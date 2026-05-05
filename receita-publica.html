@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificação de receita · Espaço Prelúdio</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-29">
+</head>
+<body>
+
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav">
+      <span class="ep-text-sm ep-text-muted">Verificação de receita</span>
+    </nav>
+  </header>
+
+  <main class="ep-main" style="max-width: 920px; margin: 0 auto;">
+
+    <div id="loading" class="ep-skeleton ep-mt-32">Verificando autenticidade…</div>
+
+    <div id="errorBox" class="ep-hide ep-mt-32">
+      <div class="ep-verify-hero ep-verify-hero--err">
+        <div class="ep-verify-hero__icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        </div>
+        <div>
+          <h1 class="ep-h2 ep-mt-0" id="errorTitle">Receita indisponível.</h1>
+          <p class="ep-text-muted ep-mt-0" id="errorMsg">O link está inválido, expirou ou a receita ainda não foi assinada.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="content" class="ep-hide">
+      <!-- HERO: badge "autêntica" -->
+      <div class="ep-verify-hero ep-verify-hero--ok">
+        <div class="ep-verify-hero__icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
+        </div>
+        <div class="ep-verify-hero__body">
+          <div class="ep-eyebrow" style="color: #1f6b3e;">Documento autenticado</div>
+          <h1 class="ep-h1 ep-mt-12">Receita digital autêntica</h1>
+          <p class="ep-text-muted ep-mt-0">
+            Esta receita foi emitida e assinada digitalmente. Os dados abaixo
+            conferem com o registro no Espaço Prelúdio.
+          </p>
+        </div>
+      </div>
+
+      <!-- Cards lado a lado: paciente + médico + emissão -->
+      <div class="ep-verify-grid">
+        <div class="ep-verify-card">
+          <div class="ep-verify-card__label">Paciente</div>
+          <div class="ep-verify-card__value" id="patientNameLbl">—</div>
+        </div>
+        <div class="ep-verify-card">
+          <div class="ep-verify-card__label">Profissional emissor</div>
+          <div class="ep-verify-card__value" id="therapistNameLbl">—</div>
+          <div class="ep-verify-card__sub" id="therapistIdsLbl">—</div>
+          <div class="ep-verify-card__sub" id="therapistAddrLbl"></div>
+          <div class="ep-verify-card__sub" id="therapistPhoneLbl"></div>
+        </div>
+        <div class="ep-verify-card">
+          <div class="ep-verify-card__label">Assinatura</div>
+          <div class="ep-verify-card__value" id="signMethodLbl">—</div>
+          <div class="ep-verify-card__sub" id="signedAtLbl">—</div>
+          <div class="ep-verify-card__sub" id="validUntilLbl"></div>
+        </div>
+      </div>
+
+      <div class="ep-alert ep-alert--info ep-mt-16">
+        <strong>Para a farmácia:</strong> abra o PDF abaixo e valide a assinatura digital
+        no <a href="https://verificador.iti.gov.br/" target="_blank" rel="noopener">Verificador ITI gov.br</a>
+        ou no Adobe Reader (cadeia ICP-Brasil). Os dados desta página devem coincidir
+        com os do PDF.
+      </div>
+
+      <div class="ep-flex ep-mt-16" style="gap: 8px; justify-content: flex-end;">
+        <button class="ep-btn ep-btn--primary" type="button" id="downloadBtn">Baixar PDF</button>
+      </div>
+
+      <iframe id="pdfFrame" class="ep-receita-public-frame ep-mt-12"></iframe>
+
+      <p class="ep-text-xs ep-text-muted ep-mt-16" style="text-align: center;">
+        Esta página de verificação é gerada pelo Espaço Prelúdio em tempo real,
+        consultando o registro original da receita. Em caso de dúvida sobre o
+        conteúdo clínico, contate o(a) profissional emissor(a).
+      </p>
+    </div>
+
+  </main>
+</div>
+
+<script type="module">
+  import { BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  const params = new URLSearchParams(location.search);
+  const token = params.get("t");
+
+  const loading   = document.getElementById("loading");
+  const errorBox  = document.getElementById("errorBox");
+  const content   = document.getElementById("content");
+
+  function showError(title, msg) {
+    loading.classList.add("ep-hide");
+    errorBox.classList.remove("ep-hide");
+    if (title) document.getElementById("errorTitle").textContent = title;
+    if (msg)   document.getElementById("errorMsg").textContent   = msg;
+  }
+
+  if (!token) { showError("Link inválido.", "Faltam dados do link."); throw new Error("NO_TOKEN"); }
+
+  function base64ToBytes(b64) {
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  function fmtDateLong(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleString("pt-BR", {
+      day: "2-digit", month: "long", year: "numeric",
+      hour: "2-digit", minute: "2-digit"
+    });
+  }
+  function fmtDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleDateString("pt-BR", {
+      day: "2-digit", month: "long", year: "numeric"
+    });
+  }
+  function methodLabel(m) {
+    if (m === "a1_inline")        return "ICP-Brasil A1 (in-loco)";
+    if (m === "external_upload")  return "ICP-Brasil (assinatura externa)";
+    return m || "—";
+  }
+
+  (async () => {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/receita/publica?t=${encodeURIComponent(token)}`);
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) {
+        const code = j?.error || res.status;
+        if (code === "TOKEN_EXPIRADO" || res.status === 401 || res.status === 410) {
+          showError("Link expirado.", "Esta receita expirou. Peça uma nova ao(à) profissional.");
+        } else if (res.status === 404) {
+          showError("Receita não encontrada.", "Verifique se o link está correto.");
+        } else {
+          showError("Não foi possível verificar.", "Tente novamente em alguns minutos.");
+        }
+        return;
+      }
+
+      const r = j.receita;
+      const issuer = r.issuer || {};
+      const c = issuer.consultorio || {};
+
+      // Paciente
+      document.getElementById("patientNameLbl").textContent = r.patientNameSnapshot || "Paciente";
+
+      // Profissional
+      document.getElementById("therapistNameLbl").textContent = issuer.displayName || "—";
+      const idParts = [];
+      if (issuer.crm) idParts.push("CRM " + issuer.crm);
+      if (issuer.crp) idParts.push("CRP " + issuer.crp);
+      if (issuer.rqe) idParts.push("RQE " + String(issuer.rqe).replace(/^RQE\s*/i, ""));
+      if (issuer.especialidade) idParts.push(issuer.especialidade);
+      document.getElementById("therapistIdsLbl").textContent = idParts.join(" · ") || "";
+
+      const addrParts = [];
+      if (c.endereco) {
+        let line = c.endereco;
+        if (c.numero) line += ", " + c.numero;
+        if (c.complemento) line += " — " + c.complemento;
+        addrParts.push(line);
+      }
+      const cityBits = [];
+      if (c.bairro) cityBits.push(c.bairro);
+      if (c.cidade && c.uf) cityBits.push(`${c.cidade}/${c.uf}`);
+      else if (c.cidade) cityBits.push(c.cidade);
+      else if (c.uf) cityBits.push(c.uf);
+      if (c.cep) cityBits.push("CEP " + c.cep);
+      if (cityBits.length) addrParts.push(cityBits.join(" · "));
+      document.getElementById("therapistAddrLbl").textContent = addrParts.join(" / ");
+      document.getElementById("therapistPhoneLbl").textContent = c.telefone ? "Tel.: " + c.telefone : "";
+
+      // Assinatura
+      document.getElementById("signMethodLbl").textContent = methodLabel(r.signatureMethod);
+      document.getElementById("signedAtLbl").textContent = "Assinada em " + fmtDateLong(r.signedAt);
+      if (r.deliveryTokenExp) {
+        document.getElementById("validUntilLbl").textContent = "Link válido até " + fmtDate(r.deliveryTokenExp);
+      }
+
+      // PDF
+      const bytes = base64ToBytes(r.pdfBase64);
+      const blob  = new Blob([bytes], { type: r.pdfMime || "application/pdf" });
+      const url   = URL.createObjectURL(blob);
+      document.getElementById("pdfFrame").src = url;
+      document.getElementById("downloadBtn").addEventListener("click", () => {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `receita-${r.receitaId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      });
+
+      loading.classList.add("ep-hide");
+      content.classList.remove("ep-hide");
+    } catch (e) {
+      console.error("receita_publica_error", e);
+      showError("Erro de conexão.", "Tente novamente mais tarde.");
+    }
+  })();
+</script>
+
+</body>
+</html>

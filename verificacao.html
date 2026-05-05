@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificação · Espaço Prelúdio</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-29">
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav">
+      <a href="./painel.html" class="ep-text-sm">Painel</a>
+      <a href="./painel.html" class="ep-btn ep-btn--ghost ep-btn--sm">Voltar</a>
+    </nav>
+  </header>
+
+  <main class="ep-main">
+    <article class="ep-doc">
+      <div class="ep-eyebrow">Selo de confiança</div>
+      <h1 class="ep-h1">Verificação profissional</h1>
+      <p class="ep-doc__meta">Validação de CRP / CRM / e-Psi · Revisão manual pela equipe</p>
+
+      <!-- Estado dinâmico (dependendo de status) ─────────────────────────── -->
+      <div id="statusBlock" class="ep-mt-16"></div>
+
+      <section class="ep-doc__section">
+        <h2 class="ep-h2">Por que verificamos</h2>
+        <p>
+          Pacientes precisam saber se o(a) profissional que vão consultar realmente
+          tem registro ativo e está autorizado(a) a atender online (Resolução CFP nº
+          11/2018 para psicólogos; Resolução CFM nº 2.314/2022 para médicos). Quem
+          passa pela verificação ganha um selo <strong>"Verificado pela equipe"</strong>
+          no perfil.
+        </p>
+      </section>
+
+      <section class="ep-doc__section">
+        <h2 class="ep-h2">Como provar</h2>
+        <p>Mande um <strong>printscreen</strong> de qualquer um destes:</p>
+        <ul class="ep-doc__list">
+          <li>
+            <strong>e-Psi (recomendado para psicólogos):</strong>
+            <a href="https://e-psi.cfp.org.br/" target="_blank" rel="noopener">e-psi.cfp.org.br</a> — sua tela de cadastro como profissional autorizado a atender online.
+          </li>
+          <li>
+            <strong>Cadastro CFP:</strong>
+            <a href="https://cadastro.cfp.org.br/buscaPublica/" target="_blank" rel="noopener">cadastro.cfp.org.br</a> — busca pública mostrando seu registro ativo.
+          </li>
+          <li>
+            <strong>CFM (psiquiatras):</strong>
+            <a href="https://portal.cfm.org.br/busca-medicos/" target="_blank" rel="noopener">portal.cfm.org.br</a> — busca pública por nome ou CRM.
+          </li>
+          <li>Documento profissional escaneado (carteira do conselho), se preferir.</li>
+        </ul>
+        <p class="ep-text-sm ep-text-muted">
+          O documento deve estar legível e mostrar nome completo + número de registro.
+          Aceitamos JPEG, PNG, WebP e PDF — até 500 KB. Você pode borrar/ocultar
+          informações irrelevantes (CPF, RG) antes de enviar.
+        </p>
+      </section>
+
+      <!-- Formulário de submissão ──────────────────────────────────────────── -->
+      <section class="ep-doc__section" id="formSection">
+        <h2 class="ep-h2">Enviar comprovante</h2>
+
+        <form id="verifForm" class="ep-stack ep-mt-12" novalidate>
+          <div class="ep-field">
+            <label class="ep-label" for="docFile">Documento (imagem ou PDF, até 500 KB)</label>
+            <input id="docFile" class="ep-input" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" required>
+          </div>
+
+          <div id="previewWrap" class="ep-hide">
+            <p class="ep-text-xs ep-text-muted ep-mt-0" style="margin-bottom: 6px;">Pré-visualização:</p>
+            <div id="previewBox" class="ep-doc__preview"></div>
+          </div>
+
+          <div class="ep-field">
+            <label class="ep-label" for="notes">Observações (opcional)</label>
+            <textarea id="notes" class="ep-input" rows="3" maxlength="500" placeholder="Ex.: cadastro e-Psi nº 12345 / atendo online desde 2019."></textarea>
+          </div>
+
+          <div class="ep-status" id="status"></div>
+
+          <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="submitBtn">Enviar para verificação</button>
+        </form>
+      </section>
+
+      <footer class="ep-doc__footer">
+        Após o envio, a equipe revisa em até <strong>2 dias úteis</strong>. Você
+        recebe a resposta nesta mesma página e por e-mail.
+      </footer>
+    </article>
+  </main>
+</div>
+
+<script type="module">
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js";
+
+  const statusBlock = document.getElementById("statusBlock");
+  const formSection = document.getElementById("formSection");
+  const verifForm   = document.getElementById("verifForm");
+  const docFileEl   = document.getElementById("docFile");
+  const notesEl     = document.getElementById("notes");
+  const previewWrap = document.getElementById("previewWrap");
+  const previewBox  = document.getElementById("previewBox");
+  const statusEl    = document.getElementById("status");
+  const submitBtn   = document.getElementById("submitBtn");
+
+  let idToken = null;
+  let pendingFile = null; // { base64, mime, name, sizeKb }
+
+  function setStatus(text, type = "") {
+    statusEl.textContent = text;
+    statusEl.className = "ep-status";
+    if (type) statusEl.classList.add("is-" + type);
+  }
+
+  function fmtDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  }
+
+  function renderStatus(status, lastSubmission, verifiedAt) {
+    statusBlock.innerHTML = "";
+    if (status === "verified") {
+      formSection.classList.add("ep-hide");
+      const card = document.createElement("div");
+      card.className = "ep-status-card ep-status-card--ok";
+      card.innerHTML = `
+        <div class="ep-status-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+        </div>
+        <div>
+          <div class="ep-status-card__title">Profissional verificado</div>
+          <div class="ep-status-card__sub">Aprovado em ${fmtDate(verifiedAt)}. O selo "Verificado" aparece no seu perfil público.</div>
+        </div>
+      `;
+      statusBlock.appendChild(card);
+    } else if (status === "pending") {
+      formSection.classList.add("ep-hide");
+      const card = document.createElement("div");
+      card.className = "ep-status-card ep-status-card--pending";
+      card.innerHTML = `
+        <div class="ep-status-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        </div>
+        <div>
+          <div class="ep-status-card__title">Em análise</div>
+          <div class="ep-status-card__sub">
+            Submetido em ${fmtDate(lastSubmission?.submittedAt)}.
+            A equipe revisa em até 2 dias úteis. Você não precisa fazer mais nada.
+          </div>
+        </div>
+      `;
+      statusBlock.appendChild(card);
+    } else if (status === "rejected") {
+      const card = document.createElement("div");
+      card.className = "ep-status-card ep-status-card--err";
+      card.innerHTML = `
+        <div class="ep-status-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        </div>
+        <div>
+          <div class="ep-status-card__title">Submissão anterior recusada</div>
+          <div class="ep-status-card__sub">
+            ${lastSubmission?.rejectionReason ? `<strong>Motivo:</strong> ${escapeHtml(lastSubmission.rejectionReason)}<br>` : ""}
+            Você pode enviar uma nova prova abaixo. Garanta que o documento esteja legível e contenha nome + registro.
+          </div>
+        </div>
+      `;
+      statusBlock.appendChild(card);
+      formSection.classList.remove("ep-hide");
+    } else {
+      // status "none" — primeiro envio
+      formSection.classList.remove("ep-hide");
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str || "").replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+    }[c]));
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = String(reader.result || "");
+        const comma = dataUrl.indexOf(",");
+        if (comma < 0) return reject(new Error("FORMATO_INVALIDO"));
+        resolve(dataUrl.slice(comma + 1));
+      };
+      reader.onerror = () => reject(reader.error || new Error("LEITURA_FALHOU"));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  docFileEl.addEventListener("change", async () => {
+    pendingFile = null;
+    previewWrap.classList.add("ep-hide");
+    previewBox.innerHTML = "";
+
+    const file = docFileEl.files?.[0];
+    if (!file) return;
+    if (file.size > 500 * 1024) {
+      setStatus("Arquivo grande demais (limite 500 KB). Reduza a resolução ou recorte a imagem.", "err");
+      docFileEl.value = "";
+      return;
+    }
+    setStatus("");
+
+    try {
+      const base64 = await fileToBase64(file);
+      pendingFile = { base64, mime: file.type, name: file.name, sizeKb: Math.round(file.size / 1024) };
+
+      // Preview
+      const dataUrl = `data:${file.type};base64,${base64}`;
+      if (file.type === "application/pdf") {
+        previewBox.innerHTML = `<div class="ep-doc__preview-pdf">📎 ${escapeHtml(file.name)} · ${pendingFile.sizeKb} KB</div>`;
+      } else {
+        previewBox.innerHTML = `<img src="${dataUrl}" alt="Pré-visualização" style="max-width: 100%; max-height: 220px; border-radius: 8px;">`;
+      }
+      previewWrap.classList.remove("ep-hide");
+    } catch (err) {
+      setStatus("Não foi possível ler o arquivo.", "err");
+      docFileEl.value = "";
+    }
+  });
+
+  verifForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!pendingFile) {
+      setStatus("Anexe um documento antes de enviar.", "err");
+      return;
+    }
+    submitBtn.disabled = true;
+    setStatus("Enviando…");
+
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/verificacao/submeter`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          documentBase64: pendingFile.base64,
+          documentMime:   pendingFile.mime,
+          notes:          notesEl.value.trim().slice(0, 500)
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        const code = data?.error || res.status;
+        setStatus("Erro ao enviar: " + code, "err");
+        submitBtn.disabled = false;
+        return;
+      }
+      setStatus("Enviado. Atualizando status…", "ok");
+      await loadStatus();
+      verifForm.reset();
+      previewWrap.classList.add("ep-hide");
+      previewBox.innerHTML = "";
+      pendingFile = null;
+    } catch (err) {
+      console.error("verif_submit_error", err);
+      setStatus("Erro de rede. Tente novamente.", "err");
+      submitBtn.disabled = false;
+    }
+  });
+
+  async function loadStatus() {
+    const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/verificacao/status`, {
+      headers: { "Authorization": `Bearer ${idToken}` }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      statusBlock.innerHTML = `<div class="ep-error-state">Erro ao carregar status: ${data?.error || res.status}</div>`;
+      return;
+    }
+    renderStatus(data.status, data.lastSubmission, data.verifiedAt);
+  }
+
+  (async () => {
+    try {
+      const ctx = await requireTherapist({ requireDek: false });
+      idToken = ctx.idToken;
+      await loadStatus();
+    } catch (e) { /* requireTherapist redireciona */ }
+  })();
+</script>
+
+</body>
+</html>

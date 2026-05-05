@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histórico de atividade · Espaço Prelúdio</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-29">
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <a href="./paciente-painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav">
+      <a href="./paciente-painel.html" class="ep-text-sm">Painel</a>
+      <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Sair</button>
+    </nav>
+  </header>
+
+  <main class="ep-main" style="max-width: 760px;">
+
+    <a href="./paciente-painel.html" class="ep-text-sm ep-text-muted">← Voltar ao painel</a>
+
+    <div class="ep-eyebrow ep-mt-12">LGPD · Art. 18, II</div>
+    <h1 class="ep-h1 ep-mt-12">Histórico da sua conta</h1>
+    <p class="ep-text-muted ep-mt-0">
+      Eventos da sua conta no Espaço Prelúdio. Para correção, exportação ou
+      exclusão de dados, escreva para
+      <a href="mailto:dpo@preludiojogos.com">dpo@preludiojogos.com</a>.
+    </p>
+
+    <div id="loading" class="ep-skeleton ep-mt-16">Carregando…</div>
+    <div id="list" class="ep-stack ep-mt-16 ep-hide" style="gap: 8px;"></div>
+    <div id="empty" class="ep-empty ep-mt-16 ep-hide">
+      <p class="ep-text-muted ep-mt-0">Nenhum evento registrado ainda.</p>
+    </div>
+
+    <p class="ep-text-xs ep-text-muted ep-mt-24" style="text-align: center;">
+      Mostramos seus eventos recentes. Para histórico completo, solicite via
+      e-mail ao Encarregado de Dados.
+    </p>
+
+  </main>
+</div>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requirePatient } from "./js/patient-auth-guard.js";
+  import { clearPatientDek } from "./js/patient-session.js";
+
+  const ctx = await requirePatient({ requireDek: false });
+  const { idToken } = ctx;
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    clearPatientDek();
+    await signOut(auth);
+    window.location.href = "./paciente-login.html";
+  });
+
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    }[c]));
+  }
+  function fmtAt(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleString("pt-BR", {
+      day: "2-digit", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit"
+    });
+  }
+  function fmtRelative(ms) {
+    if (!ms) return "—";
+    const diff = Date.now() - ms;
+    const m = Math.floor(diff / 60_000);
+    if (m < 1)  return "agora";
+    if (m < 60) return `há ${m} min`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `há ${h} h`;
+    const d = Math.floor(h / 24);
+    if (d < 30) return `há ${d} d`;
+    return `há ${Math.floor(d / 30)} meses`;
+  }
+
+  (async () => {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/audit`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
+
+      const events = data.events || [];
+      document.getElementById("loading").classList.add("ep-hide");
+
+      const list = document.getElementById("list");
+      const empty = document.getElementById("empty");
+      if (events.length === 0) {
+        empty.classList.remove("ep-hide");
+        return;
+      }
+
+      list.innerHTML = "";
+      for (const ev of events) {
+        const meta = ev.meta || {};
+        const metaParts = [];
+        if (meta.sessionId) metaParts.push(`Sessão <code>${escapeHtml(meta.sessionId.slice(0, 12))}…</code>`);
+        if (meta.ip)        metaParts.push("IP: " + escapeHtml(meta.ip));
+
+        const row = document.createElement("article");
+        row.className = "ep-audit-row";
+        row.innerHTML = `
+          <div class="ep-audit-row__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          </div>
+          <div class="ep-audit-row__main">
+            <div class="ep-audit-row__title">${escapeHtml(ev.description)}</div>
+            <div class="ep-audit-row__meta">${metaParts.join(" · ") || "&nbsp;"}</div>
+          </div>
+          <div class="ep-audit-row__time" title="${escapeHtml(fmtAt(ev.at))}">${fmtRelative(ev.at)}</div>
+        `;
+        list.appendChild(row);
+      }
+      list.classList.remove("ep-hide");
+    } catch (e) {
+      console.error("audit_load_error", e);
+      document.getElementById("loading").textContent = "Erro: " + e.message;
+      document.getElementById("loading").classList.add("ep-error-state");
+    }
+  })();
+</script>
+
+</body>
+</html>

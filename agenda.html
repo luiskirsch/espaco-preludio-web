@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda · Espaço Prelúdio</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-29">
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html">Consultas</a>
+      <a href="./agenda.html" class="is-active">Agenda</a>
+      <a href="./pacientes.html">Pacientes</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./perfil.html">Perfil</a>
+      <span id="topUserName" class="ep-text-sm ep-text-muted">&nbsp;</span>
+      <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16">
+
+  <div class="ep-flex ep-flex--end-wrap" style="justify-content: space-between; align-items: end; gap: 12px; margin-bottom: 16px;">
+    <div>
+      <div class="ep-eyebrow">Agenda</div>
+      <h1 class="ep-h1 ep-mt-12">Sua semana</h1>
+      <p class="ep-text-muted ep-mt-0">Visualize, navegue e crie consultas direto no horário desejado.</p>
+    </div>
+    <a href="./painel.html" class="ep-btn ep-btn--primary">+ Nova consulta</a>
+  </div>
+
+  <!-- Navegação semanal + legenda -->
+  <div class="ep-agenda-nav">
+    <div class="ep-flex" style="gap: 6px; align-items: center;">
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="prevWeekBtn" title="Semana anterior">←</button>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="todayBtn">Hoje</button>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="nextWeekBtn" title="Próxima semana">→</button>
+      <span class="ep-agenda-nav__label" id="weekLabel">—</span>
+    </div>
+    <div class="ep-agenda-legend" aria-label="Legenda">
+      <span class="ep-agenda-legend__item is-scheduled"><span class="ep-agenda-legend__dot"></span>Agendada</span>
+      <span class="ep-agenda-legend__item is-progress"><span class="ep-agenda-legend__dot"></span>Em sessão</span>
+      <span class="ep-agenda-legend__item is-done"><span class="ep-agenda-legend__dot"></span>Encerrada</span>
+    </div>
+  </div>
+
+  <!-- Grid semanal -->
+  <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando agenda…</div>
+
+  <div id="agendaGrid" class="ep-agenda-grid ep-hide" aria-label="Grade semanal">
+    <!-- Header row (corner + 7 days) -->
+    <div class="ep-agenda-grid__corner"></div>
+    <div class="ep-agenda-grid__day-header" data-day="0"></div>
+    <div class="ep-agenda-grid__day-header" data-day="1"></div>
+    <div class="ep-agenda-grid__day-header" data-day="2"></div>
+    <div class="ep-agenda-grid__day-header" data-day="3"></div>
+    <div class="ep-agenda-grid__day-header" data-day="4"></div>
+    <div class="ep-agenda-grid__day-header" data-day="5"></div>
+    <div class="ep-agenda-grid__day-header" data-day="6"></div>
+
+    <!-- Hour labels column -->
+    <div class="ep-agenda-grid__hour-col" id="hourCol"></div>
+
+    <!-- 7 day columns -->
+    <div class="ep-agenda-grid__day-col" data-day="0"></div>
+    <div class="ep-agenda-grid__day-col" data-day="1"></div>
+    <div class="ep-agenda-grid__day-col" data-day="2"></div>
+    <div class="ep-agenda-grid__day-col" data-day="3"></div>
+    <div class="ep-agenda-grid__day-col" data-day="4"></div>
+    <div class="ep-agenda-grid__day-col" data-day="5"></div>
+    <div class="ep-agenda-grid__day-col" data-day="6"></div>
+  </div>
+
+  <p class="ep-text-xs ep-text-muted ep-mt-12" style="text-align: center;">
+    Clique em um horário vago para criar consulta. Clique em uma sessão para abrir o prontuário.
+  </p>
+
+</main>
+
+<!-- Popover de sessão -->
+<div class="ep-modal" id="sessionPopover" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 420px;">
+    <h3 class="ep-modal__title" id="popPatientName">—</h3>
+    <p class="ep-modal__sub" id="popDateTime">—</p>
+    <div class="ep-status" id="popStatus">—</div>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="popCloseBtn">Fechar</button>
+      <a id="popOpenProntuario" href="#" class="ep-btn ep-btn--ghost ep-hide">Prontuário</a>
+      <a id="popEnter" href="#" class="ep-btn ep-btn--primary ep-hide">Entrar</a>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js";
+  import { clearDek } from "./js/crypto.js";
+
+  const ctx = await requireTherapist({ requireDek: true });
+  const { idToken, therapist } = ctx;
+
+  document.getElementById("topUserName").textContent = therapist.displayName || "";
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    clearDek();
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
+
+  // ─── Configuração da grade ──────────────────────────────────────────
+  const START_HOUR = 8;
+  const END_HOUR   = 21; // exclusivo — última linha mostra 20h-21h
+  const HOUR_PX    = 56;
+  const SESSION_DEFAULT_MIN = 50;
+
+  const DAY_NAMES = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]; // segunda-início
+  const MONTH_NAMES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
+  // ─── Estado ─────────────────────────────────────────────────────────
+  let weekStart = getMondayOf(new Date()); // Date 00:00 da segunda da semana atual
+  let allSessions = []; // todas, do backend (limit 200)
+
+  function getMondayOf(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    const day = d.getDay(); // 0=Dom, 1=Seg, ..., 6=Sáb
+    const diff = day === 0 ? -6 : 1 - day; // pra chegar na segunda
+    d.setDate(d.getDate() + diff);
+    return d;
+  }
+  function addDays(d, n) {
+    const o = new Date(d);
+    o.setDate(o.getDate() + n);
+    return o;
+  }
+  function dayIndexFromDate(date) {
+    // 0..6, segunda=0, domingo=6
+    const day = date.getDay();
+    return day === 0 ? 6 : day - 1;
+  }
+  function isSameDay(a, b) {
+    return a.getFullYear() === b.getFullYear()
+        && a.getMonth() === b.getMonth()
+        && a.getDate() === b.getDate();
+  }
+  function fmtDayHeader(d, isToday) {
+    return `${DAY_NAMES[dayIndexFromDate(d)]}<br><strong>${d.getDate()}</strong> <span class="ep-agenda-grid__day-month">${MONTH_NAMES[d.getMonth()]}</span>`;
+  }
+  function fmtWeekLabel() {
+    const end = addDays(weekStart, 6);
+    const sameMonth = weekStart.getMonth() === end.getMonth();
+    if (sameMonth) {
+      return `${weekStart.getDate()} – ${end.getDate()} de ${MONTH_NAMES[end.getMonth()]} de ${end.getFullYear()}`;
+    }
+    return `${weekStart.getDate()} ${MONTH_NAMES[weekStart.getMonth()]} – ${end.getDate()} ${MONTH_NAMES[end.getMonth()]} ${end.getFullYear()}`;
+  }
+  function statusToClass(s) {
+    if (s === "completed")   return "is-done";
+    if (s === "in_progress") return "is-progress";
+    return "is-scheduled";
+  }
+  function statusLabel(s) {
+    if (s === "completed")   return "Encerrada";
+    if (s === "in_progress") return "Em sessão";
+    return "Agendada";
+  }
+  function pad2(n) { return String(n).padStart(2, "0"); }
+  function toISOLocal(d) {
+    return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
+
+  // ─── Carregar sessões ────────────────────────────────────────────────
+  async function loadSessions() {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
+      allSessions = data.sessions || [];
+      document.getElementById("loadingBanner").classList.add("ep-hide");
+      document.getElementById("agendaGrid").classList.remove("ep-hide");
+      renderWeek();
+    } catch (e) {
+      console.error("load_sessions_error", e);
+      const banner = document.getElementById("loadingBanner");
+      banner.textContent = "Erro ao carregar agenda: " + (e?.message || "desconhecido");
+      banner.className = "ep-alert ep-alert--danger";
+    }
+  }
+
+  // ─── Renderização ───────────────────────────────────────────────────
+  function buildHourLabels() {
+    const col = document.getElementById("hourCol");
+    col.innerHTML = "";
+    for (let h = START_HOUR; h < END_HOUR; h++) {
+      const lbl = document.createElement("div");
+      lbl.className = "ep-agenda-grid__hour-label";
+      lbl.textContent = pad2(h) + "h";
+      col.appendChild(lbl);
+    }
+  }
+  buildHourLabels();
+
+  function renderWeek() {
+    document.getElementById("weekLabel").textContent = fmtWeekLabel();
+
+    const today = new Date();
+
+    // Day headers
+    document.querySelectorAll(".ep-agenda-grid__day-header").forEach(el => {
+      const i = Number(el.dataset.day);
+      const d = addDays(weekStart, i);
+      const isToday = isSameDay(d, today);
+      el.classList.toggle("is-today", isToday);
+      el.innerHTML = fmtDayHeader(d, isToday);
+    });
+
+    // Day columns: limpa + adiciona linhas de hora + sessões + clique no vazio
+    document.querySelectorAll(".ep-agenda-grid__day-col").forEach(col => {
+      const i = Number(col.dataset.day);
+      const dayDate = addDays(weekStart, i);
+      const isToday = isSameDay(dayDate, today);
+      col.classList.toggle("is-today", isToday);
+      col.innerHTML = "";
+      col.style.height = `${(END_HOUR - START_HOUR) * HOUR_PX}px`;
+
+      // Linhas horárias clicáveis
+      for (let h = START_HOUR; h < END_HOUR; h++) {
+        const slot = document.createElement("button");
+        slot.type = "button";
+        slot.className = "ep-agenda-grid__slot";
+        slot.style.top = `${(h - START_HOUR) * HOUR_PX}px`;
+        slot.style.height = `${HOUR_PX}px`;
+        slot.title = `Criar consulta em ${pad2(h)}h`;
+        slot.dataset.hour = String(h);
+        slot.addEventListener("click", () => {
+          const slotDate = new Date(dayDate);
+          slotDate.setHours(h, 0, 0, 0);
+          window.location.href = `./painel.html?newAt=${encodeURIComponent(toISOLocal(slotDate))}`;
+        });
+        col.appendChild(slot);
+      }
+    });
+
+    // Sessões da semana
+    const weekEnd = addDays(weekStart, 7);
+    const sessionsThisWeek = allSessions.filter(s => {
+      if (!s.scheduledAt) return false;
+      const sd = new Date(s.scheduledAt);
+      return sd >= weekStart && sd < weekEnd;
+    });
+
+    for (const s of sessionsThisWeek) {
+      const sd = new Date(s.scheduledAt);
+      const dayIdx = dayIndexFromDate(sd);
+      const col = document.querySelector(`.ep-agenda-grid__day-col[data-day="${dayIdx}"]`);
+      if (!col) continue;
+
+      const startMinutesFromTop = (sd.getHours() + sd.getMinutes() / 60 - START_HOUR) * 60;
+      // Recorta se cair antes do START_HOUR
+      const topPx = Math.max(0, (startMinutesFromTop / 60) * HOUR_PX);
+      const heightPx = (SESSION_DEFAULT_MIN / 60) * HOUR_PX;
+
+      const block = document.createElement("button");
+      block.type = "button";
+      block.className = `ep-agenda-session ${statusToClass(s.status)}`;
+      block.style.top = `${topPx}px`;
+      block.style.height = `${heightPx}px`;
+      block.innerHTML = `
+        <div class="ep-agenda-session__time">${pad2(sd.getHours())}:${pad2(sd.getMinutes())}</div>
+        <div class="ep-agenda-session__name">${escapeHtml(s.patientName || "—")}</div>
+      `;
+      block.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openSessionPopover(s);
+      });
+      col.appendChild(block);
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  // ─── Navegação ──────────────────────────────────────────────────────
+  document.getElementById("prevWeekBtn").addEventListener("click", () => {
+    weekStart = addDays(weekStart, -7);
+    renderWeek();
+  });
+  document.getElementById("nextWeekBtn").addEventListener("click", () => {
+    weekStart = addDays(weekStart, 7);
+    renderWeek();
+  });
+  document.getElementById("todayBtn").addEventListener("click", () => {
+    weekStart = getMondayOf(new Date());
+    renderWeek();
+  });
+
+  // ─── Popover de sessão ──────────────────────────────────────────────
+  const popover = document.getElementById("sessionPopover");
+  document.getElementById("popCloseBtn").addEventListener("click", () => popover.classList.remove("is-open"));
+  popover.addEventListener("click", (e) => { if (e.target === popover) popover.classList.remove("is-open"); });
+
+  function openSessionPopover(s) {
+    document.getElementById("popPatientName").textContent = s.patientName || "—";
+    const sd = new Date(s.scheduledAt);
+    document.getElementById("popDateTime").textContent =
+      sd.toLocaleString("pt-BR", { weekday: "long", day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" });
+    const statusEl = document.getElementById("popStatus");
+    statusEl.textContent = statusLabel(s.status);
+    statusEl.className = "ep-status";
+    if (s.status === "completed")   statusEl.classList.add("is-ok");
+    if (s.status === "in_progress") statusEl.classList.add("is-ok");
+
+    const opEnterBtn = document.getElementById("popEnter");
+    const opProntBtn = document.getElementById("popOpenProntuario");
+    if (s.status !== "completed") {
+      opEnterBtn.classList.remove("ep-hide");
+      opEnterBtn.href = `./consultorio.html?sessionId=${encodeURIComponent(s.sessionId)}`;
+    } else {
+      opEnterBtn.classList.add("ep-hide");
+    }
+    if (s.patientId) {
+      opProntBtn.classList.remove("ep-hide");
+      opProntBtn.href = `./prontuario.html?p=${encodeURIComponent(s.patientId)}`;
+    } else {
+      opProntBtn.classList.add("ep-hide");
+    }
+
+    popover.classList.add("is-open");
+  }
+
+  // ─── Boot ───────────────────────────────────────────────────────────
+  await loadSessions();
+</script>
+
+</body>
+</html>

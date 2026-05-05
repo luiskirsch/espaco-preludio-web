@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pacientes · Espaço Prelúdio</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-29">
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html">Consultas</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./pacientes.html" class="is-active">Pacientes</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./perfil.html">Perfil</a>
+      <span id="topUserName" class="ep-text-sm ep-text-muted">&nbsp;</span>
+      <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16">
+
+  <section class="ep-stack">
+    <div class="ep-flex--end-wrap ep-flex">
+      <div>
+        <div class="ep-eyebrow">Pacientes</div>
+        <h1 class="ep-h1 ep-mt-12">Quem você atende.</h1>
+        <p class="ep-text-muted ep-mt-8 ep-mt-0">
+          Dados cifrados no seu navegador antes de subir. Só você consegue ler.
+        </p>
+      </div>
+      <button id="newPatientBtn" type="button" class="ep-btn ep-btn--primary ep-btn--lg">+ Novo paciente</button>
+    </div>
+
+    <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando pacientes…</div>
+    <div id="patientList" class="ep-session-list ep-mt-16 ep-hide"></div>
+    <div id="emptyState" class="ep-empty ep-mt-16 ep-hide">
+      <h3 class="ep-h3">Nenhum paciente cadastrado.</h3>
+      <p class="ep-text-muted ep-mt-8 ep-mt-0">
+        Cadastre seu primeiro paciente — depois você associa as consultas a ele e seu prontuário fica organizado por pessoa.
+      </p>
+      <button class="ep-btn ep-btn--primary ep-mt-16" type="button" id="emptyCta">Cadastrar primeiro paciente</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- Modal: novo / editar paciente -->
+<div class="ep-modal" id="patientModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel">
+    <h3 class="ep-modal__title" id="modalTitle">Novo paciente</h3>
+    <p class="ep-modal__sub">
+      Os dados ficam cifrados no seu navegador antes de subir. Use apelido ou nome real — sua escolha.
+    </p>
+
+    <form id="patientForm" class="ep-stack">
+      <div class="ep-field">
+        <label class="ep-label" for="patientName">Nome ou apelido</label>
+        <input id="patientName" class="ep-input" type="text" maxlength="80" required>
+      </div>
+      <div class="ep-row">
+        <div class="ep-field">
+          <label class="ep-label" for="patientContact">Contato (e-mail ou telefone)</label>
+          <input id="patientContact" class="ep-input" type="text" maxlength="120">
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="patientBirth">Nascimento</label>
+          <input id="patientBirth" class="ep-input" type="date">
+        </div>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="patientObs">Observações iniciais</label>
+        <textarea id="patientObs" class="ep-textarea" maxlength="2000" placeholder="Queixa principal, encaminhamento, etc."></textarea>
+      </div>
+      <div class="ep-status" id="patientStatus"></div>
+    </form>
+
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="cancelPatient">Cancelar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="savePatient">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js";
+  import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
+
+  const sess = await requireTherapist({ requireDek: true });
+  const { idToken, therapist, dek } = sess;
+
+  document.getElementById("topUserName").textContent = therapist.displayName || "";
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    clearDek();
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
+
+  // ─── Helpers ───────────────────────────────────────────────
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    }[c]));
+  }
+  function fmtDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  async function decryptPatient(p) {
+    try {
+      const json = await decryptNote({ ciphertext: p.ciphertext, iv: p.iv }, dek);
+      const data = JSON.parse(json);
+      return { patientId: p.patientId, ...data, createdAt: p.createdAt, updatedAt: p.updatedAt };
+    } catch {
+      return { patientId: p.patientId, name: "[corrompido]", createdAt: p.createdAt, updatedAt: p.updatedAt };
+    }
+  }
+  async function encryptPatientPayload(payload) {
+    const json = JSON.stringify(payload);
+    return encryptNote(json, dek);
+  }
+
+  // ─── Listar ────────────────────────────────────────────────
+  const loadingBanner = document.getElementById("loadingBanner");
+  const patientList   = document.getElementById("patientList");
+  const emptyState    = document.getElementById("emptyState");
+
+  async function loadPatients() {
+    loadingBanner.classList.remove("ep-hide");
+    patientList.classList.add("ep-hide");
+    emptyState.classList.add("ep-hide");
+
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
+
+      loadingBanner.classList.add("ep-hide");
+
+      if (!data.patients || data.patients.length === 0) {
+        emptyState.classList.remove("ep-hide");
+        return;
+      }
+
+      const decrypted = await Promise.all(data.patients.map(decryptPatient));
+      patientList.innerHTML = "";
+      decrypted.forEach(p => patientList.appendChild(renderPatient(p)));
+      patientList.classList.remove("ep-hide");
+    } catch (error) {
+      console.error("load_patients_error", error);
+      loadingBanner.textContent = "Erro ao carregar pacientes.";
+      loadingBanner.className = "ep-alert ep-alert--danger";
+    }
+  }
+
+  function renderPatient(p) {
+    const div = document.createElement("article");
+    div.className = "ep-session";
+    div.innerHTML = `
+      <div>
+        <div class="ep-session__name">${escapeHtml(p.name || "—")}</div>
+        <div class="ep-session__meta">
+          ${p.contact ? `<span>${escapeHtml(p.contact)}</span>` : ""}
+          ${p.birthdate ? `<span>· nasc. ${fmtDate(new Date(p.birthdate).getTime())}</span>` : ""}
+          <span>· atualizado ${fmtDate(p.updatedAt)}</span>
+        </div>
+      </div>
+      <div class="ep-session__actions">
+        <a class="ep-btn ep-btn--primary ep-btn--sm" href="./prontuario.html?p=${encodeURIComponent(p.patientId)}">Prontuário</a>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="edit"   data-id="${p.patientId}">Editar</button>
+        <button class="ep-btn ep-btn--danger ep-btn--sm" data-action="delete" data-id="${p.patientId}">Apagar</button>
+      </div>
+    `;
+    div._patientData = p;
+    return div;
+  }
+
+  patientList.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+    const article = btn.closest(".ep-session");
+    const data = article?._patientData;
+
+    if (action === "edit") {
+      openModal({ mode: "edit", patient: data });
+    } else if (action === "delete") {
+      if (!confirm(`Apagar paciente "${data?.name || ""}"? As sessões antigas dele continuam existindo, mas o cadastro é removido.`)) return;
+      btn.disabled = true;
+      try {
+        await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(id)}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${idToken}` }
+        });
+        await loadPatients();
+      } catch {
+        btn.disabled = false;
+        alert("Erro ao apagar.");
+      }
+    }
+  });
+
+  // ─── Modal ─────────────────────────────────────────────────
+  const patientModal  = document.getElementById("patientModal");
+  const modalTitle    = document.getElementById("modalTitle");
+  const nameEl        = document.getElementById("patientName");
+  const contactEl     = document.getElementById("patientContact");
+  const birthEl       = document.getElementById("patientBirth");
+  const obsEl         = document.getElementById("patientObs");
+  const statusEl      = document.getElementById("patientStatus");
+  const saveBtn       = document.getElementById("savePatient");
+
+  let editingId = null;
+
+  function openModal({ mode, patient }) {
+    editingId = mode === "edit" ? patient.patientId : null;
+    modalTitle.textContent = mode === "edit" ? "Editar paciente" : "Novo paciente";
+    nameEl.value    = patient?.name      || "";
+    contactEl.value = patient?.contact   || "";
+    birthEl.value   = patient?.birthdate || "";
+    obsEl.value     = patient?.observations || "";
+    statusEl.textContent = "";
+    statusEl.className = "ep-status";
+    patientModal.classList.add("is-open");
+    setTimeout(() => nameEl.focus(), 50);
+  }
+  function closeModal() {
+    patientModal.classList.remove("is-open");
+    editingId = null;
+  }
+
+  document.getElementById("newPatientBtn").addEventListener("click", () => openModal({ mode: "create", patient: {} }));
+  document.getElementById("emptyCta").addEventListener("click", () => openModal({ mode: "create", patient: {} }));
+  document.getElementById("cancelPatient").addEventListener("click", closeModal);
+
+  saveBtn.addEventListener("click", async () => {
+    const name = nameEl.value.trim();
+    if (!name) {
+      statusEl.textContent = "Informe o nome do paciente.";
+      statusEl.className = "ep-status is-err";
+      return;
+    }
+    saveBtn.disabled = true;
+    statusEl.textContent = "cifrando…";
+    statusEl.className = "ep-status";
+
+    const payload = {
+      name,
+      contact: contactEl.value.trim(),
+      birthdate: birthEl.value || "",
+      observations: obsEl.value.trim()
+    };
+
+    try {
+      const { ciphertext, iv } = await encryptPatientPayload(payload);
+      const url = editingId
+        ? `${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(editingId)}`
+        : `${BACKEND_BASE_URL}/therapy/pacientes`;
+      const method = editingId ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ ciphertext, iv })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        statusEl.textContent = "Erro: " + (data?.error || res.status);
+        statusEl.className = "ep-status is-err";
+        saveBtn.disabled = false;
+        return;
+      }
+      closeModal();
+      await loadPatients();
+    } catch (error) {
+      console.error("save_patient_error", error);
+      statusEl.textContent = "Erro ao salvar.";
+      statusEl.className = "ep-status is-err";
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
+  });
+
+  await loadPatients();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planos · Espaço Prelúdio</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-29">
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html">Consultas</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./pacientes.html">Pacientes</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./perfil.html">Perfil</a>
+      <span id="topUserName" class="ep-text-sm ep-text-muted">&nbsp;</span>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16" style="max-width: 880px;">
+
+  <div class="ep-eyebrow">Plano da sua conta</div>
+  <h1 class="ep-h1 ep-mt-12">Espaço Prelúdio Pro</h1>
+  <p class="ep-text-muted ep-mt-0">
+    Toda a infraestrutura clínica online, com pagamento mensal sem fidelidade.
+    Cancele a qualquer momento.
+  </p>
+
+  <!-- Card de status atual -->
+  <div id="planStatus" class="ep-status-card ep-mt-16" style="display: none;">
+    <div class="ep-status-card__icon" id="planStatusIcon"></div>
+    <div>
+      <div class="ep-status-card__title" id="planStatusTitle">—</div>
+      <div class="ep-status-card__sub" id="planStatusSub">—</div>
+    </div>
+  </div>
+
+  <!-- Plano Pro -->
+  <section class="ep-plan-card ep-mt-24">
+    <div class="ep-plan-card__head">
+      <h2 class="ep-h2 ep-mt-0">Pro</h2>
+      <div class="ep-plan-card__price">
+        <span class="ep-plan-card__currency">R$</span>
+        <span class="ep-plan-card__amount" id="planAmount">49,90</span>
+        <span class="ep-plan-card__per">/mês</span>
+      </div>
+    </div>
+
+    <ul class="ep-plan-card__features">
+      <li>✓ Consultas ilimitadas com vídeo cifrado E2EE (LiveKit)</li>
+      <li>✓ Pacientes ilimitados com prontuário cifrado</li>
+      <li>✓ Anotações clínicas E2EE com chave-semente de recuperação</li>
+      <li>✓ Receita digital com assinatura ICP-Brasil + QR de verificação</li>
+      <li>✓ Agenda visual semanal</li>
+      <li>✓ Selo "Verificado pela equipe" após validação CRP/CRM</li>
+      <li>✓ Suporte por e-mail</li>
+    </ul>
+
+    <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16" id="subscribeBtn">
+      Assinar agora
+    </button>
+    <p class="ep-text-xs ep-text-muted ep-mt-12" style="text-align: center; margin-bottom: 0;">
+      Pagamento processado pelo Mercado Pago. Cobrança mensal recorrente.
+      Você pode cancelar a qualquer momento direto pelo painel.
+    </p>
+  </section>
+
+  <p class="ep-text-xs ep-text-muted ep-mt-24" style="text-align: center;">
+    Dúvidas sobre o plano? Escreva para
+    <a href="mailto:contato@preludiojogos.com">contato@preludiojogos.com</a>.
+  </p>
+
+</main>
+
+<script type="module">
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js";
+
+  const ctx = await requireTherapist({ requireDek: false });
+  const { idToken, therapist } = ctx;
+
+  document.getElementById("topUserName").textContent = therapist.displayName || "";
+
+  const planStatus       = document.getElementById("planStatus");
+  const planStatusIcon   = document.getElementById("planStatusIcon");
+  const planStatusTitle  = document.getElementById("planStatusTitle");
+  const planStatusSub    = document.getElementById("planStatusSub");
+  const subscribeBtn     = document.getElementById("subscribeBtn");
+
+  function fmtDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  }
+
+  // Renderiza status atual
+  const trialUntil = therapist.trialUntil?.toMillis
+    ? therapist.trialUntil.toMillis()
+    : Number(therapist.trialUntil) || null;
+  const plano = therapist.plano || "trial";
+
+  function showStatus(klass, iconSvg, title, sub) {
+    planStatus.style.display = "flex";
+    planStatus.className = "ep-status-card ep-mt-16 " + klass;
+    planStatusIcon.innerHTML = iconSvg;
+    planStatusTitle.textContent = title;
+    planStatusSub.textContent = sub;
+  }
+
+  if (plano === "pro") {
+    showStatus(
+      "ep-status-card--ok",
+      `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>`,
+      "Você está no plano Pro",
+      therapist.nextChargeAt
+        ? "Próxima cobrança em " + fmtDate(therapist.nextChargeAt)
+        : "Assinatura ativa."
+    );
+    subscribeBtn.textContent = "Cancelar assinatura";
+    subscribeBtn.classList.remove("ep-btn--primary");
+    subscribeBtn.classList.add("ep-btn--ghost");
+  } else if (plano === "trial") {
+    const daysLeft = trialUntil ? Math.max(0, Math.ceil((trialUntil - Date.now()) / 86_400_000)) : null;
+    showStatus(
+      "ep-status-card--pending",
+      `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`,
+      daysLeft != null && daysLeft > 0 ? `Você está em trial — ${daysLeft} ${daysLeft === 1 ? "dia restante" : "dias restantes"}` : "Trial gratuito",
+      trialUntil ? "Expira em " + fmtDate(trialUntil) : "—"
+    );
+  } else if (plano === "expired") {
+    showStatus(
+      "ep-status-card--err",
+      `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>`,
+      "Trial expirado",
+      "Assine para continuar usando todas as funcionalidades."
+    );
+  } else if (plano === "canceled") {
+    showStatus(
+      "ep-status-card--pending",
+      `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>`,
+      "Assinatura cancelada",
+      "Você ainda pode acessar até o fim do período pago. Reative quando quiser."
+    );
+    subscribeBtn.textContent = "Reativar assinatura";
+  }
+
+  // Aviso de retorno do MP
+  const params = new URLSearchParams(location.search);
+  if (params.get("mp_back") === "1") {
+    showStatus(
+      "ep-status-card--pending",
+      `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`,
+      "Processando autorização",
+      "O Mercado Pago está confirmando sua assinatura. Pode levar alguns minutos. Recarregue esta página em breve."
+    );
+  }
+
+  subscribeBtn.addEventListener("click", async () => {
+    if (plano === "pro") {
+      if (!confirm("Cancelar a assinatura? Você mantém acesso até o fim do período pago.")) return;
+      subscribeBtn.disabled = true;
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/plano/cancelar`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${idToken}` }
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+        alert("Assinatura cancelada.");
+        location.reload();
+      } catch (e) {
+        alert("Erro ao cancelar: " + e.message);
+        subscribeBtn.disabled = false;
+      }
+      return;
+    }
+
+    subscribeBtn.disabled = true;
+    subscribeBtn.textContent = "Redirecionando…";
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/plano/iniciar`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok || !data.initPoint) {
+        throw new Error(data?.error || ("HTTP_" + res.status));
+      }
+      // Redireciona pra MP — usuário autoriza, retorna pra back_url
+      window.location.href = data.initPoint;
+    } catch (e) {
+      alert("Não foi possível iniciar a assinatura: " + e.message);
+      subscribeBtn.disabled = false;
+      subscribeBtn.textContent = "Assinar agora";
+    }
+  });
+</script>
+
+</body>
+</html>
