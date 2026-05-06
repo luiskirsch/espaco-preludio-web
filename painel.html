@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-29">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-30">
 </head>
 <body>
 
@@ -256,6 +256,11 @@
         ${s.status !== "completed" ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="encerrar" data-id="${s.sessionId}">Encerrar</button>
         ` : ""}
+        ${s.status === "completed" ? `
+          <button class="ep-btn-icon" data-action="ocultar" data-id="${s.sessionId}" aria-label="Remover da lista" title="Remover da lista (mantém no prontuário)">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        ` : ""}
       </div>
     `;
     return div;
@@ -287,6 +292,21 @@
       } catch {
         btn.disabled = false;
         alert("Erro ao encerrar.");
+      }
+    } else if (action === "ocultar") {
+      if (!confirm("Remover esta consulta da lista? O registro permanece no prontuário do paciente — só some daqui.")) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/ocultar`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${idToken}` }
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
+        await loadSessions();
+      } catch (err) {
+        btn.disabled = false;
+        alert("Erro ao ocultar: " + (err?.message || "desconhecido"));
       }
     }
   });
