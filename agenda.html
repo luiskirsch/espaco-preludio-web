@@ -59,6 +59,7 @@
       <span class="ep-agenda-legend__item is-scheduled"><span class="ep-agenda-legend__dot"></span>Agendada</span>
       <span class="ep-agenda-legend__item is-progress"><span class="ep-agenda-legend__dot"></span>Em sessão</span>
       <span class="ep-agenda-legend__item is-done"><span class="ep-agenda-legend__dot"></span>Encerrada</span>
+      <span class="ep-agenda-legend__item is-canceled"><span class="ep-agenda-legend__dot"></span>Cancelada</span>
     </div>
   </div>
 
@@ -104,7 +105,28 @@
     <div class="ep-modal__actions">
       <button type="button" class="ep-btn ep-btn--ghost" id="popCloseBtn">Fechar</button>
       <a id="popOpenProntuario" href="#" class="ep-btn ep-btn--ghost ep-hide">Prontuário</a>
+      <button type="button" id="popCancelBtn" class="ep-btn ep-btn--ghost ep-hide" style="color: #b8453d;">Cancelar consulta</button>
       <a id="popEnter" href="#" class="ep-btn ep-btn--primary ep-hide">Entrar</a>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmação de cancelamento -->
+<div class="ep-modal" id="cancelModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 460px;">
+    <h3 class="ep-modal__title">Cancelar consulta</h3>
+    <p class="ep-modal__sub" id="cancelSub">—</p>
+    <div class="ep-field">
+      <label class="ep-label" for="cancelReason">Motivo (opcional)</label>
+      <textarea id="cancelReason" class="ep-textarea" rows="3" maxlength="500"
+        placeholder="Ex.: imprevisto pessoal, paciente solicitou remarcar…"></textarea>
+    </div>
+    <div class="ep-alert ep-alert--info ep-mt-12 ep-text-xs">
+      A consulta fica marcada como cancelada, mas o registro permanece no prontuário.
+    </div>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="cancelAbortBtn">Voltar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="cancelConfirmBtn" style="background: #b8453d;">Confirmar cancelamento</button>
     </div>
   </div>
 </div>
@@ -175,11 +197,13 @@
   function statusToClass(s) {
     if (s === "completed")   return "is-done";
     if (s === "in_progress") return "is-progress";
+    if (s === "canceled")    return "is-canceled";
     return "is-scheduled";
   }
   function statusLabel(s) {
     if (s === "completed")   return "Encerrada";
     if (s === "in_progress") return "Em sessão";
+    if (s === "canceled")    return "Cancelada";
     return "Agendada";
   }
   function pad2(n) { return String(n).padStart(2, "0"); }
@@ -322,7 +346,10 @@
   document.getElementById("popCloseBtn").addEventListener("click", () => popover.classList.remove("is-open"));
   popover.addEventListener("click", (e) => { if (e.target === popover) popover.classList.remove("is-open"); });
 
+  let popoverSession = null;
+
   function openSessionPopover(s) {
+    popoverSession = s;
     document.getElementById("popPatientName").textContent = s.patientName || "—";
     const sd = new Date(s.scheduledAt);
     document.getElementById("popDateTime").textContent =
@@ -332,24 +359,66 @@
     statusEl.className = "ep-status";
     if (s.status === "completed")   statusEl.classList.add("is-ok");
     if (s.status === "in_progress") statusEl.classList.add("is-ok");
+    if (s.status === "canceled")    statusEl.classList.add("is-err");
 
-    const opEnterBtn = document.getElementById("popEnter");
-    const opProntBtn = document.getElementById("popOpenProntuario");
-    if (s.status !== "completed") {
-      opEnterBtn.classList.remove("ep-hide");
-      opEnterBtn.href = `./consultorio.html?sessionId=${encodeURIComponent(s.sessionId)}`;
-    } else {
-      opEnterBtn.classList.add("ep-hide");
-    }
-    if (s.patientId) {
-      opProntBtn.classList.remove("ep-hide");
-      opProntBtn.href = `./prontuario.html?p=${encodeURIComponent(s.patientId)}`;
-    } else {
-      opProntBtn.classList.add("ep-hide");
-    }
+    const opEnterBtn  = document.getElementById("popEnter");
+    const opProntBtn  = document.getElementById("popOpenProntuario");
+    const opCancelBtn = document.getElementById("popCancelBtn");
+
+    const canEnter = s.status !== "completed" && s.status !== "canceled";
+    opEnterBtn.classList.toggle("ep-hide", !canEnter);
+    if (canEnter) opEnterBtn.href = `./consultorio.html?sessionId=${encodeURIComponent(s.sessionId)}`;
+
+    opProntBtn.classList.toggle("ep-hide", !s.patientId);
+    if (s.patientId) opProntBtn.href = `./prontuario.html?p=${encodeURIComponent(s.patientId)}`;
+
+    // Cancelar só faz sentido pra agendada/em sessão; encerrada e já-cancelada esconde.
+    const canCancel = s.status !== "completed" && s.status !== "canceled";
+    opCancelBtn.classList.toggle("ep-hide", !canCancel);
 
     popover.classList.add("is-open");
   }
+
+  // ─── Cancelamento de consulta ───────────────────────────────────────
+  const cancelModal      = document.getElementById("cancelModal");
+  const cancelReasonEl   = document.getElementById("cancelReason");
+  const cancelConfirmBtn = document.getElementById("cancelConfirmBtn");
+
+  document.getElementById("popCancelBtn").addEventListener("click", () => {
+    if (!popoverSession) return;
+    const sd = new Date(popoverSession.scheduledAt);
+    document.getElementById("cancelSub").textContent =
+      `${popoverSession.patientName || "—"} · ${sd.toLocaleString("pt-BR", { day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" })}`;
+    cancelReasonEl.value = "";
+    popover.classList.remove("is-open");
+    cancelModal.classList.add("is-open");
+  });
+  document.getElementById("cancelAbortBtn").addEventListener("click", () => cancelModal.classList.remove("is-open"));
+  cancelModal.addEventListener("click", (e) => { if (e.target === cancelModal) cancelModal.classList.remove("is-open"); });
+
+  cancelConfirmBtn.addEventListener("click", async () => {
+    if (!popoverSession) return;
+    const reason = cancelReasonEl.value.trim();
+    cancelConfirmBtn.disabled = true;
+    cancelConfirmBtn.textContent = "Cancelando…";
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(popoverSession.sessionId)}/cancelar`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ reason })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      cancelModal.classList.remove("is-open");
+      await loadSessions();
+    } catch (e) {
+      console.error("cancel_failed", e);
+      alert("Não foi possível cancelar: " + (e?.message || "erro desconhecido"));
+    } finally {
+      cancelConfirmBtn.disabled = false;
+      cancelConfirmBtn.textContent = "Confirmar cancelamento";
+    }
+  });
 
   // ─── Boot ───────────────────────────────────────────────────────────
   await loadSessions();
