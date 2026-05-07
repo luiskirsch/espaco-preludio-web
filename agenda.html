@@ -90,7 +90,7 @@
     <div class="ep-agenda-grid__day-col" data-day="6"></div>
   </div>
 
-  <p class="ep-text-xs ep-text-muted ep-mt-12" style="text-align: center;">
+  <p class="ep-text-xs ep-text-muted ep-mt-12 ep-text-center">
     Clique em um horário vago para criar consulta. Clique em uma sessão para abrir o prontuário.
   </p>
 
@@ -98,14 +98,17 @@
 
 <!-- Popover de sessão -->
 <div class="ep-modal" id="sessionPopover" role="dialog" aria-modal="true">
-  <div class="ep-modal__panel" style="max-width: 420px;">
+  <div class="ep-modal__panel ep-modal__panel--md">
     <h3 class="ep-modal__title" id="popPatientName">—</h3>
     <p class="ep-modal__sub" id="popDateTime">—</p>
     <div class="ep-status" id="popStatus">—</div>
+    <p class="ep-text-xs ep-text-muted ep-mt-12 ep-hide" id="popRecurrence"></p>
+    <div class="ep-recovery ep-pop-link-box ep-hide" id="popLinkBox"></div>
     <div class="ep-modal__actions">
       <button type="button" class="ep-btn ep-btn--ghost" id="popCloseBtn">Fechar</button>
       <a id="popOpenProntuario" href="#" class="ep-btn ep-btn--ghost ep-hide">Prontuário</a>
-      <button type="button" id="popCancelBtn" class="ep-btn ep-btn--ghost ep-hide" style="color: #b8453d;">Cancelar consulta</button>
+      <button type="button" id="popCopyLinkBtn" class="ep-btn ep-btn--ghost ep-hide">Copiar link</button>
+      <button type="button" id="popCancelBtn" class="ep-btn ep-btn--danger ep-hide">Cancelar</button>
       <a id="popEnter" href="#" class="ep-btn ep-btn--primary ep-hide">Entrar</a>
     </div>
   </div>
@@ -113,9 +116,20 @@
 
 <!-- Modal de confirmação de cancelamento -->
 <div class="ep-modal" id="cancelModal" role="dialog" aria-modal="true">
-  <div class="ep-modal__panel" style="max-width: 460px;">
+  <div class="ep-modal__panel ep-modal__panel--md">
     <h3 class="ep-modal__title">Cancelar consulta</h3>
     <p class="ep-modal__sub" id="cancelSub">—</p>
+    <div class="ep-field ep-hide" id="cancelScopeField">
+      <label class="ep-label">Aplicar a</label>
+      <label class="ep-radio">
+        <input type="radio" name="cancelScope" value="this" checked>
+        <span>Apenas esta consulta</span>
+      </label>
+      <label class="ep-radio">
+        <input type="radio" name="cancelScope" value="forward">
+        <span id="cancelScopeForwardLabel">Esta e as próximas da série</span>
+      </label>
+    </div>
     <div class="ep-field">
       <label class="ep-label" for="cancelReason">Motivo (opcional)</label>
       <textarea id="cancelReason" class="ep-textarea" rows="3" maxlength="500"
@@ -126,7 +140,7 @@
     </div>
     <div class="ep-modal__actions">
       <button type="button" class="ep-btn ep-btn--ghost" id="cancelAbortBtn">Voltar</button>
-      <button type="button" class="ep-btn ep-btn--primary" id="cancelConfirmBtn" style="background: #b8453d;">Confirmar cancelamento</button>
+      <button type="button" class="ep-btn ep-btn--danger-solid" id="cancelConfirmBtn">Confirmar cancelamento</button>
     </div>
   </div>
 </div>
@@ -348,6 +362,17 @@
 
   let popoverSession = null;
 
+  function countForwardSiblings(s) {
+    if (!s.recurrenceGroupId || !s.scheduledAt) return 0;
+    const baseAt = s.scheduledAt;
+    return allSessions.filter(x =>
+      x.recurrenceGroupId === s.recurrenceGroupId &&
+      x.status !== "completed" &&
+      x.status !== "canceled" &&
+      (x.scheduledAt || 0) >= baseAt
+    ).length;
+  }
+
   function openSessionPopover(s) {
     popoverSession = s;
     document.getElementById("popPatientName").textContent = s.patientName || "—";
@@ -361,9 +386,23 @@
     if (s.status === "in_progress") statusEl.classList.add("is-ok");
     if (s.status === "canceled")    statusEl.classList.add("is-err");
 
-    const opEnterBtn  = document.getElementById("popEnter");
-    const opProntBtn  = document.getElementById("popOpenProntuario");
-    const opCancelBtn = document.getElementById("popCancelBtn");
+    // Indicador de recorrência
+    const recEl = document.getElementById("popRecurrence");
+    if (s.recurrenceGroupId && typeof s.recurrenceIndex === "number" && s.recurrenceCount) {
+      recEl.textContent = `Consulta ${s.recurrenceIndex + 1} de ${s.recurrenceCount} de uma série semanal.`;
+      recEl.classList.remove("ep-hide");
+    } else {
+      recEl.classList.add("ep-hide");
+    }
+
+    const opEnterBtn   = document.getElementById("popEnter");
+    const opProntBtn   = document.getElementById("popOpenProntuario");
+    const opCancelBtn  = document.getElementById("popCancelBtn");
+    const opCopyBtn    = document.getElementById("popCopyLinkBtn");
+    const opLinkBox    = document.getElementById("popLinkBox");
+
+    opLinkBox.classList.add("ep-hide");
+    opLinkBox.textContent = "";
 
     const canEnter = s.status !== "completed" && s.status !== "canceled";
     opEnterBtn.classList.toggle("ep-hide", !canEnter);
@@ -372,12 +411,41 @@
     opProntBtn.classList.toggle("ep-hide", !s.patientId);
     if (s.patientId) opProntBtn.href = `./prontuario.html?p=${encodeURIComponent(s.patientId)}`;
 
-    // Cancelar só faz sentido pra agendada/em sessão; encerrada e já-cancelada esconde.
-    const canCancel = s.status !== "completed" && s.status !== "canceled";
-    opCancelBtn.classList.toggle("ep-hide", !canCancel);
+    opCopyBtn.classList.toggle("ep-hide", !canEnter);
+    opCancelBtn.classList.toggle("ep-hide", !canEnter);
 
     popover.classList.add("is-open");
   }
+
+  // ─── Copiar link (regenera joinToken) ────────────────────────────────
+  document.getElementById("popCopyLinkBtn").addEventListener("click", async () => {
+    if (!popoverSession) return;
+    const btn = document.getElementById("popCopyLinkBtn");
+    const box = document.getElementById("popLinkBox");
+    const orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Gerando…";
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(popoverSession.sessionId)}/regenerar-link`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok || !data.joinToken) throw new Error(data?.error || `HTTP ${res.status}`);
+      const link = `${location.origin}/entrar.html?t=${encodeURIComponent(data.joinToken)}`;
+      box.textContent = link;
+      box.classList.remove("ep-hide");
+      try { await navigator.clipboard.writeText(link); btn.textContent = "Copiado!"; }
+      catch { btn.textContent = "Link gerado"; }
+      setTimeout(() => { btn.textContent = orig; }, 1600);
+    } catch (e) {
+      console.error("regen_link_failed", e);
+      btn.textContent = "Erro";
+      setTimeout(() => { btn.textContent = orig; }, 1600);
+    } finally {
+      btn.disabled = false;
+    }
+  });
 
   // ─── Cancelamento de consulta ───────────────────────────────────────
   const cancelModal      = document.getElementById("cancelModal");
@@ -390,6 +458,21 @@
     document.getElementById("cancelSub").textContent =
       `${popoverSession.patientName || "—"} · ${sd.toLocaleString("pt-BR", { day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" })}`;
     cancelReasonEl.value = "";
+
+    // Mostra escopo de cancelamento se a sessão pertence a uma série com
+    // pelo menos uma ocorrência futura adicional ainda ativa.
+    const scopeField = document.getElementById("cancelScopeField");
+    const forward = countForwardSiblings(popoverSession);
+    if (forward > 1) {
+      document.getElementById("cancelScopeForwardLabel").textContent =
+        `Esta e as próximas ${forward - 1} da série`;
+      scopeField.classList.remove("ep-hide");
+      const thisRadio = scopeField.querySelector('input[value="this"]');
+      if (thisRadio) thisRadio.checked = true;
+    } else {
+      scopeField.classList.add("ep-hide");
+    }
+
     popover.classList.remove("is-open");
     cancelModal.classList.add("is-open");
   });
@@ -399,13 +482,15 @@
   cancelConfirmBtn.addEventListener("click", async () => {
     if (!popoverSession) return;
     const reason = cancelReasonEl.value.trim();
+    const scopeRadio = document.querySelector('input[name="cancelScope"]:checked');
+    const scope = scopeRadio?.value === "forward" ? "forward" : "this";
     cancelConfirmBtn.disabled = true;
     cancelConfirmBtn.textContent = "Cancelando…";
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(popoverSession.sessionId)}/cancelar`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ reason })
+        body: JSON.stringify({ reason, scope })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);

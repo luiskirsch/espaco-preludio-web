@@ -94,6 +94,18 @@
         <input id="scheduledAt" class="ep-input" type="datetime-local">
         <span class="ep-text-xs ep-text-muted">Use para agendar futura — você pode entrar antes.</span>
       </div>
+      <div class="ep-field">
+        <label class="ep-label" for="recurrenceWeeks">Repetir semanalmente</label>
+        <select id="recurrenceWeeks" class="ep-select">
+          <option value="1">Não repetir</option>
+          <option value="4">Por 4 semanas</option>
+          <option value="8">Por 8 semanas</option>
+          <option value="12">Por 12 semanas</option>
+          <option value="24">Por 24 semanas</option>
+          <option value="52">Por 52 semanas (1 ano)</option>
+        </select>
+        <span class="ep-text-xs ep-text-muted">Cria N consultas no mesmo horário, espaçadas 7 dias. Exige horário definido.</span>
+      </div>
       <div class="ep-status" id="newSessionStatus"></div>
     </form>
 
@@ -111,6 +123,7 @@
     <p class="ep-modal__sub">
       Envie este link diretamente ao paciente. Ele expira em 2 horas e só pode ser usado uma vez.
     </p>
+    <p class="ep-text-xs ep-text-muted ep-mt-0" id="linkSubtitle"></p>
 
     <div class="ep-recovery" id="linkValue" style="font-size: 12px; word-break: break-all;"></div>
 
@@ -472,9 +485,15 @@
       patientName = document.getElementById("patientName").value.trim();
     }
     const scheduledAtRaw = document.getElementById("scheduledAt").value;
+    const recurrenceWeeks = Number(document.getElementById("recurrenceWeeks").value || 1);
     const statusEl = document.getElementById("newSessionStatus");
     if (!patientName) {
       statusEl.textContent = "Selecione um paciente ou informe um nome.";
+      statusEl.className = "ep-status is-err";
+      return;
+    }
+    if (recurrenceWeeks > 1 && !scheduledAtRaw) {
+      statusEl.textContent = "Defina um horário para repetir semanalmente.";
       statusEl.className = "ep-status is-err";
       return;
     }
@@ -482,6 +501,12 @@
     statusEl.className = "ep-status";
 
     const scheduledAt = scheduledAtRaw ? new Date(scheduledAtRaw).getTime() : null;
+    const body = {
+      patientName,
+      patientId: patientId || undefined,
+      scheduledAt
+    };
+    if (recurrenceWeeks > 1) body.recurrence = { weekly: recurrenceWeeks };
 
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/criar`, {
@@ -490,11 +515,7 @@
           "Content-Type": "application/json",
           "Authorization": `Bearer ${idToken}`
         },
-        body: JSON.stringify({
-          patientName,
-          patientId: patientId || undefined,
-          scheduledAt
-        })
+        body: JSON.stringify(body)
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
@@ -506,6 +527,14 @@
 
       const link = buildPatientLink(data.session.joinToken);
       document.getElementById("linkValue").textContent = link;
+      // Indica série criada — link mostrado é da PRIMEIRA ocorrência. Demais
+      // têm joinToken on-demand (ver popover de cada uma na agenda).
+      const linkSubEl = document.getElementById("linkSubtitle");
+      if (linkSubEl) {
+        linkSubEl.textContent = data.recurrence
+          ? `Série de ${data.recurrence.count} consultas criada. Este é o link da 1ª — pegue os links das demais na agenda, no dia.`
+          : "";
+      }
       linkModal.classList.add("is-open");
 
       await loadSessions();
