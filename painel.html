@@ -90,6 +90,11 @@
         <input id="patientName" class="ep-input" type="text" maxlength="80" placeholder="Ex.: João S.">
       </div>
       <div class="ep-field">
+        <label class="ep-label" for="patientEmail">E-mail do paciente (opcional)</label>
+        <input id="patientEmail" class="ep-input" type="email" maxlength="120" placeholder="paciente@exemplo.com">
+        <span class="ep-text-xs ep-text-muted">Para enviar confirmação agora e lembrete 24h antes.</span>
+      </div>
+      <div class="ep-field">
         <label class="ep-label" for="scheduledAt">Horário (opcional)</label>
         <input id="scheduledAt" class="ep-input" type="datetime-local">
         <span class="ep-text-xs ep-text-muted">Use para agendar futura — você pode entrar antes.</span>
@@ -486,6 +491,7 @@
     }
     const scheduledAtRaw = document.getElementById("scheduledAt").value;
     const recurrenceWeeks = Number(document.getElementById("recurrenceWeeks").value || 1);
+    const patientEmailRaw = document.getElementById("patientEmail").value.trim().toLowerCase();
     const statusEl = document.getElementById("newSessionStatus");
     if (!patientName) {
       statusEl.textContent = "Selecione um paciente ou informe um nome.";
@@ -504,6 +510,7 @@
     const body = {
       patientName,
       patientId: patientId || undefined,
+      patientEmail: patientEmailRaw || undefined,
       scheduledAt
     };
     if (recurrenceWeeks > 1) body.recurrence = { weekly: recurrenceWeeks };
