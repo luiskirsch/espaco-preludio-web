@@ -811,7 +811,7 @@
       });
       const linkData = await linkRes.json().catch(() => ({}));
       if (linkRes.ok && linkData.ok && linkData.deliveryToken) {
-        verifyUrl = `${location.origin}/staging/therapy/receita-publica.html?t=${encodeURIComponent(linkData.deliveryToken)}`;
+        verifyUrl = `${location.origin}/receita-publica.html?t=${encodeURIComponent(linkData.deliveryToken)}`;
       } else {
         console.warn("preparar_link_failed", linkData);
       }
@@ -962,7 +962,7 @@
       Assinada
     `;
 
-    const url = `${location.origin}/staging/therapy/receita-publica.html?t=${encodeURIComponent(token)}`;
+    const url = `${location.origin}/receita-publica.html?t=${encodeURIComponent(token)}`;
     document.getElementById("deliveryLink").value = url;
     document.getElementById("deliveryExp").textContent = exp
       ? new Date(exp).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
