@@ -44,7 +44,10 @@
       <h1 class="ep-h1 ep-mt-12">Sua semana</h1>
       <p class="ep-text-muted ep-mt-0">Visualize, navegue e crie consultas direto no horário desejado.</p>
     </div>
-    <a href="./painel.html" class="ep-btn ep-btn--primary">+ Nova consulta</a>
+    <div class="ep-flex ep-flex--wrap ep-gap-8">
+      <button type="button" class="ep-btn ep-btn--ghost" id="openBlackoutBtn">Bloquear horário</button>
+      <a href="./painel.html" class="ep-btn ep-btn--primary">+ Nova consulta</a>
+    </div>
   </div>
 
   <!-- Navegação semanal + legenda -->
@@ -114,6 +117,31 @@
   </div>
 </div>
 
+<!-- Modal de criar bloqueio -->
+<div class="ep-modal" id="blackoutModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel ep-modal__panel--md">
+    <h3 class="ep-modal__title">Bloquear horário</h3>
+    <p class="ep-modal__sub">Marque um período em que você não estará disponível (férias, almoço fixo, licença).</p>
+    <div class="ep-field">
+      <label class="ep-label" for="blackoutFrom">Início</label>
+      <input id="blackoutFrom" class="ep-input" type="datetime-local">
+    </div>
+    <div class="ep-field">
+      <label class="ep-label" for="blackoutTo">Fim</label>
+      <input id="blackoutTo" class="ep-input" type="datetime-local">
+    </div>
+    <div class="ep-field">
+      <label class="ep-label" for="blackoutReason">Motivo (opcional)</label>
+      <input id="blackoutReason" class="ep-input" type="text" maxlength="200" placeholder="Ex.: férias, supervisão semanal…">
+    </div>
+    <div class="ep-status" id="blackoutStatus"></div>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="blackoutCancelBtn">Voltar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="blackoutSaveBtn">Bloquear</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal de confirmação de cancelamento -->
 <div class="ep-modal" id="cancelModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel ep-modal__panel--md">
@@ -172,7 +200,8 @@
 
   // ─── Estado ─────────────────────────────────────────────────────────
   let weekStart = getMondayOf(new Date()); // Date 00:00 da segunda da semana atual
-  let allSessions = []; // todas, do backend (limit 200)
+  let allSessions  = []; // todas, do backend (limit 200)
+  let allBlackouts = []; // bloqueios do terapeuta
 
   function getMondayOf(date) {
     const d = new Date(date);
@@ -225,25 +254,31 @@
     return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   }
 
-  // ─── Carregar sessões ────────────────────────────────────────────────
-  async function loadSessions() {
+  // ─── Carregar sessões + bloqueios ────────────────────────────────────
+  async function loadAgenda() {
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
-      allSessions = data.sessions || [];
+      const [sessRes, blkRes] = await Promise.all([
+        fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, { headers: { "Authorization": `Bearer ${idToken}` } }),
+        fetch(`${BACKEND_BASE_URL}/therapy/agenda/blackouts`, { headers: { "Authorization": `Bearer ${idToken}` } })
+      ]);
+      const sessData = await sessRes.json().catch(() => ({}));
+      const blkData  = await blkRes.json().catch(() => ({}));
+      if (!sessRes.ok || !sessData.ok) throw new Error(sessData?.error || "ERRO_SESSOES");
+      // Blackouts opcionais — se falhar, segue sem.
+      allSessions  = sessData.sessions || [];
+      allBlackouts = (blkRes.ok && blkData.ok && Array.isArray(blkData.blackouts)) ? blkData.blackouts : [];
       document.getElementById("loadingBanner").classList.add("ep-hide");
       document.getElementById("agendaGrid").classList.remove("ep-hide");
       renderWeek();
     } catch (e) {
-      console.error("load_sessions_error", e);
+      console.error("load_agenda_error", e);
       const banner = document.getElementById("loadingBanner");
       banner.textContent = "Erro ao carregar agenda: " + (e?.message || "desconhecido");
       banner.className = "ep-alert ep-alert--danger";
     }
   }
+  // alias mantido pra calls existentes (cancelamento, copiar link)
+  const loadSessions = loadAgenda;
 
   // ─── Renderização ───────────────────────────────────────────────────
   function buildHourLabels() {
@@ -299,8 +334,56 @@
       }
     });
 
-    // Sessões da semana
     const weekEnd = addDays(weekStart, 7);
+
+    // Bloqueios da semana — render PRIMEIRO (z-index menor que sessão).
+    // Um blackout que cruza vários dias é fatiado em segmentos por dia.
+    const weekStartMs = weekStart.getTime();
+    const weekEndMs   = weekEnd.getTime();
+    const blackoutsThisWeek = allBlackouts.filter(b => b.from < weekEndMs && b.to > weekStartMs);
+
+    for (const b of blackoutsThisWeek) {
+      const segStart = Math.max(b.from, weekStartMs);
+      const segEnd   = Math.min(b.to,   weekEndMs);
+      let cursor = segStart;
+      while (cursor < segEnd) {
+        const cursorDate = new Date(cursor);
+        cursorDate.setHours(0,0,0,0);
+        const nextDayMs = cursorDate.getTime() + 24*60*60*1000;
+        const sliceEnd  = Math.min(segEnd, nextDayMs);
+        const dayIdx    = dayIndexFromDate(new Date(cursor));
+        const col = document.querySelector(`.ep-agenda-grid__day-col[data-day="${dayIdx}"]`);
+        if (col) {
+          const startD = new Date(cursor);
+          const endD   = new Date(sliceEnd);
+          const topPx    = Math.max(0, ((startD.getHours() + startD.getMinutes()/60) - START_HOUR) * HOUR_PX);
+          const endHours = endD.getDate() !== startD.getDate() ? END_HOUR : (endD.getHours() + endD.getMinutes()/60);
+          const heightPx = Math.max(8, (endHours - Math.max(START_HOUR, startD.getHours() + startD.getMinutes()/60)) * HOUR_PX);
+          // Recorta blackouts inteiramente fora do range visível
+          if (topPx < (END_HOUR - START_HOUR) * HOUR_PX && heightPx > 0) {
+            const block = document.createElement("button");
+            block.type = "button";
+            block.className = "ep-agenda-blackout";
+            block.style.top = `${topPx}px`;
+            block.style.height = `${heightPx}px`;
+            block.title = b.reason ? `Bloqueado: ${b.reason}` : "Bloqueado";
+            block.dataset.blackoutId = b.blackoutId;
+            block.innerHTML = `
+              <div class="ep-agenda-blackout__label">Bloqueado</div>
+              ${b.reason ? `<div class="ep-agenda-blackout__reason">${escapeHtml(b.reason)}</div>` : ""}
+            `;
+            block.addEventListener("click", (e) => {
+              e.stopPropagation();
+              if (confirm("Remover este bloqueio?")) deleteBlackout(b.blackoutId);
+            });
+            col.appendChild(block);
+          }
+        }
+        cursor = sliceEnd;
+      }
+    }
+
+    // Sessões da semana
     const sessionsThisWeek = allSessions.filter(s => {
       if (!s.scheduledAt) return false;
       const sd = new Date(s.scheduledAt);
@@ -505,8 +588,83 @@
     }
   });
 
+  // ─── Bloqueios de horário (blackouts) ────────────────────────────────
+  const blackoutModal      = document.getElementById("blackoutModal");
+  const blackoutFromEl     = document.getElementById("blackoutFrom");
+  const blackoutToEl       = document.getElementById("blackoutTo");
+  const blackoutReasonEl   = document.getElementById("blackoutReason");
+  const blackoutStatusEl   = document.getElementById("blackoutStatus");
+  const blackoutSaveBtn    = document.getElementById("blackoutSaveBtn");
+
+  document.getElementById("openBlackoutBtn").addEventListener("click", () => {
+    // Pré-preenche com o agora arredondado pra próxima hora cheia.
+    const now = new Date();
+    now.setMinutes(0, 0, 0);
+    now.setHours(now.getHours() + 1);
+    const end = new Date(now.getTime() + 60 * 60 * 1000);
+    blackoutFromEl.value = toISOLocal(now);
+    blackoutToEl.value   = toISOLocal(end);
+    blackoutReasonEl.value = "";
+    blackoutStatusEl.textContent = "";
+    blackoutStatusEl.className = "ep-status";
+    blackoutModal.classList.add("is-open");
+  });
+  document.getElementById("blackoutCancelBtn").addEventListener("click", () => blackoutModal.classList.remove("is-open"));
+  blackoutModal.addEventListener("click", (e) => { if (e.target === blackoutModal) blackoutModal.classList.remove("is-open"); });
+
+  blackoutSaveBtn.addEventListener("click", async () => {
+    const fromRaw = blackoutFromEl.value;
+    const toRaw   = blackoutToEl.value;
+    if (!fromRaw || !toRaw) {
+      blackoutStatusEl.textContent = "Preencha início e fim.";
+      blackoutStatusEl.className = "ep-status is-err";
+      return;
+    }
+    const from = new Date(fromRaw).getTime();
+    const to   = new Date(toRaw).getTime();
+    if (to <= from) {
+      blackoutStatusEl.textContent = "Fim deve ser depois do início.";
+      blackoutStatusEl.className = "ep-status is-err";
+      return;
+    }
+    blackoutSaveBtn.disabled = true;
+    blackoutSaveBtn.textContent = "Salvando…";
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/agenda/blackout`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ from, to, reason: blackoutReasonEl.value.trim() || undefined })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      blackoutModal.classList.remove("is-open");
+      await loadAgenda();
+    } catch (e) {
+      blackoutStatusEl.textContent = "Erro: " + (e?.message || "desconhecido");
+      blackoutStatusEl.className = "ep-status is-err";
+    } finally {
+      blackoutSaveBtn.disabled = false;
+      blackoutSaveBtn.textContent = "Bloquear";
+    }
+  });
+
+  async function deleteBlackout(blackoutId) {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/agenda/blackout/${encodeURIComponent(blackoutId)}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      await loadAgenda();
+    } catch (e) {
+      console.error("delete_blackout_failed", e);
+      alert("Não foi possível remover: " + (e?.message || "desconhecido"));
+    }
+  }
+
   // ─── Boot ───────────────────────────────────────────────────────────
-  await loadSessions();
+  await loadAgenda();
 </script>
 
 </body>
