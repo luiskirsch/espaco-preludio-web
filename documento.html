@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documento médico · Espaço Prelúdio</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-30">
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html">Consultas</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./pacientes.html">Pacientes</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./documento.html?tipo=atestado" class="is-active">Documentos</a>
+      <a href="./perfil.html">Perfil</a>
+      <span id="topUserName" class="ep-text-sm ep-text-muted">&nbsp;</span>
+      <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16">
+    <div class="ep-flex ep-flex--end-wrap" style="justify-content: space-between; align-items: end; margin-bottom: 16px;">
+      <div>
+        <div class="ep-eyebrow" id="pageEyebrow">Documento médico</div>
+        <h1 class="ep-h1 ep-mt-12" id="pageTitle">Novo documento</h1>
+        <p class="ep-text-muted ep-mt-0" id="pageSub">Assinatura ICP-Brasil dentro da plataforma ou externa.</p>
+      </div>
+      <div class="ep-flex ep-gap-6">
+        <select id="tipoSwitcher" class="ep-select" aria-label="Tipo de documento">
+          <option value="atestado">Atestado médico</option>
+          <option value="exames">Solicitação de exames</option>
+          <option value="encaminhamento">Encaminhamento</option>
+          <option value="relatorio">Relatório médico</option>
+        </select>
+        <span id="statusBadge" class="ep-verif-pill is-pending ep-hide">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          Rascunho
+        </span>
+      </div>
+    </div>
+
+    <section class="ep-issuer-block" id="issuerBlock">
+      <div class="ep-issuer-block__logo" id="issuerLogo">
+        <span class="ep-issuer-block__logo-fallback" id="issuerLogoFallback">EP</span>
+      </div>
+      <div class="ep-issuer-block__main">
+        <div class="ep-eyebrow">Emitido por</div>
+        <div class="ep-issuer-block__name" id="issuerName">—</div>
+        <div class="ep-issuer-block__ids" id="issuerIds">—</div>
+        <div class="ep-issuer-block__addr" id="issuerAddr"></div>
+        <div class="ep-issuer-block__phone" id="issuerPhone"></div>
+      </div>
+      <div class="ep-issuer-block__actions">
+        <a href="./perfil.html" class="ep-btn ep-btn--ghost ep-btn--sm">Editar perfil</a>
+      </div>
+    </section>
+
+    <div class="ep-receita-grid ep-mt-16">
+      <section class="ep-receita-form">
+        <h2 class="ep-h3 ep-mt-0" id="formHeading">Dados do documento</h2>
+
+        <form id="docForm" class="ep-stack" novalidate>
+          <div class="ep-field">
+            <label class="ep-label" for="patientSelect">Paciente</label>
+            <select id="patientSelect" class="ep-select">
+              <option value="">— Selecione ou digite o nome —</option>
+            </select>
+          </div>
+          <div class="ep-field" id="freePatientField">
+            <label class="ep-label" for="patientName">Nome do paciente *</label>
+            <input id="patientName" class="ep-input" type="text" maxlength="120" required>
+          </div>
+          <div class="ep-row">
+            <div class="ep-field">
+              <label class="ep-label" for="patientCpf">CPF (opcional)</label>
+              <input id="patientCpf" class="ep-input" type="text" maxlength="14" placeholder="000.000.000-00">
+            </div>
+            <div class="ep-field">
+              <label class="ep-label" for="dataEmissao">Data de emissão</label>
+              <input id="dataEmissao" class="ep-input" type="date" required>
+            </div>
+          </div>
+
+          <!-- Campos específicos por tipo (renderizados via JS conforme `tipo`) -->
+          <div id="typeFields"></div>
+
+          <div class="ep-status" id="formStatus"></div>
+          <div class="ep-flex ep-gap-8">
+            <button type="button" class="ep-btn ep-btn--ghost" id="saveDraftBtn">Salvar rascunho</button>
+            <button type="button" class="ep-btn ep-btn--primary" id="previewBtn">Gerar PDF</button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="ep-receita-side">
+        <div id="previewBlock" class="ep-receita-preview">
+          <div class="ep-receita-preview__empty">Preencha e clique <strong>Gerar PDF</strong> para pré-visualizar.</div>
+        </div>
+
+        <div id="signBlock" class="ep-stack ep-mt-16 ep-hide" style="gap: 10px;">
+          <h3 class="ep-h3 ep-mt-0">Assinar o documento</h3>
+          <div class="ep-receita-sign-tabs">
+            <button type="button" class="ep-receita-sign-tab is-active" data-tab="a1">Certificado A1 (.pfx)</button>
+            <button type="button" class="ep-receita-sign-tab" data-tab="external">Assinar fora</button>
+          </div>
+          <div class="ep-receita-sign-pane is-active" data-pane="a1">
+            <p class="ep-text-sm ep-text-muted ep-mt-0">Sobe o seu <strong>.pfx</strong> e a senha. Assinatura no navegador — arquivo nunca sai do dispositivo.</p>
+            <div class="ep-field">
+              <label class="ep-label" for="pfxFile">Arquivo .pfx</label>
+              <input id="pfxFile" class="ep-input" type="file" accept=".pfx,.p12,application/x-pkcs12">
+            </div>
+            <div class="ep-field">
+              <label class="ep-label" for="pfxPass">Senha do certificado</label>
+              <input id="pfxPass" class="ep-input" type="password" autocomplete="off">
+            </div>
+            <div class="ep-status" id="signA1Status"></div>
+            <button type="button" class="ep-btn ep-btn--primary ep-btn--block" id="signA1Btn">Assinar com A1</button>
+          </div>
+          <div class="ep-receita-sign-pane" data-pane="external">
+            <p class="ep-text-sm ep-text-muted ep-mt-0">Baixe o PDF, assine externamente (gov.br, BirdID, Adobe + A1) e re-faça upload.</p>
+            <button type="button" class="ep-btn ep-btn--ghost ep-btn--block" id="downloadUnsignedBtn">Baixar PDF não-assinado</button>
+            <div class="ep-field ep-mt-12">
+              <label class="ep-label" for="signedFile">PDF assinado</label>
+              <input id="signedFile" class="ep-input" type="file" accept="application/pdf,.pdf">
+            </div>
+            <div class="ep-status" id="signExtStatus"></div>
+            <button type="button" class="ep-btn ep-btn--primary ep-btn--block" id="uploadSignedBtn">Anexar PDF assinado</button>
+          </div>
+        </div>
+
+        <div id="deliveryBlock" class="ep-stack ep-mt-16 ep-hide" style="gap: 10px;">
+          <div class="ep-alert ep-alert--ok">
+            <strong>Documento assinado.</strong>
+            <span id="signedSub">Compartilhe o link abaixo com o paciente.</span>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label">Link público</label>
+            <input id="deliveryLink" class="ep-input" type="text" readonly style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+          </div>
+          <p class="ep-text-xs ep-text-muted ep-mt-0">Validade do link: <span id="deliveryExp">—</span>.</p>
+          <div class="ep-flex ep-gap-8">
+            <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="copyLinkBtn">Copiar</button>
+            <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="downloadSignedBtn">Baixar PDF</button>
+          </div>
+          <div class="ep-receita-qr" id="qrCanvas"></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js";
+  import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
+
+  const ctx = await requireTherapist({ requireDek: true });
+  const { idToken, therapist, dek } = ctx;
+  document.getElementById("topUserName").textContent = therapist.displayName || "";
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    clearDek(); await signOut(auth); window.location.href = "./login.html";
+  });
+
+  // ─── Tipo: query param + switcher ────────────────────────────────────
+  const params = new URLSearchParams(location.search);
+  const editId = params.get("id");
+  const presetPatientId = params.get("patientId");
+  const presetSessionId = params.get("sessionId");
+  const VALID_TIPOS = ["atestado", "exames", "encaminhamento", "relatorio"];
+  let tipo = (params.get("tipo") || "atestado").toLowerCase();
+  if (!VALID_TIPOS.includes(tipo)) tipo = "atestado";
+
+  const TIPO_META = {
+    atestado:        { titulo: "Atestado médico",            cabecalho: "ATESTADO MÉDICO" },
+    exames:          { titulo: "Solicitação de exames",      cabecalho: "SOLICITAÇÃO DE EXAMES COMPLEMENTARES" },
+    encaminhamento:  { titulo: "Encaminhamento",             cabecalho: "ENCAMINHAMENTO" },
+    relatorio:       { titulo: "Relatório médico",           cabecalho: "RELATÓRIO MÉDICO" }
+  };
+
+  const tipoSwitcher = document.getElementById("tipoSwitcher");
+  tipoSwitcher.value = tipo;
+  tipoSwitcher.addEventListener("change", () => {
+    const novo = tipoSwitcher.value;
+    if (editId) {
+      if (!confirm("Trocar de tipo descarta este rascunho. Continuar?")) {
+        tipoSwitcher.value = tipo; return;
+      }
+    }
+    location.href = `./documento.html?tipo=${encodeURIComponent(novo)}`;
+  });
+
+  document.getElementById("pageTitle").textContent = `Novo ${TIPO_META[tipo].titulo.toLowerCase()}`;
+  document.getElementById("formHeading").textContent = `Dados — ${TIPO_META[tipo].titulo}`;
+
+  // ─── Issuer block ────────────────────────────────────────────────────
+  function renderIssuer() {
+    const t = therapist; const c = t.consultorio || {};
+    const initials = (t.displayName || "").split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0]).join("").toUpperCase() || "—";
+    const logoEl = document.getElementById("issuerLogo");
+    if (t.logoBase64 && t.logoMime) logoEl.innerHTML = `<img src="data:${t.logoMime};base64,${t.logoBase64}" alt="Logo">`;
+    else document.getElementById("issuerLogoFallback").textContent = initials;
+    document.getElementById("issuerName").textContent = t.displayName || "(sem nome)";
+    const idParts = [];
+    if (t.crm) idParts.push("CRM " + t.crm);
+    if (t.crp) idParts.push("CRP " + t.crp);
+    if (t.rqe) idParts.push("RQE " + String(t.rqe).replace(/^RQE\s*/i, ""));
+    if (t.especialidade) idParts.push(t.especialidade);
+    document.getElementById("issuerIds").textContent = idParts.join("  ·  ") || "(sem identificação)";
+    const addrParts = [];
+    if (c.endereco) {
+      let line = c.endereco;
+      if (c.numero) line += ", " + c.numero;
+      if (c.complemento) line += " — " + c.complemento;
+      addrParts.push(line);
+    }
+    const cityLine = [c.bairro, c.cidade, c.uf, c.cep].filter(Boolean).join(" · ");
+    if (cityLine) addrParts.push(cityLine);
+    document.getElementById("issuerAddr").textContent = addrParts.join(" / ");
+    document.getElementById("issuerPhone").textContent = c.telefone || "";
+  }
+  renderIssuer();
+
+  // ─── Form dinâmico por tipo ──────────────────────────────────────────
+  const typeFieldsEl = document.getElementById("typeFields");
+
+  const FORM_TEMPLATES = {
+    atestado: () => `
+      <div class="ep-row">
+        <div class="ep-field">
+          <label class="ep-label" for="dias">Dias de afastamento</label>
+          <input id="dias" class="ep-input" type="number" min="0" max="365" step="1" value="1">
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="cid10">CID-10 (opcional)</label>
+          <input id="cid10" class="ep-input" type="text" maxlength="20" placeholder="Ex.: F32.1">
+        </div>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="periodo">Período (texto livre, opcional)</label>
+        <input id="periodo" class="ep-input" type="text" maxlength="120" placeholder="Ex.: de 07/05/2026 a 14/05/2026">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="justificativa">Justificativa clínica</label>
+        <textarea id="justificativa" class="ep-input" rows="4" maxlength="800" placeholder="Atesto que o paciente esteve sob meu cuidado profissional e necessita afastamento por motivo de saúde."></textarea>
+      </div>`,
+    exames: () => `
+      <div class="ep-field">
+        <label class="ep-label" for="indicacao">Indicação clínica</label>
+        <textarea id="indicacao" class="ep-input" rows="3" maxlength="500" placeholder="Hipótese diagnóstica ou contexto clínico que justifica a solicitação."></textarea>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="exames">Exames solicitados (um por linha)</label>
+        <textarea id="exames" class="ep-input" rows="6" maxlength="1500" placeholder="Hemograma completo&#10;TSH e T4 livre&#10;Glicemia de jejum"></textarea>
+      </div>
+      <label class="ep-radio">
+        <input id="urgente" type="checkbox">
+        <span>Solicitação urgente</span>
+      </label>`,
+    encaminhamento: () => `
+      <div class="ep-row">
+        <div class="ep-field">
+          <label class="ep-label" for="especialidade">Especialidade destino</label>
+          <input id="especialidade" class="ep-input" type="text" maxlength="80" placeholder="Ex.: neurologista, psiquiatra, endocrinologista">
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="profissionalDestino">Profissional (opcional)</label>
+          <input id="profissionalDestino" class="ep-input" type="text" maxlength="120" placeholder="Dr(a). Nome">
+        </div>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="motivo">Motivo do encaminhamento</label>
+        <textarea id="motivo" class="ep-input" rows="3" maxlength="500" placeholder="O paciente necessita de avaliação especializada por..."></textarea>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="resumoClinico">Resumo clínico relevante</label>
+        <textarea id="resumoClinico" class="ep-input" rows="5" maxlength="1500" placeholder="História, conduta atual, exames já realizados, medicação em uso."></textarea>
+      </div>`,
+    relatorio: () => `
+      <div class="ep-field">
+        <label class="ep-label" for="finalidade">Finalidade</label>
+        <select id="finalidade" class="ep-select">
+          <option value="perícia">Perícia (INSS, judicial, etc.)</option>
+          <option value="escola">Escola / instituição de ensino</option>
+          <option value="plano">Plano de saúde / autorização</option>
+          <option value="trabalho">Empregador / RH</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="diagnostico">Diagnóstico (CID-10 + descrição)</label>
+        <input id="diagnostico" class="ep-input" type="text" maxlength="200" placeholder="Ex.: F32.1 — Episódio depressivo moderado">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="resumoCaso">Resumo do caso</label>
+        <textarea id="resumoCaso" class="ep-input" rows="6" maxlength="2000" placeholder="História da doença atual, evolução, queixas principais."></textarea>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="conduta">Conduta atual</label>
+        <textarea id="conduta" class="ep-input" rows="4" maxlength="1000" placeholder="Medicação prescrita, periodicidade da terapia, exames de seguimento."></textarea>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="consideracoes">Considerações finais</label>
+        <textarea id="consideracoes" class="ep-input" rows="3" maxlength="800" placeholder="Avaliação geral, prognóstico, recomendações."></textarea>
+      </div>`
+  };
+
+  typeFieldsEl.innerHTML = FORM_TEMPLATES[tipo]();
+
+  // ─── collectForm/applyForm específicos por tipo ──────────────────────
+  function val(id) { return document.getElementById(id)?.value?.trim() || ""; }
+  function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v ?? ""; }
+
+  function collectForm() {
+    const base = {
+      tipo,
+      patientId:  document.getElementById("patientSelect").value || null,
+      patientName: val("patientName"),
+      patientCpf:  val("patientCpf"),
+      dataEmissao: val("dataEmissao")
+    };
+    if (tipo === "atestado") {
+      return { ...base,
+        dias: Number(val("dias") || 0),
+        cid10: val("cid10"),
+        periodo: val("periodo"),
+        justificativa: val("justificativa")
+      };
+    }
+    if (tipo === "exames") {
+      return { ...base,
+        indicacao: val("indicacao"),
+        exames: val("exames"),
+        urgente: !!document.getElementById("urgente")?.checked
+      };
+    }
+    if (tipo === "encaminhamento") {
+      return { ...base,
+        especialidade: val("especialidade"),
+        profissionalDestino: val("profissionalDestino"),
+        motivo: val("motivo"),
+        resumoClinico: val("resumoClinico")
+      };
+    }
+    return { ...base,
+      finalidade: val("finalidade"),
+      diagnostico: val("diagnostico"),
+      resumoCaso: val("resumoCaso"),
+      conduta: val("conduta"),
+      consideracoes: val("consideracoes")
+    };
+  }
+  function applyForm(f) {
+    setVal("patientName", f.patientName);
+    setVal("patientCpf",  f.patientCpf);
+    setVal("dataEmissao", f.dataEmissao || todayISO());
+    if (f.patientId) document.getElementById("patientSelect").value = f.patientId;
+    if (tipo === "atestado") {
+      setVal("dias", String(f.dias || 1));
+      setVal("cid10", f.cid10);
+      setVal("periodo", f.periodo);
+      setVal("justificativa", f.justificativa);
+    } else if (tipo === "exames") {
+      setVal("indicacao", f.indicacao);
+      setVal("exames", f.exames);
+      const u = document.getElementById("urgente"); if (u) u.checked = !!f.urgente;
+    } else if (tipo === "encaminhamento") {
+      setVal("especialidade", f.especialidade);
+      setVal("profissionalDestino", f.profissionalDestino);
+      setVal("motivo", f.motivo);
+      setVal("resumoClinico", f.resumoClinico);
+    } else {
+      setVal("finalidade", f.finalidade || "perícia");
+      setVal("diagnostico", f.diagnostico);
+      setVal("resumoCaso", f.resumoCaso);
+      setVal("conduta", f.conduta);
+      setVal("consideracoes", f.consideracoes);
+    }
+  }
+  function todayISO() { return new Date().toISOString().slice(0, 10); }
+  setVal("dataEmissao", todayISO());
+
+  // ─── Pacientes (select) ──────────────────────────────────────────────
+  const patientSelect = document.getElementById("patientSelect");
+  const patientNameEl = document.getElementById("patientName");
+  const freePatientField = document.getElementById("freePatientField");
+  async function loadPatientsIntoSelect() {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) return;
+      for (const p of (j.patients || [])) {
+        try {
+          const json = await decryptNote({ ciphertext: p.ciphertext, iv: p.iv }, dek);
+          const data = JSON.parse(json);
+          const opt = document.createElement("option");
+          opt.value = p.patientId;
+          opt.textContent = data.name || "(sem nome)";
+          opt.dataset.name = data.name || "";
+          patientSelect.appendChild(opt);
+        } catch {}
+      }
+      if (presetPatientId) patientSelect.value = presetPatientId;
+    } catch {}
+    patientSelect.addEventListener("change", () => {
+      const opt = patientSelect.selectedOptions[0];
+      if (opt && opt.dataset.name) {
+        patientNameEl.value = opt.dataset.name;
+        freePatientField.classList.add("ep-hide");
+      } else freePatientField.classList.remove("ep-hide");
+    });
+    patientSelect.dispatchEvent(new Event("change"));
+  }
+  await loadPatientsIntoSelect();
+
+  // ─── Carrega rascunho existente ──────────────────────────────────────
+  let documentoId = editId || null;
+  let receitaState = "draft"; // mesmo nome usado em receita.html pra reusar componentes
+  const pageTitle = document.getElementById("pageTitle");
+  const statusBadge = document.getElementById("statusBadge");
+  const previewBtn = document.getElementById("previewBtn");
+  const saveDraftBtn = document.getElementById("saveDraftBtn");
+  const formStatus = document.getElementById("formStatus");
+  const previewBlock = document.getElementById("previewBlock");
+  const signBlock = document.getElementById("signBlock");
+  const deliveryBlock = document.getElementById("deliveryBlock");
+  const signA1Btn = document.getElementById("signA1Btn");
+  const signA1Status = document.getElementById("signA1Status");
+  const signExtStatus = document.getElementById("signExtStatus");
+  const downloadUnsignedBtn = document.getElementById("downloadUnsignedBtn");
+  const uploadSignedBtn = document.getElementById("uploadSignedBtn");
+
+  function setStatus(el, msg, kind = "") {
+    el.textContent = msg || "";
+    el.className = "ep-status" + (kind ? " is-" + kind : "");
+  }
+
+  if (editId) {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/documentos/${editId}`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok && j.ok) {
+        const d = j.documento;
+        if (d.tipo !== tipo) {
+          // redireciona pra mantê-los alinhados
+          location.href = `./documento.html?tipo=${encodeURIComponent(d.tipo)}&id=${encodeURIComponent(editId)}`;
+          throw new Error("redirected");
+        }
+        receitaState = d.status;
+        if (d.formCiphertext) {
+          const txt = await decryptNote({ ciphertext: d.formCiphertext, iv: d.formIv }, dek);
+          applyForm(JSON.parse(txt));
+        }
+        if (d.status === "signed") {
+          pageTitle.textContent = `${TIPO_META[tipo].titulo} assinado`;
+          statusBadge.classList.remove("ep-hide", "is-pending");
+          statusBadge.classList.add("is-verified");
+          statusBadge.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg> Assinado`;
+          showDelivery(d.deliveryToken, d.deliveryTokenExp);
+          previewBtn.disabled = saveDraftBtn.disabled = true;
+        }
+      }
+    } catch (e) { if (e.message !== "redirected") console.warn("load_documento_failed", e); }
+  }
+
+  // ─── Salvar rascunho ─────────────────────────────────────────────────
+  async function persistDraft() {
+    const form = collectForm();
+    if (!form.patientName) { setStatus(formStatus, "Informe o paciente.", "err"); return null; }
+    setStatus(formStatus, "Salvando…");
+    const { ciphertext, iv } = await encryptNote(JSON.stringify(form), dek);
+    try {
+      let res;
+      if (documentoId) {
+        res = await fetch(`${BACKEND_BASE_URL}/therapy/documentos/${documentoId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+          body: JSON.stringify({ formCiphertext: ciphertext, formIv: iv })
+        });
+      } else {
+        res = await fetch(`${BACKEND_BASE_URL}/therapy/documentos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+          body: JSON.stringify({
+            tipo,
+            formCiphertext: ciphertext, formIv: iv,
+            patientId: form.patientId,
+            patientNameSnapshot: form.patientName,
+            sessionId: presetSessionId || null
+          })
+        });
+      }
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) { setStatus(formStatus, "Erro: " + (j?.error || res.status), "err"); return null; }
+      if (j.documentoId) documentoId = j.documentoId;
+      setStatus(formStatus, "Rascunho salvo.", "ok");
+      setTimeout(() => setStatus(formStatus, ""), 2000);
+      return form;
+    } catch { setStatus(formStatus, "Erro de rede.", "err"); return null; }
+  }
+  saveDraftBtn.addEventListener("click", persistDraft);
+
+  // ─── PDF generation ───────────────────────────────────────────────────
+  async function buildPdf(form, verifyUrl = null) {
+    const { PDFDocument, StandardFonts, rgb } = await import("https://esm.sh/pdf-lib@1.17.1");
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([595, 842]);
+    const fontReg  = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const left = 50, right = 545;
+    let y = 800;
+
+    function drawText(text, opts = {}) {
+      const { x = left, font = fontReg, size = 11, color = rgb(0.1,0.1,0.1), maxWidth = right - left } = opts;
+      const lines = wrapText(String(text || ""), font, size, maxWidth);
+      for (const line of lines) { page.drawText(line, { x, y, font, size, color }); y -= size * 1.35; }
+    }
+    function wrapText(text, font, size, maxWidth) {
+      const words = text.split(/\s+/);
+      const lines = []; let line = "";
+      for (const w of words) {
+        const next = line ? line + " " + w : w;
+        if (font.widthOfTextAtSize(next, size) > maxWidth) {
+          if (line) lines.push(line);
+          line = w;
+        } else line = next;
+      }
+      if (line) lines.push(line);
+      return lines;
+    }
+    function hr() {
+      page.drawLine({ start: { x: left, y: y - 3 }, end: { x: right, y: y - 3 }, color: rgb(0.85,0.85,0.85), thickness: 0.5 });
+      y -= 14;
+    }
+
+    // Cabeçalho do issuer
+    const t = therapist; const c = t.consultorio || {};
+    drawText(t.displayName || "(sem nome)", { font: fontBold, size: 14 });
+    const idParts = [];
+    if (t.crm) idParts.push("CRM " + t.crm);
+    if (t.crp) idParts.push("CRP " + t.crp);
+    if (t.rqe) idParts.push("RQE " + String(t.rqe).replace(/^RQE\s*/i, ""));
+    if (t.especialidade) idParts.push(t.especialidade);
+    drawText(idParts.join("  ·  "), { size: 10, color: rgb(0.4,0.4,0.4) });
+    if (c.endereco) {
+      let line = c.endereco;
+      if (c.numero) line += ", " + c.numero;
+      drawText(line, { size: 9, color: rgb(0.4,0.4,0.4) });
+    }
+    const cityLine = [c.bairro, c.cidade, c.uf, c.cep].filter(Boolean).join(" · ");
+    if (cityLine) drawText(cityLine, { size: 9, color: rgb(0.4,0.4,0.4) });
+    if (c.telefone) drawText("Tel.: " + c.telefone, { size: 9, color: rgb(0.4,0.4,0.4) });
+
+    y -= 12; hr();
+
+    // Título do tipo
+    drawText(TIPO_META[tipo].cabecalho, { font: fontBold, size: 16 });
+    y -= 6;
+
+    // Paciente
+    drawText("Paciente: " + (form.patientName || "—"), { font: fontBold, size: 12 });
+    if (form.patientCpf) drawText("CPF: " + form.patientCpf, { size: 10, color: rgb(0.4,0.4,0.4) });
+    if (form.dataEmissao) drawText("Data de emissão: " + new Date(form.dataEmissao).toLocaleDateString("pt-BR"), { size: 10, color: rgb(0.4,0.4,0.4) });
+
+    y -= 10; hr();
+
+    // Corpo por tipo
+    if (tipo === "atestado") {
+      drawText("ATESTO, para os devidos fins, que o(a) paciente acima esteve sob meus cuidados profissionais e necessita de afastamento de suas atividades por motivo de saúde.", { size: 11 });
+      y -= 6;
+      const dias = Number(form.dias || 0);
+      if (dias > 0) drawText(`Período de afastamento: ${dias} ${dias === 1 ? "dia" : "dias"}.`, { font: fontBold });
+      if (form.periodo) drawText("Período: " + form.periodo, {});
+      if (form.cid10) drawText("CID-10: " + form.cid10, { size: 10, color: rgb(0.4,0.4,0.4) });
+      if (form.justificativa) { y -= 6; drawText(form.justificativa, {}); }
+    } else if (tipo === "exames") {
+      if (form.urgente) drawText("⚠ URGENTE", { font: fontBold, color: rgb(0.6,0.1,0.1) });
+      if (form.indicacao) { drawText("Indicação clínica:", { font: fontBold }); drawText(form.indicacao); y -= 4; }
+      drawText("Exames solicitados:", { font: fontBold });
+      const exames = (form.exames || "").split(/\r?\n/).filter(Boolean);
+      for (const e of exames) drawText("• " + e, {});
+    } else if (tipo === "encaminhamento") {
+      if (form.especialidade) drawText("Especialidade destino: " + form.especialidade, { font: fontBold });
+      if (form.profissionalDestino) drawText("Profissional: " + form.profissionalDestino, {});
+      if (form.motivo) { y -= 4; drawText("Motivo:", { font: fontBold }); drawText(form.motivo, {}); }
+      if (form.resumoClinico) { y -= 4; drawText("Resumo clínico:", { font: fontBold }); drawText(form.resumoClinico, {}); }
+    } else { // relatorio
+      if (form.finalidade) drawText("Finalidade: " + form.finalidade, { font: fontBold });
+      if (form.diagnostico) drawText("Diagnóstico: " + form.diagnostico, {});
+      if (form.resumoCaso) { y -= 4; drawText("Resumo do caso:", { font: fontBold }); drawText(form.resumoCaso, {}); }
+      if (form.conduta) { y -= 4; drawText("Conduta atual:", { font: fontBold }); drawText(form.conduta, {}); }
+      if (form.consideracoes) { y -= 4; drawText("Considerações:", { font: fontBold }); drawText(form.consideracoes, {}); }
+    }
+
+    // Assinatura + QR
+    y = Math.max(y, 160);
+    hr();
+    drawText("Assinado digitalmente por " + (t.displayName || ""), { size: 10, color: rgb(0.4,0.4,0.4) });
+    drawText(idParts.join("  ·  "), { size: 9, color: rgb(0.4,0.4,0.4) });
+
+    if (verifyUrl) {
+      try {
+        const QRLib = await import("https://esm.sh/qrcode@1.5.3");
+        const qrDataUrl = await QRLib.toDataURL(verifyUrl, { width: 200, margin: 0, errorCorrectionLevel: "M" });
+        const pngBytes = await (await fetch(qrDataUrl)).arrayBuffer();
+        const qrImg = await pdfDoc.embedPng(pngBytes);
+        page.drawImage(qrImg, { x: right - 80, y: 50, width: 78, height: 78 });
+        page.drawText("Verifique a autenticidade", { x: right - 200, y: 100, font: fontReg, size: 8, color: rgb(0.4,0.4,0.4) });
+        page.drawText("escaneando o QR ao lado.", { x: right - 200, y: 88, font: fontReg, size: 8, color: rgb(0.4,0.4,0.4) });
+      } catch (e) { console.warn("qr_embed_failed", e); }
+    }
+
+    page.drawText("Gerado por Espaço Prelúdio · espacopreludio.com.br", { x: left, y: 32, font: fontReg, size: 7.5, color: rgb(0.6,0.6,0.6) });
+
+    return await pdfDoc.save();
+  }
+
+  // ─── Preview ─────────────────────────────────────────────────────────
+  let pendingPdfBytes = null;
+  previewBtn.addEventListener("click", async () => {
+    const form = await persistDraft();
+    if (!form) return;
+    setStatus(formStatus, "Gerando PDF…");
+    let verifyUrl = null;
+    try {
+      const linkRes = await fetch(`${BACKEND_BASE_URL}/therapy/documentos/${documentoId}/preparar-link`, {
+        method: "POST", headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const linkData = await linkRes.json().catch(() => ({}));
+      if (linkRes.ok && linkData.ok && linkData.deliveryToken) {
+        verifyUrl = `${location.origin}/documento-publico.html?t=${encodeURIComponent(linkData.deliveryToken)}`;
+      }
+    } catch {}
+    try {
+      const bytes = await buildPdf(form, verifyUrl);
+      pendingPdfBytes = bytes;
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      previewBlock.innerHTML = `<iframe class="ep-receita-preview__frame" src="${url}#zoom=80"></iframe>`;
+      signBlock.classList.remove("ep-hide");
+      setStatus(formStatus, "PDF gerado. Reveja antes de assinar.", "ok");
+    } catch (e) { setStatus(formStatus, "Erro: " + e.message, "err"); }
+  });
+
+  // ─── Tabs assinatura ─────────────────────────────────────────────────
+  document.querySelectorAll(".ep-receita-sign-tab").forEach(t => t.addEventListener("click", () => {
+    document.querySelectorAll(".ep-receita-sign-tab").forEach(x => x.classList.remove("is-active"));
+    document.querySelectorAll(".ep-receita-sign-pane").forEach(x => x.classList.remove("is-active"));
+    t.classList.add("is-active");
+    document.querySelector(`.ep-receita-sign-pane[data-pane="${t.dataset.tab}"]`).classList.add("is-active");
+  }));
+
+  // ─── A1 inline ───────────────────────────────────────────────────────
+  function bytesToBase64(bytes) {
+    let bin = ""; for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  signA1Btn.addEventListener("click", async () => {
+    if (!pendingPdfBytes || !documentoId) { setStatus(signA1Status, "Gere o PDF primeiro.", "err"); return; }
+    const file = document.getElementById("pfxFile").files?.[0];
+    const pass = document.getElementById("pfxPass").value;
+    if (!file) { setStatus(signA1Status, "Selecione o .pfx.", "err"); return; }
+    if (!pass) { setStatus(signA1Status, "Informe a senha.", "err"); return; }
+    signA1Btn.disabled = true;
+    setStatus(signA1Status, "Carregando bibliotecas…");
+    try {
+      const [{ default: signpdfLib }, { P12Signer }, placeholderMod, pdfLib] = await Promise.all([
+        import("https://esm.sh/@signpdf/signpdf@3.2.4?bundle"),
+        import("https://esm.sh/@signpdf/signer-p12@3.2.4?bundle"),
+        import("https://esm.sh/@signpdf/placeholder-pdf-lib@3.2.4?bundle"),
+        import("https://esm.sh/pdf-lib@1.17.1")
+      ]);
+      const SignPdf = signpdfLib?.SignPdf || signpdfLib?.default || signpdfLib;
+      const pdflibAddPlaceholder = placeholderMod?.pdflibAddPlaceholder || placeholderMod?.default;
+      setStatus(signA1Status, "Adicionando placeholder…");
+      const pdfDoc = await pdfLib.PDFDocument.load(pendingPdfBytes);
+      pdflibAddPlaceholder({ pdfDoc, reason: TIPO_META[tipo].titulo, contactInfo: "espaco.preludio@preludiojogos.com", name: therapist.displayName || "Profissional", location: "Brasil", signatureLength: 16384 });
+      const placeholderBytes = await pdfDoc.save({ useObjectStreams: false });
+      setStatus(signA1Status, "Assinando…");
+      const pfxBytes = new Uint8Array(await file.arrayBuffer());
+      const signer = new P12Signer(pfxBytes, { passphrase: pass });
+      const signer_instance = (typeof SignPdf === "function") ? new SignPdf() : SignPdf;
+      const signedBytes = await signer_instance.sign(placeholderBytes, signer);
+      const signedB64 = bytesToBase64(new Uint8Array(signedBytes));
+      await uploadSigned(signedB64, "a1_inline");
+    } catch (e) {
+      const msg = (e?.message || "").includes("password") || (e?.message || "").includes("MAC")
+        ? "Senha incorreta ou .pfx inválido."
+        : "Erro: " + (e?.message || "desconhecido");
+      setStatus(signA1Status, msg, "err");
+      signA1Btn.disabled = false;
+    }
+  });
+
+  downloadUnsignedBtn.addEventListener("click", () => {
+    if (!pendingPdfBytes) { setStatus(signExtStatus, "Gere o PDF primeiro.", "err"); return; }
+    const blob = new Blob([pendingPdfBytes], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${tipo}-${documentoId || Date.now()}-nao-assinado.pdf`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  });
+  uploadSignedBtn.addEventListener("click", async () => {
+    if (!documentoId) { setStatus(signExtStatus, "Salve o rascunho antes.", "err"); return; }
+    const file = document.getElementById("signedFile").files?.[0];
+    if (!file) { setStatus(signExtStatus, "Selecione o PDF.", "err"); return; }
+    if (file.size > 1024 * 1024) { setStatus(signExtStatus, "PDF > 1MB.", "err"); return; }
+    uploadSignedBtn.disabled = true;
+    setStatus(signExtStatus, "Anexando…");
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const b64 = bytesToBase64(bytes);
+      await uploadSigned(b64, "external_upload");
+    } catch (e) { setStatus(signExtStatus, "Erro: " + e.message, "err"); uploadSignedBtn.disabled = false; }
+  });
+
+  async function uploadSigned(pdfBase64, signatureMethod) {
+    const res = await fetch(`${BACKEND_BASE_URL}/therapy/documentos/${documentoId}/assinar`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+      body: JSON.stringify({ pdfBase64, pdfMime: "application/pdf", signatureMethod })
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) throw new Error(j?.error || ("HTTP_" + res.status));
+    receitaState = "signed";
+    showDelivery(j.deliveryToken, j.deliveryTokenExp);
+  }
+
+  // ─── Delivery ────────────────────────────────────────────────────────
+  function showDelivery(token, exp) {
+    signBlock.classList.add("ep-hide");
+    deliveryBlock.classList.remove("ep-hide");
+    statusBadge.classList.remove("ep-hide", "is-pending");
+    statusBadge.classList.add("is-verified");
+    statusBadge.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg> Assinado`;
+    const url = `${location.origin}/documento-publico.html?t=${encodeURIComponent(token)}`;
+    document.getElementById("deliveryLink").value = url;
+    document.getElementById("deliveryExp").textContent = exp ? new Date(exp).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }) : "—";
+    import("https://esm.sh/qrcode@1.5.3").then(QR => {
+      QR.toCanvas(url, { width: 180, margin: 1 }).then(canvas => {
+        const wrap = document.getElementById("qrCanvas");
+        wrap.innerHTML = ""; wrap.appendChild(canvas);
+      }).catch(() => {});
+    });
+    document.getElementById("copyLinkBtn").addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(url); } catch {}
+    });
+  }
+</script>
+
+</body>
+</html>
