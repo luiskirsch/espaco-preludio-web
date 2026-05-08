@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recuperar acesso · Espaço Prelúdio</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-30">
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<main class="ep-auth">
+  <div class="ep-auth__panel" style="max-width: 560px;">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+
+    <h2 class="ep-auth__title ep-mt-32">Recuperar acesso</h2>
+    <p class="ep-auth__sub">
+      Esta tela serve quando você esqueceu a senha. Tem dois passos: primeiro
+      redefinir a senha pelo e-mail, depois reconectar suas anotações com a
+      <strong>chave-semente</strong> que você guardou no cadastro.
+    </p>
+
+    <div class="ep-alert ep-alert--info ep-mt-12">
+      <strong>Sem a chave-semente, não dá para recuperar as notas.</strong>
+      Por desenho criptográfico, ninguém — nem nós, nem o Google — consegue
+      decifrar o que você escreveu sem ela. Se você não tiver a chave, ainda
+      pode redefinir a senha e voltar a usar a conta, mas o histórico clínico
+      anterior ficará inacessível.
+    </div>
+
+    <!-- ─── Passo 1: enviar e-mail de redefinição ─────────────────────── -->
+    <section class="ep-recover-step ep-mt-24">
+      <h3 class="ep-h3 ep-mt-0">Passo 1 — Redefinir sua senha</h3>
+      <p class="ep-text-sm ep-text-muted">
+        Vamos enviar um link no seu e-mail para você cadastrar uma nova senha.
+        Volte aqui depois de cadastrá-la.
+      </p>
+      <form id="formReset" class="ep-stack ep-mt-12" novalidate>
+        <div class="ep-field">
+          <label class="ep-label" for="emailReset">E-mail da conta</label>
+          <input id="emailReset" class="ep-input" type="email" autocomplete="email" maxlength="160" required>
+        </div>
+        <div class="ep-status" id="statusReset"></div>
+        <button class="ep-btn ep-btn--ghost ep-btn--block" type="submit" id="resetBtn">Enviar link de redefinição</button>
+      </form>
+    </section>
+
+    <hr class="ep-mt-24" style="border: none; border-top: 1px solid rgba(28,31,29,0.10);">
+
+    <!-- ─── Passo 2: recuperar com chave-semente ──────────────────────── -->
+    <section class="ep-recover-step ep-mt-24">
+      <h3 class="ep-h3 ep-mt-0">Passo 2 — Recuperar suas anotações</h3>
+      <p class="ep-text-sm ep-text-muted">
+        Já redefiniu a senha? Cole sua chave-semente abaixo. Vamos reconstruir
+        sua chave de cifragem com a nova senha — nada sai do seu navegador.
+      </p>
+      <form id="formRecover" class="ep-stack ep-mt-12" novalidate>
+        <div class="ep-field">
+          <label class="ep-label" for="emailRecover">E-mail</label>
+          <input id="emailRecover" class="ep-input" type="email" autocomplete="email" maxlength="160" required>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="passwordRecover">Nova senha (a que você acabou de cadastrar)</label>
+          <input id="passwordRecover" class="ep-input" type="password" autocomplete="current-password" minlength="10" required>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="recoveryPhrase">Chave-semente (13 grupos de 4 caracteres)</label>
+          <textarea id="recoveryPhrase" class="ep-input" rows="3"
+            style="font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0.04em; font-size: 14px;"
+            placeholder="Ex.: ABCD EFGH JKMN PQRS TUVW XYZ2 3456 789A BCDE FGHJ KMNP QRST UVWX"
+            required></textarea>
+          <p class="ep-text-xs ep-text-muted ep-mt-0">
+            Maiúsculas/minúsculas e espaços são ignorados. Apenas letras e números.
+          </p>
+        </div>
+        <div class="ep-status" id="statusRecover"></div>
+        <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="recoverBtn">Recuperar acesso</button>
+      </form>
+    </section>
+
+    <div class="ep-auth__bottom ep-mt-24">
+      <a href="./login.html">Voltar ao login</a>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+  import {
+    signInWithEmailAndPassword,
+    sendPasswordResetEmail
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import {
+    generateSalt, wrapDek, recoveryPhraseToDek, rememberDek, rememberUser
+  } from "./js/crypto.js";
+
+  function setStatus(el, text, type = "") {
+    el.textContent = text;
+    el.className = "ep-status";
+    if (type) el.classList.add("is-" + type);
+  }
+  function humanizeAuth(err) {
+    const code = err?.code || "";
+    if (code === "auth/user-not-found")     return "E-mail não cadastrado.";
+    if (code === "auth/invalid-email")      return "E-mail inválido.";
+    if (code === "auth/invalid-credential") return "E-mail ou senha incorretos.";
+    if (code === "auth/wrong-password")     return "Senha incorreta.";
+    if (code === "auth/too-many-requests")  return "Muitas tentativas. Tente em alguns minutos.";
+    if (code === "auth/network-request-failed") return "Erro de conexão.";
+    return err?.message || "Erro de autenticação.";
+  }
+
+  // ─── Passo 1: enviar e-mail de redefinição ──────────────────────────
+  const formReset   = document.getElementById("formReset");
+  const emailReset  = document.getElementById("emailReset");
+  const statusReset = document.getElementById("statusReset");
+  const resetBtn    = document.getElementById("resetBtn");
+
+  formReset.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = emailReset.value.trim().toLowerCase();
+    if (!email) { setStatus(statusReset, "Informe seu e-mail.", "err"); return; }
+    resetBtn.disabled = true;
+    setStatus(statusReset, "Enviando…");
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setStatus(statusReset, "Pronto. Se o e-mail está cadastrado, você receberá um link em instantes. Cheque também o spam.", "ok");
+    } catch (err) {
+      console.error("reset_email_error", err);
+      setStatus(statusReset, humanizeAuth(err), "err");
+    }
+    resetBtn.disabled = false;
+  });
+
+  // ─── Passo 2: recuperar com chave-semente ───────────────────────────
+  const formRecover    = document.getElementById("formRecover");
+  const emailRecover   = document.getElementById("emailRecover");
+  const passwordRecover= document.getElementById("passwordRecover");
+  const recoveryEl     = document.getElementById("recoveryPhrase");
+  const statusRecover  = document.getElementById("statusRecover");
+  const recoverBtn     = document.getElementById("recoverBtn");
+
+  formRecover.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    recoverBtn.disabled = true;
+
+    const email    = emailRecover.value.trim().toLowerCase();
+    const password = passwordRecover.value;
+    const phrase   = recoveryEl.value.trim();
+
+    if (!email || !password || !phrase) {
+      setStatus(statusRecover, "Preencha todos os campos.", "err");
+      recoverBtn.disabled = false;
+      return;
+    }
+    if (password.length < 10) {
+      setStatus(statusRecover, "Senha precisa ter pelo menos 10 caracteres.", "err");
+      recoverBtn.disabled = false;
+      return;
+    }
+
+    // 1. Reconstrói DEK localmente.
+    let dekBytes;
+    try {
+      dekBytes = recoveryPhraseToDek(phrase);
+    } catch (err) {
+      setStatus(statusRecover, "Chave-semente inválida ou incompleta. Confira se copiou todos os 13 grupos.", "err");
+      recoverBtn.disabled = false;
+      return;
+    }
+
+    // 2. Autentica no Firebase com a nova senha.
+    setStatus(statusRecover, "Autenticando com sua nova senha…");
+    let cred;
+    try {
+      cred = await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      console.error("recover_signin_error", err);
+      setStatus(statusRecover, "Não consegui entrar com essa senha. Você redefiniu pelo e-mail antes? " + humanizeAuth(err), "err");
+      recoverBtn.disabled = false;
+      return;
+    }
+
+    const idToken = await cred.user.getIdToken();
+
+    // 3. Gera novo salt e re-cifra DEK com a nova senha.
+    setStatus(statusRecover, "Re-cifrando sua chave com a nova senha…");
+    const salt = generateSalt();
+    const { wrappedDEK, wrappedDEKIv } = await wrapDek(dekBytes, password, salt);
+
+    // 4. Sobe ao backend.
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/recuperar`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ e2eeSalt: salt, wrappedDEK, wrappedDEKIv })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        const code = data?.error || res.status;
+        setStatus(statusRecover, "Erro ao salvar a nova chave: " + code, "err");
+        recoverBtn.disabled = false;
+        return;
+      }
+    } catch (err) {
+      console.error("recover_save_error", err);
+      setStatus(statusRecover, "Erro de rede ao salvar. Tente novamente.", "err");
+      recoverBtn.disabled = false;
+      return;
+    }
+
+    // 5. Cacheia DEK em sessão e redireciona.
+    rememberDek(dekBytes);
+    rememberUser({ uid: cred.user.uid, email, displayName: cred.user.displayName || "" });
+
+    setStatus(statusRecover, "Acesso recuperado. Indo para o painel…", "ok");
+    setTimeout(() => { window.location.href = "./painel.html"; }, 1200);
+  });
+</script>
+
+</body>
+</html>

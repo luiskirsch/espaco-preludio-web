@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfil profissional · Espaço Prelúdio</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-30">
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <div class="ep-container ep-topbar__inner">
+      <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+        <span class="ep-brand__mark">EP</span>
+        <span class="ep-brand__name">
+          <span class="ep-brand__lead">Espaço</span>
+          <span>Prelúdio</span>
+        </span>
+      </a>
+      <nav class="ep-nav" aria-label="Painel">
+        <a href="./painel.html">Consultas</a>
+        <a href="./agenda.html">Agenda</a>
+        <a href="./pacientes.html">Pacientes</a>
+        <a href="./receita.html">Receitas</a>
+      <a href="./documento.html?tipo=atestado">Documentos</a>
+        <a href="./perfil.html" class="is-active">Perfil</a>
+        <span id="topUserName" class="ep-text-sm ep-text-muted">&nbsp;</span>
+      </nav>
+    </div>
+  </header>
+
+  <main class="ep-container ep-mt-32 ep-mb-16" style="max-width: 760px;">
+
+    <div class="ep-eyebrow">Identidade do consultório</div>
+    <h1 class="ep-h1 ep-mt-12">Perfil profissional</h1>
+    <p class="ep-text-muted ep-mt-0">
+      Esses dados aparecem no cabeçalho das suas receitas digitais. Mantenha
+      atualizado — o paciente e a farmácia veem essas informações.
+    </p>
+
+    <!-- Card de plano -->
+    <section id="planoCard" class="ep-issuer-block ep-mt-24" style="display: none;">
+      <div class="ep-issuer-block__main">
+        <div class="ep-eyebrow" id="planoEyebrow">Plano</div>
+        <div class="ep-issuer-block__name" id="planoTitle">—</div>
+        <div class="ep-issuer-block__ids" id="planoSub">—</div>
+      </div>
+      <div class="ep-issuer-block__actions">
+        <a href="./planos.html" class="ep-btn ep-btn--ghost ep-btn--sm">Gerenciar plano</a>
+      </div>
+    </section>
+
+    <form id="perfilForm" class="ep-stack ep-mt-24" novalidate>
+
+      <!-- Identidade -->
+      <section class="ep-receita-form">
+        <h2 class="ep-h3 ep-mt-0">Identificação</h2>
+
+        <div class="ep-field">
+          <label class="ep-label" for="displayName">Nome completo</label>
+          <input id="displayName" class="ep-input" type="text" maxlength="80" required>
+        </div>
+
+        <div class="ep-row">
+          <div class="ep-field">
+            <label class="ep-label" for="crp">CRP</label>
+            <input id="crp" class="ep-input" type="text" maxlength="20" placeholder="Ex.: 12/12345">
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="crm">CRM</label>
+            <input id="crm" class="ep-input" type="text" maxlength="20" placeholder="Ex.: 123456-SC">
+          </div>
+        </div>
+
+        <div class="ep-row">
+          <div class="ep-field">
+            <label class="ep-label" for="rqe">RQE (especialista)</label>
+            <input id="rqe" class="ep-input" type="text" maxlength="30" placeholder="Ex.: RQE 12345">
+            <p class="ep-text-xs ep-text-muted ep-mt-0">
+              Obrigatório para psiquiatras e demais especialistas registrados (CFM 1.701/2003).
+            </p>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="especialidade">Especialidade</label>
+            <select id="especialidade" class="ep-select">
+              <option value="">Selecione…</option>
+              <option value="psicologia-clinica">Psicologia clínica</option>
+              <option value="psicanalise">Psicanálise</option>
+              <option value="terapia-cognitivo-comportamental">TCC</option>
+              <option value="terapia-de-casal">Terapia de casal</option>
+              <option value="psiquiatria">Psiquiatria</option>
+              <option value="terapia-ocupacional">Terapia ocupacional</option>
+              <option value="outra">Outra</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="cnpj">CNPJ (opcional, se atua como PJ)</label>
+          <input id="cnpj" class="ep-input" type="text" maxlength="20" placeholder="00.000.000/0001-00">
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="bio">Bio (mostrada no perfil público — opcional)</label>
+          <textarea id="bio" class="ep-input" rows="3" maxlength="500"></textarea>
+        </div>
+      </section>
+
+      <!-- Consultório -->
+      <section class="ep-receita-form">
+        <h2 class="ep-h3 ep-mt-0">Endereço do consultório</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Aparece no cabeçalho das receitas. Use o endereço do consultório físico,
+          mesmo que você atenda apenas online.
+        </p>
+
+        <div class="ep-row">
+          <div class="ep-field" style="flex: 2;">
+            <label class="ep-label" for="endereco">Logradouro</label>
+            <input id="endereco" class="ep-input" type="text" maxlength="200" placeholder="Rua / Av.">
+          </div>
+          <div class="ep-field" style="flex: 1;">
+            <label class="ep-label" for="numero">Número</label>
+            <input id="numero" class="ep-input" type="text" maxlength="20">
+          </div>
+        </div>
+
+        <div class="ep-row">
+          <div class="ep-field">
+            <label class="ep-label" for="complemento">Complemento</label>
+            <input id="complemento" class="ep-input" type="text" maxlength="80" placeholder="Sala 101, Bloco A">
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="bairro">Bairro</label>
+            <input id="bairro" class="ep-input" type="text" maxlength="80">
+          </div>
+        </div>
+
+        <div class="ep-row">
+          <div class="ep-field" style="flex: 2;">
+            <label class="ep-label" for="cidade">Cidade</label>
+            <input id="cidade" class="ep-input" type="text" maxlength="80">
+          </div>
+          <div class="ep-field" style="flex: 0.5;">
+            <label class="ep-label" for="uf">UF</label>
+            <input id="uf" class="ep-input" type="text" maxlength="2" placeholder="SP">
+          </div>
+          <div class="ep-field" style="flex: 1;">
+            <label class="ep-label" for="cep">CEP</label>
+            <input id="cep" class="ep-input" type="text" maxlength="12" placeholder="00000-000">
+          </div>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="telefone">Telefone</label>
+          <input id="telefone" class="ep-input" type="text" maxlength="30" placeholder="(11) 99999-9999">
+        </div>
+      </section>
+
+      <!-- Logo -->
+      <section class="ep-receita-form">
+        <h2 class="ep-h3 ep-mt-0">Logo do consultório (opcional)</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Imagem PNG, JPEG ou WebP até 200 KB. Aparece no canto superior do PDF da receita.
+          Para boa qualidade, use proporção quadrada (ex.: 240×240).
+        </p>
+
+        <div class="ep-row" style="align-items: center;">
+          <div class="ep-field" style="flex: 1;">
+            <label class="ep-label" for="logoFile">Selecionar arquivo</label>
+            <input id="logoFile" class="ep-input" type="file" accept="image/png,image/jpeg,image/webp">
+          </div>
+          <div id="logoPreview" class="ep-logo-preview ep-hide" aria-label="Pré-visualização do logo">
+            <img id="logoImg" alt="Logo">
+            <button type="button" class="ep-btn ep-btn--ghost ep-btn--xs" id="removeLogoBtn">Remover</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="ep-status" id="formStatus"></div>
+
+      <div class="ep-flex" style="gap: 8px; justify-content: space-between; align-items: center;">
+        <a href="./audit.html" class="ep-text-sm" style="color: var(--ep-accent);">Histórico de atividade da conta →</a>
+        <div class="ep-flex" style="gap: 8px;">
+          <a class="ep-btn ep-btn--ghost" href="./painel.html">Cancelar</a>
+          <button type="submit" class="ep-btn ep-btn--primary" id="saveBtn">Salvar perfil</button>
+        </div>
+      </div>
+    </form>
+
+  </main>
+</div>
+
+<script type="module">
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js";
+
+  const ctx = await requireTherapist({ requireDek: false });
+  const { idToken, therapist } = ctx;
+
+  document.getElementById("topUserName").textContent = therapist.displayName || "";
+
+  // ─── Helpers ─────────────────────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+  const formStatus = $("formStatus");
+
+  function setStatus(text, type = "") {
+    formStatus.textContent = text;
+    formStatus.className = "ep-status";
+    if (type) formStatus.classList.add("is-" + type);
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = String(reader.result || "");
+        const comma = dataUrl.indexOf(",");
+        if (comma < 0) return reject(new Error("FORMATO_INVALIDO"));
+        resolve(dataUrl.slice(comma + 1));
+      };
+      reader.onerror = () => reject(reader.error || new Error("LEITURA_FALHOU"));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ─── Card de plano ───────────────────────────────────────────────────
+  function renderPlanoCard(t) {
+    const card = $("planoCard");
+    if (!card) return;
+    const trialUntil = t.trialUntil?.toMillis ? t.trialUntil.toMillis() : Number(t.trialUntil) || null;
+    const plano = t.plano || "trial";
+
+    let title = "Plano Trial", sub = "—", eyebrow = "Plano";
+    if (plano === "pro") {
+      eyebrow = "Plano · Ativo";
+      title = "Espaço Prelúdio Pro";
+      sub = t.nextChargeAt
+        ? "Próxima cobrança em " + new Date(Number(t.nextChargeAt)).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
+        : "Assinatura ativa.";
+    } else if (plano === "trial") {
+      const days = trialUntil ? Math.max(0, Math.ceil((trialUntil - Date.now()) / 86_400_000)) : null;
+      eyebrow = "Plano · Trial";
+      title = days != null ? `Trial gratuito — ${days} ${days === 1 ? "dia restante" : "dias restantes"}` : "Trial gratuito";
+      sub = trialUntil ? "Expira em " + new Date(trialUntil).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }) : "";
+    } else if (plano === "expired") {
+      eyebrow = "Plano · Expirado";
+      title = "Trial encerrado";
+      sub = "Assine para continuar usando todas as funcionalidades.";
+    } else if (plano === "canceled") {
+      eyebrow = "Plano · Cancelado";
+      title = "Assinatura cancelada";
+      sub = "Você pode reativar quando quiser.";
+    }
+    $("planoEyebrow").textContent = eyebrow;
+    $("planoTitle").textContent   = title;
+    $("planoSub").textContent     = sub;
+    card.style.display = "flex";
+  }
+  renderPlanoCard(therapist);
+
+  // ─── Carrega dados existentes ────────────────────────────────────────
+  function applyTherapist(t) {
+    $("displayName").value   = t.displayName || "";
+    $("crp").value           = t.crp || "";
+    $("crm").value           = t.crm || "";
+    $("rqe").value           = t.rqe || "";
+    $("especialidade").value = t.especialidade || "";
+    $("cnpj").value          = t.cnpj || "";
+    $("bio").value           = t.bio || "";
+
+    const c = t.consultorio || {};
+    $("endereco").value     = c.endereco    || "";
+    $("numero").value       = c.numero      || "";
+    $("complemento").value  = c.complemento || "";
+    $("bairro").value       = c.bairro      || "";
+    $("cidade").value       = c.cidade      || "";
+    $("uf").value           = c.uf          || "";
+    $("cep").value           = c.cep         || "";
+    $("telefone").value     = c.telefone    || "";
+
+    if (t.logoBase64 && t.logoMime) {
+      $("logoImg").src = `data:${t.logoMime};base64,${t.logoBase64}`;
+      $("logoPreview").classList.remove("ep-hide");
+      pendingLogo = { base64: t.logoBase64, mime: t.logoMime, dirty: false };
+    }
+  }
+  applyTherapist(therapist);
+
+  // ─── Logo upload ─────────────────────────────────────────────────────
+  let pendingLogo = null; // { base64, mime, dirty: bool, removed: bool }
+
+  $("logoFile").addEventListener("change", async () => {
+    const file = $("logoFile").files?.[0];
+    if (!file) return;
+    if (file.size > 200 * 1024) {
+      setStatus("Logo grande demais (limite 200 KB).", "err");
+      $("logoFile").value = "";
+      return;
+    }
+    setStatus("");
+    try {
+      const base64 = await fileToBase64(file);
+      pendingLogo = { base64, mime: file.type, dirty: true, removed: false };
+      $("logoImg").src = `data:${file.type};base64,${base64}`;
+      $("logoPreview").classList.remove("ep-hide");
+    } catch (e) {
+      setStatus("Não foi possível ler o arquivo.", "err");
+    }
+  });
+
+  $("removeLogoBtn").addEventListener("click", () => {
+    pendingLogo = { base64: "", mime: "", dirty: true, removed: true };
+    $("logoImg").src = "";
+    $("logoPreview").classList.add("ep-hide");
+    $("logoFile").value = "";
+  });
+
+  // ─── Submit ──────────────────────────────────────────────────────────
+  $("perfilForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    $("saveBtn").disabled = true;
+    setStatus("Salvando…");
+
+    const body = {
+      displayName:   $("displayName").value.trim(),
+      crp:           $("crp").value.trim(),
+      crm:           $("crm").value.trim(),
+      rqe:           $("rqe").value.trim(),
+      especialidade: $("especialidade").value,
+      cnpj:          $("cnpj").value.trim(),
+      bio:           $("bio").value.trim(),
+      consultorio: {
+        endereco:    $("endereco").value.trim(),
+        numero:      $("numero").value.trim(),
+        complemento: $("complemento").value.trim(),
+        bairro:      $("bairro").value.trim(),
+        cidade:      $("cidade").value.trim(),
+        uf:          $("uf").value.trim().toUpperCase(),
+        cep:         $("cep").value.trim(),
+        telefone:    $("telefone").value.trim()
+      }
+    };
+
+    if (pendingLogo && pendingLogo.dirty) {
+      if (pendingLogo.removed) {
+        body.logoBase64 = "";
+        body.logoMime   = "";
+      } else {
+        body.logoBase64 = pendingLogo.base64;
+        body.logoMime   = pendingLogo.mime;
+      }
+    }
+
+    if (!body.displayName) {
+      setStatus("Nome é obrigatório.", "err");
+      $("saveBtn").disabled = false;
+      return;
+    }
+
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        setStatus("Erro: " + (data?.error || res.status), "err");
+        $("saveBtn").disabled = false;
+        return;
+      }
+      setStatus("Perfil atualizado.", "ok");
+      $("saveBtn").disabled = false;
+    } catch (e) {
+      console.error("perfil_save_error", e);
+      setStatus("Erro de rede.", "err");
+      $("saveBtn").disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>

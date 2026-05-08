@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meu painel · Espaço Prelúdio</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-30">
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav">
+      <a href="./paciente-audit.html" class="ep-text-sm">Histórico</a>
+      <span id="navUser" class="ep-text-sm ep-text-muted">…</span>
+      <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="logoutBtn">Sair</button>
+    </nav>
+  </header>
+
+  <main class="ep-main">
+    <section class="ep-prontuario__header">
+      <div class="ep-prontuario__avatar" id="avatar" aria-hidden="true">P</div>
+      <div class="ep-prontuario__title">
+        <div class="ep-eyebrow">Suas anotações</div>
+        <h1 class="ep-h1" id="patientName">…</h1>
+        <div class="ep-pill-row" id="pillRow"></div>
+      </div>
+      <div class="ep-prontuario__actions"></div>
+    </section>
+
+    <section class="ep-stats-strip" id="statsStrip"></section>
+
+    <section class="ep-stack ep-mt-24">
+      <div class="ep-row" style="align-items: center; justify-content: space-between;">
+        <h2 class="ep-h2 ep-mt-0">Histórico de consultas</h2>
+        <span class="ep-text-xs ep-text-muted ep-lock">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          Cifradas com a sua chave — só você lê
+        </span>
+      </div>
+      <div class="ep-timeline" id="timeline">
+        <div class="ep-skeleton">Carregando…</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requirePatient } from "./js/patient-auth-guard.js";
+  import { encryptNote, decryptNote } from "./js/crypto.js";
+  import { clearPatientDek } from "./js/patient-session.js";
+
+  const navUser     = document.getElementById("navUser");
+  const avatar      = document.getElementById("avatar");
+  const patientName = document.getElementById("patientName");
+  const pillRow     = document.getElementById("pillRow");
+  const statsStrip  = document.getElementById("statsStrip");
+  const timeline    = document.getElementById("timeline");
+  const logoutBtn   = document.getElementById("logoutBtn");
+
+  function initials(name) {
+    const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return "P";
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  function fmtDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  }
+  function fmtTime(ms) {
+    if (!ms) return "";
+    return new Date(ms).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  }
+  function fmtMonthYear(ms) {
+    if (!ms) return "—";
+    const s = new Date(ms).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  function monthKey(ms) {
+    if (!ms) return "0000-00";
+    const d = new Date(ms);
+    return `${d.getFullYear()}-${String(d.getMonth()).padStart(2, "0")}`;
+  }
+  function relative(ms) {
+    if (!ms) return "—";
+    const diff = Date.now() - ms;
+    const d = Math.floor(diff / 86_400_000);
+    if (d === 0) return "hoje";
+    if (d === 1) return "ontem";
+    if (d < 7)  return `há ${d} dias`;
+    if (d < 30) return `há ${Math.floor(d/7)} semanas`;
+    if (d < 365) return `há ${Math.floor(d/30)} meses`;
+    return `há ${Math.floor(d/365)} anos`;
+  }
+
+  let dek = null;
+  let idToken = null;
+  let account = null;
+  let allSessions = [];
+  const notesCache = new Map(); // sessionId → array de notas decifradas
+
+  logoutBtn.addEventListener("click", async () => {
+    if (!confirm("Sair da sua conta?")) return;
+    clearPatientDek();
+    try { await signOut(auth); } catch {}
+    window.location.href = "./paciente-login.html";
+  });
+
+  async function api(path, opts = {}) {
+    const headers = { ...(opts.headers || {}), "Authorization": `Bearer ${idToken}` };
+    if (opts.body) headers["Content-Type"] = "application/json";
+    const res = await fetch(BACKEND_BASE_URL + path, { ...opts, headers });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+    return data;
+  }
+
+  async function loadSessions() {
+    const data = await api("/therapy/paciente/sessoes");
+    allSessions = data.sessions || [];
+  }
+
+  function renderHeader() {
+    patientName.textContent = account.displayName || "Você";
+    avatar.textContent = initials(account.displayName);
+    navUser.textContent = account.displayName ? `Olá, ${account.displayName}` : "…";
+
+    const since = account.createdAt?.toMillis
+      ? account.createdAt.toMillis()
+      : (account.createdAt?._seconds ? account.createdAt._seconds * 1000 : null);
+    pillRow.innerHTML = "";
+    if (since) {
+      const p = document.createElement("span");
+      p.className = "ep-pill";
+      p.textContent = "Cliente desde " + fmtMonthYear(since);
+      pillRow.appendChild(p);
+    }
+  }
+
+  function renderStats() {
+    const total = allSessions.length;
+    const last  = allSessions[0]?.createdAt || null;
+    statsStrip.innerHTML = `
+      <div class="ep-stat">
+        <div class="ep-stat__label">Consultas</div>
+        <div class="ep-stat__value">${total}</div>
+        <div class="ep-stat__sub">${total === 1 ? "encontro registrado" : "encontros registrados"}</div>
+      </div>
+      <div class="ep-stat">
+        <div class="ep-stat__label">Última</div>
+        <div class="ep-stat__value">${relative(last)}</div>
+        <div class="ep-stat__sub">${last ? fmtDate(last) : "—"}</div>
+      </div>
+      <div class="ep-stat">
+        <div class="ep-stat__label">Anotações</div>
+        <div class="ep-stat__value" id="totalNotesValue">—</div>
+        <div class="ep-stat__sub">cifradas só com sua chave</div>
+      </div>
+    `;
+  }
+
+  async function refreshTotalNotes() {
+    try {
+      const { notes } = await api("/therapy/paciente/notas");
+      const el = document.getElementById("totalNotesValue");
+      if (el) el.textContent = String(notes.length);
+    } catch (e) { /* silencioso */ }
+  }
+
+  async function loadSessionNotes(sessionId) {
+    if (notesCache.has(sessionId)) return notesCache.get(sessionId);
+    const { notes } = await api("/therapy/paciente/notas?sessionId=" + encodeURIComponent(sessionId));
+    const decoded = [];
+    for (const n of notes) {
+      const text = await decryptNote({ ciphertext: n.ciphertext, iv: n.iv }, dek);
+      decoded.push({ ...n, text });
+    }
+    notesCache.set(sessionId, decoded);
+    return decoded;
+  }
+
+  function renderTimeline() {
+    timeline.innerHTML = "";
+    if (allSessions.length === 0) {
+      timeline.innerHTML = `
+        <div class="ep-empty">
+          <h3 class="ep-h3 ep-mt-0">Nenhuma consulta vinculada à sua conta ainda.</h3>
+          <p class="ep-text-sm ep-text-muted">
+            Da próxima vez que entrar pelo link do(a) profissional <strong>já logado(a)</strong>,
+            a sessão aparecerá aqui e suas notas ficam salvas.
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    // Agrupa por mês
+    const groups = new Map();
+    for (const s of allSessions) {
+      const k = monthKey(s.createdAt);
+      if (!groups.has(k)) groups.set(k, { label: fmtMonthYear(s.createdAt), items: [] });
+      groups.get(k).items.push(s);
+    }
+
+    for (const [, g] of groups) {
+      const head = document.createElement("div");
+      head.className = "ep-timeline__month";
+      head.textContent = g.label;
+      timeline.appendChild(head);
+
+      for (const s of g.items) timeline.appendChild(renderSessionCard(s));
+    }
+  }
+
+  function renderSessionCard(session) {
+    const card = document.createElement("article");
+    card.className = "ep-session-card";
+    card.dataset.sessionId = session.sessionId;
+
+    const dateLine = `${fmtDate(session.createdAt)} · ${fmtTime(session.createdAt)}`;
+    card.innerHTML = `
+      <button class="ep-session-card__head" type="button" aria-expanded="false">
+        <div>
+          <div class="ep-session-card__date">${dateLine}</div>
+          <div class="ep-session-card__therapist">com ${session.therapistDisplayName || "Profissional"}</div>
+        </div>
+        <div class="ep-session-card__meta">
+          <span class="ep-session-card__count" data-count>—</span>
+          <svg class="ep-session-card__chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+      </button>
+      <div class="ep-session-card__body" hidden>
+        <div class="ep-skeleton">Carregando suas anotações…</div>
+      </div>
+    `;
+
+    const head = card.querySelector(".ep-session-card__head");
+    const body = card.querySelector(".ep-session-card__body");
+    const countEl = card.querySelector("[data-count]");
+
+    head.addEventListener("click", async () => {
+      const open = head.getAttribute("aria-expanded") === "true";
+      if (open) {
+        head.setAttribute("aria-expanded", "false");
+        body.hidden = true;
+        return;
+      }
+      head.setAttribute("aria-expanded", "true");
+      body.hidden = false;
+      try {
+        const notes = await loadSessionNotes(session.sessionId);
+        countEl.textContent = notes.length === 1 ? "1 nota" : `${notes.length} notas`;
+        renderNotesIntoBody(body, session.sessionId, notes);
+      } catch (e) {
+        body.innerHTML = `<div class="ep-error-state">Erro ao carregar suas anotações: ${e.message}</div>`;
+      }
+    });
+
+    return card;
+  }
+
+  function renderNotesIntoBody(body, sessionId, notes) {
+    body.innerHTML = "";
+    if (notes.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "ep-text-sm ep-text-muted";
+      empty.style.fontStyle = "italic";
+      empty.textContent = "Você não escreveu nada nessa sessão.";
+      body.appendChild(empty);
+      return;
+    }
+    for (const n of notes) body.appendChild(renderNoteRow(sessionId, n));
+  }
+
+  function renderNoteRow(sessionId, note) {
+    const row = document.createElement("article");
+    row.className = "ep-note ep-note--patient";
+    row.innerHTML = `
+      <div class="ep-note__meta">${fmtDate(note.createdAt)} · ${fmtTime(note.createdAt)}</div>
+      <div class="ep-note__text"></div>
+      <div class="ep-note__actions">
+        <button type="button" class="ep-btn ep-btn--ghost ep-btn--xs" data-edit>Editar</button>
+        <button type="button" class="ep-btn ep-btn--ghost ep-btn--xs" data-delete>Apagar</button>
+      </div>
+    `;
+    const textEl = row.querySelector(".ep-note__text");
+    textEl.textContent = note.text;
+
+    row.querySelector("[data-edit]").addEventListener("click", async () => {
+      const novoTexto = prompt("Editar nota:", note.text);
+      if (novoTexto == null) return;
+      const trimmed = novoTexto.trim();
+      if (!trimmed) return;
+      try {
+        const { ciphertext, iv } = await encryptNote(trimmed, dek);
+        await api(`/therapy/paciente/notas/${encodeURIComponent(note.noteId)}`, {
+          method: "PATCH",
+          body: JSON.stringify({ ciphertext, iv })
+        });
+        note.text = trimmed;
+        textEl.textContent = trimmed;
+        notesCache.set(sessionId, notesCache.get(sessionId)); // já mutado
+      } catch (e) {
+        alert("Erro ao salvar edição: " + e.message);
+      }
+    });
+
+    row.querySelector("[data-delete]").addEventListener("click", async () => {
+      if (!confirm("Apagar esta anotação? Não dá para desfazer.")) return;
+      try {
+        await api(`/therapy/paciente/notas/${encodeURIComponent(note.noteId)}`, { method: "DELETE" });
+        const arr = notesCache.get(sessionId).filter(n => n.noteId !== note.noteId);
+        notesCache.set(sessionId, arr);
+        row.remove();
+      } catch (e) {
+        alert("Erro ao apagar: " + e.message);
+      }
+    });
+
+    return row;
+  }
+
+  // ─── Boot ──────────────────────────────────────────────────────────────
+  (async () => {
+    try {
+      const auth = await requirePatient();
+      idToken = auth.idToken;
+      account = auth.account;
+      dek     = auth.dek;
+      renderHeader();
+      await loadSessions();
+      renderStats();
+      renderTimeline();
+      refreshTotalNotes();
+    } catch (e) {
+      console.error("paciente_painel_boot_error", e);
+    }
+  })();
+</script>
+
+</body>
+</html>

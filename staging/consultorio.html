@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consultório · Espaço Prelúdio</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-30">
+</head>
+<body class="ep-consult">
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<div class="ep-shell">
+
+  <header class="ep-consult__topbar">
+    <a href="./painel.html" class="ep-brand" aria-label="Voltar ao painel">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Consultório</span>
+        <span id="topPatientName" class="ep-brand__waiting">Aguardando paciente</span>
+      </span>
+    </a>
+    <div class="ep-flex ep-flex--center ep-gap-14 ep-w-full">
+      <span id="connectionStatus" class="ep-consult__status">conectando…</span>
+      <span id="e2eeBadge" class="ep-badge ep-badge--ok ep-hide" title="End-to-end encrypted">E2EE ativo</span>
+      <span class="ep-text-xs ep-text-muted" id="infoDuration">0min 00s</span>
+    </div>
+    <div class="ep-flex ep-gap-8">
+      <button type="button" id="endSessionBtn" class="ep-btn ep-btn--ghost ep-btn--sm">Encerrar</button>
+      <a href="./painel.html" class="ep-btn ep-btn--ghost ep-btn--sm">Painel</a>
+    </div>
+  </header>
+
+  <main class="ep-consult__main ep-consult__main--solo">
+    <section class="ep-consult__video ep-consult__video--inline" id="videoArea">
+
+      <div class="ep-tile ep-tile--gilded" id="tileLocal">
+        <video id="videoLocal" autoplay muted playsinline></video>
+        <div class="ep-tile__name">Você (profissional)</div>
+      </div>
+      <div class="ep-tile ep-tile--gilded" id="tileRemote">
+        <div class="ep-tile__placeholder" id="remotePlaceholder">
+          <div class="ep-waiting">
+            <div class="ep-waiting__pulse" aria-hidden="true"></div>
+            <div class="ep-waiting__text">A sala está aberta.</div>
+            <div class="ep-waiting__sub">O paciente entrará pelo link enviado.</div>
+          </div>
+        </div>
+        <video id="videoRemote" autoplay playsinline class="ep-hide"></video>
+        <div class="ep-tile__name ep-hide" id="remoteName"></div>
+      </div>
+
+      <!-- Anotações inline (largura total, abaixo dos tiles) -->
+      <div class="ep-inline-notes">
+        <div class="ep-inline-notes__head">
+          <span class="ep-lock">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+            Anotações cifradas · só você lê
+          </span>
+          <span class="ep-text-xs ep-text-muted" id="noteStatus">&nbsp;</span>
+        </div>
+        <div class="ep-inline-notes__list" id="notesList"></div>
+        <div id="notesEmpty" class="ep-inline-notes__empty ep-hide">
+          Nenhuma anotação ainda. Use o campo abaixo durante a sessão.
+        </div>
+        <div class="ep-inline-notes__composer">
+          <textarea id="noteInput" placeholder="Digite uma anotação… (cifrada antes de enviar)"></textarea>
+          <div class="ep-inline-notes__actions">
+            <span class="ep-text-xs ep-text-muted">Ctrl + Enter pra salvar</span>
+            <button class="ep-btn ep-btn--primary ep-btn--sm" type="button" id="saveNoteBtn">Salvar nota</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ajustar ambiente (canto inferior esquerdo, painel abre pra cima) -->
+      <div class="ep-ambient ep-ambient--bottom">
+        <button id="ambientBtn" class="ep-ambient__btn" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="ambientPanel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <line x1="4" y1="9" x2="20" y2="9"/>
+            <line x1="4" y1="15" x2="20" y2="15"/>
+            <circle cx="9" cy="9" r="2.2"/>
+            <circle cx="15" cy="15" r="2.2"/>
+          </svg>
+          Ajustar ambiente
+        </button>
+        <div class="ep-ambient__panel" id="ambientPanel" aria-label="Ajustes de ambiente">
+          <div class="ep-ambient__section">
+            <div class="ep-ambient__label">Clima da sala</div>
+            <div class="ep-ambient__pills" role="group" aria-label="Modo de clima">
+              <button class="ep-ambient__pill" type="button" data-mode="foco">Foco</button>
+              <button class="ep-ambient__pill" type="button" data-mode="entardecer">Entardecer</button>
+              <button class="ep-ambient__pill" type="button" data-mode="calmo">Calmo</button>
+            </div>
+          </div>
+          <div class="ep-ambient__section">
+            <div class="ep-ambient__label">Som ambiente</div>
+            <div class="ep-ambient__pills" role="group" aria-label="Som ambiente">
+              <button class="ep-ambient__pill" type="button" data-sound="off">Silêncio</button>
+              <button class="ep-ambient__pill" type="button" data-sound="brown">Acolhedor</button>
+            </div>
+            <input type="range" data-ambient-volume class="ep-ambient__slider" min="0" max="100" value="40" aria-label="Volume do som ambiente">
+          </div>
+          <p class="ep-ambient__hint">Suas preferências ficam só neste dispositivo.</p>
+        </div>
+      </div>
+
+      <!-- Tópicos clínicos (canto inferior direito, deck abre pra cima) -->
+      <button class="ep-topics-toggle ep-topics-toggle--bottom" id="topicsToggle" type="button" aria-expanded="false">＋ Tópicos</button>
+      <aside class="ep-topics-deck ep-topics-deck--bottom" id="topicsDeck" aria-hidden="true">
+        <div class="ep-topics-deck__head">
+          <span class="ep-topics-deck__title">Cards de Tópicos</span>
+          <button class="ep-topics-deck__close" id="topicsClose" type="button" aria-label="Fechar">×</button>
+        </div>
+        <div class="ep-topics-deck__filters" id="topicsFilters"></div>
+        <div class="ep-topics-deck__list" id="topicsList"></div>
+        <button class="ep-topics-deck__draw" id="topicsDraw" type="button">Puxar tópico aleatório</button>
+      </aside>
+
+      <!-- Controles centrais (mic / cam / leave) -->
+      <div class="ep-controls-bar">
+        <button class="ep-ctrl" id="ctrlMic" type="button" title="Silenciar microfone" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        </button>
+        <button class="ep-ctrl" id="ctrlCam" type="button" title="Desligar câmera" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="m17 10 4-2v8l-4-2z"/></svg>
+        </button>
+        <button class="ep-ctrl ep-ctrl--leave" id="ctrlLeave" type="button" title="Encerrar consulta">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" transform="rotate(135 12 12)"/></svg>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <div class="ep-session-timeline" aria-hidden="true">
+    <div class="ep-session-timeline__fill" id="timelineFill"></div>
+  </div>
+
+  <div class="ep-ritual-open ep-hide" id="ritualOpen" aria-hidden="true">
+    <div class="ep-ritual-open__circle"></div>
+    <div class="ep-ritual-open__text">a sessão começou</div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js";
+  import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
+  import { TOPIC_LIBRARY, ABORDAGEM_LABEL, shuffle } from "./js/topics.js";
+  import { initAtmosphere } from "./js/atmosphere.js";
+
+  // Inicializa clima + som ambiente + painel "Ajustar ambiente".
+  // Todo o estado fica em localStorage; nada disso vai pro servidor.
+  await initAtmosphere({ buttonId: "ambientBtn", panelId: "ambientPanel" });
+
+  // LiveKit via esm.sh — pin de versão para reprodutibilidade.
+  const LIVEKIT_VERSION = "2.5.6";
+  const livekitMod = await import(`https://esm.sh/livekit-client@${LIVEKIT_VERSION}`);
+  const { Room, RoomEvent, Track, ExternalE2EEKeyProvider } = livekitMod;
+
+  // ─── Boot ───────────────────────────────────────────────────
+  const params = new URLSearchParams(location.search);
+  const sessionId = params.get("session");
+  if (!sessionId) {
+    alert("Sessão não informada.");
+    window.location.href = "./painel.html";
+    throw new Error("NO_SESSION");
+  }
+
+  const sess = await requireTherapist({ requireDek: true });
+  const { idToken, therapist, dek } = sess;
+
+  // ─── Pega token LiveKit + e2eeKey ───────────────────────────
+  const tokenRes = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/livekit-token`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${idToken}` }
+  });
+  const tokenData = await tokenRes.json().catch(() => ({}));
+  if (!tokenRes.ok || !tokenData.ok) {
+    alert("Erro ao entrar na consulta: " + (tokenData?.error || tokenRes.status));
+    window.location.href = "./painel.html";
+    throw new Error("TOKEN_FAIL");
+  }
+
+  // ─── DOM refs ───────────────────────────────────────────────
+  const topPatientName    = document.getElementById("topPatientName");
+  const connectionStatus  = document.getElementById("connectionStatus");
+  const e2eeBadge         = document.getElementById("e2eeBadge");
+  const videoLocal        = document.getElementById("videoLocal");
+  const videoRemote       = document.getElementById("videoRemote");
+  const remotePlaceholder = document.getElementById("remotePlaceholder");
+  const remoteName        = document.getElementById("remoteName");
+  const ctrlMic           = document.getElementById("ctrlMic");
+  const ctrlCam           = document.getElementById("ctrlCam");
+  const ctrlLeave         = document.getElementById("ctrlLeave");
+  const notesList         = document.getElementById("notesList");
+  const notesEmpty        = document.getElementById("notesEmpty");
+  const noteInput         = document.getElementById("noteInput");
+  const noteStatus        = document.getElementById("noteStatus");
+  const saveNoteBtn       = document.getElementById("saveNoteBtn");
+  const endSessionBtn     = document.getElementById("endSessionBtn");
+
+  // ─── LiveKit + E2EE ─────────────────────────────────────────
+  function setStatus(text) { connectionStatus.textContent = text; }
+
+  function b64ToBytes(b64) {
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  let room = null;
+  let e2eeWorker = null;
+
+  try {
+    setStatus("preparando E2EE…");
+    // Worker E2EE do LiveKit. esm.sh serve o arquivo de worker do pacote.
+    e2eeWorker = new Worker(
+      `https://esm.sh/livekit-client@${LIVEKIT_VERSION}/dist/livekit-client.e2ee.worker.js`,
+      { type: "module" }
+    );
+  } catch (err) {
+    console.warn("E2EE worker indisponível, seguindo sem E2EE", err);
+  }
+
+  const e2eeKeyBytes = tokenData.e2eeKey ? b64ToBytes(tokenData.e2eeKey) : null;
+  const useE2EE = !!(e2eeWorker && e2eeKeyBytes);
+
+  let keyProvider = null;
+  if (useE2EE) {
+    keyProvider = new ExternalE2EEKeyProvider();
+  }
+
+  room = new Room({
+    adaptiveStream: true,
+    dynacast: true,
+    publishDefaults: { dtx: true, simulcast: false },
+    e2ee: useE2EE ? { keyProvider, worker: e2eeWorker } : undefined
+  });
+
+  room
+    .on(RoomEvent.ParticipantConnected, onRemoteConnected)
+    .on(RoomEvent.ParticipantDisconnected, onRemoteDisconnected)
+    .on(RoomEvent.TrackSubscribed, onTrackSubscribed)
+    .on(RoomEvent.TrackUnsubscribed, onTrackUnsubscribed)
+    .on(RoomEvent.Disconnected, () => setStatus("desconectado"))
+    .on(RoomEvent.ConnectionStateChanged, (s) => setStatus(String(s).toLowerCase()));
+
+  let ritualPlayedThisSession = false;
+  function onRemoteConnected(p) {
+    remotePlaceholder.classList.add("ep-hide");
+    videoRemote.classList.remove("ep-hide");
+    remoteName.classList.remove("ep-hide");
+    remoteName.textContent = p.name || p.identity || "Paciente";
+    topPatientName.textContent = p.name || "Paciente";
+    topPatientName.classList.remove("ep-brand__waiting");
+    if (!ritualPlayedThisSession) {
+      ritualPlayedThisSession = true;
+      playOpeningRitual();
+    }
+  }
+  function onRemoteDisconnected() {
+    remotePlaceholder.classList.remove("ep-hide");
+    videoRemote.classList.add("ep-hide");
+    remoteName.classList.add("ep-hide");
+  }
+  function onTrackSubscribed(track, pub, p) {
+    if (track.kind === Track.Kind.Video) {
+      track.attach(videoRemote);
+    } else if (track.kind === Track.Kind.Audio) {
+      const audioEl = track.attach();
+      audioEl.style.display = "none";
+      document.body.appendChild(audioEl);
+    }
+  }
+  function onTrackUnsubscribed(track) {
+    track.detach().forEach(el => el.remove());
+  }
+
+  try {
+    setStatus("conectando…");
+    if (useE2EE) {
+      await keyProvider.setKey(e2eeKeyBytes);
+    }
+    await room.connect(tokenData.livekitUrl, tokenData.livekitToken);
+
+    if (useE2EE) {
+      await room.setE2EEEnabled(true);
+      e2eeBadge.classList.remove("ep-hide");
+    }
+
+    setStatus("ligando câmera…");
+    await room.localParticipant.enableCameraAndMicrophone();
+    const camTrack = Array.from(room.localParticipant.videoTrackPublications.values())[0]?.videoTrack;
+    if (camTrack) camTrack.attach(videoLocal);
+
+    setStatus("em sessão");
+  } catch (err) {
+    console.error("connect_error", err);
+    setStatus("erro ao conectar");
+    alert("Não foi possível conectar à consulta:\n" + (err?.message || err));
+  }
+
+  // ─── Controles ──────────────────────────────────────────────
+  ctrlMic.addEventListener("click", async () => {
+    const enabled = !ctrlMic.classList.contains("is-off");
+    await room.localParticipant.setMicrophoneEnabled(!enabled);
+    ctrlMic.classList.toggle("is-off", enabled);
+    ctrlMic.setAttribute("aria-pressed", enabled ? "true" : "false");
+  });
+  ctrlCam.addEventListener("click", async () => {
+    const enabled = !ctrlCam.classList.contains("is-off");
+    await room.localParticipant.setCameraEnabled(!enabled);
+    ctrlCam.classList.toggle("is-off", enabled);
+    ctrlCam.setAttribute("aria-pressed", enabled ? "true" : "false");
+  });
+  ctrlLeave.addEventListener("click", async () => {
+    if (!confirm("Sair da consulta? A sessão continua aberta para o paciente até você encerrá-la.")) return;
+    try { await room?.disconnect(); } catch {}
+    window.location.href = "./painel.html";
+  });
+
+  endSessionBtn.addEventListener("click", async () => {
+    if (!confirm("Encerrar definitivamente esta consulta? O paciente será desconectado.")) return;
+    try {
+      await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/encerrar`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+    } catch {}
+    try { await room?.disconnect(); } catch {}
+    window.location.href = "./painel.html";
+  });
+
+  // ─── Notas cifradas ─────────────────────────────────────────
+  let sessionStartTs = Date.now();
+
+  async function loadNotes() {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/notas`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        notesEmpty.classList.remove("ep-hide");
+        notesEmpty.textContent = "Erro ao carregar anotações.";
+        return;
+      }
+      notesList.innerHTML = "";
+      if (!data.notes || data.notes.length === 0) {
+        notesEmpty.classList.remove("ep-hide");
+        return;
+      }
+      notesEmpty.classList.add("ep-hide");
+      for (const n of data.notes) {
+        const text = await decryptNote(n, dek);
+        const el = document.createElement("article");
+        el.className = "ep-note";
+        const ts = n.createdAt ? new Date(n.createdAt) : null;
+        el.innerHTML = `
+          <div class="ep-note__meta">
+            <span>${ts ? ts.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : ""}</span>
+            <span class="ep-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg> cifrada</span>
+          </div>
+          <div></div>
+        `;
+        el.lastElementChild.textContent = text;
+        notesList.appendChild(el);
+      }
+    } catch (err) {
+      console.error("load_notes_error", err);
+    }
+  }
+
+  saveNoteBtn.addEventListener("click", async () => {
+    const text = noteInput.value.trim();
+    if (!text) return;
+    saveNoteBtn.disabled = true;
+    noteStatus.textContent = "cifrando…";
+    try {
+      const { ciphertext, iv } = await encryptNote(text, dek);
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/notas`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ ciphertext, iv })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        noteStatus.textContent = "erro: " + (data?.error || res.status);
+        saveNoteBtn.disabled = false;
+        return;
+      }
+      noteInput.value = "";
+      noteStatus.textContent = "salva · cifrada";
+      await loadNotes();
+      setTimeout(() => { noteStatus.textContent = " "; }, 2000);
+    } catch (err) {
+      console.error("save_note_error", err);
+      noteStatus.textContent = "erro ao salvar";
+    } finally {
+      saveNoteBtn.disabled = false;
+    }
+  });
+
+  // Atalho Ctrl/Cmd + Enter no textarea
+  noteInput.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      saveNoteBtn.click();
+    }
+  });
+
+  // ─── Duração + Linha do tempo dourada ───────────────────────
+  // Sessão típica: 50 min. A linha enche linearmente. Sem alarme — pista visual.
+  const SESSION_TARGET_MS = 50 * 60 * 1000;
+  const timelineFill = document.getElementById("timelineFill");
+  const infoDuration = document.getElementById("infoDuration");
+
+  setInterval(() => {
+    const ms = Date.now() - sessionStartTs;
+    const m = Math.floor(ms / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    infoDuration.textContent = `${m}min ${String(s).padStart(2,"0")}s`;
+    const pct = Math.min(100, (ms / SESSION_TARGET_MS) * 100);
+    timelineFill.style.width = pct + "%";
+  }, 1000);
+
+  // ─── Ritual de abertura (overlay + chime) ───────────────────
+  // Toca uma vez quando o paciente entra. Som suave gerado por Web Audio
+  // (sem assets) — duas oitavas em fade triangular, cabeçalho de sessão.
+  function playOpeningRitual() {
+    const overlay = document.getElementById("ritualOpen");
+    overlay.classList.remove("ep-hide");
+    setTimeout(() => overlay.classList.add("ep-hide"), 3200);
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = ctx.currentTime;
+      [392.0, 587.33].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, now + i * 0.4);
+        gain.gain.linearRampToValueAtTime(0.06, now + i * 0.4 + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.4 + 1.6);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now + i * 0.4);
+        osc.stop(now + i * 0.4 + 1.7);
+      });
+      setTimeout(() => ctx.close().catch(() => {}), 2400);
+    } catch (e) { /* navegador sem WebAudio: ignora */ }
+  }
+
+  // ─── Cards de Tópicos Clínicos ──────────────────────────────
+  const topicsToggle  = document.getElementById("topicsToggle");
+  const topicsDeck    = document.getElementById("topicsDeck");
+  const topicsClose   = document.getElementById("topicsClose");
+  const topicsFilters = document.getElementById("topicsFilters");
+  const topicsList    = document.getElementById("topicsList");
+  const topicsDraw    = document.getElementById("topicsDraw");
+
+  let activeAbord = "all";
+
+  function renderFilters() {
+    const abords = ["all", ...Object.keys(ABORDAGEM_LABEL)];
+    topicsFilters.innerHTML = "";
+    abords.forEach(a => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ep-topics-deck__filter" + (a === activeAbord ? " is-active" : "");
+      btn.textContent = a === "all" ? "Todas" : ABORDAGEM_LABEL[a];
+      btn.addEventListener("click", () => {
+        activeAbord = a;
+        renderFilters();
+        renderList();
+      });
+      topicsFilters.appendChild(btn);
+    });
+  }
+  function renderList() {
+    const filtered = activeAbord === "all"
+      ? TOPIC_LIBRARY
+      : TOPIC_LIBRARY.filter(t => t.abord === activeAbord);
+    topicsList.innerHTML = "";
+    filtered.forEach(t => topicsList.appendChild(buildTopicCard(t)));
+  }
+  function buildTopicCard(t) {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "ep-topic-card";
+    const abord = document.createElement("span");
+    abord.className = "ep-topic-card__abord";
+    abord.textContent = ABORDAGEM_LABEL[t.abord] || t.abord;
+    const text = document.createElement("span");
+    text.textContent = t.text;
+    card.appendChild(abord);
+    card.appendChild(text);
+    card.addEventListener("click", () => {
+      // Insere o tópico como prefixo na anotação atual.
+      const prefix = noteInput.value.trim();
+      noteInput.value = (prefix ? prefix + "\n\n" : "") + "› " + t.text + "\n";
+      noteInput.focus();
+    });
+    return card;
+  }
+
+  topicsToggle.addEventListener("click", () => {
+    const open = topicsDeck.classList.toggle("is-open");
+    topicsToggle.setAttribute("aria-expanded", open ? "true" : "false");
+    topicsDeck.setAttribute("aria-hidden", open ? "false" : "true");
+  });
+  topicsClose.addEventListener("click", () => {
+    topicsDeck.classList.remove("is-open");
+    topicsToggle.setAttribute("aria-expanded", "false");
+    topicsDeck.setAttribute("aria-hidden", "true");
+  });
+  topicsDraw.addEventListener("click", () => {
+    const pool = activeAbord === "all" ? TOPIC_LIBRARY : TOPIC_LIBRARY.filter(t => t.abord === activeAbord);
+    if (pool.length === 0) return;
+    const t = pool[Math.floor(Math.random() * pool.length)];
+    const prefix = noteInput.value.trim();
+    noteInput.value = (prefix ? prefix + "\n\n" : "") + "› " + t.text + "\n";
+    noteInput.focus();
+  });
+
+  renderFilters();
+  renderList();
+
+  // Som ambiente e clima já foram inicializados por initAtmosphere() acima.
+
+  await loadNotes();
+
+  // beforeunload: leave gracefully
+  window.addEventListener("beforeunload", () => {
+    try { room?.disconnect(); } catch {}
+  });
+</script>
+
+</body>
+</html>

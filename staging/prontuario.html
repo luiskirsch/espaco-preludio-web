@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prontuário · Espaço Prelúdio</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-30">
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html">Consultas</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./pacientes.html" class="is-active">Pacientes</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./documento.html?tipo=atestado">Documentos</a>
+      <a href="./perfil.html">Perfil</a>
+      <span id="topUserName" class="ep-text-sm ep-text-muted">&nbsp;</span>
+      <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16">
+
+  <a href="./pacientes.html" class="ep-text-sm ep-text-muted">← Voltar para pacientes</a>
+
+  <!-- Header com avatar, nome, pills, ações -->
+  <section class="ep-prontuario__header ep-mt-12">
+    <div class="ep-prontuario__avatar" id="patientAvatar" aria-hidden="true">
+      <span class="ep-skeleton ep-skeleton--avatar"></span>
+    </div>
+    <div class="ep-prontuario__title">
+      <div class="ep-eyebrow">Prontuário</div>
+      <h1 id="patientName"><span class="ep-skeleton ep-skeleton--title"></span></h1>
+      <div class="ep-prontuario__pills" id="patientPills">
+        <span class="ep-skeleton ep-skeleton--pill"></span>
+        <span class="ep-skeleton ep-skeleton--pill"></span>
+        <span class="ep-skeleton ep-skeleton--pill"></span>
+      </div>
+    </div>
+    <div class="ep-prontuario__actions">
+      <a href="./pacientes.html" class="ep-btn ep-btn--ghost ep-btn--sm" id="editPatientBtn" title="Gerenciar paciente">Editar</a>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="exportPdfBtn" title="Exportar PDF do prontuário (CFP Res. 1/2019)">Exportar PDF</button>
+      <a id="newReceitaLink" href="#" class="ep-btn ep-btn--ghost ep-btn--sm" title="Emitir nova receita">+ Receita</a>
+      <a id="newSessionLink" href="#" class="ep-btn ep-btn--primary">+ Nova consulta</a>
+    </div>
+  </section>
+
+  <!-- Strip de stats agregados -->
+  <section class="ep-stats-strip ep-mt-16" id="statsStrip" aria-label="Resumo do paciente">
+    <div class="ep-stat">
+      <div class="ep-stat__label">Sessões</div>
+      <div class="ep-stat__value" id="statSessions">—</div>
+      <div class="ep-stat__hint" id="statSessionsHint">&nbsp;</div>
+    </div>
+    <div class="ep-stat">
+      <div class="ep-stat__label">Última sessão</div>
+      <div class="ep-stat__value" id="statLast">—</div>
+      <div class="ep-stat__hint" id="statLastHint">&nbsp;</div>
+    </div>
+    <div class="ep-stat">
+      <div class="ep-stat__label">Tempo total</div>
+      <div class="ep-stat__value" id="statTotal">—</div>
+      <div class="ep-stat__hint" id="statTotalHint">&nbsp;</div>
+    </div>
+  </section>
+
+  <!-- Observações iniciais (se houver) -->
+  <section class="ep-mt-24">
+    <div class="ep-eyebrow ep-mb-12">Observações iniciais</div>
+    <div class="ep-observations" id="patientObs"></div>
+  </section>
+
+  <!-- Histórico clínico -->
+  <section class="ep-mt-32">
+    <div class="ep-eyebrow">Histórico clínico</div>
+    <h2 class="ep-h2 ep-mt-12">Sessões anteriores</h2>
+    <p class="ep-text-muted ep-text-sm ep-mt-8 ep-mt-0">
+      <span class="ep-lock">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+      </span>
+      Tudo aqui é decifrado no seu navegador. Nada disso fica no servidor em texto claro.
+    </p>
+
+    <div id="sessionsLoading" class="ep-stack ep-mt-16">
+      <div class="ep-skeleton ep-skeleton--card"></div>
+      <div class="ep-skeleton ep-skeleton--card"></div>
+      <div class="ep-skeleton ep-skeleton--card"></div>
+    </div>
+
+    <div id="sessions" class="ep-timeline ep-mt-16 ep-hide"></div>
+
+    <div id="sessionsEmpty" class="ep-empty ep-mt-16 ep-hide">
+      <h3 class="ep-h3">Nenhuma sessão ainda.</h3>
+      <p class="ep-text-muted ep-mt-8 ep-mt-0">
+        Quando você criar uma consulta vinculada a este paciente, ela aparecerá aqui.
+      </p>
+      <a id="newSessionEmptyCta" href="#" class="ep-btn ep-btn--primary ep-mt-16">+ Criar primeira consulta</a>
+    </div>
+
+    <div id="errorState" class="ep-error-state ep-mt-16 ep-hide">
+      <div>
+        <div class="ep-error-state__title">Não foi possível carregar o prontuário.</div>
+        <div class="ep-error-state__detail" id="errorStateDetail"></div>
+      </div>
+      <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="retryBtn">Tentar novamente</button>
+    </div>
+  </section>
+
+  <!-- Receitas digitais -->
+  <section class="ep-mt-32">
+    <div class="ep-eyebrow">Receitas</div>
+    <div class="ep-flex" style="justify-content: space-between; align-items: end; gap: 12px;">
+      <h2 class="ep-h2 ep-mt-12">Receitas emitidas</h2>
+      <a id="newReceitaInline" href="#" class="ep-btn ep-btn--ghost ep-btn--sm">+ Nova receita</a>
+    </div>
+
+    <div id="receitasLoading" class="ep-skeleton ep-mt-16">Carregando…</div>
+    <div id="receitasList" class="ep-stack ep-mt-16 ep-hide" style="gap: 8px;"></div>
+    <div id="receitasEmpty" class="ep-empty ep-mt-16 ep-hide">
+      <p class="ep-text-muted ep-mt-0">Nenhuma receita emitida para este paciente.</p>
+    </div>
+  </section>
+
+</main>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js";
+  import { decryptNote, clearDek } from "./js/crypto.js";
+
+  // ─── Boot ───────────────────────────────────────────────────
+  const params = new URLSearchParams(location.search);
+  const patientId = params.get("p");
+  if (!patientId) {
+    window.location.href = "./pacientes.html";
+    throw new Error("NO_PATIENT");
+  }
+
+  const sess = await requireTherapist({ requireDek: true });
+  const { idToken, therapist, dek } = sess;
+  document.getElementById("topUserName").textContent = therapist.displayName || "";
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    clearDek();
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
+
+  // ─── Helpers ────────────────────────────────────────────────
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    }[c]));
+  }
+  function fmtTime(ms) {
+    if (!ms) return "";
+    return new Date(ms).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  }
+  function fmtDateLong(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+  }
+  function fmtMonthYear(ms) {
+    return new Date(ms).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  }
+  function monthKey(ms) {
+    const d = new Date(ms);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+  }
+  function calcAge(birth) {
+    if (!birth) return null;
+    const b = new Date(birth);
+    if (Number.isNaN(b.getTime())) return null;
+    const t = new Date();
+    let age = t.getFullYear() - b.getFullYear();
+    const m = t.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && t.getDate() < b.getDate())) age--;
+    return age >= 0 ? age : null;
+  }
+  function relativeTime(ms) {
+    if (!ms) return "—";
+    const diff = Date.now() - ms;
+    const s = Math.floor(diff / 1000);
+    if (s < 60) return "agora";
+    const min = Math.floor(s / 60);
+    if (min < 60) return `há ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `há ${h} h`;
+    const d = Math.floor(h / 24);
+    if (d < 7) return `há ${d} dia${d > 1 ? "s" : ""}`;
+    if (d < 30) {
+      const w = Math.floor(d / 7);
+      return `há ${w} semana${w > 1 ? "s" : ""}`;
+    }
+    if (d < 365) {
+      const mo = Math.floor(d / 30);
+      return `há ${mo} ${mo === 1 ? "mês" : "meses"}`;
+    }
+    const y = Math.floor(d / 365);
+    return `há ${y} ano${y > 1 ? "s" : ""}`;
+  }
+  function fmtDuration(ms) {
+    if (!ms || ms <= 0) return "—";
+    const min = Math.floor(ms / 60000);
+    if (min < 60) return `${min} min`;
+    const h = Math.floor(min / 60);
+    const rest = min % 60;
+    return rest === 0 ? `${h}h` : `${h}h ${rest}min`;
+  }
+  function initialsFromName(name) {
+    const parts = (name || "").trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "—";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  // ─── Loaders ────────────────────────────────────────────────
+  async function loadPatient() {
+    const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, {
+      headers: { "Authorization": `Bearer ${idToken}` }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+    const p = (data.patients || []).find(x => x.patientId === patientId);
+    if (!p) return null;
+    const json = await decryptNote({ ciphertext: p.ciphertext, iv: p.iv }, dek);
+    return { ...JSON.parse(json), patientId, createdAt: p.createdAt, updatedAt: p.updatedAt };
+  }
+
+  async function loadSessions() {
+    const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patientId)}/sessoes`, {
+      headers: { "Authorization": `Bearer ${idToken}` }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+    return data.sessions || [];
+  }
+
+  async function loadNotesFor(sessionId) {
+    const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/notas`, {
+      headers: { "Authorization": `Bearer ${idToken}` }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) return [];
+    return Promise.all((data.notes || []).map(async n => ({ ...n, text: await decryptNote(n, dek) })));
+  }
+
+  // ─── Renders ────────────────────────────────────────────────
+  function renderHeader(patient) {
+    const avatarEl = document.getElementById("patientAvatar");
+    avatarEl.textContent = initialsFromName(patient.name);
+
+    document.getElementById("patientName").textContent = patient.name || "—";
+
+    const pills = document.getElementById("patientPills");
+    pills.innerHTML = "";
+    const age = calcAge(patient.birthdate);
+    if (age !== null) {
+      pills.insertAdjacentHTML("beforeend", `<span class="ep-pill">${age} anos</span>`);
+    }
+    if (patient.contact) {
+      pills.insertAdjacentHTML("beforeend",
+        `<span class="ep-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="m4 6 8 6 8-6"/></svg>${escapeHtml(patient.contact)}</span>`);
+    }
+    if (patient.createdAt) {
+      pills.insertAdjacentHTML("beforeend", `<span class="ep-pill">Cliente desde ${fmtMonthYear(patient.createdAt)}</span>`);
+    }
+
+    const obsEl = document.getElementById("patientObs");
+    if (patient.observations) {
+      obsEl.textContent = patient.observations;
+    } else {
+      obsEl.style.display = "none";
+    }
+
+    const newSessionHref = `./painel.html?newWith=${encodeURIComponent(patientId)}&name=${encodeURIComponent(patient.name || "")}`;
+    document.getElementById("newSessionLink").href = newSessionHref;
+    document.getElementById("newSessionEmptyCta").href = newSessionHref;
+    document.getElementById("newReceitaLink").href = `./receita.html?patientId=${encodeURIComponent(patientId)}`;
+  }
+
+  function renderHeaderError(name) {
+    document.getElementById("patientAvatar").textContent = "—";
+    document.getElementById("patientName").textContent = name || "Paciente não encontrado";
+    document.getElementById("patientPills").innerHTML = "";
+    document.getElementById("patientObs").style.display = "none";
+    document.getElementById("editPatientBtn").classList.add("ep-hide");
+    document.getElementById("newSessionLink").classList.add("ep-hide");
+    document.getElementById("newReceitaLink").classList.add("ep-hide");
+  }
+
+  function renderStats(sessions) {
+    const completed = sessions.filter(s => s.status === "completed");
+    const last = sessions[0]; // já vem ordenado desc
+
+    document.getElementById("statSessions").textContent = sessions.length;
+    document.getElementById("statSessionsHint").textContent =
+      completed.length === sessions.length
+        ? `${completed.length} encerradas`
+        : `${completed.length} encerradas · ${sessions.length - completed.length} em aberto`;
+
+    if (last) {
+      document.getElementById("statLast").textContent = relativeTime(last.createdAt);
+      document.getElementById("statLastHint").textContent = new Date(last.createdAt).toLocaleDateString("pt-BR", {
+        day: "2-digit", month: "short", year: "numeric"
+      });
+    } else {
+      document.getElementById("statLast").textContent = "—";
+      document.getElementById("statLastHint").textContent = "sem sessões";
+    }
+
+    // Tempo total = soma de (completedAt - createdAt) das encerradas
+    let totalMs = 0;
+    for (const s of completed) {
+      if (s.completedAt && s.createdAt) {
+        totalMs += Math.max(0, s.completedAt - s.createdAt);
+      }
+    }
+    document.getElementById("statTotal").textContent = fmtDuration(totalMs);
+    document.getElementById("statTotalHint").textContent = completed.length
+      ? `média ${fmtDuration(Math.round(totalMs / completed.length))}/sessão`
+      : "—";
+  }
+
+  function renderTimeline(sessions, notesBySession) {
+    const wrap = document.getElementById("sessions");
+    wrap.innerHTML = "";
+
+    // Agrupa por mês (já ordenado desc por createdAt)
+    const groups = new Map();
+    for (const s of sessions) {
+      const k = monthKey(s.createdAt || Date.now());
+      if (!groups.has(k)) groups.set(k, { label: fmtMonthYear(s.createdAt || Date.now()), items: [] });
+      groups.get(k).items.push(s);
+    }
+
+    for (const [k, g] of groups) {
+      const month = document.createElement("div");
+      month.className = "ep-timeline-month";
+      month.innerHTML = `<div class="ep-timeline-month__label">${escapeHtml(g.label)}</div>`;
+      g.items.forEach(s => month.appendChild(buildSessionCard(s, notesBySession.get(s.sessionId) || [])));
+      wrap.appendChild(month);
+    }
+    wrap.classList.remove("ep-hide");
+  }
+
+  function buildSessionCard(s, notes) {
+    const card = document.createElement("article");
+    card.className = "ep-session-card";
+
+    const statusBadge = s.status === "completed"
+      ? '<span class="ep-badge ep-badge--muted">Encerrada</span>'
+      : s.status === "in_progress"
+        ? '<span class="ep-badge ep-badge--ok">Em sessão</span>'
+        : '<span class="ep-badge">Agendada</span>';
+
+    const duration = (s.completedAt && s.createdAt)
+      ? fmtDuration(s.completedAt - s.createdAt)
+      : null;
+
+    const timeRange = s.completedAt
+      ? `${fmtTime(s.createdAt)} — ${fmtTime(s.completedAt)}${duration ? ` · ${duration}` : ""}`
+      : fmtTime(s.createdAt);
+
+    card.innerHTML = `
+      <button type="button" class="ep-session-card__head" aria-expanded="false">
+        <div>
+          <div class="ep-session-card__date">${escapeHtml(fmtDateLong(s.createdAt))}</div>
+          <div class="ep-session-card__time">${escapeHtml(timeRange)}</div>
+        </div>
+        ${statusBadge}
+        <span class="ep-session-card__count" title="Notas cifradas">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          ${notes.length}
+        </span>
+        <span class="ep-session-card__chevron" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </span>
+      </button>
+      <div class="ep-session-card__body" data-notes></div>
+    `;
+
+    const body = card.querySelector("[data-notes]");
+    if (notes.length === 0) {
+      body.innerHTML = `<div class="ep-text-xs ep-text-muted">Nenhuma anotação registrada nesta sessão.</div>`;
+    } else {
+      notes.forEach(n => {
+        const noteEl = document.createElement("div");
+        noteEl.className = "ep-note";
+        const meta = document.createElement("div");
+        meta.className = "ep-note__meta";
+        meta.textContent = fmtTime(n.createdAt);
+        const text = document.createElement("div");
+        text.textContent = n.text;
+        noteEl.appendChild(meta);
+        noteEl.appendChild(text);
+        body.appendChild(noteEl);
+      });
+    }
+
+    card.querySelector(".ep-session-card__head").addEventListener("click", () => {
+      const open = card.classList.toggle("is-open");
+      card.querySelector(".ep-session-card__head").setAttribute("aria-expanded", open ? "true" : "false");
+    });
+
+    return card;
+  }
+
+  function showError(message) {
+    document.getElementById("sessionsLoading").classList.add("ep-hide");
+    document.getElementById("sessions").classList.add("ep-hide");
+    document.getElementById("sessionsEmpty").classList.add("ep-hide");
+    const errEl = document.getElementById("errorState");
+    document.getElementById("errorStateDetail").textContent = message || "—";
+    errEl.classList.remove("ep-hide");
+  }
+
+  // ─── Boot pipeline ──────────────────────────────────────────
+  async function boot() {
+    document.getElementById("errorState").classList.add("ep-hide");
+    document.getElementById("sessionsLoading").classList.remove("ep-hide");
+
+    let patient;
+    try {
+      patient = await loadPatient();
+    } catch (err) {
+      console.error("load_patient_error", err);
+      renderHeaderError();
+      showError(String(err?.message || err || "ERRO"));
+      return;
+    }
+
+    if (!patient) {
+      renderHeaderError("Paciente não encontrado");
+      document.getElementById("sessionsLoading").classList.add("ep-hide");
+      document.getElementById("statsStrip").classList.add("ep-hide");
+      document.getElementById("patientObs").style.display = "none";
+      return;
+    }
+
+    renderHeader(patient);
+
+    let sessions;
+    try {
+      sessions = await loadSessions();
+    } catch (err) {
+      console.error("load_sessions_error", err);
+      showError(String(err?.message || err || "ERRO"));
+      return;
+    }
+
+    renderStats(sessions);
+
+    if (sessions.length === 0) {
+      document.getElementById("sessionsLoading").classList.add("ep-hide");
+      document.getElementById("sessionsEmpty").classList.remove("ep-hide");
+      return;
+    }
+
+    // Carrega notas em paralelo (limite de concorrência implícito do browser)
+    const notesEntries = await Promise.all(
+      sessions.map(async s => [s.sessionId, await loadNotesFor(s.sessionId)])
+    );
+    const notesBySession = new Map(notesEntries);
+
+    document.getElementById("sessionsLoading").classList.add("ep-hide");
+    renderTimeline(sessions, notesBySession);
+  }
+
+  // ─── Receitas digitais — listagem por paciente ─────────────────────
+  async function loadReceitas() {
+    const url = `${BACKEND_BASE_URL}/therapy/receitas?patientId=${encodeURIComponent(patientId)}`;
+    const res = await fetch(url, { headers: { "Authorization": `Bearer ${idToken}` } });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+    return data.receitas || [];
+  }
+
+  function fmtReceitaDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  async function renderReceitas() {
+    const loading = document.getElementById("receitasLoading");
+    const list    = document.getElementById("receitasList");
+    const empty   = document.getElementById("receitasEmpty");
+    document.getElementById("newReceitaInline").href = `./receita.html?patientId=${encodeURIComponent(patientId)}`;
+    try {
+      const receitas = await loadReceitas();
+      loading.classList.add("ep-hide");
+      if (!receitas.length) { empty.classList.remove("ep-hide"); return; }
+
+      list.innerHTML = "";
+      for (const r of receitas) {
+        // Decifra resumo do form pra mostrar 1ª linha de medicação
+        let resumo = "(rascunho)";
+        try {
+          const txt = await decryptNote({ ciphertext: r.formCiphertext, iv: r.formIv }, dek);
+          const f = JSON.parse(txt);
+          const first = (f.meds && f.meds[0]) || null;
+          resumo = first ? `${first.nome}${first.posologia ? " · " + first.posologia : ""}` : "(sem medicamentos)";
+        } catch {}
+
+        const card = document.createElement("article");
+        card.className = "ep-receita-row";
+        const isSigned = r.status === "signed";
+        const statusPill = isSigned
+          ? `<span class="ep-verif-pill is-verified" style="font-size: 11px;">Assinada</span>`
+          : `<span class="ep-verif-pill is-pending" style="font-size: 11px;">Rascunho</span>`;
+        const linkBtn = isSigned && r.deliveryToken
+          ? `<a class="ep-btn ep-btn--ghost ep-btn--xs" href="./receita-publica.html?t=${encodeURIComponent(r.deliveryToken)}" target="_blank">Ver link</a>`
+          : "";
+        card.innerHTML = `
+          <div>
+            <div class="ep-receita-row__top">
+              ${statusPill}
+              <span class="ep-text-xs ep-text-muted">${fmtReceitaDate(r.signedAt || r.createdAt)}</span>
+            </div>
+            <div class="ep-receita-row__resumo">${escapeHtml(resumo)}</div>
+          </div>
+          <div class="ep-flex" style="gap: 6px;">
+            ${linkBtn}
+            <a class="ep-btn ep-btn--ghost ep-btn--xs" href="./receita.html?id=${encodeURIComponent(r.receitaId)}">Abrir</a>
+          </div>
+        `;
+        list.appendChild(card);
+      }
+      list.classList.remove("ep-hide");
+    } catch (e) {
+      console.error("load_receitas_error", e);
+      loading.textContent = "Não foi possível carregar receitas.";
+      loading.classList.add("ep-error-state");
+    }
+  }
+
+  document.getElementById("retryBtn").addEventListener("click", boot);
+
+  // ─── Export PDF do prontuário (CFP Res. 1/2019 — retenção 20 anos) ──
+  // Estado em memória pra o exportador usar (preenchido por boot/receitas)
+  const exportState = {
+    patient: null,
+    sessions: [],
+    notesBySession: new Map(),
+    receitas: []  // {receitaId, status, signedAt, createdAt, formDecrypted: {meds, observacoes, ...}}
+  };
+  // Hook em boot/renderReceitas via wrappers
+  const _origBoot = boot;
+  async function bootWithExport() {
+    await _origBoot();
+    // Ao final do boot, expõe dados decifrados pro export.
+    // Loadpatient é repetido aqui pois o original não retornou nada (renderHeader consome).
+    try {
+      exportState.patient = await loadPatient();
+    } catch {}
+    try {
+      const sessions = await loadSessions();
+      exportState.sessions = sessions;
+      const entries = await Promise.all(sessions.map(async s => [s.sessionId, await loadNotesFor(s.sessionId)]));
+      exportState.notesBySession = new Map(entries);
+    } catch {}
+  }
+  // Recarrega receitas com decifrado completo pro PDF
+  async function loadReceitasDecrypted() {
+    try {
+      const receitas = await loadReceitas();
+      const out = [];
+      for (const r of receitas) {
+        let formDecrypted = null;
+        try {
+          const txt = await decryptNote({ ciphertext: r.formCiphertext, iv: r.formIv }, dek);
+          formDecrypted = JSON.parse(txt);
+        } catch {}
+        out.push({ ...r, formDecrypted });
+      }
+      exportState.receitas = out;
+    } catch (e) { console.warn("export_receitas_error", e); }
+  }
+
+  document.getElementById("exportPdfBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("exportPdfBtn");
+    btn.disabled = true;
+    btn.textContent = "Gerando…";
+    try {
+      // Garante que receitas estão decifradas
+      if (exportState.receitas.length === 0) await loadReceitasDecrypted();
+      const bytes = await buildProntuarioPdf(exportState);
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const name = (exportState.patient?.name || "paciente").replace(/[^a-zA-Z0-9-]/g, "_");
+      a.href = url;
+      a.download = `prontuario-${name}-${new Date().toISOString().slice(0,10)}.pdf`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("export_pdf_error", e);
+      alert("Erro ao gerar PDF: " + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Exportar PDF";
+    }
+  });
+
+  async function buildProntuarioPdf(state) {
+    const { PDFDocument, StandardFonts, rgb } = await import("https://esm.sh/pdf-lib@1.17.1");
+    const pdfDoc = await PDFDocument.create();
+    const fontReg  = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const PAGE_W = 595, PAGE_H = 842;
+    const MARGIN = 50;
+    const RIGHT  = PAGE_W - MARGIN;
+
+    let page = pdfDoc.addPage([PAGE_W, PAGE_H]);
+    let y = PAGE_H - MARGIN;
+
+    function newPage() {
+      page = pdfDoc.addPage([PAGE_W, PAGE_H]);
+      y = PAGE_H - MARGIN;
+      drawPageFooter();
+    }
+    function ensure(needed) {
+      if (y - needed < MARGIN + 30) newPage();
+    }
+    function drawPageFooter() {
+      const total = pdfDoc.getPageCount();
+      page.drawText(`Documento gerado pelo Espaço Prelúdio — retenção exigida pela Resolução CFP nº 1/2019 (mínimo 20 anos).`, {
+        x: MARGIN, y: 30, font: fontReg, size: 7.5, color: rgb(0.55,0.55,0.55)
+      });
+      page.drawText(`Página ${total}`, {
+        x: RIGHT - 50, y: 30, font: fontReg, size: 7.5, color: rgb(0.55,0.55,0.55)
+      });
+    }
+    function wrap(text, font, size, max) {
+      const words = String(text || "").split(/\s+/);
+      const lines = []; let cur = "";
+      for (const w of words) {
+        const test = cur ? cur + " " + w : w;
+        if (font.widthOfTextAtSize(test, size) > max && cur) { lines.push(cur); cur = w; }
+        else cur = test;
+      }
+      if (cur) lines.push(cur);
+      return lines.length ? lines : [""];
+    }
+    function txt(text, opts = {}) {
+      const { x = MARGIN, font = fontReg, size = 11, color = rgb(0.1,0.1,0.1), max = RIGHT - MARGIN } = opts;
+      const lines = wrap(text, font, size, max);
+      for (const ln of lines) {
+        ensure(size + 2);
+        page.drawText(ln, { x, y, font, size, color });
+        y -= size * 1.4;
+      }
+    }
+    function hr() {
+      ensure(14);
+      page.drawLine({ start: { x: MARGIN, y: y + 3 }, end: { x: RIGHT, y: y + 3 }, thickness: 0.5, color: rgb(0.78,0.78,0.78) });
+      y -= 12;
+    }
+    function fmtDate(ms) {
+      if (!ms) return "—";
+      return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+    }
+    function fmtTime(ms) {
+      return new Date(ms).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    // ── CAPA ──────────────────────────────────────────────────────────
+    txt(therapist.displayName || "", { font: fontBold, size: 14 });
+    const idParts = [];
+    if (therapist.crm) idParts.push("CRM " + therapist.crm);
+    if (therapist.crp) idParts.push("CRP " + therapist.crp);
+    if (therapist.rqe) idParts.push("RQE " + therapist.rqe.replace(/^RQE\s*/i, ""));
+    if (therapist.especialidade) idParts.push(therapist.especialidade);
+    if (idParts.length) txt(idParts.join("  ·  "), { size: 10, color: rgb(0.4,0.4,0.4) });
+    y -= 10; hr();
+
+    y -= 80;
+    txt("PRONTUÁRIO CLÍNICO", { font: fontBold, size: 22 });
+    y -= 8;
+    txt(state.patient?.name || "Paciente", { font: fontBold, size: 18 });
+    y -= 16;
+
+    const meta = [];
+    if (state.patient?.contact)   meta.push("Contato: " + state.patient.contact);
+    if (state.patient?.birthdate) meta.push("Nascimento: " + state.patient.birthdate);
+    meta.push("Cliente desde: " + fmtDate(state.patient?.createdAt));
+    meta.push("Total de sessões: " + state.sessions.length);
+    meta.push("Total de receitas: " + state.receitas.length);
+    meta.push("Exportado em: " + new Date().toLocaleString("pt-BR"));
+    for (const m of meta) txt(m, { size: 11, color: rgb(0.30,0.30,0.30) });
+
+    y -= 30;
+    txt("Documento confidencial — uso clínico restrito.", { size: 9, color: rgb(0.55,0.55,0.55), font: fontBold });
+    txt("Mantenha em local seguro pelo prazo legal de retenção (mínimo 20 anos após o último atendimento, conforme Resolução CFP nº 1/2019).", {
+      size: 9, color: rgb(0.50,0.50,0.50)
+    });
+
+    drawPageFooter();
+
+    // ── IDENTIFICAÇÃO + OBSERVAÇÕES INICIAIS ──────────────────────────
+    newPage();
+    txt("1. Identificação do paciente", { font: fontBold, size: 14 });
+    y -= 4; hr();
+    txt("Nome: " + (state.patient?.name || "—"));
+    if (state.patient?.contact)   txt("Contato: " + state.patient.contact);
+    if (state.patient?.birthdate) txt("Data de nascimento: " + state.patient.birthdate);
+    txt("Cadastrado em: " + fmtDate(state.patient?.createdAt));
+    if (state.patient?.observations) {
+      y -= 8;
+      txt("Observações iniciais", { font: fontBold, size: 12 });
+      y -= 2;
+      txt(state.patient.observations);
+    }
+
+    // ── SESSÕES ───────────────────────────────────────────────────────
+    y -= 16;
+    ensure(40);
+    txt("2. Histórico de sessões", { font: fontBold, size: 14 });
+    y -= 4; hr();
+
+    if (state.sessions.length === 0) {
+      txt("Nenhuma sessão registrada.", { color: rgb(0.45,0.45,0.45) });
+    } else {
+      // Sessões já vêm em ordem desc; vamos exibir asc (cronológica)
+      const sessionsAsc = [...state.sessions].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+      for (let i = 0; i < sessionsAsc.length; i++) {
+        const s = sessionsAsc[i];
+        ensure(60);
+        txt(`Sessão ${i + 1} — ${fmtDate(s.createdAt)} ${fmtTime(s.createdAt)}`, { font: fontBold, size: 12 });
+        const statusMap = { completed: "Encerrada", in_progress: "Em sessão", scheduled: "Agendada" };
+        txt("Status: " + (statusMap[s.status] || s.status), { size: 10, color: rgb(0.40,0.40,0.40) });
+        if (s.scheduledAt) txt("Agendada para: " + fmtDate(s.scheduledAt), { size: 10, color: rgb(0.40,0.40,0.40) });
+        if (s.completedAt) txt("Encerrada em: " + fmtDate(s.completedAt) + " " + fmtTime(s.completedAt), { size: 10, color: rgb(0.40,0.40,0.40) });
+
+        const notes = state.notesBySession.get(s.sessionId) || [];
+        if (notes.length === 0) {
+          y -= 4;
+          txt("Sem anotações registradas.", { size: 10, color: rgb(0.55,0.55,0.55) });
+        } else {
+          y -= 4;
+          txt("Anotações clínicas:", { font: fontBold, size: 10 });
+          for (const n of notes) {
+            const time = n.createdAt ? fmtTime(n.createdAt) : "";
+            txt(`[${time}] ${n.text || ""}`, { size: 10 });
+          }
+        }
+        y -= 10;
+      }
+    }
+
+    // ── RECEITAS ──────────────────────────────────────────────────────
+    y -= 8;
+    ensure(40);
+    txt("3. Receitas emitidas", { font: fontBold, size: 14 });
+    y -= 4; hr();
+
+    if (state.receitas.length === 0) {
+      txt("Nenhuma receita emitida para este paciente.", { color: rgb(0.45,0.45,0.45) });
+    } else {
+      const receitasAsc = [...state.receitas].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+      for (let i = 0; i < receitasAsc.length; i++) {
+        const r = receitasAsc[i];
+        ensure(60);
+        const statusLbl = r.status === "signed" ? "Assinada" : "Rascunho";
+        txt(`Receita ${i + 1} — ${fmtDate(r.signedAt || r.createdAt)} (${statusLbl})`, { font: fontBold, size: 12 });
+        if (r.signatureMethod) txt("Assinatura: " + r.signatureMethod, { size: 10, color: rgb(0.40,0.40,0.40) });
+
+        const f = r.formDecrypted;
+        if (f) {
+          if (f.tipoReceita) {
+            const tipoMap = { simples: "Receita comum", "controle-especial": "Receita de Controle Especial" };
+            txt("Tipo: " + (tipoMap[f.tipoReceita] || f.tipoReceita), { size: 10, color: rgb(0.40,0.40,0.40) });
+          }
+          if (f.meds?.length) {
+            y -= 4;
+            txt("Medicações:", { font: fontBold, size: 10 });
+            f.meds.forEach((m, idx) => {
+              txt(`  ${idx + 1}. ${m.nome || ""}` + (m.qtd ? ` · Qtd: ${m.qtd}` : ""), { size: 10 });
+              if (m.posologia) txt(`     ${m.posologia}`, { size: 10, color: rgb(0.35,0.35,0.35) });
+            });
+          }
+          if (f.observacoes) {
+            y -= 2;
+            txt("Observações: " + f.observacoes, { size: 10, color: rgb(0.30,0.30,0.30) });
+          }
+        }
+        y -= 10;
+      }
+    }
+
+    // ── ASSINATURA DO PROFISSIONAL ────────────────────────────────────
+    y -= 30;
+    ensure(80);
+    page.drawLine({ start: { x: MARGIN, y }, end: { x: MARGIN + 280, y }, thickness: 0.5, color: rgb(0.3,0.3,0.3) });
+    y -= 14;
+    txt("Profissional responsável", { size: 9, color: rgb(0.45,0.45,0.45) });
+    txt(therapist.displayName || "", { font: fontBold, size: 11 });
+    if (idParts.length) txt(idParts.join("  ·  "), { size: 9, color: rgb(0.35,0.35,0.35) });
+
+    return pdfDoc.save();
+  }
+
+  await bootWithExport();
+  // Receitas carregam após o resto (não-bloqueante)
+  renderReceitas().then(() => loadReceitasDecrypted());
+</script>
+
+</body>
+</html>

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel · Espaço Prelúdio</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-30">
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html" class="is-active">Consultas</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./pacientes.html">Pacientes</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./documento.html?tipo=atestado">Documentos</a>
+      <a href="./perfil.html">Perfil</a>
+      <span id="topUserName" class="ep-text-sm ep-text-muted">&nbsp;</span>
+      <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16">
+
+  <section class="ep-stack">
+    <div class="ep-flex--end-wrap ep-flex">
+      <div>
+        <div class="ep-eyebrow">Painel do profissional</div>
+        <h1 class="ep-h1 ep-mt-12">Suas consultas</h1>
+        <p class="ep-text-muted ep-mt-8 ep-mt-0">
+          Crie um link único para cada paciente. Cifragem ponta-a-ponta ativa em todas as sessões.
+        </p>
+        <a href="./verificacao.html" id="verifPill" class="ep-verif-pill ep-hide ep-mt-12" aria-label="Status de verificação"></a>
+      </div>
+      <button id="newSessionBtn" type="button" class="ep-btn ep-btn--primary ep-btn--lg">+ Nova consulta</button>
+    </div>
+
+    <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando suas consultas…</div>
+
+    <div id="sessionList" class="ep-session-list ep-mt-16 ep-hide"></div>
+
+    <div id="emptyState" class="ep-empty ep-mt-16 ep-hide">
+      <h3 class="ep-h3">Nenhuma consulta ainda.</h3>
+      <p class="ep-text-muted ep-mt-8" style="margin: 0;">
+        Crie sua primeira consulta para gerar um link e enviar ao paciente.
+      </p>
+      <button class="ep-btn ep-btn--primary ep-mt-16" type="button" id="emptyCta">Criar primeira consulta</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- Modal: Nova consulta -->
+<div class="ep-modal" id="newSessionModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel">
+    <h3 class="ep-modal__title">Nova consulta</h3>
+    <p class="ep-modal__sub">
+      Defina o nome do paciente (apelido se preferir) e gere um link único.
+      O link expira em 2 horas — perfeito para enviar pouco antes da sessão.
+    </p>
+
+    <form id="newSessionForm" class="ep-stack">
+      <div class="ep-field">
+        <label class="ep-label" for="patientSelect">Paciente</label>
+        <select id="patientSelect" class="ep-select">
+          <option value="">— Selecione ou digite o nome —</option>
+        </select>
+        <span class="ep-text-xs ep-text-muted">
+          <a href="./pacientes.html" target="_blank" rel="noopener">Gerenciar pacientes →</a>
+        </span>
+      </div>
+      <div class="ep-field" id="freeNameField">
+        <label class="ep-label" for="patientName">Nome do paciente</label>
+        <input id="patientName" class="ep-input" type="text" maxlength="80" placeholder="Ex.: João S.">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="patientEmail">E-mail do paciente (opcional)</label>
+        <input id="patientEmail" class="ep-input" type="email" maxlength="120" placeholder="paciente@exemplo.com">
+        <span class="ep-text-xs ep-text-muted">Para enviar confirmação agora e lembrete 24h antes.</span>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="scheduledAt">Horário (opcional)</label>
+        <input id="scheduledAt" class="ep-input" type="datetime-local">
+        <span class="ep-text-xs ep-text-muted">Use para agendar futura — você pode entrar antes.</span>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="recurrenceWeeks">Repetir semanalmente</label>
+        <select id="recurrenceWeeks" class="ep-select">
+          <option value="1">Não repetir</option>
+          <option value="4">Por 4 semanas</option>
+          <option value="8">Por 8 semanas</option>
+          <option value="12">Por 12 semanas</option>
+          <option value="24">Por 24 semanas</option>
+          <option value="52">Por 52 semanas (1 ano)</option>
+        </select>
+        <span class="ep-text-xs ep-text-muted">Cria N consultas no mesmo horário, espaçadas 7 dias. Exige horário definido.</span>
+      </div>
+      <div class="ep-status" id="newSessionStatus"></div>
+    </form>
+
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="cancelNewSession">Cancelar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="createNewSession">Criar consulta</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Link gerado -->
+<div class="ep-modal" id="linkModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel">
+    <h3 class="ep-modal__title">Link da consulta gerado</h3>
+    <p class="ep-modal__sub">
+      Envie este link diretamente ao paciente. Ele expira em 2 horas e só pode ser usado uma vez.
+    </p>
+    <p class="ep-text-xs ep-text-muted ep-mt-0" id="linkSubtitle"></p>
+
+    <div class="ep-recovery" id="linkValue" style="font-size: 12px; word-break: break-all;"></div>
+
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="copyLinkBtn">Copiar link</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="closeLinkModal">Pronto</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js";
+  import { clearDek, recallUser, decryptNote } from "./js/crypto.js";
+
+  // ─── Boot ───────────────────────────────────────────────────
+  const session = await requireTherapist({ requireDek: true });
+  const { idToken, therapist, dek } = session;
+
+  document.getElementById("topUserName").textContent = therapist.displayName || "";
+
+  // ─── Verificação CRP/CRM (e-Psi) — pill dinâmica ────────────
+  (async () => {
+    const pill = document.getElementById("verifPill");
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/verificacao/status`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) return;
+      pill.classList.remove("ep-hide");
+      if (data.status === "verified") {
+        pill.classList.add("is-verified");
+        pill.innerHTML = `
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+          Profissional verificado
+        `;
+      } else if (data.status === "pending") {
+        pill.classList.add("is-pending");
+        pill.innerHTML = `
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          Verificação em análise
+        `;
+      } else if (data.status === "rejected") {
+        pill.classList.add("is-rejected");
+        pill.innerHTML = `
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          Verificação recusada — reenviar
+        `;
+      } else {
+        pill.classList.add("is-none");
+        pill.innerHTML = `
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          Verificar perfil profissional →
+        `;
+      }
+    } catch (e) { /* silencioso — pill fica oculta */ }
+  })();
+
+  // ─── Logout ─────────────────────────────────────────────────
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    clearDek();
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
+
+  // ─── Helpers ────────────────────────────────────────────────
+  function fmtDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleString("pt-BR", {
+      day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
+    });
+  }
+  function statusBadge(status) {
+    if (status === "completed")   return '<span class="ep-badge ep-badge--muted">Encerrada</span>';
+    if (status === "in_progress") return '<span class="ep-badge ep-badge--ok">Em sessão</span>';
+    return '<span class="ep-badge">Agendada</span>';
+  }
+  function buildPatientLink(joinToken) {
+    return `${location.origin}/entrar.html?t=${encodeURIComponent(joinToken)}`;
+  }
+
+  // ─── Listar sessões ─────────────────────────────────────────
+  const loadingBanner = document.getElementById("loadingBanner");
+  const sessionList   = document.getElementById("sessionList");
+  const emptyState    = document.getElementById("emptyState");
+
+  // Cache global das sessões — usado tanto pra render quanto pra extrair
+  // pacientes "atendidos antes" (avulsos sem patientId) no select de nova consulta.
+  let allSessions = [];
+
+  async function loadSessions() {
+    loadingBanner.classList.remove("ep-hide");
+    sessionList.classList.add("ep-hide");
+    emptyState.classList.add("ep-hide");
+
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        const code = data?.error || ("HTTP_" + res.status);
+        throw new Error(code);
+      }
+
+      loadingBanner.classList.add("ep-hide");
+      allSessions = data.sessions || [];
+
+      if (allSessions.length === 0) {
+        emptyState.classList.remove("ep-hide");
+        return;
+      }
+
+      sessionList.innerHTML = "";
+      allSessions.forEach(s => sessionList.appendChild(renderSession(s)));
+      sessionList.classList.remove("ep-hide");
+    } catch (error) {
+      console.error("load_sessions_error", error);
+      loadingBanner.textContent = "Erro ao carregar consultas: " + (error?.message || "desconhecido");
+      loadingBanner.className = "ep-alert ep-alert--danger";
+    }
+  }
+
+  function renderSession(s) {
+    const div = document.createElement("article");
+    div.className = "ep-session";
+    div.innerHTML = `
+      <div>
+        <div class="ep-session__name">${escapeHtml(s.patientName)}</div>
+        <div class="ep-session__meta">
+          ${statusBadge(s.status)}
+          <span>Criada ${fmtDate(s.createdAt)}</span>
+          ${s.scheduledAt ? `<span>· Agendada ${fmtDate(s.scheduledAt)}</span>` : ""}
+          ${s.completedAt ? `<span>· Encerrada ${fmtDate(s.completedAt)}</span>` : ""}
+        </div>
+      </div>
+      <div class="ep-session__actions">
+        ${s.status !== "completed" ? `
+          <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="enter" data-id="${s.sessionId}">Entrar</button>
+        ` : ""}
+        ${s.status !== "completed" ? `
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="encerrar" data-id="${s.sessionId}">Encerrar</button>
+        ` : ""}
+        ${s.status === "completed" ? `
+          <button class="ep-btn-icon" data-action="ocultar" data-id="${s.sessionId}" aria-label="Remover da lista" title="Remover da lista (mantém no prontuário)">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        ` : ""}
+      </div>
+    `;
+    return div;
+  }
+
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  sessionList.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+
+    if (action === "enter") {
+      window.location.href = `./consultorio.html?session=${encodeURIComponent(id)}`;
+    } else if (action === "encerrar") {
+      if (!confirm("Encerrar esta consulta? Ela ficará marcada como concluída.")) return;
+      btn.disabled = true;
+      try {
+        await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/encerrar`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${idToken}` }
+        });
+        await loadSessions();
+      } catch {
+        btn.disabled = false;
+        alert("Erro ao encerrar.");
+      }
+    } else if (action === "ocultar") {
+      if (!confirm("Remover esta consulta da lista? O registro permanece no prontuário do paciente — só some daqui.")) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/ocultar`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${idToken}` }
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
+        await loadSessions();
+      } catch (err) {
+        btn.disabled = false;
+        alert("Erro ao ocultar: " + (err?.message || "desconhecido"));
+      }
+    }
+  });
+
+  // ─── Nova consulta ──────────────────────────────────────────
+  const newSessionModal = document.getElementById("newSessionModal");
+  const linkModal       = document.getElementById("linkModal");
+  const patientSelect   = document.getElementById("patientSelect");
+  const freeNameField   = document.getElementById("freeNameField");
+
+  // Carrega pacientes do profissional (decifra nomes localmente) para o select.
+  // O select tem 3 grupos:
+  //   • Pacientes cadastrados — value="id:<patientId>"
+  //   • Atendidos antes (avulso) — value="name:<nome>" (extraído de allSessions)
+  //   • + Cadastrar novo paciente — value="__new__"  → pacientes.html
+  // Vazio (default) → liberado para digitar nome avulso.
+  let patientsCache = [];   // cadastrados
+  let avulsoCache   = [];   // nomes únicos sem patientId em sessões anteriores
+
+  async function loadPatientsForSelect() {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        patientsCache = await Promise.all((data.patients || []).map(async p => {
+          try {
+            const json = await decryptNote({ ciphertext: p.ciphertext, iv: p.iv }, dek);
+            const obj = JSON.parse(json);
+            return { patientId: p.patientId, name: obj.name || "—" };
+          } catch {
+            return { patientId: p.patientId, name: "[corrompido]" };
+          }
+        }));
+      }
+    } catch (err) {
+      console.warn("load_patients_for_select_error", err);
+    }
+
+    // Extrai nomes avulsos únicos do histórico de sessões já carregado.
+    // Considera apenas sessões SEM patientId (não vinculadas a cadastro)
+    // e que têm nome significativo (≠ "Paciente" default).
+    const seen = new Set();
+    avulsoCache = [];
+    const cadastradosLower = new Set(patientsCache.map(p => p.name.toLowerCase()));
+    for (const s of allSessions) {
+      if (s.patientId) continue;
+      const name = (s.patientName || "").trim();
+      if (!name || name.toLowerCase() === "paciente") continue;
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      // não duplicar: se já está cadastrado com mesmo nome, pula
+      if (cadastradosLower.has(key)) continue;
+      seen.add(key);
+      avulsoCache.push({ name, lastSession: s.createdAt || 0 });
+    }
+    avulsoCache.sort((a, b) => (b.lastSession || 0) - (a.lastSession || 0));
+
+    // Reconstrói o select.
+    patientSelect.innerHTML = "";
+    const optDefault = document.createElement("option");
+    optDefault.value = "";
+    optDefault.textContent = "— Selecione ou digite o nome —";
+    patientSelect.appendChild(optDefault);
+
+    const optNew = document.createElement("option");
+    optNew.value = "__new__";
+    optNew.textContent = "+ Cadastrar novo paciente";
+    patientSelect.appendChild(optNew);
+
+    if (patientsCache.length) {
+      const grp = document.createElement("optgroup");
+      grp.label = "Pacientes cadastrados";
+      [...patientsCache]
+        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
+        .forEach(p => {
+          const opt = document.createElement("option");
+          opt.value = "id:" + p.patientId;
+          opt.textContent = p.name;
+          grp.appendChild(opt);
+        });
+      patientSelect.appendChild(grp);
+    }
+
+    if (avulsoCache.length) {
+      const grp = document.createElement("optgroup");
+      grp.label = "Atendidos antes (sem cadastro)";
+      avulsoCache.forEach(a => {
+        const opt = document.createElement("option");
+        opt.value = "name:" + a.name;
+        opt.textContent = a.name;
+        grp.appendChild(opt);
+      });
+      patientSelect.appendChild(grp);
+    }
+  }
+
+  patientSelect.addEventListener("change", () => {
+    const v = patientSelect.value;
+    if (v === "__new__") {
+      // Reset visual e redireciona pro CRUD de pacientes.
+      patientSelect.value = "";
+      window.location.href = "./pacientes.html";
+      return;
+    }
+    if (v.startsWith("id:")) {
+      const patientId = v.slice(3);
+      const p = patientsCache.find(x => x.patientId === patientId);
+      document.getElementById("patientName").value = p?.name || "";
+      freeNameField.classList.add("ep-hide");
+    } else if (v.startsWith("name:")) {
+      const name = v.slice(5);
+      document.getElementById("patientName").value = name;
+      freeNameField.classList.add("ep-hide");
+    } else {
+      freeNameField.classList.remove("ep-hide");
+      document.getElementById("patientName").value = "";
+    }
+  });
+
+  document.getElementById("newSessionBtn").addEventListener("click", () => openModal());
+  document.getElementById("emptyCta").addEventListener("click", () => openModal());
+  document.getElementById("cancelNewSession").addEventListener("click", () => closeModal(newSessionModal));
+
+  function openModal(prefill = {}) {
+    // prefill: { patientId?: string, patientName?: string }
+    if (prefill.patientId) {
+      patientSelect.value = "id:" + prefill.patientId;
+    } else if (prefill.patientName) {
+      // Tenta achar nos avulsos primeiro
+      const found = avulsoCache.find(a => a.name.toLowerCase() === prefill.patientName.toLowerCase());
+      patientSelect.value = found ? "name:" + found.name : "";
+    } else {
+      patientSelect.value = "";
+    }
+    document.getElementById("patientName").value = prefill.patientName || "";
+    document.getElementById("scheduledAt").value = prefill.scheduledAt || "";
+    document.getElementById("newSessionStatus").textContent = "";
+    if (prefill.patientId || (prefill.patientName && patientSelect.value)) {
+      freeNameField.classList.add("ep-hide");
+    } else {
+      freeNameField.classList.remove("ep-hide");
+    }
+    newSessionModal.classList.add("is-open");
+    setTimeout(() => {
+      (prefill.patientId ? patientSelect : document.getElementById("patientName")).focus();
+    }, 50);
+  }
+  function closeModal(el) { el.classList.remove("is-open"); }
+
+  document.getElementById("createNewSession").addEventListener("click", async () => {
+    const v = patientSelect.value;
+    let patientName = "";
+    let patientId = "";
+    if (v.startsWith("id:")) {
+      patientId = v.slice(3);
+      const p = patientsCache.find(x => x.patientId === patientId);
+      patientName = p?.name || "";
+    } else if (v.startsWith("name:")) {
+      patientName = v.slice(5);
+    } else {
+      patientName = document.getElementById("patientName").value.trim();
+    }
+    const scheduledAtRaw = document.getElementById("scheduledAt").value;
+    const recurrenceWeeks = Number(document.getElementById("recurrenceWeeks").value || 1);
+    const patientEmailRaw = document.getElementById("patientEmail").value.trim().toLowerCase();
+    const statusEl = document.getElementById("newSessionStatus");
+    if (!patientName) {
+      statusEl.textContent = "Selecione um paciente ou informe um nome.";
+      statusEl.className = "ep-status is-err";
+      return;
+    }
+    if (recurrenceWeeks > 1 && !scheduledAtRaw) {
+      statusEl.textContent = "Defina um horário para repetir semanalmente.";
+      statusEl.className = "ep-status is-err";
+      return;
+    }
+    statusEl.textContent = "Criando…";
+    statusEl.className = "ep-status";
+
+    const scheduledAt = scheduledAtRaw ? new Date(scheduledAtRaw).getTime() : null;
+    const body = {
+      patientName,
+      patientId: patientId || undefined,
+      patientEmail: patientEmailRaw || undefined,
+      scheduledAt
+    };
+    if (recurrenceWeeks > 1) body.recurrence = { weekly: recurrenceWeeks };
+
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/criar`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`
+        },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        statusEl.textContent = "Erro: " + (data?.error || res.status);
+        statusEl.className = "ep-status is-err";
+        return;
+      }
+      closeModal(newSessionModal);
+
+      const link = buildPatientLink(data.session.joinToken);
+      document.getElementById("linkValue").textContent = link;
+      // Indica série criada — link mostrado é da PRIMEIRA ocorrência. Demais
+      // têm joinToken on-demand (ver popover de cada uma na agenda).
+      const linkSubEl = document.getElementById("linkSubtitle");
+      if (linkSubEl) {
+        linkSubEl.textContent = data.recurrence
+          ? `Série de ${data.recurrence.count} consultas criada. Este é o link da 1ª — pegue os links das demais na agenda, no dia.`
+          : "";
+      }
+      linkModal.classList.add("is-open");
+
+      await loadSessions();
+    } catch (error) {
+      statusEl.textContent = "Erro de rede.";
+      statusEl.className = "ep-status is-err";
+    }
+  });
+
+  document.getElementById("closeLinkModal").addEventListener("click", () => closeModal(linkModal));
+  document.getElementById("copyLinkBtn").addEventListener("click", async () => {
+    const text = document.getElementById("linkValue").textContent;
+    try {
+      await navigator.clipboard.writeText(text);
+      const btn = document.getElementById("copyLinkBtn");
+      const orig = btn.textContent;
+      btn.textContent = "Copiado!";
+      setTimeout(() => { btn.textContent = orig; }, 1200);
+    } catch { /* noop */ }
+  });
+
+  // Esc fecha modais
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      newSessionModal.classList.remove("is-open");
+      linkModal.classList.remove("is-open");
+    }
+  });
+
+  await loadSessions();
+  await loadPatientsForSelect();
+
+  // Auto-abrir modal se vier de prontuario.html?newWith=ID&name=... ou de
+  // agenda.html?newAt=ISO (slot de horário clicado).
+  (function maybeAutoOpen() {
+    const params = new URLSearchParams(location.search);
+    const newWith = params.get("newWith");
+    const newAt   = params.get("newAt");
+    if (newWith || newAt) {
+      openModal({
+        patientId: newWith || null,
+        patientName: params.get("name") || "",
+        scheduledAt: newAt || ""
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>

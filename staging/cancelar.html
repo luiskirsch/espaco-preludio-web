@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cancelar consulta · Espaço Prelúdio</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-30">
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav">
+      <span class="ep-text-sm ep-text-muted">Cancelar consulta</span>
+    </nav>
+  </header>
+
+  <main class="ep-cancel-main">
+
+    <div id="missingToken" class="ep-hide ep-mt-32">
+      <div class="ep-alert ep-alert--danger">
+        Link inválido. Use o link enviado no e-mail de confirmação ou de lembrete.
+      </div>
+    </div>
+
+    <div id="confirmBox" class="ep-hide ep-mt-32">
+      <h1 class="ep-h2 ep-mt-0">Cancelar a consulta?</h1>
+      <p class="ep-text-muted ep-mt-0">
+        Ao confirmar, sua consulta será cancelada. Cancelamentos exigem antecedência mínima de 24 horas — abaixo disso, fale direto com o profissional.
+      </p>
+      <div class="ep-field ep-mt-16">
+        <label class="ep-label" for="reason">Motivo (opcional)</label>
+        <textarea id="reason" class="ep-textarea" rows="3" maxlength="500"
+          placeholder="Algo que você queira que o profissional saiba"></textarea>
+      </div>
+      <div class="ep-modal__actions ep-mt-16">
+        <a href="./index.html" class="ep-btn ep-btn--ghost">Voltar</a>
+        <button type="button" class="ep-btn ep-btn--danger-solid" id="confirmBtn">Confirmar cancelamento</button>
+      </div>
+    </div>
+
+    <div id="successBox" class="ep-hide ep-mt-32">
+      <div class="ep-alert ep-alert--ok">
+        <strong>Consulta cancelada.</strong> Você pode fechar esta janela.
+      </div>
+    </div>
+
+    <div id="errorBox" class="ep-hide ep-mt-32">
+      <div class="ep-alert ep-alert--danger">
+        <strong id="errorTitle">Não foi possível cancelar.</strong>
+        <p id="errorMsg" class="ep-mt-0"></p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script type="module">
+  import { BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  const params = new URLSearchParams(location.search);
+  const token = (params.get("t") || "").trim();
+
+  if (!token) {
+    document.getElementById("missingToken").classList.remove("ep-hide");
+  } else {
+    document.getElementById("confirmBox").classList.remove("ep-hide");
+  }
+
+  const confirmBtn = document.getElementById("confirmBtn");
+  if (confirmBtn) {
+    confirmBtn.addEventListener("click", async () => {
+      const reason = document.getElementById("reason").value.trim();
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = "Cancelando…";
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/cancelar-publico`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cancelToken: token, reason })
+        });
+        const data = await res.json().catch(() => ({}));
+        document.getElementById("confirmBox").classList.add("ep-hide");
+        if (res.ok && data.ok) {
+          document.getElementById("successBox").classList.remove("ep-hide");
+        } else {
+          const errorBox  = document.getElementById("errorBox");
+          const errorMsg  = document.getElementById("errorMsg");
+          const errorTitle = document.getElementById("errorTitle");
+          if (data?.error === "PRAZO_CANCELAMENTO_EXPIRADO") {
+            errorTitle.textContent = "Fora da janela de cancelamento.";
+            errorMsg.textContent = data.hint || "Cancelamentos pelo paciente exigem antecedência mínima. Fale direto com o profissional.";
+          } else if (data?.error === "SESSAO_JA_ENCERRADA") {
+            errorTitle.textContent = "Consulta já encerrada.";
+            errorMsg.textContent = "Esta consulta já aconteceu — não há mais o que cancelar.";
+          } else {
+            errorTitle.textContent = "Não foi possível cancelar.";
+            errorMsg.textContent = data?.error || `HTTP ${res.status}`;
+          }
+          errorBox.classList.remove("ep-hide");
+        }
+      } catch (e) {
+        document.getElementById("confirmBox").classList.add("ep-hide");
+        const errorBox = document.getElementById("errorBox");
+        document.getElementById("errorMsg").textContent = e?.message || "Erro de rede.";
+        errorBox.classList.remove("ep-hide");
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = "Confirmar cancelamento";
+      }
+    });
+  }
+</script>
+
+</body>
+</html>
