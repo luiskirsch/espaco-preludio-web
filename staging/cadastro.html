@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-43">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-44">
 </head>
 <body>
 
@@ -356,7 +356,12 @@
       });
 
       show(stepDone);
-      setTimeout(() => { window.location.href = "./painel.html"; }, 1200);
+      // Se veio do plano Estudante, redireciona pra upload do comprovante
+      // de matrícula (libera o tier após validação automática). Caso contrário,
+      // vai direto pro painel (trial/pro/recém-formado).
+      const params = new URLSearchParams(location.search);
+      const dest = params.get("plano") === "estudante" ? "./comprovante-estudante.html" : "./painel.html";
+      setTimeout(() => { window.location.href = dest; }, 1200);
     } catch (error) {
       console.error("registrar_profissional_error", error);
       setStatus(statusRecovery, "Erro de rede. Tente novamente.", "err");

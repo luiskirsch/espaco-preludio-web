@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin · Verificações · Espaço Prelúdio</title>
+  <title>Admin · Comprovantes Estudante · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,6 +23,7 @@
       </span>
     </a>
     <nav class="ep-nav">
+      <a href="./admin-verificacoes.html" class="ep-text-sm">CRP/CRM</a>
       <span id="adminEmail" class="ep-text-sm ep-text-muted">…</span>
       <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Sair</button>
     </nav>
@@ -30,11 +31,9 @@
 
   <main class="ep-main">
 
-    <!-- Tela 1: login (caso não autenticado) -->
     <section id="loginPanel" class="ep-hide" style="max-width: 400px; margin: 40px auto;">
       <div class="ep-auth__panel">
         <h2 class="ep-auth__title">Acesso Admin</h2>
-        <p class="ep-auth__sub">Login restrito a e-mails na allowlist do servidor.</p>
         <form id="loginForm" class="ep-stack ep-mt-16" novalidate>
           <div class="ep-field">
             <label class="ep-label" for="email">E-mail</label>
@@ -50,19 +49,18 @@
       </div>
     </section>
 
-    <!-- Tela 2: dashboard de verificações -->
     <section id="dashboardPanel" class="ep-hide">
-      <div class="ep-flex ep-flex--end-wrap" style="justify-content: space-between; align-items: end; margin-bottom: 24px;">
+      <div class="ep-flex" style="justify-content: space-between; align-items: end; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
         <div>
           <div class="ep-eyebrow">Painel administrativo</div>
-          <h1 class="ep-h1 ep-mt-12">Verificações de profissionais</h1>
-          <p class="ep-text-muted ep-mt-0">Revise documentos enviados e libere o selo "Verificado".</p>
+          <h1 class="ep-h1 ep-mt-12">Comprovantes de matrícula</h1>
+          <p class="ep-text-muted ep-mt-0">Revisa as submissões que a IA marcou como "manual-review".</p>
         </div>
         <div class="ep-flex" style="gap: 6px;">
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="pending">Pendentes</button>
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="verified">Aprovadas</button>
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="rejected">Recusadas</button>
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="all">Todas</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="pending-review">Em revisão</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="approved">Aprovados</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="rejected">Rejeitados</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="all">Todos</button>
         </div>
       </div>
 
@@ -71,13 +69,10 @@
       </div>
     </section>
 
-    <!-- Tela 3: erro de autorização -->
     <section id="forbiddenPanel" class="ep-hide" style="max-width: 460px; margin: 60px auto; text-align: center;">
       <div class="ep-auth__panel">
         <h2 class="ep-auth__title">Acesso negado.</h2>
-        <p class="ep-auth__sub">
-          Sua conta não está na allowlist de admin. Se isso é um erro, fale com a equipe técnica.
-        </p>
+        <p class="ep-auth__sub">Sua conta não está na allowlist de admin.</p>
         <button class="ep-btn ep-btn--ghost ep-btn--block ep-mt-16" type="button" id="forbiddenLogout">Sair</button>
       </div>
     </section>
@@ -85,14 +80,12 @@
   </main>
 </div>
 
-<!-- Modal: detalhes da verificação -->
 <div class="ep-modal" id="detailModal" role="dialog" aria-modal="true">
-  <div class="ep-modal__panel" style="max-width: 720px;">
-    <h3 class="ep-modal__title" id="modalTitle">Verificação</h3>
+  <div class="ep-modal__panel" style="max-width: 920px;">
+    <h3 class="ep-modal__title" id="modalTitle">Comprovante</h3>
     <div id="modalBody"></div>
     <div class="ep-modal__actions">
       <button type="button" class="ep-btn ep-btn--ghost" id="closeModal">Fechar</button>
-      <button type="button" class="ep-btn ep-btn--ghost" id="autoValidateBtn" title="Roda validação automatizada via API paga">🔍 API</button>
       <button type="button" class="ep-btn ep-btn--ghost" id="rejectBtn" style="color: #b8453d; border-color: rgba(184,69,61,0.3);">Rejeitar</button>
       <button type="button" class="ep-btn ep-btn--primary" id="approveBtn">Aprovar</button>
     </div>
@@ -112,8 +105,7 @@
   const listEl         = document.getElementById("list");
 
   let idToken = null;
-  let currentEmail = null;
-  let currentFilter = "pending";
+  let currentFilter = "pending-review";
 
   function escapeHtml(str) {
     return String(str || "").replace(/[&<>"']/g, c => ({
@@ -126,12 +118,17 @@
       day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
     });
   }
+  function fmtSize(bytes) {
+    if (!bytes) return "—";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / 1024 / 1024).toFixed(2) + " MB";
+  }
   function show(panel) {
     [loginPanel, dashboardPanel, forbiddenPanel].forEach(p => p.classList.add("ep-hide"));
     panel.classList.remove("ep-hide");
   }
 
-  // ─── Login flow ──────────────────────────────────────────────────────
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const email    = document.getElementById("email").value.trim().toLowerCase();
@@ -140,27 +137,17 @@
     const loginBtn = document.getElementById("loginBtn");
     loginBtn.disabled = true;
     statusEl.textContent = "Autenticando…";
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      // onAuthStateChanged abaixo vai redirecionar
-    } catch (err) {
-      console.error("admin_login_error", err);
+    try { await signInWithEmailAndPassword(auth, email, password); }
+    catch (err) {
       statusEl.textContent = err?.message || "Erro de autenticação.";
       statusEl.className = "ep-status is-err";
       loginBtn.disabled = false;
     }
   });
 
-  document.getElementById("logoutBtn").addEventListener("click", async () => {
-    await signOut(auth);
-    window.location.reload();
-  });
-  document.getElementById("forbiddenLogout").addEventListener("click", async () => {
-    await signOut(auth);
-    window.location.reload();
-  });
+  document.getElementById("logoutBtn").addEventListener("click", async () => { await signOut(auth); window.location.reload(); });
+  document.getElementById("forbiddenLogout").addEventListener("click", async () => { await signOut(auth); window.location.reload(); });
 
-  // ─── Filtros ─────────────────────────────────────────────────────────
   document.querySelectorAll("[data-filter]").forEach(btn => {
     btn.addEventListener("click", () => {
       currentFilter = btn.dataset.filter;
@@ -182,122 +169,123 @@
   async function loadList() {
     listEl.innerHTML = `<div class="ep-skeleton">Carregando…</div>`;
     try {
-      const data = await api(`/therapy/admin/verificacoes?status=${currentFilter}`);
+      const data = await api(`/therapy/admin/comprovantes-estudante?status=${currentFilter}`);
       renderList(data.items || []);
     } catch (err) {
-      if (err.status === 403) {
-        show(forbiddenPanel);
-        return;
-      }
+      if (err.status === 403) { show(forbiddenPanel); return; }
       listEl.innerHTML = `<div class="ep-error-state">Erro: ${escapeHtml(err.message)}</div>`;
     }
   }
 
   function renderList(items) {
     if (items.length === 0) {
-      listEl.innerHTML = `<div class="ep-empty"><p class="ep-text-muted ep-mt-0">Nenhuma submissão neste filtro.</p></div>`;
+      listEl.innerHTML = `<div class="ep-empty"><p class="ep-text-muted ep-mt-0">Nenhum comprovante neste filtro.</p></div>`;
       return;
     }
     listEl.innerHTML = "";
     for (const item of items) {
+      const ext = item.studentDoc?.extracted || {};
+      const conf = item.studentDoc?.confidence != null ? Math.round(item.studentDoc.confidence * 100) + "%" : "—";
       const card = document.createElement("article");
       card.className = "ep-admin-card";
-      const t = item.therapist || {};
-      const statusLabel = {
-        pending:  "Pendente",
-        verified: "Aprovada",
-        rejected: "Rejeitada"
-      }[item.status] || item.status;
-      const statusClass = item.status === "verified" ? "is-verified"
-                       : item.status === "rejected" ? "is-rejected"
-                       : "is-pending";
       card.innerHTML = `
         <div>
-          <div class="ep-admin-card__name">${escapeHtml(t.displayName || "(sem nome)")}</div>
+          <div class="ep-admin-card__name">${escapeHtml(item.displayName || "(sem nome)")}</div>
           <div class="ep-admin-card__meta">
-            ${t.crp ? `CRP ${escapeHtml(t.crp)}` : ""}
-            ${t.crm ? ` · CRM ${escapeHtml(t.crm)}` : ""}
-            ${t.especialidade ? ` · ${escapeHtml(t.especialidade)}` : ""}
+            ${ext.curso ? escapeHtml(ext.curso) : "Curso?"}
+            ${ext.semestre ? " · " + escapeHtml(ext.semestre) : ""}
+            ${ext.instituicao ? " · " + escapeHtml(ext.instituicao) : ""}
             <br>
-            Enviado ${fmtDate(item.submittedAt)}
-            ${item.reviewedAt ? ` · revisado ${fmtDate(item.reviewedAt)} por ${escapeHtml(item.reviewedBy || "")}` : ""}
+            Plano: <strong>${escapeHtml(item.plano || "?")}</strong>
+            · IA: ${conf}
+            · Enviado ${fmtDate(item.studentDoc?.lastUploadedAt)}
           </div>
-          ${item.rejectionReason ? `<div class="ep-admin-card__reject">Motivo da recusa: ${escapeHtml(item.rejectionReason)}</div>` : ""}
         </div>
         <div class="ep-flex" style="gap: 8px; align-items: center;">
-          <span class="ep-verif-pill ${statusClass}" style="font-size: 11px;">${statusLabel}</span>
-          <button class="ep-btn ep-btn--primary ep-btn--sm" type="button" data-id="${item.verificationId}">Abrir</button>
+          <button class="ep-btn ep-btn--primary ep-btn--sm" type="button" data-uid="${escapeHtml(item.therapistUid)}">Abrir</button>
         </div>
       `;
-      card.querySelector("[data-id]").addEventListener("click", () => openDetail(item.verificationId));
+      card.querySelector("[data-uid]").addEventListener("click", () => openDetail(item.therapistUid));
       listEl.appendChild(card);
     }
   }
 
-  // ─── Modal de detalhe ────────────────────────────────────────────────
   const modal       = document.getElementById("detailModal");
   const modalTitle  = document.getElementById("modalTitle");
   const modalBody   = document.getElementById("modalBody");
-  const approveBtn      = document.getElementById("approveBtn");
-  const rejectBtn       = document.getElementById("rejectBtn");
-  const autoValidateBtn = document.getElementById("autoValidateBtn");
+  const approveBtn  = document.getElementById("approveBtn");
+  const rejectBtn   = document.getElementById("rejectBtn");
   document.getElementById("closeModal").addEventListener("click", () => modal.classList.remove("is-open"));
 
-  let activeId = null;
+  let activeUid = null;
 
-  async function openDetail(id) {
-    activeId = id;
+  async function openDetail(uid) {
+    activeUid = uid;
     modal.classList.add("is-open");
     modalBody.innerHTML = `<div class="ep-skeleton">Carregando…</div>`;
     approveBtn.disabled = true;
     rejectBtn.disabled  = true;
     try {
-      const { item } = await api(`/therapy/admin/verificacoes/${encodeURIComponent(id)}`);
+      const { item } = await api(`/therapy/admin/comprovantes-estudante/${encodeURIComponent(uid)}`);
       const t = item.therapist || {};
-      const dataUrl = `data:${item.documentMime};base64,${item.documentBase64}`;
-      modalTitle.textContent = `Verificação · ${t.displayName || ""}`;
+      const ext = item.extracted || {};
+      const dataUrl = `data:${item.mediaType};base64,${item.fileBase64}`;
+      modalTitle.textContent = `Comprovante · ${t.displayName || ""}`;
+
+      const reasonsHtml = (item.reasons || []).map(r => `<li>${escapeHtml(r)}</li>`).join("");
+      const conf = item.confidence != null ? Math.round(item.confidence * 100) + "%" : "—";
+
       modalBody.innerHTML = `
-        <div class="ep-stack" style="gap: 14px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
           <div>
-            <strong>${escapeHtml(t.displayName || "")}</strong><br>
-            <span class="ep-text-sm ep-text-muted">
-              ${t.crp ? `CRP ${escapeHtml(t.crp)}` : ""}
-              ${t.crm ? ` · CRM ${escapeHtml(t.crm)}` : ""}
-              ${t.especialidade ? ` · ${escapeHtml(t.especialidade)}` : ""}
-            </span>
+            <div class="ep-text-sm ep-text-muted ep-mt-0"><strong>Profissional cadastrado</strong></div>
+            <p style="margin: 4px 0;">${escapeHtml(t.displayName || "")}<br>
+              <span class="ep-text-sm ep-text-muted">${escapeHtml(t.email || "")}</span>
+            </p>
+
+            <div class="ep-text-sm ep-text-muted ep-mt-16"><strong>Extraído pela IA · confiança ${conf}</strong></div>
+            <p style="margin: 4px 0; font-size: 13.5px;">
+              <strong>Nome:</strong> ${escapeHtml(ext.nome || "—")}<br>
+              <strong>Curso:</strong> ${escapeHtml(ext.curso || "—")} ${ext.cursoElegivel ? "✓" : "✗"}<br>
+              <strong>Semestre:</strong> ${escapeHtml(ext.semestre || "—")} ${ext.isUltimoAno ? "✓ último ano" : ""}<br>
+              <strong>Instituição:</strong> ${escapeHtml(ext.instituicao || "—")}<br>
+              <strong>Data emissão:</strong> ${escapeHtml(ext.dataEmissao || "—")}<br>
+              <strong>Situação:</strong> ${escapeHtml(ext.situacao || "—")}<br>
+              ${ext.observacoes ? `<strong>Obs IA:</strong> <em>${escapeHtml(ext.observacoes)}</em>` : ""}
+            </p>
+
+            ${reasonsHtml ? `<div class="ep-text-sm ep-text-muted ep-mt-16"><strong>Motivos:</strong><ul>${reasonsHtml}</ul></div>` : ""}
+
+            <div class="ep-text-sm ep-text-muted ep-mt-16">
+              <strong>Tamanho:</strong> ${fmtSize(item.fileSize)} · ${escapeHtml(item.mediaType)}<br>
+              <strong>Hash:</strong> <code style="font-size: 11px;">${escapeHtml(item.fileHash || "").slice(0, 16)}…</code>
+            </div>
           </div>
-          ${item.notes ? `<div class="ep-alert" style="font-size: 13px;"><strong>Observações:</strong> ${escapeHtml(item.notes)}</div>` : ""}
           <div>
-            ${item.documentMime === "application/pdf"
-              ? `<a class="ep-btn ep-btn--ghost ep-btn--sm" href="${dataUrl}" target="_blank">Abrir PDF em nova aba ↗</a>`
-              : `<img src="${dataUrl}" alt="Documento" style="max-width: 100%; max-height: 480px; border-radius: 10px; border: 1px solid rgba(28,31,29,0.10);">`
+            ${item.mediaType === "application/pdf"
+              ? `<a class="ep-btn ep-btn--ghost ep-btn--block" href="${dataUrl}" target="_blank">Abrir PDF em nova aba ↗</a>`
+              : `<img src="${dataUrl}" alt="Comprovante" style="max-width: 100%; max-height: 600px; border-radius: 10px; border: 1px solid rgba(28,31,29,0.10);">`
             }
-          </div>
-          <div class="ep-text-sm ep-text-muted">
-            <strong>Status atual:</strong> ${escapeHtml(item.status)}
-            ${item.rejectionReason ? `<br><strong>Motivo registrado:</strong> ${escapeHtml(item.rejectionReason)}` : ""}
-          </div>
-          <div class="ep-text-sm ep-text-muted">
-            <strong>Verificar publicamente:</strong>
-            ${t.crp ? `<a href="https://cadastro.cfp.org.br/buscaPublica/" target="_blank" rel="noopener">CFP</a> · <a href="https://e-psi.cfp.org.br/" target="_blank" rel="noopener">e-Psi</a>` : ""}
-            ${t.crm ? `<a href="https://portal.cfm.org.br/busca-medicos/" target="_blank" rel="noopener">CFM</a>` : ""}
           </div>
         </div>
       `;
-      // Habilita ações se ainda revisável
-      approveBtn.disabled = (item.status === "verified");
-      rejectBtn.disabled  = (item.status === "verified"); // já aprovada não rejeita; só pendente/rejeitada permite re-rejeição
+      approveBtn.disabled = false;
+      rejectBtn.disabled  = false;
     } catch (err) {
       modalBody.innerHTML = `<div class="ep-error-state">Erro: ${escapeHtml(err.message)}</div>`;
     }
   }
 
   approveBtn.addEventListener("click", async () => {
-    if (!activeId) return;
-    if (!confirm("Aprovar esta verificação? O profissional ganha o selo 'Verificado'.")) return;
+    if (!activeUid) return;
+    if (!confirm("Aprovar este comprovante? O profissional vira tier estudante (gratuito) por 1 ano.")) return;
+    const notes = prompt("Notas internas (opcional):", "") || "";
     approveBtn.disabled = true;
     try {
-      await api(`/therapy/admin/verificacoes/${encodeURIComponent(activeId)}/aprovar`, { method: "POST" });
+      await api(`/therapy/admin/comprovantes-estudante/${encodeURIComponent(activeUid)}/aprovar`, {
+        method: "POST",
+        body: JSON.stringify({ notes })
+      });
       modal.classList.remove("is-open");
       await loadList();
     } catch (err) {
@@ -306,41 +294,15 @@
     }
   });
 
-  autoValidateBtn.addEventListener("click", async () => {
-    if (!activeId) return;
-    autoValidateBtn.disabled = true;
-    const original = autoValidateBtn.textContent;
-    autoValidateBtn.textContent = "Validando…";
-    try {
-      const { result } = await api(`/therapy/admin/verificacoes/${encodeURIComponent(activeId)}/auto-validar`, { method: "POST" });
-      const verified = !!result.verified;
-      const provider = result.provider || "—";
-      const conf     = result.confidence != null ? Math.round(result.confidence * 100) + "%" : "—";
-      const errMsg   = result.error ? `\n\nErro: ${result.error}` : "";
-      const rawNote  = result.raw?.message ? `\n\n${result.raw.message}` : "";
-      alert(
-        `Validação automatizada (provider: ${provider})\n\n` +
-        `Verificado: ${verified ? "SIM" : "NÃO"}\n` +
-        `Confiança: ${conf}` +
-        errMsg + rawNote
-      );
-    } catch (err) {
-      alert("Falha ao chamar validador: " + err.message);
-    } finally {
-      autoValidateBtn.disabled = false;
-      autoValidateBtn.textContent = original;
-    }
-  });
-
   rejectBtn.addEventListener("click", async () => {
-    if (!activeId) return;
+    if (!activeUid) return;
     const reason = prompt("Motivo da recusa (será mostrado ao profissional):", "");
     if (reason == null) return;
     const trimmed = reason.trim();
     if (!trimmed) { alert("Informe um motivo."); return; }
     rejectBtn.disabled = true;
     try {
-      await api(`/therapy/admin/verificacoes/${encodeURIComponent(activeId)}/rejeitar`, {
+      await api(`/therapy/admin/comprovantes-estudante/${encodeURIComponent(activeUid)}/rejeitar`, {
         method: "POST",
         body: JSON.stringify({ reason: trimmed })
       });
@@ -352,29 +314,15 @@
     }
   });
 
-  // ─── Boot: detecta auth state e decide qual painel mostrar ───────────
   onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      show(loginPanel);
-      adminEmailEl.textContent = "";
-      return;
-    }
+    if (!user) { show(loginPanel); adminEmailEl.textContent = ""; return; }
     try {
       idToken = await user.getIdToken();
-      currentEmail = user.email || "";
-      adminEmailEl.textContent = currentEmail;
-
-      // Tenta uma chamada admin pra validar autorização
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/admin/verificacoes?status=pending`, {
+      adminEmailEl.textContent = user.email || "";
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/admin/comprovantes-estudante?status=pending-review`, {
         headers: { "Authorization": `Bearer ${idToken}` }
       });
-      if (res.status === 403) { show(forbiddenPanel); return; }
-      if (res.status === 503) {
-        forbiddenPanel.querySelector(".ep-auth__sub").textContent =
-          "Allowlist de admin não configurada no servidor (THERAPY_ADMIN_EMAILS).";
-        show(forbiddenPanel);
-        return;
-      }
+      if (res.status === 403 || res.status === 503) { show(forbiddenPanel); return; }
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         forbiddenPanel.querySelector(".ep-auth__sub").textContent = "Erro: " + (j.error || res.status);
@@ -383,10 +331,9 @@
       }
       const data = await res.json();
       show(dashboardPanel);
-      document.querySelector('[data-filter="pending"]').classList.add("is-active");
+      document.querySelector('[data-filter="pending-review"]').classList.add("is-active");
       renderList(data.items || []);
     } catch (err) {
-      console.error("admin_boot_error", err);
       forbiddenPanel.querySelector(".ep-auth__sub").textContent = "Erro: " + err.message;
       show(forbiddenPanel);
     }

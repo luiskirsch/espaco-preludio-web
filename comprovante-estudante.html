@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Comprovante de matrícula — Espaço Prelúdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-44">
+</head>
+<body>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Principal">
+      <a href="./painel.html">Painel</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="ep-section">
+    <div class="ep-container ep-container--narrow">
+      <div class="ep-eyebrow">Plano Estudante</div>
+      <h1 class="ep-h1 ep-mt-12">Envie sua declaração de matrícula.</h1>
+      <p class="ep-lead ep-mt-12">
+        Pra liberar o tier estudante (gratuito), precisamos confirmar que você está
+        no último ano de Psicologia ou Medicina cursando clínica-escola/internato.
+        Suba a declaração emitida pela sua instituição — nosso sistema lê automaticamente
+        e libera em segundos. Se algo precisar de revisão humana, te avisamos por e-mail
+        em até 48h.
+      </p>
+
+      <div id="uploadCard" class="ep-card ep-mt-32">
+        <div id="dropzone" class="ep-dropzone" tabindex="0" role="button" aria-label="Selecionar declaração de matrícula">
+          <input type="file" id="fileInput" accept=".pdf,image/png,image/jpeg,image/webp" hidden>
+          <div class="ep-dropzone__inner">
+            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/>
+              <path d="M14 3v5h5"/>
+              <path d="M9 14l3-3 3 3M12 11v7"/>
+            </svg>
+            <p class="ep-h3 ep-mt-12">Clique para escolher ou arraste o arquivo aqui</p>
+            <p class="ep-text-sm ep-text-muted ep-mt-8">PDF, PNG ou JPG · até 5 MB</p>
+          </div>
+        </div>
+
+        <div id="filePreview" class="ep-stack ep-mt-16 ep-hide">
+          <div class="ep-flex ep-flex--between" style="gap: 12px; align-items: center;">
+            <div class="ep-stack" style="gap: 4px;">
+              <strong id="fileName"></strong>
+              <span class="ep-text-sm ep-text-muted" id="fileSize"></span>
+            </div>
+            <button type="button" id="removeFileBtn" class="ep-btn ep-btn--ghost ep-btn--sm">Trocar</button>
+          </div>
+          <button type="button" id="submitBtn" class="ep-btn ep-btn--primary ep-btn--block ep-mt-12">
+            Enviar e validar
+          </button>
+        </div>
+      </div>
+
+      <!-- Estado: validando -->
+      <div id="loadingCard" class="ep-card ep-mt-32 ep-hide">
+        <div class="ep-stack ep-text-center">
+          <div class="ep-spinner" aria-hidden="true"></div>
+          <p class="ep-h3 ep-mt-12">Validando documento…</p>
+          <p class="ep-text-sm ep-text-muted ep-mt-8">
+            Estamos lendo sua declaração com IA. Pode levar 10–30 segundos.
+          </p>
+        </div>
+      </div>
+
+      <!-- Resultado: aprovado -->
+      <div id="approvedCard" class="ep-card ep-card--success ep-mt-32 ep-hide">
+        <div class="ep-eyebrow ep-text-success">✓ Aprovado</div>
+        <h2 class="ep-h2 ep-mt-12">Plano Estudante ativo!</h2>
+        <p class="ep-lead ep-mt-12" id="approvedDetails"></p>
+        <p class="ep-text-sm ep-text-muted ep-mt-12" id="approvedValidity"></p>
+        <a href="./painel.html" class="ep-btn ep-btn--primary ep-btn--lg ep-mt-16">Ir para o painel</a>
+      </div>
+
+      <!-- Resultado: revisão manual -->
+      <div id="reviewCard" class="ep-card ep-card--warn ep-mt-32 ep-hide">
+        <div class="ep-eyebrow ep-text-warn">⏱ Em revisão</div>
+        <h2 class="ep-h2 ep-mt-12">Recebemos seu comprovante.</h2>
+        <p class="ep-lead ep-mt-12">
+          Alguns detalhes precisam ser revisados por um humano antes da liberação.
+          Vamos te avisar por e-mail em até 48h. Pode fechar esta página.
+        </p>
+        <div id="reviewReasons" class="ep-stack ep-mt-12" style="gap: 6px;"></div>
+        <a href="./painel.html" class="ep-btn ep-btn--ghost ep-btn--lg ep-mt-16">Ir para o painel</a>
+      </div>
+
+      <!-- Resultado: rejeitado -->
+      <div id="rejectedCard" class="ep-card ep-card--danger ep-mt-32 ep-hide">
+        <div class="ep-eyebrow ep-text-danger">⚠ Não aceito</div>
+        <h2 class="ep-h2 ep-mt-12">Documento não passou na validação.</h2>
+        <p class="ep-lead ep-mt-12">Motivos:</p>
+        <ul id="rejectedReasons" class="ep-mt-12" style="padding-left: 20px;"></ul>
+        <button type="button" id="tryAgainBtn" class="ep-btn ep-btn--primary ep-btn--lg ep-mt-16">Enviar outro arquivo</button>
+      </div>
+
+      <p class="ep-text-sm ep-text-muted ep-mt-32">
+        <strong>Privacidade:</strong> seu comprovante é armazenado cifrado, acessível apenas
+        pela equipe de verificação do Espaço Prelúdio. É descartado automaticamente 90 dias
+        após a validação.
+      </p>
+    </div>
+  </section>
+</main>
+
+<style>
+  .ep-dropzone {
+    border: 2px dashed var(--ep-line-strong);
+    border-radius: var(--ep-radius);
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 120ms ease, background 120ms ease;
+    color: var(--ep-ink-2);
+  }
+  .ep-dropzone:hover, .ep-dropzone:focus, .ep-dropzone.is-drag {
+    border-color: var(--ep-accent);
+    background: var(--ep-accent-soft);
+    outline: none;
+  }
+  .ep-dropzone__inner svg { color: var(--ep-accent); margin: 0 auto; display: block; }
+
+  .ep-spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--ep-line);
+    border-top-color: var(--ep-accent);
+    border-radius: 50%;
+    animation: ep-spin 800ms linear infinite;
+    margin: 0 auto;
+  }
+  @keyframes ep-spin { to { transform: rotate(360deg); } }
+
+  .ep-card--success { border-color: var(--ep-ok); background: rgba(45,106,79,0.04); }
+  .ep-card--warn    { border-color: var(--ep-warn); background: rgba(176,125,44,0.04); }
+  .ep-card--danger  { border-color: var(--ep-danger); background: rgba(160,43,31,0.04); }
+  .ep-text-success { color: var(--ep-ok); }
+  .ep-text-warn    { color: var(--ep-warn); }
+  .ep-text-danger  { color: var(--ep-danger); }
+  .ep-flex--between { display: flex; justify-content: space-between; }
+</style>
+
+<script src="./js/trust-footer.js?v=2-44" defer></script>
+
+<script type="module">
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js";
+
+  const session = await requireTherapist({ requireDek: false });
+  const { idToken } = session;
+
+  const dropzone     = document.getElementById("dropzone");
+  const fileInput    = document.getElementById("fileInput");
+  const filePreview  = document.getElementById("filePreview");
+  const fileName     = document.getElementById("fileName");
+  const fileSize     = document.getElementById("fileSize");
+  const removeBtn    = document.getElementById("removeFileBtn");
+  const submitBtn    = document.getElementById("submitBtn");
+  const uploadCard   = document.getElementById("uploadCard");
+  const loadingCard  = document.getElementById("loadingCard");
+  const approvedCard = document.getElementById("approvedCard");
+  const reviewCard   = document.getElementById("reviewCard");
+  const rejectedCard = document.getElementById("rejectedCard");
+  const tryAgainBtn  = document.getElementById("tryAgainBtn");
+
+  const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+  const ACCEPTED_MIMES = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
+
+  let selectedFile = null;
+
+  function fmtSize(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+  }
+
+  function showOnly(card) {
+    [uploadCard, loadingCard, approvedCard, reviewCard, rejectedCard].forEach(c => c.classList.add("ep-hide"));
+    card.classList.remove("ep-hide");
+  }
+
+  function pickFile(file) {
+    if (!file) return;
+    if (file.size > MAX_BYTES) {
+      alert("Arquivo muito grande. Máximo 5 MB.");
+      return;
+    }
+    if (!ACCEPTED_MIMES.includes(file.type)) {
+      alert("Formato não suportado. Envie PDF, PNG ou JPG.");
+      return;
+    }
+    selectedFile = file;
+    fileName.textContent = file.name;
+    fileSize.textContent = fmtSize(file.size) + " · " + file.type;
+    filePreview.classList.remove("ep-hide");
+  }
+
+  dropzone.addEventListener("click", () => fileInput.click());
+  dropzone.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") fileInput.click(); });
+  dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.classList.add("is-drag"); });
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("is-drag"));
+  dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("is-drag");
+    pickFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener("change", (e) => pickFile(e.target.files[0]));
+  removeBtn.addEventListener("click", () => {
+    selectedFile = null;
+    fileInput.value = "";
+    filePreview.classList.add("ep-hide");
+  });
+  tryAgainBtn.addEventListener("click", () => {
+    selectedFile = null;
+    fileInput.value = "";
+    filePreview.classList.add("ep-hide");
+    showOnly(uploadCard);
+  });
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        const base64 = result.split(",")[1] || "";
+        resolve(base64);
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  submitBtn.addEventListener("click", async () => {
+    if (!selectedFile) return;
+    submitBtn.disabled = true;
+    showOnly(loadingCard);
+
+    try {
+      const fileBase64 = await fileToBase64(selectedFile);
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/comprovante-estudante`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${idToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ fileBase64, mediaType: selectedFile.type })
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        // Erro de rede/validação — volta pro upload com mensagem
+        const msg = data?.error || "Erro ao enviar. Tente novamente.";
+        alert(msg);
+        showOnly(uploadCard);
+        submitBtn.disabled = false;
+        return;
+      }
+
+      if (data.decision === "approved") {
+        const ext = data.extracted || {};
+        document.getElementById("approvedDetails").textContent =
+          `${ext.curso || "Curso"} · ${ext.semestre || ""} · ${ext.instituicao || ""}`.replace(/ · $/, "");
+        if (data.validUntil) {
+          const d = new Date(data.validUntil);
+          document.getElementById("approvedValidity").textContent =
+            `Acesso liberado até ${d.toLocaleDateString("pt-BR")}. Renovamos automaticamente após reverificação.`;
+        }
+        showOnly(approvedCard);
+      } else if (data.decision === "manual-review") {
+        const reasons = data.reasons || [];
+        const target = document.getElementById("reviewReasons");
+        target.innerHTML = "";
+        reasons.forEach(r => {
+          const p = document.createElement("p");
+          p.className = "ep-text-sm ep-text-muted";
+          p.textContent = "• " + r;
+          target.appendChild(p);
+        });
+        showOnly(reviewCard);
+      } else {
+        // rejected
+        const reasons = data.reasons || ["Documento não atende aos requisitos."];
+        const ul = document.getElementById("rejectedReasons");
+        ul.innerHTML = "";
+        reasons.forEach(r => {
+          const li = document.createElement("li");
+          li.textContent = r;
+          ul.appendChild(li);
+        });
+        showOnly(rejectedCard);
+      }
+    } catch (error) {
+      console.error("comprovante_upload_error", error);
+      alert("Erro de conexão. Tente novamente.");
+      showOnly(uploadCard);
+      submitBtn.disabled = false;
+    }
+  });
+
+  // Se já está aprovado/em revisão, redireciona pra resultado direto
+  (async () => {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/comprovante-estudante/status`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) return;
+      if (data.plano === "student-active") {
+        const ext = data.studentDoc?.extracted || {};
+        document.getElementById("approvedDetails").textContent =
+          `${ext.curso || "Curso"} · ${ext.semestre || ""} · ${ext.instituicao || ""}`.replace(/ · $/, "");
+        if (data.studentVerifiedUntil) {
+          const d = new Date(data.studentVerifiedUntil);
+          document.getElementById("approvedValidity").textContent =
+            `Acesso liberado até ${d.toLocaleDateString("pt-BR")}.`;
+        }
+        showOnly(approvedCard);
+      } else if (data.plano === "student-pending-review") {
+        showOnly(reviewCard);
+      }
+    } catch (_) { /* silencioso */ }
+  })();
+</script>
+
+</body>
+</html>
