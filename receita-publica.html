@@ -103,15 +103,16 @@
         Valide também a assinatura digital do PDF no
         <a href="https://verificador.iti.gov.br/" target="_blank" rel="noopener">Verificador ITI gov.br</a>
         ou Adobe Reader (cadeia ICP-Brasil).
+        <br><a href="./como-dispensar.html" target="_blank" rel="noopener">Guia rápido para farmacêuticos →</a>
       </div>
 
-      <div class="ep-flex ep-mt-16 ep-gap-8" style="justify-content: flex-end;">
+      <div class="ep-flex ep-mt-16 ep-gap-8 ep-flex--justify-end">
         <button class="ep-btn ep-btn--primary" type="button" id="downloadBtn">Baixar PDF</button>
       </div>
 
-      <iframe id="pdfFrame" class="ep-receita-public-frame ep-mt-12"></iframe>
+      <iframe id="pdfFrame" class="ep-receita-public-frame ep-mt-12" title="PDF da receita digital assinada"></iframe>
 
-      <p class="ep-text-xs ep-text-muted ep-mt-16" style="text-align: center;">
+      <p class="ep-text-xs ep-text-muted ep-mt-16 ep-text-center">
         Esta página de verificação é gerada pelo Espaço Prelúdio em tempo real,
         consultando o registro original da receita. Em caso de dúvida sobre o
         conteúdo clínico, contate o(a) profissional emissor(a).
@@ -149,6 +150,13 @@
       <input id="dQuantidade" class="ep-input" type="number" min="1" max="24" step="1" value="1">
       <p class="ep-text-xs ep-text-muted ep-mt-0" id="dRestanteHint">—</p>
     </div>
+    <label class="ep-radio">
+      <input id="dSavePharmacy" type="checkbox">
+      <span>Salvar CRF, CNPJ e nome da farmácia neste navegador (próximas dispensações ficam mais rápidas)</span>
+    </label>
+    <p class="ep-text-xs ep-text-muted ep-mt-0 ep-hide" id="dClearSavedWrap">
+      <a href="#" id="dClearSavedBtn">Limpar dados salvos deste navegador</a>
+    </p>
     <div class="ep-status" id="dStatus"></div>
     <div class="ep-modal__actions">
       <button type="button" class="ep-btn ep-btn--ghost" id="dCancelBtn">Voltar</button>
@@ -371,10 +379,22 @@
     openBtn.addEventListener("click", () => {
       statusModalEl.textContent = "";
       statusModalEl.className = "ep-status";
+      loadSavedPharmacy();
       modal.classList.add("is-open");
     });
     document.getElementById("dCancelBtn").addEventListener("click", () => modal.classList.remove("is-open"));
     modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("is-open"); });
+
+    document.getElementById("dClearSavedBtn").addEventListener("click", (e) => {
+      e.preventDefault();
+      try { localStorage.removeItem("epPharmacyProfile"); } catch {}
+      document.getElementById("dCRF").value = "";
+      document.getElementById("dFarmaceutico").value = "";
+      document.getElementById("dCnpj").value = "";
+      document.getElementById("dFarmaciaNome").value = "";
+      document.getElementById("dSavePharmacy").checked = false;
+      document.getElementById("dClearSavedWrap").classList.add("ep-hide");
+    });
 
     // Auto-format CNPJ enquanto digita
     document.getElementById("dCnpj").addEventListener("input", (e) => {
@@ -424,6 +444,14 @@
           confirmBtn.disabled = false;
           return;
         }
+        // Salva perfil da farmácia neste navegador, se marcado.
+        if (document.getElementById("dSavePharmacy").checked) {
+          try {
+            localStorage.setItem("epPharmacyProfile", JSON.stringify({
+              crf, farmaceuticoNome: farm, cnpj, farmaciaNome: farmNome
+            }));
+          } catch {}
+        }
         modal.classList.remove("is-open");
         // Re-fetch pra atualizar saldo + histórico.
         location.reload();
@@ -433,6 +461,20 @@
         confirmBtn.disabled = false;
       }
     });
+  }
+
+  function loadSavedPharmacy() {
+    try {
+      const raw = localStorage.getItem("epPharmacyProfile");
+      if (!raw) return;
+      const p = JSON.parse(raw);
+      if (p?.crf)               document.getElementById("dCRF").value = p.crf;
+      if (p?.farmaceuticoNome)  document.getElementById("dFarmaceutico").value = p.farmaceuticoNome;
+      if (p?.cnpj)              document.getElementById("dCnpj").value = formatCnpj(p.cnpj);
+      if (p?.farmaciaNome)      document.getElementById("dFarmaciaNome").value = p.farmaciaNome;
+      document.getElementById("dSavePharmacy").checked = true;
+      document.getElementById("dClearSavedWrap").classList.remove("ep-hide");
+    } catch {}
   }
 
   function escapeHtml(s) {
