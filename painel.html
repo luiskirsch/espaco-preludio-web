@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-44">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-45">
 </head>
 <body>
 
@@ -49,6 +49,9 @@
       </div>
       <button id="newSessionBtn" type="button" class="ep-btn ep-btn--primary ep-btn--lg">+ Nova consulta</button>
     </div>
+
+    <!-- Banner do tier estudante: aparece se em revisão / aprovado / rejeitado -->
+    <div id="studentBanner" class="ep-alert ep-hide ep-mt-16"></div>
 
     <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando suas consultas…</div>
 
@@ -186,6 +189,37 @@
         `;
       }
     } catch (e) { /* silencioso — pill fica oculta */ }
+  })();
+
+  // ─── Banner tier estudante (em revisão / aprovado / rejeitado) ──
+  (async () => {
+    const banner = document.getElementById("studentBanner");
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/comprovante-estudante/status`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) return;
+
+      const plano = data.plano;
+      const doc   = data.studentDoc;
+
+      if (plano === "student-pending-review") {
+        banner.className = "ep-alert ep-alert--info ep-mt-16";
+        banner.innerHTML = `<strong>Comprovante em revisão.</strong> Recebemos sua declaração de matrícula. Nossa equipe revisa em até 48h e você é avisado por e-mail.`;
+        banner.classList.remove("ep-hide");
+      } else if (plano === "student-active") {
+        const until = data.studentVerifiedUntil ? new Date(data.studentVerifiedUntil).toLocaleDateString("pt-BR") : "1 ano";
+        banner.className = "ep-alert ep-alert--success ep-mt-16";
+        banner.innerHTML = `<strong>Plano Estudante ativo</strong> até ${until}. No vencimento, vamos pedir um comprovante atualizado.`;
+        banner.classList.remove("ep-hide");
+      } else if (doc?.decision === "rejected") {
+        const reasons = (doc.reasons || []).map(r => `<li>${r}</li>`).join("");
+        banner.className = "ep-alert ep-alert--warn ep-mt-16";
+        banner.innerHTML = `<strong>Comprovante não aprovado.</strong> ${reasons ? `<ul style="margin: 6px 0 8px 18px; padding: 0;">${reasons}</ul>` : ""} <a href="./comprovante-estudante.html">Enviar outro comprovante →</a>`;
+        banner.classList.remove("ep-hide");
+      }
+    } catch (e) { /* silencioso — banner fica oculto */ }
   })();
 
   // ─── Logout ─────────────────────────────────────────────────
