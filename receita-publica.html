@@ -153,9 +153,19 @@
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/receita/publica?t=${encodeURIComponent(token)}`);
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.ok) {
-        const code = j?.error || res.status;
-        if (code === "TOKEN_EXPIRADO" || res.status === 401 || res.status === 410) {
-          showError("Link expirado.", "Esta receita expirou. Peça uma nova ao(à) profissional.");
+        const code = j?.error || "";
+        if (code === "RECEITA_NAO_ASSINADA") {
+          showError("Receita ainda não foi assinada.",
+            "O(A) profissional gerou o link antes de assinar a receita. Peça pra reenviar depois da assinatura.");
+        } else if (code === "TOKEN_REVOGADO") {
+          showError("Link substituído.",
+            "Esta receita foi reassinada e este link foi invalidado. Peça o link atualizado ao(à) profissional.");
+        } else if (code === "TOKEN_EXPIRADO") {
+          showError("Link expirado.",
+            "Este link tem validade de 90 dias e já expirou. Peça uma nova ao(à) profissional.");
+        } else if (code === "TOKEN_INVALIDO" || code === "TOKEN_NAO_AUTORIZADO" || code === "TOKEN_OBRIGATORIO") {
+          showError("Link inválido.",
+            "O link parece estar corrompido ou incompleto. Verifique se copiou inteiro.");
         } else if (res.status === 404) {
           showError("Receita não encontrada.", "Verifique se o link está correto.");
         } else {
