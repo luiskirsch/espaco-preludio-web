@@ -160,7 +160,6 @@ a:hover { color: var(--ep-accent-hover); }
   letter-spacing: -0.01em;
   color: var(--ep-ink);
   font-size: 15px;
-  isolation: isolate;
 }
 
 .ep-brand__mark {
@@ -178,34 +177,6 @@ a:hover { color: var(--ep-accent-hover); }
   color: transparent;
   flex: 0 0 auto;
   box-shadow: 0 0 12px rgba(215,176,107,0.18);
-  position: relative;
-}
-
-.ep-brand__mark::after {
-  content: "";
-  position: absolute;
-  inset: -6px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(215,176,107,0.55) 0%, rgba(215,176,107,0) 70%);
-  z-index: -1;
-  pointer-events: none;
-  animation: ep-brand-pulse 3.2s ease-in-out infinite;
-  will-change: transform, opacity;
-}
-
-@keyframes ep-brand-pulse {
-  0%, 100% {
-    transform: scale(0.85);
-    opacity: 0.3;
-  }
-  50% {
-    transform: scale(1.35);
-    opacity: 0.85;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ep-brand__mark::after { animation: none; }
 }
 
 .ep-brand__name { display: flex; flex-direction: column; line-height: 1.1; }
