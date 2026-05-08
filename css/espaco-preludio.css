@@ -2851,6 +2851,66 @@ body.ep-consult.ep-mode-calmo .ep-consult__topbar {
 .ep-pop-link-box { font-size: 11px; word-break: break-all; margin-top: 12px; }
 .ep-cancel-main { max-width: 560px; margin: 0 auto; padding: 0 16px; }
 
+/* Bloco de DISPENSAÇÃO na página pública da receita */
+.ep-dispensacao {
+  border: 1px solid var(--ep-line-strong);
+  border-radius: 8px;
+  padding: 16px 18px;
+  background: var(--ep-surface);
+}
+.ep-dispensacao__header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ep-dispensacao__status {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ep-dispensacao__balance {
+  font-size: 14px;
+  color: rgba(28,31,29,0.75);
+}
+.ep-dispensacao.is-pending  .ep-dispensacao__status { color: #6c4d1c; }
+.ep-dispensacao.is-pending  { background: rgba(176,125,44,0.05); border-color: rgba(176,125,44,0.30); }
+.ep-dispensacao.is-parcial  .ep-dispensacao__status { color: #1f6b3e; }
+.ep-dispensacao.is-parcial  { background: rgba(45,138,82,0.06); border-color: rgba(45,138,82,0.30); }
+.ep-dispensacao.is-completa .ep-dispensacao__status { color: #1f6b3e; }
+.ep-dispensacao.is-completa { background: rgba(45,138,82,0.10); border-color: rgba(45,138,82,0.40); }
+.ep-dispensacao.is-expirada .ep-dispensacao__status { color: var(--ep-danger); }
+.ep-dispensacao.is-expirada { background: rgba(160,43,31,0.06); border-color: rgba(160,43,31,0.30); }
+.ep-dispensacao.is-legacy   .ep-dispensacao__status { color: rgba(28,31,29,0.55); }
+
+.ep-dispensacao__list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+.ep-dispensacao__item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(28,31,29,0.08);
+  align-items: flex-start;
+}
+.ep-dispensacao__qty {
+  flex: 0 0 auto;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--ep-ink);
+  background: var(--ep-accent-soft);
+  padding: 4px 10px;
+  border-radius: 4px;
+  min-width: 36px;
+  text-align: center;
+}
+.ep-dispensacao__farmacia {
+  font-weight: 500;
+  font-size: 14px;
+}
+
 .ep-agenda-blackout {
   position: absolute;
   left: 4px;

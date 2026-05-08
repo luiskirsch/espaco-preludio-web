@@ -80,14 +80,32 @@
         </div>
       </div>
 
-      <div class="ep-alert ep-alert--info ep-mt-16">
-        <strong>Para a farmácia:</strong> abra o PDF abaixo e valide a assinatura digital
-        no <a href="https://verificador.iti.gov.br/" target="_blank" rel="noopener">Verificador ITI gov.br</a>
-        ou no Adobe Reader (cadeia ICP-Brasil). Os dados desta página devem coincidir
-        com os do PDF.
+      <!-- Bloco de DISPENSAÇÃO (controle de saldo) -->
+      <div class="ep-dispensacao ep-mt-16" id="dispensacaoBlock">
+        <div class="ep-dispensacao__header">
+          <div class="ep-dispensacao__status" id="dispensacaoStatus">—</div>
+          <div class="ep-dispensacao__balance" id="dispensacaoBalance">—</div>
+        </div>
+        <div class="ep-dispensacao__history ep-hide" id="dispensacaoHistory">
+          <div class="ep-eyebrow ep-mt-12">Histórico de dispensações</div>
+          <ul class="ep-dispensacao__list" id="dispensacaoList"></ul>
+        </div>
+        <div class="ep-dispensacao__action ep-mt-12">
+          <button class="ep-btn ep-btn--primary" type="button" id="openDispensarBtn">
+            Sou farmacêutico — registrar dispensação
+          </button>
+        </div>
       </div>
 
-      <div class="ep-flex ep-mt-16" style="gap: 8px; justify-content: flex-end;">
+      <div class="ep-alert ep-alert--info ep-mt-16">
+        <strong>Para a farmácia:</strong> antes de aviar, registre a dispensação acima.
+        O sistema controla o saldo restante entre todas as farmácias que aviarem esta receita.
+        Valide também a assinatura digital do PDF no
+        <a href="https://verificador.iti.gov.br/" target="_blank" rel="noopener">Verificador ITI gov.br</a>
+        ou Adobe Reader (cadeia ICP-Brasil).
+      </div>
+
+      <div class="ep-flex ep-mt-16 ep-gap-8" style="justify-content: flex-end;">
         <button class="ep-btn ep-btn--primary" type="button" id="downloadBtn">Baixar PDF</button>
       </div>
 
@@ -101,6 +119,42 @@
     </div>
 
   </main>
+</div>
+
+<!-- Modal: registrar dispensação -->
+<div class="ep-modal" id="dispensarModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel ep-modal__panel--md">
+    <h3 class="ep-modal__title">Registrar dispensação</h3>
+    <p class="ep-modal__sub">
+      Preencha os dados profissionais e a quantidade dispensada agora. O registro fica auditado e visível pra próxima farmácia que aviar esta receita.
+    </p>
+    <div class="ep-field">
+      <label class="ep-label" for="dCRF">CRF (com UF)</label>
+      <input id="dCRF" class="ep-input" type="text" maxlength="20" placeholder="Ex.: CRF-SC 12345" autocomplete="off">
+    </div>
+    <div class="ep-field">
+      <label class="ep-label" for="dFarmaceutico">Nome do farmacêutico responsável</label>
+      <input id="dFarmaceutico" class="ep-input" type="text" maxlength="80" autocomplete="off">
+    </div>
+    <div class="ep-field">
+      <label class="ep-label" for="dCnpj">CNPJ da farmácia</label>
+      <input id="dCnpj" class="ep-input" type="text" maxlength="18" placeholder="00.000.000/0000-00" autocomplete="off">
+    </div>
+    <div class="ep-field">
+      <label class="ep-label" for="dFarmaciaNome">Nome da farmácia</label>
+      <input id="dFarmaciaNome" class="ep-input" type="text" maxlength="120" autocomplete="off">
+    </div>
+    <div class="ep-field">
+      <label class="ep-label" for="dQuantidade">Quantidade dispensada agora</label>
+      <input id="dQuantidade" class="ep-input" type="number" min="1" max="24" step="1" value="1">
+      <p class="ep-text-xs ep-text-muted ep-mt-0" id="dRestanteHint">—</p>
+    </div>
+    <div class="ep-status" id="dStatus"></div>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="dCancelBtn">Voltar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="dConfirmBtn">Confirmar dispensação</button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
@@ -228,6 +282,9 @@
         a.remove();
       });
 
+      // ── Bloco de dispensação ─────────────────────────────────────────
+      renderDispensacao(r);
+
       loading.classList.add("ep-hide");
       content.classList.remove("ep-hide");
     } catch (e) {
@@ -235,6 +292,174 @@
       showError("Erro de conexão.", "Tente novamente mais tarde.");
     }
   })();
+
+  // ─── Dispensação: render + modal ──────────────────────────────────────
+  function renderDispensacao(r) {
+    const block = document.getElementById("dispensacaoBlock");
+    const statusEl = document.getElementById("dispensacaoStatus");
+    const balanceEl = document.getElementById("dispensacaoBalance");
+    const historyEl = document.getElementById("dispensacaoHistory");
+    const listEl = document.getElementById("dispensacaoList");
+    const actionEl = document.querySelector(".ep-dispensacao__action");
+    const openBtn = document.getElementById("openDispensarBtn");
+
+    if (!r.quantidadePrescrita) {
+      // Receita antiga sem quantidade. Mostra aviso, esconde botão.
+      block.classList.add("is-legacy");
+      statusEl.textContent = "Receita sem controle de saldo";
+      balanceEl.textContent = "Esta receita foi emitida antes do controle digital de dispensação. A farmácia decide com base no PDF.";
+      actionEl.classList.add("ep-hide");
+      return;
+    }
+
+    const total = r.quantidadePrescrita;
+    const usado = r.quantidadeDispensada || 0;
+    const restante = Math.max(0, total - usado);
+    const status = r.dispensacaoStatus || "pendente";
+
+    block.classList.remove("is-pending", "is-parcial", "is-completa", "is-expirada", "is-legacy");
+    block.classList.add(`is-${status}`);
+
+    if (status === "expirada") {
+      statusEl.textContent = "RECEITA VENCIDA";
+      balanceEl.textContent = `Validade clínica de 30 dias expirou. ${usado} de ${total} unidades foram dispensadas.`;
+      openBtn.disabled = true;
+      openBtn.textContent = "Receita vencida — não é possível dispensar";
+    } else if (status === "completa") {
+      statusEl.textContent = "TOTALMENTE DISPENSADA";
+      balanceEl.textContent = `${usado} de ${total} unidades dispensadas.`;
+      openBtn.disabled = true;
+      openBtn.textContent = "Saldo zerado";
+    } else if (status === "parcial") {
+      statusEl.textContent = "PARCIALMENTE DISPENSADA";
+      balanceEl.textContent = `${restante} de ${total} unidades restantes.`;
+    } else {
+      statusEl.textContent = "PENDENTE DE DISPENSAÇÃO";
+      balanceEl.textContent = `${total} ${total === 1 ? "unidade prescrita" : "unidades prescritas"}.`;
+    }
+
+    // Histórico
+    const dispensacoes = r.dispensacoes || [];
+    if (dispensacoes.length > 0) {
+      historyEl.classList.remove("ep-hide");
+      listEl.innerHTML = dispensacoes.map(d => {
+        const when = d.dispensadoAt ? fmtDateLong(d.dispensadoAt) : "—";
+        const cnpjFmt = formatCnpj(d.farmaciaCNPJ);
+        return `<li class="ep-dispensacao__item">
+          <div class="ep-dispensacao__qty">${d.quantidade}×</div>
+          <div class="ep-dispensacao__info">
+            <div class="ep-dispensacao__farmacia">${escapeHtml(d.farmaciaNome || "—")} <span class="ep-text-muted ep-text-xs">${escapeHtml(cnpjFmt)}</span></div>
+            <div class="ep-text-xs ep-text-muted">${escapeHtml(d.farmaceuticoNome || "—")} · ${escapeHtml(d.farmaceuticoCRF || "—")} · ${escapeHtml(when)}</div>
+          </div>
+        </li>`;
+      }).join("");
+    }
+
+    // Modal handlers
+    if (status !== "pendente" && status !== "parcial") return;
+
+    const modal = document.getElementById("dispensarModal");
+    const qtyEl = document.getElementById("dQuantidade");
+    const hintEl = document.getElementById("dRestanteHint");
+    const statusModalEl = document.getElementById("dStatus");
+    const confirmBtn = document.getElementById("dConfirmBtn");
+
+    qtyEl.max = String(restante);
+    qtyEl.value = "1";
+    hintEl.textContent = `${restante} ${restante === 1 ? "unidade restante" : "unidades restantes"} de ${total}.`;
+
+    openBtn.addEventListener("click", () => {
+      statusModalEl.textContent = "";
+      statusModalEl.className = "ep-status";
+      modal.classList.add("is-open");
+    });
+    document.getElementById("dCancelBtn").addEventListener("click", () => modal.classList.remove("is-open"));
+    modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("is-open"); });
+
+    // Auto-format CNPJ enquanto digita
+    document.getElementById("dCnpj").addEventListener("input", (e) => {
+      const v = e.target.value.replace(/\D/g, "").slice(0, 14);
+      e.target.value = formatCnpj(v);
+    });
+
+    confirmBtn.addEventListener("click", async () => {
+      const crf  = document.getElementById("dCRF").value.trim().toUpperCase();
+      const farm = document.getElementById("dFarmaceutico").value.trim();
+      const cnpj = document.getElementById("dCnpj").value.replace(/\D/g, "");
+      const farmNome = document.getElementById("dFarmaciaNome").value.trim();
+      const qty  = Number(qtyEl.value);
+
+      if (!/^[A-Z]{2,4}[\s\-/]*[A-Z]{2}[\s\-/]*\d{2,8}$/i.test(crf)) {
+        statusModalEl.textContent = "CRF em formato inválido. Ex.: CRF-SC 12345.";
+        statusModalEl.className = "ep-status is-err"; return;
+      }
+      if (!farm) { statusModalEl.textContent = "Informe o nome do farmacêutico."; statusModalEl.className = "ep-status is-err"; return; }
+      if (!isValidCnpj(cnpj)) { statusModalEl.textContent = "CNPJ inválido."; statusModalEl.className = "ep-status is-err"; return; }
+      if (!farmNome) { statusModalEl.textContent = "Informe o nome da farmácia."; statusModalEl.className = "ep-status is-err"; return; }
+      if (!Number.isInteger(qty) || qty < 1 || qty > restante) {
+        statusModalEl.textContent = `Quantidade entre 1 e ${restante}.`;
+        statusModalEl.className = "ep-status is-err"; return;
+      }
+
+      confirmBtn.disabled = true;
+      statusModalEl.textContent = "Registrando…";
+      statusModalEl.className = "ep-status";
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/receita/dispensar`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            deliveryToken: token,
+            farmaceuticoCRF: crf,
+            farmaceuticoNome: farm,
+            farmaciaCNPJ: cnpj,
+            farmaciaNome: farmNome,
+            quantidade: qty
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          statusModalEl.textContent = "Erro: " + (data?.hint || data?.error || `HTTP ${res.status}`);
+          statusModalEl.className = "ep-status is-err";
+          confirmBtn.disabled = false;
+          return;
+        }
+        modal.classList.remove("is-open");
+        // Re-fetch pra atualizar saldo + histórico.
+        location.reload();
+      } catch (e) {
+        statusModalEl.textContent = "Erro de rede: " + (e?.message || "");
+        statusModalEl.className = "ep-status is-err";
+        confirmBtn.disabled = false;
+      }
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  }
+
+  function formatCnpj(c) {
+    const v = String(c || "").replace(/\D/g, "");
+    if (v.length !== 14) return v;
+    return `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8,12)}-${v.slice(12,14)}`;
+  }
+
+  // Validador CNPJ (algoritmo Receita Federal — espelha o do backend).
+  function isValidCnpj(cnpj) {
+    const c = String(cnpj || "").replace(/\D/g, "");
+    if (c.length !== 14) return false;
+    if (/^(\d)\1{13}$/.test(c)) return false;
+    const calc = (digs, weights) => {
+      const sum = digs.reduce((acc, d, i) => acc + d * weights[i], 0);
+      const r = sum % 11;
+      return r < 2 ? 0 : 11 - r;
+    };
+    const arr = c.split("").map(Number);
+    const w1 = [5,4,3,2,9,8,7,6,5,4,3,2];
+    const w2 = [6].concat(w1);
+    return calc(arr.slice(0, 12), w1) === arr[12] && calc(arr.slice(0, 13), w2) === arr[13];
+  }
 </script>
 
 </body>
