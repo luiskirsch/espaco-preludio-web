@@ -125,6 +125,14 @@
             </select>
           </div>
 
+          <div class="ep-field">
+            <label class="ep-label" for="quantidadePrescrita">Quantidade total prescrita *</label>
+            <input id="quantidadePrescrita" class="ep-input" type="number" min="1" max="24" step="1" value="1" required>
+            <p class="ep-text-xs ep-text-muted ep-mt-0">
+              Total de unidades (caixas/embalagens) que a farmácia pode dispensar somando todas as visitas. Ex.: 2 caixas → paciente pode pegar 1 hoje e 1 outra hora.
+            </p>
+          </div>
+
           <div class="ep-status" id="formStatus"></div>
 
           <div class="ep-flex" style="gap: 8px;">
@@ -389,7 +397,10 @@
     })).filter(m => m.nome);
   }
 
+  const quantidadeEl = document.getElementById("quantidadePrescrita");
+
   function collectForm() {
+    const qty = Number(quantidadeEl.value);
     return {
       patientId: patientSelect.value || null,
       patientName: patientNameEl.value.trim(),
@@ -398,6 +409,7 @@
       tipoReceita: tipoReceitaEl.value,
       observacoes: observacoesEl.value.trim(),
       validade:    Number(validadeEl.value),
+      quantidadePrescrita: Number.isInteger(qty) && qty >= 1 && qty <= 24 ? qty : null,
       meds:        collectMeds()
     };
   }
@@ -410,6 +422,7 @@
     tipoReceitaEl.value = f.tipoReceita || "simples";
     observacoesEl.value = f.observacoes || "";
     validadeEl.value    = String(f.validade || 90);
+    quantidadeEl.value  = String(f.quantidadePrescrita || 1);
     medListEl.innerHTML = "";
     (f.meds || []).forEach(m => addMedRow(m));
     if ((f.meds || []).length === 0) addMedRow();
@@ -493,6 +506,10 @@
       setStatus(formStatus, "Adicione ao menos um medicamento.", "err");
       return null;
     }
+    if (!form.quantidadePrescrita) {
+      setStatus(formStatus, "Informe a quantidade total prescrita (1 a 24).", "err");
+      return null;
+    }
     setStatus(formStatus, "Salvando…");
     const payload = JSON.stringify(form);
     const { ciphertext, iv } = await encryptNote(payload, dek);
@@ -503,7 +520,10 @@
         res = await fetch(`${BACKEND_BASE_URL}/therapy/receitas/${receitaId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
-          body: JSON.stringify({ formCiphertext: ciphertext, formIv: iv })
+          body: JSON.stringify({
+            formCiphertext: ciphertext, formIv: iv,
+            quantidadePrescrita: form.quantidadePrescrita
+          })
         });
       } else {
         res = await fetch(`${BACKEND_BASE_URL}/therapy/receitas`, {
@@ -514,7 +534,8 @@
             formIv: iv,
             patientId: form.patientId,
             patientNameSnapshot: form.patientName,
-            sessionId: presetSessionId || null
+            sessionId: presetSessionId || null,
+            quantidadePrescrita: form.quantidadePrescrita
           })
         });
       }
@@ -712,10 +733,15 @@
       drawText(form.observacoes);
     }
 
-    // ── Validade ──────────────────────────────────────────────────────
+    // ── Validade + quantidade dispensável ─────────────────────────────
     y -= 6;
     hr();
     drawText("Validade: " + form.validade + " dias a partir da emissão.", { size: 10, color: rgb(0.35,0.35,0.35) });
+    if (form.quantidadePrescrita) {
+      const unidade = form.quantidadePrescrita === 1 ? "unidade" : "unidades";
+      drawText(`Total dispensável: ${form.quantidadePrescrita} ${unidade}. A farmácia registra cada retirada no link de verificação — após esgotar, o link bloqueia novas dispensações.`,
+        { size: 9, color: rgb(0.35,0.35,0.35) });
+    }
 
     // ── BLOCO INFERIOR (assinatura à esquerda, QR à direita, mesmo nível) ──
     // Duas colunas claramente separadas pra evitar colisão entre IDs longos
