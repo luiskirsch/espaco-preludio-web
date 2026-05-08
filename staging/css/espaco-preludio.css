@@ -177,6 +177,22 @@ a:hover { color: var(--ep-accent-hover); }
   color: transparent;
   flex: 0 0 auto;
   box-shadow: 0 0 12px rgba(215,176,107,0.18);
+  animation: ep-brand-pulse 3.2s ease-in-out infinite;
+}
+
+@keyframes ep-brand-pulse {
+  0%, 100% {
+    background-size: 60%;
+    box-shadow: 0 0 12px rgba(215,176,107,0.18);
+  }
+  50% {
+    background-size: 66%;
+    box-shadow: 0 0 18px rgba(215,176,107,0.34);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ep-brand__mark { animation: none; }
 }
 
 .ep-brand__name { display: flex; flex-direction: column; line-height: 1.1; }
