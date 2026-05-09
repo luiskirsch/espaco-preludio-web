@@ -269,19 +269,50 @@ h3.ep-h3 {
   box-shadow: var(--ep-shadow-card);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   padding: 32px 28px;
 }
-/* Anula o margin-top utility do .ep-h3 pra não somar com o gap do flex —
-   espaçamento entre badge / preço / texto / botão fica todo controlado
-   pelo gap (consistente). */
+/* Anula o margin-top utility do .ep-h3 pra não somar com o gap do flex. */
 .ep-card--strong > .ep-h3 { margin-top: 0; }
-/* Distribui o "espaço sobrando" em 2 pontos: antes do texto descritivo (centra
-   ele verticalmente no card) e antes do botão (mantém CTAs alinhados no fundo
-   entre cards de alturas diferentes). Em cards com texto longo, o auto vira
-   0 e o gap garante respiro mínimo de 16px. */
-.ep-card--strong > .ep-card__sub      { margin-top: auto; }
+/* Botão sempre alinhado no fundo entre cards de alturas diferentes. */
 .ep-card--strong > .ep-btn:last-child { margin-top: auto; }
+
+/* Lista de features dentro do card de plano. Check verde via pseudo-elemento
+   pra evitar dependência de imagem/SVG. */
+.ep-card__features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 13.5px;
+  color: var(--ep-ink);
+  line-height: 1.45;
+}
+.ep-card__features li {
+  position: relative;
+  padding-left: 24px;
+}
+.ep-card__features li::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 5px;
+  width: 12px;
+  height: 6px;
+  border-left: 2px solid var(--ep-accent);
+  border-bottom: 2px solid var(--ep-accent);
+  transform: rotate(-45deg);
+}
+
+/* Nota fina (condições/elegibilidade). Aparece depois das features. */
+.ep-card__note {
+  font-size: 12.5px;
+  color: var(--ep-ink-3);
+  margin: 0;
+  line-height: 1.5;
+}
 
 .ep-card__title {
   font-size: 15px;
