@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-47">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-48">
 </head>
 <body>
 
@@ -577,6 +577,13 @@
         body: JSON.stringify(body)
       });
       const data = await res.json().catch(() => ({}));
+      if (res.status === 402) {
+        // Trial expirado / sem assinatura ativa. Manda pro perfil pra contratar.
+        if (confirm("Sua trial expirou. Você precisa contratar um plano para criar consultas. Ir para o perfil agora?")) {
+          window.location.href = "./perfil.html";
+        }
+        return;
+      }
       if (!res.ok || !data.ok) {
         statusEl.textContent = "Erro: " + (data?.error || res.status);
         statusEl.className = "ep-status is-err";

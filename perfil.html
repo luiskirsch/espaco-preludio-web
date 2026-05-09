@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-47">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-48">
 </head>
 <body>
 
@@ -52,7 +52,7 @@
         <div class="ep-issuer-block__ids" id="planoSub">—</div>
       </div>
       <div class="ep-issuer-block__actions">
-        <a href="./planos.html" class="ep-btn ep-btn--ghost ep-btn--sm">Gerenciar plano</a>
+        <a id="planoCta" href="./planos.html" class="ep-btn ep-btn--ghost ep-btn--sm">Gerenciar plano</a>
       </div>
     </section>
 
@@ -236,31 +236,69 @@
     if (!card) return;
     const trialUntil = t.trialUntil?.toMillis ? t.trialUntil.toMillis() : Number(t.trialUntil) || null;
     const plano = t.plano || "trial";
+    const trialAinda = trialUntil && trialUntil > Date.now();
 
-    let title = "Plano Trial", sub = "—", eyebrow = "Plano";
+    let title = "Plano Trial", sub = "—", eyebrow = "Plano", cta = "Gerenciar plano", danger = false;
     if (plano === "pro") {
       eyebrow = "Plano · Ativo";
-      title = "Espaço Prelúdio Pro";
+      const tierLabel = t.proTier === "recem-formado" ? "Recém-formado" : t.proTier === "profissional" ? "Profissional" : "Pro";
+      const priceTxt = t.proPriceCents ? ` (R$ ${(t.proPriceCents / 100).toFixed(2).replace(".", ",")}/mês)` : "";
+      title = `Espaço Prelúdio ${tierLabel}${priceTxt}`;
       sub = t.nextChargeAt
         ? "Próxima cobrança em " + new Date(Number(t.nextChargeAt)).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
         : "Assinatura ativa.";
-    } else if (plano === "trial") {
+    } else if (plano === "student-active") {
+      eyebrow = "Plano · Estudante";
+      title = "Tier Estudante (gratuito)";
+      const until = t.studentVerifiedUntil?.toMillis ? t.studentVerifiedUntil.toMillis() : Number(t.studentVerifiedUntil);
+      sub = until ? "Validado até " + new Date(until).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }) : "Acesso ativo.";
+      cta = "Ver detalhes";
+    } else if (plano === "student-pending-review" && trialAinda) {
+      eyebrow = "Plano · Estudante (em revisão)";
+      title = "Comprovante em análise";
+      sub = "Trial vigente até a revisão. Em até 48h te avisamos por e-mail.";
+    } else if (plano === "recem-formado-eligible") {
+      eyebrow = "Plano · Recém-formado";
+      title = "Habilitado para R$ 49,90/mês";
       const days = trialUntil ? Math.max(0, Math.ceil((trialUntil - Date.now()) / 86_400_000)) : null;
+      sub = trialAinda
+        ? `Trial gratuito ${days} ${days === 1 ? "dia restante" : "dias restantes"}. Contrate antes de expirar.`
+        : "Trial encerrado. Contrate pra continuar usando.";
+      cta = "Contratar agora";
+      danger = !trialAinda;
+    } else if (plano === "recem-formado-pending-review" && trialAinda) {
+      eyebrow = "Plano · Recém-formado (em revisão)";
+      title = "Comprovante em análise";
+      sub = "Trial vigente até a revisão. Em até 48h te avisamos por e-mail.";
+    } else if (plano === "trial" && trialAinda) {
+      const days = Math.max(0, Math.ceil((trialUntil - Date.now()) / 86_400_000));
       eyebrow = "Plano · Trial";
-      title = days != null ? `Trial gratuito — ${days} ${days === 1 ? "dia restante" : "dias restantes"}` : "Trial gratuito";
-      sub = trialUntil ? "Expira em " + new Date(trialUntil).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }) : "";
-    } else if (plano === "expired") {
-      eyebrow = "Plano · Expirado";
-      title = "Trial encerrado";
-      sub = "Assine para continuar usando todas as funcionalidades.";
-    } else if (plano === "canceled") {
-      eyebrow = "Plano · Cancelado";
-      title = "Assinatura cancelada";
-      sub = "Você pode reativar quando quiser.";
+      title = `Trial gratuito — ${days} ${days === 1 ? "dia restante" : "dias restantes"}`;
+      sub = "Expira em " + new Date(trialUntil).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }) + ". Assine antes pra não perder o acesso.";
+      cta = "Contratar agora";
+    } else {
+      // Trial expirado, expired, canceled, ou outros estados sem trial vigente:
+      // funções clínicas estão bloqueadas, precisa contratar.
+      eyebrow = "Plano · Bloqueado";
+      title = plano === "canceled" ? "Assinatura cancelada" :
+              plano === "expired"  ? "Trial encerrado" :
+              "Acesso bloqueado";
+      sub = "Suas funções clínicas (criar consulta, receita, documento, paciente) estão suspensas até você contratar uma assinatura.";
+      cta = "Contratar agora";
+      danger = true;
     }
+
     $("planoEyebrow").textContent = eyebrow;
     $("planoTitle").textContent   = title;
     $("planoSub").textContent     = sub;
+    const ctaEl = $("planoCta");
+    ctaEl.textContent = cta;
+    if (danger) {
+      ctaEl.classList.remove("ep-btn--ghost");
+      ctaEl.classList.add("ep-btn--primary");
+      card.style.borderLeft = "3px solid var(--ep-danger)";
+      card.style.paddingLeft = "12px";
+    }
     card.style.display = "flex";
   }
   renderPlanoCard(therapist);

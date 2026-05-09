@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-47">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-48">
 </head>
 <body>
 
@@ -321,6 +321,15 @@
     finishRegister.disabled = true;
     setStatus(statusRecovery, "Registrando profissional…");
 
+    // Tier intencionado define a duração do trial:
+    //   estudante      → 0d (libera só após validar doc, gratuito permanente)
+    //   recem-formado  → 30d
+    //   profissional   → 7d (default)
+    const planoQS = new URLSearchParams(location.search).get("plano");
+    const intendedTier = planoQS === "estudante" ? "estudante"
+                       : planoQS === "recem"     ? "recem-formado"
+                       : "profissional";
+
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/registrar`, {
         method: "POST",
@@ -337,7 +346,8 @@
           e2eeSalt:      pending.salt,
           wrappedDEK:    pending.wrappedDEK,
           wrappedDEKIv:  pending.wrappedDEKIv,
-          consentLgpd:   true
+          consentLgpd:   true,
+          intendedTier
         })
       });
 
