@@ -9,11 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-46">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-47">
 </head>
 <body>
-
-<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
@@ -36,7 +34,7 @@
   </div>
 </header>
 
-<main class="ep-container ep-mt-32 ep-mb-16" style="max-width: 880px;">
+<main class="ep-container ep-mt-32 ep-mb-16" style="max-width: 980px;">
 
   <div class="ep-eyebrow">Plano da sua conta</div>
   <h1 class="ep-h1 ep-mt-12">Espaço Prelúdio Pro</h1>
@@ -54,42 +52,87 @@
     </div>
   </div>
 
-  <!-- Plano Pro -->
-  <section class="ep-plan-card ep-mt-24">
-    <div class="ep-plan-card__head">
-      <h2 class="ep-h2 ep-mt-0">Pro</h2>
-      <div class="ep-plan-card__price">
-        <span class="ep-plan-card__currency">R$</span>
-        <span class="ep-plan-card__amount" id="planAmount">49,90</span>
-        <span class="ep-plan-card__per">/mês</span>
-      </div>
-    </div>
-
-    <ul class="ep-plan-card__features">
-      <li>✓ Consultas ilimitadas com vídeo cifrado E2EE (LiveKit)</li>
-      <li>✓ Pacientes ilimitados com prontuário cifrado</li>
-      <li>✓ Anotações clínicas E2EE com chave-semente de recuperação</li>
-      <li>✓ Receita digital com assinatura ICP-Brasil + QR de verificação</li>
-      <li>✓ Agenda visual semanal</li>
-      <li>✓ Selo "Verificado pela equipe" após validação CRP/CRM</li>
-      <li>✓ Suporte por e-mail</li>
-    </ul>
-
-    <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16" id="subscribeBtn">
-      Assinar agora
+  <!-- Card único: gerenciar assinatura ativa (mostra só se plano===pro) -->
+  <section id="manageCard" class="ep-plan-card ep-mt-24" style="display: none;">
+    <h2 class="ep-h2 ep-mt-0">Sua assinatura</h2>
+    <p class="ep-text-muted ep-mt-8" id="manageCardSub">—</p>
+    <button type="button" class="ep-btn ep-btn--ghost ep-btn--lg ep-btn--block ep-mt-16" id="cancelBtn">
+      Cancelar assinatura
     </button>
     <p class="ep-text-xs ep-text-muted ep-mt-12" style="text-align: center; margin-bottom: 0;">
-      Pagamento processado pelo Mercado Pago. Cobrança mensal recorrente.
-      Você pode cancelar a qualquer momento direto pelo painel.
+      Você mantém acesso até o fim do período pago. Reative quando quiser.
     </p>
   </section>
 
+  <!-- Cards lado-a-lado: recém-formado + profissional -->
+  <div id="tiersGrid" style="display: none; grid-template-columns: 1fr 1fr; gap: 16px;" class="ep-mt-24">
+
+    <!-- Tier Recém-formado -->
+    <section id="recemCard" class="ep-plan-card" style="position: relative;">
+      <span class="ep-badge" id="recemBadge" style="position: absolute; top: 16px; right: 16px;">Recém-formado</span>
+      <div class="ep-plan-card__head">
+        <h2 class="ep-h2 ep-mt-0">Recém-formado</h2>
+        <div class="ep-plan-card__price">
+          <span class="ep-plan-card__currency">R$</span>
+          <span class="ep-plan-card__amount">49,90</span>
+          <span class="ep-plan-card__per">/mês</span>
+        </div>
+      </div>
+      <p class="ep-text-sm ep-text-muted ep-mt-8" id="recemEligibilityNote">—</p>
+      <ul class="ep-plan-card__features ep-mt-12">
+        <li>✓ Tudo do plano Profissional</li>
+        <li>✓ Desconto válido enquanto inscrição CRP/CRM &lt; 12 meses</li>
+        <li>✓ Após 12 meses migra automaticamente para Profissional</li>
+      </ul>
+      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16" id="subscribeRecemBtn">
+        Assinar como Recém-formado
+      </button>
+    </section>
+
+    <!-- Tier Profissional -->
+    <section id="profCard" class="ep-plan-card">
+      <div class="ep-plan-card__head">
+        <h2 class="ep-h2 ep-mt-0">Profissional</h2>
+        <div class="ep-plan-card__price">
+          <span class="ep-plan-card__currency">R$</span>
+          <span class="ep-plan-card__amount">120,00</span>
+          <span class="ep-plan-card__per">/mês</span>
+        </div>
+      </div>
+      <ul class="ep-plan-card__features ep-mt-12">
+        <li>✓ Consultas ilimitadas com vídeo cifrado E2EE (LiveKit)</li>
+        <li>✓ Pacientes ilimitados com prontuário cifrado</li>
+        <li>✓ Anotações clínicas E2EE com chave-semente</li>
+        <li>✓ Receita digital com assinatura ICP-Brasil + QR</li>
+        <li>✓ Agenda visual semanal</li>
+        <li>✓ Selo "Verificado" após validação CRP/CRM</li>
+        <li>✓ Suporte por e-mail</li>
+      </ul>
+      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16" id="subscribeProfBtn">
+        Assinar Profissional
+      </button>
+    </section>
+
+  </div>
+
+  <p id="recemHint" class="ep-text-sm ep-text-muted ep-mt-16 ep-text-center ep-hide">
+    Inscrito no CRP/CRM nos últimos 12 meses?
+    <a href="./comprovante-recem-formado.html">Validar inscrição para o desconto de R$ 49,90/mês →</a>
+  </p>
+
   <p class="ep-text-xs ep-text-muted ep-mt-24" style="text-align: center;">
-    Dúvidas sobre o plano? Escreva para
-    <a href="mailto:contato@preludiojogos.com">contato@preludiojogos.com</a>.
+    Pagamento processado pelo Mercado Pago. Cobrança mensal recorrente.
+    Dúvidas? Escreva para <a href="mailto:contato@preludiojogos.com">contato@preludiojogos.com</a>.
   </p>
 
 </main>
+
+<style>
+  @media (max-width: 720px) {
+    #tiersGrid { grid-template-columns: 1fr !important; }
+  }
+  .ep-text-center { text-align: center; }
+</style>
 
 <script type="module">
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
@@ -104,18 +147,20 @@
   const planStatusIcon   = document.getElementById("planStatusIcon");
   const planStatusTitle  = document.getElementById("planStatusTitle");
   const planStatusSub    = document.getElementById("planStatusSub");
-  const subscribeBtn     = document.getElementById("subscribeBtn");
+  const manageCard       = document.getElementById("manageCard");
+  const manageCardSub    = document.getElementById("manageCardSub");
+  const cancelBtn        = document.getElementById("cancelBtn");
+  const tiersGrid        = document.getElementById("tiersGrid");
+  const recemCard        = document.getElementById("recemCard");
+  const recemEligibilityNote = document.getElementById("recemEligibilityNote");
+  const subscribeRecemBtn = document.getElementById("subscribeRecemBtn");
+  const subscribeProfBtn  = document.getElementById("subscribeProfBtn");
+  const recemHint         = document.getElementById("recemHint");
 
   function fmtDate(ms) {
     if (!ms) return "—";
     return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
   }
-
-  // Renderiza status atual
-  const trialUntil = therapist.trialUntil?.toMillis
-    ? therapist.trialUntil.toMillis()
-    : Number(therapist.trialUntil) || null;
-  const plano = therapist.plano || "trial";
 
   function showStatus(klass, iconSvg, title, sub) {
     planStatus.style.display = "flex";
@@ -125,18 +170,60 @@
     planStatusSub.textContent = sub;
   }
 
+  const trialUntil = therapist.trialUntil?.toMillis
+    ? therapist.trialUntil.toMillis()
+    : Number(therapist.trialUntil) || null;
+  const plano = therapist.plano || "trial";
+
+  // ─── Status banner + which tier cards to show ───────────────────
   if (plano === "pro") {
     showStatus(
       "ep-status-card--ok",
       `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>`,
-      "Você está no plano Pro",
+      "Você está no plano Pro" + (therapist.proTier === "recem-formado" ? " (Recém-formado)" : therapist.proTier === "profissional" ? " (Profissional)" : ""),
       therapist.nextChargeAt
         ? "Próxima cobrança em " + fmtDate(therapist.nextChargeAt)
         : "Assinatura ativa."
     );
-    subscribeBtn.textContent = "Cancelar assinatura";
-    subscribeBtn.classList.remove("ep-btn--primary");
-    subscribeBtn.classList.add("ep-btn--ghost");
+    manageCard.style.display = "block";
+    const priceTxt = therapist.proPriceCents
+      ? `R$ ${(therapist.proPriceCents / 100).toFixed(2).replace(".", ",")}/mês`
+      : "Cobrança mensal recorrente.";
+    manageCardSub.textContent = priceTxt;
+
+  } else if (plano === "student-active") {
+    showStatus(
+      "ep-status-card--ok",
+      `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>`,
+      "Você está no tier Estudante (gratuito)",
+      therapist.studentVerifiedUntil
+        ? "Validado até " + fmtDate(therapist.studentVerifiedUntil?.toMillis?.() || therapist.studentVerifiedUntil)
+        : "Acesso ativo."
+    );
+
+  } else if (plano === "recem-formado-eligible") {
+    showStatus(
+      "ep-status-card--ok",
+      `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>`,
+      "Você está habilitado para o tier Recém-formado",
+      "Contrate por R$ 49,90/mês ou assine como Profissional."
+    );
+    tiersGrid.style.display = "grid";
+    recemCard.style.borderColor = "var(--ep-accent)";
+    recemEligibilityNote.textContent = "Validado pela nossa equipe. Você pode contratar este tier.";
+
+  } else if (plano === "recem-formado-pending-review") {
+    showStatus(
+      "ep-status-card--pending",
+      `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`,
+      "Comprovante de inscrição em revisão",
+      "Avisamos por e-mail em até 48h. Enquanto isso, você pode assinar como Profissional."
+    );
+    tiersGrid.style.display = "grid";
+    subscribeRecemBtn.disabled = true;
+    subscribeRecemBtn.textContent = "Aguardando revisão";
+    recemEligibilityNote.textContent = "Em análise — disponível assim que a equipe aprovar.";
+
   } else if (plano === "trial") {
     const daysLeft = trialUntil ? Math.max(0, Math.ceil((trialUntil - Date.now()) / 86_400_000)) : null;
     showStatus(
@@ -145,6 +232,14 @@
       daysLeft != null && daysLeft > 0 ? `Você está em trial — ${daysLeft} ${daysLeft === 1 ? "dia restante" : "dias restantes"}` : "Trial gratuito",
       trialUntil ? "Expira em " + fmtDate(trialUntil) : "—"
     );
+    tiersGrid.style.display = "grid";
+    subscribeRecemBtn.classList.remove("ep-btn--primary");
+    subscribeRecemBtn.classList.add("ep-btn--ghost");
+    subscribeRecemBtn.textContent = "Validar inscrição primeiro";
+    recemEligibilityNote.textContent = "Para liberar este tier, envie um comprovante de inscrição no conselho.";
+    recemHint.classList.remove("ep-hide");
+    subscribeRecemBtn.addEventListener("click", () => { window.location.href = "./comprovante-recem-formado.html"; });
+
   } else if (plano === "expired") {
     showStatus(
       "ep-status-card--err",
@@ -152,14 +247,34 @@
       "Trial expirado",
       "Assine para continuar usando todas as funcionalidades."
     );
+    tiersGrid.style.display = "grid";
+    subscribeRecemBtn.classList.remove("ep-btn--primary");
+    subscribeRecemBtn.classList.add("ep-btn--ghost");
+    subscribeRecemBtn.textContent = "Validar inscrição primeiro";
+    recemEligibilityNote.textContent = "Para liberar este tier, envie um comprovante de inscrição.";
+    recemHint.classList.remove("ep-hide");
+    subscribeRecemBtn.addEventListener("click", () => { window.location.href = "./comprovante-recem-formado.html"; });
+
   } else if (plano === "canceled") {
     showStatus(
       "ep-status-card--pending",
       `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>`,
       "Assinatura cancelada",
-      "Você ainda pode acessar até o fim do período pago. Reative quando quiser."
+      "Reative quando quiser."
     );
-    subscribeBtn.textContent = "Reativar assinatura";
+    tiersGrid.style.display = "grid";
+    subscribeRecemBtn.classList.remove("ep-btn--primary");
+    subscribeRecemBtn.classList.add("ep-btn--ghost");
+    subscribeRecemBtn.textContent = "Validar inscrição primeiro";
+    subscribeRecemBtn.addEventListener("click", () => { window.location.href = "./comprovante-recem-formado.html"; });
+
+  } else {
+    // student-pending-review, student-rejected (continua trial efetivo): mostra cards de assinatura
+    tiersGrid.style.display = "grid";
+    subscribeRecemBtn.classList.remove("ep-btn--primary");
+    subscribeRecemBtn.classList.add("ep-btn--ghost");
+    subscribeRecemBtn.textContent = "Validar inscrição primeiro";
+    subscribeRecemBtn.addEventListener("click", () => { window.location.href = "./comprovante-recem-formado.html"; });
   }
 
   // Aviso de retorno do MP
@@ -173,43 +288,55 @@
     );
   }
 
-  subscribeBtn.addEventListener("click", async () => {
-    if (plano === "pro") {
-      if (!confirm("Cancelar a assinatura? Você mantém acesso até o fim do período pago.")) return;
-      subscribeBtn.disabled = true;
-      try {
-        const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/plano/cancelar`, {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${idToken}` }
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
-        alert("Assinatura cancelada.");
-        location.reload();
-      } catch (e) {
-        alert("Erro ao cancelar: " + e.message);
-        subscribeBtn.disabled = false;
-      }
-      return;
-    }
-
-    subscribeBtn.disabled = true;
-    subscribeBtn.textContent = "Redirecionando…";
+  // ─── Subscribe handlers ─────────────────────────────────────────
+  async function startSubscription(tier, btn, originalText) {
+    btn.disabled = true;
+    btn.textContent = "Redirecionando…";
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/plano/iniciar`, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${idToken}` }
+        headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ tier })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok || !data.initPoint) {
         throw new Error(data?.error || ("HTTP_" + res.status));
       }
-      // Redireciona pra MP — usuário autoriza, retorna pra back_url
       window.location.href = data.initPoint;
     } catch (e) {
       alert("Não foi possível iniciar a assinatura: " + e.message);
-      subscribeBtn.disabled = false;
-      subscribeBtn.textContent = "Assinar agora";
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
+
+  // Só plugamos o handler de assinatura se estiver elegível (caso recém-formado).
+  // Pra trial/expired, o handler já redireciona pra validar antes (acima).
+  if (plano === "recem-formado-eligible") {
+    subscribeRecemBtn.addEventListener("click", () =>
+      startSubscription("recem-formado", subscribeRecemBtn, "Assinar como Recém-formado")
+    );
+  }
+  subscribeProfBtn.addEventListener("click", () =>
+    startSubscription("profissional", subscribeProfBtn, "Assinar Profissional")
+  );
+
+  // Cancel
+  cancelBtn.addEventListener("click", async () => {
+    if (!confirm("Cancelar a assinatura? Você mantém acesso até o fim do período pago.")) return;
+    cancelBtn.disabled = true;
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/plano/cancelar`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+      alert("Assinatura cancelada.");
+      location.reload();
+    } catch (e) {
+      alert("Erro ao cancelar: " + e.message);
+      cancelBtn.disabled = false;
     }
   });
 </script>
