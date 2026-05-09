@@ -269,10 +269,17 @@ h3.ep-h3 {
   box-shadow: var(--ep-shadow-card);
   display: flex;
   flex-direction: column;
+  gap: 16px;
+  padding: 32px 28px;
 }
+/* Anula o margin-top utility do .ep-h3 pra não somar com o gap do flex —
+   espaçamento entre badge / preço / texto / botão fica todo controlado
+   pelo gap (consistente). */
+.ep-card--strong > .ep-h3 { margin-top: 0; }
 /* Distribui o "espaço sobrando" em 2 pontos: antes do texto descritivo (centra
    ele verticalmente no card) e antes do botão (mantém CTAs alinhados no fundo
-   entre cards de alturas diferentes). */
+   entre cards de alturas diferentes). Em cards com texto longo, o auto vira
+   0 e o gap garante respiro mínimo de 16px. */
 .ep-card--strong > .ep-card__sub      { margin-top: auto; }
 .ep-card--strong > .ep-btn:last-child { margin-top: auto; }
 
