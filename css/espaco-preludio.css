@@ -265,7 +265,14 @@ h3.ep-h3 {
   box-shadow: var(--ep-shadow-soft);
 }
 
-.ep-card--strong { box-shadow: var(--ep-shadow-card); }
+.ep-card--strong {
+  box-shadow: var(--ep-shadow-card);
+  display: flex;
+  flex-direction: column;
+}
+/* Empurra o último botão pro fundo do card pra alinhar CTAs entre cards
+   de altura desigual (planos). */
+.ep-card--strong > .ep-btn:last-child { margin-top: auto; }
 
 .ep-card__title {
   font-size: 15px;
