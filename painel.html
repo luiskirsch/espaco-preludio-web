@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-45">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-46">
 </head>
 <body>
 
@@ -191,33 +191,52 @@
     } catch (e) { /* silencioso — pill fica oculta */ }
   })();
 
-  // ─── Banner tier estudante (em revisão / aprovado / rejeitado) ──
+  // ─── Banner tier estudante / recém-formado ─────────────────
+  // Faz duas chamadas (pode rodar em paralelo) e mostra o banner do tier
+  // ATIVO. Prioridade: estudante > recém-formado (estudante é gratuito).
   (async () => {
     const banner = document.getElementById("studentBanner");
+    function setBanner(cls, html) {
+      banner.className = "ep-alert " + cls + " ep-mt-16";
+      banner.innerHTML = html;
+      banner.classList.remove("ep-hide");
+    }
+
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/comprovante-estudante/status`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) return;
+      const [studentRes, recemRes] = await Promise.all([
+        fetch(`${BACKEND_BASE_URL}/therapy/profissional/comprovante-estudante/status`, {
+          headers: { "Authorization": `Bearer ${idToken}` }
+        }).then(r => r.json()).catch(() => ({})),
+        fetch(`${BACKEND_BASE_URL}/therapy/profissional/comprovante-recem-formado/status`, {
+          headers: { "Authorization": `Bearer ${idToken}` }
+        }).then(r => r.json()).catch(() => ({}))
+      ]);
 
-      const plano = data.plano;
-      const doc   = data.studentDoc;
+      const plano = studentRes?.plano || recemRes?.plano;
 
+      // Tier estudante tem prioridade (gratuito)
       if (plano === "student-pending-review") {
-        banner.className = "ep-alert ep-alert--info ep-mt-16";
-        banner.innerHTML = `<strong>Comprovante em revisão.</strong> Recebemos sua declaração de matrícula. Nossa equipe revisa em até 48h e você é avisado por e-mail.`;
-        banner.classList.remove("ep-hide");
-      } else if (plano === "student-active") {
-        const until = data.studentVerifiedUntil ? new Date(data.studentVerifiedUntil).toLocaleDateString("pt-BR") : "1 ano";
-        banner.className = "ep-alert ep-alert--success ep-mt-16";
-        banner.innerHTML = `<strong>Plano Estudante ativo</strong> até ${until}. No vencimento, vamos pedir um comprovante atualizado.`;
-        banner.classList.remove("ep-hide");
-      } else if (doc?.decision === "rejected") {
-        const reasons = (doc.reasons || []).map(r => `<li>${r}</li>`).join("");
-        banner.className = "ep-alert ep-alert--warn ep-mt-16";
-        banner.innerHTML = `<strong>Comprovante não aprovado.</strong> ${reasons ? `<ul style="margin: 6px 0 8px 18px; padding: 0;">${reasons}</ul>` : ""} <a href="./comprovante-estudante.html">Enviar outro comprovante →</a>`;
-        banner.classList.remove("ep-hide");
+        return setBanner("ep-alert--info", `<strong>Comprovante em revisão.</strong> Recebemos sua declaração de matrícula. Nossa equipe revisa em até 48h e você é avisado por e-mail.`);
+      }
+      if (plano === "student-active") {
+        const until = studentRes?.studentVerifiedUntil ? new Date(studentRes.studentVerifiedUntil).toLocaleDateString("pt-BR") : "1 ano";
+        return setBanner("ep-alert--success", `<strong>Plano Estudante ativo</strong> até ${until}. No vencimento, vamos pedir um comprovante atualizado.`);
+      }
+      if (studentRes?.studentDoc?.decision === "rejected") {
+        const reasons = (studentRes.studentDoc.reasons || []).map(r => `<li>${r}</li>`).join("");
+        return setBanner("ep-alert--warn", `<strong>Comprovante de matrícula não aprovado.</strong> ${reasons ? `<ul style="margin: 6px 0 8px 18px; padding: 0;">${reasons}</ul>` : ""} <a href="./comprovante-estudante.html">Enviar outro →</a>`);
+      }
+
+      // Tier recém-formado
+      if (plano === "recem-formado-pending-review") {
+        return setBanner("ep-alert--info", `<strong>Comprovante de inscrição em revisão.</strong> Recebemos sua carteira/print do conselho. Nossa equipe revisa em até 48h.`);
+      }
+      if (plano === "recem-formado-eligible") {
+        return setBanner("ep-alert--success", `<strong>Você está habilitado para o tier Recém-formado</strong> (R$ 49,90/mês). Quando contratar a assinatura, esse será seu preço.`);
+      }
+      if (recemRes?.recemFormadoDoc?.decision === "rejected") {
+        const reasons = (recemRes.recemFormadoDoc.reasons || []).map(r => `<li>${r}</li>`).join("");
+        return setBanner("ep-alert--warn", `<strong>Comprovante de inscrição não aprovado.</strong> ${reasons ? `<ul style="margin: 6px 0 8px 18px; padding: 0;">${reasons}</ul>` : ""} <a href="./comprovante-recem-formado.html">Enviar outro →</a>`);
       }
     } catch (e) { /* silencioso — banner fica oculto */ }
   })();

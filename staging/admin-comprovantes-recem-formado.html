@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin · Comprovantes Estudante · Espaço Prelúdio</title>
+  <title>Admin · Comprovantes Recém-formado · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,8 +24,8 @@
     </a>
     <nav class="ep-nav">
       <a href="./admin-verificacoes.html" class="ep-text-sm">CRP/CRM</a>
-      <a href="./admin-comprovantes.html" class="ep-text-sm" style="font-weight: 600;">Estudante</a>
-      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm">Recém-formado</a>
+      <a href="./admin-comprovantes.html" class="ep-text-sm">Estudante</a>
+      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm" style="font-weight: 600;">Recém-formado</a>
       <span id="adminEmail" class="ep-text-sm ep-text-muted">…</span>
       <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Sair</button>
     </nav>
@@ -55,12 +55,12 @@
       <div class="ep-flex" style="justify-content: space-between; align-items: end; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
         <div>
           <div class="ep-eyebrow">Painel administrativo</div>
-          <h1 class="ep-h1 ep-mt-12">Comprovantes de matrícula</h1>
-          <p class="ep-text-muted ep-mt-0">Revisa as submissões que a IA marcou como "manual-review".</p>
+          <h1 class="ep-h1 ep-mt-12">Comprovantes Recém-formado</h1>
+          <p class="ep-text-muted ep-mt-0">Inscrições CRP/CRM cuja IA não teve confiança automática suficiente.</p>
         </div>
         <div class="ep-flex" style="gap: 6px;">
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="pending-review">Em revisão</button>
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="approved">Aprovados</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="eligible">Aprovados</button>
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="rejected">Rejeitados</button>
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="all">Todos</button>
         </div>
@@ -171,7 +171,7 @@
   async function loadList() {
     listEl.innerHTML = `<div class="ep-skeleton">Carregando…</div>`;
     try {
-      const data = await api(`/therapy/admin/comprovantes-estudante?status=${currentFilter}`);
+      const data = await api(`/therapy/admin/comprovantes-recem-formado?status=${currentFilter}`);
       renderList(data.items || []);
     } catch (err) {
       if (err.status === 403) { show(forbiddenPanel); return; }
@@ -186,21 +186,22 @@
     }
     listEl.innerHTML = "";
     for (const item of items) {
-      const ext = item.studentDoc?.extracted || {};
-      const conf = item.studentDoc?.confidence != null ? Math.round(item.studentDoc.confidence * 100) + "%" : "—";
+      const ext = item.recemFormadoDoc?.extracted || {};
+      const conf = item.recemFormadoDoc?.confidence != null ? Math.round(item.recemFormadoDoc.confidence * 100) + "%" : "—";
       const card = document.createElement("article");
       card.className = "ep-admin-card";
+      const meses = ext.monthsSinceInscricao;
       card.innerHTML = `
         <div>
           <div class="ep-admin-card__name">${escapeHtml(item.displayName || "(sem nome)")}</div>
           <div class="ep-admin-card__meta">
-            ${ext.curso ? escapeHtml(ext.curso) : "Curso?"}
-            ${ext.semestre ? " · " + escapeHtml(ext.semestre) : ""}
-            ${ext.instituicao ? " · " + escapeHtml(ext.instituicao) : ""}
+            ${ext.conselho ? escapeHtml(ext.conselho) : "?"} ${ext.registro ? "· " + escapeHtml(ext.registro) : ""}
+            ${ext.regiao ? " (" + escapeHtml(ext.regiao) + ")" : ""}
+            ${meses != null ? " · inscrito há " + meses + (meses === 1 ? " mês" : " meses") : ""}
             <br>
             Plano: <strong>${escapeHtml(item.plano || "?")}</strong>
             · IA: ${conf}
-            · Enviado ${fmtDate(item.studentDoc?.lastUploadedAt)}
+            · Enviado ${fmtDate(item.recemFormadoDoc?.lastUploadedAt)}
           </div>
         </div>
         <div class="ep-flex" style="gap: 8px; align-items: center;">
@@ -228,37 +229,45 @@
     approveBtn.disabled = true;
     rejectBtn.disabled  = true;
     try {
-      const { item } = await api(`/therapy/admin/comprovantes-estudante/${encodeURIComponent(uid)}`);
+      const { item } = await api(`/therapy/admin/comprovantes-recem-formado/${encodeURIComponent(uid)}`);
       const t = item.therapist || {};
       const ext = item.extracted || {};
       const dataUrl = `data:${item.mediaType};base64,${item.fileBase64}`;
-      modalTitle.textContent = `Comprovante · ${t.displayName || ""}`;
+      modalTitle.textContent = `Recém-formado · ${t.displayName || ""}`;
 
       const reasonsHtml = (item.reasons || []).map(r => `<li>${escapeHtml(r)}</li>`).join("");
       const conf = item.confidence != null ? Math.round(item.confidence * 100) + "%" : "—";
+      const meses = ext.monthsSinceInscricao;
 
       modalBody.innerHTML = `
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
           <div>
             <div class="ep-text-sm ep-text-muted ep-mt-0"><strong>Profissional cadastrado</strong></div>
             <p style="margin: 4px 0;">${escapeHtml(t.displayName || "")}<br>
-              <span class="ep-text-sm ep-text-muted">${escapeHtml(t.email || "")}</span>
+              <span class="ep-text-sm ep-text-muted">${escapeHtml(t.email || "")}</span><br>
+              <span class="ep-text-sm ep-text-muted">${t.crp ? "CRP " + escapeHtml(t.crp) : ""} ${t.crm ? " · CRM " + escapeHtml(t.crm) : ""}</span>
             </p>
 
             <div class="ep-text-sm ep-text-muted ep-mt-16"><strong>Extraído pela IA · confiança ${conf}</strong></div>
             <p style="margin: 4px 0; font-size: 13.5px;">
               <strong>Nome:</strong> ${escapeHtml(ext.nome || "—")}<br>
-              <strong>Curso:</strong> ${escapeHtml(ext.curso || "—")} ${ext.cursoElegivel ? "✓" : "✗"}<br>
-              <strong>Semestre:</strong> ${escapeHtml(ext.semestre || "—")} ${ext.isUltimoAno ? "✓ último ano" : ""}<br>
-              <strong>Instituição:</strong> ${escapeHtml(ext.instituicao || "—")}<br>
-              <strong>Data emissão:</strong> ${escapeHtml(ext.dataEmissao || "—")}<br>
+              <strong>Conselho:</strong> ${escapeHtml(ext.conselho || "—")}<br>
+              <strong>Registro:</strong> ${escapeHtml(ext.registro || "—")} ${ext.regiao ? "(" + escapeHtml(ext.regiao) + ")" : ""}<br>
+              <strong>Data inscrição:</strong> ${escapeHtml(ext.dataInscricao || "—")} ${meses != null ? "(" + meses + (meses === 1 ? " mês" : " meses") + " atrás)" : ""} ${meses != null && meses <= 12 ? "✓ dentro" : "✗ fora"} da janela<br>
               <strong>Situação:</strong> ${escapeHtml(ext.situacao || "—")}<br>
+              <strong>Tipo doc:</strong> ${escapeHtml(ext.tipoDocumento || "—")}<br>
               ${ext.observacoes ? `<strong>Obs IA:</strong> <em>${escapeHtml(ext.observacoes)}</em>` : ""}
             </p>
 
             ${reasonsHtml ? `<div class="ep-text-sm ep-text-muted ep-mt-16"><strong>Motivos:</strong><ul>${reasonsHtml}</ul></div>` : ""}
 
             <div class="ep-text-sm ep-text-muted ep-mt-16">
+              <strong>Verificar publicamente:</strong>
+              ${t.crp ? `<a href="https://cadastro.cfp.org.br/buscaPublica/" target="_blank" rel="noopener">CFP</a>` : ""}
+              ${t.crm ? `<a href="https://portal.cfm.org.br/busca-medicos/" target="_blank" rel="noopener">CFM</a>` : ""}
+            </div>
+
+            <div class="ep-text-sm ep-text-muted ep-mt-12">
               <strong>Tamanho:</strong> ${fmtSize(item.fileSize)} · ${escapeHtml(item.mediaType)}<br>
               <strong>Hash:</strong> <code style="font-size: 11px;">${escapeHtml(item.fileHash || "").slice(0, 16)}…</code>
             </div>
@@ -280,11 +289,11 @@
 
   approveBtn.addEventListener("click", async () => {
     if (!activeUid) return;
-    if (!confirm("Aprovar este comprovante? O profissional vira tier estudante (gratuito) por 1 ano.")) return;
+    if (!confirm("Aprovar inscrição como recém-formado? O profissional poderá contratar a R$ 49,90/mês.")) return;
     const notes = prompt("Notas internas (opcional):", "") || "";
     approveBtn.disabled = true;
     try {
-      await api(`/therapy/admin/comprovantes-estudante/${encodeURIComponent(activeUid)}/aprovar`, {
+      await api(`/therapy/admin/comprovantes-recem-formado/${encodeURIComponent(activeUid)}/aprovar`, {
         method: "POST",
         body: JSON.stringify({ notes })
       });
@@ -298,13 +307,13 @@
 
   rejectBtn.addEventListener("click", async () => {
     if (!activeUid) return;
-    const reason = prompt("Motivo da recusa (será mostrado ao profissional):", "");
+    const reason = prompt("Motivo da recusa:", "");
     if (reason == null) return;
     const trimmed = reason.trim();
     if (!trimmed) { alert("Informe um motivo."); return; }
     rejectBtn.disabled = true;
     try {
-      await api(`/therapy/admin/comprovantes-estudante/${encodeURIComponent(activeUid)}/rejeitar`, {
+      await api(`/therapy/admin/comprovantes-recem-formado/${encodeURIComponent(activeUid)}/rejeitar`, {
         method: "POST",
         body: JSON.stringify({ reason: trimmed })
       });
@@ -321,7 +330,7 @@
     try {
       idToken = await user.getIdToken();
       adminEmailEl.textContent = user.email || "";
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/admin/comprovantes-estudante?status=pending-review`, {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/admin/comprovantes-recem-formado?status=pending-review`, {
         headers: { "Authorization": `Bearer ${idToken}` }
       });
       if (res.status === 403 || res.status === 503) { show(forbiddenPanel); return; }

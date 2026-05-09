@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-45">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-46">
 </head>
 <body>
 
@@ -356,11 +356,15 @@
       });
 
       show(stepDone);
-      // Se veio do plano Estudante, redireciona pra upload do comprovante
-      // de matrícula (libera o tier após validação automática). Caso contrário,
-      // vai direto pro painel (trial/pro/recém-formado).
+      // Redireciona conforme plano selecionado na landing:
+      //   estudante → upload de declaração de matrícula
+      //   recem     → upload de comprovante de inscrição CRP/CRM (<12 meses)
+      //   default   → painel (trial → contrata profissional depois)
       const params = new URLSearchParams(location.search);
-      const dest = params.get("plano") === "estudante" ? "./comprovante-estudante.html" : "./painel.html";
+      const plano = params.get("plano");
+      let dest = "./painel.html";
+      if (plano === "estudante") dest = "./comprovante-estudante.html";
+      else if (plano === "recem") dest = "./comprovante-recem-formado.html";
       setTimeout(() => { window.location.href = dest; }, 1200);
     } catch (error) {
       console.error("registrar_profissional_error", error);
