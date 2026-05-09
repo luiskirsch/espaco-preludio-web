@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-56">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-57">
 </head>
 <body>
 
@@ -195,7 +195,7 @@
     showStatus(
       "ep-status-card--ok",
       `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>`,
-      "Você está no tier Estudante (gratuito)",
+      "Você está no plano Estudante (gratuito)",
       therapist.studentVerifiedUntil
         ? "Validado até " + fmtDate(therapist.studentVerifiedUntil?.toMillis?.() || therapist.studentVerifiedUntil)
         : "Acesso ativo."
@@ -205,12 +205,12 @@
     showStatus(
       "ep-status-card--ok",
       `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>`,
-      "Você está habilitado para o tier Recém-formado",
+      "Você está habilitado para o plano Recém-formado",
       "Contrate por R$ 49,90/mês ou assine como Profissional."
     );
     tiersGrid.style.display = "grid";
     recemCard.style.borderColor = "var(--ep-accent)";
-    recemEligibilityNote.textContent = "Validado pela nossa equipe. Você pode contratar este tier.";
+    recemEligibilityNote.textContent = "Validado pela nossa equipe. Você pode contratar este plano.";
 
   } else if (plano === "recem-formado-pending-review") {
     showStatus(
@@ -236,7 +236,7 @@
     subscribeRecemBtn.classList.remove("ep-btn--primary");
     subscribeRecemBtn.classList.add("ep-btn--ghost");
     subscribeRecemBtn.textContent = "Validar inscrição primeiro";
-    recemEligibilityNote.textContent = "Para liberar este tier, envie um comprovante de inscrição no conselho.";
+    recemEligibilityNote.textContent = "Para liberar este plano, envie um comprovante de inscrição no conselho.";
     recemHint.classList.remove("ep-hide");
     subscribeRecemBtn.addEventListener("click", () => { window.location.href = "./comprovante-recem-formado.html"; });
 
@@ -251,7 +251,7 @@
     subscribeRecemBtn.classList.remove("ep-btn--primary");
     subscribeRecemBtn.classList.add("ep-btn--ghost");
     subscribeRecemBtn.textContent = "Validar inscrição primeiro";
-    recemEligibilityNote.textContent = "Para liberar este tier, envie um comprovante de inscrição.";
+    recemEligibilityNote.textContent = "Para liberar este plano, envie um comprovante de inscrição.";
     recemHint.classList.remove("ep-hide");
     subscribeRecemBtn.addEventListener("click", () => { window.location.href = "./comprovante-recem-formado.html"; });
 
