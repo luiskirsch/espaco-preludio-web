@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-52">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-53">
 </head>
 <body>
 
@@ -375,6 +375,7 @@
       let dest = "./painel.html";
       if (plano === "estudante") dest = "./comprovante-estudante.html";
       else if (plano === "recem") dest = "./comprovante-recem-formado.html";
+      else dest = "./planos.html?welcome=1"; // Profissional ou padrão → resumo do trial + opção de contratar
       setTimeout(() => { window.location.href = dest; }, 1200);
     } catch (error) {
       console.error("registrar_profissional_error", error);
@@ -383,16 +384,31 @@
     }
   });
 
-  // Pre-fill plano se vindo da landing
+  // Banner indicativo do plano escolhido + duração do trial. Aparece em
+  // qualquer cadastro vindo de um botão da landing (sempre passa ?plano=).
   try {
     const params = new URLSearchParams(location.search);
     const plano = params.get("plano");
-    if (plano) {
-      // marcador visual sutil — não precisa armazenar agora
+    const config = {
+      "estudante": {
+        title: "Plano Estudante (gratuito)",
+        sub: "Após cadastrar, você envia sua declaração de matrícula. A IA valida em segundos."
+      },
+      "recem": {
+        title: "Plano Recém-formado (R$ 49,90/mês)",
+        sub: "30 dias grátis. Após cadastrar, você envia o comprovante de inscrição CRP/CRM (<12 meses)."
+      },
+      "profissional": {
+        title: "Plano Profissional (R$ 120,00/mês)",
+        sub: "7 dias grátis para experimentar. Você decide quando contratar — direto pelo perfil."
+      }
+    };
+    const c = config[plano];
+    if (c) {
       const banner = document.createElement("div");
       banner.className = "ep-alert ep-alert--info";
       banner.style.marginBottom = "16px";
-      banner.textContent = "Plano selecionado: " + plano + ". Você poderá confirmar depois.";
+      banner.innerHTML = `<strong>${c.title}</strong><br><span class="ep-text-sm">${c.sub}</span>`;
       stepData.insertBefore(banner, stepData.firstChild.nextSibling);
     }
   } catch {}
