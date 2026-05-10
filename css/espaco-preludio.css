@@ -205,10 +205,12 @@ a:hover { color: var(--ep-accent-hover); }
 
 /* Desktop: cada seção principal ocupa a viewport inteira (one-section-per-screen).
    Mobile (<900px) preserva o flow natural — vh em mobile é problemático e o
-   conteúdo acomoda melhor sem altura forçada. */
+   conteúdo acomoda melhor sem altura forçada.
+   :not(:last-of-type) exclui a última .ep-section (CTA final, conteúdo curto)
+   pra evitar que ela fique com vazio enorme. */
 @media (min-width: 900px) {
   .ep-hero,
-  .ep-section {
+  .ep-section:not(:last-of-type) {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
