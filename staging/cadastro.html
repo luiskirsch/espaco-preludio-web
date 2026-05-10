@@ -99,14 +99,60 @@
                 <option value="CRN">CRN — Nutrição</option>
                 <option value="CRO">CRO — Odontologia</option>
                 <option value="CREF">CREF — Educação Física</option>
+                <option value="SEM_CONSELHO">Sem conselho regulamentado (psicanálise, terapia integrativa, hipnoterapia)</option>
+              </select>
+            </div>
+            <div class="ep-field" id="numeroConselhoField">
+              <label class="ep-label" for="numeroConselho">Número do registro</label>
+              <input id="numeroConselho" class="ep-input" type="text" maxlength="30" placeholder="Selecione o conselho primeiro" autocomplete="off">
+            </div>
+          </div>
+          <p class="ep-text-xs ep-text-muted ep-mt-0" id="numeroConselhoHint">Mostraremos esse registro no seu perfil público para o paciente confirmar.</p>
+
+          <!-- Campos extras pra SEM_CONSELHO. Escondidos por padrão; revelados
+               quando user seleciona 'Sem conselho regulamentado' no dropdown.
+               Substituem o "selo do conselho" como trust signal — todos
+               obrigatórios, validados no backend. -->
+          <div id="semConselhoFields" class="ep-stack ep-hide ep-mt-12" style="gap: 12px; padding: 16px; border: 1px solid var(--ep-border); border-radius: 8px; background: rgba(255, 244, 220, 0.4);">
+            <div class="ep-alert ep-alert--warning" style="margin: 0;">
+              <strong>Atenção: você se cadastrará como profissional não regulamentado.</strong><br>
+              Sua conta passa por <strong>revisão manual obrigatória</strong> antes do perfil público
+              ficar visível. Você não terá acesso a emissão de receitas nem documentos clínicos
+              (atestado de doença, encaminhamento, relatório). Atende consultas, chat, vídeo e
+              anotações normalmente.
+            </div>
+            <div class="ep-field">
+              <label class="ep-label" for="tipoPratica">Tipo de prática</label>
+              <select id="tipoPratica" class="ep-select">
+                <option value="">Selecione…</option>
+                <option value="psicanalise">Psicanálise (sem CRP)</option>
+                <option value="terapia-integrativa">Terapia integrativa / holística</option>
+                <option value="hipnoterapia">Hipnoterapia</option>
               </select>
             </div>
             <div class="ep-field">
-              <label class="ep-label" for="numeroConselho">Número do registro</label>
-              <input id="numeroConselho" class="ep-input" type="text" maxlength="30" placeholder="Selecione o conselho primeiro" autocomplete="off" required>
+              <label class="ep-label" for="formacaoInstituicao">Instituição de formação</label>
+              <input id="formacaoInstituicao" class="ep-input" type="text" maxlength="200" placeholder="Ex.: Sociedade Brasileira de Psicanálise">
             </div>
+            <div class="ep-field">
+              <label class="ep-label" for="formacaoCurso">Curso / formação concluída</label>
+              <input id="formacaoCurso" class="ep-input" type="text" maxlength="200" placeholder="Ex.: Formação em Psicanálise Lacaniana (4 anos)">
+            </div>
+            <div class="ep-row">
+              <div class="ep-field">
+                <label class="ep-label" for="formacaoAnoConclusao">Ano de conclusão</label>
+                <input id="formacaoAnoConclusao" class="ep-input" type="number" min="1950" max="2099" placeholder="Ex.: 2018">
+              </div>
+              <div class="ep-field">
+                <label class="ep-label" for="anosExperiencia">Anos de prática</label>
+                <input id="anosExperiencia" class="ep-input" type="number" min="0" max="80" placeholder="Ex.: 6">
+              </div>
+            </div>
+            <p class="ep-text-xs ep-text-muted ep-mt-0">
+              Após o cadastro, você precisará anexar <strong>uma cópia do diploma/certificado</strong>
+              de formação. Sem essa etapa o perfil não fica público.
+            </p>
           </div>
-          <p class="ep-text-xs ep-text-muted ep-mt-0">Mostraremos esse registro no seu perfil público para o paciente confirmar.</p>
 
           <div class="ep-row">
             <div class="ep-field">
@@ -200,6 +246,14 @@
   const especialidadeEl  = document.getElementById("especialidade");
   const tipoConselhoEl   = document.getElementById("tipoConselho");
   const numeroConselhoEl = document.getElementById("numeroConselho");
+  const numeroConselhoField = document.getElementById("numeroConselhoField");
+  const numeroConselhoHint  = document.getElementById("numeroConselhoHint");
+  const semConselhoFields   = document.getElementById("semConselhoFields");
+  const tipoPraticaEl       = document.getElementById("tipoPratica");
+  const formacaoInstituicaoEl = document.getElementById("formacaoInstituicao");
+  const formacaoCursoEl       = document.getElementById("formacaoCurso");
+  const formacaoAnoConclusaoEl = document.getElementById("formacaoAnoConclusao");
+  const anosExperienciaEl     = document.getElementById("anosExperiencia");
   const passwordEl       = document.getElementById("password");
   const passwordConfirmEl= document.getElementById("passwordConfirm");
   const consentLgpdEl    = document.getElementById("consentLgpd");
@@ -254,16 +308,43 @@
     const passwordConfirm = passwordConfirmEl.value;
     const consentLgpd    = consentLgpdEl.checked;
 
-    if (!displayName)    return setStatus(statusData, "Informe seu nome completo.", "err");
+    if (!displayName) return setStatus(statusData, "Informe seu nome completo.", "err");
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setStatus(statusData, "E-mail inválido.", "err");
-    if (!tipoConselho)   return setStatus(statusData, "Selecione o conselho profissional.", "err");
-    if (!numeroConselho) return setStatus(statusData, "Informe o número de registro no conselho.", "err");
+    if (!tipoConselho) return setStatus(statusData, "Selecione o conselho profissional.", "err");
+    // SEM_CONSELHO não exige número, mas exige campos de formação preenchidos.
+    let semConselhoExtras = null;
+    if (tipoConselho === "SEM_CONSELHO") {
+      const tipoPratica = tipoPraticaEl.value.trim().toLowerCase();
+      const formacaoInstituicao = formacaoInstituicaoEl.value.trim();
+      const formacaoCurso = formacaoCursoEl.value.trim();
+      const formacaoAnoConclusao = parseInt(formacaoAnoConclusaoEl.value, 10);
+      const anosExperiencia = parseInt(anosExperienciaEl.value, 10);
+      const anoAtual = new Date().getFullYear();
+      if (!tipoPratica) return setStatus(statusData, "Selecione o tipo de prática.", "err");
+      if (!formacaoInstituicao) return setStatus(statusData, "Informe a instituição de formação.", "err");
+      if (!formacaoCurso) return setStatus(statusData, "Informe o curso/formação concluída.", "err");
+      if (!Number.isInteger(formacaoAnoConclusao) || formacaoAnoConclusao < 1950 || formacaoAnoConclusao > anoAtual) {
+        return setStatus(statusData, `Ano de conclusão inválido (entre 1950 e ${anoAtual}).`, "err");
+      }
+      if (!Number.isInteger(anosExperiencia) || anosExperiencia < 0 || anosExperiencia > 80) {
+        return setStatus(statusData, "Anos de prática inválidos (entre 0 e 80).", "err");
+      }
+      semConselhoExtras = { tipoPratica, formacaoInstituicao, formacaoCurso, formacaoAnoConclusao, anosExperiencia };
+    } else if (!numeroConselho) {
+      return setStatus(statusData, "Informe o número de registro no conselho.", "err");
+    }
     {
       const planoQS = new URLSearchParams(location.search).get("plano");
       const studentAllowed = new Set(["CRP", "CRM"]);
       if (planoQS === "estudante" && !studentAllowed.has(tipoConselho)) {
         return setStatus(statusData,
           "Plano Estudante exige cadastro em Psicologia (CRP) ou Medicina (CRM). Volte na landing e escolha Recém-formado ou Profissional.",
+          "err");
+      }
+      // Recém-formado e estudante exigem conselho regulamentado.
+      if ((planoQS === "recem" || planoQS === "estudante") && tipoConselho === "SEM_CONSELHO") {
+        return setStatus(statusData,
+          "Profissional não regulamentado só está disponível no plano Profissional (R$ 120/mês). Volte na landing e escolha Profissional.",
           "err");
       }
     }
@@ -294,7 +375,7 @@
         wrappedDEK,
         wrappedDEKIv,
         recoveryPhrase: recovery,
-        form: { displayName, email, especialidade, tipoConselho, numeroConselho }
+        form: { displayName, email, especialidade, tipoConselho, numeroConselho, semConselhoExtras }
       };
 
       recoveryEl.textContent = recovery;
@@ -375,7 +456,15 @@
           wrappedDEK:     pending.wrappedDEK,
           wrappedDEKIv:   pending.wrappedDEKIv,
           consentLgpd:    true,
-          intendedTier
+          intendedTier,
+          // Campos extras pra SEM_CONSELHO (substituem o registro no conselho).
+          ...(pending.form.semConselhoExtras ? {
+            tipoPratica:           pending.form.semConselhoExtras.tipoPratica,
+            formacaoInstituicao:   pending.form.semConselhoExtras.formacaoInstituicao,
+            formacaoCurso:         pending.form.semConselhoExtras.formacaoCurso,
+            formacaoAnoConclusao:  pending.form.semConselhoExtras.formacaoAnoConclusao,
+            anosExperiencia:       pending.form.semConselhoExtras.anosExperiencia
+          } : {})
         })
       });
 
@@ -429,11 +518,28 @@
   const STUDENT_TIER_ALLOWED = new Set(["CRP", "CRM"]);
   tipoConselhoEl?.addEventListener("change", () => {
     const sigla = tipoConselhoEl.value.trim().toUpperCase();
-    numeroConselhoEl.placeholder = NUMBER_HINTS[sigla] || "Selecione o conselho primeiro";
+    const isSemConselho = sigla === "SEM_CONSELHO";
+
+    // SEM_CONSELHO esconde o número de registro e revela campos de formação.
+    numeroConselhoField.classList.toggle("ep-hide", isSemConselho);
+    numeroConselhoHint.classList.toggle("ep-hide", isSemConselho);
+    semConselhoFields.classList.toggle("ep-hide", !isSemConselho);
+    if (isSemConselho) {
+      numeroConselhoEl.value = "";
+      numeroConselhoEl.removeAttribute("required");
+    } else {
+      numeroConselhoEl.placeholder = NUMBER_HINTS[sigla] || "Selecione o conselho primeiro";
+      numeroConselhoEl.setAttribute("required", "");
+    }
+
     const planoQS = new URLSearchParams(location.search).get("plano");
     if (planoQS === "estudante" && sigla && !STUDENT_TIER_ALLOWED.has(sigla)) {
       setStatus(statusData,
         "O plano Estudante (gratuito) só é elegível para Psicologia ou Medicina cursando clínica-escola/internato. Use Recém-formado ou Profissional.",
+        "err");
+    } else if ((planoQS === "recem" || planoQS === "estudante") && isSemConselho) {
+      setStatus(statusData,
+        "Profissional não regulamentado só está disponível no plano Profissional (R$ 120/mês).",
         "err");
     } else {
       setStatus(statusData, "");
