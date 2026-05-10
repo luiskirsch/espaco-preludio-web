@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profissional verificado · Espaço Prelúdio</title>
-  <meta name="description" content="Profissional verificado pelo Espaço Prelúdio. Plataforma de telessaúde com prescrição digital, sigilo LGPD e auditoria.">
+  <meta name="description" content="Profissional verificado pelo Espaço Prelúdio. Plataforma de telessaúde para profissionais regulamentados (CRP, CRM, CRESS, CREFITO, CRFa, CRN, CRO, CREF) com prescrição digital, sigilo LGPD e auditoria.">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -74,11 +74,11 @@
       </div>
 
       <div class="ep-alert ep-alert--info ep-mt-16">
-        <strong>O que significa verificado?</strong> A equipe do Espaço Prelúdio confirmou os registros profissionais (CRM/CRP/RQE) deste profissional junto aos respectivos conselhos. Isso não substitui sua diligência — para tratamento clínico, sempre confira o registro diretamente no <a href="https://portal.cfm.org.br/" target="_blank" rel="noopener">portal CFM</a> ou <a href="https://e-psi.cfp.org.br/" target="_blank" rel="noopener">e-Psi do CFP</a>.
+        <strong>O que significa verificado?</strong> A equipe do Espaço Prelúdio confirmou o registro profissional deste(a) profissional junto ao conselho de classe correspondente (CRP, CRM, CRESS, CREFITO, CRFa, CRN, CRO ou CREF). Isso não substitui sua diligência — para tratamento clínico, você pode confirmar diretamente no sistema de busca pública do conselho.
       </div>
 
       <div class="ep-alert ep-alert--info ep-mt-12">
-        <strong>Sobre o Espaço Prelúdio.</strong> Plataforma de telessaúde para psicólogos e psiquiatras com prescrição digital, criptografia E2EE de notas clínicas, sigilo LGPD e auditoria de dispensação. <a href="./index.html">Saiba mais →</a>
+        <strong>Sobre o Espaço Prelúdio.</strong> Plataforma de telessaúde para profissionais regulamentados de saúde mental e bem-estar — psicólogos, médicos, assistentes sociais, terapeutas ocupacionais, fonoaudiólogos, nutricionistas, dentistas e profissionais de Educação Física. Prescrição digital, criptografia E2EE de notas clínicas, sigilo LGPD e auditoria de dispensação. <a href="./index.html">Saiba mais →</a>
       </div>
 
     </div>
@@ -127,9 +127,14 @@
       const p = j.profissional;
       document.getElementById("profName").textContent = p.displayName || "—";
 
+      // Prefere o conselho genérico (S21+); cai pra crp/crm legados.
       const ids = [];
-      if (p.crm) ids.push("CRM " + p.crm);
-      if (p.crp) ids.push("CRP " + p.crp);
+      if (p.tipoConselho && p.numeroConselho) {
+        ids.push(`${p.tipoConselho} ${p.numeroConselho}`);
+      } else {
+        if (p.crm) ids.push("CRM " + p.crm);
+        if (p.crp) ids.push("CRP " + p.crp);
+      }
       if (p.rqe) ids.push("RQE " + String(p.rqe).replace(/^RQE\s*/i, ""));
       document.getElementById("profIds").textContent = ids.join(" · ") || "—";
       document.getElementById("profEspecialidade").textContent = p.especialidade || "—";
