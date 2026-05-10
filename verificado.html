@@ -47,6 +47,9 @@
           <div class="ep-eyebrow ep-text-success">Profissional verificado</div>
           <h1 class="ep-h1 ep-mt-12" id="profName">—</h1>
           <p class="ep-text-muted ep-mt-0" id="profIds">—</p>
+          <p class="ep-text-muted ep-mt-0 ep-hide" id="profSemConselhoNote" style="font-style: italic; font-size: 14px;">
+            Profissional não regulamentado por conselho oficial.
+          </p>
         </div>
       </div>
 
@@ -128,8 +131,18 @@
       document.getElementById("profName").textContent = p.displayName || "—";
 
       // Prefere o conselho genérico (S21+); cai pra crp/crm legados.
+      // Para SEM_CONSELHO (S22), mostra o tipo de prática declarado em vez
+      // de número de registro (não tem) e revela a nota "não regulamentado".
       const ids = [];
-      if (p.tipoConselho && p.numeroConselho) {
+      const PRACTICE_LABELS = {
+        "psicanalise":         "Psicanálise",
+        "terapia-integrativa": "Terapia integrativa",
+        "hipnoterapia":        "Hipnoterapia"
+      };
+      if (p.isRegulamentado === false) {
+        if (p.tipoPratica) ids.push(PRACTICE_LABELS[p.tipoPratica] || p.tipoPratica);
+        document.getElementById("profSemConselhoNote").classList.remove("ep-hide");
+      } else if (p.tipoConselho && p.numeroConselho) {
         ids.push(`${p.tipoConselho} ${p.numeroConselho}`);
       } else {
         if (p.crm) ids.push("CRM " + p.crm);
