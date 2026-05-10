@@ -205,15 +205,18 @@ a:hover { color: var(--ep-accent-hover); }
 
 /* Desktop: cada seção principal ocupa exatamente a área visível (= viewport
    menos o topbar sticky de 64px). Mobile (<900px) preserva o flow natural.
-   :not(:last-of-type) exclui a última .ep-section (CTA final, conteúdo curto)
-   pra evitar que ela fique com vazio enorme.
+
+   Exclusões:
+   - :last-of-type → CTA final, conteúdo curto (deixa em altura natural)
+   - #planos       → cards têm conteúdo alto que ultrapassa a viewport;
+                     fica em altura natural pra cards aparecerem inteiros
 
    min-height: calc(100vh - 64px) = altura da área visível abaixo do topbar.
    Padding simétrico 56/56 pra que o flex centering produza top space = bottom
    space dentro da área visível. */
 @media (min-width: 900px) {
   .ep-hero,
-  .ep-section:not(:last-of-type) {
+  .ep-section:not(:last-of-type):not(#planos) {
     min-height: calc(100vh - 64px);
     display: flex;
     flex-direction: column;
