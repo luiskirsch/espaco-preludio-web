@@ -203,6 +203,19 @@ a:hover { color: var(--ep-accent-hover); }
   padding: 80px 0 56px;
 }
 
+/* Desktop: cada seção principal ocupa a viewport inteira (one-section-per-screen).
+   Mobile (<900px) preserva o flow natural — vh em mobile é problemático e o
+   conteúdo acomoda melhor sem altura forçada. */
+@media (min-width: 900px) {
+  .ep-hero,
+  .ep-section {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
 .ep-eyebrow {
   display: inline-flex;
   align-items: center;
