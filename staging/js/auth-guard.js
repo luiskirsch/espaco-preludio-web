@@ -23,7 +23,44 @@ export async function fetchTherapistProfile(idToken) {
   if (res.status === 404) return { ok: false, code: "NAO_REGISTRADO" };
   const data = await res.json().catch(() => ({}));
   if (!res.ok) return { ok: false, code: data?.error || "ERRO_PERFIL" };
-  return { ok: true, therapist: data.therapist };
+  return {
+    ok: true,
+    therapist: data.therapist,
+    conselho: data.conselho || null,    // { sigla, label, profissional, capabilities }
+    planAccess: data.planAccess || null
+  };
+}
+
+// Esconde links de nav que apontam pra features cujo conselho do profissional
+// não habilita. Match por substring no href — links com href contendo
+// "receita.html" são ocultados pra quem não tem capability "receita", e
+// "documento.html" pra quem não tem "documentos-clinicos".
+//
+// Backend continua sendo a fonte da verdade (requireCapability nos endpoints).
+// Esta função só evita que o user clique em algo que vai cair em 403.
+function applyCapabilityVisibility(capabilities) {
+  const set = new Set(capabilities || []);
+  const RULES = [
+    { match: "receita.html",   capability: "receita" },
+    { match: "documento.html", capability: "documentos-clinicos" }
+  ];
+  document.querySelectorAll("a[href], button[data-href]").forEach(el => {
+    const href = (el.getAttribute("href") || el.getAttribute("data-href") || "").toLowerCase();
+    for (const rule of RULES) {
+      if (href.includes(rule.match) && !set.has(rule.capability)) {
+        el.style.display = "none";
+        el.setAttribute("aria-hidden", "true");
+      }
+    }
+  });
+  // Botões/elementos com data-capability="X" explícito também são ocultados.
+  document.querySelectorAll("[data-capability]").forEach(el => {
+    const cap = el.getAttribute("data-capability");
+    if (cap && !set.has(cap)) {
+      el.style.display = "none";
+      el.setAttribute("aria-hidden", "true");
+    }
+  });
 }
 
 export async function requireTherapist({ requireDek = true } = {}) {
@@ -45,16 +82,20 @@ export async function requireTherapist({ requireDek = true } = {}) {
     throw new Error(profile.code);
   }
 
+  // Aplica visibilidade baseada nas capabilities do conselho — esconde
+  // links/botões pra features que o profissional não pode usar.
+  applyCapabilityVisibility(profile.conselho?.capabilities);
+
   if (requireDek) {
     const dek = recallDek();
     if (!dek) {
       window.location.href = "./login.html?reauth=1&redirect=" + encodeURIComponent(location.pathname + location.search);
       throw new Error("DEK_AUSENTE");
     }
-    return { user, idToken, therapist: profile.therapist, dek };
+    return { user, idToken, therapist: profile.therapist, conselho: profile.conselho, planAccess: profile.planAccess, dek };
   }
 
-  return { user, idToken, therapist: profile.therapist };
+  return { user, idToken, therapist: profile.therapist, conselho: profile.conselho, planAccess: profile.planAccess };
 }
 
 export async function refreshIdToken() {
