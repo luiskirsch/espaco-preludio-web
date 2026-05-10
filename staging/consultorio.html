@@ -272,6 +272,7 @@
     remoteName.classList.add("ep-hide");
   }
   function onTrackSubscribed(track, pub, p) {
+    console.info("[lk] trackSubscribed", { kind: track.kind, sid: pub?.trackSid, participant: p?.identity });
     if (track.kind === Track.Kind.Video) {
       track.attach(videoRemote);
     } else if (track.kind === Track.Kind.Audio) {
@@ -283,18 +284,24 @@
   function onTrackUnsubscribed(track) {
     track.detach().forEach(el => el.remove());
   }
+  // Logs auxiliares — diagnosticar vídeo unilateral / E2EE.
+  room
+    .on(RoomEvent.LocalTrackPublished, (pub) => console.info("[lk] localPublished", { kind: pub?.kind, sid: pub?.trackSid }))
+    .on(RoomEvent.TrackPublished, (pub, p) => console.info("[lk] trackPublished", { kind: pub?.kind, sid: pub?.trackSid, participant: p?.identity }))
+    .on(RoomEvent.EncryptionError, (err) => console.error("[lk] encryptionError", err));
 
   try {
     setStatus("conectando…");
+    // Ordem canônica do LiveKit 2.x: setKey + setE2EEEnabled ANTES do connect.
+    // Se ativar E2EE depois de connect, auto-subscribe das tracks já publicadas
+    // pelo participante remoto pode rodar antes do worker estar pronto, o que
+    // deixa essa subscription permanentemente "muda" até a track ser republicada.
     if (useE2EE) {
       await keyProvider.setKey(e2eeKeyBytes);
-    }
-    await room.connect(tokenData.livekitUrl, tokenData.livekitToken);
-
-    if (useE2EE) {
       await room.setE2EEEnabled(true);
       e2eeBadge.classList.remove("ep-hide");
     }
+    await room.connect(tokenData.livekitUrl, tokenData.livekitToken);
 
     setStatus("ligando câmera…");
     await room.localParticipant.enableCameraAndMicrophone();

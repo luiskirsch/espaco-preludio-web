@@ -495,7 +495,8 @@
         remoteName.classList.add("ep-hide");
         setBottomState("waiting");
       })
-      .on(RoomEvent.TrackSubscribed, (track) => {
+      .on(RoomEvent.TrackSubscribed, (track, pub, p) => {
+        console.info("[lk] trackSubscribed", { kind: track.kind, sid: pub?.trackSid, participant: p?.identity });
         if (track.kind === Track.Kind.Video) {
           track.attach(videoRemote);
         } else if (track.kind === Track.Kind.Audio) {
@@ -505,15 +506,21 @@
         }
       })
       .on(RoomEvent.TrackUnsubscribed, (track) => track.detach().forEach(el => el.remove()))
+      .on(RoomEvent.LocalTrackPublished, (pub) => console.info("[lk] localPublished", { kind: pub?.kind, sid: pub?.trackSid }))
+      .on(RoomEvent.TrackPublished, (pub, p) => console.info("[lk] trackPublished", { kind: pub?.kind, sid: pub?.trackSid, participant: p?.identity }))
+      .on(RoomEvent.EncryptionError, (err) => console.error("[lk] encryptionError", err))
       .on(RoomEvent.Disconnected, () => setStatus("desconectado"));
 
     try {
-      if (useE2EE) await keyProvider.setKey(e2eeKeyBytes);
-      await room.connect(data.livekitUrl, data.livekitToken);
+      // Ordem canônica do LiveKit 2.x: setKey + setE2EEEnabled ANTES do connect.
+      // Senão, auto-subscribe das tracks já publicadas pode rodar antes do
+      // worker E2EE estar pronto e essa subscription fica permanentemente muda.
       if (useE2EE) {
+        await keyProvider.setKey(e2eeKeyBytes);
         await room.setE2EEEnabled(true);
         e2eeBadge.classList.remove("ep-hide");
       }
+      await room.connect(data.livekitUrl, data.livekitToken);
       setStatus("ligando câmera…");
       await room.localParticipant.enableCameraAndMicrophone();
       const camTrack = Array.from(room.localParticipant.videoTrackPublications.values())[0]?.videoTrack;
