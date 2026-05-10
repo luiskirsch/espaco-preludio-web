@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin · Comprovantes Recém-formado · Espaço Prelúdio</title>
+  <title>Admin · Comprovantes de Formação · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,8 +25,8 @@
     <nav class="ep-nav">
       <a href="./admin-verificacoes.html" class="ep-text-sm">CRP/CRM</a>
       <a href="./admin-comprovantes.html" class="ep-text-sm">Estudante</a>
-      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm" style="font-weight: 600;">Recém-formado</a>
-      <a href="./admin-comprovantes-formacao.html" class="ep-text-sm">Sem conselho</a>
+      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm">Recém-formado</a>
+      <a href="./admin-comprovantes-formacao.html" class="ep-text-sm" style="font-weight: 600;">Sem conselho</a>
       <span id="adminEmail" class="ep-text-sm ep-text-muted">…</span>
       <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Sair</button>
     </nav>
@@ -56,12 +56,12 @@
       <div class="ep-flex" style="justify-content: space-between; align-items: end; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
         <div>
           <div class="ep-eyebrow">Painel administrativo</div>
-          <h1 class="ep-h1 ep-mt-12">Comprovantes Recém-formado</h1>
-          <p class="ep-text-muted ep-mt-0">Inscrições CRP/CRM cuja IA não teve confiança automática suficiente.</p>
+          <h1 class="ep-h1 ep-mt-12">Comprovantes de formação</h1>
+          <p class="ep-text-muted ep-mt-0">Diplomas de profissionais SEM_CONSELHO (psicanálise, terapia integrativa, hipnoterapia). Revisão sempre manual — não há OCR automático.</p>
         </div>
         <div class="ep-flex" style="gap: 6px;">
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="pending-review">Em revisão</button>
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="eligible">Aprovados</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="verified">Aprovados</button>
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="rejected">Rejeitados</button>
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="all">Todos</button>
         </div>
@@ -109,6 +109,12 @@
 
   let idToken = null;
   let currentFilter = "pending-review";
+
+  const PRACTICE_LABELS = {
+    "psicanalise":          "Psicanálise (sem CRP)",
+    "terapia-integrativa":  "Terapia integrativa / holística",
+    "hipnoterapia":         "Hipnoterapia"
+  };
 
   function escapeHtml(str) {
     return String(str || "").replace(/[&<>"']/g, c => ({
@@ -172,7 +178,7 @@
   async function loadList() {
     listEl.innerHTML = `<div class="ep-skeleton">Carregando…</div>`;
     try {
-      const data = await api(`/therapy/admin/comprovantes-recem-formado?status=${currentFilter}`);
+      const data = await api(`/therapy/admin/comprovantes-formacao?status=${currentFilter}`);
       renderList(data.items || []);
     } catch (err) {
       if (err.status === 403) { show(forbiddenPanel); return; }
@@ -187,29 +193,33 @@
     }
     listEl.innerHTML = "";
     for (const item of items) {
-      const ext = item.recemFormadoDoc?.extracted || {};
-      const conf = item.recemFormadoDoc?.confidence != null ? Math.round(item.recemFormadoDoc.confidence * 100) + "%" : "—";
+      const f = item.formacaoNaoRegulamentada || {};
+      const tipoPratica = PRACTICE_LABELS[f.tipoPratica] || (f.tipoPratica || "?");
       const card = document.createElement("article");
       card.className = "ep-admin-card";
-      const meses = ext.monthsSinceInscricao;
+      const hasDoc = !!item.formacaoDoc?.lastUploadId;
       card.innerHTML = `
         <div>
           <div class="ep-admin-card__name">${escapeHtml(item.displayName || "(sem nome)")}</div>
           <div class="ep-admin-card__meta">
-            ${ext.conselho ? escapeHtml(ext.conselho) : "?"} ${ext.registro ? "· " + escapeHtml(ext.registro) : ""}
-            ${ext.regiao ? " (" + escapeHtml(ext.regiao) + ")" : ""}
-            ${meses != null ? " · inscrito há " + meses + (meses === 1 ? " mês" : " meses") : ""}
+            <strong>${escapeHtml(tipoPratica)}</strong>
+            ${f.instituicao ? "· " + escapeHtml(f.instituicao) : ""}
+            ${f.anosExperiencia != null ? " · " + f.anosExperiencia + (f.anosExperiencia === 1 ? " ano" : " anos") + " de prática" : ""}
             <br>
-            Plano: <strong>${escapeHtml(item.plano || "?")}</strong>
-            · IA: ${conf}
-            · Enviado ${fmtDate(item.recemFormadoDoc?.lastUploadedAt)}
+            Status: <strong>${escapeHtml(item.verificationStatus || "?")}</strong>
+            · Doc: ${escapeHtml(item.formacaoDoc?.decision || "—")}
+            ${hasDoc ? "· Enviado " + fmtDate(item.formacaoDoc?.lastUploadedAt) : "· Sem upload ainda"}
           </div>
         </div>
         <div class="ep-flex" style="gap: 8px; align-items: center;">
-          <button class="ep-btn ep-btn--primary ep-btn--sm" type="button" data-uid="${escapeHtml(item.therapistUid)}">Abrir</button>
+          ${hasDoc
+            ? `<button class="ep-btn ep-btn--primary ep-btn--sm" type="button" data-uid="${escapeHtml(item.therapistUid)}">Abrir</button>`
+            : `<span class="ep-text-xs ep-text-muted">aguardando upload</span>`
+          }
         </div>
       `;
-      card.querySelector("[data-uid]").addEventListener("click", () => openDetail(item.therapistUid));
+      const btn = card.querySelector("[data-uid]");
+      if (btn) btn.addEventListener("click", () => openDetail(item.therapistUid));
       listEl.appendChild(card);
     }
   }
@@ -230,15 +240,12 @@
     approveBtn.disabled = true;
     rejectBtn.disabled  = true;
     try {
-      const { item } = await api(`/therapy/admin/comprovantes-recem-formado/${encodeURIComponent(uid)}`);
+      const { item } = await api(`/therapy/admin/comprovantes-formacao/${encodeURIComponent(uid)}`);
       const t = item.therapist || {};
-      const ext = item.extracted || {};
+      const f = t.formacaoNaoRegulamentada || {};
+      const tipoPratica = PRACTICE_LABELS[f.tipoPratica] || (f.tipoPratica || "?");
       const dataUrl = `data:${item.mediaType};base64,${item.fileBase64}`;
-      modalTitle.textContent = `Recém-formado · ${t.displayName || ""}`;
-
-      const reasonsHtml = (item.reasons || []).map(r => `<li>${escapeHtml(r)}</li>`).join("");
-      const conf = item.confidence != null ? Math.round(item.confidence * 100) + "%" : "—";
-      const meses = ext.monthsSinceInscricao;
+      modalTitle.textContent = `Sem conselho · ${t.displayName || ""}`;
 
       modalBody.innerHTML = `
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
@@ -246,26 +253,24 @@
             <div class="ep-text-sm ep-text-muted ep-mt-0"><strong>Profissional cadastrado</strong></div>
             <p style="margin: 4px 0;">${escapeHtml(t.displayName || "")}<br>
               <span class="ep-text-sm ep-text-muted">${escapeHtml(t.email || "")}</span><br>
-              <span class="ep-text-sm ep-text-muted">${t.crp ? "CRP " + escapeHtml(t.crp) : ""} ${t.crm ? " · CRM " + escapeHtml(t.crm) : ""}</span>
+              <span class="ep-text-sm ep-text-muted">${escapeHtml(t.especialidade || "")}</span>
             </p>
 
-            <div class="ep-text-sm ep-text-muted ep-mt-16"><strong>Extraído pela IA · confiança ${conf}</strong></div>
+            <div class="ep-text-sm ep-text-muted ep-mt-16"><strong>Dados declarados de formação</strong></div>
             <p style="margin: 4px 0; font-size: 13.5px;">
-              <strong>Nome:</strong> ${escapeHtml(ext.nome || "—")}<br>
-              <strong>Conselho:</strong> ${escapeHtml(ext.conselho || "—")}<br>
-              <strong>Registro:</strong> ${escapeHtml(ext.registro || "—")} ${ext.regiao ? "(" + escapeHtml(ext.regiao) + ")" : ""}<br>
-              <strong>Data inscrição:</strong> ${escapeHtml(ext.dataInscricao || "—")} ${meses != null ? "(" + meses + (meses === 1 ? " mês" : " meses") + " atrás)" : ""} ${meses != null && meses <= 12 ? "✓ dentro" : "✗ fora"} da janela<br>
-              <strong>Situação:</strong> ${escapeHtml(ext.situacao || "—")}<br>
-              <strong>Tipo doc:</strong> ${escapeHtml(ext.tipoDocumento || "—")}<br>
-              ${ext.observacoes ? `<strong>Obs IA:</strong> <em>${escapeHtml(ext.observacoes)}</em>` : ""}
+              <strong>Tipo de prática:</strong> ${escapeHtml(tipoPratica)}<br>
+              <strong>Instituição:</strong> ${escapeHtml(f.instituicao || "—")}<br>
+              <strong>Curso:</strong> ${escapeHtml(f.curso || "—")}<br>
+              <strong>Ano de conclusão:</strong> ${f.anoConclusao || "—"}<br>
+              <strong>Anos de prática declarados:</strong> ${f.anosExperiencia != null ? f.anosExperiencia : "—"}
             </p>
-
-            ${reasonsHtml ? `<div class="ep-text-sm ep-text-muted ep-mt-16"><strong>Motivos:</strong><ul>${reasonsHtml}</ul></div>` : ""}
 
             <div class="ep-text-sm ep-text-muted ep-mt-16">
-              <strong>Verificar publicamente:</strong>
-              ${t.crp ? `<a href="https://cadastro.cfp.org.br/buscaPublica/" target="_blank" rel="noopener">CFP</a>` : ""}
-              ${t.crm ? `<a href="https://portal.cfm.org.br/busca-medicos/" target="_blank" rel="noopener">CFM</a>` : ""}
+              <strong>Como verificar:</strong><br>
+              1. Conferir se o nome no diploma bate com "${escapeHtml(t.displayName || "—")}"<br>
+              2. Confirmar a instituição declarada vs. o emissor do diploma<br>
+              3. Validar que o ano confere com o que foi declarado<br>
+              4. Avaliar se a instituição é reconhecida na área (ex.: SBPSP, ABRAP, IPHM, ABH)
             </div>
 
             <div class="ep-text-sm ep-text-muted ep-mt-12">
@@ -276,7 +281,7 @@
           <div>
             ${item.mediaType === "application/pdf"
               ? `<a class="ep-btn ep-btn--ghost ep-btn--block" href="${dataUrl}" target="_blank">Abrir PDF em nova aba ↗</a>`
-              : `<img src="${dataUrl}" alt="Comprovante" style="max-width: 100%; max-height: 600px; border-radius: 10px; border: 1px solid rgba(28,31,29,0.10);">`
+              : `<img src="${dataUrl}" alt="Diploma" style="max-width: 100%; max-height: 600px; border-radius: 10px; border: 1px solid rgba(28,31,29,0.10);">`
             }
           </div>
         </div>
@@ -290,11 +295,11 @@
 
   approveBtn.addEventListener("click", async () => {
     if (!activeUid) return;
-    if (!confirm("Aprovar inscrição como recém-formado? O profissional poderá contratar a R$ 49,90/mês.")) return;
+    if (!confirm("Aprovar diploma? O perfil público fica visível com selo 'Verificado pela equipe' (com indicação de não regulamentado).")) return;
     const notes = prompt("Notas internas (opcional):", "") || "";
     approveBtn.disabled = true;
     try {
-      await api(`/therapy/admin/comprovantes-recem-formado/${encodeURIComponent(activeUid)}/aprovar`, {
+      await api(`/therapy/admin/comprovantes-formacao/${encodeURIComponent(activeUid)}/aprovar`, {
         method: "POST",
         body: JSON.stringify({ notes })
       });
@@ -308,13 +313,13 @@
 
   rejectBtn.addEventListener("click", async () => {
     if (!activeUid) return;
-    const reason = prompt("Motivo da recusa:", "");
+    const reason = prompt("Motivo da recusa (será enviado por e-mail ao profissional):", "");
     if (reason == null) return;
     const trimmed = reason.trim();
     if (!trimmed) { alert("Informe um motivo."); return; }
     rejectBtn.disabled = true;
     try {
-      await api(`/therapy/admin/comprovantes-recem-formado/${encodeURIComponent(activeUid)}/rejeitar`, {
+      await api(`/therapy/admin/comprovantes-formacao/${encodeURIComponent(activeUid)}/rejeitar`, {
         method: "POST",
         body: JSON.stringify({ reason: trimmed })
       });
@@ -331,7 +336,7 @@
     try {
       idToken = await user.getIdToken();
       adminEmailEl.textContent = user.email || "";
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/admin/comprovantes-recem-formado?status=pending-review`, {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/admin/comprovantes-formacao?status=pending-review`, {
         headers: { "Authorization": `Bearer ${idToken}` }
       });
       if (res.status === 403 || res.status === 503) { show(forbiddenPanel); return; }
