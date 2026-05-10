@@ -1,7 +1,10 @@
 (() => {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-  const HEADER_OFFSET = 80;
+  // Topbar sticky tem 64px. 120 deixa 56px de respiro acima do topo da seção
+  // alvo — o suficiente pra eyebrow + título não ficarem grudados no topbar.
+  // Mantém em sync com scroll-margin-top de .ep-section em espaco-preludio.css.
+  const HEADER_OFFSET = 120;
   const DURATION = 1100;
 
   const easeOutExpo = (t) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
