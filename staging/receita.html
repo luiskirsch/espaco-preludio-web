@@ -96,15 +96,12 @@
           </div>
 
           <div class="ep-field">
-            <label class="ep-label" for="tipoReceita">Tipo</label>
-            <select id="tipoReceita" class="ep-select">
-              <option value="simples">Receita comum (medicamentos sem tarja)</option>
-              <option value="controle-especial">Receita de Controle Especial (tarja vermelha — C1/C5)</option>
+            <label class="ep-label" for="tipoPrescricao">Tipo de receita *</label>
+            <select id="tipoPrescricao" class="ep-select" required>
+              <!-- Opções inseridas dinamicamente baseadas em prescriptionTypes
+                   do conselho do profissional logado (vem de /me). -->
             </select>
-            <p class="ep-text-xs ep-text-muted ep-mt-0">
-              <strong>Atenção:</strong> psicotrópicos B1/B2 (azuis) e A1/A2/A3 (amarelas) ainda exigem talonário físico
-              da Vigilância Sanitária — não emita por aqui.
-            </p>
+            <p class="ep-text-xs ep-text-muted ep-mt-0" id="tipoPrescricaoHint"></p>
           </div>
 
           <h3 class="ep-h3 ep-mt-16">Medicação</h3>
@@ -306,7 +303,49 @@
   const patientNameEl    = document.getElementById("patientName");
   const patientCpfEl     = document.getElementById("patientCpf");
   const dataEmissaoEl    = document.getElementById("dataEmissao");
-  const tipoReceitaEl    = document.getElementById("tipoReceita");
+  const tipoPrescricaoEl    = document.getElementById("tipoPrescricao");
+  const tipoPrescricaoHintEl = document.getElementById("tipoPrescricaoHint");
+
+  // Opções de tipo de prescrição filtradas pelo conselho do profissional.
+  // session.conselho.prescriptionTypes vem do backend (/me) refletindo a
+  // matriz em professional-councils.js — fonte da verdade.
+  const PRESCRIPTION_TYPE_LABELS = {
+    "mip":              { label: "MIP — livre prescrição (sem tarja)",                                hint: "Medicamentos isentos de prescrição. Sem tarja, dispensação livre." },
+    "insumo-injetavel": { label: "Insumos / injetáveis (estética)",                                   hint: "Acórdão COFFITO 735/2024 — fisioterapeutas podem prescrever insumos e injetáveis dentro do escopo." },
+    "controlado":       { label: "Controle especial (Portaria SVS/MS 344/98)",                        hint: "Medicamentos sob controle especial (tarja vermelha — C1/C5). Validade clínica 30 dias. Psicotrópicos B1/B2 (azuis) e A1/A2/A3 (amarelas) ainda exigem talonário físico." }
+  };
+  const allowedTypes = session?.conselho?.prescriptionTypes || [];
+  function renderTipoPrescricaoOptions() {
+    tipoPrescricaoEl.innerHTML = "";
+    if (allowedTypes.length === 0) {
+      const opt = document.createElement("option");
+      opt.value = ""; opt.textContent = "Seu conselho não habilita receitas — contate o suporte.";
+      opt.disabled = true; opt.selected = true;
+      tipoPrescricaoEl.appendChild(opt);
+      tipoPrescricaoEl.disabled = true;
+      return;
+    }
+    if (allowedTypes.length > 1) {
+      const placeholder = document.createElement("option");
+      placeholder.value = ""; placeholder.textContent = "Selecione o tipo…";
+      placeholder.disabled = true; placeholder.selected = true;
+      tipoPrescricaoEl.appendChild(placeholder);
+    }
+    allowedTypes.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t;
+      opt.textContent = PRESCRIPTION_TYPE_LABELS[t]?.label || t;
+      tipoPrescricaoEl.appendChild(opt);
+    });
+    if (allowedTypes.length === 1) tipoPrescricaoEl.value = allowedTypes[0];
+    updateTipoPrescricaoHint();
+  }
+  function updateTipoPrescricaoHint() {
+    const t = tipoPrescricaoEl.value;
+    tipoPrescricaoHintEl.innerHTML = PRESCRIPTION_TYPE_LABELS[t]?.hint || "";
+  }
+  tipoPrescricaoEl.addEventListener("change", updateTipoPrescricaoHint);
+  renderTipoPrescricaoOptions();
   const observacoesEl    = document.getElementById("observacoes");
   const validadeEl       = document.getElementById("validade");
   const medListEl        = document.getElementById("medList");
@@ -407,7 +446,7 @@
       patientName: patientNameEl.value.trim(),
       patientCpf:  patientCpfEl.value.trim(),
       dataEmissao: dataEmissaoEl.value,
-      tipoReceita: tipoReceitaEl.value,
+      tipoPrescricao: tipoPrescricaoEl.value,
       observacoes: observacoesEl.value.trim(),
       validade:    Number(validadeEl.value),
       quantidadePrescrita: Number.isInteger(qty) && qty >= 1 && qty <= 24 ? qty : null,
@@ -420,7 +459,16 @@
     patientNameEl.value = f.patientName || "";
     patientCpfEl.value  = f.patientCpf  || "";
     dataEmissaoEl.value = f.dataEmissao || todayISO();
-    tipoReceitaEl.value = f.tipoReceita || "simples";
+    // Compat: rascunhos antigos têm `tipoReceita` ("simples"|"controle-especial");
+    // mapeia pra novo `tipoPrescricao` ("mip"|"controlado") quando carregar.
+    let novoTipo = f.tipoPrescricao;
+    if (!novoTipo && f.tipoReceita) {
+      novoTipo = f.tipoReceita === "controle-especial" ? "controlado" : "mip";
+    }
+    if (novoTipo && allowedTypes.includes(novoTipo)) {
+      tipoPrescricaoEl.value = novoTipo;
+    }
+    updateTipoPrescricaoHint();
     observacoesEl.value = f.observacoes || "";
     validadeEl.value    = String(f.validade || 90);
     quantidadeEl.value  = String(f.quantidadePrescrita || 1);
@@ -511,6 +559,10 @@
       setStatus(formStatus, "Informe a quantidade total prescrita (1 a 24).", "err");
       return null;
     }
+    if (!form.tipoPrescricao || !allowedTypes.includes(form.tipoPrescricao)) {
+      setStatus(formStatus, "Selecione o tipo de receita.", "err");
+      return null;
+    }
     setStatus(formStatus, "Salvando…");
     const payload = JSON.stringify(form);
     const { ciphertext, iv } = await encryptNote(payload, dek);
@@ -536,7 +588,8 @@
             patientId: form.patientId,
             patientNameSnapshot: form.patientName,
             sessionId: presetSessionId || null,
-            quantidadePrescrita: form.quantidadePrescrita
+            quantidadePrescrita: form.quantidadePrescrita,
+            tipoPrescricao: form.tipoPrescricao
           })
         });
       }
@@ -703,10 +756,11 @@
 
     // ── Título do receituário ─────────────────────────────────────────
     const titulos = {
-      "simples": "RECEITUÁRIO",
-      "controle-especial": "RECEITUÁRIO DE CONTROLE ESPECIAL"
+      "mip":              "RECEITUÁRIO",
+      "insumo-injetavel": "RECEITUÁRIO — INSUMOS / INJETÁVEIS",
+      "controlado":       "RECEITUÁRIO DE CONTROLE ESPECIAL"
     };
-    drawText(titulos[form.tipoReceita] || "RECEITUÁRIO", { font: fontBold, size: 13 });
+    drawText(titulos[form.tipoPrescricao] || titulos[form.tipoReceita === "controle-especial" ? "controlado" : "mip"] || "RECEITUÁRIO", { font: fontBold, size: 13 });
     y -= 4;
 
     // ── Paciente ──────────────────────────────────────────────────────
@@ -742,6 +796,19 @@
       const unidade = form.quantidadePrescrita === 1 ? "unidade" : "unidades";
       drawText(`Total dispensável: ${form.quantidadePrescrita} ${unidade}. A farmácia registra cada retirada no link de verificação — após esgotar, o link bloqueia novas dispensações.`,
         { size: 9, color: rgb(0.35,0.35,0.35) });
+    }
+
+    // ── Base legal pra prescritor não-médico ──────────────────────────
+    // Documenta a base legal pro farmacêutico que conferir e não é médico:
+    // fisioterapeuta tem competência via Acórdão COFFITO 735/2024.
+    const conselhoSigla = (session?.conselho?.sigla || "").toUpperCase();
+    const subtipo       = (session?.conselho?.subtipo || "").toLowerCase();
+    if (conselhoSigla === "CREFITO" && subtipo === "fisio") {
+      drawText("Prescrição emitida por fisioterapeuta com base no Acórdão COFFITO nº 735/2024 (DOU 11/09/2024).",
+        { size: 8, color: rgb(0.35,0.35,0.35) });
+    } else if (conselhoSigla === "CREFITO" && subtipo === "to") {
+      drawText("Prescrição de MIPs emitida por terapeuta ocupacional no escopo de sua competência profissional.",
+        { size: 8, color: rgb(0.35,0.35,0.35) });
     }
 
     // ── BLOCO INFERIOR (assinatura à esquerda, QR à direita, mesmo nível) ──

@@ -107,6 +107,21 @@
           </div>
           <p class="ep-text-xs ep-text-muted ep-mt-0" id="numeroConselhoHint">Mostraremos esse registro no seu perfil público para o paciente confirmar.</p>
 
+          <!-- Sub-dropdown pra CREFITO: distingue fisio (que pode prescrever
+               MIPs + injetáveis pelo Ac. COFFITO 735/2024) de TO (só MIPs).
+               Backend exige subtipoConselho quando tipoConselho=CREFITO. -->
+          <div class="ep-field ep-hide ep-mt-12" id="subtipoCrefitoField">
+            <label class="ep-label" for="subtipoConselho">Você é Fisioterapeuta ou Terapeuta Ocupacional?</label>
+            <select id="subtipoConselho" class="ep-select">
+              <option value="">Selecione…</option>
+              <option value="fisio">Fisioterapeuta</option>
+              <option value="to">Terapeuta Ocupacional</option>
+            </select>
+            <p class="ep-text-xs ep-text-muted ep-mt-0" style="margin-top: 6px;">
+              Define quais tipos de receita você pode emitir (fisio: MIPs + injetáveis estéticos; TO: MIPs).
+            </p>
+          </div>
+
           <!-- Campos extras pra SEM_CONSELHO. Escondidos por padrão; revelados
                quando user seleciona 'Sem conselho regulamentado' no dropdown.
                Substituem o "selo do conselho" como trust signal — todos
@@ -246,6 +261,8 @@
   const numeroConselhoEl = document.getElementById("numeroConselho");
   const numeroConselhoField = document.getElementById("numeroConselhoField");
   const numeroConselhoHint  = document.getElementById("numeroConselhoHint");
+  const subtipoCrefitoField = document.getElementById("subtipoCrefitoField");
+  const subtipoConselhoEl   = document.getElementById("subtipoConselho");
   const semConselhoFields   = document.getElementById("semConselhoFields");
   const tipoPraticaEl       = document.getElementById("tipoPratica");
   const formacaoInstituicaoEl = document.getElementById("formacaoInstituicao");
@@ -309,6 +326,17 @@
     if (!displayName) return setStatus(statusData, "Informe seu nome completo.", "err");
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setStatus(statusData, "E-mail inválido.", "err");
     if (!tipoConselho) return setStatus(statusData, "Selecione o conselho profissional.", "err");
+
+    // CREFITO exige subtipo (fisio vs TO) — define quais tipos de receita
+    // o profissional pode emitir.
+    let subtipoConselho = "";
+    if (tipoConselho === "CREFITO") {
+      subtipoConselho = subtipoConselhoEl.value.trim().toLowerCase();
+      if (!["fisio", "to"].includes(subtipoConselho)) {
+        return setStatus(statusData, "Indique se você é Fisioterapeuta ou Terapeuta Ocupacional.", "err");
+      }
+    }
+
     // SEM_CONSELHO não exige número, mas exige campos de formação preenchidos.
     let semConselhoExtras = null;
     if (tipoConselho === "SEM_CONSELHO") {
@@ -373,7 +401,7 @@
         wrappedDEK,
         wrappedDEKIv,
         recoveryPhrase: recovery,
-        form: { displayName, email, especialidade, tipoConselho, numeroConselho, semConselhoExtras }
+        form: { displayName, email, especialidade, tipoConselho, numeroConselho, subtipoConselho, semConselhoExtras }
       };
 
       recoveryEl.textContent = recovery;
@@ -446,9 +474,10 @@
         },
         body: JSON.stringify({
           displayName:    pending.form.displayName,
-          tipoConselho:   pending.form.tipoConselho,
-          numeroConselho: pending.form.numeroConselho,
-          especialidade:  pending.form.especialidade,
+          tipoConselho:    pending.form.tipoConselho,
+          numeroConselho:  pending.form.numeroConselho,
+          subtipoConselho: pending.form.subtipoConselho || undefined,
+          especialidade:   pending.form.especialidade,
           bio:            "",
           e2eeSalt:       pending.salt,
           wrappedDEK:     pending.wrappedDEK,
@@ -520,11 +549,16 @@
   tipoConselhoEl?.addEventListener("change", () => {
     const sigla = tipoConselhoEl.value.trim().toUpperCase();
     const isSemConselho = sigla === "SEM_CONSELHO";
+    const isCrefito     = sigla === "CREFITO";
 
     // SEM_CONSELHO esconde o número de registro e revela campos de formação.
     numeroConselhoField.classList.toggle("ep-hide", isSemConselho);
     numeroConselhoHint.classList.toggle("ep-hide", isSemConselho);
     semConselhoFields.classList.toggle("ep-hide", !isSemConselho);
+    // CREFITO revela o sub-dropdown fisio/TO. Outros conselhos escondem.
+    subtipoCrefitoField.classList.toggle("ep-hide", !isCrefito);
+    if (!isCrefito) subtipoConselhoEl.value = "";
+
     if (isSemConselho) {
       numeroConselhoEl.value = "";
       numeroConselhoEl.removeAttribute("required");
