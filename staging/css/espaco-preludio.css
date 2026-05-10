@@ -207,7 +207,12 @@ a:hover { color: var(--ep-accent-hover); }
    Mobile (<900px) preserva o flow natural — vh em mobile é problemático e o
    conteúdo acomoda melhor sem altura forçada.
    :not(:last-of-type) exclui a última .ep-section (CTA final, conteúdo curto)
-   pra evitar que ela fique com vazio enorme. */
+   pra evitar que ela fique com vazio enorme.
+
+   padding-top: 120px = 64px (topbar sticky cobre o topo da seção) + 56px (respiro
+   normal). Diferença de 64px pra padding-bottom 56px desloca o conteúdo flex-
+   centered 32px pra baixo, alinhando com o centro visual (entre topbar e
+   borda inferior da viewport). */
 @media (min-width: 900px) {
   .ep-hero,
   .ep-section:not(:last-of-type) {
@@ -215,6 +220,8 @@ a:hover { color: var(--ep-accent-hover); }
     display: flex;
     flex-direction: column;
     justify-content: center;
+    padding-top: 120px;
+    padding-bottom: 56px;
   }
 }
 
