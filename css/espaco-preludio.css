@@ -203,24 +203,22 @@ a:hover { color: var(--ep-accent-hover); }
   padding: 80px 0 56px;
 }
 
-/* Desktop: cada seção principal ocupa a viewport inteira (one-section-per-screen).
-   Mobile (<900px) preserva o flow natural — vh em mobile é problemático e o
-   conteúdo acomoda melhor sem altura forçada.
+/* Desktop: cada seção principal ocupa exatamente a área visível (= viewport
+   menos o topbar sticky de 64px). Mobile (<900px) preserva o flow natural.
    :not(:last-of-type) exclui a última .ep-section (CTA final, conteúdo curto)
    pra evitar que ela fique com vazio enorme.
 
-   padding-top: 120px = 64px (topbar sticky cobre o topo da seção) + 56px (respiro
-   normal). Diferença de 64px pra padding-bottom 56px desloca o conteúdo flex-
-   centered 32px pra baixo, alinhando com o centro visual (entre topbar e
-   borda inferior da viewport). */
+   min-height: calc(100vh - 64px) = altura da área visível abaixo do topbar.
+   Padding simétrico 56/56 pra que o flex centering produza top space = bottom
+   space dentro da área visível. */
 @media (min-width: 900px) {
   .ep-hero,
   .ep-section:not(:last-of-type) {
-    min-height: 100vh;
+    min-height: calc(100vh - 64px);
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding-top: 120px;
+    padding-top: 56px;
     padding-bottom: 56px;
   }
 }
@@ -274,7 +272,7 @@ h3.ep-h3 {
   letter-spacing: -0.005em;
 }
 
-.ep-section { padding: 56px 0; scroll-margin-top: 24px; }
+.ep-section { padding: 56px 0; scroll-margin-top: 64px; }
 .ep-section--alt { background: var(--ep-bg-2); border-top: 1px solid var(--ep-line); border-bottom: 1px solid var(--ep-line); }
 
 /* ─── Cards ─────────────────────────────────────────────── */
