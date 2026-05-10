@@ -483,14 +483,17 @@
       });
 
       show(stepDone);
-      // Redireciona conforme plano selecionado na landing:
-      //   estudante → upload de declaração de matrícula
-      //   recem     → upload de comprovante de inscrição CRP/CRM (<12 meses)
-      //   default   → painel (trial → contrata profissional depois)
+      // Redireciona conforme plano selecionado na landing + tipo de conselho:
+      //   SEM_CONSELHO → upload de diploma de formação (sempre, antes do painel)
+      //   estudante    → upload de declaração de matrícula
+      //   recem        → upload de comprovante de inscrição CRP/CRM (<12 meses)
+      //   default      → painel (trial → contrata profissional depois)
       const params = new URLSearchParams(location.search);
       const plano = params.get("plano");
+      const isSemConselho = pending.form.tipoConselho === "SEM_CONSELHO";
       let dest = "./painel.html";
-      if (plano === "estudante") dest = "./comprovante-estudante.html";
+      if (isSemConselho) dest = "./comprovante-formacao.html";
+      else if (plano === "estudante") dest = "./comprovante-estudante.html";
       else if (plano === "recem") dest = "./comprovante-recem-formado.html";
       else dest = "./planos.html?welcome=1"; // Profissional ou padrão → resumo do trial + opção de contratar
       setTimeout(() => { window.location.href = dest; }, 1200);
