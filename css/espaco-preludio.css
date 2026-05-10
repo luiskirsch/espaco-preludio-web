@@ -208,8 +208,8 @@ a:hover { color: var(--ep-accent-hover); }
 
    Exclusões:
    - :last-of-type → CTA final, conteúdo curto (deixa em altura natural)
-   - #planos       → cards têm conteúdo alto que ultrapassa a viewport;
-                     fica em altura natural pra cards aparecerem inteiros
+   - #planos       → conteúdo alto, recebe tratamento próprio (abaixo) com
+                     min-height + padding compacto pra cards caberem
 
    min-height: calc(100vh - 64px) = altura da área visível abaixo do topbar.
    Padding simétrico 56/56 pra que o flex centering produza top space = bottom
@@ -223,6 +223,24 @@ a:hover { color: var(--ep-accent-hover); }
     justify-content: center;
     padding-top: 56px;
     padding-bottom: 56px;
+  }
+
+  /* #planos: também viewport-height, mas com padding reduzido pra que os 3
+     cards caibam inteiros (cada card ~700px + título + lead = ~1100px de
+     conteúdo). Justify-content: flex-start alinha topo (eyebrow logo abaixo
+     do topbar via scroll-margin), em vez de centralizar (que faria sobrar
+     espaço acima e cortar os cards embaixo). Reduz também o gap entre o
+     título e a grid pra economizar mais altura. */
+  #planos {
+    min-height: calc(100vh - 64px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: 24px;
+    padding-bottom: 16px;
+  }
+  #planos .ep-mt-32 {
+    margin-top: 16px;
   }
 }
 
