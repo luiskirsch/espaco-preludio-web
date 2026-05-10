@@ -1,10 +1,12 @@
 (() => {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-  // Topbar sticky tem 64px. 120 deixa 56px de respiro acima do topo da seção
-  // alvo — o suficiente pra eyebrow + título não ficarem grudados no topbar.
+  // Topbar sticky tem 64px. .ep-section tem padding-top: 56px (espaço acima
+  // do eyebrow). Pra o eyebrow aparecer ~16px abaixo do topbar (sem cortar)
+  // E sobrar viewport pros cards inteiros: scrollar de modo que a borda da
+  // seção fique em Y=24 (atrás do topbar opaco). Eyebrow cai em Y = 24+56 = 80.
   // Mantém em sync com scroll-margin-top de .ep-section em espaco-preludio.css.
-  const HEADER_OFFSET = 120;
+  const HEADER_OFFSET = 24;
   const DURATION = 1100;
 
   const easeOutExpo = (t) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
