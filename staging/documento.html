@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-76">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-77">
 </head>
 <body>
 
@@ -51,6 +51,45 @@
           <option value="encaminhamento">Encaminhamento</option>
           <option value="relatorio">Relatório</option>
         </select>
+        <script>
+          // Resolução otimista do título: lê cache do /me em sessionStorage
+          // pra evitar o flash "Novo documento" → "Novo atestado psicológico"
+          // que acontece quando o auth-guard ainda não resolveu. Roda síncrono
+          // no parse do body, antes do primeiro paint. Se cache faltar (1ª
+          // visita), título genérico fica; o módulo principal corrige depois.
+          (function() {
+            try {
+              const raw = sessionStorage.getItem("ep:profile:v1");
+              if (!raw) return;
+              const conselho = JSON.parse(raw)?.profile?.conselho;
+              if (!conselho?.sigla) return;
+              const MAP = {
+                CRM:           { atestado: "Atestado Médico",                encaminhamento: "Encaminhamento Médico",            relatorio: "Relatório Médico",                exames: "Solicitação de exames" },
+                CRP:           { atestado: "Atestado Psicológico",           encaminhamento: "Encaminhamento Psicológico",       relatorio: "Relatório Psicológico",           exames: "Solicitação de avaliação" },
+                CREFITO_FISIO: { atestado: "Atestado Fisioterapêutico",      encaminhamento: "Encaminhamento Fisioterapêutico",  relatorio: "Relatório Fisioterapêutico",      exames: "Solicitação de exames" },
+                CREFITO_TO:    { atestado: "Atestado de Terapia Ocupacional", encaminhamento: "Encaminhamento — Terapia Ocupacional", relatorio: "Relatório de Terapia Ocupacional", exames: "Solicitação de exames" },
+                CRN:           { atestado: "Atestado Nutricional",           encaminhamento: "Encaminhamento Nutricional",       relatorio: "Relatório Nutricional",           exames: "Solicitação de exames bioquímicos" },
+                CRO:           { atestado: "Atestado Odontológico",          encaminhamento: "Encaminhamento Odontológico",      relatorio: "Relatório Odontológico",          exames: "Solicitação de exames" }
+              };
+              let key = String(conselho.sigla).toUpperCase();
+              if (key === "CREFITO") {
+                const sub = String(conselho.subtipo || "").toLowerCase();
+                key = sub === "to" ? "CREFITO_TO" : sub === "fisio" ? "CREFITO_FISIO" : null;
+              }
+              const set = key && MAP[key];
+              if (!set) return;
+              const tipo = (new URLSearchParams(location.search).get("tipo") || "atestado").toLowerCase();
+              const titulo = set[tipo];
+              if (!titulo) return;
+              document.getElementById("pageTitle").textContent = `Novo ${titulo.toLowerCase()}`;
+              // Atualiza também a option do switcher pro tipo selecionado (as
+              // outras options serão atualizadas pelo módulo principal).
+              for (const opt of document.getElementById("tipoSwitcher").options) {
+                if (opt.value === tipo) opt.textContent = titulo;
+              }
+            } catch {}
+          })();
+        </script>
         <span id="statusBadge" class="ep-verif-pill is-pending ep-hide">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
           Rascunho
