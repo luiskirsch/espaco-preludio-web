@@ -16,7 +16,49 @@ export function authReady() {
   });
 }
 
-export async function fetchTherapistProfile(idToken) {
+// Cache do /me em sessionStorage. Stale-while-revalidate: dentro do TTL
+// retorna o cache imediato e dispara refetch em background pra atualizar
+// o cache pra próxima navegação. Resultado: 1ª página paga o roundtrip,
+// subsequentes ficam instantâneas (~0ms vs. ~150-800ms).
+//
+// Invalidar via invalidateProfileCache() em logout, PATCH /perfil, troca
+// de plano. TTL curto (30s) limita janela de staleness se invalidação
+// faltar em algum lugar.
+const PROFILE_CACHE_KEY = "ep:profile:v1";
+const PROFILE_CACHE_TTL_MS = 30_000;
+
+function readProfileCache(uid) {
+  try {
+    const raw = sessionStorage.getItem(PROFILE_CACHE_KEY);
+    if (!raw) return null;
+    const entry = JSON.parse(raw);
+    if (entry.uid !== uid) return null;
+    if (Date.now() - entry.t > PROFILE_CACHE_TTL_MS) return null;
+    return entry.profile;
+  } catch { return null; }
+}
+
+function writeProfileCache(uid, profile) {
+  try {
+    sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify({ uid, t: Date.now(), profile }));
+  } catch {}
+}
+
+export function invalidateProfileCache() {
+  try { sessionStorage.removeItem(PROFILE_CACHE_KEY); } catch {}
+}
+
+// Invalida automaticamente em signOut ou troca de conta — listener global
+// roda uma vez quando este módulo é importado. Evita ter que adicionar
+// invalidateProfileCache() em cada handler de logout espalhado pelas páginas.
+let lastSeenUid = null;
+onAuthStateChanged(auth, (user) => {
+  const uid = user?.uid || null;
+  if (lastSeenUid && uid !== lastSeenUid) invalidateProfileCache();
+  lastSeenUid = uid;
+});
+
+async function fetchProfileFromBackend(idToken) {
   const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, {
     headers: { "Authorization": `Bearer ${idToken}` }
   });
@@ -29,6 +71,24 @@ export async function fetchTherapistProfile(idToken) {
     conselho: data.conselho || null,    // { sigla, label, profissional, capabilities }
     planAccess: data.planAccess || null
   };
+}
+
+export async function fetchTherapistProfile(idToken, uid) {
+  // Sem uid (compat retro) → busca direto, sem cache.
+  if (!uid) return fetchProfileFromBackend(idToken);
+
+  const cached = readProfileCache(uid);
+  if (cached) {
+    // SWR: dispara revalidate em background, retorna cache imediato.
+    fetchProfileFromBackend(idToken)
+      .then(fresh => { if (fresh.ok) writeProfileCache(uid, fresh); })
+      .catch(() => {});
+    return cached;
+  }
+
+  const fresh = await fetchProfileFromBackend(idToken);
+  if (fresh.ok) writeProfileCache(uid, fresh);
+  return fresh;
 }
 
 // Esconde links de nav que apontam pra features cujo conselho do profissional
@@ -63,6 +123,28 @@ function applyCapabilityVisibility(capabilities) {
   });
 }
 
+// Prefetch HTML das páginas do nav após render — próxima navegação chega
+// pré-carregada do disk cache. Custo: ~30-100KB por página em background,
+// pago uma vez por sessão. Ganho: clique vira navegação instantânea.
+function prefetchNavLinks() {
+  // Espera o load completar pra não competir com recursos críticos.
+  const run = () => {
+    const seen = new Set();
+    document.querySelectorAll('a[href$=".html"]').forEach(a => {
+      const href = a.getAttribute("href");
+      if (!href || href.startsWith("http") || seen.has(href)) return;
+      seen.add(href);
+      const link = document.createElement("link");
+      link.rel = "prefetch";
+      link.href = href;
+      link.as = "document";
+      document.head.appendChild(link);
+    });
+  };
+  if (document.readyState === "complete") setTimeout(run, 50);
+  else window.addEventListener("load", () => setTimeout(run, 50), { once: true });
+}
+
 export async function requireTherapist({ requireDek = true } = {}) {
   const user = await authReady();
   if (!user) {
@@ -71,7 +153,7 @@ export async function requireTherapist({ requireDek = true } = {}) {
   }
 
   const idToken = await user.getIdToken();
-  const profile = await fetchTherapistProfile(idToken);
+  const profile = await fetchTherapistProfile(idToken, user.uid);
 
   if (!profile.ok) {
     if (profile.code === "NAO_REGISTRADO") {
@@ -85,6 +167,9 @@ export async function requireTherapist({ requireDek = true } = {}) {
   // Aplica visibilidade baseada nas capabilities do conselho — esconde
   // links/botões pra features que o profissional não pode usar.
   applyCapabilityVisibility(profile.conselho?.capabilities);
+
+  // Prefetch da nav pra navegação subsequente parecer instantânea.
+  prefetchNavLinks();
 
   if (requireDek) {
     const dek = recallDek();
