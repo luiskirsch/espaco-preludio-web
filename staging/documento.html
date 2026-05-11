@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-77">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-78">
 </head>
 <body>
 
@@ -51,45 +51,6 @@
           <option value="encaminhamento">Encaminhamento</option>
           <option value="relatorio">Relatório</option>
         </select>
-        <script>
-          // Resolução otimista do título: lê cache do /me em sessionStorage
-          // pra evitar o flash "Novo documento" → "Novo atestado psicológico"
-          // que acontece quando o auth-guard ainda não resolveu. Roda síncrono
-          // no parse do body, antes do primeiro paint. Se cache faltar (1ª
-          // visita), título genérico fica; o módulo principal corrige depois.
-          (function() {
-            try {
-              const raw = sessionStorage.getItem("ep:profile:v1");
-              if (!raw) return;
-              const conselho = JSON.parse(raw)?.profile?.conselho;
-              if (!conselho?.sigla) return;
-              const MAP = {
-                CRM:           { atestado: "Atestado Médico",                encaminhamento: "Encaminhamento Médico",            relatorio: "Relatório Médico",                exames: "Solicitação de exames" },
-                CRP:           { atestado: "Atestado Psicológico",           encaminhamento: "Encaminhamento Psicológico",       relatorio: "Relatório Psicológico",           exames: "Solicitação de avaliação" },
-                CREFITO_FISIO: { atestado: "Atestado Fisioterapêutico",      encaminhamento: "Encaminhamento Fisioterapêutico",  relatorio: "Relatório Fisioterapêutico",      exames: "Solicitação de exames" },
-                CREFITO_TO:    { atestado: "Atestado de Terapia Ocupacional", encaminhamento: "Encaminhamento — Terapia Ocupacional", relatorio: "Relatório de Terapia Ocupacional", exames: "Solicitação de exames" },
-                CRN:           { atestado: "Atestado Nutricional",           encaminhamento: "Encaminhamento Nutricional",       relatorio: "Relatório Nutricional",           exames: "Solicitação de exames bioquímicos" },
-                CRO:           { atestado: "Atestado Odontológico",          encaminhamento: "Encaminhamento Odontológico",      relatorio: "Relatório Odontológico",          exames: "Solicitação de exames" }
-              };
-              let key = String(conselho.sigla).toUpperCase();
-              if (key === "CREFITO") {
-                const sub = String(conselho.subtipo || "").toLowerCase();
-                key = sub === "to" ? "CREFITO_TO" : sub === "fisio" ? "CREFITO_FISIO" : null;
-              }
-              const set = key && MAP[key];
-              if (!set) return;
-              const tipo = (new URLSearchParams(location.search).get("tipo") || "atestado").toLowerCase();
-              const titulo = set[tipo];
-              if (!titulo) return;
-              document.getElementById("pageTitle").textContent = `Novo ${titulo.toLowerCase()}`;
-              // Atualiza também a option do switcher pro tipo selecionado (as
-              // outras options serão atualizadas pelo módulo principal).
-              for (const opt of document.getElementById("tipoSwitcher").options) {
-                if (opt.value === tipo) opt.textContent = titulo;
-              }
-            } catch {}
-          })();
-        </script>
         <span id="statusBadge" class="ep-verif-pill is-pending ep-hide">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
           Rascunho
@@ -112,6 +73,96 @@
         <a href="./perfil.html" class="ep-btn ep-btn--ghost ep-btn--sm">Editar perfil</a>
       </div>
     </section>
+    <script>
+      // Resolução otimista do título + bloco emissor a partir do cache do /me
+      // em sessionStorage. Roda síncrono no fim do parse desses blocos, ANTES
+      // do primeiro paint — elimina os flashes "Novo documento" → "Novo
+      // atestado psicológico" e do fallback EP dourado → imagem real do logo.
+      // Sem cache (1ª visita), fica genérico até o módulo principal corrigir.
+      (function() {
+        try {
+          const raw = sessionStorage.getItem("ep:profile:v1");
+          if (!raw) return;
+          const profile = JSON.parse(raw)?.profile;
+          if (!profile) return;
+          const conselho = profile.conselho;
+          const t = profile.therapist || {};
+
+          // ─── Título do documento ───
+          if (conselho?.sigla) {
+            const MAP = {
+              CRM:           { atestado: "Atestado Médico",                encaminhamento: "Encaminhamento Médico",            relatorio: "Relatório Médico",                exames: "Solicitação de exames" },
+              CRP:           { atestado: "Atestado Psicológico",           encaminhamento: "Encaminhamento Psicológico",       relatorio: "Relatório Psicológico",           exames: "Solicitação de avaliação" },
+              CREFITO_FISIO: { atestado: "Atestado Fisioterapêutico",      encaminhamento: "Encaminhamento Fisioterapêutico",  relatorio: "Relatório Fisioterapêutico",      exames: "Solicitação de exames" },
+              CREFITO_TO:    { atestado: "Atestado de Terapia Ocupacional", encaminhamento: "Encaminhamento — Terapia Ocupacional", relatorio: "Relatório de Terapia Ocupacional", exames: "Solicitação de exames" },
+              CRN:           { atestado: "Atestado Nutricional",           encaminhamento: "Encaminhamento Nutricional",       relatorio: "Relatório Nutricional",           exames: "Solicitação de exames bioquímicos" },
+              CRO:           { atestado: "Atestado Odontológico",          encaminhamento: "Encaminhamento Odontológico",      relatorio: "Relatório Odontológico",          exames: "Solicitação de exames" }
+            };
+            let key = String(conselho.sigla).toUpperCase();
+            if (key === "CREFITO") {
+              const sub = String(conselho.subtipo || "").toLowerCase();
+              key = sub === "to" ? "CREFITO_TO" : sub === "fisio" ? "CREFITO_FISIO" : null;
+            }
+            const set = key && MAP[key];
+            if (set) {
+              const tipo = (new URLSearchParams(location.search).get("tipo") || "atestado").toLowerCase();
+              const titulo = set[tipo];
+              if (titulo) {
+                document.getElementById("pageTitle").textContent = `Novo ${titulo.toLowerCase()}`;
+                for (const opt of document.getElementById("tipoSwitcher").options) {
+                  if (opt.value === tipo) opt.textContent = titulo;
+                }
+              }
+            }
+          }
+
+          // ─── Issuer block (logo, nome, IDs, endereço, telefone) ───
+          // Mesma lógica do renderIssuer() do módulo principal — duplicada
+          // aqui porque inline script não pode importar ES module. Se
+          // divergir, ajustar nos dois lugares.
+          const c = t.consultorio || {};
+          const issuerLogo = document.getElementById("issuerLogo");
+          if (t.logoBase64 && t.logoMime && issuerLogo) {
+            issuerLogo.innerHTML = `<img src="data:${t.logoMime};base64,${t.logoBase64}" alt="Logo">`;
+          } else {
+            const initials = (t.displayName || "").split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0]).join("").toUpperCase() || "—";
+            const fb = document.getElementById("issuerLogoFallback");
+            if (fb) fb.textContent = initials;
+          }
+          const issuerName = document.getElementById("issuerName");
+          if (issuerName) issuerName.textContent = t.displayName || "(sem nome)";
+          const idParts = [];
+          if (t.crm) idParts.push("CRM " + t.crm);
+          if (t.crp) idParts.push("CRP " + t.crp);
+          const isLegacy = t.crm || t.crp;
+          if (!isLegacy && t.tipoConselho && t.numeroConselho) {
+            const sub = t.subtipoConselho ? ` (${t.subtipoConselho === "to" ? "TO" : "fisio"})` : "";
+            idParts.push(`${t.tipoConselho} ${t.numeroConselho}${sub}`);
+          }
+          if (t.rqe) idParts.push("RQE " + String(t.rqe).replace(/^RQE\s*/i, ""));
+          if (t.especialidade) idParts.push(t.especialidade);
+          const issuerIds = document.getElementById("issuerIds");
+          if (issuerIds) issuerIds.textContent = idParts.join("  ·  ") || "(sem identificação)";
+          const addrParts = [];
+          if (c.endereco) {
+            let line = c.endereco;
+            if (c.numero) line += ", " + c.numero;
+            if (c.complemento) line += " — " + c.complemento;
+            addrParts.push(line);
+          }
+          const cityLine = [c.bairro, c.cidade, c.uf, c.cep].filter(Boolean).join(" · ");
+          if (cityLine) addrParts.push(cityLine);
+          const issuerAddr = document.getElementById("issuerAddr");
+          if (issuerAddr) issuerAddr.textContent = addrParts.join(" / ");
+          const issuerPhone = document.getElementById("issuerPhone");
+          if (issuerPhone) issuerPhone.textContent = c.telefone || "";
+
+          // Nome no topbar também
+          const topUserName = document.getElementById("topUserName");
+          if (topUserName) topUserName.textContent = t.displayName || "";
+        } catch {}
+      })();
+    </script>
 
     <div class="ep-receita-grid ep-mt-16">
       <section class="ep-receita-form">
