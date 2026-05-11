@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-80">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-81">
 </head>
 <body>
 
@@ -66,6 +66,57 @@
         <a href="./perfil.html" class="ep-btn ep-btn--ghost ep-btn--sm">Editar perfil</a>
       </div>
     </section>
+    <script>
+      // Resolução otimista do bloco emissor + topbar a partir do cache do /me.
+      // Evita o flash do EP dourado → imagem real do logo. Sem cache (1ª visita)
+      // fica como está; renderIssuer() do módulo principal corrige depois.
+      (function() {
+        try {
+          const raw = sessionStorage.getItem("ep:profile:v1");
+          if (!raw) return;
+          const t = JSON.parse(raw)?.profile?.therapist;
+          if (!t) return;
+          const c = t.consultorio || {};
+          const issuerLogo = document.getElementById("issuerLogo");
+          if (t.logoBase64 && t.logoMime && issuerLogo) {
+            issuerLogo.innerHTML = `<img src="data:${t.logoMime};base64,${t.logoBase64}" alt="Logo">`;
+          } else {
+            const initials = (t.displayName || "").split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0]).join("").toUpperCase() || "—";
+            const fb = document.getElementById("issuerLogoFallback");
+            if (fb) fb.textContent = initials;
+          }
+          const issuerName = document.getElementById("issuerName");
+          if (issuerName) issuerName.textContent = t.displayName || "(sem nome)";
+          const idParts = [];
+          if (t.crm) idParts.push("CRM " + t.crm);
+          if (t.crp) idParts.push("CRP " + t.crp);
+          const isLegacy = t.crm || t.crp;
+          if (!isLegacy && t.tipoConselho && t.numeroConselho) {
+            const sub = t.subtipoConselho ? ` (${t.subtipoConselho === "to" ? "TO" : "fisio"})` : "";
+            idParts.push(`${t.tipoConselho} ${t.numeroConselho}${sub}`);
+          }
+          if (t.rqe) idParts.push("RQE " + String(t.rqe).replace(/^RQE\s*/i, ""));
+          if (t.especialidade) idParts.push(t.especialidade);
+          const issuerIds = document.getElementById("issuerIds");
+          if (issuerIds) issuerIds.textContent = idParts.join("  ·  ") || "(sem identificação profissional)";
+          const addrParts = [];
+          if (c.endereco) {
+            let line = c.endereco;
+            if (c.numero) line += ", " + c.numero;
+            if (c.complemento) line += " — " + c.complemento;
+            addrParts.push(line);
+          }
+          const cityLine = [c.bairro, c.cidade, c.uf, c.cep].filter(Boolean).join(" · ");
+          if (cityLine) addrParts.push(cityLine);
+          const issuerAddr = document.getElementById("issuerAddr");
+          if (issuerAddr) issuerAddr.textContent = addrParts.join(" / ");
+          const issuerPhone = document.getElementById("issuerPhone");
+          if (issuerPhone) issuerPhone.textContent = c.telefone || "";
+          const topUserName = document.getElementById("topUserName");
+          if (topUserName) topUserName.textContent = t.displayName || "";
+        } catch {}
+      })();
+    </script>
     <div id="issuerWarning" class="ep-alert ep-alert--info ep-mt-12 ep-hide" style="background: rgba(184,69,61,0.06); border-color: rgba(184,69,61,0.25); color: #8a3a33;"></div>
 
     <div class="ep-receita-grid ep-mt-16">
@@ -229,11 +280,15 @@
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist } from "./js/auth-guard.js?v=2-75";
+  import { cachedGet } from "./js/api-cache.js?v=2-76";
   import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
 
   // ─── Boot ────────────────────────────────────────────────────────────
-  const ctx = await requireTherapist({ requireDek: true });
-  const { idToken, therapist, dek } = ctx;
+  // Nome 'session' é o esperado pelo resto do código (session.conselho.* etc).
+  // Sem isso, allowedTypes = [] e o dropdown mostra "conselho não habilita".
+  const session = await requireTherapist({ requireDek: true });
+  const { user, idToken, therapist, conselho, dek } = session;
+  const uid = user.uid;
 
   document.getElementById("topUserName").textContent = therapist.displayName || "";
   document.getElementById("logoutBtn").addEventListener("click", async () => {
@@ -478,26 +533,32 @@
   }
 
   // ─── Pacientes (para select) ─────────────────────────────────────────
+  async function populatePatientOptions(j) {
+    // Limpa options anteriores exceto a primeira (placeholder).
+    while (patientSelect.options.length > 1) patientSelect.remove(1);
+    for (const p of (j.patients || [])) {
+      try {
+        const json = await decryptNote({ ciphertext: p.ciphertext, iv: p.iv }, dek);
+        const data = JSON.parse(json);
+        const opt = document.createElement("option");
+        opt.value = p.patientId;
+        opt.textContent = data.name || "(sem nome)";
+        opt.dataset.name = data.name || "";
+        patientSelect.appendChild(opt);
+      } catch {}
+    }
+  }
   async function loadPatientsIntoSelect() {
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
+      await cachedGet({
+        url: `${BACKEND_BASE_URL}/therapy/pacientes`,
+        idToken, uid, key: "pacientes", ttl: 60_000,
+        onData: (data) => {
+          populatePatientOptions(data).then(() => {
+            if (presetPatientId) patientSelect.value = presetPatientId;
+          });
+        }
       });
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok || !j.ok) return;
-
-      for (const p of (j.patients || [])) {
-        try {
-          const json = await decryptNote({ ciphertext: p.ciphertext, iv: p.iv }, dek);
-          const data = JSON.parse(json);
-          const opt = document.createElement("option");
-          opt.value = p.patientId;
-          opt.textContent = data.name || "(sem nome)";
-          opt.dataset.name = data.name || "";
-          patientSelect.appendChild(opt);
-        } catch {}
-      }
-      if (presetPatientId) patientSelect.value = presetPatientId;
     } catch {}
 
     patientSelect.addEventListener("change", () => {
