@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-78">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-79">
 </head>
 <body>
 
@@ -106,7 +106,9 @@
               const tipo = (new URLSearchParams(location.search).get("tipo") || "atestado").toLowerCase();
               const titulo = set[tipo];
               if (titulo) {
-                document.getElementById("pageTitle").textContent = `Novo ${titulo.toLowerCase()}`;
+                // "Solicitação" é feminino — Nova solicitação. Resto é masculino.
+                const artigo = tipo === "exames" ? "Nova" : "Novo";
+                document.getElementById("pageTitle").textContent = `${artigo} ${titulo.toLowerCase()}`;
                 for (const opt of document.getElementById("tipoSwitcher").options) {
                   if (opt.value === tipo) opt.textContent = titulo;
                 }
@@ -335,7 +337,9 @@
     location.href = `./documento.html?tipo=${encodeURIComponent(novo)}`;
   });
 
-  document.getElementById("pageTitle").textContent = `Novo ${TIPO_META[tipo].titulo.toLowerCase()}`;
+  // "Solicitação" é feminino — Nova solicitação. Resto é masculino.
+  const artigoNovo = tipo === "exames" ? "Nova" : "Novo";
+  document.getElementById("pageTitle").textContent = `${artigoNovo} ${TIPO_META[tipo].titulo.toLowerCase()}`;
   document.getElementById("formHeading").textContent = `Dados — ${TIPO_META[tipo].titulo}`;
 
   // ─── Issuer block ────────────────────────────────────────────────────
