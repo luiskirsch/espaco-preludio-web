@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Documento médico · Espaço Prelúdio</title>
+  <title>Documento clínico · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,16 +38,16 @@
 <main class="ep-container ep-mt-32 ep-mb-16">
     <div class="ep-flex ep-flex--end-wrap" style="justify-content: space-between; align-items: end; margin-bottom: 16px;">
       <div>
-        <div class="ep-eyebrow" id="pageEyebrow">Documento médico</div>
+        <div class="ep-eyebrow" id="pageEyebrow">Documento clínico</div>
         <h1 class="ep-h1 ep-mt-12" id="pageTitle">Novo documento</h1>
         <p class="ep-text-muted ep-mt-0" id="pageSub">Assinatura ICP-Brasil dentro da plataforma ou externa.</p>
       </div>
       <div class="ep-flex ep-gap-6">
         <select id="tipoSwitcher" class="ep-select" aria-label="Tipo de documento">
-          <option value="atestado">Atestado médico</option>
+          <option value="atestado">Atestado</option>
           <option value="exames">Solicitação de exames</option>
           <option value="encaminhamento">Encaminhamento</option>
-          <option value="relatorio">Relatório médico</option>
+          <option value="relatorio">Relatório</option>
         </select>
         <span id="statusBadge" class="ep-verif-pill is-pending ep-hide">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
@@ -172,7 +172,7 @@
   import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
 
   const ctx = await requireTherapist({ requireDek: true });
-  const { idToken, therapist, dek } = ctx;
+  const { idToken, therapist, conselho, dek } = ctx;
   document.getElementById("topUserName").textContent = therapist.displayName || "";
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     clearDek(); await signOut(auth); window.location.href = "./login.html";
@@ -187,12 +187,47 @@
   let tipo = (params.get("tipo") || "atestado").toLowerCase();
   if (!VALID_TIPOS.includes(tipo)) tipo = "atestado";
 
-  const TIPO_META = {
-    atestado:        { titulo: "Atestado médico",            cabecalho: "ATESTADO MÉDICO" },
-    exames:          { titulo: "Solicitação de exames",      cabecalho: "SOLICITAÇÃO DE EXAMES COMPLEMENTARES" },
-    encaminhamento:  { titulo: "Encaminhamento",             cabecalho: "ENCAMINHAMENTO" },
-    relatorio:       { titulo: "Relatório médico",           cabecalho: "RELATÓRIO MÉDICO" }
+  // Título do documento varia por conselho — fisio/TO não emite "atestado médico",
+  // emite atestado fisioterapêutico/de TO. Mesmo helper que services/professional-councils.js
+  // no backend, espelhado aqui pra montar o PDF e o switcher.
+  const TITULOS_POR_CONSELHO = {
+    CRM:           { atestado: "Atestado Médico",                encaminhamento: "Encaminhamento Médico",            relatorio: "Relatório Médico",                exames: "Solicitação de exames" },
+    CRP:           { atestado: "Atestado Psicológico",           encaminhamento: "Encaminhamento Psicológico",       relatorio: "Relatório Psicológico",           exames: "Solicitação de avaliação" },
+    CREFITO_FISIO: { atestado: "Atestado Fisioterapêutico",      encaminhamento: "Encaminhamento Fisioterapêutico",  relatorio: "Relatório Fisioterapêutico",      exames: "Solicitação de exames" },
+    CREFITO_TO:    { atestado: "Atestado de Terapia Ocupacional", encaminhamento: "Encaminhamento — Terapia Ocupacional", relatorio: "Relatório de Terapia Ocupacional", exames: "Solicitação de exames" }
   };
+
+  function resolveConselhoKey(c) {
+    const sigla = String(c?.sigla || "").toUpperCase();
+    if (sigla === "CREFITO") {
+      const sub = String(c?.subtipo || "").toLowerCase();
+      return sub === "to" ? "CREFITO_TO" : sub === "fisio" ? "CREFITO_FISIO" : null;
+    }
+    return sigla || null;
+  }
+
+  function tituloFor(tipoArg) {
+    const key = resolveConselhoKey(conselho);
+    const set = key && TITULOS_POR_CONSELHO[key];
+    const titulo = set?.[tipoArg] || ({
+      atestado: "Atestado Profissional", encaminhamento: "Encaminhamento Profissional",
+      relatorio: "Relatório Profissional", exames: "Solicitação"
+    })[tipoArg] || "Documento";
+    return { titulo, cabecalho: titulo.toUpperCase() };
+  }
+
+  const TIPO_META = {
+    atestado:        tituloFor("atestado"),
+    exames:          tituloFor("exames"),
+    encaminhamento:  tituloFor("encaminhamento"),
+    relatorio:       tituloFor("relatorio")
+  };
+
+  // Atualiza os labels do switcher com os títulos específicos do conselho.
+  const tipoSwitcherEl = document.getElementById("tipoSwitcher");
+  Array.from(tipoSwitcherEl.options).forEach(opt => {
+    if (TIPO_META[opt.value]) opt.textContent = TIPO_META[opt.value].titulo;
+  });
 
   const tipoSwitcher = document.getElementById("tipoSwitcher");
   tipoSwitcher.value = tipo;
@@ -220,6 +255,13 @@
     const idParts = [];
     if (t.crm) idParts.push("CRM " + t.crm);
     if (t.crp) idParts.push("CRP " + t.crp);
+    // Conselhos novos (CREFITO etc) usam tipoConselho + numeroConselho, sem
+    // espelhamento legado em crm/crp. Mostra "CREFITO 12345-F" ou similar.
+    const isLegacy = t.crm || t.crp;
+    if (!isLegacy && t.tipoConselho && t.numeroConselho) {
+      const sub = t.subtipoConselho ? ` (${t.subtipoConselho === "to" ? "TO" : "fisio"})` : "";
+      idParts.push(`${t.tipoConselho} ${t.numeroConselho}${sub}`);
+    }
     if (t.rqe) idParts.push("RQE " + String(t.rqe).replace(/^RQE\s*/i, ""));
     if (t.especialidade) idParts.push(t.especialidade);
     document.getElementById("issuerIds").textContent = idParts.join("  ·  ") || "(sem identificação)";
@@ -555,6 +597,11 @@
     const idParts = [];
     if (t.crm) idParts.push("CRM " + t.crm);
     if (t.crp) idParts.push("CRP " + t.crp);
+    const isLegacy = t.crm || t.crp;
+    if (!isLegacy && t.tipoConselho && t.numeroConselho) {
+      const sub = t.subtipoConselho ? ` (${t.subtipoConselho === "to" ? "TO" : "fisio"})` : "";
+      idParts.push(`${t.tipoConselho} ${t.numeroConselho}${sub}`);
+    }
     if (t.rqe) idParts.push("RQE " + String(t.rqe).replace(/^RQE\s*/i, ""));
     if (t.especialidade) idParts.push(t.especialidade);
     drawText(idParts.join("  ·  "), { size: 10, color: rgb(0.4,0.4,0.4) });
