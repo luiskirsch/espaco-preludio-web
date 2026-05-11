@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-75">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-76">
 </head>
 <body>
 
@@ -201,10 +201,12 @@
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist } from "./js/auth-guard.js?v=2-75";
+  import { cachedGet, invalidate as invalidateApi } from "./js/api-cache.js?v=2-76";
   import { clearDek } from "./js/crypto.js";
 
   const ctx = await requireTherapist({ requireDek: true });
-  const { idToken, therapist } = ctx;
+  const { user, idToken, therapist } = ctx;
+  const uid = user.uid;
 
   document.getElementById("topUserName").textContent = therapist.displayName || "";
   document.getElementById("logoutBtn").addEventListener("click", async () => {
@@ -279,26 +281,35 @@
   }
 
   // ─── Carregar sessões + bloqueios ────────────────────────────────────
+  // SWR independente por endpoint: render inicial pode disparar com cache
+  // stale (instantâneo), e cada refetch que vier atualiza o que mudou.
+  function showAgenda() {
+    document.getElementById("loadingBanner").classList.add("ep-hide");
+    document.getElementById("agendaGrid").classList.remove("ep-hide");
+    renderWeek();
+  }
+
   async function loadAgenda() {
     try {
-      const [sessRes, blkRes] = await Promise.all([
-        fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, { headers: { "Authorization": `Bearer ${idToken}` } }),
-        fetch(`${BACKEND_BASE_URL}/therapy/agenda/blackouts`, { headers: { "Authorization": `Bearer ${idToken}` } })
+      await Promise.all([
+        cachedGet({
+          url: `${BACKEND_BASE_URL}/therapy/sessoes`,
+          idToken, uid, key: "sessoes", ttl: 30_000,
+          onData: (data) => { allSessions = data.sessions || []; showAgenda(); }
+        }),
+        cachedGet({
+          url: `${BACKEND_BASE_URL}/therapy/agenda/blackouts`,
+          idToken, uid, key: "blackouts", ttl: 60_000,
+          onData: (data) => { allBlackouts = Array.isArray(data.blackouts) ? data.blackouts : []; showAgenda(); }
+        }).catch(() => { /* blackouts opcional */ })
       ]);
-      const sessData = await sessRes.json().catch(() => ({}));
-      const blkData  = await blkRes.json().catch(() => ({}));
-      if (!sessRes.ok || !sessData.ok) throw new Error(sessData?.error || "ERRO_SESSOES");
-      // Blackouts opcionais — se falhar, segue sem.
-      allSessions  = sessData.sessions || [];
-      allBlackouts = (blkRes.ok && blkData.ok && Array.isArray(blkData.blackouts)) ? blkData.blackouts : [];
-      document.getElementById("loadingBanner").classList.add("ep-hide");
-      document.getElementById("agendaGrid").classList.remove("ep-hide");
-      renderWeek();
     } catch (e) {
       console.error("load_agenda_error", e);
-      const banner = document.getElementById("loadingBanner");
-      banner.textContent = "Erro ao carregar agenda: " + (e?.message || "desconhecido");
-      banner.className = "ep-alert ep-alert--danger";
+      if (!allSessions.length) {
+        const banner = document.getElementById("loadingBanner");
+        banner.textContent = "Erro ao carregar agenda: " + (e?.message || "desconhecido");
+        banner.className = "ep-alert ep-alert--danger";
+      }
     }
   }
   // alias mantido pra calls existentes (cancelamento, copiar link)

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-75">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-76">
 </head>
 <body>
 
@@ -171,10 +171,12 @@
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist } from "./js/auth-guard.js?v=2-75";
+  import { cachedGet } from "./js/api-cache.js?v=2-76";
   import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
 
   const ctx = await requireTherapist({ requireDek: true });
-  const { idToken, therapist, conselho, dek } = ctx;
+  const { user, idToken, therapist, conselho, dek } = ctx;
+  const uid = user.uid;
   document.getElementById("topUserName").textContent = therapist.displayName || "";
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     clearDek(); await signOut(auth); window.location.href = "./login.html";
@@ -446,23 +448,29 @@
   const patientSelect = document.getElementById("patientSelect");
   const patientNameEl = document.getElementById("patientName");
   const freePatientField = document.getElementById("freePatientField");
+  async function populatePatientOptions(j) {
+    // Limpa options anteriores exceto a primeira (placeholder/avulso).
+    while (patientSelect.options.length > 1) patientSelect.remove(1);
+    for (const p of (j.patients || [])) {
+      try {
+        const json = await decryptNote({ ciphertext: p.ciphertext, iv: p.iv }, dek);
+        const data = JSON.parse(json);
+        const opt = document.createElement("option");
+        opt.value = p.patientId;
+        opt.textContent = data.name || "(sem nome)";
+        opt.dataset.name = data.name || "";
+        patientSelect.appendChild(opt);
+      } catch {}
+    }
+    if (presetPatientId) patientSelect.value = presetPatientId;
+  }
   async function loadPatientsIntoSelect() {
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, { headers: { "Authorization": `Bearer ${idToken}` } });
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok || !j.ok) return;
-      for (const p of (j.patients || [])) {
-        try {
-          const json = await decryptNote({ ciphertext: p.ciphertext, iv: p.iv }, dek);
-          const data = JSON.parse(json);
-          const opt = document.createElement("option");
-          opt.value = p.patientId;
-          opt.textContent = data.name || "(sem nome)";
-          opt.dataset.name = data.name || "";
-          patientSelect.appendChild(opt);
-        } catch {}
-      }
-      if (presetPatientId) patientSelect.value = presetPatientId;
+      await cachedGet({
+        url: `${BACKEND_BASE_URL}/therapy/pacientes`,
+        idToken, uid, key: "pacientes", ttl: 60_000,
+        onData: (data) => { populatePatientOptions(data); }
+      });
     } catch {}
     patientSelect.addEventListener("change", () => {
       const opt = patientSelect.selectedOptions[0];

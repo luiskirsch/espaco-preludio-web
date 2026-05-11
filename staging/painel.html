@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-75">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-76">
 </head>
 <body>
 
@@ -147,11 +147,13 @@
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist } from "./js/auth-guard.js?v=2-75";
+  import { cachedGet, invalidate as invalidateApi } from "./js/api-cache.js?v=2-76";
   import { clearDek, recallUser, decryptNote } from "./js/crypto.js";
 
   // ─── Boot ───────────────────────────────────────────────────
   const session = await requireTherapist({ requireDek: true });
-  const { idToken, therapist, dek } = session;
+  const { user, idToken, therapist, dek } = session;
+  const uid = user.uid;
 
   document.getElementById("topUserName").textContent = therapist.displayName || "";
 
@@ -273,36 +275,36 @@
   // pacientes "atendidos antes" (avulsos sem patientId) no select de nova consulta.
   let allSessions = [];
 
-  async function loadSessions() {
-    loadingBanner.classList.remove("ep-hide");
-    sessionList.classList.add("ep-hide");
+  function renderSessionsFromData(data) {
+    loadingBanner.classList.add("ep-hide");
+    allSessions = data.sessions || [];
+    if (allSessions.length === 0) {
+      sessionList.classList.add("ep-hide");
+      emptyState.classList.remove("ep-hide");
+      return;
+    }
     emptyState.classList.add("ep-hide");
+    sessionList.innerHTML = "";
+    allSessions.forEach(s => sessionList.appendChild(renderSession(s)));
+    sessionList.classList.remove("ep-hide");
+  }
 
+  async function loadSessions() {
+    // SWR: mostra cache imediato + revalida em background. Loading banner
+    // só fica visível se NÃO houver cache (1ª carga).
+    loadingBanner.classList.remove("ep-hide");
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
+      await cachedGet({
+        url: `${BACKEND_BASE_URL}/therapy/sessoes`,
+        idToken, uid, key: "sessoes", ttl: 30_000,
+        onData: (data) => renderSessionsFromData(data)
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) {
-        const code = data?.error || ("HTTP_" + res.status);
-        throw new Error(code);
-      }
-
-      loadingBanner.classList.add("ep-hide");
-      allSessions = data.sessions || [];
-
-      if (allSessions.length === 0) {
-        emptyState.classList.remove("ep-hide");
-        return;
-      }
-
-      sessionList.innerHTML = "";
-      allSessions.forEach(s => sessionList.appendChild(renderSession(s)));
-      sessionList.classList.remove("ep-hide");
     } catch (error) {
       console.error("load_sessions_error", error);
-      loadingBanner.textContent = "Erro ao carregar consultas: " + (error?.message || "desconhecido");
-      loadingBanner.className = "ep-alert ep-alert--danger";
+      if (!allSessions.length) {
+        loadingBanner.textContent = "Erro ao carregar consultas: " + (error?.message || "desconhecido");
+        loadingBanner.className = "ep-alert ep-alert--danger";
+      }
     }
   }
 
@@ -358,6 +360,7 @@
           method: "POST",
           headers: { "Authorization": `Bearer ${idToken}` }
         });
+        invalidateApi("sessoes", uid);
         await loadSessions();
       } catch {
         btn.disabled = false;
@@ -373,6 +376,7 @@
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
+        invalidateApi("sessoes", uid);
         await loadSessions();
       } catch (err) {
         btn.disabled = false;

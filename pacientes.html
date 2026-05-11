@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-75">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-76">
 </head>
 <body>
 
@@ -103,10 +103,12 @@
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist } from "./js/auth-guard.js?v=2-75";
+  import { cachedGet, invalidate as invalidateApi } from "./js/api-cache.js?v=2-76";
   import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
 
   const sess = await requireTherapist({ requireDek: true });
-  const { idToken, therapist, dek } = sess;
+  const { user, idToken, therapist, dek } = sess;
+  const uid = user.uid;
 
   document.getElementById("topUserName").textContent = therapist.displayName || "";
 
@@ -146,33 +148,35 @@
   const patientList   = document.getElementById("patientList");
   const emptyState    = document.getElementById("emptyState");
 
-  async function loadPatients() {
-    loadingBanner.classList.remove("ep-hide");
-    patientList.classList.add("ep-hide");
+  async function renderPatientsFromData(data) {
+    loadingBanner.classList.add("ep-hide");
+    if (!data.patients || data.patients.length === 0) {
+      patientList.classList.add("ep-hide");
+      emptyState.classList.remove("ep-hide");
+      return;
+    }
     emptyState.classList.add("ep-hide");
+    const decrypted = await Promise.all(data.patients.map(decryptPatient));
+    patientList.innerHTML = "";
+    decrypted.forEach(p => patientList.appendChild(renderPatient(p)));
+    patientList.classList.remove("ep-hide");
+  }
 
+  async function loadPatients() {
+    // SWR: cache stale rende instantâneo, fresh atualiza em background.
+    loadingBanner.classList.remove("ep-hide");
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
+      await cachedGet({
+        url: `${BACKEND_BASE_URL}/therapy/pacientes`,
+        idToken, uid, key: "pacientes", ttl: 60_000,
+        onData: (data) => renderPatientsFromData(data)
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
-
-      loadingBanner.classList.add("ep-hide");
-
-      if (!data.patients || data.patients.length === 0) {
-        emptyState.classList.remove("ep-hide");
-        return;
-      }
-
-      const decrypted = await Promise.all(data.patients.map(decryptPatient));
-      patientList.innerHTML = "";
-      decrypted.forEach(p => patientList.appendChild(renderPatient(p)));
-      patientList.classList.remove("ep-hide");
     } catch (error) {
       console.error("load_patients_error", error);
-      loadingBanner.textContent = "Erro ao carregar pacientes.";
-      loadingBanner.className = "ep-alert ep-alert--danger";
+      if (loadingBanner && !loadingBanner.classList.contains("ep-hide")) {
+        loadingBanner.textContent = "Erro ao carregar pacientes.";
+        loadingBanner.className = "ep-alert ep-alert--danger";
+      }
     }
   }
 
@@ -216,6 +220,7 @@
           method: "DELETE",
           headers: { "Authorization": `Bearer ${idToken}` }
         });
+        invalidateApi("pacientes", uid);
         await loadPatients();
       } catch {
         btn.disabled = false;
@@ -298,6 +303,7 @@
         return;
       }
       closeModal();
+      invalidateApi("pacientes", uid);
       await loadPatients();
     } catch (error) {
       console.error("save_patient_error", error);
