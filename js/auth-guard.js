@@ -24,7 +24,11 @@ export function authReady() {
 // Invalidar via invalidateProfileCache() em logout, PATCH /perfil, troca
 // de plano. TTL curto (30s) limita janela de staleness se invalidação
 // faltar em algum lugar.
-const PROFILE_CACHE_KEY = "ep:profile:v1";
+//
+// Versão da chave: bumpar quando o shape do profile mudar OU quando precisar
+// invalidar caches stale em todos os users (ex.: ajuste de capabilities no
+// backend que muda a matriz pra um conselho).
+const PROFILE_CACHE_KEY = "ep:profile:v2";
 const PROFILE_CACHE_TTL_MS = 30_000;
 
 function readProfileCache(uid) {
@@ -45,7 +49,11 @@ function writeProfileCache(uid, profile) {
 }
 
 export function invalidateProfileCache() {
-  try { sessionStorage.removeItem(PROFILE_CACHE_KEY); } catch {}
+  try {
+    sessionStorage.removeItem(PROFILE_CACHE_KEY);
+    // Limpa também a key antiga v1 caso ainda exista da sessão pré-bump.
+    sessionStorage.removeItem("ep:profile:v1");
+  } catch {}
 }
 
 // Invalida automaticamente em signOut ou troca de conta — listener global
@@ -73,15 +81,32 @@ async function fetchProfileFromBackend(idToken) {
   };
 }
 
+function capsEqual(a, b) {
+  const aa = [...(a || [])].sort();
+  const bb = [...(b || [])].sort();
+  if (aa.length !== bb.length) return false;
+  for (let i = 0; i < aa.length; i++) if (aa[i] !== bb[i]) return false;
+  return true;
+}
+
 export async function fetchTherapistProfile(idToken, uid) {
   // Sem uid (compat retro) → busca direto, sem cache.
   if (!uid) return fetchProfileFromBackend(idToken);
 
   const cached = readProfileCache(uid);
   if (cached) {
-    // SWR: dispara revalidate em background, retorna cache imediato.
+    // SWR: dispara revalidate em background, retorna cache imediato. Se
+    // o fresh fetch trouxer capabilities diferentes (ex.: cache stale do
+    // CRP, conta agora é CRM), reaplica visibility — link de feature
+    // que antes estava escondido volta a aparecer sem precisar refresh.
     fetchProfileFromBackend(idToken)
-      .then(fresh => { if (fresh.ok) writeProfileCache(uid, fresh); })
+      .then(fresh => {
+        if (!fresh.ok) return;
+        writeProfileCache(uid, fresh);
+        if (!capsEqual(cached.conselho?.capabilities, fresh.conselho?.capabilities)) {
+          applyCapabilityVisibility(fresh.conselho?.capabilities);
+        }
+      })
       .catch(() => {});
     return cached;
   }
@@ -91,13 +116,15 @@ export async function fetchTherapistProfile(idToken, uid) {
   return fresh;
 }
 
-// Esconde links de nav que apontam pra features cujo conselho do profissional
-// não habilita. Match por substring no href — links com href contendo
-// "receita.html" são ocultados pra quem não tem capability "receita", e
-// "documento.html" pra quem não tem "documentos-clinicos".
+// Aplica visibilidade nos links de nav e botões com data-capability. Match
+// por substring no href — "receita.html" exige capability "receita", e
+// "documento.html" exige "documentos-clinicos".
+//
+// REVERSÍVEL: se a cap está habilitada, restaura display/aria-hidden ao
+// estado natural — necessário pra quando o SWR refetch detecta que o user
+// recuperou uma cap que estava escondida pelo cache stale.
 //
 // Backend continua sendo a fonte da verdade (requireCapability nos endpoints).
-// Esta função só evita que o user clique em algo que vai cair em 403.
 function applyCapabilityVisibility(capabilities) {
   const set = new Set(capabilities || []);
   const RULES = [
@@ -107,18 +134,26 @@ function applyCapabilityVisibility(capabilities) {
   document.querySelectorAll("a[href], button[data-href]").forEach(el => {
     const href = (el.getAttribute("href") || el.getAttribute("data-href") || "").toLowerCase();
     for (const rule of RULES) {
-      if (href.includes(rule.match) && !set.has(rule.capability)) {
+      if (!href.includes(rule.match)) continue;
+      if (!set.has(rule.capability)) {
         el.style.display = "none";
         el.setAttribute("aria-hidden", "true");
+      } else {
+        // Restaura — necessário se foi escondido por um call anterior.
+        el.style.display = "";
+        el.removeAttribute("aria-hidden");
       }
     }
   });
-  // Botões/elementos com data-capability="X" explícito também são ocultados.
   document.querySelectorAll("[data-capability]").forEach(el => {
     const cap = el.getAttribute("data-capability");
-    if (cap && !set.has(cap)) {
+    if (!cap) return;
+    if (!set.has(cap)) {
       el.style.display = "none";
       el.setAttribute("aria-hidden", "true");
+    } else {
+      el.style.display = "";
+      el.removeAttribute("aria-hidden");
     }
   });
 }
