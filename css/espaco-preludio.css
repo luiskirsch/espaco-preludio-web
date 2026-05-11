@@ -225,22 +225,17 @@ a:hover { color: var(--ep-accent-hover); }
     padding-bottom: 56px;
   }
 
-  /* #planos: também viewport-height, mas com padding reduzido pra que os 3
-     cards caibam inteiros (cada card ~700px + título + lead = ~1100px de
-     conteúdo). Justify-content: flex-start alinha topo (eyebrow logo abaixo
-     do topbar via scroll-margin), em vez de centralizar (que faria sobrar
-     espaço acima e cortar os cards embaixo). Reduz também o gap entre o
-     título e a grid pra economizar mais altura. */
+  /* #planos: altura natural (não-viewport). Os cards cresceram demais pra
+     caber em uma viewport (Recém-formado tem 7 features + nota de validação
+     comprida com CRP/CRM/CRESS/CREFITO/CRFa/CRN/CRO/CREF). Forçar viewport
+     com min-height + flex-start estourava o conteúdo e cortava as CTAs.
+     Solução: padding generoso, deixar a seção crescer, usuário rola. */
   #planos {
-    min-height: calc(100vh - 64px);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    padding-top: 24px;
-    padding-bottom: 16px;
+    padding-top: 32px;
+    padding-bottom: 64px;
   }
   #planos .ep-mt-32 {
-    margin-top: 16px;
+    margin-top: 24px;
   }
 }
 
