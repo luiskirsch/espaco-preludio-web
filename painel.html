@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-83">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-84">
 </head>
 <body>
 
@@ -310,7 +310,9 @@
 
   function renderSession(s) {
     const div = document.createElement("article");
-    div.className = "ep-session";
+    // Consultas agendadas ou em sessão ganham marca lateral dourada (ep-session--active).
+    const isActive = s.status === "in_progress" || (s.status !== "completed" && s.status !== "canceled");
+    div.className = "ep-session" + (isActive ? " ep-session--active" : "");
     div.innerHTML = `
       <div>
         <div class="ep-session__name">${escapeHtml(s.patientName)}</div>
