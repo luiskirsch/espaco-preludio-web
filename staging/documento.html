@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-79">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-80">
 </head>
 <body>
 
@@ -111,9 +111,14 @@
                 // "Solicitação" é feminino — Nova solicitação. Resto é masculino.
                 const artigo = tipo === "exames" ? "Nova" : "Novo";
                 document.getElementById("pageTitle").textContent = `${artigo} ${titulo.toLowerCase()}`;
-                for (const opt of document.getElementById("tipoSwitcher").options) {
-                  if (opt.value === tipo) opt.textContent = titulo;
+                // Atualiza TODAS as opções com nomes específicos do conselho +
+                // seleciona o tipo correto. Sem isso, o switcher renderiza
+                // "Atestado" (default do HTML) e só depois corrige.
+                const switcher = document.getElementById("tipoSwitcher");
+                for (const opt of switcher.options) {
+                  if (set[opt.value]) opt.textContent = set[opt.value];
                 }
+                switcher.value = tipo;
               }
             }
           }
