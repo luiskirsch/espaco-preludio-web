@@ -225,18 +225,20 @@ a:hover { color: var(--ep-accent-hover); }
     padding-bottom: 56px;
   }
 
-  /* #planos: altura natural (não-viewport). Os cards cresceram demais pra
-     caber em uma viewport (Recém-formado tem 7 features + nota de validação
-     comprida com CRP/CRM/CRESS/CREFITO/CRFa/CRN/CRO/CREF). Forçar viewport
-     com min-height + flex-start estourava o conteúdo e cortava as CTAs.
-     Solução: padding generoso, deixar a seção crescer, usuário rola. */
+  /* #planos: altura natural + compactação agressiva dentro do bloco pra
+     que os 3 cards caibam confortavelmente. Recém-formado tem 7 features
+     + nota de validação — reduz gap/padding/typography aqui sem afetar
+     as outras seções da landing. */
   #planos {
-    padding-top: 32px;
-    padding-bottom: 64px;
+    padding-top: 12px;
+    padding-bottom: 48px;
   }
-  #planos .ep-mt-32 {
-    margin-top: 24px;
-  }
+  #planos .ep-mt-32 { margin-top: 12px; }
+  #planos .ep-mt-12 { margin-top: 6px; }
+  #planos .ep-lead { font-size: 15px; margin-top: 8px; }
+  #planos .ep-card--strong { padding: 22px 22px; gap: 10px; }
+  #planos .ep-card__features { gap: 6px; font-size: 13px; }
+  #planos .ep-card__note { font-size: 12px; line-height: 1.4; }
 }
 
 .ep-eyebrow {
