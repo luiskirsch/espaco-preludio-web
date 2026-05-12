@@ -1,27 +1,27 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lista de espera Â· EspaÃ§o PrelÃºdio</title>
+  <title>Lista de espera · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-7">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-8">
 </head>
 <body>
 
-<div class="ep-staging-banner">Ambiente de teste Â· EspaÃ§o PrelÃºdio Â· staging</div>
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
-    <a href="./painel.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">EspaÃ§o</span>
-        <span>PrelÃºdio</span>
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
       </span>
     </a>
     <nav class="ep-nav" aria-label="Painel">
@@ -29,14 +29,14 @@
       <a href="./agenda.html">Agenda</a>
       <a href="./pacientes.html">Pacientes</a>
       <a href="./financeiro.html">Financeiro</a>
-      <a href="./clinica.html">ClÃ­nica</a>
+      <a href="./clinica.html">Clínica</a>
       <a href="./inventario.html">Estoque</a>
       <a href="./receita.html">Receitas</a>
       <a href="./calculadora.html">Calculadora</a>
       <a href="./documento.html?tipo=atestado">Atestado</a>
       <a href="./whatsapp.html">WhatsApp</a>
       <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
-        <span class="ep-nav-avatar" id="topUserAvatar">Â·</span>
+        <span class="ep-nav-avatar" id="topUserAvatar">·</span>
         <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
       </a>
       <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
@@ -52,11 +52,11 @@
         <div class="ep-eyebrow">Agenda</div>
         <h1 class="ep-h1 ep-mt-12">Lista de espera</h1>
         <p class="ep-text-muted ep-mt-8 ep-mt-0">
-          Pacientes aguardando vaga. Quando abrir um horÃ¡rio, converta direto em consulta.
+          Pacientes aguardando vaga. Quando abrir um horário, converta direto em consulta.
         </p>
       </div>
       <div class="ep-flex ep-flex--wrap ep-gap-8">
-        <a href="./agenda.html" class="ep-btn ep-btn--ghost">â† Voltar pra agenda</a>
+        <a href="./agenda.html" class="ep-btn ep-btn--ghost">← Voltar pra agenda</a>
         <button id="newEntryBtn" type="button" class="ep-btn ep-btn--primary ep-btn--lg">+ Adicionar</button>
       </div>
     </div>
@@ -64,25 +64,25 @@
     <!-- Filtros -->
     <div class="ep-flex ep-flex--wrap ep-gap-8 ep-mt-16" style="align-items: center;">
       <div class="ep-field" style="flex: 1; max-width: 360px; margin: 0;">
-        <input id="searchInput" class="ep-input" type="search" placeholder="ðŸ” Buscar nomeâ€¦">
+        <input id="searchInput" class="ep-input" type="search" placeholder="🔍 Buscar nome…">
       </div>
       <div class="ep-flex ep-gap-8">
         <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-prio-filter="all">Todas</button>
         <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-prio-filter="high">Alta</button>
-        <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-prio-filter="med">MÃ©dia</button>
+        <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-prio-filter="med">Média</button>
         <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-prio-filter="low">Baixa</button>
       </div>
       <span id="countHint" class="ep-text-xs ep-text-muted"></span>
     </div>
 
-    <div id="loadingBanner" class="ep-alert ep-mt-16">Carregandoâ€¦</div>
+    <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando…</div>
 
     <div id="entryList" class="ep-session-list ep-mt-16 ep-hide"></div>
 
     <div id="emptyState" class="ep-empty ep-mt-16 ep-hide">
       <h3 class="ep-h3">Lista vazia.</h3>
       <p class="ep-text-muted ep-mt-8" style="margin: 0;">
-        Adicione pacientes que estÃ£o aguardando uma vaga.
+        Adicione pacientes que estão aguardando uma vaga.
       </p>
       <button class="ep-btn ep-btn--primary ep-mt-16" type="button" id="emptyCta">Adicionar primeiro</button>
     </div>
@@ -93,8 +93,8 @@
 <!-- Modal: criar/editar entrada -->
 <div class="ep-modal" id="entryModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel">
-    <h3 class="ep-modal__title" id="entryModalTitle">Adicionar Ã  lista de espera</h3>
-    <p class="ep-modal__sub">Preencha os dados do paciente. VocÃª pode converter em consulta a qualquer momento.</p>
+    <h3 class="ep-modal__title" id="entryModalTitle">Adicionar à lista de espera</h3>
+    <p class="ep-modal__sub">Preencha os dados do paciente. Você pode converter em consulta a qualquer momento.</p>
 
     <form id="entryForm" class="ep-stack" style="padding: 0 28px;">
       <div class="ep-field">
@@ -109,13 +109,13 @@
         <label class="ep-label" for="entryPriority">Prioridade</label>
         <select id="entryPriority" class="ep-select">
           <option value="high">Alta (urgente)</option>
-          <option value="med" selected>MÃ©dia (normal)</option>
+          <option value="med" selected>Média (normal)</option>
           <option value="low">Baixa (sem pressa)</option>
         </select>
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="entryNote">ObservaÃ§Ã£o</label>
-        <textarea id="entryNote" class="ep-input" rows="3" maxlength="500" placeholder="Motivo, preferÃªncias de horÃ¡rio, etc."></textarea>
+        <label class="ep-label" for="entryNote">Observação</label>
+        <textarea id="entryNote" class="ep-input" rows="3" maxlength="500" placeholder="Motivo, preferências de horário, etc."></textarea>
       </div>
       <div class="ep-status" id="entryStatus"></div>
     </form>
@@ -153,10 +153,10 @@
   let activeFilter = "all";
 
   function escapeHtml(s) { return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
-  function priorityLabel(p) { return p === "high" ? "Alta" : p === "low" ? "Baixa" : "MÃ©dia"; }
+  function priorityLabel(p) { return p === "high" ? "Alta" : p === "low" ? "Baixa" : "Média"; }
   function priorityClass(p) { return p === "high" ? "ep-badge--done" : p === "low" ? "ep-badge--muted" : "ep-badge--warn"; }
   function daysSince(ms) {
-    if (!ms) return "â€”";
+    if (!ms) return "—";
     const d = Math.floor((Date.now() - ms) / 86_400_000);
     return d === 0 ? "hoje" : d === 1 ? "1 dia" : `${d} dias`;
   }
@@ -185,9 +185,9 @@
           <div class="ep-session__name">${escapeHtml(e.patientName)}</div>
           <div class="ep-session__meta">
             <span class="ep-badge ${priorityClass(e.priority)}">${priorityLabel(e.priority)}</span>
-            ${e.contact ? `<span>Â· ${escapeHtml(e.contact)}</span>` : ""}
-            <span>Â· aguardando hÃ¡ ${daysSince(e.createdAt)}</span>
-            ${e.note ? `<span>Â· ${escapeHtml(e.note)}</span>` : ""}
+            ${e.contact ? `<span>· ${escapeHtml(e.contact)}</span>` : ""}
+            <span>· aguardando há ${daysSince(e.createdAt)}</span>
+            ${e.note ? `<span>· ${escapeHtml(e.note)}</span>` : ""}
           </div>
         </div>
         <div class="ep-session__actions">
@@ -206,7 +206,6 @@
           const params = new URLSearchParams();
           params.set("name", btn.dataset.name || "");
           if (btn.dataset.patientId) params.set("newWith", btn.dataset.patientId);
-          // Marca pra remover da lista apÃ³s criar consulta (frontend-only flag).
           sessionStorage.setItem("ep:waitlist-after-create", id);
           window.location.href = "./painel.html?" + params.toString();
         } else if (action === "edit") {
@@ -250,13 +249,13 @@
     }
   }
 
-  // â”€â”€â”€ Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Modal ────────────────────────────────────────────────────────────
   const entryModal = $("entryModal");
   let editingId = null;
 
   function openEntryModal(entry) {
     editingId = entry?.waitlistId || null;
-    $("entryModalTitle").textContent = editingId ? "Editar entrada" : "Adicionar Ã  lista de espera";
+    $("entryModalTitle").textContent = editingId ? "Editar entrada" : "Adicionar à lista de espera";
     $("entryPatientName").value = entry?.patientName || "";
     $("entryContact").value     = entry?.contact     || "";
     $("entryPriority").value    = entry?.priority    || "med";
@@ -272,7 +271,7 @@
   $("entrySaveBtn").addEventListener("click", async () => {
     const patientName = $("entryPatientName").value.trim();
     if (!patientName) {
-      $("entryStatus").textContent = "Nome Ã© obrigatÃ³rio.";
+      $("entryStatus").textContent = "Nome é obrigatório.";
       $("entryStatus").classList.add("is-err");
       return;
     }
@@ -285,7 +284,7 @@
     const btn = $("entrySaveBtn");
     btn.disabled = true;
     $("entryStatus").className = "ep-status";
-    $("entryStatus").textContent = "Salvandoâ€¦";
+    $("entryStatus").textContent = "Salvando…";
     try {
       const url = editingId
         ? `${BACKEND_BASE_URL}/therapy/waitlist/${encodeURIComponent(editingId)}`
@@ -308,7 +307,7 @@
     }
   });
 
-  // â”€â”€â”€ Filtros + Busca â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Filtros + Busca ──────────────────────────────────────────────────
   document.querySelectorAll("button[data-prio-filter]").forEach(btn => {
     btn.addEventListener("click", () => {
       activeFilter = btn.dataset.prioFilter;
@@ -317,12 +316,10 @@
       renderList();
     });
   });
-  // Marca "Todas" como ativo no boot
   document.querySelector('button[data-prio-filter="all"]').classList.add("ep-btn--primary");
 
   searchInput.addEventListener("input", renderList);
 
-  // Boot
   await loadList();
 </script>
 
