@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-9">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-10">
 </head>
 <body>
 
@@ -550,7 +550,7 @@
       if (!col) continue;
       const startMin = (nDate.getHours() - START_HOUR) * 60 + nDate.getMinutes();
       const topPx = Math.max(0, (startMin / 60) * HOUR_PX);
-      const heightPx = Math.max(20, ((n.durationMin || 60) / 60) * HOUR_PX);
+      const heightPx = Math.max(HOUR_PX, ((n.durationMin || 60) / 60) * HOUR_PX);
       if (topPx >= (END_HOUR - START_HOUR) * HOUR_PX) continue;
       const block = document.createElement("button");
       block.type = "button";
@@ -585,7 +585,7 @@
       const startMinutesFromTop = (sd.getHours() + sd.getMinutes() / 60 - START_HOUR) * 60;
       // Recorta se cair antes do START_HOUR
       const topPx = Math.max(0, (startMinutesFromTop / 60) * HOUR_PX);
-      const heightPx = (SESSION_DEFAULT_MIN / 60) * HOUR_PX;
+      const heightPx = Math.max(HOUR_PX, (SESSION_DEFAULT_MIN / 60) * HOUR_PX);
 
       const block = document.createElement("button");
       block.type = "button";
