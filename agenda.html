@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-3">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-4">
 </head>
 <body>
 
@@ -50,11 +50,22 @@
       <h1 class="ep-h1 ep-mt-12">Sua semana</h1>
       <p class="ep-text-muted ep-mt-0">Visualize, navegue e crie consultas direto no horário desejado.</p>
     </div>
-    <div class="ep-flex ep-flex--wrap ep-gap-8">
+    <div class="ep-flex ep-flex--wrap ep-gap-8 ep-no-print">
       <button type="button" class="ep-btn ep-btn--ghost" id="openSyncBtn">Sincronizar agenda</button>
       <button type="button" class="ep-btn ep-btn--ghost" id="openBlackoutBtn">Bloquear horário</button>
+      <button type="button" class="ep-btn ep-btn--ghost" id="openWaitlistBtn">Lista de espera</button>
+      <button type="button" class="ep-btn ep-btn--ghost" id="openAgendaConfigBtn">Configurações</button>
+      <button type="button" class="ep-btn ep-btn--ghost" id="printAgendaBtn" title="Imprimir agenda">Imprimir</button>
       <a href="./painel.html" class="ep-btn ep-btn--primary">+ Nova consulta</a>
     </div>
+  </div>
+
+  <!-- Busca por paciente + Navegação semanal + legenda -->
+  <div class="ep-flex ep-flex--end-wrap ep-no-print" style="gap: 10px; align-items: center; margin-bottom: 8px;">
+    <div class="ep-field" style="flex: 1; max-width: 360px; margin: 0;">
+      <input id="patientSearch" class="ep-input" type="search" placeholder="🔍 Buscar consulta por paciente…" aria-label="Buscar paciente">
+    </div>
+    <span id="searchHint" class="ep-text-xs ep-text-muted ep-hide"></span>
   </div>
 
   <!-- Navegação semanal + legenda -->
@@ -300,6 +311,8 @@
     document.getElementById("loadingBanner").classList.add("ep-hide");
     document.getElementById("agendaGrid").classList.remove("ep-hide");
     renderWeek();
+    // Reaplica filtro de busca após re-render (navegação semanal).
+    if (typeof applyPatientSearch === "function") applyPatientSearch();
   }
 
   async function loadAgenda() {
@@ -454,6 +467,7 @@
       block.className = `ep-agenda-session ${statusToClass(s.status)}`;
       block.style.top = `${topPx}px`;
       block.style.height = `${heightPx}px`;
+      block.dataset.patientName = s.patientName || "";
       block.innerHTML = `
         <div class="ep-agenda-session__time">${pad2(sd.getHours())}:${pad2(sd.getMinutes())}</div>
         <div class="ep-agenda-session__name">${escapeHtml(s.patientName || "—")}</div>
@@ -765,6 +779,53 @@
     } catch (e) {
       syncUrlBox.textContent = "Erro: " + (e?.message || "desconhecido");
     }
+  });
+
+  // ─── Busca por paciente ──────────────────────────────────────────────
+  // Aplica filtro nos blocos de sessão renderizados — destaque (ouro forte)
+  // pros que casam, fade pros que não casam. Não esconde nada — usuário ainda
+  // vê o contexto da semana. Match: substring case-insensitive no patientName.
+  const searchInput = document.getElementById("patientSearch");
+  const searchHint  = document.getElementById("searchHint");
+
+  function applyPatientSearch() {
+    const q = String(searchInput.value || "").trim().toLowerCase();
+    const blocks = document.querySelectorAll(".ep-agenda-session");
+    if (!q) {
+      blocks.forEach(b => b.classList.remove("is-search-hit", "is-search-miss"));
+      searchHint.classList.add("ep-hide");
+      return;
+    }
+    let hits = 0;
+    blocks.forEach(b => {
+      const name = (b.dataset.patientName || "").toLowerCase();
+      if (name.includes(q)) {
+        b.classList.add("is-search-hit");
+        b.classList.remove("is-search-miss");
+        hits++;
+      } else {
+        b.classList.add("is-search-miss");
+        b.classList.remove("is-search-hit");
+      }
+    });
+    searchHint.textContent = `${hits} ${hits === 1 ? "consulta encontrada" : "consultas encontradas"} nesta semana`;
+    searchHint.classList.remove("ep-hide");
+  }
+
+  searchInput.addEventListener("input", applyPatientSearch);
+  // showAgenda() já reaplica applyPatientSearch após cada re-render.
+
+  // ─── Imprimir agenda ─────────────────────────────────────────────────
+  document.getElementById("printAgendaBtn").addEventListener("click", () => {
+    window.print();
+  });
+
+  // Placeholders pros próximos commits.
+  document.getElementById("openWaitlistBtn").addEventListener("click", () => {
+    window.location.href = "./lista-espera.html";
+  });
+  document.getElementById("openAgendaConfigBtn").addEventListener("click", () => {
+    alert("Configurações de agenda — em breve.");
   });
 
   // ─── Boot ───────────────────────────────────────────────────────────

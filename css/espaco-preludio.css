@@ -3101,6 +3101,45 @@ body.ep-consult.ep-mode-calmo .ep-consult__topbar {
   opacity: 0.72;
 }
 
+/* Filtro de busca por paciente — destaque hit / fade miss. */
+.ep-agenda-session.is-search-hit {
+  outline: 2px solid var(--ep-gold);
+  outline-offset: 1px;
+  z-index: 5;
+}
+.ep-agenda-session.is-search-miss {
+  opacity: 0.35;
+  filter: grayscale(0.4);
+}
+
+/* Estilo de impressão — esconde toolbar/nav, abre o grid em tela cheia. */
+@media print {
+  .ep-no-print,
+  .ep-topbar,
+  .ep-staging-banner,
+  .ep-eyebrow,
+  #verifPill,
+  #studentBanner,
+  .ep-agenda-nav .ep-flex--center {
+    display: none !important;
+  }
+  body { background: #fff !important; }
+  .ep-container { max-width: none !important; padding: 0 8mm !important; }
+  .ep-agenda-grid {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+  .ep-agenda-session {
+    box-shadow: none !important;
+    border: 1px solid rgba(28,31,29,0.25) !important;
+    color: #000 !important;
+  }
+  .ep-agenda-session__name,
+  .ep-agenda-session__time { color: #000 !important; }
+  /* Página A4 paisagem — semana inteira cabe melhor */
+  @page { size: A4 landscape; margin: 10mm; }
+}
+
 .ep-modal__panel--md { max-width: 540px; }
 .ep-pop-link-box { font-size: 11px; word-break: break-all; margin-top: 12px; }
 
