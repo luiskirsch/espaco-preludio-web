@@ -828,11 +828,36 @@ h3.ep-h3 {
   box-shadow: var(--ep-shadow-modal);
   width: 100%;
   max-width: 520px;
-  padding: 28px;
+  /* Limita altura à viewport e cria scroll interno — sem isso, modais
+     com muitos campos (financeiro, paciente) ficam com botões "Salvar"
+     fora do alcance visual. margin: auto centraliza vertical. */
+  max-height: calc(100vh - 32px);
+  margin: 16px;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
 }
-.ep-modal__title { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 6px; }
-.ep-modal__sub { color: var(--ep-ink-2); font-size: 13.5px; line-height: 1.5; margin: 0 0 18px; }
-.ep-modal__actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+.ep-modal__title { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; margin: 0; padding: 24px 28px 0; flex-shrink: 0; }
+.ep-modal__sub { color: var(--ep-ink-2); font-size: 13.5px; line-height: 1.5; margin: 6px 0 0; padding: 0 28px; flex-shrink: 0; }
+/* Conteúdo entre título e actions: scrollável quando excede a viewport. */
+.ep-modal__panel > *:not(.ep-modal__title):not(.ep-modal__sub):not(.ep-modal__actions) {
+  overflow-y: auto;
+  padding: 18px 28px 0;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+/* Actions sempre visíveis no rodapé do modal (não rolam). */
+.ep-modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 18px 28px 24px;
+  border-top: 1px solid var(--ep-line);
+  background: var(--ep-surface);
+  flex-shrink: 0;
+}
+/* Quando o modal tem só título + actions (sem corpo), tira border-top. */
+.ep-modal__panel > .ep-modal__sub + .ep-modal__actions { border-top: none; padding-top: 4px; }
 
 /* ─── Consultório (sala de vídeo) ───────────────────────── */
 
