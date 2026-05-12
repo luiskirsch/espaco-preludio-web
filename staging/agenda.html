@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-8">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-9">
 </head>
 <body>
 
@@ -283,8 +283,8 @@
       <select id="cfgSlotMinutes" class="ep-select">
         <option value="30">30 minutos</option>
         <option value="45">45 minutos</option>
-        <option value="50" selected>50 minutos</option>
-        <option value="60">60 minutos</option>
+        <option value="50">50 minutos</option>
+        <option value="60" selected>60 minutos</option>
         <option value="90">90 minutos</option>
         <option value="120">120 minutos</option>
       </select>
@@ -320,7 +320,7 @@
   // Defaults sobrescritos por therapist.agendaConfig (configurável via modal).
   let START_HOUR = 8;
   let END_HOUR   = 21;
-  let SESSION_DEFAULT_MIN = 50;
+  let SESSION_DEFAULT_MIN = 60;
   const HOUR_PX    = 56;
 
   (function applyAgendaConfig() {
@@ -550,7 +550,7 @@
       if (!col) continue;
       const startMin = (nDate.getHours() - START_HOUR) * 60 + nDate.getMinutes();
       const topPx = Math.max(0, (startMin / 60) * HOUR_PX);
-      const heightPx = Math.max(20, ((n.durationMin || 30) / 60) * HOUR_PX);
+      const heightPx = Math.max(20, ((n.durationMin || 60) / 60) * HOUR_PX);
       if (topPx >= (END_HOUR - START_HOUR) * HOUR_PX) continue;
       const block = document.createElement("button");
       block.type = "button";
@@ -980,7 +980,7 @@
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/agenda/note`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
-        body: JSON.stringify({ at: pendingSlotDate.getTime(), durationMin: 30, text })
+        body: JSON.stringify({ at: pendingSlotDate.getTime(), durationMin: 60, text })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
