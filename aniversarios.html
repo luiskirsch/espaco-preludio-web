@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aniversariantes · Espaço Prelúdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-12">
+</head>
+<body>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html">Consultas</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./pacientes.html">Pacientes</a>
+      <a href="./financeiro.html">Financeiro</a>
+      <a href="./clinica.html">Clínica</a>
+      <a href="./inventario.html">Estoque</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./calculadora.html">Calculadora</a>
+      <a href="./documento.html?tipo=atestado">Atestado</a>
+      <a href="./whatsapp.html">WhatsApp</a>
+      <a href="./suporte.html">Suporte</a>
+      <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
+        <span class="ep-nav-avatar" id="topUserAvatar">·</span>
+        <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
+      </a>
+      <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16" style="max-width: 760px;">
+
+  <section class="ep-stack">
+    <div class="ep-flex--end-wrap ep-flex">
+      <div>
+        <div class="ep-eyebrow">Carinho automático</div>
+        <h1 class="ep-h1 ep-mt-12">Aniversariantes</h1>
+        <p class="ep-text-muted ep-mt-8 ep-mt-0">
+          E-mail automático no aniversário do paciente — assinado por você. Carinho do dia, sem você precisar lembrar.
+        </p>
+      </div>
+      <button id="newEntryBtn" type="button" class="ep-btn ep-btn--primary ep-btn--lg">+ Adicionar</button>
+    </div>
+
+    <div class="ep-alert ep-mt-16" style="background: rgba(215,176,107,0.08); border-color: var(--ep-gold-line); color: #6a4d18;">
+      <strong>LGPD:</strong> só cadastre pacientes que <strong>autorizaram</strong> receber e-mail de aniversário. O paciente é informado no rodapé do e-mail que pode pedir pra parar.
+    </div>
+
+    <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando…</div>
+
+    <div id="entryList" class="ep-session-list ep-mt-16 ep-hide"></div>
+
+    <div id="emptyState" class="ep-empty ep-mt-16 ep-hide">
+      <h3 class="ep-h3">Nenhum aniversário cadastrado.</h3>
+      <p class="ep-text-muted ep-mt-8" style="margin: 0;">
+        Adicione um paciente com nome, e-mail e data de nascimento.
+      </p>
+      <button class="ep-btn ep-btn--primary ep-mt-16" type="button" id="emptyCta">Adicionar primeiro</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- Modal: criar/editar -->
+<div class="ep-modal" id="entryModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel">
+    <h3 class="ep-modal__title" id="entryModalTitle">Adicionar aniversariante</h3>
+    <p class="ep-modal__sub">Só o mês e dia são guardados — o ano não importa, pra preservar privacidade.</p>
+
+    <form id="entryForm" class="ep-stack" style="padding: 0 28px;">
+      <div class="ep-field">
+        <label class="ep-label" for="entryPatientName">Nome do paciente</label>
+        <input id="entryPatientName" class="ep-input" type="text" maxlength="80" required>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="entryPatientEmail">E-mail</label>
+        <input id="entryPatientEmail" class="ep-input" type="email" maxlength="120" required placeholder="paciente@exemplo.com">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="entryBirthDate">Data de nascimento (dia e mês)</label>
+        <div class="ep-row">
+          <select id="entryBirthDay" class="ep-select" required></select>
+          <select id="entryBirthMonth" class="ep-select" required></select>
+        </div>
+      </div>
+      <div class="ep-status" id="entryStatus"></div>
+    </form>
+
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="entryCancelBtn">Voltar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="entrySaveBtn">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-2";
+  import { clearDek } from "./js/crypto.js";
+
+  const ctx = await requireTherapist({ requireDek: false });
+  const { idToken } = ctx;
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    clearDek();
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
+
+  const $ = id => document.getElementById(id);
+  const loadingBanner = $("loadingBanner");
+  const entryList     = $("entryList");
+  const emptyState    = $("emptyState");
+
+  let allEntries = [];
+
+  const MONTHS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+
+  function escapeHtml(s) { return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+  function fmtMMDD(mmdd) {
+    if (!mmdd || mmdd.length !== 4) return "—";
+    return `${parseInt(mmdd.slice(2,4),10)} de ${MONTHS[parseInt(mmdd.slice(0,2),10)-1].toLowerCase()}`;
+  }
+  function daysUntil(mmdd) {
+    const today = new Date();
+    const m = parseInt(mmdd.slice(0,2),10) - 1;
+    const d = parseInt(mmdd.slice(2,4),10);
+    let next = new Date(today.getFullYear(), m, d);
+    next.setHours(0,0,0,0);
+    const t0 = new Date(); t0.setHours(0,0,0,0);
+    if (next < t0) next = new Date(today.getFullYear()+1, m, d);
+    return Math.ceil((next - t0) / 86_400_000);
+  }
+  function daysHint(mmdd) {
+    const n = daysUntil(mmdd);
+    if (n === 0) return "🎉 hoje!";
+    if (n === 1) return "amanhã";
+    if (n < 7)  return `em ${n} dias`;
+    if (n < 30) return `em ${n} dias`;
+    return `em ${Math.round(n / 30)} ${n < 60 ? "mês" : "meses"}`;
+  }
+
+  function renderList() {
+    if (allEntries.length === 0) {
+      entryList.classList.add("ep-hide");
+      emptyState.classList.remove("ep-hide");
+      return;
+    }
+    emptyState.classList.add("ep-hide");
+    entryList.classList.remove("ep-hide");
+    entryList.innerHTML = allEntries.map(e => `
+      <article class="ep-session">
+        <div>
+          <div class="ep-session__name">${escapeHtml(e.patientName)}</div>
+          <div class="ep-session__meta">
+            <span class="ep-badge ep-badge--warn">${fmtMMDD(e.birthMonthDay)}</span>
+            <span>· ${daysHint(e.birthMonthDay)}</span>
+            <span>· ${escapeHtml(e.patientEmail)}</span>
+            ${e.lastSentAt ? `<span>· último envio: ${new Date(e.lastSentAt).toLocaleDateString("pt-BR")}</span>` : ""}
+          </div>
+        </div>
+        <div class="ep-session__actions">
+          <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-action="edit" data-id="${e.optinId}">Editar</button>
+          <button type="button" class="ep-btn ep-btn--danger ep-btn--sm" data-action="delete" data-id="${e.optinId}">Remover</button>
+        </div>
+      </article>
+    `).join("");
+
+    entryList.querySelectorAll("button[data-action]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.id;
+        if (btn.dataset.action === "edit") {
+          openEntryModal(allEntries.find(x => x.optinId === id));
+        } else {
+          deleteEntry(id);
+        }
+      });
+    });
+  }
+
+  async function loadList() {
+    loadingBanner.classList.remove("ep-hide");
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/aniversarios`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      allEntries = data.items || [];
+      loadingBanner.classList.add("ep-hide");
+      renderList();
+    } catch (e) {
+      loadingBanner.textContent = "Erro ao carregar: " + (e?.message || "desconhecido");
+      loadingBanner.className = "ep-alert ep-alert--danger";
+    }
+  }
+
+  async function deleteEntry(optinId) {
+    if (!confirm("Remover da lista de aniversariantes?")) return;
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/aniversarios/${encodeURIComponent(optinId)}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      await loadList();
+    } catch (e) {
+      alert("Erro ao remover: " + (e?.message || "desconhecido"));
+    }
+  }
+
+  // ─── Modal ────────────────────────────────────────────────────────────
+  const entryModal = $("entryModal");
+  const dayEl   = $("entryBirthDay");
+  const monthEl = $("entryBirthMonth");
+
+  // Popula selects de dia (1-31) e mês (1-12).
+  for (let d = 1; d <= 31; d++) {
+    const o = document.createElement("option");
+    o.value = String(d).padStart(2,"0");
+    o.textContent = d;
+    dayEl.appendChild(o);
+  }
+  MONTHS.forEach((name, idx) => {
+    const o = document.createElement("option");
+    o.value = String(idx+1).padStart(2,"0");
+    o.textContent = name;
+    monthEl.appendChild(o);
+  });
+
+  let editingId = null;
+  function openEntryModal(entry) {
+    editingId = entry?.optinId || null;
+    $("entryModalTitle").textContent = editingId ? "Editar aniversariante" : "Adicionar aniversariante";
+    $("entryPatientName").value  = entry?.patientName  || "";
+    $("entryPatientEmail").value = entry?.patientEmail || "";
+    if (entry?.birthMonthDay) {
+      monthEl.value = entry.birthMonthDay.slice(0,2);
+      dayEl.value   = entry.birthMonthDay.slice(2,4);
+    } else {
+      monthEl.value = "01";
+      dayEl.value   = "01";
+    }
+    $("entryStatus").textContent = "";
+    $("entryStatus").className   = "ep-status";
+    entryModal.classList.add("is-open");
+  }
+  $("newEntryBtn").addEventListener("click", () => openEntryModal(null));
+  $("emptyCta").addEventListener("click", () => openEntryModal(null));
+  $("entryCancelBtn").addEventListener("click", () => entryModal.classList.remove("is-open"));
+
+  $("entrySaveBtn").addEventListener("click", async () => {
+    const patientName  = $("entryPatientName").value.trim();
+    const patientEmail = $("entryPatientEmail").value.trim();
+    const birthMonthDay = monthEl.value + dayEl.value;
+    const status = $("entryStatus");
+
+    if (!patientName) {
+      status.textContent = "Nome é obrigatório.";
+      status.classList.add("is-err");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patientEmail)) {
+      status.textContent = "E-mail inválido.";
+      status.classList.add("is-err");
+      return;
+    }
+    const btn = $("entrySaveBtn");
+    btn.disabled = true;
+    status.className = "ep-status";
+    status.textContent = "Salvando…";
+    try {
+      const url = editingId
+        ? `${BACKEND_BASE_URL}/therapy/aniversarios/${encodeURIComponent(editingId)}`
+        : `${BACKEND_BASE_URL}/therapy/aniversarios`;
+      const method = editingId ? "PATCH" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ patientName, patientEmail, birthMonthDay })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      entryModal.classList.remove("is-open");
+      await loadList();
+    } catch (e) {
+      status.textContent = "Erro: " + (e?.message || "desconhecido");
+      status.classList.add("is-err");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  await loadList();
+</script>
+
+</body>
+</html>
