@@ -7,6 +7,26 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/f
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
 import { recallDek } from "./crypto.js";
 
+// ─── 2FA session ─────────────────────────────────────────────────────
+const TWOFA_KEY = "ep:twofa-session";
+const TWOFA_TTL_MS = 8 * 60 * 60 * 1000;
+
+export function hasValid2faSession() {
+  try {
+    const raw = sessionStorage.getItem(TWOFA_KEY);
+    if (!raw) return false;
+    const entry = JSON.parse(raw);
+    if (!entry?.token || !entry?.savedAt) return false;
+    return (Date.now() - entry.savedAt) < TWOFA_TTL_MS;
+  } catch { return false; }
+}
+export function save2faSession(token) {
+  try { sessionStorage.setItem(TWOFA_KEY, JSON.stringify({ token, savedAt: Date.now() })); } catch {}
+}
+export function clear2faSession() {
+  try { sessionStorage.removeItem(TWOFA_KEY); } catch {}
+}
+
 export function authReady() {
   return new Promise((resolve) => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -226,6 +246,15 @@ export async function requireTherapist({ requireDek = true } = {}) {
       window.location.href = "./login.html?error=" + encodeURIComponent(profile.code);
     }
     throw new Error(profile.code);
+  }
+
+  // 2FA gate.
+  if (profile.therapist?.twoFactorEnabled && !arguments[0]?.skip2fa) {
+    if (!hasValid2faSession()) {
+      const redirect = encodeURIComponent(location.pathname + location.search);
+      window.location.href = "./2fa-verify.html?redirect=" + redirect;
+      throw new Error("TWOFA_REQUIRED");
+    }
   }
 
   // Aplica visibilidade baseada nas capabilities do conselho — esconde

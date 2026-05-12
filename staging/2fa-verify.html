@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificação 2FA · Espaço Prelúdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-13">
+  <style>
+    body { background: var(--ep-bg); min-height: 100vh; }
+    .twofa-shell { max-width: 460px; margin: 0 auto; padding: 64px 24px; }
+    .twofa-card {
+      background: var(--ep-surface);
+      border: 1px solid var(--ep-line);
+      border-radius: var(--ep-radius-lg);
+      padding: 36px 32px;
+      box-shadow: var(--ep-shadow-soft);
+    }
+    .twofa-code-input {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: 8px;
+      text-align: center;
+      padding: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<div class="twofa-shell">
+  <div style="text-align: center; margin-bottom: 24px;">
+    <a href="./painel.html" style="text-decoration: none; color: var(--ep-ink); font-family: var(--ep-font-serif); font-weight: 600; font-size: 18px;">Espaço Prelúdio</a>
+  </div>
+
+  <div class="twofa-card">
+    <div class="ep-eyebrow" style="color: var(--ep-accent);">Verificação em 2 etapas</div>
+    <h1 style="font-family: var(--ep-font-serif); font-size: 24px; font-weight: 600; margin: 12px 0 14px; letter-spacing: -0.01em;">
+      Digite seu código
+    </h1>
+    <p class="ep-text-muted" style="margin: 0 0 24px; font-size: 14px;">
+      Abra seu app de autenticador (Google Authenticator, Authy, 1Password) e digite o código de 6 dígitos.
+    </p>
+
+    <input id="codeInput" class="ep-input twofa-code-input" type="text" inputmode="numeric"
+           autocomplete="one-time-code" maxlength="6" placeholder="••••••" autofocus>
+
+    <div class="ep-status" id="status"></div>
+
+    <button id="verifyBtn" type="button" class="ep-btn ep-btn--primary ep-btn--block ep-mt-16" disabled>Verificar</button>
+
+    <p class="ep-text-xs ep-text-muted ep-mt-16 ep-text-center" style="margin-bottom: 0;">
+      Perdeu acesso ao app? <a href="mailto:contato@preludiojogos.com.br?subject=Recuperar%20acesso%202FA" style="color: var(--ep-accent);">Fale com o suporte</a>
+    </p>
+  </div>
+
+  <div class="ep-text-xs ep-text-muted ep-text-center ep-mt-16">
+    <button type="button" id="logoutBtn" style="background: none; border: none; color: var(--ep-ink-2); font-size: 12px; cursor: pointer; text-decoration: underline;">
+      Sair desta conta
+    </button>
+  </div>
+</div>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { authReady, save2faSession, clear2faSession } from "./js/auth-guard.js?v=3-13";
+  import { clearDek } from "./js/crypto.js";
+
+  const user = await authReady();
+  if (!user) { window.location.href = "./login.html"; throw new Error("NOT_AUTH"); }
+
+  const params = new URLSearchParams(location.search);
+  const redirect = params.get("redirect") || "./painel.html";
+
+  const codeEl = document.getElementById("codeInput");
+  const btnEl  = document.getElementById("verifyBtn");
+  const stEl   = document.getElementById("status");
+
+  codeEl.addEventListener("input", () => {
+    codeEl.value = codeEl.value.replace(/\D/g, "").slice(0, 6);
+    btnEl.disabled = codeEl.value.length !== 6;
+    if (codeEl.value.length === 6) btnEl.focus();
+  });
+  codeEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && codeEl.value.length === 6) verify();
+  });
+
+  async function verify() {
+    const code = codeEl.value.trim();
+    if (!/^\d{6}$/.test(code)) return;
+    btnEl.disabled = true;
+    stEl.className = "ep-status";
+    stEl.textContent = "Verificando…";
+
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/2fa/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ code })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
+      save2faSession(data.sessionToken);
+      window.location.href = redirect;
+    } catch (e) {
+      stEl.textContent = e.message === "CODIGO_INCORRETO"
+        ? "Código incorreto. Tente o próximo (códigos mudam a cada 30s)."
+        : "Erro: " + (e?.message || "desconhecido");
+      stEl.classList.add("is-err");
+      btnEl.disabled = false;
+      codeEl.select();
+    }
+  }
+
+  btnEl.addEventListener("click", verify);
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    clear2faSession();
+    clearDek();
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
+</script>
+
+</body>
+</html>
