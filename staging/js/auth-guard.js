@@ -162,19 +162,25 @@ function applyCapabilityVisibility(capabilities) {
 // Preenche o slot de perfil no topbar — avatar circular + nome clicável.
 // O <a id="topProfileLink"> é o link pra perfil.html. Se a página não tiver
 // o markup (ex.: páginas públicas), no-op silencioso.
-function applyTopUserSlot(therapist) {
+//
+// Foto: vem como data URL construída a partir de therapist.photoBase64 +
+// therapist.photoMime (armazenamento inline no Firestore). Fallback pra
+// iniciais quando não tem foto.
+export function applyTopUserSlot(therapist) {
   const name = (therapist?.displayName || "").trim();
   const elName   = document.getElementById("topUserName");
   const elAvatar = document.getElementById("topUserAvatar");
   if (elName) elName.textContent = name || "Perfil";
   if (elAvatar) {
-    const photo = therapist?.photoUrl || "";
-    if (photo) {
-      elAvatar.style.backgroundImage = `url(${CSS.escape(photo)})`;
+    const photoBase64 = therapist?.photoBase64 || "";
+    const photoMime   = therapist?.photoMime   || "image/jpeg";
+    if (photoBase64) {
+      elAvatar.style.backgroundImage = `url(data:${photoMime};base64,${photoBase64})`;
       elAvatar.style.backgroundSize = "cover";
       elAvatar.style.backgroundPosition = "center";
       elAvatar.textContent = "";
     } else {
+      elAvatar.style.backgroundImage = "";
       const initials = (name.match(/\b\p{L}/gu) || []).slice(0, 2).join("").toUpperCase() || "·";
       elAvatar.textContent = initials;
     }

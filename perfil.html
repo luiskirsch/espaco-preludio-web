@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-0">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-1">
 </head>
 <body>
 
@@ -210,6 +210,26 @@
         </div>
       </section>
 
+      <!-- Foto de perfil -->
+      <section class="ep-receita-form">
+        <h2 class="ep-h3 ep-mt-0">Foto de perfil</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Aparece no topo do painel (avatar circular) e nas comunicações com pacientes. PNG, JPEG ou WebP até 5 MB — redimensionamos pra 256×256 antes de salvar.
+        </p>
+
+        <div class="ep-flex" style="gap: 18px; align-items: center; margin-top: 12px;">
+          <div id="photoPreview" class="ep-photo-preview" aria-label="Pré-visualização da foto de perfil">
+            <span id="photoInitials">·</span>
+            <img id="photoImg" alt="Foto" style="display:none;">
+          </div>
+          <div class="ep-field" style="flex: 1;">
+            <label class="ep-label" for="photoFile">Selecionar foto</label>
+            <input id="photoFile" class="ep-input" type="file" accept="image/png,image/jpeg,image/webp">
+            <button type="button" class="ep-btn ep-btn--ghost ep-btn--xs ep-mt-8 ep-hide" id="removePhotoBtn">Remover foto</button>
+          </div>
+        </div>
+      </section>
+
       <!-- Logo -->
       <section class="ep-receita-form">
         <h2 class="ep-h3 ep-mt-0">Logo do consultório (opcional)</h2>
@@ -246,7 +266,7 @@
 
 <script type="module">
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist, invalidateProfileCache } from "./js/auth-guard.js?v=3-0";
+  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-1";
 
   const ctx = await requireTherapist({ requireDek: false });
   const { idToken, therapist } = ctx;
@@ -375,8 +395,90 @@
       $("logoPreview").classList.remove("ep-hide");
       pendingLogo = { base64: t.logoBase64, mime: t.logoMime, dirty: false };
     }
+
+    // Foto de perfil — mesma lógica da logo.
+    renderPhotoPreview(t.photoBase64 || "", t.photoMime || "", t.displayName || "");
+    if (t.photoBase64) pendingPhoto = { base64: t.photoBase64, mime: t.photoMime, dirty: false };
   }
   applyTherapist(therapist);
+
+  // ─── Foto de perfil ──────────────────────────────────────────────────
+  let pendingPhoto = null; // { base64, mime, dirty: bool, removed: bool }
+
+  function renderPhotoPreview(base64, mime, name) {
+    const img = $("photoImg");
+    const initials = $("photoInitials");
+    const removeBtn = $("removePhotoBtn");
+    if (base64) {
+      img.src = `data:${mime || "image/jpeg"};base64,${base64}`;
+      img.style.display = "block";
+      initials.style.display = "none";
+      removeBtn.classList.remove("ep-hide");
+    } else {
+      img.style.display = "none";
+      img.src = "";
+      const inits = ((name || "").match(/\b\p{L}/gu) || []).slice(0, 2).join("").toUpperCase() || "·";
+      initials.textContent = inits;
+      initials.style.display = "inline";
+      removeBtn.classList.add("ep-hide");
+    }
+  }
+
+  // Redimensiona pra 256x256 (quadrado, crop centralizado) e devolve
+  // { base64, mime: "image/jpeg" } com qualidade 0.85. JPEG sempre (menor que PNG
+  // pra fotografias). Reduz ~3MB → ~30KB.
+  function resizePhotoToSquare(file, size = 256, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const min = Math.min(img.width, img.height);
+          const sx = (img.width  - min) / 2;
+          const sy = (img.height - min) / 2;
+          const canvas = document.createElement("canvas");
+          canvas.width = canvas.height = size;
+          const ctx = canvas.getContext("2d");
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+          const dataUrl = canvas.toDataURL("image/jpeg", quality);
+          const comma = dataUrl.indexOf(",");
+          if (comma < 0) return reject(new Error("FORMATO_INVALIDO"));
+          resolve({ base64: dataUrl.slice(comma + 1), mime: "image/jpeg" });
+        };
+        img.onerror = () => reject(new Error("IMAGEM_INVALIDA"));
+        img.src = String(reader.result || "");
+      };
+      reader.onerror = () => reject(reader.error || new Error("LEITURA_FALHOU"));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  $("photoFile").addEventListener("change", async () => {
+    const file = $("photoFile").files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setStatus("Foto grande demais (limite 5 MB).", "err");
+      $("photoFile").value = "";
+      return;
+    }
+    setStatus("Processando foto…");
+    try {
+      const { base64, mime } = await resizePhotoToSquare(file);
+      pendingPhoto = { base64, mime, dirty: true, removed: false };
+      renderPhotoPreview(base64, mime, $("displayName").value);
+      setStatus("");
+    } catch (e) {
+      console.error("photo_resize_error", e);
+      setStatus("Não foi possível processar a foto.", "err");
+    }
+  });
+
+  $("removePhotoBtn").addEventListener("click", () => {
+    pendingPhoto = { base64: "", mime: "", dirty: true, removed: true };
+    renderPhotoPreview("", "", $("displayName").value);
+    $("photoFile").value = "";
+  });
 
   // ─── Logo upload ─────────────────────────────────────────────────────
   let pendingLogo = null; // { base64, mime, dirty: bool, removed: bool }
@@ -443,6 +545,16 @@
       }
     }
 
+    if (pendingPhoto && pendingPhoto.dirty) {
+      if (pendingPhoto.removed) {
+        body.photoBase64 = "";
+        body.photoMime   = "";
+      } else {
+        body.photoBase64 = pendingPhoto.base64;
+        body.photoMime   = pendingPhoto.mime;
+      }
+    }
+
     if (!body.displayName) {
       setStatus("Nome é obrigatório.", "err");
       $("saveBtn").disabled = false;
@@ -462,6 +574,14 @@
         return;
       }
       invalidateProfileCache();
+      // Atualiza o avatar do topbar na hora (sem reload).
+      applyTopUserSlot({
+        displayName: body.displayName,
+        photoBase64: pendingPhoto?.removed ? "" : (pendingPhoto?.base64 ?? therapist.photoBase64),
+        photoMime:   pendingPhoto?.removed ? "" : (pendingPhoto?.mime   ?? therapist.photoMime)
+      });
+      if (pendingPhoto) pendingPhoto.dirty = false;
+      if (pendingLogo)  pendingLogo.dirty  = false;
       setStatus("Perfil atualizado.", "ok");
       $("saveBtn").disabled = false;
     } catch (e) {
