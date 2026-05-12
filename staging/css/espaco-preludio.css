@@ -846,14 +846,19 @@ h3.ep-h3 {
   flex: 1 1 auto;
   min-height: 0;
 }
-/* Actions sempre visíveis no rodapé do modal (não rolam). */
+/* Actions sempre visíveis no rodapé do modal (não rolam). flex-wrap permite
+   que modais com muitos botões (ex.: popover de sessão na agenda com 5 ações)
+   quebrem pra linha de baixo em vez de transbordar a largura do painel. */
 .ep-modal__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   justify-content: flex-end;
   padding: 18px 28px 24px;
   border-top: 1px solid var(--ep-line);
   background: var(--ep-surface);
+  border-bottom-left-radius: var(--ep-radius-lg);
+  border-bottom-right-radius: var(--ep-radius-lg);
   flex-shrink: 0;
 }
 /* Quando o modal tem só título + actions (sem corpo), tira border-top. */
