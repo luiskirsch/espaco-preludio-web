@@ -511,8 +511,12 @@
       renderTransactions(allTransactions);
     } catch (error) {
       console.error("load_financial_error", error);
-      loadingBanner.textContent = "Erro ao carregar: " + (error?.message || "desconhecido");
+      const human = error?.message === "ERRO_INTERNO"
+        ? "Algo deu errado no servidor. Tente novamente em alguns segundos."
+        : `Erro ao carregar: ${error?.message || "desconhecido"}`;
+      loadingBanner.innerHTML = `${human} <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" style="margin-left: 12px;" id="retryLoadBtn">Tentar de novo</button>`;
       loadingBanner.className = "ep-alert ep-alert--danger";
+      document.getElementById("retryLoadBtn")?.addEventListener("click", () => loadFinancial());
     }
   }
 
