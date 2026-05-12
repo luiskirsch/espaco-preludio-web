@@ -1,0 +1,578 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estoque · Espaço Prelúdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-88">
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html">Consultas</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./pacientes.html">Pacientes</a>
+      <a href="./financeiro.html">Financeiro</a>
+      <a href="./inventario.html" class="is-active">Estoque</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./documento.html?tipo=atestado">Atestado</a>
+      <a href="./perfil.html">Perfil</a>
+      <span id="topUserName" class="ep-text-sm ep-text-muted">&nbsp;</span>
+      <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16">
+
+  <section class="ep-stack">
+    <div class="ep-flex--end-wrap ep-flex">
+      <div>
+        <div class="ep-eyebrow">Controle de estoque</div>
+        <h1 class="ep-h1 ep-mt-12">Seus materiais</h1>
+        <p class="ep-text-muted ep-mt-8 ep-mt-0">
+          Cadastre os itens que você usa no consultório e registre entradas e saídas.
+        </p>
+      </div>
+      <button id="newItemBtn" type="button" class="ep-btn ep-btn--primary ep-btn--lg">+ Novo item</button>
+    </div>
+
+    <!-- Banner de baixo estoque (só aparece se houver itens) -->
+    <div id="lowStockBanner" class="ep-alert ep-mt-16 ep-hide" style="background: var(--ep-gold-soft); border-color: var(--ep-gold-line); color: var(--ep-warn);">
+      <strong id="lowStockTitle">—</strong>
+      <span id="lowStockSub">—</span>
+    </div>
+
+    <div class="ep-mt-16">
+      <div class="ep-flex ep-gap-8" style="flex-wrap: wrap; align-items: center;">
+        <input id="searchInput" class="ep-input" type="text" placeholder="Buscar por nome…" style="max-width: 280px;">
+        <select id="categoryFilter" class="ep-select" aria-label="Filtrar por categoria">
+          <option value="">Todas as categorias</option>
+        </select>
+        <label class="ep-flex" style="gap: 6px; align-items: center; cursor: pointer;">
+          <input type="checkbox" id="lowStockOnly"> <span class="ep-text-sm">Só baixo estoque</span>
+        </label>
+      </div>
+
+      <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando itens…</div>
+      <div id="itemList" class="ep-session-list ep-mt-16 ep-hide"></div>
+      <div id="emptyState" class="ep-empty ep-mt-16 ep-hide">
+        <h3 class="ep-h3">Nenhum item no estoque ainda.</h3>
+        <p class="ep-text-muted ep-mt-8" style="margin: 0;">
+          Cadastre o primeiro material — eletrodos, ataduras, amostras de suplemento, testes, etc.
+        </p>
+        <button class="ep-btn ep-btn--primary ep-mt-16" type="button" id="emptyCta">Cadastrar primeiro item</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Modal: Novo / editar item -->
+<div class="ep-modal" id="itemModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel">
+    <h3 class="ep-modal__title" id="itemModalTitle">Novo item</h3>
+    <p class="ep-modal__sub">
+      Cadastre um material do consultório. Saldo só muda via entradas/saídas — preserva o histórico.
+    </p>
+
+    <form id="itemForm" class="ep-stack" novalidate>
+      <div class="ep-field">
+        <label class="ep-label" for="itemName">Nome *</label>
+        <input id="itemName" class="ep-input" type="text" maxlength="100" placeholder="Ex.: Eletrodo descartável" required>
+      </div>
+      <div class="ep-row">
+        <div class="ep-field">
+          <label class="ep-label" for="itemCategory">Categoria</label>
+          <input id="itemCategory" class="ep-input" type="text" maxlength="50" placeholder="Ex.: Eletro" list="categoryDatalist">
+          <datalist id="categoryDatalist"></datalist>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="itemUnit">Unidade *</label>
+          <select id="itemUnit" class="ep-select" required>
+            <option value="unidade">Unidade</option>
+            <option value="caixa">Caixa</option>
+            <option value="kg">Quilograma (kg)</option>
+            <option value="g">Grama (g)</option>
+            <option value="litro">Litro</option>
+            <option value="ml">Mililitro (ml)</option>
+            <option value="metro">Metro</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+      </div>
+      <div class="ep-row">
+        <div class="ep-field" id="initialStockField">
+          <label class="ep-label" for="itemInitialStock">Estoque inicial</label>
+          <input id="itemInitialStock" class="ep-input" type="number" min="0" step="1" value="0">
+          <p class="ep-text-xs ep-text-muted ep-mt-0">Cria movimento "Saldo inicial" automaticamente.</p>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="itemMinStock">Alerta de estoque baixo</label>
+          <input id="itemMinStock" class="ep-input" type="number" min="0" step="1" value="0">
+          <p class="ep-text-xs ep-text-muted ep-mt-0">0 desativa o alerta.</p>
+        </div>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="itemDescription">Descrição (opcional)</label>
+        <input id="itemDescription" class="ep-input" type="text" maxlength="300" placeholder="Marca, fornecedor, etc.">
+      </div>
+      <div class="ep-status" id="itemStatusMsg"></div>
+    </form>
+
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="cancelItemBtn">Cancelar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="saveItemBtn">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Entrada / saída -->
+<div class="ep-modal" id="movModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel">
+    <h3 class="ep-modal__title" id="movModalTitle">Movimentação</h3>
+    <p class="ep-modal__sub" id="movModalSub">—</p>
+
+    <form id="movForm" class="ep-stack" novalidate>
+      <div class="ep-row">
+        <div class="ep-field">
+          <label class="ep-label" for="movType">Tipo *</label>
+          <select id="movType" class="ep-select" required>
+            <option value="entrada">Entrada (adicionar)</option>
+            <option value="saida">Saída (remover)</option>
+          </select>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="movQuantity">Quantidade *</label>
+          <input id="movQuantity" class="ep-input" type="number" min="1" step="1" value="1" required>
+        </div>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="movDate">Data</label>
+        <input id="movDate" class="ep-input" type="date">
+        <p class="ep-text-xs ep-text-muted ep-mt-0">Em branco usa hoje.</p>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="movReason">Motivo (opcional)</label>
+        <input id="movReason" class="ep-input" type="text" maxlength="200" placeholder="Ex.: Compra Fornecedor X / Uso na sessão">
+      </div>
+      <div class="ep-status" id="movStatusMsg"></div>
+    </form>
+
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="cancelMovBtn">Cancelar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="saveMovBtn">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Histórico de movimentações -->
+<div class="ep-modal" id="historyModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 640px;">
+    <h3 class="ep-modal__title" id="historyTitle">Histórico</h3>
+    <p class="ep-modal__sub" id="historySub">—</p>
+    <div id="historyList" class="ep-stack"></div>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--primary" id="closeHistoryBtn">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js?v=2-82";
+  import { clearDek } from "./js/crypto.js";
+
+  // ─── Boot ───────────────────────────────────────────────────
+  const session = await requireTherapist({ requireDek: false });
+  const { user, idToken, therapist } = session;
+  const uid = user.uid;
+  document.getElementById("topUserName").textContent = therapist.displayName || "";
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    clearDek();
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
+
+  // ─── Helpers ───────────────────────────────────────────────────
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    }[c]));
+  }
+  function fmtDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  }
+  function isoDateInput(ms) {
+    if (!ms) return "";
+    const d = new Date(ms);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+  function parseDateInput(str) {
+    if (!str) return null;
+    const [y, m, day] = str.split("-").map(Number);
+    if (!y || !m || !day) return null;
+    return new Date(y, m - 1, day, 12, 0, 0).getTime();
+  }
+  function unitLabel(unit) {
+    return ({
+      "unidade": "un.", "caixa": "cx.", "kg": "kg", "g": "g",
+      "litro": "L", "ml": "mL", "metro": "m", "outro": ""
+    }[unit] || unit);
+  }
+  function isLowStock(item) {
+    return item && typeof item.minStock === "number" && item.minStock > 0 && (item.currentStock || 0) <= item.minStock;
+  }
+
+  // ─── Estado ────────────────────────────────────────────────────
+  let allItems = [];
+
+  // ─── Carregamento ──────────────────────────────────────────────
+  const loadingBanner = document.getElementById("loadingBanner");
+  const itemList      = document.getElementById("itemList");
+  const emptyState    = document.getElementById("emptyState");
+
+  async function loadItems() {
+    loadingBanner.classList.remove("ep-hide");
+    itemList.classList.add("ep-hide");
+    emptyState.classList.add("ep-hide");
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/inventario/itens`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+      allItems = data.items || [];
+      populateCategoryDatalist();
+      renderAll();
+    } catch (error) {
+      console.error("load_inventory_error", error);
+      const human = error?.message === "ERRO_INTERNO"
+        ? "Algo deu errado no servidor. Tente novamente em alguns segundos."
+        : `Erro ao carregar: ${error?.message || "desconhecido"}`;
+      loadingBanner.innerHTML = `${human} <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" style="margin-left: 12px;" id="retryBtn">Tentar de novo</button>`;
+      loadingBanner.className = "ep-alert ep-alert--danger";
+      document.getElementById("retryBtn")?.addEventListener("click", () => loadItems());
+    }
+  }
+
+  function populateCategoryDatalist() {
+    const cats = [...new Set(allItems.map(i => i.category).filter(Boolean))].sort();
+    const dl = document.getElementById("categoryDatalist");
+    dl.innerHTML = cats.map(c => `<option value="${escapeHtml(c)}"></option>`).join("");
+    const sel = document.getElementById("categoryFilter");
+    while (sel.options.length > 1) sel.remove(1);
+    for (const c of cats) {
+      const opt = document.createElement("option");
+      opt.value = c; opt.textContent = c;
+      sel.appendChild(opt);
+    }
+  }
+
+  function renderAll() {
+    loadingBanner.classList.add("ep-hide");
+
+    // Banner de baixo estoque
+    const low = allItems.filter(isLowStock);
+    const banner = document.getElementById("lowStockBanner");
+    if (low.length > 0) {
+      banner.classList.remove("ep-hide");
+      document.getElementById("lowStockTitle").textContent = low.length === 1
+        ? "1 item em estoque baixo."
+        : `${low.length} itens em estoque baixo.`;
+      document.getElementById("lowStockSub").textContent = low.map(i => i.name).slice(0, 5).join(", ") + (low.length > 5 ? "…" : "");
+    } else {
+      banner.classList.add("ep-hide");
+    }
+
+    // Aplica filtros locais
+    const search = document.getElementById("searchInput").value.trim().toLowerCase();
+    const catFilter = document.getElementById("categoryFilter").value;
+    const lowOnly = document.getElementById("lowStockOnly").checked;
+    const filtered = allItems.filter(i => {
+      if (lowOnly && !isLowStock(i)) return false;
+      if (catFilter && i.category !== catFilter) return false;
+      if (search && !i.name.toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      itemList.classList.add("ep-hide");
+      if (allItems.length === 0) {
+        emptyState.classList.remove("ep-hide");
+      } else {
+        // Tem itens mas nenhum bate com o filtro
+        itemList.innerHTML = "";
+        itemList.classList.remove("ep-hide");
+        itemList.innerHTML = `<div class="ep-empty"><h3 class="ep-h3">Nenhum item bate com os filtros.</h3></div>`;
+      }
+      return;
+    }
+
+    emptyState.classList.add("ep-hide");
+    itemList.innerHTML = "";
+    for (const item of filtered) {
+      itemList.appendChild(renderItem(item));
+    }
+    itemList.classList.remove("ep-hide");
+  }
+
+  function renderItem(item) {
+    const div = document.createElement("article");
+    div.className = "ep-session";
+    if (isLowStock(item)) div.classList.add("ep-session--active"); // marca lateral dourada
+    const stockLine = `<strong style="font-size: 18px;">${item.currentStock} ${unitLabel(item.unit)}</strong>`;
+    const lowBadge = isLowStock(item)
+      ? `<span class="ep-badge" style="background: var(--ep-gold-soft); color: var(--ep-warn); border-color: var(--ep-gold-line);">Baixo estoque (mín. ${item.minStock})</span>`
+      : "";
+    const catBadge = item.category
+      ? `<span class="ep-badge ep-badge--muted">${escapeHtml(item.category)}</span>`
+      : "";
+    div.innerHTML = `
+      <div>
+        <div class="ep-session__name">${escapeHtml(item.name)}</div>
+        <div class="ep-session__meta">
+          ${catBadge}
+          ${lowBadge}
+          ${item.description ? `<span>${escapeHtml(item.description)}</span>` : ""}
+        </div>
+      </div>
+      <div class="ep-session__actions" style="gap: 10px; align-items: center;">
+        ${stockLine}
+        <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="mov" data-id="${item.itemId}">Mov.</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="history" data-id="${item.itemId}">Hist.</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="edit" data-id="${item.itemId}">Editar</button>
+        <button class="ep-btn-icon" data-action="delete" data-id="${item.itemId}" aria-label="Arquivar" title="Arquivar">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+    `;
+    div._itemData = item;
+    return div;
+  }
+
+  await loadItems();
+
+  // Filtros re-renderizam localmente
+  document.getElementById("searchInput").addEventListener("input", renderAll);
+  document.getElementById("categoryFilter").addEventListener("change", renderAll);
+  document.getElementById("lowStockOnly").addEventListener("change", renderAll);
+
+  // ─── Modal: item (criar/editar) ────────────────────────────────
+  const itemModal = document.getElementById("itemModal");
+  const itemModalTitle = document.getElementById("itemModalTitle");
+  const itemName = document.getElementById("itemName");
+  const itemCategory = document.getElementById("itemCategory");
+  const itemUnit = document.getElementById("itemUnit");
+  const itemInitialStock = document.getElementById("itemInitialStock");
+  const itemMinStock = document.getElementById("itemMinStock");
+  const itemDescription = document.getElementById("itemDescription");
+  const initialStockField = document.getElementById("initialStockField");
+  const itemStatusMsg = document.getElementById("itemStatusMsg");
+  let editingItemId = null;
+
+  function openItemModal(item) {
+    editingItemId = item?.itemId || null;
+    itemModalTitle.textContent = editingItemId ? "Editar item" : "Novo item";
+    itemName.value = item?.name || "";
+    itemCategory.value = item?.category || "";
+    itemUnit.value = item?.unit || "unidade";
+    itemInitialStock.value = "0";
+    itemMinStock.value = item?.minStock ?? 0;
+    itemDescription.value = item?.description || "";
+    // Estoque inicial só na criação
+    initialStockField.style.display = editingItemId ? "none" : "";
+    itemStatusMsg.textContent = "";
+    itemStatusMsg.className = "ep-status";
+    itemModal.classList.add("is-open");
+  }
+  function closeItemModal() { itemModal.classList.remove("is-open"); editingItemId = null; }
+
+  document.getElementById("newItemBtn").addEventListener("click", () => openItemModal(null));
+  document.getElementById("emptyCta").addEventListener("click", () => openItemModal(null));
+  document.getElementById("cancelItemBtn").addEventListener("click", closeItemModal);
+  itemModal.addEventListener("click", (e) => { if (e.target === itemModal) closeItemModal(); });
+
+  document.getElementById("saveItemBtn").addEventListener("click", async () => {
+    const name = itemName.value.trim();
+    if (!name) { itemStatusMsg.textContent = "Nome é obrigatório."; itemStatusMsg.className = "ep-status is-err"; return; }
+    const body = {
+      name,
+      category: itemCategory.value.trim() || null,
+      unit: itemUnit.value,
+      minStock: Number(itemMinStock.value || 0),
+      description: itemDescription.value.trim() || null
+    };
+    if (!editingItemId) body.currentStock = Number(itemInitialStock.value || 0);
+
+    try {
+      const url = editingItemId
+        ? `${BACKEND_BASE_URL}/therapy/inventario/itens/${encodeURIComponent(editingItemId)}`
+        : `${BACKEND_BASE_URL}/therapy/inventario/itens`;
+      const method = editingItemId ? "PATCH" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+      closeItemModal();
+      await loadItems();
+    } catch (e) {
+      itemStatusMsg.textContent = "Erro ao salvar: " + e.message;
+      itemStatusMsg.className = "ep-status is-err";
+    }
+  });
+
+  // ─── Modal: movimentação ───────────────────────────────────────
+  const movModal = document.getElementById("movModal");
+  const movModalTitle = document.getElementById("movModalTitle");
+  const movModalSub = document.getElementById("movModalSub");
+  const movType = document.getElementById("movType");
+  const movQuantity = document.getElementById("movQuantity");
+  const movDate = document.getElementById("movDate");
+  const movReason = document.getElementById("movReason");
+  const movStatusMsg = document.getElementById("movStatusMsg");
+  let movItemId = null;
+
+  function openMovModal(item) {
+    movItemId = item.itemId;
+    movModalTitle.textContent = `Movimentação — ${item.name}`;
+    movModalSub.textContent = `Estoque atual: ${item.currentStock} ${unitLabel(item.unit)}`;
+    movType.value = "entrada";
+    movQuantity.value = "1";
+    movDate.value = isoDateInput(Date.now());
+    movReason.value = "";
+    movStatusMsg.textContent = "";
+    movStatusMsg.className = "ep-status";
+    movModal.classList.add("is-open");
+  }
+  function closeMovModal() { movModal.classList.remove("is-open"); movItemId = null; }
+
+  document.getElementById("cancelMovBtn").addEventListener("click", closeMovModal);
+  movModal.addEventListener("click", (e) => { if (e.target === movModal) closeMovModal(); });
+
+  document.getElementById("saveMovBtn").addEventListener("click", async () => {
+    const quantity = Number(movQuantity.value);
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      movStatusMsg.textContent = "Quantidade inválida."; movStatusMsg.className = "ep-status is-err"; return;
+    }
+    const body = {
+      itemId: movItemId,
+      type: movType.value,
+      quantity,
+      reason: movReason.value.trim() || null,
+      movDate: parseDateInput(movDate.value) || Date.now()
+    };
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/inventario/movimentos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        if (data.error === "ESTOQUE_INSUFICIENTE") {
+          throw new Error(`Estoque insuficiente. Atual: ${data.currentStock}, pediu: ${data.requested}.`);
+        }
+        throw new Error(data.error || ("HTTP_" + res.status));
+      }
+      closeMovModal();
+      await loadItems();
+    } catch (e) {
+      movStatusMsg.textContent = e.message;
+      movStatusMsg.className = "ep-status is-err";
+    }
+  });
+
+  // ─── Modal: histórico ──────────────────────────────────────────
+  const historyModal = document.getElementById("historyModal");
+  document.getElementById("closeHistoryBtn").addEventListener("click", () => historyModal.classList.remove("is-open"));
+  historyModal.addEventListener("click", (e) => { if (e.target === historyModal) historyModal.classList.remove("is-open"); });
+
+  async function openHistoryModal(item) {
+    document.getElementById("historyTitle").textContent = `Histórico — ${item.name}`;
+    document.getElementById("historySub").textContent = `Estoque atual: ${item.currentStock} ${unitLabel(item.unit)}`;
+    const listEl = document.getElementById("historyList");
+    listEl.innerHTML = "Carregando…";
+    historyModal.classList.add("is-open");
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/inventario/movimentos?itemId=${encodeURIComponent(item.itemId)}`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
+      const movs = data.movements || [];
+      if (movs.length === 0) {
+        listEl.innerHTML = `<p class="ep-text-muted">Sem movimentações ainda.</p>`;
+        return;
+      }
+      listEl.innerHTML = movs.map(m => {
+        const sign = m.type === "entrada" ? "+" : "−";
+        const color = m.type === "entrada" ? "var(--ep-ok)" : "var(--ep-danger)";
+        return `
+          <div class="ep-flex" style="justify-content: space-between; padding: 10px 12px; border: 1px solid var(--ep-line); border-radius: 8px;">
+            <div>
+              <strong style="color: ${color};">${sign} ${m.quantity} ${unitLabel(item.unit)}</strong>
+              ${m.reason ? `<span class="ep-text-sm ep-text-muted"> — ${escapeHtml(m.reason)}</span>` : ""}
+              <div class="ep-text-xs ep-text-muted">${fmtDate(m.movDate)}</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    } catch (e) {
+      listEl.innerHTML = `<p class="ep-text-muted">Erro: ${escapeHtml(e.message)}</p>`;
+    }
+  }
+
+  // ─── Lista: delegação de eventos ───────────────────────────────
+  itemList.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    const article = btn.closest(".ep-session");
+    const item = article?._itemData;
+    if (!item) return;
+    const action = btn.dataset.action;
+    if (action === "mov")     openMovModal(item);
+    else if (action === "history") openHistoryModal(item);
+    else if (action === "edit")    openItemModal(item);
+    else if (action === "delete") {
+      if (!confirm(`Arquivar "${item.name}"? O histórico de movimentações fica preservado.`)) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/inventario/itens/${encodeURIComponent(item.itemId)}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${idToken}` }
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+        await loadItems();
+      } catch (err) {
+        btn.disabled = false;
+        alert("Erro: " + err.message);
+      }
+    }
+  });
+</script>
+
+</body>
+</html>
