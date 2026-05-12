@@ -1,0 +1,603 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clínica · Espaço Prelúdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-90">
+  <style>
+    .ep-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--ep-line); margin-bottom: 24px; }
+    .ep-tab { padding: 12px 18px; font-weight: 500; color: var(--ep-ink-2); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; transition: color 120ms ease, border-color 120ms ease; font-family: var(--ep-font-sans); font-size: 14px; }
+    .ep-tab:hover { color: var(--ep-ink); }
+    .ep-tab.is-active { color: var(--ep-accent); border-bottom-color: var(--ep-accent); }
+    .ep-tab-panel { display: none; }
+    .ep-tab-panel.is-active { display: block; }
+    .ep-repasse-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    .ep-repasse-table th, .ep-repasse-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--ep-line); font-size: 13.5px; }
+    .ep-repasse-table th { color: var(--ep-ink-2); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .ep-repasse-table tbody tr:hover { background: var(--ep-bg-2); }
+    .ep-totals { background: var(--ep-gold-soft); border: 1px solid var(--ep-gold-line); border-radius: var(--ep-radius); padding: 18px 20px; margin-top: 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .ep-totals__label { color: var(--ep-ink-2); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .ep-totals__value { font-family: var(--ep-font-serif); font-size: 22px; font-weight: 500; margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html">Consultas</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./pacientes.html">Pacientes</a>
+      <a href="./financeiro.html">Financeiro</a>
+      <a href="./clinica.html" class="is-active">Clínica</a>
+      <a href="./inventario.html">Estoque</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./calculadora.html">Calculadora</a>
+      <a href="./documento.html?tipo=atestado">Atestado</a>
+      <a href="./perfil.html">Perfil</a>
+      <span id="topUserName" class="ep-text-sm ep-text-muted">&nbsp;</span>
+      <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16">
+
+  <!-- Bootstrap state: 3 caminhos -->
+  <div id="bootLoading" class="ep-alert">Carregando…</div>
+
+  <!-- Estado A: user não tem clínica nem é membro de nenhuma -->
+  <section id="emptyState" class="ep-hide ep-stack">
+    <div>
+      <div class="ep-eyebrow">Gestão multidisciplinar</div>
+      <h1 class="ep-h1 ep-mt-12">Clínica</h1>
+      <p class="ep-text-muted ep-mt-8 ep-mt-0">
+        Crie uma clínica pra cadastrar outros profissionais e calcular repasse automático,
+        ou aguarde um convite de outra clínica.
+      </p>
+    </div>
+    <div class="ep-card ep-mt-16" style="padding: 32px;">
+      <h2 class="ep-h2 ep-mt-0">Criar sua clínica</h2>
+      <p class="ep-text-muted ep-mt-8 ep-mt-0">
+        Você será o dono. Pode convidar profissionais por e-mail, definir repasse por % ou
+        valor fixo, e ver o relatório mensal do que cada um recebeu.
+      </p>
+      <form class="ep-stack ep-mt-16" id="createClinicForm">
+        <div class="ep-row">
+          <div class="ep-field">
+            <label class="ep-label" for="newClinicName">Nome da clínica *</label>
+            <input id="newClinicName" class="ep-input" type="text" maxlength="100" placeholder="Ex.: Espaço Vínculo" required>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="newClinicCnpj">CNPJ (opcional)</label>
+            <input id="newClinicCnpj" class="ep-input" type="text" maxlength="18" placeholder="00.000.000/0001-00">
+          </div>
+        </div>
+        <div class="ep-status" id="createClinicStatus"></div>
+        <button type="button" class="ep-btn ep-btn--primary ep-btn--lg" id="createClinicBtn">Criar clínica</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Estado B: user é dono -->
+  <section id="ownerView" class="ep-hide">
+    <div class="ep-flex--end-wrap ep-flex">
+      <div>
+        <div class="ep-eyebrow">Sua clínica</div>
+        <h1 class="ep-h1 ep-mt-12" id="clinicNameTitle">—</h1>
+        <p class="ep-text-muted ep-mt-8 ep-mt-0" id="clinicSubtitle">—</p>
+      </div>
+    </div>
+
+    <div class="ep-tabs ep-mt-24">
+      <button type="button" class="ep-tab is-active" data-tab="membros">Membros</button>
+      <button type="button" class="ep-tab" data-tab="repasse">Repasse mensal</button>
+    </div>
+
+    <!-- Tab: Membros -->
+    <div class="ep-tab-panel is-active" data-panel="membros">
+      <div class="ep-flex ep-flex--end-wrap" style="margin-bottom: 16px;">
+        <p class="ep-text-muted" style="margin: 0;">Profissionais cadastrados na sua clínica.</p>
+        <button type="button" class="ep-btn ep-btn--primary" id="addMemberBtn">+ Convidar profissional</button>
+      </div>
+      <div id="memberList" class="ep-session-list"></div>
+      <div id="memberEmpty" class="ep-empty ep-hide">
+        <h3 class="ep-h3">Nenhum membro ainda.</h3>
+        <p class="ep-text-muted ep-mt-8" style="margin: 0;">Convide profissionais por e-mail pra começar a calcular repasses.</p>
+      </div>
+    </div>
+
+    <!-- Tab: Repasse -->
+    <div class="ep-tab-panel" data-panel="repasse">
+      <div class="ep-flex ep-flex--end-wrap" style="margin-bottom: 16px;">
+        <p class="ep-text-muted" style="margin: 0;">Relatório do que cada profissional recebe no mês. Calculado a partir das transações financeiras com "Atendido por" preenchido.</p>
+        <select id="repasseMonthFilter" class="ep-select" aria-label="Mês"></select>
+      </div>
+      <div id="repasseLoading" class="ep-alert">Carregando…</div>
+      <div id="repasseContent" class="ep-hide">
+        <div class="ep-totals">
+          <div>
+            <div class="ep-totals__label">Receita consultas (pago)</div>
+            <div class="ep-totals__value" id="repasseReceita">R$ 0,00</div>
+          </div>
+          <div>
+            <div class="ep-totals__label">Total repasse devido</div>
+            <div class="ep-totals__value" id="repasseTotal" style="color: var(--ep-warn);">R$ 0,00</div>
+          </div>
+          <div>
+            <div class="ep-totals__label">Sobra para a clínica</div>
+            <div class="ep-totals__value" id="repasseSobra" style="color: var(--ep-ok);">R$ 0,00</div>
+          </div>
+        </div>
+        <table class="ep-repasse-table">
+          <thead>
+            <tr>
+              <th>Profissional</th>
+              <th>Consultas</th>
+              <th>Receita gerada</th>
+              <th>Regra</th>
+              <th style="text-align: right;">Repasse</th>
+            </tr>
+          </thead>
+          <tbody id="repasseTbody"></tbody>
+        </table>
+        <p class="ep-text-xs ep-text-muted ep-mt-12">
+          Só conta receitas com status "Pago" e campo "Atendido por" preenchido.
+          Pra contar uma consulta: ao registrar a transação no financeiro,
+          escolha o profissional em "Atendido por".
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Estado C: user é membro (não dono) -->
+  <section id="memberView" class="ep-hide">
+    <div class="ep-eyebrow">Você é membro de</div>
+    <h1 class="ep-h1 ep-mt-12">Clínicas</h1>
+    <p class="ep-text-muted ep-mt-8 ep-mt-0">
+      Você foi cadastrado como profissional em uma ou mais clínicas.
+    </p>
+    <div id="membershipList" class="ep-session-list ep-mt-24"></div>
+  </section>
+
+  <!-- Convites pendentes (sempre que tiver) -->
+  <section id="pendingInvites" class="ep-hide ep-mt-24">
+    <h2 class="ep-h3">Convites pendentes</h2>
+    <div id="invitesList" class="ep-session-list ep-mt-12"></div>
+  </section>
+
+</main>
+
+<!-- Modal: convidar membro -->
+<div class="ep-modal" id="memberModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel">
+    <h3 class="ep-modal__title" id="memberModalTitle">Convidar profissional</h3>
+    <p class="ep-modal__sub">
+      Digite o e-mail do profissional. Se ele já tem conta no Espaço Prelúdio, vai ver o convite
+      no painel dele e poderá aceitar.
+    </p>
+    <form class="ep-stack" id="memberForm" novalidate>
+      <div class="ep-field" id="memberEmailField">
+        <label class="ep-label" for="memberEmail">E-mail *</label>
+        <input id="memberEmail" class="ep-input" type="email" placeholder="profissional@exemplo.com" required>
+      </div>
+      <div class="ep-row">
+        <div class="ep-field">
+          <label class="ep-label" for="memberRuleType">Tipo de repasse *</label>
+          <select id="memberRuleType" class="ep-select" required>
+            <option value="percentual" selected>Percentual sobre receita</option>
+            <option value="valor-fixo">Valor fixo por consulta</option>
+          </select>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="memberRuleValue"><span id="memberRuleValueLabel">% sobre receita</span> *</label>
+          <input id="memberRuleValue" class="ep-input" type="text" inputmode="decimal" placeholder="70">
+          <p class="ep-text-xs ep-text-muted ep-mt-0" id="memberRuleHint">Quanto o profissional recebe de cada consulta paga.</p>
+        </div>
+      </div>
+      <div class="ep-status" id="memberFormStatus"></div>
+    </form>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="cancelMemberBtn">Cancelar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="saveMemberBtn">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js?v=2-82";
+  import { clearDek } from "./js/crypto.js";
+
+  const session = await requireTherapist({ requireDek: false });
+  const { user, idToken, therapist } = session;
+  const uid = user.uid;
+  document.getElementById("topUserName").textContent = therapist.displayName || "";
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    clearDek();
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
+
+  // ─── Helpers ───────────────────────────────────────────────────
+  function fmtCents(cents) {
+    const v = (cents || 0) / 100;
+    return "R$ " + v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function fmtRule(rule) {
+    if (!rule) return "—";
+    if (rule.type === "percentual") return `${rule.value}% sobre receita`;
+    return `${fmtCents(rule.value)} por consulta`;
+  }
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  }
+  function api(path, opts = {}) {
+    return fetch(`${BACKEND_BASE_URL}${path}`, {
+      ...opts,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${idToken}`,
+        ...(opts.headers || {})
+      }
+    }).then(async r => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) throw new Error(data?.error || `HTTP_${r.status}`);
+      return data;
+    });
+  }
+
+  // ─── Boot: descobre o estado do user ───────────────────────────
+  let myClinic = null;
+  let memberships = [];
+  let pendingInvites = [];
+
+  async function bootstrap() {
+    try {
+      const [me, invites] = await Promise.all([
+        api("/therapy/clinicas/me"),
+        api("/therapy/clinicas/convites-pendentes")
+      ]);
+      myClinic = me.ownedClinic;
+      memberships = me.memberships || [];
+      pendingInvites = invites.invites || [];
+      document.getElementById("bootLoading").classList.add("ep-hide");
+      renderRoot();
+    } catch (e) {
+      document.getElementById("bootLoading").textContent = "Erro: " + e.message;
+      document.getElementById("bootLoading").className = "ep-alert ep-alert--danger";
+    }
+  }
+
+  function renderRoot() {
+    // Convites pendentes: sempre que houver
+    if (pendingInvites.length > 0) {
+      document.getElementById("pendingInvites").classList.remove("ep-hide");
+      renderInvites();
+    }
+
+    if (myClinic) {
+      document.getElementById("ownerView").classList.remove("ep-hide");
+      document.getElementById("clinicNameTitle").textContent = myClinic.name;
+      document.getElementById("clinicSubtitle").textContent = myClinic.cnpj
+        ? `CNPJ ${myClinic.cnpj}` : "Você é o dono.";
+      buildRepasseMonthOptions();
+      loadMembers();
+    } else if (memberships.length > 0) {
+      document.getElementById("memberView").classList.remove("ep-hide");
+      renderMemberships();
+    } else {
+      document.getElementById("emptyState").classList.remove("ep-hide");
+    }
+  }
+
+  function renderInvites() {
+    const list = document.getElementById("invitesList");
+    list.innerHTML = pendingInvites.map(inv => `
+      <article class="ep-session ep-session--active">
+        <div>
+          <div class="ep-session__name">${escapeHtml(inv.clinicName || "Clínica")}</div>
+          <div class="ep-session__meta">Repasse: ${escapeHtml(fmtRule(inv.repasseRule))}</div>
+        </div>
+        <div class="ep-session__actions">
+          <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="accept" data-id="${inv.memberId}">Aceitar</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="decline" data-id="${inv.memberId}">Recusar</button>
+        </div>
+      </article>
+    `).join("");
+    list.querySelectorAll("button[data-action]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const action = btn.dataset.action;
+        const id = btn.dataset.id;
+        btn.disabled = true;
+        try {
+          await api(`/therapy/clinicas/convites/${id}/${action === "accept" ? "aceitar" : "recusar"}`, { method: "POST" });
+          location.reload();
+        } catch (e) {
+          btn.disabled = false;
+          alert("Erro: " + e.message);
+        }
+      });
+    });
+  }
+
+  function renderMemberships() {
+    const list = document.getElementById("membershipList");
+    list.innerHTML = memberships.map(m => `
+      <article class="ep-session">
+        <div>
+          <div class="ep-session__name">${escapeHtml(m.clinicName || "Clínica")}</div>
+          <div class="ep-session__meta">Seu repasse: ${escapeHtml(fmtRule(m.repasseRule))}</div>
+        </div>
+        <div class="ep-session__actions">
+          <span class="ep-badge ep-badge--ok">Ativo</span>
+        </div>
+      </article>
+    `).join("");
+  }
+
+  // ─── Estado A: criar clínica ───────────────────────────────────
+  document.getElementById("createClinicBtn").addEventListener("click", async () => {
+    const name = document.getElementById("newClinicName").value.trim();
+    const cnpj = document.getElementById("newClinicCnpj").value.trim();
+    const statusEl = document.getElementById("createClinicStatus");
+    if (!name) { statusEl.textContent = "Nome obrigatório."; statusEl.className = "ep-status is-err"; return; }
+    try {
+      await api("/therapy/clinicas", { method: "POST", body: JSON.stringify({ name, cnpj: cnpj || null }) });
+      location.reload();
+    } catch (e) {
+      statusEl.textContent = "Erro: " + e.message;
+      statusEl.className = "ep-status is-err";
+    }
+  });
+
+  // ─── Tabs (dono) ────────────────────────────────────────────────
+  document.querySelectorAll(".ep-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".ep-tab").forEach(t => t.classList.remove("is-active"));
+      document.querySelectorAll(".ep-tab-panel").forEach(p => p.classList.remove("is-active"));
+      tab.classList.add("is-active");
+      document.querySelector(`[data-panel="${tab.dataset.tab}"]`).classList.add("is-active");
+      if (tab.dataset.tab === "repasse") loadRepasse();
+    });
+  });
+
+  // ─── Estado B: membros ──────────────────────────────────────────
+  let membersData = [];
+  async function loadMembers() {
+    try {
+      const data = await api(`/therapy/clinicas/${myClinic.clinicId}/membros`);
+      membersData = data.members || [];
+      renderMembers();
+    } catch (e) {
+      console.error("loadMembers error", e);
+    }
+  }
+
+  function renderMembers() {
+    const list = document.getElementById("memberList");
+    const empty = document.getElementById("memberEmpty");
+    if (membersData.length === 0) {
+      list.classList.add("ep-hide");
+      empty.classList.remove("ep-hide");
+      return;
+    }
+    empty.classList.add("ep-hide");
+    list.classList.remove("ep-hide");
+    list.innerHTML = membersData.map(m => {
+      const statusBadge = m.status === "active"
+        ? '<span class="ep-badge ep-badge--ok">Ativo</span>'
+        : '<span class="ep-badge">Convite pendente</span>';
+      const isActive = m.status === "active";
+      return `
+        <article class="ep-session${m.status === "pending" ? " ep-session--active" : ""}">
+          <div>
+            <div class="ep-session__name">${escapeHtml(m.name || m.invitedEmail)}</div>
+            <div class="ep-session__meta">
+              ${statusBadge}
+              <span>${escapeHtml(fmtRule(m.repasseRule))}</span>
+              ${!isActive ? `<span>${escapeHtml(m.invitedEmail)}</span>` : ""}
+            </div>
+          </div>
+          <div class="ep-session__actions">
+            <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="edit" data-id="${m.memberId}">Editar repasse</button>
+            <button class="ep-btn-icon" data-action="remove" data-id="${m.memberId}" aria-label="Remover" title="Remover">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+        </article>
+      `;
+    }).join("");
+    list.querySelectorAll("button[data-action]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const action = btn.dataset.action;
+        const id = btn.dataset.id;
+        const member = membersData.find(m => m.memberId === id);
+        if (action === "edit") openMemberModal(member);
+        else if (action === "remove") removeMember(member);
+      });
+    });
+  }
+
+  async function removeMember(member) {
+    if (!confirm(`Remover "${member.name || member.invitedEmail}" da clínica?`)) return;
+    try {
+      await api(`/therapy/clinicas/${myClinic.clinicId}/membros/${member.memberId}`, { method: "DELETE" });
+      await loadMembers();
+    } catch (e) {
+      alert("Erro: " + e.message);
+    }
+  }
+
+  // Modal de convidar/editar membro
+  const memberModal     = document.getElementById("memberModal");
+  const memberEmailField = document.getElementById("memberEmailField");
+  const memberEmail     = document.getElementById("memberEmail");
+  const memberRuleType  = document.getElementById("memberRuleType");
+  const memberRuleValue = document.getElementById("memberRuleValue");
+  const memberRuleHint  = document.getElementById("memberRuleHint");
+  const memberRuleValueLabel = document.getElementById("memberRuleValueLabel");
+  const memberFormStatus = document.getElementById("memberFormStatus");
+  let editingMemberId = null;
+
+  function updateRuleUI() {
+    const t = memberRuleType.value;
+    if (t === "percentual") {
+      memberRuleValueLabel.textContent = "% sobre receita";
+      memberRuleValue.placeholder = "70";
+      memberRuleHint.textContent = "Entre 0 e 100. Ex.: 70 = profissional recebe 70% de cada consulta paga.";
+    } else {
+      memberRuleValueLabel.textContent = "Valor por consulta (R$)";
+      memberRuleValue.placeholder = "150,00";
+      memberRuleHint.textContent = "Valor fixo por consulta atendida, independente do que o paciente pagou.";
+    }
+  }
+  memberRuleType.addEventListener("change", updateRuleUI);
+
+  function openMemberModal(member) {
+    editingMemberId = member?.memberId || null;
+    document.getElementById("memberModalTitle").textContent = editingMemberId ? "Editar repasse" : "Convidar profissional";
+    if (editingMemberId) {
+      memberEmailField.style.display = "none";
+      memberEmail.value = "";
+    } else {
+      memberEmailField.style.display = "";
+      memberEmail.value = "";
+    }
+    if (member?.repasseRule) {
+      memberRuleType.value = member.repasseRule.type;
+      memberRuleValue.value = member.repasseRule.type === "percentual"
+        ? String(member.repasseRule.value)
+        : (member.repasseRule.value / 100).toFixed(2).replace(".", ",");
+    } else {
+      memberRuleType.value = "percentual";
+      memberRuleValue.value = "";
+    }
+    updateRuleUI();
+    memberFormStatus.textContent = "";
+    memberFormStatus.className = "ep-status";
+    memberModal.classList.add("is-open");
+  }
+  function closeMemberModal() { memberModal.classList.remove("is-open"); editingMemberId = null; }
+  document.getElementById("addMemberBtn").addEventListener("click", () => openMemberModal(null));
+  document.getElementById("cancelMemberBtn").addEventListener("click", closeMemberModal);
+  memberModal.addEventListener("click", (e) => { if (e.target === memberModal) closeMemberModal(); });
+
+  document.getElementById("saveMemberBtn").addEventListener("click", async () => {
+    const type = memberRuleType.value;
+    const rawValue = memberRuleValue.value.trim().replace(",", ".");
+    const value = Number(rawValue);
+    if (!Number.isFinite(value) || value < 0) {
+      memberFormStatus.textContent = "Valor inválido.";
+      memberFormStatus.className = "ep-status is-err"; return;
+    }
+    let ruleValue;
+    if (type === "percentual") {
+      if (value > 100) {
+        memberFormStatus.textContent = "Percentual entre 0 e 100.";
+        memberFormStatus.className = "ep-status is-err"; return;
+      }
+      ruleValue = value;
+    } else {
+      ruleValue = Math.round(value * 100); // centavos
+      if (ruleValue < 1) {
+        memberFormStatus.textContent = "Valor deve ser maior que zero.";
+        memberFormStatus.className = "ep-status is-err"; return;
+      }
+    }
+    const repasseRule = { type, value: ruleValue };
+
+    try {
+      if (editingMemberId) {
+        await api(`/therapy/clinicas/${myClinic.clinicId}/membros/${editingMemberId}`, {
+          method: "PATCH",
+          body: JSON.stringify({ repasseRule })
+        });
+      } else {
+        const email = memberEmail.value.trim();
+        if (!email || !email.includes("@")) {
+          memberFormStatus.textContent = "E-mail inválido.";
+          memberFormStatus.className = "ep-status is-err"; return;
+        }
+        await api(`/therapy/clinicas/${myClinic.clinicId}/membros`, {
+          method: "POST",
+          body: JSON.stringify({ email, repasseRule })
+        });
+      }
+      closeMemberModal();
+      await loadMembers();
+    } catch (e) {
+      memberFormStatus.textContent = "Erro: " + e.message;
+      memberFormStatus.className = "ep-status is-err";
+    }
+  });
+
+  // ─── Repasse ────────────────────────────────────────────────────
+  function buildRepasseMonthOptions() {
+    const sel = document.getElementById("repasseMonthFilter");
+    if (sel.options.length > 0) return;
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const lbl = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+      const opt = document.createElement("option");
+      opt.value = val;
+      opt.textContent = lbl.charAt(0).toUpperCase() + lbl.slice(1);
+      sel.appendChild(opt);
+    }
+    sel.addEventListener("change", loadRepasse);
+  }
+
+  async function loadRepasse() {
+    const month = document.getElementById("repasseMonthFilter").value;
+    document.getElementById("repasseLoading").classList.remove("ep-hide");
+    document.getElementById("repasseContent").classList.add("ep-hide");
+    try {
+      const data = await api(`/therapy/clinicas/${myClinic.clinicId}/repasse?month=${encodeURIComponent(month)}`);
+      document.getElementById("repasseLoading").classList.add("ep-hide");
+      document.getElementById("repasseContent").classList.remove("ep-hide");
+      document.getElementById("repasseReceita").textContent = fmtCents(data.totals.totalConsultasCents);
+      document.getElementById("repasseTotal").textContent = fmtCents(data.totals.totalRepasseCents);
+      document.getElementById("repasseSobra").textContent = fmtCents(data.totals.sobraClinicaCents);
+      const tbody = document.getElementById("repasseTbody");
+      if (data.members.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--ep-ink-2); padding: 24px;">Nenhum membro ativo com transações no mês.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = data.members.map(m => `
+        <tr>
+          <td>${escapeHtml(m.name || m.invitedEmail)}</td>
+          <td>${m.countConsultas}</td>
+          <td>${fmtCents(m.totalConsultasCents)}</td>
+          <td><span class="ep-text-sm ep-text-muted">${escapeHtml(fmtRule(m.repasseRule))}</span></td>
+          <td style="text-align: right; font-weight: 600; color: var(--ep-warn);">${fmtCents(m.totalRepasseCents)}</td>
+        </tr>
+      `).join("");
+    } catch (e) {
+      document.getElementById("repasseLoading").textContent = "Erro: " + e.message;
+      document.getElementById("repasseLoading").className = "ep-alert ep-alert--danger";
+    }
+  }
+
+  await bootstrap();
+</script>
+
+</body>
+</html>

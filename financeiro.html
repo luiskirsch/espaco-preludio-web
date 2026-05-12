@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-89">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-90">
 </head>
 <body>
 
@@ -27,6 +27,7 @@
       <a href="./agenda.html">Agenda</a>
       <a href="./pacientes.html">Pacientes</a>
       <a href="./financeiro.html" class="is-active">Financeiro</a>
+      <a href="./clinica.html">Clínica</a>
       <a href="./inventario.html">Estoque</a>
       <a href="./receita.html">Receitas</a>
       <a href="./calculadora.html">Calculadora</a>
@@ -193,6 +194,17 @@
         </select>
         <p class="ep-text-xs ep-text-muted ep-mt-0">
           Vincular permite relatórios "quanto cada paciente gerou de receita".
+        </p>
+      </div>
+
+      <!-- Atendido por (só aparece se user é dono de clínica com membros ativos) -->
+      <div class="ep-field ep-hide" id="performedByField">
+        <label class="ep-label" for="txPerformedBy">Atendido por</label>
+        <select id="txPerformedBy" class="ep-select">
+          <option value="">— Eu mesmo —</option>
+        </select>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Define quem realizou o atendimento. Usado pra calcular repasse mensal automaticamente.
         </p>
       </div>
 
@@ -541,15 +553,46 @@
   const txIssueDateEl   = document.getElementById("txIssueDate");
   const txPaymentMethodEl = document.getElementById("txPaymentMethod");
   const txPatientSelect = document.getElementById("txPatientSelect");
+  const txPerformedByEl = document.getElementById("txPerformedBy");
   const txDueDateEl     = document.getElementById("txDueDate");
   const txPaidDateEl    = document.getElementById("txPaidDate");
   const txDescriptionEl = document.getElementById("txDescription");
   const dueDateField    = document.getElementById("dueDateField");
   const paidDateField   = document.getElementById("paidDateField");
   const patientField    = document.getElementById("patientField");
+  const performedByField = document.getElementById("performedByField");
   const txStatusMsgEl   = document.getElementById("txStatusMsg");
   const saveTxBtn       = document.getElementById("saveTxBtn");
   let editingTxId = null;
+
+  // Carrega membros ativos da clínica (se user é dono) pra popular o
+  // dropdown "Atendido por". Falha silenciosamente — não bloqueia o uso
+  // do financeiro pra quem não tem clínica.
+  let clinicMembersActive = [];
+  (async () => {
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/clinicas/me`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok || !d.ownedClinic) return;
+      const clinicId = d.ownedClinic.clinicId;
+      const mr = await fetch(`${BACKEND_BASE_URL}/therapy/clinicas/${clinicId}/membros`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const md = await mr.json().catch(() => ({}));
+      if (!mr.ok || !md.ok) return;
+      clinicMembersActive = (md.members || []).filter(m => m.status === "active" && m.therapistUid);
+      if (clinicMembersActive.length > 0) {
+        for (const m of clinicMembersActive) {
+          const opt = document.createElement("option");
+          opt.value = m.therapistUid;
+          opt.textContent = m.name || m.invitedEmail;
+          txPerformedByEl.appendChild(opt);
+        }
+      }
+    } catch {}
+  })();
 
   function openModal(tx) {
     editingTxId = tx?.txId || null;
@@ -562,6 +605,7 @@
     txIssueDateEl.value = isoDateInput(tx?.issueDate) || isoDateInput(Date.now());
     txPaymentMethodEl.value = tx?.paymentMethod || "outro";
     txPatientSelect.value = tx?.patientId || "";
+    txPerformedByEl.value = tx?.performedByUid || "";
     txDueDateEl.value  = isoDateInput(tx?.dueDate);
     txPaidDateEl.value = isoDateInput(tx?.paidDate);
     txDescriptionEl.value = tx?.description || "";
@@ -578,6 +622,8 @@
     const type = txTypeEl.value;
     const status = txStatusEl.value;
     patientField.style.display = type === "receita" ? "" : "none";
+    performedByField.classList.toggle("ep-hide",
+      !(clinicMembersActive.length > 0 && type === "receita"));
     dueDateField.classList.toggle("ep-hide", status === "pago");
     paidDateField.classList.toggle("ep-hide", status !== "pago");
   }
@@ -615,6 +661,9 @@
       body.patientId = txPatientSelect.value;
       const sel = txPatientSelect.selectedOptions[0];
       if (sel) body.patientNameSnapshot = sel.textContent;
+    }
+    if (type === "receita" && txPerformedByEl.value) {
+      body.performedByUid = txPerformedByEl.value;
     }
 
     saveTxBtn.disabled = true;
