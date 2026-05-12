@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suporte · Espaço Prelúdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-12">
+  <style>
+    .ep-faq-list { display: flex; flex-direction: column; gap: 8px; }
+    .ep-faq-item {
+      background: var(--ep-surface);
+      border: 1px solid var(--ep-line);
+      border-radius: var(--ep-radius);
+      overflow: hidden;
+      transition: border-color 120ms ease;
+    }
+    .ep-faq-item:hover { border-color: var(--ep-line-strong); }
+    .ep-faq-item[open] { border-color: var(--ep-gold-line); }
+    .ep-faq-item summary {
+      padding: 16px 20px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14.5px;
+      color: var(--ep-ink);
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .ep-faq-item summary::-webkit-details-marker { display: none; }
+    .ep-faq-item summary::after {
+      content: "+";
+      font-size: 20px;
+      font-weight: 300;
+      color: var(--ep-ink-2);
+      transition: transform 180ms ease;
+      flex-shrink: 0;
+    }
+    .ep-faq-item[open] summary::after { transform: rotate(45deg); color: var(--ep-accent); }
+    .ep-faq-item__body {
+      padding: 0 20px 18px;
+      color: var(--ep-ink-2);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .ep-faq-item__body p { margin: 0 0 10px; }
+    .ep-faq-item__body p:last-child { margin-bottom: 0; }
+    .ep-faq-item__body a { color: var(--ep-accent); }
+    .ep-contact-card {
+      background: var(--ep-bg-2);
+      border: 1px solid var(--ep-line);
+      border-radius: var(--ep-radius);
+      padding: 24px;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .ep-contact-card__icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--ep-gold-soft);
+      color: #8a5b1a;
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+    .ep-contact-card__main { flex: 1; min-width: 240px; }
+    .ep-contact-card__main h3 { margin: 0 0 6px; font-size: 16px; font-weight: 600; }
+    .ep-contact-card__main p { margin: 0; font-size: 13.5px; color: var(--ep-ink-2); }
+  </style>
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html">Consultas</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./pacientes.html">Pacientes</a>
+      <a href="./financeiro.html">Financeiro</a>
+      <a href="./clinica.html">Clínica</a>
+      <a href="./inventario.html">Estoque</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./calculadora.html">Calculadora</a>
+      <a href="./documento.html?tipo=atestado">Atestado</a>
+      <a href="./whatsapp.html">WhatsApp</a>
+      <a href="./suporte.html" class="is-active">Suporte</a>
+      <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
+        <span class="ep-nav-avatar" id="topUserAvatar">·</span>
+        <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
+      </a>
+      <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16" style="max-width: 820px;">
+
+  <div class="ep-eyebrow">Central de ajuda</div>
+  <h1 class="ep-h1 ep-mt-12">Suporte</h1>
+  <p class="ep-text-muted ep-mt-0">
+    Perguntas frequentes e canais diretos pra te ajudar a tirar o máximo da plataforma.
+  </p>
+
+  <!-- Contato -->
+  <section class="ep-mt-24">
+    <h2 class="ep-h3">Fale com a gente</h2>
+    <p class="ep-text-muted ep-mt-0">Respondemos em até 24h em dias úteis.</p>
+
+    <div class="ep-stack ep-mt-16" style="gap: 12px;">
+      <div class="ep-contact-card">
+        <div class="ep-contact-card__icon">✉</div>
+        <div class="ep-contact-card__main">
+          <h3>E-mail</h3>
+          <p>contato@preludiojogos.com.br</p>
+        </div>
+        <a href="mailto:contato@preludiojogos.com.br?subject=Suporte%20Espa%C3%A7o%20Pre%CC%81lu%CC%81dio" class="ep-btn ep-btn--ghost ep-btn--sm">Enviar e-mail</a>
+      </div>
+
+      <div class="ep-contact-card">
+        <div class="ep-contact-card__icon" style="background: rgba(37,211,102,0.10); color: #25D366;">💬</div>
+        <div class="ep-contact-card__main">
+          <h3>WhatsApp</h3>
+          <p>(48) 98863-7670 · resposta mais rápida</p>
+        </div>
+        <a href="https://wa.me/5548988637670?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20com%20o%20Espa%C3%A7o%20Pre%CC%81lu%CC%81dio." target="_blank" rel="noopener" class="ep-btn ep-btn--primary ep-btn--sm">Abrir conversa</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="ep-mt-32">
+    <h2 class="ep-h3">Perguntas frequentes</h2>
+
+    <div class="ep-faq-list ep-mt-16">
+
+      <details class="ep-faq-item">
+        <summary>Como crio minha primeira consulta?</summary>
+        <div class="ep-faq-item__body">
+          <p>No painel principal (Consultas), clique no botão <strong>"+ Nova consulta"</strong>. Preencha:</p>
+          <p>• <strong>Paciente</strong>: selecione um existente ou digite o nome livre<br>
+             • <strong>Horário</strong> (opcional): pra agendar pro futuro<br>
+             • <strong>WhatsApp/E-mail</strong> (opcional): pra envio automático de confirmação e lembrete</p>
+          <p>A plataforma gera um link único pra cada consulta. Você envia pro paciente, ele entra com 1 clique no horário marcado.</p>
+        </div>
+      </details>
+
+      <details class="ep-faq-item">
+        <summary>Como meu paciente entra na consulta?</summary>
+        <div class="ep-faq-item__body">
+          <p>O paciente recebe um <strong>link único</strong> (por WhatsApp/e-mail/cópia manual). Ele:</p>
+          <p>1. Clica no link no horário<br>
+             2. Digita o nome (apenas no 1º acesso)<br>
+             3. Permite câmera/microfone no navegador<br>
+             4. Entra na sala — pronto</p>
+          <p>Sem cadastro, sem app pra baixar. Funciona em qualquer navegador moderno (Chrome, Safari, Firefox, Edge).</p>
+        </div>
+      </details>
+
+      <details class="ep-faq-item">
+        <summary>Como ativar o envio automático por WhatsApp?</summary>
+        <div class="ep-faq-item__body">
+          <p>Acesse a página <a href="./whatsapp.html">WhatsApp</a> no menu superior. Ative o toggle "WhatsApp ativado" e preencha o nome da sua clínica/consultório e telefone de contato.</p>
+          <p>Os templates de confirmação, lembrete (24h antes) e cancelamento podem ser personalizados na mesma página, com variáveis como <code>{{paciente}}</code>, <code>{{data}}</code>, <code>{{hora}}</code>.</p>
+          <p>O envio funciona pelo número único da plataforma (48988637670) — você não precisa parear seu WhatsApp.</p>
+        </div>
+      </details>
+
+      <details class="ep-faq-item">
+        <summary>Posso emitir receita de medicamento controlado?</summary>
+        <div class="ep-faq-item__body">
+          <p>Sim, se você é médico (CRM ativo) ou outro profissional habilitado por lei. Acesse <a href="./receita.html">Receitas</a> → "+ Nova receita" → selecione o tipo <strong>"Controlado"</strong>.</p>
+          <p>A plataforma aplica as regras vigentes: validade de 30 dias (psicotrópicos B1, B2) ou 60 dias (A1, A2, A3 conforme legislação), inclui campo de receituário azul/amarelo conforme a substância.</p>
+          <p>A receita digital é válida em todo território nacional conforme RDC 471/2021 da ANVISA. A farmácia consulta a autenticidade via QR code impresso.</p>
+        </div>
+      </details>
+
+      <details class="ep-faq-item">
+        <summary>Como funciona o trial e a cobrança?</summary>
+        <div class="ep-faq-item__body">
+          <p>Você tem <strong>30 dias grátis</strong> com acesso completo a todas as funcionalidades. Sem cartão exigido pra começar.</p>
+          <p>Após o trial, o acesso fica bloqueado até você contratar um plano:<br>
+             • <strong>Profissional</strong>: R$ 120/mês<br>
+             • <strong>Recém-formado</strong> (CRP/CRM com menos de 12 meses): R$ 49,90/mês<br>
+             • <strong>Estudante</strong>: gratuito, mediante envio de comprovante de matrícula em curso superior</p>
+          <p>A cobrança é mensal recorrente via Mercado Pago. Cancele a qualquer momento — você mantém acesso até o fim do ciclo pago.</p>
+        </div>
+      </details>
+
+      <details class="ep-faq-item">
+        <summary>Meus dados (e os do paciente) são seguros?</summary>
+        <div class="ep-faq-item__body">
+          <p><strong>Sim.</strong> Tomamos isso muito a sério:</p>
+          <p>• <strong>Cifragem ponta-a-ponta</strong>: dados clínicos sensíveis (notas, telefone do paciente, prontuário) são cifrados no <em>seu navegador</em> antes de subir. Mesmo o servidor não consegue ler.<br>
+             • <strong>Videochamada E2EE</strong>: LiveKit com criptografia, ninguém intercepta.<br>
+             • <strong>LGPD</strong>: você é o controlador dos dados; nós somos operadores. Política completa em <a href="./politica.html">Política de privacidade</a>.<br>
+             • <strong>Backup automático</strong>: dados redundados em múltiplas regiões pelo Firestore.</p>
+        </div>
+      </details>
+
+      <details class="ep-faq-item">
+        <summary>Por que algumas funcionalidades não aparecem pra mim?</summary>
+        <div class="ep-faq-item__body">
+          <p>A plataforma respeita as <strong>atribuições legais de cada conselho profissional</strong>. Cada especialidade vê apenas o que pode emitir:</p>
+          <p>• <strong>CRM (médicos)</strong>: receita completa (MIP, controlados, insumos), atestado, todos os documentos<br>
+             • <strong>CRP (psicólogos)</strong>: documentos psicológicos (atestado psicológico, declaração, relatório), sem receita<br>
+             • <strong>CREFITO (fisio/TO)</strong>: documentos clínicos, sem receita; subtipo determina se aparece como "Fisioterapêutico" ou "de TO"<br>
+             • <strong>CRN (nutricionistas)</strong>: receita de insumos (Lei 8.234/91)<br>
+             • <strong>CRO (dentistas)</strong>: receita e atestado odontológico</p>
+          <p>Se acha que está faltando algo que você tem direito legal de emitir, fale com a gente.</p>
+        </div>
+      </details>
+
+      <details class="ep-faq-item">
+        <summary>Esqueci minha senha. Como recupero?</summary>
+        <div class="ep-faq-item__body">
+          <p>Na tela de <a href="./login.html">login</a>, clique em "Esqueci minha senha". Vamos enviar um link pro e-mail cadastrado.</p>
+          <p><strong>Atenção:</strong> se você ativou a <strong>chave de recuperação</strong> ao cadastrar (24 palavras), recuperar a senha <em>não</em> recupera o acesso aos prontuários cifrados — você precisa da chave pra ler dados antigos. Se perdeu ambos, os dados ficam inacessíveis (é a contrapartida da E2EE).</p>
+        </div>
+      </details>
+
+      <details class="ep-faq-item">
+        <summary>Como cancelar minha assinatura?</summary>
+        <div class="ep-faq-item__body">
+          <p>Acesse <a href="./perfil.html">Perfil</a> → seção "Plano" → "Gerenciar plano". Você é redirecionado pro painel do Mercado Pago, onde pode cancelar a recorrência.</p>
+          <p>Após cancelar, você mantém acesso até o fim do ciclo já pago. Os dados continuam armazenados por 60 dias, dando tempo de você reativar ou exportar.</p>
+        </div>
+      </details>
+
+      <details class="ep-faq-item">
+        <summary>Posso usar a plataforma no celular/tablet?</summary>
+        <div class="ep-faq-item__body">
+          <p>Sim, tudo funciona via navegador (Chrome no Android / Safari no iPhone). Não tem app pra baixar.</p>
+          <p>Pra teleconsulta, recomendamos <strong>câmera frontal + fones de ouvido</strong> pra evitar eco. Conexão Wi-Fi estável é melhor que 4G/5G.</p>
+        </div>
+      </details>
+
+    </div>
+  </section>
+
+  <!-- Útil -->
+  <section class="ep-mt-32">
+    <h2 class="ep-h3">Atalhos úteis</h2>
+    <div class="ep-flex ep-flex--wrap ep-gap-8 ep-mt-12">
+      <button type="button" class="ep-btn ep-btn--ghost" id="restartTourBtn">↻ Refazer tour de boas-vindas</button>
+      <a href="./politica.html" class="ep-btn ep-btn--ghost">Política de privacidade</a>
+      <a href="./termos.html" class="ep-btn ep-btn--ghost">Termos de uso</a>
+      <a href="./audit.html" class="ep-btn ep-btn--ghost">Histórico de atividade</a>
+    </div>
+  </section>
+
+</main>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-2";
+  import { clearDek } from "./js/crypto.js";
+  import { runOnboarding } from "./js/onboarding.js?v=3-12";
+
+  await requireTherapist({ requireDek: false });
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    clearDek();
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
+
+  document.getElementById("restartTourBtn").addEventListener("click", () => {
+    runOnboarding({ force: true });
+  });
+</script>
+
+</body>
+</html>
