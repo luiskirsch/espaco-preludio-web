@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-98">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-99">
 </head>
 <body>
 
@@ -320,9 +320,15 @@
 
   function renderSession(s) {
     const div = document.createElement("article");
-    // Consultas agendadas ou em sessão ganham marca lateral dourada (ep-session--active).
-    const isActive = s.status === "in_progress" || (s.status !== "completed" && s.status !== "canceled");
-    div.className = "ep-session" + (isActive ? " ep-session--active" : "");
+    // Marca lateral colorida — espelha o badge: ouro pra agendada/em-sessão,
+    // terracota pra encerrada. Identifica o status sem ler o badge.
+    let sideClass = "";
+    if (s.status === "in_progress" || (s.status !== "completed" && s.status !== "canceled")) {
+      sideClass = " ep-session--active";
+    } else if (s.status === "completed") {
+      sideClass = " ep-session--done";
+    }
+    div.className = "ep-session" + sideClass;
     div.innerHTML = `
       <div>
         <div class="ep-session__name">${escapeHtml(s.patientName)}</div>
@@ -650,6 +656,17 @@
 
   await loadSessions();
   await loadPatientsForSelect();
+
+  // Recarrega a lista quando a aba volta a ficar visível. Usa caso comum:
+  // profissional encerra sessão em consultorio.html, volta pra cá — sem isso,
+  // o card permanece "Agendada" até refresh manual. SWR já evita flash.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      invalidateApi("sessoes", uid);
+      loadSessions();
+    }
+  });
+
 
   // Auto-abrir modal se vier de prontuario.html?newWith=ID&name=... ou de
   // agenda.html?newAt=ISO (slot de horário clicado).
