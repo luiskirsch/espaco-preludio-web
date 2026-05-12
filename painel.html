@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-11">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-12">
 </head>
 <body>
 
@@ -159,6 +159,7 @@
   import { requireTherapist } from "./js/auth-guard.js?v=3-2";
   import { cachedGet, invalidate as invalidateApi } from "./js/api-cache.js?v=2-82";
   import { clearDek, recallUser, decryptNote } from "./js/crypto.js";
+  import { runOnboarding } from "./js/onboarding.js?v=3-12";
 
   // ─── Boot ───────────────────────────────────────────────────
   const session = await requireTherapist({ requireDek: true });
@@ -668,6 +669,10 @@
 
   await loadSessions();
   await loadPatientsForSelect();
+
+  // Tour de boas-vindas pro 1º acesso (no-op se já viu — flag em localStorage).
+  // Disparado depois do load pra não bloquear a UI inicial.
+  runOnboarding();
 
   // Recarrega a lista quando a aba volta a ficar visível. Usa caso comum:
   // profissional encerra sessão em consultorio.html, volta pra cá — sem isso,
