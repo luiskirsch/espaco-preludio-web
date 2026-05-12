@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-4">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-5">
 </head>
 <body>
 
@@ -223,10 +223,47 @@
   </div>
 </div>
 
+<!-- Modal: Configurações de agenda -->
+<div class="ep-modal" id="agendaConfigModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel ep-modal__panel--md">
+    <h3 class="ep-modal__title">Configurações de agenda</h3>
+    <p class="ep-modal__sub">
+      Personalize sua janela de trabalho e a duração padrão das consultas.
+    </p>
+    <div class="ep-row" style="padding: 0 28px;">
+      <div class="ep-field">
+        <label class="ep-label" for="cfgStartHour">Hora de início</label>
+        <select id="cfgStartHour" class="ep-select"></select>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="cfgEndHour">Hora de término</label>
+        <select id="cfgEndHour" class="ep-select"></select>
+      </div>
+    </div>
+    <div class="ep-field" style="padding: 0 28px;">
+      <label class="ep-label" for="cfgSlotMinutes">Duração padrão da consulta</label>
+      <select id="cfgSlotMinutes" class="ep-select">
+        <option value="30">30 minutos</option>
+        <option value="45">45 minutos</option>
+        <option value="50" selected>50 minutos</option>
+        <option value="60">60 minutos</option>
+        <option value="90">90 minutos</option>
+        <option value="120">120 minutos</option>
+      </select>
+      <p class="ep-text-xs ep-text-muted ep-mt-0">Aplicado ao criar consultas sem horário de fim explícito.</p>
+    </div>
+    <div class="ep-status" id="agendaConfigStatus" style="padding: 0 28px;"></div>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="agendaConfigCancelBtn">Voltar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="agendaConfigSaveBtn">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=3-2";
+  import { requireTherapist, invalidateProfileCache } from "./js/auth-guard.js?v=3-2";
   import { cachedGet, invalidate as invalidateApi } from "./js/api-cache.js?v=2-82";
   import { clearDek } from "./js/crypto.js";
 
@@ -242,10 +279,21 @@
   });
 
   // ─── Configuração da grade ──────────────────────────────────────────
-  const START_HOUR = 8;
-  const END_HOUR   = 21; // exclusivo — última linha mostra 20h-21h
+  // Defaults sobrescritos por therapist.agendaConfig (configurável via modal).
+  let START_HOUR = 8;
+  let END_HOUR   = 21;
+  let SESSION_DEFAULT_MIN = 50;
   const HOUR_PX    = 56;
-  const SESSION_DEFAULT_MIN = 50;
+
+  (function applyAgendaConfig() {
+    const cfg = therapist?.agendaConfig || {};
+    const sh = Number(cfg.startHour);
+    const eh = Number(cfg.endHour);
+    const sm = Number(cfg.slotMinutes);
+    if (Number.isFinite(sh) && sh >= 0 && sh <= 22) START_HOUR = sh;
+    if (Number.isFinite(eh) && eh > START_HOUR && eh <= 24) END_HOUR = eh;
+    if (Number.isFinite(sm) && sm >= 15 && sm <= 120) SESSION_DEFAULT_MIN = sm;
+  })();
 
   const DAY_NAMES = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]; // segunda-início
   const MONTH_NAMES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
@@ -815,8 +863,67 @@
   document.getElementById("openWaitlistBtn").addEventListener("click", () => {
     window.location.href = "./lista-espera.html";
   });
+
+  // ─── Configurações de agenda ─────────────────────────────────────────
+  const cfgModal     = document.getElementById("agendaConfigModal");
+  const cfgStartEl   = document.getElementById("cfgStartHour");
+  const cfgEndEl     = document.getElementById("cfgEndHour");
+  const cfgSlotEl    = document.getElementById("cfgSlotMinutes");
+  const cfgStatusEl  = document.getElementById("agendaConfigStatus");
+  const cfgSaveBtn   = document.getElementById("agendaConfigSaveBtn");
+
+  for (let h = 0; h <= 23; h++) {
+    const o1 = document.createElement("option"); o1.value = h; o1.textContent = `${pad2(h)}:00`;
+    const o2 = document.createElement("option"); o2.value = h; o2.textContent = `${pad2(h)}:00`;
+    cfgStartEl.appendChild(o1);
+    cfgEndEl.appendChild(o2);
+  }
+  const o24 = document.createElement("option"); o24.value = 24; o24.textContent = "24:00"; cfgEndEl.appendChild(o24);
+
   document.getElementById("openAgendaConfigBtn").addEventListener("click", () => {
-    alert("Configurações de agenda — em breve.");
+    cfgStartEl.value = String(START_HOUR);
+    cfgEndEl.value   = String(END_HOUR);
+    cfgSlotEl.value  = String(SESSION_DEFAULT_MIN);
+    cfgStatusEl.textContent = "";
+    cfgStatusEl.className = "ep-status";
+    cfgModal.classList.add("is-open");
+  });
+  document.getElementById("agendaConfigCancelBtn").addEventListener("click", () => {
+    cfgModal.classList.remove("is-open");
+  });
+  cfgSaveBtn.addEventListener("click", async () => {
+    const sh = Number(cfgStartEl.value);
+    const eh = Number(cfgEndEl.value);
+    const sm = Number(cfgSlotEl.value);
+    if (!(eh > sh)) {
+      cfgStatusEl.textContent = "Hora de término deve ser maior que a de início.";
+      cfgStatusEl.classList.add("is-err");
+      return;
+    }
+    cfgSaveBtn.disabled = true;
+    cfgStatusEl.className = "ep-status";
+    cfgStatusEl.textContent = "Salvando…";
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ agendaConfig: { startHour: sh, endHour: eh, slotMinutes: sm } })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
+      START_HOUR = sh; END_HOUR = eh; SESSION_DEFAULT_MIN = sm;
+      invalidateProfileCache();
+      cfgStatusEl.textContent = "Salvo. Atualizando agenda…";
+      cfgStatusEl.classList.add("is-ok");
+      buildHourLabels();
+      renderWeek();
+      setTimeout(() => cfgModal.classList.remove("is-open"), 600);
+    } catch (e) {
+      cfgStatusEl.textContent = "Erro: " + (e?.message || "desconhecido");
+      cfgStatusEl.classList.add("is-err");
+    } finally {
+      cfgSaveBtn.disabled = false;
+    }
   });
 
   // ─── Boot ───────────────────────────────────────────────────────────
