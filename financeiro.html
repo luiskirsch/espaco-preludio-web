@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-90">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-91">
 </head>
 <body>
 
@@ -466,6 +466,9 @@
       </div>
       <div class="ep-session__actions" style="gap: 10px; align-items: center;">
         <strong style="color: ${color}; font-size: 16px;">${sign} ${fmtCents(tx.amount)}</strong>
+        ${tx.type === "receita" && tx.status === "pago"
+          ? `<button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="receipt" data-id="${tx.txId}">Recibo</button>`
+          : ""}
         <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="edit" data-id="${tx.txId}">Editar</button>
         <button class="ep-btn-icon" data-action="delete" data-id="${tx.txId}" aria-label="Apagar" title="Apagar">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -719,8 +722,114 @@
         btn.disabled = false;
         alert("Erro ao apagar: " + err.message);
       }
+    } else if (action === "receipt") {
+      btn.disabled = true;
+      const original = btn.textContent;
+      btn.textContent = "Gerando…";
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/recibos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+          body: JSON.stringify({ txId: id })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+        await downloadReceiptPdf(data.receipt);
+        btn.textContent = data.existed ? "Recibo" : "✓ Emitido";
+        setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 2000);
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = original;
+        alert("Erro ao gerar recibo: " + err.message);
+      }
     }
   });
+
+  // ─── Geração de PDF do recibo (client-side via pdf-lib) ──────────────
+  async function downloadReceiptPdf(receipt) {
+    const { PDFDocument, StandardFonts, rgb } = await import("https://esm.sh/pdf-lib@1.17.1");
+    const pdf = await PDFDocument.create();
+    const page = pdf.addPage([595.28, 841.89]); // A4
+    const fontReg  = await pdf.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
+
+    const margin = 50;
+    const right  = 595.28 - margin;
+    let y = 800;
+
+    function draw(text, opts = {}) {
+      const font = opts.font || fontReg;
+      const size = opts.size || 11;
+      const color = opts.color || rgb(0.1, 0.12, 0.1);
+      const maxWidth = right - margin;
+      const words = String(text || "").split(/\s+/);
+      let line = "";
+      const lines = [];
+      for (const w of words) {
+        const test = line ? `${line} ${w}` : w;
+        if (font.widthOfTextAtSize(test, size) > maxWidth) {
+          if (line) lines.push(line);
+          line = w;
+        } else { line = test; }
+      }
+      if (line) lines.push(line);
+      for (const ln of lines) {
+        page.drawText(ln, { x: margin, y, size, font, color });
+        y -= size + 3;
+      }
+      y -= 4;
+    }
+    function hr() {
+      page.drawLine({ start: { x: margin, y }, end: { x: right, y }, thickness: 0.5, color: rgb(0.7, 0.72, 0.7) });
+      y -= 10;
+    }
+
+    const em = receipt.emitterSnapshot || {};
+
+    draw(em.displayName || "(emitente)", { font: fontBold, size: 16 });
+    if (em.ids)           draw(em.ids,           { size: 10, color: rgb(0.4, 0.4, 0.4) });
+    if (em.especialidade) draw(em.especialidade, { size: 10, color: rgb(0.4, 0.4, 0.4) });
+    if (em.address)       draw(em.address,       { size: 9,  color: rgb(0.4, 0.4, 0.4) });
+    if (em.phone)         draw("Tel.: " + em.phone, { size: 9, color: rgb(0.4, 0.4, 0.4) });
+    if (em.cnpj)          draw("CNPJ: " + em.cnpj, { size: 9, color: rgb(0.4, 0.4, 0.4) });
+
+    y -= 8; hr();
+
+    draw(`RECIBO  Nº ${String(receipt.sequentialNumber).padStart(4, "0")}`, { font: fontBold, size: 18 });
+    y -= 4;
+
+    draw(`Recebi de ${receipt.patientName || "(paciente)"} a importância de ${fmtCents(receipt.amount)} (${receipt.amountExtenso}), referente a ${receipt.description || "serviço profissional prestado"}.`, { size: 12 });
+
+    y -= 4;
+    draw(`Forma de pagamento: ${receipt.paymentMethodLabel || "—"}`, { size: 10, color: rgb(0.4, 0.4, 0.4) });
+    draw(`Data do pagamento: ${new Date(receipt.paidDate).toLocaleDateString("pt-BR")}`, { size: 10, color: rgb(0.4, 0.4, 0.4) });
+    draw(`Data de emissão: ${new Date(receipt.issueDate).toLocaleDateString("pt-BR")}`, { size: 10, color: rgb(0.4, 0.4, 0.4) });
+
+    y -= 30;
+    page.drawLine({ start: { x: right - 200, y }, end: { x: right, y }, thickness: 0.5, color: rgb(0.3, 0.3, 0.3) });
+    y -= 14;
+    page.drawText(em.displayName || "", { x: right - 200, y, size: 10, font: fontBold });
+    y -= 12;
+    if (em.ids) page.drawText(em.ids, { x: right - 200, y, size: 9, font: fontReg, color: rgb(0.4, 0.4, 0.4) });
+
+    page.drawText("Documento gerado eletronicamente pelo Espaço Prelúdio · espacopreludio.com.br", {
+      x: margin, y: 40, size: 7.5, font: fontReg, color: rgb(0.55, 0.55, 0.55)
+    });
+    page.drawText(`Recibo ${receipt.receiptId}`, {
+      x: margin, y: 28, size: 7.5, font: fontReg, color: rgb(0.55, 0.55, 0.55)
+    });
+
+    const pdfBytes = await pdf.save();
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `recibo-${String(receipt.sequentialNumber).padStart(4, "0")}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
 </script>
 
 </body>
