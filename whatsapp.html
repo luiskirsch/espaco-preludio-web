@@ -1,0 +1,326 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp · Espaço Prelúdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-92">
+  <style>
+    .ep-wa-status { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; }
+    .ep-wa-status--on  { background: rgba(45,106,79,0.10); color: var(--ep-ok); border: 1px solid rgba(45,106,79,0.35); }
+    .ep-wa-status--off { background: rgba(160,43,31,0.06); color: var(--ep-danger); border: 1px solid rgba(160,43,31,0.30); }
+    .ep-wa-status--pending { background: var(--ep-gold-soft); color: var(--ep-warn); border: 1px solid var(--ep-gold-line); }
+    .ep-wa-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 6px currentColor; }
+    .ep-template-textarea { min-height: 160px; font-family: "JetBrains Mono", "Inter", monospace; font-size: 13px; line-height: 1.55; }
+    .ep-vars-help { background: var(--ep-bg-2); border: 1px solid var(--ep-line); border-radius: var(--ep-radius-sm); padding: 12px 14px; font-size: 12px; color: var(--ep-ink-2); }
+    .ep-vars-help code { background: var(--ep-surface); padding: 1px 6px; border-radius: 4px; font-family: "JetBrains Mono", monospace; font-size: 11.5px; color: var(--ep-accent); }
+  </style>
+</head>
+<body>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html">Consultas</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./pacientes.html">Pacientes</a>
+      <a href="./financeiro.html">Financeiro</a>
+      <a href="./clinica.html">Clínica</a>
+      <a href="./inventario.html">Estoque</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./calculadora.html">Calculadora</a>
+      <a href="./documento.html?tipo=atestado">Atestado</a>
+      <a href="./whatsapp.html" class="is-active">WhatsApp</a>
+      <a href="./perfil.html">Perfil</a>
+      <span id="topUserName" class="ep-text-sm ep-text-muted">&nbsp;</span>
+      <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16" style="max-width: 880px;">
+
+  <div class="ep-flex--end-wrap ep-flex">
+    <div>
+      <div class="ep-eyebrow">Comunicação automática</div>
+      <h1 class="ep-h1 ep-mt-12">WhatsApp</h1>
+      <p class="ep-text-muted ep-mt-8 ep-mt-0">
+        Envio automático de confirmação, lembrete 24h antes e cancelamento pros seus pacientes.
+      </p>
+    </div>
+    <span id="instanceStatus" class="ep-wa-status ep-wa-status--pending">
+      <span class="ep-wa-dot"></span>
+      <span id="instanceStatusText">Carregando…</span>
+    </span>
+  </div>
+
+  <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando configuração…</div>
+
+  <div id="contentBlock" class="ep-hide">
+
+    <!-- Setup pendente (Z-API não configurado no servidor) -->
+    <div id="setupPending" class="ep-alert ep-alert--warn ep-mt-16 ep-hide">
+      <strong>⚠ Integração WhatsApp ainda não configurada no servidor.</strong>
+      <p style="margin: 8px 0 0;">
+        O administrador da plataforma precisa configurar as credenciais do Z-API e parear o número
+        de envio. Você pode editar templates e ativar abaixo — começa a funcionar assim que o setup
+        ficar pronto.
+      </p>
+    </div>
+
+    <!-- Status detalhado -->
+    <section class="ep-card ep-mt-16">
+      <h2 class="ep-h3 ep-mt-0">Status da integração</h2>
+      <p class="ep-text-sm ep-text-muted ep-mt-8" id="statusDetail">—</p>
+      <p class="ep-text-xs ep-text-muted ep-mt-12" style="margin-bottom: 0;">
+        Número de envio compartilhado da plataforma. O paciente recebe mensagens automáticas, mas não responde direto a esse número — você define seu telefone de contato abaixo.
+      </p>
+    </section>
+
+    <!-- Configuração geral -->
+    <section class="ep-card ep-mt-16">
+      <div class="ep-flex--end-wrap ep-flex">
+        <h2 class="ep-h3 ep-mt-0">Ativação e identificação</h2>
+        <label class="ep-flex" style="gap: 8px; align-items: center; cursor: pointer;">
+          <input type="checkbox" id="waEnabled">
+          <span class="ep-text-sm">WhatsApp ativado</span>
+        </label>
+      </div>
+      <p class="ep-text-xs ep-text-muted ep-mt-8">Quando desativado, nenhuma mensagem é enviada (mesmo com templates configurados).</p>
+
+      <form class="ep-stack ep-mt-16" id="generalForm">
+        <div class="ep-field">
+          <label class="ep-label" for="clinicName">Nome da clínica ou consultório</label>
+          <input id="clinicName" class="ep-input" type="text" maxlength="100" placeholder="Ex.: Espaço Vínculo">
+          <p class="ep-text-xs ep-text-muted ep-mt-0">Aparece na assinatura das mensagens (variável <code style="background: var(--ep-surface); padding: 1px 5px; border-radius: 4px; font-size: 11px;">{{nome_clinica}}</code>).</p>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="phoneClinic">Telefone de contato</label>
+          <input id="phoneClinic" class="ep-input" type="tel" maxlength="30" placeholder="(48) 3333-4444">
+          <p class="ep-text-xs ep-text-muted ep-mt-0">Aparece na mensagem pra paciente ligar se tiver dúvida (<code style="background: var(--ep-surface); padding: 1px 5px; border-radius: 4px; font-size: 11px;">{{telefone_clinica}}</code>).</p>
+        </div>
+      </form>
+    </section>
+
+    <!-- Templates -->
+    <section class="ep-card ep-mt-16">
+      <h2 class="ep-h3 ep-mt-0">Templates de mensagem</h2>
+      <p class="ep-text-sm ep-text-muted ep-mt-8">
+        Personalize o texto de cada tipo de mensagem. Deixe em branco pra usar o template padrão.
+      </p>
+
+      <div class="ep-vars-help ep-mt-12">
+        <strong>Variáveis disponíveis:</strong>
+        <code>{{paciente}}</code>
+        <code>{{profissional}}</code>
+        <code>{{data}}</code>
+        <code>{{hora}}</code>
+        <code>{{link_confirmar}}</code>
+        <code>{{link_cancelar}}</code>
+        <code>{{telefone_clinica}}</code>
+        <code>{{nome_clinica}}</code>
+      </div>
+
+      <div class="ep-stack ep-mt-16" style="gap: 24px;">
+        <div class="ep-field">
+          <label class="ep-label" for="tplConfirmacao">Confirmação (ao criar consulta)</label>
+          <textarea id="tplConfirmacao" class="ep-input ep-template-textarea" maxlength="1500" placeholder="Deixe em branco pra usar o template padrão."></textarea>
+          <p class="ep-text-xs ep-text-muted ep-mt-0">Enviado imediatamente ao criar uma consulta com WhatsApp do paciente preenchido.</p>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="tplLembrete">Lembrete (24h antes)</label>
+          <textarea id="tplLembrete" class="ep-input ep-template-textarea" maxlength="1500" placeholder="Deixe em branco pra usar o template padrão."></textarea>
+          <p class="ep-text-xs ep-text-muted ep-mt-0">Disparado automaticamente 24h antes do horário agendado.</p>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="tplCancelamento">Cancelamento</label>
+          <textarea id="tplCancelamento" class="ep-input ep-template-textarea" maxlength="1500" placeholder="Deixe em branco pra usar o template padrão."></textarea>
+          <p class="ep-text-xs ep-text-muted ep-mt-0">Enviado quando a consulta é cancelada pelo profissional.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ações -->
+    <div class="ep-flex ep-mt-16" style="gap: 12px;">
+      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg" id="saveBtn">Salvar configuração</button>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--lg" id="resetTplBtn">Restaurar templates padrão</button>
+    </div>
+    <div class="ep-status ep-mt-12" id="saveStatus"></div>
+
+    <!-- Teste de envio -->
+    <section class="ep-card ep-mt-24">
+      <h2 class="ep-h3 ep-mt-0">Testar envio</h2>
+      <p class="ep-text-sm ep-text-muted ep-mt-8">
+        Mande uma mensagem de teste pra um número WhatsApp seu pra confirmar que a integração está funcionando antes de criar consultas reais.
+      </p>
+      <form class="ep-flex ep-mt-12" id="testForm" style="gap: 10px; flex-wrap: wrap; align-items: flex-end;">
+        <div class="ep-field" style="flex: 1; min-width: 240px;">
+          <label class="ep-label" for="testPhone">Seu WhatsApp (teste)</label>
+          <input id="testPhone" class="ep-input" type="tel" maxlength="30" placeholder="(48) 99999-9999">
+        </div>
+        <button type="button" class="ep-btn ep-btn--ghost" id="testBtn">Enviar mensagem teste</button>
+      </form>
+      <div class="ep-status ep-mt-12" id="testStatus"></div>
+    </section>
+
+  </div>
+
+</main>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js?v=2-82";
+  import { clearDek } from "./js/crypto.js";
+
+  const session = await requireTherapist({ requireDek: false });
+  document.getElementById("topUserName").textContent = session.therapist.displayName || "";
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    clearDek();
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
+
+  const { idToken } = session;
+  const $ = (id) => document.getElementById(id);
+
+  async function api(path, opts = {}) {
+    const r = await fetch(`${BACKEND_BASE_URL}${path}`, {
+      ...opts,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${idToken}`,
+        ...(opts.headers || {})
+      }
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.ok) throw new Error(data?.error || `HTTP_${r.status}`);
+    return data;
+  }
+
+  let defaults = {};
+  async function load() {
+    try {
+      const data = await api("/therapy/profissional/whatsapp/config");
+      defaults = data.defaults || {};
+      const cfg = data.config || {};
+
+      $("waEnabled").checked = Boolean(cfg.enabled);
+      $("clinicName").value  = cfg.clinicName  || (session.therapist.displayName || "");
+      $("phoneClinic").value = cfg.phoneClinic || "";
+      $("tplConfirmacao").value  = cfg.templates?.confirmacao  || "";
+      $("tplLembrete").value     = cfg.templates?.lembrete     || "";
+      $("tplCancelamento").value = cfg.templates?.cancelamento || "";
+
+      // Status box
+      const st = data.instanceStatus || {};
+      const stEl = $("instanceStatus");
+      const stTxt = $("instanceStatusText");
+      const detail = $("statusDetail");
+      const setupPending = $("setupPending");
+
+      if (!st.configured) {
+        stEl.className = "ep-wa-status ep-wa-status--pending";
+        stTxt.textContent = "Aguardando setup";
+        detail.textContent = "O administrador da plataforma ainda não configurou as credenciais do Z-API. Suas mensagens só começarão a ser enviadas após esse passo.";
+        setupPending.classList.remove("ep-hide");
+      } else if (st.connected) {
+        stEl.className = "ep-wa-status ep-wa-status--on";
+        stTxt.textContent = "Conectado";
+        detail.textContent = "Número da plataforma pareado e pronto pra enviar mensagens.";
+      } else {
+        stEl.className = "ep-wa-status ep-wa-status--off";
+        stTxt.textContent = "Desconectado";
+        detail.textContent = "A instância do Z-API está configurada, mas o número de envio não está pareado no momento (provavelmente o WhatsApp Web foi deslogado). Avise o suporte se persistir.";
+      }
+
+      $("loadingBanner").classList.add("ep-hide");
+      $("contentBlock").classList.remove("ep-hide");
+    } catch (e) {
+      $("loadingBanner").innerHTML = `Erro ao carregar: ${e.message} <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" style="margin-left: 12px;" id="retry">Tentar de novo</button>`;
+      $("loadingBanner").className = "ep-alert ep-alert--danger";
+      $("retry")?.addEventListener("click", load);
+    }
+  }
+  await load();
+
+  // Salvar config
+  $("saveBtn").addEventListener("click", async () => {
+    const status = $("saveStatus");
+    status.textContent = "Salvando…";
+    status.className = "ep-status";
+    try {
+      const body = {
+        enabled:     $("waEnabled").checked,
+        clinicName:  $("clinicName").value.trim(),
+        phoneClinic: $("phoneClinic").value.trim(),
+        templates: {
+          confirmacao:  $("tplConfirmacao").value,
+          lembrete:     $("tplLembrete").value,
+          cancelamento: $("tplCancelamento").value
+        }
+      };
+      await api("/therapy/profissional/whatsapp/config", {
+        method: "PATCH",
+        body: JSON.stringify(body)
+      });
+      status.textContent = "✓ Configuração salva.";
+      status.className = "ep-status is-ok";
+    } catch (e) {
+      status.textContent = "Erro: " + e.message;
+      status.className = "ep-status is-err";
+    }
+  });
+
+  // Restaurar templates padrão
+  $("resetTplBtn").addEventListener("click", () => {
+    if (!confirm("Limpar os 3 templates customizados? Você volta a usar os textos padrão da plataforma.")) return;
+    $("tplConfirmacao").value = "";
+    $("tplLembrete").value = "";
+    $("tplCancelamento").value = "";
+    $("saveStatus").textContent = "Templates limpos. Clique em 'Salvar' pra confirmar.";
+    $("saveStatus").className = "ep-status";
+  });
+
+  // Teste de envio
+  $("testBtn").addEventListener("click", async () => {
+    const phone = $("testPhone").value.trim();
+    const status = $("testStatus");
+    if (!phone) {
+      status.textContent = "Informe um número.";
+      status.className = "ep-status is-err"; return;
+    }
+    status.textContent = "Enviando…";
+    status.className = "ep-status";
+    try {
+      const r = await api("/therapy/profissional/whatsapp/teste", {
+        method: "POST",
+        body: JSON.stringify({ to: phone })
+      });
+      status.textContent = "✓ Mensagem enviada. Confira seu WhatsApp.";
+      status.className = "ep-status is-ok";
+    } catch (e) {
+      if (e.message === "ZAPI_NAO_CONFIGURADO") {
+        status.textContent = "Credenciais Z-API ainda não configuradas pelo administrador da plataforma.";
+      } else {
+        status.textContent = "Erro: " + e.message;
+      }
+      status.className = "ep-status is-err";
+    }
+  });
+</script>
+
+</body>
+</html>
