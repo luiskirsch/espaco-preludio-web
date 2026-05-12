@@ -128,8 +128,9 @@ export async function fetchTherapistProfile(idToken, uid) {
 function applyCapabilityVisibility(capabilities) {
   const set = new Set(capabilities || []);
   const RULES = [
-    { match: "receita.html",   capability: "receita" },
-    { match: "documento.html", capability: "documentos-clinicos" }
+    { match: "receita.html",     capability: "receita" },
+    { match: "documento.html",   capability: "documentos-clinicos" },
+    { match: "calculadora.html", capability: "calculadora-clinica" }
   ];
   document.querySelectorAll("a[href], button[data-href]").forEach(el => {
     const href = (el.getAttribute("href") || el.getAttribute("data-href") || "").toLowerCase();

@@ -1,0 +1,562 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora clínica · Espaço Prelúdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-89">
+  <style>
+    .ep-calc-block { background: var(--ep-surface); border: 1px solid var(--ep-line); border-radius: var(--ep-radius); padding: 0; margin-bottom: 12px; transition: box-shadow 120ms ease; }
+    .ep-calc-block[open] { box-shadow: var(--ep-shadow-soft); }
+    .ep-calc-summary { padding: 16px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 600; color: var(--ep-ink); list-style: none; }
+    .ep-calc-summary::-webkit-details-marker { display: none; }
+    .ep-calc-summary::after { content: "▾"; font-size: 12px; color: var(--ep-ink-3); transition: transform 120ms ease; }
+    .ep-calc-block[open] .ep-calc-summary::after { transform: rotate(180deg); }
+    .ep-calc-summary:hover { background: var(--ep-bg-2); }
+    .ep-calc-body { padding: 0 20px 20px; border-top: 1px solid var(--ep-line); padding-top: 18px; }
+    .ep-calc-result { background: var(--ep-gold-soft); border: 1px solid var(--ep-gold-line); border-radius: var(--ep-radius-sm); padding: 16px 20px; margin-top: 16px; }
+    .ep-calc-result__main { font-family: var(--ep-font-serif); font-size: 24px; font-weight: 600; color: var(--ep-ink); line-height: 1.1; }
+    .ep-calc-result__sub { color: var(--ep-ink-2); font-size: 13px; margin-top: 6px; }
+    .ep-calc-formula { font-family: "JetBrains Mono", monospace; font-size: 11.5px; color: var(--ep-ink-3); margin-top: 4px; }
+    .ep-calc-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+    .ep-calc-disclaimer { background: rgba(176, 125, 44, 0.08); border: 1px solid rgba(176, 125, 44, 0.30); border-radius: var(--ep-radius); padding: 14px 18px; color: #6e4f1a; font-size: 13.5px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html">Consultas</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./pacientes.html">Pacientes</a>
+      <a href="./financeiro.html">Financeiro</a>
+      <a href="./inventario.html">Estoque</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./calculadora.html" class="is-active">Calculadora</a>
+      <a href="./documento.html?tipo=atestado">Atestado</a>
+      <a href="./perfil.html">Perfil</a>
+      <span id="topUserName" class="ep-text-sm ep-text-muted">&nbsp;</span>
+      <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16" style="max-width: 880px;">
+
+  <div class="ep-eyebrow">Ferramenta clínica</div>
+  <h1 class="ep-h1 ep-mt-12">Calculadora clínica</h1>
+  <p class="ep-text-muted ep-mt-8 ep-mt-0">
+    Cálculos assistidos pra dose, infusão e avaliação. Sete fórmulas essenciais do dia-a-dia.
+  </p>
+
+  <div class="ep-calc-disclaimer ep-mt-16">
+    <strong>⚠ Calculadora assistiva — não prescritiva.</strong>
+    Os resultados servem como apoio ao raciocínio clínico. A decisão final sobre dose,
+    via e frequência é responsabilidade do profissional prescritor. Sempre confira a
+    bula, o estado clínico do paciente e interações medicamentosas.
+  </div>
+
+  <div class="ep-mt-24">
+
+    <!-- 1. Dosagem por peso -->
+    <details class="ep-calc-block" open>
+      <summary class="ep-calc-summary">
+        <span>Dosagem por peso (mg/kg)</span>
+        <span class="ep-calc-tag" style="background: var(--ep-accent-soft); color: var(--ep-accent);">Mais usada</span>
+      </summary>
+      <div class="ep-calc-body">
+        <p class="ep-text-sm ep-text-muted ep-mt-0">
+          Calcula a dose total por dia (e por administração) a partir da dose recomendada por kg.
+        </p>
+        <form class="ep-stack" data-calc="peso">
+          <div class="ep-row">
+            <div class="ep-field">
+              <label class="ep-label">Dose (mg/kg/dia)</label>
+              <input class="ep-input" type="number" step="0.01" min="0" data-input="dose" placeholder="Ex.: 10">
+            </div>
+            <div class="ep-field">
+              <label class="ep-label">Peso do paciente (kg)</label>
+              <input class="ep-input" type="number" step="0.01" min="0" data-input="peso" placeholder="Ex.: 70">
+            </div>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label">Frequência (vezes ao dia)</label>
+            <input class="ep-input" type="number" step="1" min="1" max="12" value="1" data-input="freq">
+          </div>
+          <button type="button" class="ep-btn ep-btn--primary" data-action="calc">Calcular</button>
+          <div class="ep-calc-result" data-result style="display: none;">
+            <div class="ep-calc-result__main" data-result-main>—</div>
+            <div class="ep-calc-result__sub" data-result-sub>—</div>
+            <div class="ep-calc-formula" data-result-formula>—</div>
+          </div>
+        </form>
+      </div>
+    </details>
+
+    <!-- 2. Superfície corporal (BSA Mosteller) -->
+    <details class="ep-calc-block">
+      <summary class="ep-calc-summary">
+        <span>Superfície corporal (BSA Mosteller)</span>
+        <span class="ep-calc-tag" style="background: var(--ep-gold-soft); color: var(--ep-warn);">Oncologia · Pediatria</span>
+      </summary>
+      <div class="ep-calc-body">
+        <p class="ep-text-sm ep-text-muted ep-mt-0">
+          Fórmula de Mosteller para superfície corporal. Padrão em quimioterapia e doses pediátricas.
+        </p>
+        <form class="ep-stack" data-calc="bsa">
+          <div class="ep-row">
+            <div class="ep-field">
+              <label class="ep-label">Peso (kg)</label>
+              <input class="ep-input" type="number" step="0.01" min="0" data-input="peso" placeholder="Ex.: 70">
+            </div>
+            <div class="ep-field">
+              <label class="ep-label">Altura (cm)</label>
+              <input class="ep-input" type="number" step="0.1" min="0" data-input="altura" placeholder="Ex.: 170">
+            </div>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label">Dose (mg/m²) — opcional</label>
+            <input class="ep-input" type="number" step="0.01" min="0" data-input="dose" placeholder="Para calcular dose total">
+          </div>
+          <button type="button" class="ep-btn ep-btn--primary" data-action="calc">Calcular</button>
+          <div class="ep-calc-result" data-result style="display: none;">
+            <div class="ep-calc-result__main" data-result-main>—</div>
+            <div class="ep-calc-result__sub" data-result-sub>—</div>
+            <div class="ep-calc-formula" data-result-formula>—</div>
+          </div>
+        </form>
+      </div>
+    </details>
+
+    <!-- 3. Conversão de unidades -->
+    <details class="ep-calc-block">
+      <summary class="ep-calc-summary">
+        <span>Conversão de unidades</span>
+        <span class="ep-calc-tag" style="background: var(--ep-bg-2); color: var(--ep-ink-2);">Utilitário</span>
+      </summary>
+      <div class="ep-calc-body">
+        <p class="ep-text-sm ep-text-muted ep-mt-0">
+          Massa (g/mg/mcg), volume (L/mL) e gotas (1 mL = 20 macrogotas = 60 microgotas).
+        </p>
+        <form class="ep-stack" data-calc="conv">
+          <div class="ep-row">
+            <div class="ep-field">
+              <label class="ep-label">Valor</label>
+              <input class="ep-input" type="number" step="any" min="0" data-input="valor" placeholder="Ex.: 500">
+            </div>
+            <div class="ep-field">
+              <label class="ep-label">De</label>
+              <select class="ep-select" data-input="from">
+                <optgroup label="Massa">
+                  <option value="g">g (grama)</option>
+                  <option value="mg" selected>mg (miligrama)</option>
+                  <option value="mcg">mcg (micrograma)</option>
+                </optgroup>
+                <optgroup label="Volume">
+                  <option value="L">L (litro)</option>
+                  <option value="mL">mL (mililitro)</option>
+                  <option value="macrogota">macrogotas (20/mL)</option>
+                  <option value="microgota">microgotas (60/mL)</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="ep-field">
+              <label class="ep-label">Para</label>
+              <select class="ep-select" data-input="to">
+                <optgroup label="Massa">
+                  <option value="g">g</option>
+                  <option value="mg">mg</option>
+                  <option value="mcg" selected>mcg</option>
+                </optgroup>
+                <optgroup label="Volume">
+                  <option value="L">L</option>
+                  <option value="mL">mL</option>
+                  <option value="macrogota">macrogotas</option>
+                  <option value="microgota">microgotas</option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+          <button type="button" class="ep-btn ep-btn--primary" data-action="calc">Converter</button>
+          <div class="ep-calc-result" data-result style="display: none;">
+            <div class="ep-calc-result__main" data-result-main>—</div>
+            <div class="ep-calc-result__sub" data-result-sub>—</div>
+          </div>
+        </form>
+      </div>
+    </details>
+
+    <!-- 4. Taxa de infusão / Gotejamento -->
+    <details class="ep-calc-block">
+      <summary class="ep-calc-summary">
+        <span>Taxa de infusão / Gotejamento</span>
+        <span class="ep-calc-tag" style="background: var(--ep-gold-soft); color: var(--ep-warn);">Hospitalar</span>
+      </summary>
+      <div class="ep-calc-body">
+        <p class="ep-text-sm ep-text-muted ep-mt-0">
+          Converte volume + tempo em mL/h e gotas/min (macro = 20 gotas/mL, micro = 60 gotas/mL).
+        </p>
+        <form class="ep-stack" data-calc="infusao">
+          <div class="ep-row">
+            <div class="ep-field">
+              <label class="ep-label">Volume total (mL)</label>
+              <input class="ep-input" type="number" step="0.1" min="0" data-input="volume" placeholder="Ex.: 500">
+            </div>
+            <div class="ep-field">
+              <label class="ep-label">Tempo (horas)</label>
+              <input class="ep-input" type="number" step="0.1" min="0" data-input="horas" placeholder="Ex.: 4">
+            </div>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label">Equipo</label>
+            <select class="ep-select" data-input="equipo">
+              <option value="20">Macrogotas (20 gotas/mL)</option>
+              <option value="60">Microgotas (60 gotas/mL)</option>
+            </select>
+          </div>
+          <button type="button" class="ep-btn ep-btn--primary" data-action="calc">Calcular</button>
+          <div class="ep-calc-result" data-result style="display: none;">
+            <div class="ep-calc-result__main" data-result-main>—</div>
+            <div class="ep-calc-result__sub" data-result-sub>—</div>
+            <div class="ep-calc-formula" data-result-formula>—</div>
+          </div>
+        </form>
+      </div>
+    </details>
+
+    <!-- 5. Clearance de creatinina (Cockcroft-Gault) -->
+    <details class="ep-calc-block">
+      <summary class="ep-calc-summary">
+        <span>Clearance de creatinina (Cockcroft-Gault)</span>
+        <span class="ep-calc-tag" style="background: var(--ep-accent-soft); color: var(--ep-accent);">Função renal</span>
+      </summary>
+      <div class="ep-calc-body">
+        <p class="ep-text-sm ep-text-muted ep-mt-0">
+          Estima ClCr pra ajuste de dose em pacientes com função renal alterada. Use peso corporal real;
+          em obesos considere peso ideal. Pode subestimar em idosos com pouca massa muscular.
+        </p>
+        <form class="ep-stack" data-calc="clcr">
+          <div class="ep-row">
+            <div class="ep-field">
+              <label class="ep-label">Idade (anos)</label>
+              <input class="ep-input" type="number" step="1" min="0" max="120" data-input="idade" placeholder="Ex.: 65">
+            </div>
+            <div class="ep-field">
+              <label class="ep-label">Peso (kg)</label>
+              <input class="ep-input" type="number" step="0.1" min="0" data-input="peso" placeholder="Ex.: 70">
+            </div>
+          </div>
+          <div class="ep-row">
+            <div class="ep-field">
+              <label class="ep-label">Creatinina sérica (mg/dL)</label>
+              <input class="ep-input" type="number" step="0.01" min="0" data-input="creat" placeholder="Ex.: 1.2">
+            </div>
+            <div class="ep-field">
+              <label class="ep-label">Sexo biológico</label>
+              <select class="ep-select" data-input="sexo">
+                <option value="M">Masculino</option>
+                <option value="F">Feminino</option>
+              </select>
+            </div>
+          </div>
+          <button type="button" class="ep-btn ep-btn--primary" data-action="calc">Calcular</button>
+          <div class="ep-calc-result" data-result style="display: none;">
+            <div class="ep-calc-result__main" data-result-main>—</div>
+            <div class="ep-calc-result__sub" data-result-sub>—</div>
+            <div class="ep-calc-formula" data-result-formula>—</div>
+          </div>
+        </form>
+      </div>
+    </details>
+
+    <!-- 6. IMC -->
+    <details class="ep-calc-block">
+      <summary class="ep-calc-summary">
+        <span>IMC (Índice de Massa Corporal)</span>
+        <span class="ep-calc-tag" style="background: var(--ep-bg-2); color: var(--ep-ink-2);">Avaliação</span>
+      </summary>
+      <div class="ep-calc-body">
+        <p class="ep-text-sm ep-text-muted ep-mt-0">
+          Classificação OMS adulto. Não aplicável a gestantes, atletas com alta massa muscular ou idosos &gt;65a.
+        </p>
+        <form class="ep-stack" data-calc="imc">
+          <div class="ep-row">
+            <div class="ep-field">
+              <label class="ep-label">Peso (kg)</label>
+              <input class="ep-input" type="number" step="0.1" min="0" data-input="peso" placeholder="Ex.: 75">
+            </div>
+            <div class="ep-field">
+              <label class="ep-label">Altura (cm)</label>
+              <input class="ep-input" type="number" step="0.1" min="0" data-input="altura" placeholder="Ex.: 175">
+            </div>
+          </div>
+          <button type="button" class="ep-btn ep-btn--primary" data-action="calc">Calcular</button>
+          <div class="ep-calc-result" data-result style="display: none;">
+            <div class="ep-calc-result__main" data-result-main>—</div>
+            <div class="ep-calc-result__sub" data-result-sub>—</div>
+            <div class="ep-calc-formula" data-result-formula>—</div>
+          </div>
+        </form>
+      </div>
+    </details>
+
+    <!-- 7. Idade pediátrica precisa -->
+    <details class="ep-calc-block">
+      <summary class="ep-calc-summary">
+        <span>Idade pediátrica precisa</span>
+        <span class="ep-calc-tag" style="background: var(--ep-bg-2); color: var(--ep-ink-2);">Pediatria</span>
+      </summary>
+      <div class="ep-calc-body">
+        <p class="ep-text-sm ep-text-muted ep-mt-0">
+          Calcula anos, meses e dias exatos a partir da data de nascimento. Importante pra doses pediátricas e cobertura vacinal.
+        </p>
+        <form class="ep-stack" data-calc="idade">
+          <div class="ep-field">
+            <label class="ep-label">Data de nascimento</label>
+            <input class="ep-input" type="date" data-input="dn">
+          </div>
+          <button type="button" class="ep-btn ep-btn--primary" data-action="calc">Calcular</button>
+          <div class="ep-calc-result" data-result style="display: none;">
+            <div class="ep-calc-result__main" data-result-main>—</div>
+            <div class="ep-calc-result__sub" data-result-sub>—</div>
+          </div>
+        </form>
+      </div>
+    </details>
+
+  </div>
+
+</main>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js?v=2-82";
+  import { clearDek } from "./js/crypto.js";
+
+  const session = await requireTherapist({ requireDek: false });
+  document.getElementById("topUserName").textContent = session.therapist.displayName || "";
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    clearDek();
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
+
+  // Calculadora não tem dado sensível e roda 100% client-side. Não envia
+  // nada pro backend além do auth normal. Cap "calculadora-clinica" só
+  // controla visibilidade do link no nav — acesso direto à URL fica
+  // livre pra qualquer therapist logado (apoio ao raciocínio).
+
+  // ─── Helpers de número ──────────────────────────────────────────────
+  function num(el, name) {
+    const raw = el.querySelector(`[data-input="${name}"]`)?.value;
+    const n = Number(String(raw || "").replace(",", "."));
+    return Number.isFinite(n) ? n : null;
+  }
+  function txt(el, name) {
+    return el.querySelector(`[data-input="${name}"]`)?.value || "";
+  }
+  function fmt(n, decimals = 2) {
+    if (!Number.isFinite(n)) return "—";
+    return n.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  }
+  function setResult(form, main, sub, formula) {
+    const result = form.querySelector("[data-result]");
+    result.style.display = "block";
+    form.querySelector("[data-result-main]").textContent = main;
+    form.querySelector("[data-result-sub]").textContent = sub || "";
+    const fEl = form.querySelector("[data-result-formula]");
+    if (fEl) fEl.textContent = formula || "";
+  }
+  function setError(form, msg) {
+    const result = form.querySelector("[data-result]");
+    result.style.display = "block";
+    result.style.background = "rgba(160, 43, 31, 0.06)";
+    result.style.borderColor = "rgba(160, 43, 31, 0.30)";
+    form.querySelector("[data-result-main]").textContent = "Verifique os campos";
+    form.querySelector("[data-result-sub]").textContent = msg;
+    const fEl = form.querySelector("[data-result-formula]");
+    if (fEl) fEl.textContent = "";
+  }
+  function resetResultStyle(form) {
+    const result = form.querySelector("[data-result]");
+    result.style.background = "";
+    result.style.borderColor = "";
+  }
+
+  // ─── Calculadoras ──────────────────────────────────────────────────
+  const CALCS = {
+    peso(form) {
+      const dose = num(form, "dose"), peso = num(form, "peso"), freq = num(form, "freq") || 1;
+      if (dose === null || peso === null || dose <= 0 || peso <= 0) {
+        return setError(form, "Dose e peso devem ser maiores que zero.");
+      }
+      const total = dose * peso;
+      const porAdmin = total / freq;
+      setResult(form,
+        `${fmt(total)} mg/dia`,
+        freq > 1 ? `${fmt(porAdmin)} mg por administração (${freq}× ao dia)` : "Dose única diária",
+        `Dose total = dose × peso = ${fmt(dose)} × ${fmt(peso)} = ${fmt(total)} mg`
+      );
+    },
+    bsa(form) {
+      const peso = num(form, "peso"), altura = num(form, "altura"), dose = num(form, "dose");
+      if (peso === null || altura === null || peso <= 0 || altura <= 0) {
+        return setError(form, "Peso e altura devem ser maiores que zero.");
+      }
+      const bsa = Math.sqrt((altura * peso) / 3600);
+      if (dose !== null && dose > 0) {
+        const total = bsa * dose;
+        setResult(form,
+          `${fmt(total)} mg`,
+          `BSA ${fmt(bsa)} m² × ${fmt(dose)} mg/m²`,
+          `BSA = √((altura × peso)/3600) = √((${fmt(altura)} × ${fmt(peso)})/3600) = ${fmt(bsa, 3)} m²`
+        );
+      } else {
+        setResult(form,
+          `BSA = ${fmt(bsa, 3)} m²`,
+          "Multiplique pela dose em mg/m² pra obter dose total.",
+          `Mosteller: √((${fmt(altura)} × ${fmt(peso)})/3600)`
+        );
+      }
+    },
+    conv(form) {
+      const valor = num(form, "valor");
+      const from = txt(form, "from"), to = txt(form, "to");
+      if (valor === null || valor < 0) return setError(form, "Valor inválido.");
+
+      // Conversão pra unidade base (mg pra massa, mL pra volume)
+      const TO_BASE = {
+        g: 1000, mg: 1, mcg: 0.001,                  // base = mg
+        L: 1000, mL: 1, macrogota: 0.05, microgota: 0.05/3  // base = mL (1 mL = 20 macrogotas = 60 micro)
+      };
+      const isMass = (u) => ["g","mg","mcg"].includes(u);
+      const isVol  = (u) => ["L","mL","macrogota","microgota"].includes(u);
+
+      if ((isMass(from) && !isMass(to)) || (isVol(from) && !isVol(to))) {
+        return setError(form, "Não dá pra converter massa em volume (precisa de concentração).");
+      }
+      const baseValue = valor * TO_BASE[from];
+      const result = baseValue / TO_BASE[to];
+      setResult(form,
+        `${fmt(result, result < 1 ? 4 : 2)} ${to}`,
+        `${fmt(valor)} ${from} = ${fmt(result, result < 1 ? 4 : 2)} ${to}`
+      );
+    },
+    infusao(form) {
+      const volume = num(form, "volume"), horas = num(form, "horas"), equipo = num(form, "equipo");
+      if (volume === null || horas === null || volume <= 0 || horas <= 0) {
+        return setError(form, "Volume e tempo devem ser maiores que zero.");
+      }
+      const mlPorHora = volume / horas;
+      const gotasMin = (volume * equipo) / (horas * 60);
+      const tipoEquipo = equipo === 60 ? "microgotas" : "macrogotas";
+      setResult(form,
+        `${fmt(gotasMin, 0)} ${tipoEquipo}/min`,
+        `${fmt(mlPorHora)} mL/h em ${equipo} gotas/mL`,
+        `gotas/min = (${fmt(volume)} mL × ${equipo}) / (${fmt(horas)} h × 60 min) = ${fmt(gotasMin, 1)}`
+      );
+    },
+    clcr(form) {
+      const idade = num(form, "idade"), peso = num(form, "peso"), creat = num(form, "creat");
+      const sexo = txt(form, "sexo");
+      if (idade === null || peso === null || creat === null || idade < 0 || peso <= 0 || creat <= 0) {
+        return setError(form, "Preencha todos os campos com valores válidos.");
+      }
+      let clcr = ((140 - idade) * peso) / (72 * creat);
+      if (sexo === "F") clcr *= 0.85;
+      let classificacao = "";
+      if (clcr >= 90)      classificacao = "Função renal normal (≥90)";
+      else if (clcr >= 60) classificacao = "Insuficiência renal leve (60–89)";
+      else if (clcr >= 30) classificacao = "Insuficiência renal moderada (30–59)";
+      else if (clcr >= 15) classificacao = "Insuficiência renal severa (15–29)";
+      else                 classificacao = "Falência renal (<15) — considerar diálise";
+      const fatorSexo = sexo === "F" ? " × 0,85 (feminino)" : "";
+      setResult(form,
+        `ClCr = ${fmt(clcr, 1)} mL/min`,
+        classificacao,
+        `((140 − ${idade}) × ${fmt(peso)}) / (72 × ${fmt(creat)})${fatorSexo}`
+      );
+    },
+    imc(form) {
+      const peso = num(form, "peso"), altura = num(form, "altura");
+      if (peso === null || altura === null || peso <= 0 || altura <= 0) {
+        return setError(form, "Peso e altura devem ser maiores que zero.");
+      }
+      const alturaM = altura / 100;
+      const imc = peso / (alturaM * alturaM);
+      let classificacao;
+      if      (imc < 18.5) classificacao = "Baixo peso";
+      else if (imc < 25)   classificacao = "Eutrofia (peso normal)";
+      else if (imc < 30)   classificacao = "Sobrepeso";
+      else if (imc < 35)   classificacao = "Obesidade grau I";
+      else if (imc < 40)   classificacao = "Obesidade grau II";
+      else                 classificacao = "Obesidade grau III";
+      setResult(form,
+        `IMC = ${fmt(imc, 1)} kg/m²`,
+        classificacao + " (classificação OMS)",
+        `${fmt(peso)} / (${fmt(alturaM)})² = ${fmt(imc, 2)}`
+      );
+    },
+    idade(form) {
+      const dnStr = txt(form, "dn");
+      if (!dnStr) return setError(form, "Selecione a data de nascimento.");
+      const dn = new Date(dnStr + "T12:00:00");
+      const hoje = new Date();
+      if (isNaN(dn.getTime()) || dn > hoje) return setError(form, "Data inválida ou futura.");
+      let anos  = hoje.getFullYear() - dn.getFullYear();
+      let meses = hoje.getMonth()    - dn.getMonth();
+      let dias  = hoje.getDate()     - dn.getDate();
+      if (dias < 0) {
+        meses -= 1;
+        const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth(), 0).getDate();
+        dias += ultimoDia;
+      }
+      if (meses < 0) { anos -= 1; meses += 12; }
+      const partes = [];
+      if (anos > 0)  partes.push(`${anos} ${anos === 1 ? "ano" : "anos"}`);
+      if (meses > 0) partes.push(`${meses} ${meses === 1 ? "mês" : "meses"}`);
+      if (dias > 0)  partes.push(`${dias} ${dias === 1 ? "dia" : "dias"}`);
+      const totalDias = Math.floor((hoje - dn) / 86_400_000);
+      setResult(form,
+        partes.join(", ") || "0 dias",
+        `Total: ${totalDias.toLocaleString("pt-BR")} dias`
+      );
+    }
+  };
+
+  // Wire-up: cada form com data-calc dispara o handler correspondente.
+  document.querySelectorAll("form[data-calc]").forEach(form => {
+    const kind = form.dataset.calc;
+    const btn = form.querySelector('[data-action="calc"]');
+    if (!btn || !CALCS[kind]) return;
+    btn.addEventListener("click", () => {
+      resetResultStyle(form);
+      CALCS[kind](form);
+    });
+    // Enter dentro de input também dispara
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      resetResultStyle(form);
+      CALCS[kind](form);
+    });
+  });
+</script>
+
+</body>
+</html>
