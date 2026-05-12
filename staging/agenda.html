@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-5">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-6">
 </head>
 <body>
 
@@ -223,6 +223,44 @@
   </div>
 </div>
 
+<!-- Modal: ação no slot vazio (criar consulta ou nota) -->
+<div class="ep-modal" id="slotActionModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel ep-modal__panel--md">
+    <h3 class="ep-modal__title" id="slotActionTitle">Horário</h3>
+    <p class="ep-modal__sub" id="slotActionSub">—</p>
+    <div style="padding: 8px 28px 0;">
+      <button type="button" class="ep-btn ep-btn--primary ep-btn--block" id="slotCreateSessionBtn">📅 Criar consulta</button>
+      <div class="ep-text-xs ep-text-muted ep-text-center ep-mt-12" style="margin-bottom: 12px;">— ou —</div>
+      <label class="ep-label" for="slotNoteText">Adicionar observação</label>
+      <textarea id="slotNoteText" class="ep-input" rows="3" maxlength="300" placeholder="Ex.: almoço, supervisão, ligar pro paciente X…"></textarea>
+      <div class="ep-status" id="slotActionStatus"></div>
+    </div>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="slotActionCancelBtn">Fechar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="slotSaveNoteBtn">Salvar observação</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: editar/remover observação -->
+<div class="ep-modal" id="noteEditModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel ep-modal__panel--md">
+    <h3 class="ep-modal__title">Editar observação</h3>
+    <p class="ep-modal__sub" id="noteEditSub">—</p>
+    <div style="padding: 8px 28px 0;">
+      <label class="ep-label" for="noteEditText">Texto</label>
+      <textarea id="noteEditText" class="ep-input" rows="3" maxlength="300"></textarea>
+      <div class="ep-status" id="noteEditStatus"></div>
+    </div>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--danger" id="noteEditDeleteBtn">Remover</button>
+      <span style="flex:1;"></span>
+      <button type="button" class="ep-btn ep-btn--ghost" id="noteEditCancelBtn">Fechar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="noteEditSaveBtn">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: Configurações de agenda -->
 <div class="ep-modal" id="agendaConfigModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel ep-modal__panel--md">
@@ -302,6 +340,7 @@
   let weekStart = getMondayOf(new Date()); // Date 00:00 da segunda da semana atual
   let allSessions  = []; // todas, do backend (limit 200)
   let allBlackouts = []; // bloqueios do terapeuta
+  let allNotes     = []; // observações em slots vazios
 
   function getMondayOf(date) {
     const d = new Date(date);
@@ -376,7 +415,12 @@
           url: `${BACKEND_BASE_URL}/therapy/agenda/blackouts`,
           idToken, uid, key: "blackouts", ttl: 60_000,
           onData: (data) => { allBlackouts = Array.isArray(data.blackouts) ? data.blackouts : []; showAgenda(); }
-        }).catch(() => { /* blackouts opcional */ })
+        }).catch(() => { /* blackouts opcional */ }),
+        cachedGet({
+          url: `${BACKEND_BASE_URL}/therapy/agenda/notes`,
+          idToken, uid, key: "agendaNotes", ttl: 60_000,
+          onData: (data) => { allNotes = Array.isArray(data.notes) ? data.notes : []; showAgenda(); }
+        }).catch(() => { /* notas opcional */ })
       ]);
     } catch (e) {
       console.error("load_agenda_error", e);
@@ -438,7 +482,7 @@
         slot.addEventListener("click", () => {
           const slotDate = new Date(dayDate);
           slotDate.setHours(h, 0, 0, 0);
-          window.location.href = `./painel.html?newAt=${encodeURIComponent(toISOLocal(slotDate))}`;
+          openSlotActionModal(slotDate);
         });
         col.appendChild(slot);
       }
@@ -491,6 +535,38 @@
         }
         cursor = sliceEnd;
       }
+    }
+
+    // Observações (notas) da semana
+    const notesThisWeek = allNotes.filter(n => {
+      const nAt = Number(n.at || 0);
+      return nAt >= weekStartMs && nAt < weekEndMs;
+    });
+    for (const n of notesThisWeek) {
+      const nAt = Number(n.at);
+      const nDate = new Date(nAt);
+      const dayIdx = dayIndexFromDate(nDate);
+      const col = document.querySelector(`.ep-agenda-grid__day-col[data-day="${dayIdx}"]`);
+      if (!col) continue;
+      const startMin = (nDate.getHours() - START_HOUR) * 60 + nDate.getMinutes();
+      const topPx = Math.max(0, (startMin / 60) * HOUR_PX);
+      const heightPx = Math.max(20, ((n.durationMin || 30) / 60) * HOUR_PX);
+      if (topPx >= (END_HOUR - START_HOUR) * HOUR_PX) continue;
+      const block = document.createElement("button");
+      block.type = "button";
+      block.className = "ep-agenda-note";
+      block.style.top = `${topPx}px`;
+      block.style.height = `${heightPx}px`;
+      block.dataset.noteId = n.noteId;
+      block.innerHTML = `
+        <div class="ep-agenda-note__time">${pad2(nDate.getHours())}:${pad2(nDate.getMinutes())}</div>
+        <div class="ep-agenda-note__text">${escapeHtml(n.text || "")}</div>
+      `;
+      block.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openNoteEditModal(n);
+      });
+      col.appendChild(block);
     }
 
     // Sessões da semana
@@ -862,6 +938,131 @@
   document.getElementById("printAgendaBtn").addEventListener("click", () => window.print());
   document.getElementById("openWaitlistBtn").addEventListener("click", () => {
     window.location.href = "./lista-espera.html";
+  });
+
+  // ─── Slot action modal (criar consulta OU adicionar nota) ────────────
+  let pendingSlotDate = null;
+
+  function openSlotActionModal(slotDate) {
+    pendingSlotDate = slotDate;
+    const wd = slotDate.toLocaleDateString("pt-BR", { weekday: "long" });
+    const dm = slotDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "long" });
+    const hm = `${pad2(slotDate.getHours())}:${pad2(slotDate.getMinutes())}`;
+    document.getElementById("slotActionTitle").textContent = `${wd[0].toUpperCase()+wd.slice(1)}, ${dm}`;
+    document.getElementById("slotActionSub").textContent   = `Horário: ${hm}`;
+    document.getElementById("slotNoteText").value = "";
+    document.getElementById("slotActionStatus").textContent = "";
+    document.getElementById("slotActionStatus").className = "ep-status";
+    document.getElementById("slotActionModal").classList.add("is-open");
+  }
+
+  document.getElementById("slotCreateSessionBtn").addEventListener("click", () => {
+    if (!pendingSlotDate) return;
+    window.location.href = `./painel.html?newAt=${encodeURIComponent(toISOLocal(pendingSlotDate))}`;
+  });
+  document.getElementById("slotActionCancelBtn").addEventListener("click", () => {
+    document.getElementById("slotActionModal").classList.remove("is-open");
+  });
+  document.getElementById("slotSaveNoteBtn").addEventListener("click", async () => {
+    if (!pendingSlotDate) return;
+    const text = document.getElementById("slotNoteText").value.trim();
+    const status = document.getElementById("slotActionStatus");
+    if (!text) {
+      status.textContent = "Escreva uma observação antes de salvar.";
+      status.classList.add("is-err");
+      return;
+    }
+    const btn = document.getElementById("slotSaveNoteBtn");
+    btn.disabled = true;
+    status.className = "ep-status";
+    status.textContent = "Salvando…";
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/agenda/note`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ at: pendingSlotDate.getTime(), durationMin: 30, text })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
+      invalidateApi("agendaNotes", uid);
+      document.getElementById("slotActionModal").classList.remove("is-open");
+      await loadAgenda();
+    } catch (e) {
+      status.textContent = "Erro: " + (e?.message || "desconhecido");
+      status.classList.add("is-err");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // ─── Editar/remover nota existente ───────────────────────────────────
+  let pendingNote = null;
+
+  function openNoteEditModal(note) {
+    pendingNote = note;
+    const at = new Date(note.at);
+    const wd = at.toLocaleDateString("pt-BR", { weekday: "long" });
+    const dm = at.toLocaleDateString("pt-BR", { day: "2-digit", month: "long" });
+    const hm = `${pad2(at.getHours())}:${pad2(at.getMinutes())}`;
+    document.getElementById("noteEditSub").textContent = `${wd[0].toUpperCase()+wd.slice(1)}, ${dm} · ${hm}`;
+    document.getElementById("noteEditText").value = note.text || "";
+    document.getElementById("noteEditStatus").textContent = "";
+    document.getElementById("noteEditStatus").className = "ep-status";
+    document.getElementById("noteEditModal").classList.add("is-open");
+  }
+
+  document.getElementById("noteEditCancelBtn").addEventListener("click", () => {
+    document.getElementById("noteEditModal").classList.remove("is-open");
+  });
+  document.getElementById("noteEditSaveBtn").addEventListener("click", async () => {
+    if (!pendingNote) return;
+    const text = document.getElementById("noteEditText").value.trim();
+    const status = document.getElementById("noteEditStatus");
+    if (!text) {
+      status.textContent = "Texto é obrigatório.";
+      status.classList.add("is-err");
+      return;
+    }
+    const btn = document.getElementById("noteEditSaveBtn");
+    btn.disabled = true;
+    status.className = "ep-status";
+    status.textContent = "Salvando…";
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/agenda/note/${encodeURIComponent(pendingNote.noteId)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ text })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
+      invalidateApi("agendaNotes", uid);
+      document.getElementById("noteEditModal").classList.remove("is-open");
+      await loadAgenda();
+    } catch (e) {
+      status.textContent = "Erro: " + (e?.message || "desconhecido");
+      status.classList.add("is-err");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  document.getElementById("noteEditDeleteBtn").addEventListener("click", async () => {
+    if (!pendingNote) return;
+    if (!confirm("Remover esta observação?")) return;
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/agenda/note/${encodeURIComponent(pendingNote.noteId)}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
+      invalidateApi("agendaNotes", uid);
+      document.getElementById("noteEditModal").classList.remove("is-open");
+      await loadAgenda();
+    } catch (e) {
+      const status = document.getElementById("noteEditStatus");
+      status.textContent = "Erro: " + (e?.message || "desconhecido");
+      status.classList.add("is-err");
+    }
   });
 
   // ─── Configurações de agenda ─────────────────────────────────────────
