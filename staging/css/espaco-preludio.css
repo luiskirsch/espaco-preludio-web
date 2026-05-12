@@ -216,6 +216,51 @@ a:hover { color: var(--ep-accent-hover); }
 .ep-nav a:not(.ep-btn):hover { color: var(--ep-ink); background: var(--ep-accent-soft); }
 .ep-nav a.is-active:not(.ep-btn) { color: var(--ep-accent); }
 
+/* Slot de perfil no topbar — avatar circular + nome, ambos clicáveis e
+   linkando pra perfil.html. Substitui o antigo link "Perfil" + span solto. */
+.ep-nav-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  color: var(--ep-ink) !important;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 120ms ease, color 120ms ease;
+  margin-left: 4px;
+}
+.ep-nav-profile:hover { background: var(--ep-accent-soft); }
+.ep-nav-profile.is-active { background: var(--ep-accent-soft); }
+.ep-nav-profile.is-active .ep-nav-profile__name { color: var(--ep-accent); }
+
+.ep-nav-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--ep-gold-soft);
+  color: #8a5b1a;
+  border: 1px solid var(--ep-gold-line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  user-select: none;
+  background-size: cover;
+  background-position: center;
+}
+.ep-nav-profile__name {
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ─── Hero / Sections ───────────────────────────────────── */
 
 .ep-hero {

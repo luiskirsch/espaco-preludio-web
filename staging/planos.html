@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-99">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-0">
 </head>
 <body>
 
@@ -33,8 +33,10 @@
       <a href="./calculadora.html">Calculadora</a>
       <a href="./documento.html?tipo=atestado">Atestado</a>
       <a href="./whatsapp.html">WhatsApp</a>
-      <a href="./perfil.html">Perfil</a>
-      <span id="topUserName" class="ep-text-sm ep-text-muted">&nbsp;</span>
+      <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
+        <span class="ep-nav-avatar" id="topUserAvatar">·</span>
+        <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
+      </a>
     </nav>
   </div>
 </header>
@@ -155,7 +157,7 @@
 
 <script type="module">
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=2-82";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-0";
 
   const ctx = await requireTherapist({ requireDek: false });
   const { idToken, therapist } = ctx;

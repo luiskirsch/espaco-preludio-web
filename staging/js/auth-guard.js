@@ -159,6 +159,28 @@ function applyCapabilityVisibility(capabilities) {
   });
 }
 
+// Preenche o slot de perfil no topbar — avatar circular + nome clicável.
+// O <a id="topProfileLink"> é o link pra perfil.html. Se a página não tiver
+// o markup (ex.: páginas públicas), no-op silencioso.
+function applyTopUserSlot(therapist) {
+  const name = (therapist?.displayName || "").trim();
+  const elName   = document.getElementById("topUserName");
+  const elAvatar = document.getElementById("topUserAvatar");
+  if (elName) elName.textContent = name || "Perfil";
+  if (elAvatar) {
+    const photo = therapist?.photoUrl || "";
+    if (photo) {
+      elAvatar.style.backgroundImage = `url(${CSS.escape(photo)})`;
+      elAvatar.style.backgroundSize = "cover";
+      elAvatar.style.backgroundPosition = "center";
+      elAvatar.textContent = "";
+    } else {
+      const initials = (name.match(/\b\p{L}/gu) || []).slice(0, 2).join("").toUpperCase() || "·";
+      elAvatar.textContent = initials;
+    }
+  }
+}
+
 // Prefetch HTML das páginas do nav após render — próxima navegação chega
 // pré-carregada do disk cache. Custo: ~30-100KB por página em background,
 // pago uma vez por sessão. Ganho: clique vira navegação instantânea.
@@ -206,6 +228,9 @@ export async function requireTherapist({ requireDek = true } = {}) {
 
   // Prefetch da nav pra navegação subsequente parecer instantânea.
   prefetchNavLinks();
+
+  // Preenche o slot de perfil no topbar (avatar + nome → link pra perfil.html).
+  applyTopUserSlot(profile.therapist);
 
   if (requireDek) {
     const dek = recallDek();

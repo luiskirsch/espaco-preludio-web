@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-99">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-0">
   <style>
     .ep-wa-status { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; }
     .ep-wa-status--on  { background: rgba(45,106,79,0.10); color: var(--ep-ok); border: 1px solid rgba(45,106,79,0.35); }
@@ -45,8 +45,10 @@
       <a href="./calculadora.html">Calculadora</a>
       <a href="./documento.html?tipo=atestado">Atestado</a>
       <a href="./whatsapp.html" class="is-active">WhatsApp</a>
-      <a href="./perfil.html">Perfil</a>
-      <span id="topUserName" class="ep-text-sm ep-text-muted">&nbsp;</span>
+      <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
+        <span class="ep-nav-avatar" id="topUserAvatar">·</span>
+        <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
+      </a>
       <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
     </nav>
   </div>
@@ -184,7 +186,7 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=2-82";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-0";
   import { clearDek } from "./js/crypto.js";
 
   const session = await requireTherapist({ requireDek: false });
