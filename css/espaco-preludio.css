@@ -261,6 +261,37 @@ a:hover { color: var(--ep-accent-hover); }
   text-overflow: ellipsis;
 }
 
+/* Botão flutuante de suporte (canto inferior direito) — injetado pelo
+   auth-guard.js após login. Não aparece em /suporte.html nem 2fa-verify.html. */
+.ep-help-bubble {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--ep-accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(45,74,62,0.28), 0 1px 3px rgba(28,31,29,0.10);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  z-index: 180;
+}
+.ep-help-bubble:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 22px rgba(45,74,62,0.36), 0 2px 4px rgba(28,31,29,0.14);
+  background: var(--ep-accent-hover);
+}
+.ep-help-bubble:active { transform: translateY(0) scale(1); }
+.ep-help-bubble:focus-visible {
+  outline: 2px solid var(--ep-gold);
+  outline-offset: 3px;
+}
+@media print { .ep-help-bubble { display: none !important; } }
+
 /* Onboarding tour — modal centralizado com progresso, 5 passos. */
 .ep-onb-panel {
   max-width: 540px !important;

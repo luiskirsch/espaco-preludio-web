@@ -179,6 +179,29 @@ function applyCapabilityVisibility(capabilities) {
   });
 }
 
+// Botão flutuante de suporte — injetado em todas as páginas pós-login.
+function mountHelpBubble() {
+  if (typeof document === "undefined") return;
+  const path = location.pathname.toLowerCase();
+  if (path.endsWith("/suporte.html") || path.endsWith("/2fa-verify.html")) return;
+  if (document.getElementById("epHelpBubble")) return;
+
+  const a = document.createElement("a");
+  a.id = "epHelpBubble";
+  a.href = "./suporte.html";
+  a.className = "ep-help-bubble";
+  a.title = "Suporte e ajuda";
+  a.setAttribute("aria-label", "Abrir suporte");
+  a.innerHTML = `
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+    </svg>
+  `;
+  document.body.appendChild(a);
+}
+
 // Preenche o slot de perfil no topbar — avatar circular + nome clicável.
 // O <a id="topProfileLink"> é o link pra perfil.html. Se a página não tiver
 // o markup (ex.: páginas públicas), no-op silencioso.
@@ -266,6 +289,8 @@ export async function requireTherapist({ requireDek = true } = {}) {
 
   // Preenche o slot de perfil no topbar (avatar + nome → link pra perfil.html).
   applyTopUserSlot(profile.therapist);
+
+  mountHelpBubble();
 
   if (requireDek) {
     const dek = recallDek();

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-13">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-14">
 </head>
 <body>
 
@@ -37,7 +37,6 @@
       <a href="./calculadora.html">Calculadora</a>
       <a href="./documento.html?tipo=atestado">Atestado</a>
         <a href="./whatsapp.html">WhatsApp</a>
-      <a href="./suporte.html">Suporte</a>
         <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile is-active" aria-label="Abrir perfil">
         <span class="ep-nav-avatar" id="topUserAvatar">·</span>
         <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
@@ -334,7 +333,7 @@
 
 <script type="module">
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-13";
+  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-14";
 
   const ctx = await requireTherapist({ requireDek: false });
   const { idToken, therapist } = ctx;
@@ -573,7 +572,7 @@
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
       // Salva session 2FA token (evita redirect imediato após ativar).
-      const { save2faSession } = await import("./js/auth-guard.js?v=3-13");
+      const { save2faSession } = await import("./js/auth-guard.js?v=3-14");
       save2faSession(data.sessionToken);
       therapist.twoFactorEnabled = true;
       twofaModal.classList.remove("is-open");
@@ -620,7 +619,7 @@
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
       therapist.twoFactorEnabled = false;
-      const { clear2faSession } = await import("./js/auth-guard.js?v=3-13");
+      const { clear2faSession } = await import("./js/auth-guard.js?v=3-14");
       clear2faSession();
       twofaDisableModal.classList.remove("is-open");
       renderTwoFactorStatus();
