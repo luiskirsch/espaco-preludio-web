@@ -158,6 +158,44 @@
     <p class="ep-text-xs ep-text-muted ep-mt-16 ep-text-center">
       No-show = consultas canceladas com menos de 24h de antecedência. Taxa de conclusão = concluídas ÷ (concluídas + canceladas).
     </p>
+
+    <!-- NPS -->
+    <section class="ep-mt-24">
+      <div class="ep-flex--end-wrap ep-flex">
+        <div>
+          <h2 class="ep-h3" style="margin: 0;">Satisfação dos pacientes (NPS)</h2>
+          <p class="ep-text-xs ep-text-muted ep-mt-0">Resposta automática 24h após cada consulta concluída. Escala 0-10.</p>
+        </div>
+      </div>
+
+      <div class="ep-stat-grid ep-mt-16">
+        <div class="ep-stat-card">
+          <div class="ep-stat-card__label">NPS</div>
+          <div class="ep-stat-card__value" id="npsScore">—</div>
+          <div class="ep-stat-card__sub" id="npsScoreSub">Promoters − Detractors</div>
+        </div>
+        <div class="ep-stat-card">
+          <div class="ep-stat-card__label">Média</div>
+          <div class="ep-stat-card__value" id="npsAvg">—</div>
+          <div class="ep-stat-card__sub" id="npsAvgSub">de 0 a 10</div>
+        </div>
+        <div class="ep-stat-card">
+          <div class="ep-stat-card__label">Respostas</div>
+          <div class="ep-stat-card__value" id="npsTotal">—</div>
+          <div class="ep-stat-card__sub" id="npsTotalSub">no período</div>
+        </div>
+        <div class="ep-stat-card">
+          <div class="ep-stat-card__label">Distribuição</div>
+          <div class="ep-stat-card__value" style="font-size: 16px; line-height: 1.5;" id="npsDist">—</div>
+          <div class="ep-stat-card__sub">promoters · passives · detractors</div>
+        </div>
+      </div>
+
+      <div id="npsCommentsCard" class="ep-chart-card ep-mt-12 ep-hide">
+        <h3>Comentários recentes</h3>
+        <div id="npsCommentsList" class="ep-stack" style="gap: 10px;"></div>
+      </div>
+    </section>
   </div>
 
 </main>
@@ -290,10 +328,49 @@
 
       $("loadingBanner").classList.add("ep-hide");
       $("content").classList.remove("ep-hide");
+
+      // NPS — load em paralelo, não bloqueia o resto.
+      loadNps(range).catch(e => console.error("nps_load_error", e));
     } catch (e) {
       console.error("relatorios_error", e);
       $("loadingBanner").textContent = "Erro: " + (e?.message || "desconhecido");
       $("loadingBanner").className = "ep-alert ep-alert--danger";
+    }
+  }
+
+  async function loadNps(range) {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/nps?range=${encodeURIComponent(range)}`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) return;
+      const m = data.metrics;
+      $("npsScore").textContent  = m.npsScore == null ? "—" : (m.npsScore > 0 ? "+" + m.npsScore : String(m.npsScore));
+      $("npsAvg").textContent    = m.avg == null ? "—" : String(m.avg);
+      $("npsTotal").textContent  = String(m.total);
+      $("npsDist").textContent   = m.total > 0 ? `${m.promoters} · ${m.passives} · ${m.detractors}` : "—";
+
+      const list = $("npsCommentsList");
+      const card = $("npsCommentsCard");
+      if (data.recentComments && data.recentComments.length > 0) {
+        list.innerHTML = data.recentComments.map(c => `
+          <div style="padding: 12px 14px; background: var(--ep-bg-2); border-radius: 8px; border-left: 3px solid ${
+            c.score >= 9 ? "#2d8a52" : c.score >= 7 ? "#c89b4a" : "#b8453d"
+          };">
+            <div style="display: flex; justify-content: space-between; font-size: 12.5px; color: var(--ep-ink-2); margin-bottom: 4px;">
+              <strong style="color: var(--ep-ink);">Nota ${c.score}</strong>
+              <span>${new Date(c.respondedAt).toLocaleDateString("pt-BR")}</span>
+            </div>
+            <div style="font-size: 14px; line-height: 1.5;">${String(c.comment || "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]))}</div>
+          </div>
+        `).join("");
+        card.classList.remove("ep-hide");
+      } else {
+        card.classList.add("ep-hide");
+      }
+    } catch (e) {
+      // Silent fail — NPS é opcional
     }
   }
 
