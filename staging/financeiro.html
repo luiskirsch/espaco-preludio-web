@@ -1,0 +1,674 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financeiro · Espaço Prelúdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-86">
+</head>
+<body>
+
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html">Consultas</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./pacientes.html">Pacientes</a>
+      <a href="./financeiro.html" class="is-active">Financeiro</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./documento.html?tipo=atestado">Atestado</a>
+      <a href="./perfil.html">Perfil</a>
+      <span id="topUserName" class="ep-text-sm ep-text-muted">&nbsp;</span>
+      <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16">
+
+  <section class="ep-stack">
+    <div class="ep-flex--end-wrap ep-flex">
+      <div>
+        <div class="ep-eyebrow">Controle financeiro</div>
+        <h1 class="ep-h1 ep-mt-12">Suas finanças</h1>
+        <p class="ep-text-muted ep-mt-8 ep-mt-0">
+          Receitas, despesas e relatório mensal. Tudo privado da sua conta.
+        </p>
+      </div>
+      <div class="ep-flex ep-gap-8" style="align-items: center;">
+        <select id="monthFilter" class="ep-select" aria-label="Filtrar por mês"></select>
+        <button id="newTxBtn" type="button" class="ep-btn ep-btn--primary ep-btn--lg">+ Nova transação</button>
+      </div>
+    </div>
+
+    <!-- Dashboard cards -->
+    <div id="dashboardGrid" class="ep-mt-16" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+      <div class="ep-card" id="cardReceita">
+        <div class="ep-eyebrow">Receitas (pago)</div>
+        <div class="ep-h2 ep-mt-8" id="receitaTotalEl">R$ 0,00</div>
+        <p class="ep-text-xs ep-text-muted ep-mt-0" id="receitaSubEl">0 transações</p>
+      </div>
+      <div class="ep-card" id="cardDespesa">
+        <div class="ep-eyebrow">Despesas (pago)</div>
+        <div class="ep-h2 ep-mt-8" id="despesaTotalEl">R$ 0,00</div>
+        <p class="ep-text-xs ep-text-muted ep-mt-0" id="despesaSubEl">0 transações</p>
+      </div>
+      <div class="ep-card" id="cardSaldo">
+        <div class="ep-eyebrow">Saldo do mês</div>
+        <div class="ep-h2 ep-mt-8" id="saldoTotalEl">R$ 0,00</div>
+        <p class="ep-text-xs ep-text-muted ep-mt-0" id="saldoSubEl">Previsto: R$ 0,00</p>
+      </div>
+    </div>
+
+    <!-- Pendências (contas a receber + a pagar) -->
+    <div id="pendenciasBlock" class="ep-mt-16 ep-hide">
+      <h2 class="ep-h3">Pendentes do mês</h2>
+      <div class="ep-flex ep-gap-8 ep-mt-8" style="flex-wrap: wrap;">
+        <div id="pendReceitaPill" class="ep-verif-pill is-pending ep-hide">A receber: <strong id="pendReceitaTxt">R$ 0,00</strong></div>
+        <div id="pendDespesaPill" class="ep-verif-pill is-pending ep-hide">A pagar: <strong id="pendDespesaTxt">R$ 0,00</strong></div>
+      </div>
+    </div>
+
+    <!-- Top categorias (mostra só se houver dados) -->
+    <div id="topCategoriasBlock" class="ep-mt-16 ep-hide">
+      <h2 class="ep-h3">Top categorias</h2>
+      <div class="ep-flex ep-mt-8" style="gap: 24px; flex-wrap: wrap;">
+        <div id="topReceitaList" style="min-width: 240px;"></div>
+        <div id="topDespesaList" style="min-width: 240px;"></div>
+      </div>
+    </div>
+
+    <!-- Filtros + lista -->
+    <div class="ep-mt-16">
+      <h2 class="ep-h3">Transações</h2>
+      <div class="ep-flex ep-gap-8 ep-mt-8" style="flex-wrap: wrap; align-items: center;">
+        <select id="typeFilter" class="ep-select" aria-label="Filtrar por tipo">
+          <option value="">Todos os tipos</option>
+          <option value="receita">Receitas</option>
+          <option value="despesa">Despesas</option>
+        </select>
+        <select id="statusFilter" class="ep-select" aria-label="Filtrar por status">
+          <option value="">Todos os status</option>
+          <option value="pago">Pago</option>
+          <option value="pendente">Pendente</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+        <select id="categoryFilter" class="ep-select" aria-label="Filtrar por categoria">
+          <option value="">Todas as categorias</option>
+        </select>
+      </div>
+
+      <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando transações…</div>
+      <div id="txList" class="ep-session-list ep-mt-16 ep-hide"></div>
+      <div id="emptyState" class="ep-empty ep-mt-16 ep-hide">
+        <h3 class="ep-h3">Nenhuma transação no mês selecionado.</h3>
+        <p class="ep-text-muted ep-mt-8" style="margin: 0;">
+          Comece registrando uma consulta paga ou uma despesa do consultório.
+        </p>
+        <button class="ep-btn ep-btn--primary ep-mt-16" type="button" id="emptyCta">Registrar primeira transação</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Modal: Nova/editar transação -->
+<div class="ep-modal" id="txModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 560px;">
+    <h3 class="ep-modal__title" id="txModalTitle">Nova transação</h3>
+    <p class="ep-modal__sub">
+      Registre uma receita ou despesa. Vincule a um paciente se for consulta —
+      facilita relatórios.
+    </p>
+
+    <form id="txForm" class="ep-stack" novalidate>
+      <div class="ep-row">
+        <div class="ep-field">
+          <label class="ep-label" for="txType">Tipo *</label>
+          <select id="txType" class="ep-select" required>
+            <option value="receita">Receita</option>
+            <option value="despesa">Despesa</option>
+          </select>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="txCategory">Categoria *</label>
+          <select id="txCategory" class="ep-select" required></select>
+        </div>
+      </div>
+
+      <div class="ep-row">
+        <div class="ep-field">
+          <label class="ep-label" for="txAmount">Valor (R$) *</label>
+          <input id="txAmount" class="ep-input" type="text" inputmode="decimal" placeholder="200,00" required>
+          <p class="ep-text-xs ep-text-muted ep-mt-0">Use vírgula para centavos.</p>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="txStatus">Status *</label>
+          <select id="txStatus" class="ep-select" required>
+            <option value="pago">Pago</option>
+            <option value="pendente">Pendente</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="ep-row">
+        <div class="ep-field">
+          <label class="ep-label" for="txIssueDate">Data de emissão *</label>
+          <input id="txIssueDate" class="ep-input" type="date" required>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="txPaymentMethod">Forma de pagamento</label>
+          <select id="txPaymentMethod" class="ep-select">
+            <option value="pix">Pix</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="cartao-credito">Cartão de crédito</option>
+            <option value="cartao-debito">Cartão de débito</option>
+            <option value="transferencia">Transferência</option>
+            <option value="boleto">Boleto</option>
+            <option value="outro" selected>Outro</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Vínculo opcional com paciente (mostra só se receita) -->
+      <div class="ep-field" id="patientField">
+        <label class="ep-label" for="txPatientSelect">Paciente (opcional)</label>
+        <select id="txPatientSelect" class="ep-select">
+          <option value="">— Sem vínculo —</option>
+        </select>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Vincular permite relatórios "quanto cada paciente gerou de receita".
+        </p>
+      </div>
+
+      <!-- Vencimento e data de pagamento condicionais -->
+      <div class="ep-row" id="dateRow">
+        <div class="ep-field ep-hide" id="dueDateField">
+          <label class="ep-label" for="txDueDate">Vencimento (opcional)</label>
+          <input id="txDueDate" class="ep-input" type="date">
+        </div>
+        <div class="ep-field ep-hide" id="paidDateField">
+          <label class="ep-label" for="txPaidDate">Data do pagamento</label>
+          <input id="txPaidDate" class="ep-input" type="date">
+        </div>
+      </div>
+
+      <div class="ep-field">
+        <label class="ep-label" for="txDescription">Descrição (opcional)</label>
+        <input id="txDescription" class="ep-input" type="text" maxlength="200" placeholder="Ex.: Sessão de 15/05">
+        <p class="ep-text-xs ep-text-muted ep-mt-0">Até 200 caracteres. Não inclua dados clínicos.</p>
+      </div>
+
+      <div class="ep-status" id="txStatusMsg"></div>
+    </form>
+
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="cancelTxBtn">Cancelar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="saveTxBtn">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js?v=2-82";
+  import { cachedGet, invalidate as invalidateApi } from "./js/api-cache.js?v=2-82";
+  import { decryptNote, clearDek } from "./js/crypto.js";
+
+  // ─── Boot ───────────────────────────────────────────────────
+  const session = await requireTherapist({ requireDek: true });
+  const { user, idToken, therapist, dek } = session;
+  const uid = user.uid;
+
+  document.getElementById("topUserName").textContent = therapist.displayName || "";
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    clearDek();
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
+
+  // ─── Helpers ───────────────────────────────────────────────────
+  function fmtCents(cents) {
+    const v = (cents || 0) / 100;
+    return "R$ " + v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function parseAmountInput(str) {
+    // Aceita "200", "200,50", "200.50", "1.234,56"
+    const cleaned = String(str || "").replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
+    const v = Number(cleaned);
+    if (!Number.isFinite(v) || v <= 0) return null;
+    return Math.round(v * 100); // centavos
+  }
+  function fmtDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+  }
+  function isoDateInput(ms) {
+    if (!ms) return "";
+    const d = new Date(ms);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+  function parseDateInput(str) {
+    if (!str) return null;
+    const [y, m, day] = str.split("-").map(Number);
+    if (!y || !m || !day) return null;
+    return new Date(y, m - 1, day, 12, 0, 0).getTime(); // meio-dia local pra evitar timezone offset
+  }
+
+  // ─── Month picker: últimos 12 meses + 1 futuro ───────────────────────
+  const monthFilter = document.getElementById("monthFilter");
+  function currentMonthStr() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  }
+  (function buildMonthOptions() {
+    const now = new Date();
+    const months = [];
+    for (let i = -1; i <= 12; i++) { // -1 = mês que vem, 0 = atual, 1+ = passado
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const lbl = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+      const opt = document.createElement("option");
+      opt.value = val;
+      opt.textContent = lbl.charAt(0).toUpperCase() + lbl.slice(1);
+      months.push(opt);
+    }
+    months.forEach(o => monthFilter.appendChild(o));
+    monthFilter.value = currentMonthStr();
+  })();
+
+  // ─── Categorias: populadas dinamicamente do backend (vem em GET /transacoes) ──
+  let CATEGORY_LABELS = {};
+
+  function populateCategoryDropdown(selectEl, typeFilter) {
+    selectEl.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = ""; placeholder.textContent = "Selecione…"; placeholder.disabled = true; placeholder.selected = true;
+    selectEl.appendChild(placeholder);
+    for (const [key, meta] of Object.entries(CATEGORY_LABELS)) {
+      if (typeFilter && meta.type !== typeFilter) continue;
+      const opt = document.createElement("option");
+      opt.value = key; opt.textContent = meta.label;
+      selectEl.appendChild(opt);
+    }
+  }
+  function populateCategoryFilter() {
+    const sel = document.getElementById("categoryFilter");
+    while (sel.options.length > 1) sel.remove(1);
+    for (const [key, meta] of Object.entries(CATEGORY_LABELS)) {
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = `${meta.label} (${meta.type})`;
+      sel.appendChild(opt);
+    }
+  }
+
+  // ─── Pacientes (pra dropdown do modal — SWR cache) ────────────────────────
+  let patientsCache = []; // { patientId, name }
+  async function loadPatients() {
+    try {
+      await cachedGet({
+        url: `${BACKEND_BASE_URL}/therapy/pacientes`,
+        idToken, uid, key: "pacientes", ttl: 60_000,
+        onData: async (data) => {
+          patientsCache = await Promise.all((data.patients || []).map(async p => {
+            try {
+              const json = await decryptNote({ ciphertext: p.ciphertext, iv: p.iv }, dek);
+              const obj = JSON.parse(json);
+              return { patientId: p.patientId, name: obj.name || "(sem nome)" };
+            } catch {
+              return { patientId: p.patientId, name: "[corrompido]" };
+            }
+          }));
+          populatePatientSelect();
+        }
+      });
+    } catch {}
+  }
+  function populatePatientSelect() {
+    const sel = document.getElementById("txPatientSelect");
+    while (sel.options.length > 1) sel.remove(1);
+    for (const p of patientsCache) {
+      const opt = document.createElement("option");
+      opt.value = p.patientId;
+      opt.textContent = p.name;
+      sel.appendChild(opt);
+    }
+  }
+
+  // ─── Render: resumo + lista ──────────────────────────────────────────
+  const receitaTotalEl = document.getElementById("receitaTotalEl");
+  const receitaSubEl   = document.getElementById("receitaSubEl");
+  const despesaTotalEl = document.getElementById("despesaTotalEl");
+  const despesaSubEl   = document.getElementById("despesaSubEl");
+  const saldoTotalEl   = document.getElementById("saldoTotalEl");
+  const saldoSubEl     = document.getElementById("saldoSubEl");
+  const pendBlock      = document.getElementById("pendenciasBlock");
+  const pendRecPill    = document.getElementById("pendReceitaPill");
+  const pendRecTxt     = document.getElementById("pendReceitaTxt");
+  const pendDespPill   = document.getElementById("pendDespesaPill");
+  const pendDespTxt    = document.getElementById("pendDespesaTxt");
+  const topBlock       = document.getElementById("topCategoriasBlock");
+  const topReceitaList = document.getElementById("topReceitaList");
+  const topDespesaList = document.getElementById("topDespesaList");
+  const loadingBanner  = document.getElementById("loadingBanner");
+  const txList         = document.getElementById("txList");
+  const emptyState     = document.getElementById("emptyState");
+
+  function renderSummary(summary) {
+    receitaTotalEl.textContent = fmtCents(summary.receitas.pago.totalCents);
+    receitaSubEl.textContent   = `${summary.receitas.pago.count} ${summary.receitas.pago.count === 1 ? "transação" : "transações"}`;
+    despesaTotalEl.textContent = fmtCents(summary.despesas.pago.totalCents);
+    despesaSubEl.textContent   = `${summary.despesas.pago.count} ${summary.despesas.pago.count === 1 ? "transação" : "transações"}`;
+    saldoTotalEl.textContent   = fmtCents(summary.saldoCents);
+    saldoTotalEl.style.color   = summary.saldoCents >= 0 ? "var(--ep-ok)" : "var(--ep-danger)";
+    saldoSubEl.textContent     = `Previsto: ${fmtCents(summary.previstoCents)}`;
+
+    // Pendentes
+    const hasPendRec  = summary.receitas.pendente.totalCents > 0;
+    const hasPendDesp = summary.despesas.pendente.totalCents > 0;
+    if (hasPendRec || hasPendDesp) {
+      pendBlock.classList.remove("ep-hide");
+      pendRecPill.classList.toggle("ep-hide", !hasPendRec);
+      pendDespPill.classList.toggle("ep-hide", !hasPendDesp);
+      pendRecTxt.textContent  = fmtCents(summary.receitas.pendente.totalCents);
+      pendDespTxt.textContent = fmtCents(summary.despesas.pendente.totalCents);
+    } else {
+      pendBlock.classList.add("ep-hide");
+    }
+
+    // Top categorias
+    const hasTopRec  = summary.topCategoriasReceita.length > 0;
+    const hasTopDesp = summary.topCategoriasDespesa.length > 0;
+    if (hasTopRec || hasTopDesp) {
+      topBlock.classList.remove("ep-hide");
+      const renderTop = (items) => items.map(c =>
+        `<div class="ep-flex" style="justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--ep-line);">
+          <span>${escapeHtml(c.label)}</span>
+          <strong>${fmtCents(c.totalCents)}</strong>
+        </div>`
+      ).join("");
+      topReceitaList.innerHTML = hasTopRec
+        ? `<div class="ep-eyebrow">Receitas</div>` + renderTop(summary.topCategoriasReceita)
+        : "";
+      topDespesaList.innerHTML = hasTopDesp
+        ? `<div class="ep-eyebrow">Despesas</div>` + renderTop(summary.topCategoriasDespesa)
+        : "";
+    } else {
+      topBlock.classList.add("ep-hide");
+    }
+  }
+
+  function renderTransactions(transactions) {
+    loadingBanner.classList.add("ep-hide");
+    if (!transactions || transactions.length === 0) {
+      txList.classList.add("ep-hide");
+      emptyState.classList.remove("ep-hide");
+      return;
+    }
+    emptyState.classList.add("ep-hide");
+    txList.innerHTML = "";
+    for (const tx of transactions) {
+      txList.appendChild(renderTxRow(tx));
+    }
+    txList.classList.remove("ep-hide");
+  }
+
+  function renderTxRow(tx) {
+    const div = document.createElement("article");
+    div.className = "ep-session";
+    if (tx.status === "pendente") div.classList.add("ep-session--active"); // marca lateral dourada
+    const sign = tx.type === "receita" ? "+" : "−";
+    const color = tx.type === "receita" ? "var(--ep-ok)" : "var(--ep-danger)";
+    const catLabel = CATEGORY_LABELS[tx.category]?.label || tx.category;
+    const statusBadge = tx.status === "pago"      ? '<span class="ep-badge ep-badge--ok">Pago</span>'
+                      : tx.status === "pendente"  ? '<span class="ep-badge">Pendente</span>'
+                      : '<span class="ep-badge ep-badge--muted">Cancelado</span>';
+    const patientLine = tx.patientNameSnapshot
+      ? `<span>· ${escapeHtml(tx.patientNameSnapshot)}</span>`
+      : "";
+    div.innerHTML = `
+      <div>
+        <div class="ep-session__name">${escapeHtml(catLabel)}${tx.description ? ` — ${escapeHtml(tx.description)}` : ""}</div>
+        <div class="ep-session__meta">
+          ${statusBadge}
+          <span>${fmtDate(tx.issueDate)}</span>
+          ${patientLine}
+        </div>
+      </div>
+      <div class="ep-session__actions" style="gap: 10px; align-items: center;">
+        <strong style="color: ${color}; font-size: 16px;">${sign} ${fmtCents(tx.amount)}</strong>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="edit" data-id="${tx.txId}">Editar</button>
+        <button class="ep-btn-icon" data-action="delete" data-id="${tx.txId}" aria-label="Apagar" title="Apagar">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+    `;
+    div._txData = tx;
+    return div;
+  }
+
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  // ─── Carregamento ────────────────────────────────────────────────────
+  let allTransactions = [];
+
+  async function loadFinancial() {
+    loadingBanner.classList.remove("ep-hide");
+    txList.classList.add("ep-hide");
+    emptyState.classList.add("ep-hide");
+
+    const month = monthFilter.value;
+    const params = new URLSearchParams();
+    if (month) params.set("month", month);
+    const tFilter = document.getElementById("typeFilter").value;
+    const sFilter = document.getElementById("statusFilter").value;
+    const cFilter = document.getElementById("categoryFilter").value;
+    if (tFilter) params.set("type", tFilter);
+    if (sFilter) params.set("status", sFilter);
+    if (cFilter) params.set("category", cFilter);
+
+    try {
+      // Carrega resumo + lista em paralelo.
+      const [resumoRes, listRes] = await Promise.all([
+        fetch(`${BACKEND_BASE_URL}/therapy/financeiro/resumo?month=${encodeURIComponent(month)}`, {
+          headers: { "Authorization": `Bearer ${idToken}` }
+        }).then(r => r.json()),
+        fetch(`${BACKEND_BASE_URL}/therapy/financeiro/transacoes?${params}`, {
+          headers: { "Authorization": `Bearer ${idToken}` }
+        }).then(r => r.json())
+      ]);
+
+      if (!resumoRes.ok) throw new Error(resumoRes.error || "ERRO_RESUMO");
+      if (!listRes.ok)   throw new Error(listRes.error || "ERRO_LISTA");
+
+      // Categorias só vêm em /transacoes — sempre primeira chamada.
+      if (listRes.categories) {
+        CATEGORY_LABELS = listRes.categories;
+        populateCategoryFilter();
+      }
+
+      allTransactions = listRes.transactions || [];
+      renderSummary(resumoRes.summary);
+      renderTransactions(allTransactions);
+    } catch (error) {
+      console.error("load_financial_error", error);
+      loadingBanner.textContent = "Erro ao carregar: " + (error?.message || "desconhecido");
+      loadingBanner.className = "ep-alert ep-alert--danger";
+    }
+  }
+
+  await loadPatients();
+  await loadFinancial();
+
+  // Re-carrega quando muda filtros.
+  monthFilter.addEventListener("change", loadFinancial);
+  document.getElementById("typeFilter").addEventListener("change", loadFinancial);
+  document.getElementById("statusFilter").addEventListener("change", loadFinancial);
+  document.getElementById("categoryFilter").addEventListener("change", loadFinancial);
+
+  // ─── Modal: criar/editar ──────────────────────────────────────────────
+  const modal           = document.getElementById("txModal");
+  const modalTitleEl    = document.getElementById("txModalTitle");
+  const txTypeEl        = document.getElementById("txType");
+  const txCategoryEl    = document.getElementById("txCategory");
+  const txAmountEl      = document.getElementById("txAmount");
+  const txStatusEl      = document.getElementById("txStatus");
+  const txIssueDateEl   = document.getElementById("txIssueDate");
+  const txPaymentMethodEl = document.getElementById("txPaymentMethod");
+  const txPatientSelect = document.getElementById("txPatientSelect");
+  const txDueDateEl     = document.getElementById("txDueDate");
+  const txPaidDateEl    = document.getElementById("txPaidDate");
+  const txDescriptionEl = document.getElementById("txDescription");
+  const dueDateField    = document.getElementById("dueDateField");
+  const paidDateField   = document.getElementById("paidDateField");
+  const patientField    = document.getElementById("patientField");
+  const txStatusMsgEl   = document.getElementById("txStatusMsg");
+  const saveTxBtn       = document.getElementById("saveTxBtn");
+  let editingTxId = null;
+
+  function openModal(tx) {
+    editingTxId = tx?.txId || null;
+    modalTitleEl.textContent = editingTxId ? "Editar transação" : "Nova transação";
+    txTypeEl.value     = tx?.type || "receita";
+    populateCategoryDropdown(txCategoryEl, txTypeEl.value);
+    txCategoryEl.value = tx?.category || "";
+    txAmountEl.value   = tx ? ((tx.amount / 100).toFixed(2).replace(".", ",")) : "";
+    txStatusEl.value   = tx?.status || "pago";
+    txIssueDateEl.value = isoDateInput(tx?.issueDate) || isoDateInput(Date.now());
+    txPaymentMethodEl.value = tx?.paymentMethod || "outro";
+    txPatientSelect.value = tx?.patientId || "";
+    txDueDateEl.value  = isoDateInput(tx?.dueDate);
+    txPaidDateEl.value = isoDateInput(tx?.paidDate);
+    txDescriptionEl.value = tx?.description || "";
+    txStatusMsgEl.textContent = "";
+    txStatusMsgEl.className = "ep-status";
+    updateConditionalFields();
+    modal.classList.add("is-open");
+  }
+  function closeModal() {
+    modal.classList.remove("is-open");
+    editingTxId = null;
+  }
+  function updateConditionalFields() {
+    const type = txTypeEl.value;
+    const status = txStatusEl.value;
+    patientField.style.display = type === "receita" ? "" : "none";
+    dueDateField.classList.toggle("ep-hide", status === "pago");
+    paidDateField.classList.toggle("ep-hide", status !== "pago");
+  }
+  txTypeEl.addEventListener("change", () => {
+    populateCategoryDropdown(txCategoryEl, txTypeEl.value);
+    updateConditionalFields();
+  });
+  txStatusEl.addEventListener("change", updateConditionalFields);
+
+  document.getElementById("newTxBtn").addEventListener("click", () => openModal(null));
+  document.getElementById("emptyCta").addEventListener("click", () => openModal(null));
+  document.getElementById("cancelTxBtn").addEventListener("click", closeModal);
+  modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+
+  saveTxBtn.addEventListener("click", async () => {
+    const type     = txTypeEl.value;
+    const category = txCategoryEl.value;
+    const amount   = parseAmountInput(txAmountEl.value);
+    const status   = txStatusEl.value;
+    const issueDate = parseDateInput(txIssueDateEl.value);
+    const paymentMethod = txPaymentMethodEl.value;
+
+    if (!category) { showFormError("Escolha uma categoria."); return; }
+    if (!amount)   { showFormError("Valor inválido."); return; }
+    if (!issueDate) { showFormError("Data de emissão obrigatória."); return; }
+
+    const body = {
+      type, category, amount, status, paymentMethod, issueDate,
+      description: txDescriptionEl.value.trim() || null,
+      dueDate:  status !== "pago" ? parseDateInput(txDueDateEl.value)  : null,
+      paidDate: status === "pago" ? parseDateInput(txPaidDateEl.value) : null
+    };
+
+    if (type === "receita" && txPatientSelect.value) {
+      body.patientId = txPatientSelect.value;
+      const sel = txPatientSelect.selectedOptions[0];
+      if (sel) body.patientNameSnapshot = sel.textContent;
+    }
+
+    saveTxBtn.disabled = true;
+    try {
+      const url = editingTxId
+        ? `${BACKEND_BASE_URL}/therapy/financeiro/transacoes/${encodeURIComponent(editingTxId)}`
+        : `${BACKEND_BASE_URL}/therapy/financeiro/transacoes`;
+      const method = editingTxId ? "PATCH" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+      closeModal();
+      await loadFinancial();
+    } catch (e) {
+      showFormError("Erro ao salvar: " + e.message);
+    } finally {
+      saveTxBtn.disabled = false;
+    }
+  });
+
+  function showFormError(msg) {
+    txStatusMsgEl.textContent = msg;
+    txStatusMsgEl.className = "ep-status is-err";
+  }
+
+  // ─── Lista: editar/deletar ────────────────────────────────────────────
+  txList.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+    const article = btn.closest(".ep-session");
+    const tx = article?._txData;
+
+    if (action === "edit") {
+      openModal(tx);
+    } else if (action === "delete") {
+      if (!confirm("Apagar esta transação? A ação não pode ser desfeita.")) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/financeiro/transacoes/${encodeURIComponent(id)}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${idToken}` }
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+        await loadFinancial();
+      } catch (err) {
+        btn.disabled = false;
+        alert("Erro ao apagar: " + err.message);
+      }
+    }
+  });
+</script>
+
+</body>
+</html>
