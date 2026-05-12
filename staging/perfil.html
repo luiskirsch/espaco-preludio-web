@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-1">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-2">
 </head>
 <body>
 
@@ -268,7 +268,7 @@
 
 <script type="module">
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-1";
+  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-2";
 
   const ctx = await requireTherapist({ requireDek: false });
   const { idToken, therapist } = ctx;
@@ -370,6 +370,11 @@
   }
   renderPlanoCard(therapist);
 
+  // Declarados antes de applyTherapist pra evitar TDZ no assignment dentro
+  // do if (t.photoBase64) — let não é hoisted como function.
+  let pendingPhoto = null; // { base64, mime, dirty: bool, removed: bool }
+  let pendingLogo  = null;
+
   // ─── Carrega dados existentes ────────────────────────────────────────
   function applyTherapist(t) {
     $("displayName").value   = t.displayName || "";
@@ -403,7 +408,6 @@
   applyTherapist(therapist);
 
   // ─── Foto de perfil ──────────────────────────────────────────────────
-  let pendingPhoto = null; // { base64, mime, dirty: bool, removed: bool }
 
   function renderPhotoPreview(base64, mime, name) {
     const img = $("photoImg");
@@ -459,11 +463,22 @@
       $("photoFile").value = "";
       return;
     }
+
+    // Preview imediato — usa URL.createObjectURL pro arquivo original (sem
+    // esperar resize). Resize roda em background pra montar o payload de upload.
+    const objUrl = URL.createObjectURL(file);
+    const img = $("photoImg");
+    img.onload = () => URL.revokeObjectURL(objUrl);
+    img.src = objUrl;
+    img.style.display = "block";
+    $("photoInitials").style.display = "none";
+    $("removePhotoBtn").classList.remove("ep-hide");
+
     setStatus("Processando foto…");
     try {
       const { base64, mime } = await resizePhotoToSquare(file);
       pendingPhoto = { base64, mime, dirty: true, removed: false };
-      renderPhotoPreview(base64, mime, $("displayName").value);
+      img.src = `data:${mime};base64,${base64}`;
       setStatus("");
     } catch (e) {
       console.error("photo_resize_error", e);
@@ -478,7 +493,6 @@
   });
 
   // ─── Logo upload ─────────────────────────────────────────────────────
-  let pendingLogo = null; // { base64, mime, dirty: bool, removed: bool }
 
   $("logoFile").addEventListener("change", async () => {
     const file = $("logoFile").files?.[0];
