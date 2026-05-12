@@ -808,12 +808,13 @@ h3.ep-h3 {
 
 /* ─── Modal ─────────────────────────────────────────────── */
 
+/* Overlay: sólido escuro em vez de backdrop-filter. blur(6px) custava
+   recomposição do GPU a cada hover de botão (lag perceptível). Overlay
+   com alpha 0.62 entrega o mesmo contraste sem custo de pintura. */
 .ep-modal {
   position: fixed;
   inset: 0;
-  background: rgba(28,31,29,0.45);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  background: rgba(20,23,21,0.62);
   display: none;
   place-items: center;
   z-index: 200;
@@ -3032,8 +3033,56 @@ body.ep-consult.ep-mode-calmo .ep-consult__topbar {
   opacity: 0.72;
 }
 
-.ep-modal__panel--md { max-width: 460px; }
+.ep-modal__panel--md { max-width: 540px; }
 .ep-pop-link-box { font-size: 11px; word-break: break-all; margin-top: 12px; }
+
+/* Popover de sessão (agenda) — versão premium ─────────────────── */
+
+/* Status como chip colorido (não só texto cinza). Cor padrão = "agendada"
+   (ouro suave). is-ok = realizada (verde); is-err = cancelada (vermelho). */
+.ep-pop-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  background: var(--ep-gold-soft);
+  color: var(--ep-warn);
+  border: 1px solid var(--ep-gold-line);
+  margin-top: 12px;
+}
+.ep-pop-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.ep-pop-status.is-ok {
+  background: rgba(45,106,79,0.10);
+  color: var(--ep-ok);
+  border-color: rgba(45,106,79,0.30);
+}
+.ep-pop-status.is-err {
+  background: rgba(160,43,31,0.07);
+  color: var(--ep-danger);
+  border-color: rgba(160,43,31,0.28);
+}
+
+/* Actions do popover: secundárias à esquerda (sm/ghost), primárias à
+   direita (cancel + entrar). flex já vem do .ep-modal__actions. */
+.ep-pop-actions {
+  justify-content: space-between !important;
+  align-items: center;
+}
+.ep-pop-actions__group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 .ep-cancel-main { max-width: 560px; margin: 0 auto; padding: 0 16px; }
 
 /* Bloco de DISPENSAÇÃO na página pública da receita */

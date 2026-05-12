@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-95">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=2-96">
 </head>
 <body>
 
@@ -109,15 +109,21 @@
   <div class="ep-modal__panel ep-modal__panel--md">
     <h3 class="ep-modal__title" id="popPatientName">—</h3>
     <p class="ep-modal__sub" id="popDateTime">—</p>
-    <div class="ep-status" id="popStatus">—</div>
+    <div class="ep-pop-status-wrap">
+      <span class="ep-pop-status" id="popStatus">—</span>
+    </div>
     <p class="ep-text-xs ep-text-muted ep-mt-12 ep-hide" id="popRecurrence"></p>
     <div class="ep-recovery ep-pop-link-box ep-hide" id="popLinkBox"></div>
-    <div class="ep-modal__actions">
-      <button type="button" class="ep-btn ep-btn--ghost" id="popCloseBtn">Fechar</button>
-      <a id="popOpenProntuario" href="#" class="ep-btn ep-btn--ghost ep-hide">Prontuário</a>
-      <button type="button" id="popCopyLinkBtn" class="ep-btn ep-btn--ghost ep-hide">Copiar link</button>
-      <button type="button" id="popCancelBtn" class="ep-btn ep-btn--danger ep-hide">Cancelar</button>
-      <a id="popEnter" href="#" class="ep-btn ep-btn--primary ep-hide">Entrar</a>
+    <div class="ep-modal__actions ep-pop-actions">
+      <div class="ep-pop-actions__group">
+        <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="popCloseBtn">Fechar</button>
+        <a id="popOpenProntuario" href="#" class="ep-btn ep-btn--ghost ep-btn--sm ep-hide">Prontuário</a>
+        <button type="button" id="popCopyLinkBtn" class="ep-btn ep-btn--ghost ep-btn--sm ep-hide">Copiar link</button>
+      </div>
+      <div class="ep-pop-actions__group">
+        <button type="button" id="popCancelBtn" class="ep-btn ep-btn--danger ep-btn--sm ep-hide">Cancelar</button>
+        <a id="popEnter" href="#" class="ep-btn ep-btn--primary ep-hide">Entrar</a>
+      </div>
     </div>
   </div>
 </div>
@@ -504,7 +510,7 @@
       sd.toLocaleString("pt-BR", { weekday: "long", day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" });
     const statusEl = document.getElementById("popStatus");
     statusEl.textContent = statusLabel(s.status);
-    statusEl.className = "ep-status";
+    statusEl.className = "ep-pop-status";
     if (s.status === "completed")   statusEl.classList.add("is-ok");
     if (s.status === "in_progress") statusEl.classList.add("is-ok");
     if (s.status === "canceled")    statusEl.classList.add("is-err");
