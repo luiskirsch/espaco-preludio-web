@@ -1,0 +1,328 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de espera Â· EspaÃ§o PrelÃºdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-7">
+</head>
+<body>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">EspaÃ§o</span>
+        <span>PrelÃºdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html">Consultas</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./pacientes.html">Pacientes</a>
+      <a href="./financeiro.html">Financeiro</a>
+      <a href="./clinica.html">ClÃ­nica</a>
+      <a href="./inventario.html">Estoque</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./calculadora.html">Calculadora</a>
+      <a href="./documento.html?tipo=atestado">Atestado</a>
+      <a href="./whatsapp.html">WhatsApp</a>
+      <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
+        <span class="ep-nav-avatar" id="topUserAvatar">Â·</span>
+        <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
+      </a>
+      <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16">
+
+  <section class="ep-stack">
+    <div class="ep-flex--end-wrap ep-flex">
+      <div>
+        <div class="ep-eyebrow">Agenda</div>
+        <h1 class="ep-h1 ep-mt-12">Lista de espera</h1>
+        <p class="ep-text-muted ep-mt-8 ep-mt-0">
+          Pacientes aguardando vaga. Quando abrir um horÃ¡rio, converta direto em consulta.
+        </p>
+      </div>
+      <div class="ep-flex ep-flex--wrap ep-gap-8">
+        <a href="./agenda.html" class="ep-btn ep-btn--ghost">â† Voltar pra agenda</a>
+        <button id="newEntryBtn" type="button" class="ep-btn ep-btn--primary ep-btn--lg">+ Adicionar</button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="ep-flex ep-flex--wrap ep-gap-8 ep-mt-16" style="align-items: center;">
+      <div class="ep-field" style="flex: 1; max-width: 360px; margin: 0;">
+        <input id="searchInput" class="ep-input" type="search" placeholder="ðŸ” Buscar nomeâ€¦">
+      </div>
+      <div class="ep-flex ep-gap-8">
+        <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-prio-filter="all">Todas</button>
+        <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-prio-filter="high">Alta</button>
+        <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-prio-filter="med">MÃ©dia</button>
+        <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-prio-filter="low">Baixa</button>
+      </div>
+      <span id="countHint" class="ep-text-xs ep-text-muted"></span>
+    </div>
+
+    <div id="loadingBanner" class="ep-alert ep-mt-16">Carregandoâ€¦</div>
+
+    <div id="entryList" class="ep-session-list ep-mt-16 ep-hide"></div>
+
+    <div id="emptyState" class="ep-empty ep-mt-16 ep-hide">
+      <h3 class="ep-h3">Lista vazia.</h3>
+      <p class="ep-text-muted ep-mt-8" style="margin: 0;">
+        Adicione pacientes que estÃ£o aguardando uma vaga.
+      </p>
+      <button class="ep-btn ep-btn--primary ep-mt-16" type="button" id="emptyCta">Adicionar primeiro</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- Modal: criar/editar entrada -->
+<div class="ep-modal" id="entryModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel">
+    <h3 class="ep-modal__title" id="entryModalTitle">Adicionar Ã  lista de espera</h3>
+    <p class="ep-modal__sub">Preencha os dados do paciente. VocÃª pode converter em consulta a qualquer momento.</p>
+
+    <form id="entryForm" class="ep-stack" style="padding: 0 28px;">
+      <div class="ep-field">
+        <label class="ep-label" for="entryPatientName">Nome do paciente</label>
+        <input id="entryPatientName" class="ep-input" type="text" maxlength="80" required>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="entryContact">Contato (telefone, e-mail)</label>
+        <input id="entryContact" class="ep-input" type="text" maxlength="80" placeholder="Opcional">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="entryPriority">Prioridade</label>
+        <select id="entryPriority" class="ep-select">
+          <option value="high">Alta (urgente)</option>
+          <option value="med" selected>MÃ©dia (normal)</option>
+          <option value="low">Baixa (sem pressa)</option>
+        </select>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="entryNote">ObservaÃ§Ã£o</label>
+        <textarea id="entryNote" class="ep-input" rows="3" maxlength="500" placeholder="Motivo, preferÃªncias de horÃ¡rio, etc."></textarea>
+      </div>
+      <div class="ep-status" id="entryStatus"></div>
+    </form>
+
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="entryCancelBtn">Voltar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="entrySaveBtn">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-2";
+  import { clearDek } from "./js/crypto.js";
+
+  const ctx = await requireTherapist({ requireDek: false });
+  const { idToken } = ctx;
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    clearDek();
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
+
+  const $ = id => document.getElementById(id);
+  const loadingBanner = $("loadingBanner");
+  const entryList     = $("entryList");
+  const emptyState    = $("emptyState");
+  const searchInput   = $("searchInput");
+  const countHint     = $("countHint");
+
+  let allEntries = [];
+  let activeFilter = "all";
+
+  function escapeHtml(s) { return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+  function priorityLabel(p) { return p === "high" ? "Alta" : p === "low" ? "Baixa" : "MÃ©dia"; }
+  function priorityClass(p) { return p === "high" ? "ep-badge--done" : p === "low" ? "ep-badge--muted" : "ep-badge--warn"; }
+  function daysSince(ms) {
+    if (!ms) return "â€”";
+    const d = Math.floor((Date.now() - ms) / 86_400_000);
+    return d === 0 ? "hoje" : d === 1 ? "1 dia" : `${d} dias`;
+  }
+
+  function renderList() {
+    const q = (searchInput.value || "").trim().toLowerCase();
+    let visible = allEntries.filter(e =>
+      (activeFilter === "all" || e.priority === activeFilter) &&
+      (!q || (e.patientName || "").toLowerCase().includes(q))
+    );
+
+    if (visible.length === 0) {
+      entryList.classList.add("ep-hide");
+      if (allEntries.length === 0) emptyState.classList.remove("ep-hide");
+      else { entryList.classList.remove("ep-hide"); entryList.innerHTML = `<div class="ep-empty"><p class="ep-text-muted" style="margin:0;">Nenhum resultado para o filtro atual.</p></div>`; }
+      countHint.textContent = "";
+      return;
+    }
+    emptyState.classList.add("ep-hide");
+    entryList.classList.remove("ep-hide");
+    countHint.textContent = `${visible.length} ${visible.length === 1 ? "paciente" : "pacientes"}`;
+
+    entryList.innerHTML = visible.map(e => `
+      <article class="ep-session">
+        <div>
+          <div class="ep-session__name">${escapeHtml(e.patientName)}</div>
+          <div class="ep-session__meta">
+            <span class="ep-badge ${priorityClass(e.priority)}">${priorityLabel(e.priority)}</span>
+            ${e.contact ? `<span>Â· ${escapeHtml(e.contact)}</span>` : ""}
+            <span>Â· aguardando hÃ¡ ${daysSince(e.createdAt)}</span>
+            ${e.note ? `<span>Â· ${escapeHtml(e.note)}</span>` : ""}
+          </div>
+        </div>
+        <div class="ep-session__actions">
+          <button type="button" class="ep-btn ep-btn--primary ep-btn--sm" data-action="convert" data-id="${e.waitlistId}" data-name="${escapeHtml(e.patientName)}" data-patient-id="${e.patientId || ''}">Criar consulta</button>
+          <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-action="edit" data-id="${e.waitlistId}">Editar</button>
+          <button type="button" class="ep-btn ep-btn--danger ep-btn--sm" data-action="delete" data-id="${e.waitlistId}">Remover</button>
+        </div>
+      </article>
+    `).join("");
+
+    entryList.querySelectorAll("button[data-action]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        if (action === "convert") {
+          const params = new URLSearchParams();
+          params.set("name", btn.dataset.name || "");
+          if (btn.dataset.patientId) params.set("newWith", btn.dataset.patientId);
+          // Marca pra remover da lista apÃ³s criar consulta (frontend-only flag).
+          sessionStorage.setItem("ep:waitlist-after-create", id);
+          window.location.href = "./painel.html?" + params.toString();
+        } else if (action === "edit") {
+          openEntryModal(allEntries.find(x => x.waitlistId === id));
+        } else if (action === "delete") {
+          deleteEntry(id);
+        }
+      });
+    });
+  }
+
+  async function loadList() {
+    loadingBanner.classList.remove("ep-hide");
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/waitlist`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      allEntries = data.items || [];
+      loadingBanner.classList.add("ep-hide");
+      renderList();
+    } catch (e) {
+      loadingBanner.textContent = "Erro ao carregar: " + (e?.message || "desconhecido");
+      loadingBanner.className = "ep-alert ep-alert--danger";
+    }
+  }
+
+  async function deleteEntry(waitlistId) {
+    if (!confirm("Remover da lista de espera?")) return;
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/waitlist/${encodeURIComponent(waitlistId)}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      await loadList();
+    } catch (e) {
+      alert("Erro ao remover: " + (e?.message || "desconhecido"));
+    }
+  }
+
+  // â”€â”€â”€ Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const entryModal = $("entryModal");
+  let editingId = null;
+
+  function openEntryModal(entry) {
+    editingId = entry?.waitlistId || null;
+    $("entryModalTitle").textContent = editingId ? "Editar entrada" : "Adicionar Ã  lista de espera";
+    $("entryPatientName").value = entry?.patientName || "";
+    $("entryContact").value     = entry?.contact     || "";
+    $("entryPriority").value    = entry?.priority    || "med";
+    $("entryNote").value        = entry?.note        || "";
+    $("entryStatus").textContent = "";
+    $("entryStatus").className   = "ep-status";
+    entryModal.classList.add("is-open");
+  }
+  $("newEntryBtn").addEventListener("click", () => openEntryModal(null));
+  $("emptyCta").addEventListener("click", () => openEntryModal(null));
+  $("entryCancelBtn").addEventListener("click", () => entryModal.classList.remove("is-open"));
+
+  $("entrySaveBtn").addEventListener("click", async () => {
+    const patientName = $("entryPatientName").value.trim();
+    if (!patientName) {
+      $("entryStatus").textContent = "Nome Ã© obrigatÃ³rio.";
+      $("entryStatus").classList.add("is-err");
+      return;
+    }
+    const body = {
+      patientName,
+      contact:  $("entryContact").value.trim() || null,
+      priority: $("entryPriority").value,
+      note:     $("entryNote").value.trim() || null
+    };
+    const btn = $("entrySaveBtn");
+    btn.disabled = true;
+    $("entryStatus").className = "ep-status";
+    $("entryStatus").textContent = "Salvandoâ€¦";
+    try {
+      const url = editingId
+        ? `${BACKEND_BASE_URL}/therapy/waitlist/${encodeURIComponent(editingId)}`
+        : `${BACKEND_BASE_URL}/therapy/waitlist`;
+      const method = editingId ? "PATCH" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      entryModal.classList.remove("is-open");
+      await loadList();
+    } catch (e) {
+      $("entryStatus").textContent = "Erro: " + (e?.message || "desconhecido");
+      $("entryStatus").classList.add("is-err");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // â”€â”€â”€ Filtros + Busca â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  document.querySelectorAll("button[data-prio-filter]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeFilter = btn.dataset.prioFilter;
+      document.querySelectorAll("button[data-prio-filter]").forEach(b => b.classList.remove("ep-btn--primary"));
+      btn.classList.add("ep-btn--primary");
+      renderList();
+    });
+  });
+  // Marca "Todas" como ativo no boot
+  document.querySelector('button[data-prio-filter="all"]').classList.add("ep-btn--primary");
+
+  searchInput.addEventListener("input", renderList);
+
+  // Boot
+  await loadList();
+</script>
+
+</body>
+</html>

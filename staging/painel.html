@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-6">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-7">
 </head>
 <body>
 
@@ -616,6 +616,15 @@
         return;
       }
       closeModal(newSessionModal);
+
+      const waitlistId = sessionStorage.getItem("ep:waitlist-after-create");
+      if (waitlistId) {
+        sessionStorage.removeItem("ep:waitlist-after-create");
+        fetch(`${BACKEND_BASE_URL}/therapy/waitlist/${encodeURIComponent(waitlistId)}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${idToken}` }
+        }).catch(() => {});
+      }
 
       const link = buildPatientLink(data.session.joinToken);
       document.getElementById("linkValue").textContent = link;
