@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-40">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-41">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -67,6 +67,12 @@
     </div>
 
     <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando pacientes…</div>
+    <div id="patientFilters" class="ep-mt-16 ep-hide" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 16px;background:var(--ep-bg-2);border-radius:10px;">
+      <span class="ep-text-xs ep-text-muted" style="font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Filtrar:</span>
+      <input id="patientSearchInput" class="ep-input" type="text" placeholder="🔍 Nome ou contato…" style="flex:1;min-width:200px;max-width:320px;height:36px;font-size:13px;">
+      <div id="tagFilterChips" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;"></div>
+      <button id="clearFiltersBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm ep-hide" style="margin-left:auto;">Limpar filtros</button>
+    </div>
     <div id="patientList" class="ep-session-list ep-mt-16 ep-hide"></div>
     <div id="emptyState" class="ep-empty ep-mt-16 ep-hide">
       <h3 class="ep-h3">Nenhum paciente cadastrado.</h3>
@@ -326,20 +332,84 @@
   const loadingBanner = document.getElementById("loadingBanner");
   const patientList   = document.getElementById("patientList");
   const emptyState    = document.getElementById("emptyState");
+  const filtersBox    = document.getElementById("patientFilters");
+  const searchInput   = document.getElementById("patientSearchInput");
+  const tagFilterChips = document.getElementById("tagFilterChips");
+  const clearFiltersBtn = document.getElementById("clearFiltersBtn");
+
+  let allDecrypted = [];
+  let activeTagFilter = null;
+  let searchTerm = "";
+
+  function renderTagFilterChips() {
+    const allTags = new Set();
+    allDecrypted.forEach(p => (p.tags || []).forEach(t => allTags.add(t)));
+    const sorted = [...allTags].sort();
+    tagFilterChips.innerHTML = sorted.map(t => `
+      <button type="button" class="ep-tag-filter${activeTagFilter === t ? " is-active" : ""}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>
+    `).join("");
+  }
+
+  function applyFilters() {
+    const term = searchTerm.toLowerCase();
+    let filtered = allDecrypted;
+    if (activeTagFilter) filtered = filtered.filter(p => (p.tags || []).includes(activeTagFilter));
+    if (term) filtered = filtered.filter(p =>
+      (p.name || "").toLowerCase().includes(term) ||
+      (p.contact || "").toLowerCase().includes(term)
+    );
+    patientList.innerHTML = "";
+    if (filtered.length === 0) {
+      patientList.classList.add("ep-hide");
+      if (allDecrypted.length > 0) {
+        emptyState.classList.remove("ep-hide");
+        emptyState.querySelector("h3").textContent = "Nenhum paciente bate com o filtro.";
+        emptyState.querySelector("p").textContent = "Tente outro termo ou limpe os filtros.";
+        emptyState.querySelector("button").style.display = "none";
+      }
+    } else {
+      emptyState.classList.add("ep-hide");
+      filtered.forEach(p => patientList.appendChild(renderPatient(p)));
+      patientList.classList.remove("ep-hide");
+    }
+    const hasFilter = !!(activeTagFilter || searchTerm);
+    clearFiltersBtn.classList.toggle("ep-hide", !hasFilter);
+  }
 
   async function renderPatientsFromData(data) {
     loadingBanner.classList.add("ep-hide");
     if (!data.patients || data.patients.length === 0) {
       patientList.classList.add("ep-hide");
+      filtersBox.classList.add("ep-hide");
       emptyState.classList.remove("ep-hide");
       return;
     }
     emptyState.classList.add("ep-hide");
-    const decrypted = await Promise.all(data.patients.map(decryptPatient));
-    patientList.innerHTML = "";
-    decrypted.forEach(p => patientList.appendChild(renderPatient(p)));
-    patientList.classList.remove("ep-hide");
+    allDecrypted = await Promise.all(data.patients.map(decryptPatient));
+    filtersBox.classList.remove("ep-hide");
+    renderTagFilterChips();
+    applyFilters();
   }
+
+  tagFilterChips.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-tag]");
+    if (!btn) return;
+    const tag = btn.getAttribute("data-tag");
+    activeTagFilter = activeTagFilter === tag ? null : tag;
+    renderTagFilterChips();
+    applyFilters();
+  });
+  searchInput.addEventListener("input", () => {
+    searchTerm = searchInput.value.trim();
+    applyFilters();
+  });
+  clearFiltersBtn.addEventListener("click", () => {
+    activeTagFilter = null;
+    searchTerm = "";
+    searchInput.value = "";
+    renderTagFilterChips();
+    applyFilters();
+  });
 
   async function loadPatients() {
     // SWR: cache stale rende instantâneo, fresh atualiza em background.

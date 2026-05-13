@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-40">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-41">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -386,7 +386,10 @@
           anamneses, audit. Cifrados E2E são decifrados no seu navegador antes de empacotar.
         </p>
 
-        <button type="button" id="exportDataBtn" class="ep-btn ep-btn--ghost ep-btn--sm ep-mt-12">↓ Exportar meus dados (ZIP)</button>
+        <div class="ep-flex ep-gap-8 ep-flex--wrap ep-mt-12">
+          <button type="button" id="exportDataBtn" class="ep-btn ep-btn--ghost ep-btn--sm">↓ Exportar meus dados (ZIP, decifrado)</button>
+          <button type="button" id="backupE2eeBtn" class="ep-btn ep-btn--ghost ep-btn--sm" title="Baixa um arquivo .epbk com seus dados ainda cifrados — só você (com sua senha) consegue abrir.">🔒 Backup cifrado (.epbk)</button>
+        </div>
         <div id="exportDataStatus" class="ep-status ep-mt-12"></div>
 
         <p class="ep-text-xs ep-text-muted ep-mt-12">
@@ -974,7 +977,101 @@ Direito de portabilidade — LGPD Art. 18, V.
       st.className = "ep-status is-err";
     } finally {
       btn.disabled = false;
-      btn.textContent = "↓ Exportar meus dados (ZIP)";
+      btn.textContent = "↓ Exportar meus dados (ZIP, decifrado)";
+    }
+  });
+
+  $("backupE2eeBtn").addEventListener("click", async () => {
+    if (!confirm("Baixar backup com seus dados ainda cifrados (.epbk)?\n\nO arquivo só pode ser aberto com sua senha do Espaço Prelúdio. Ideal para guardar em pen-drive ou nuvem pessoal.")) return;
+    const btn = $("backupE2eeBtn");
+    const st = $("exportDataStatus");
+    btn.disabled = true;
+    btn.textContent = "Empacotando…";
+    st.textContent = "";
+    st.className = "ep-status";
+
+    try {
+      st.textContent = "Baixando dados cifrados…";
+      const headers = { "Authorization": `Bearer ${idToken}` };
+
+      const [meRes, pacRes, sessRes] = await Promise.all([
+        fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, { headers }),
+        fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, { headers }),
+        fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, { headers })
+      ]);
+      const meData = await meRes.json();
+      const pacData = await pacRes.json();
+      const sessData = await sessRes.json();
+
+      const patients = (pacData.patients || []).map(p => ({
+        patientId: p.patientId, ciphertext: p.ciphertext, iv: p.iv,
+        createdAt: p.createdAt, updatedAt: p.updatedAt
+      }));
+
+      st.textContent = "Coletando notas cifradas das sessões…";
+      const sessions = sessData.sessions || [];
+      const allNotes = [];
+      const batchSize = 6;
+      for (let i = 0; i < sessions.length; i += batchSize) {
+        const batch = sessions.slice(i, i + batchSize);
+        const results = await Promise.all(batch.map(async s => {
+          try {
+            const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(s.sessionId)}/notas`, { headers });
+            const d = await r.json();
+            return (d.notes || []).map(n => ({
+              sessionId: s.sessionId, noteId: n.noteId,
+              ciphertext: n.ciphertext, iv: n.iv,
+              createdAt: n.createdAt
+            }));
+          } catch { return []; }
+        }));
+        results.forEach(arr => allNotes.push(...arr));
+      }
+
+      const backup = {
+        format: "epbk",
+        version: 1,
+        generatedAt: Date.now(),
+        therapist: {
+          uid: meData.therapist?.uid || null,
+          displayName: meData.therapist?.displayName || null,
+          email: meData.therapist?.email || null,
+          dekEnvelope: meData.therapist?.dekEnvelope || null
+        },
+        patients: patients,
+        sessions: sessions.map(s => ({
+          sessionId: s.sessionId,
+          patientId: s.patientId || null,
+          patientName: s.patientName || null,
+          status: s.status,
+          createdAt: s.createdAt,
+          scheduledAt: s.scheduledAt || null,
+          completedAt: s.completedAt || null,
+          canceledAt: s.canceledAt || null
+        })),
+        notes: allNotes
+      };
+
+      const json = JSON.stringify(backup, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const ymd = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `espaco-preludio-backup-${ymd}.epbk`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+      const sizeMB = (blob.size / 1024 / 1024).toFixed(2);
+      st.textContent = `✓ Backup cifrado salvo (${sizeMB} MB · ${patients.length} pacientes · ${allNotes.length} notas).`;
+      st.className = "ep-status is-ok";
+    } catch (e) {
+      console.error("backup_e2ee_failed", e);
+      st.textContent = "Erro: " + (e?.message || "desconhecido");
+      st.className = "ep-status is-err";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "🔒 Backup cifrado (.epbk)";
     }
   });
 

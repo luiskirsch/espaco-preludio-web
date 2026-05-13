@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-40">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-41">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -204,6 +204,28 @@
         </select>
         <p class="ep-text-xs ep-text-muted ep-mt-0">
           Vincular permite relatórios "quanto cada paciente gerou de receita".
+        </p>
+      </div>
+
+      <!-- Convênio (opcional, free-text com sugestões) -->
+      <div class="ep-field" id="convenioField">
+        <label class="ep-label" for="txConvenio">Convênio (opcional)</label>
+        <input id="txConvenio" class="ep-input" type="text" maxlength="50" list="convenioOptions" placeholder="Ex.: Unimed, Bradesco Saúde, Particular…">
+        <datalist id="convenioOptions">
+          <option value="Particular">
+          <option value="Unimed">
+          <option value="Bradesco Saúde">
+          <option value="SulAmérica">
+          <option value="Amil">
+          <option value="Hapvida">
+          <option value="NotreDame Intermédica">
+          <option value="Cassi">
+          <option value="GEAP">
+          <option value="Petrobras Saúde">
+          <option value="Saúde Caixa">
+        </datalist>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Deixe em branco se for particular. Aparece nos relatórios separadamente.
         </p>
       </div>
 
@@ -534,11 +556,13 @@
     const cobrarBtn = showCobrarBtn
       ? `<button class="ep-btn ${tx.asaasPaymentId ? "ep-btn--ghost" : "ep-btn--primary"} ep-btn--sm" data-action="cobrar" data-id="${tx.txId}">${tx.asaasPaymentId ? "Ver Pix" : "Cobrar Pix"}</button>`
       : "";
+    const convBadge = tx.convenio ? `<span class="ep-badge ep-badge--ok" style="background:rgba(45,74,62,0.10);color:var(--ep-accent);" title="Convênio">${escapeHtml(tx.convenio)}</span>` : "";
     div.innerHTML = `
       <div>
         <div class="ep-session__name">${escapeHtml(catLabel)}${tx.description ? ` — ${escapeHtml(tx.description)}` : ""}</div>
         <div class="ep-session__meta">
           ${statusBadge}
+          ${convBadge}
           ${asaasBadge}
           <span>${fmtDate(tx.issueDate)}</span>
           ${patientLine}
@@ -694,6 +718,7 @@
     txDueDateEl.value  = isoDateInput(tx?.dueDate);
     txPaidDateEl.value = isoDateInput(tx?.paidDate);
     txDescriptionEl.value = tx?.description || "";
+    document.getElementById("txConvenio").value = tx?.convenio || "";
     txStatusMsgEl.textContent = "";
     txStatusMsgEl.className = "ep-status";
     updateConditionalFields();
@@ -756,9 +781,11 @@
     if (!amount)   { showFormError("Valor inválido."); return; }
     if (!issueDate) { showFormError("Data de emissão obrigatória."); return; }
 
+    const convenio = document.getElementById("txConvenio").value.trim().slice(0, 50);
     const body = {
       type, category, amount, status, paymentMethod, issueDate,
       description: txDescriptionEl.value.trim() || null,
+      convenio: convenio || null,
       dueDate:  status !== "pago" ? parseDateInput(txDueDateEl.value)  : null,
       paidDate: status === "pago" ? parseDateInput(txPaidDateEl.value) : null
     };
