@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-32">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-33">
 </head>
 <body>
 
@@ -168,6 +168,96 @@
     <div class="ep-modal__actions">
       <button type="button" class="ep-btn ep-btn--ghost" id="copyLinkBtn">Copiar link</button>
       <button type="button" class="ep-btn ep-btn--primary" id="closeLinkModal">Pronto</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Enviar recibo -->
+<div class="ep-modal" id="reciboModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 520px;">
+    <h3 class="ep-modal__title">Enviar recibo</h3>
+    <p class="ep-modal__sub">
+      Cria a transação no financeiro (status pago) + emite o recibo + envia
+      pro paciente. Você pode reenviar depois pelo link público.
+    </p>
+
+    <div id="reciboFormWrap" style="padding: 0 28px;">
+      <div style="padding: 12px 14px; background: var(--ep-bg-2); border-radius: 8px;">
+        <div class="ep-text-xs ep-text-muted">Paciente</div>
+        <div style="font-weight: 600;" id="reciboPatientName">—</div>
+      </div>
+
+      <div class="ep-row ep-mt-16">
+        <div class="ep-field">
+          <label class="ep-label" for="reciboAmount">Valor (R$) *</label>
+          <input id="reciboAmount" class="ep-input" type="text" inputmode="decimal" placeholder="200,00" autofocus>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="reciboPaymentMethod">Forma *</label>
+          <select id="reciboPaymentMethod" class="ep-select">
+            <option value="pix">Pix</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="cartao-credito">Cartão de crédito</option>
+            <option value="cartao-debito">Cartão de débito</option>
+            <option value="transferencia">Transferência</option>
+            <option value="boleto">Boleto</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="ep-field">
+        <label class="ep-label" for="reciboPaidDate">Data do pagamento</label>
+        <input id="reciboPaidDate" class="ep-input" type="date">
+      </div>
+
+      <div class="ep-row">
+        <div class="ep-field">
+          <label class="ep-label" for="reciboEmail">E-mail do paciente</label>
+          <input id="reciboEmail" class="ep-input" type="email" maxlength="120" placeholder="paciente@exemplo.com">
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="reciboPhone">WhatsApp do paciente</label>
+          <input id="reciboPhone" class="ep-input" type="tel" maxlength="20" placeholder="(48) 99999-9999">
+        </div>
+      </div>
+
+      <div class="ep-flex ep-mt-12" style="gap: 16px; flex-wrap: wrap; align-items: center;">
+        <label class="ep-flex" style="gap: 6px; cursor: pointer; align-items: center;">
+          <input id="reciboSendEmail" type="checkbox" style="width: 16px; height: 16px;">
+          <span class="ep-text-sm">Enviar por e-mail</span>
+        </label>
+        <label class="ep-flex" style="gap: 6px; cursor: pointer; align-items: center;">
+          <input id="reciboSendWa" type="checkbox" style="width: 16px; height: 16px;">
+          <span class="ep-text-sm">Enviar por WhatsApp</span>
+        </label>
+      </div>
+
+      <p class="ep-text-xs ep-text-muted ep-mt-12">
+        WhatsApp exige config ativa em Perfil → WhatsApp. Caso contrário, o link público fica disponível pra você compartilhar manualmente.
+      </p>
+
+      <div class="ep-status ep-mt-12" id="reciboStatus"></div>
+    </div>
+
+    <div id="reciboSuccessWrap" class="ep-hide" style="padding: 0 28px;">
+      <div class="ep-verify-hero ep-verify-hero--ok" style="margin-top: 8px;">
+        <div class="ep-verify-hero__icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
+        </div>
+        <div class="ep-verify-hero__body">
+          <div class="ep-eyebrow" style="color: #1f6b3e;">Recibo nº <span id="reciboSuccessNumber">—</span> emitido</div>
+        </div>
+      </div>
+      <ul id="reciboSuccessChannels" class="ep-mt-12 ep-text-sm" style="list-style: none; padding: 0; margin: 0;"></ul>
+      <p class="ep-text-xs ep-text-muted ep-mt-16">Link público (válido por 1 ano):</p>
+      <a id="reciboPublicLink" href="#" target="_blank" rel="noopener" class="ep-text-sm" style="font-family: 'JetBrains Mono', monospace; word-break: break-all; color: var(--ep-accent);">—</a>
+    </div>
+
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="reciboCloseBtn">Cancelar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="reciboSubmitBtn">Gerar e enviar</button>
+      <button type="button" class="ep-btn ep-btn--primary ep-hide" id="reciboSuccessCloseBtn">Pronto</button>
     </div>
   </div>
 </div>
@@ -481,6 +571,9 @@
         ${s.status !== "completed" ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="encerrar" data-id="${s.sessionId}">Encerrar</button>
         ` : ""}
+        ${s.status !== "canceled" ? `
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="recibo" data-id="${s.sessionId}" title="Enviar recibo ao paciente">Recibo</button>
+        ` : ""}
         ${s.status === "completed" ? `
           <button class="ep-btn-icon" data-action="ocultar" data-id="${s.sessionId}" aria-label="Remover da lista" title="Remover da lista (mantém no prontuário)">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -535,6 +628,110 @@
         btn.disabled = false;
         alert("Erro ao ocultar: " + (err?.message || "desconhecido"));
       }
+    } else if (action === "recibo") {
+      openReciboModal(allSessions.find(x => x.sessionId === id));
+    }
+  });
+
+  // ─── Modal: Enviar recibo ────────────────────────────────────
+  function openReciboModal(sess) {
+    if (!sess) return;
+    const modal = document.getElementById("reciboModal");
+    modal._session = sess;
+    document.getElementById("reciboPatientName").textContent = sess.patientName || "—";
+    document.getElementById("reciboAmount").value = "";
+    document.getElementById("reciboPaymentMethod").value = "pix";
+    const today = new Date();
+    document.getElementById("reciboPaidDate").value = today.toISOString().slice(0, 10);
+    document.getElementById("reciboEmail").value = sess.patientEmail || "";
+    document.getElementById("reciboPhone").value = sess.patientPhone || "";
+    document.getElementById("reciboSendEmail").checked = !!sess.patientEmail;
+    document.getElementById("reciboSendWa").checked = !!sess.patientPhone;
+    document.getElementById("reciboStatus").textContent = "";
+    document.getElementById("reciboStatus").className = "ep-status";
+    document.getElementById("reciboFormWrap").classList.remove("ep-hide");
+    document.getElementById("reciboSuccessWrap").classList.add("ep-hide");
+    document.getElementById("reciboSubmitBtn").classList.remove("ep-hide");
+    document.getElementById("reciboCloseBtn").classList.remove("ep-hide");
+    document.getElementById("reciboSuccessCloseBtn").classList.add("ep-hide");
+    document.getElementById("reciboSubmitBtn").disabled = false;
+    document.getElementById("reciboSubmitBtn").textContent = "Gerar e enviar";
+    modal.classList.add("is-open");
+  }
+  document.getElementById("reciboCloseBtn").addEventListener("click", () => {
+    document.getElementById("reciboModal").classList.remove("is-open");
+  });
+  document.getElementById("reciboSuccessCloseBtn").addEventListener("click", () => {
+    document.getElementById("reciboModal").classList.remove("is-open");
+  });
+  document.getElementById("reciboSubmitBtn").addEventListener("click", async () => {
+    const modal = document.getElementById("reciboModal");
+    const sess = modal._session;
+    if (!sess) return;
+    const amountStr = document.getElementById("reciboAmount").value.trim().replace(",", ".");
+    const amountReais = Number(amountStr);
+    if (!Number.isFinite(amountReais) || amountReais <= 0) {
+      const st = document.getElementById("reciboStatus");
+      st.textContent = "Informe um valor válido.";
+      st.className = "ep-status is-err";
+      return;
+    }
+    const amount = Math.round(amountReais * 100);
+    const paymentMethod = document.getElementById("reciboPaymentMethod").value;
+    const paidDateStr = document.getElementById("reciboPaidDate").value;
+    const paidDate = paidDateStr ? new Date(paidDateStr + "T12:00:00").getTime() : Date.now();
+    const patientEmail = document.getElementById("reciboEmail").value.trim().toLowerCase() || null;
+    const patientPhone = document.getElementById("reciboPhone").value.trim() || null;
+    const sendEmail = document.getElementById("reciboSendEmail").checked;
+    const sendWhatsapp = document.getElementById("reciboSendWa").checked;
+    if (!sendEmail && !sendWhatsapp) {
+      const st = document.getElementById("reciboStatus");
+      st.textContent = "Selecione pelo menos um canal de envio.";
+      st.className = "ep-status is-err";
+      return;
+    }
+    const submitBtn = document.getElementById("reciboSubmitBtn");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Enviando…";
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sess.sessionId)}/recibo/enviar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ amount, paymentMethod, paidDate, patientEmail, patientPhone, sendEmail, sendWhatsapp })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        const st = document.getElementById("reciboStatus");
+        st.textContent = "Erro: " + (data?.hint || data?.error || res.status);
+        st.className = "ep-status is-err";
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Gerar e enviar";
+        return;
+      }
+      document.getElementById("reciboFormWrap").classList.add("ep-hide");
+      document.getElementById("reciboSuccessWrap").classList.remove("ep-hide");
+      document.getElementById("reciboSubmitBtn").classList.add("ep-hide");
+      document.getElementById("reciboCloseBtn").classList.add("ep-hide");
+      document.getElementById("reciboSuccessCloseBtn").classList.remove("ep-hide");
+      invalidateApi("financeiro", uid);
+      document.getElementById("reciboSuccessNumber").textContent = data.sequentialNumber;
+      const channels = data.channels || {};
+      const lines = [];
+      if (channels.email?.attempted) lines.push(channels.email.ok ? "✓ E-mail enviado" : "✗ E-mail falhou");
+      if (channels.whatsapp?.attempted) {
+        if (channels.whatsapp.ok) lines.push("✓ WhatsApp enviado");
+        else if (channels.whatsapp.reason === "WHATSAPP_NAO_HABILITADO") lines.push("⚠ WhatsApp não habilitado (configure em Perfil → WhatsApp)");
+        else lines.push("✗ WhatsApp falhou");
+      }
+      document.getElementById("reciboSuccessChannels").innerHTML = lines.map(l => `<li>${l}</li>`).join("");
+      document.getElementById("reciboPublicLink").href = data.reciboUrl;
+      document.getElementById("reciboPublicLink").textContent = data.reciboUrl;
+    } catch (e) {
+      const st = document.getElementById("reciboStatus");
+      st.textContent = "Erro de conexão.";
+      st.className = "ep-status is-err";
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Gerar e enviar";
     }
   });
 

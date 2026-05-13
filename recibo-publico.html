@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recibo · Espaço Prelúdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-33">
+</head>
+<body>
+
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav">
+      <span class="ep-text-sm ep-text-muted">Recibo</span>
+    </nav>
+  </header>
+
+  <main class="ep-main" style="max-width: 760px; margin: 0 auto;">
+
+    <div id="loading" class="ep-skeleton ep-mt-32">Carregando recibo…</div>
+
+    <div id="errorBox" class="ep-hide ep-mt-32">
+      <div class="ep-verify-hero ep-verify-hero--err">
+        <div class="ep-verify-hero__icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        </div>
+        <div>
+          <h1 class="ep-h2 ep-mt-0" id="errorTitle">Recibo indisponível.</h1>
+          <p class="ep-text-muted ep-mt-0" id="errorMsg">O link está inválido ou expirou.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="content" class="ep-hide ep-mt-32">
+      <div class="ep-verify-hero ep-verify-hero--ok">
+        <div class="ep-verify-hero__icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
+        </div>
+        <div class="ep-verify-hero__body">
+          <div class="ep-eyebrow" style="color: #1f6b3e;">Recibo emitido</div>
+          <h1 class="ep-h1 ep-mt-12">Recibo nº <span id="seqNumber">—</span></h1>
+          <p class="ep-text-muted ep-mt-0">Documento de comprovação de pagamento.</p>
+        </div>
+      </div>
+
+      <!-- Corpo do recibo (estilo formal) -->
+      <article id="reciboBody" class="ep-mt-24" style="background: #fff; border: 1px solid var(--ep-line); border-radius: 12px; padding: 32px;">
+        <header style="border-bottom: 1px solid var(--ep-line); padding-bottom: 16px; margin-bottom: 20px; display: flex; gap: 16px; align-items: flex-start;">
+          <img id="emitterLogo" class="ep-hide" alt="Logo" style="width: 64px; height: 64px; object-fit: contain;">
+          <div style="flex: 1;">
+            <div style="font-size: 16px; font-weight: 600;" id="emitterName">—</div>
+            <div class="ep-text-sm ep-text-muted" id="emitterIds">—</div>
+            <div class="ep-text-xs ep-text-muted ep-mt-8" id="emitterEspecialidade"></div>
+            <div class="ep-text-xs ep-text-muted" id="emitterAddress"></div>
+            <div class="ep-text-xs ep-text-muted" id="emitterPhone"></div>
+            <div class="ep-text-xs ep-text-muted" id="emitterDoc"></div>
+          </div>
+        </header>
+
+        <h2 class="ep-h3 ep-mt-0" style="text-align: center; letter-spacing: 0.04em;">RECIBO</h2>
+
+        <p class="ep-mt-16" style="line-height: 1.7; font-size: 15px;">
+          Recebi de <strong id="payerName">—</strong> a importância de
+          <strong id="amountFmt">—</strong> (<em id="amountExtenso">—</em>) referente a
+          <strong id="reciboDescription">—</strong>.
+        </p>
+
+        <div class="ep-mt-16" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 14px 16px; background: var(--ep-bg-2); border-radius: 8px; font-size: 14px;">
+          <div>
+            <div class="ep-text-xs ep-text-muted">Data do pagamento</div>
+            <strong id="paidDateLbl">—</strong>
+          </div>
+          <div>
+            <div class="ep-text-xs ep-text-muted">Forma</div>
+            <strong id="paymentMethodLbl">—</strong>
+          </div>
+        </div>
+
+        <p class="ep-mt-24 ep-text-sm ep-text-muted" style="text-align: center; padding-top: 16px; border-top: 1px solid var(--ep-line);">
+          Para clareza e validade do presente recibo, firmo o documento eletronicamente.
+        </p>
+
+        <p class="ep-mt-16 ep-text-xs ep-text-muted" style="text-align: center;">
+          Documento gerado eletronicamente pelo Espaço Prelúdio.
+        </p>
+      </article>
+
+      <div class="ep-flex ep-mt-16 ep-gap-8 ep-no-print" style="justify-content: center;">
+        <button type="button" class="ep-btn ep-btn--primary" id="downloadPdfBtn">↓ Baixar PDF</button>
+        <button type="button" class="ep-btn ep-btn--ghost" onclick="window.print()">Imprimir</button>
+      </div>
+
+      <p class="ep-text-xs ep-text-muted ep-mt-16" style="text-align: center;">
+        Você pode salvar esta página ou baixar o PDF. Guarde para IR, reembolso de plano de saúde ou referência futura.
+      </p>
+    </div>
+
+  </main>
+</div>
+
+<script type="module">
+  import { BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  const $ = id => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  const token = (params.get("t") || "").trim();
+
+  function showError(title, msg) {
+    $("loading").classList.add("ep-hide");
+    $("content").classList.add("ep-hide");
+    $("errorTitle").textContent = title;
+    $("errorMsg").textContent = msg;
+    $("errorBox").classList.remove("ep-hide");
+  }
+  function fmtDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric", timeZone: "America/Sao_Paulo" });
+  }
+  function fmtCents(c) {
+    return "R$ " + (Number(c || 0) / 100).toFixed(2).replace(".", ",");
+  }
+
+  if (!token) {
+    showError("Link incompleto.", "Use o link completo enviado pelo profissional.");
+    throw new Error("NO_TOKEN");
+  }
+
+  let receipt = null;
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/therapy/recibo/publico?t=${encodeURIComponent(token)}`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      showError("Link inválido ou expirado.", "Peça pro profissional reenviar o recibo se necessário.");
+      throw new Error(data?.error || "ERRO");
+    }
+    receipt = data.receipt;
+  } catch (e) {
+    if (!$("errorBox").classList.contains("ep-hide")) throw e;
+    showError("Erro de conexão.", "Tente recarregar a página.");
+    throw e;
+  }
+
+  // Renderiza
+  const e = receipt.emitterSnapshot || {};
+  $("seqNumber").textContent = String(receipt.sequentialNumber);
+  $("emitterName").textContent = e.displayName || "—";
+  $("emitterIds").textContent = e.ids || "";
+  $("emitterEspecialidade").textContent = e.especialidade || "";
+  $("emitterAddress").textContent = e.address || "";
+  $("emitterPhone").textContent = e.phone || "";
+  const docParts = [];
+  if (e.cnpj) docParts.push(`CNPJ ${e.cnpj}`);
+  if (e.cpf) docParts.push(`CPF ${e.cpf}`);
+  $("emitterDoc").textContent = docParts.join(" · ");
+  if (e.logoBase64 && e.logoMime) {
+    $("emitterLogo").src = `data:${e.logoMime};base64,${e.logoBase64}`;
+    $("emitterLogo").classList.remove("ep-hide");
+  }
+  $("payerName").textContent = receipt.patientName || "—";
+  $("amountFmt").textContent = fmtCents(receipt.amount);
+  $("amountExtenso").textContent = receipt.amountExtenso || "";
+  $("reciboDescription").textContent = receipt.description || "atendimento";
+  $("paidDateLbl").textContent = fmtDate(receipt.paidDate);
+  $("paymentMethodLbl").textContent = receipt.paymentMethodLabel || receipt.paymentMethod || "—";
+
+  $("loading").classList.add("ep-hide");
+  $("content").classList.remove("ep-hide");
+
+  // Baixar PDF: reusa pdf-lib client-side. Layout simples — header com nome
+  // do emitente, corpo descritivo, rodapé com data + assinatura eletrônica.
+  $("downloadPdfBtn").addEventListener("click", async () => {
+    const btn = $("downloadPdfBtn");
+    btn.disabled = true;
+    btn.textContent = "Gerando…";
+    try {
+      const { PDFDocument, StandardFonts, rgb } = await import("https://esm.sh/pdf-lib@1.17.1");
+      const pdf = await PDFDocument.create();
+      const page = pdf.addPage([595.28, 841.89]);
+      const fontReg  = await pdf.embedFont(StandardFonts.Helvetica);
+      const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
+
+      const margin = 50;
+      const right  = 595.28 - margin;
+      let y = 800;
+
+      function draw(text, opts = {}) {
+        const font = opts.font || fontReg;
+        const size = opts.size || 11;
+        const color = opts.color || rgb(0.1, 0.12, 0.1);
+        const lines = String(text || "").split("\n");
+        for (const line of lines) {
+          page.drawText(line, { x: opts.x || margin, y, size, font, color });
+          y -= size * 1.4;
+        }
+      }
+
+      // Header emitente
+      draw(e.displayName || "—", { font: fontBold, size: 14 });
+      if (e.ids) draw(e.ids, { size: 10, color: rgb(0.4, 0.42, 0.4) });
+      if (e.especialidade) draw(e.especialidade, { size: 10, color: rgb(0.4, 0.42, 0.4) });
+      if (e.address) draw(e.address, { size: 9, color: rgb(0.45, 0.47, 0.45) });
+      if (e.phone) draw(e.phone, { size: 9, color: rgb(0.45, 0.47, 0.45) });
+      const docLine = [e.cnpj && `CNPJ ${e.cnpj}`, e.cpf && `CPF ${e.cpf}`].filter(Boolean).join(" · ");
+      if (docLine) draw(docLine, { size: 9, color: rgb(0.45, 0.47, 0.45) });
+      y -= 10;
+
+      // Linha separadora
+      page.drawLine({ start: { x: margin, y }, end: { x: right, y }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });
+      y -= 30;
+
+      // Título
+      const title = `RECIBO Nº ${receipt.sequentialNumber}`;
+      const tw = fontBold.widthOfTextAtSize(title, 16);
+      page.drawText(title, { x: (595.28 - tw) / 2, y, size: 16, font: fontBold });
+      y -= 36;
+
+      // Corpo (texto justificado simples por wrap manual)
+      const valor = fmtCents(receipt.amount);
+      const bodyText = `Recebi de ${receipt.patientName || "—"} a importância de ${valor} (${receipt.amountExtenso || ""}) referente a ${receipt.description || "atendimento"}.`;
+      const maxW = right - margin;
+      const words = bodyText.split(" ");
+      let line = "";
+      for (const w of words) {
+        const test = line ? line + " " + w : w;
+        if (fontReg.widthOfTextAtSize(test, 11) > maxW) {
+          page.drawText(line, { x: margin, y, size: 11, font: fontReg });
+          y -= 16;
+          line = w;
+        } else {
+          line = test;
+        }
+      }
+      if (line) { page.drawText(line, { x: margin, y, size: 11, font: fontReg }); y -= 24; }
+
+      // Dados de pagamento
+      draw(`Data do pagamento: ${fmtDate(receipt.paidDate)}`, { size: 10, color: rgb(0.3, 0.32, 0.3) });
+      draw(`Forma: ${receipt.paymentMethodLabel || receipt.paymentMethod || "—"}`, { size: 10, color: rgb(0.3, 0.32, 0.3) });
+      y -= 20;
+
+      // Local + data + assinatura
+      const cidade = (e.address || "").split(" · ").filter(s => /^[a-zA-ZÀ-ÿ]/.test(s))[0] || "";
+      const localData = `${cidade ? cidade + ", " : ""}${fmtDate(receipt.paidDate)}`;
+      const lw = fontReg.widthOfTextAtSize(localData, 11);
+      page.drawText(localData, { x: (595.28 - lw) / 2, y, size: 11, font: fontReg });
+      y -= 60;
+
+      // Linha de assinatura
+      const sigW = 280;
+      const sigX = (595.28 - sigW) / 2;
+      page.drawLine({ start: { x: sigX, y }, end: { x: sigX + sigW, y }, thickness: 0.5, color: rgb(0.3, 0.3, 0.3) });
+      y -= 14;
+      const sigName = e.displayName || "";
+      const snw = fontReg.widthOfTextAtSize(sigName, 10);
+      page.drawText(sigName, { x: (595.28 - snw) / 2, y, size: 10, font: fontReg });
+
+      // Footer
+      const footer = "Documento gerado eletronicamente pelo Espaço Prelúdio.";
+      const fw = fontReg.widthOfTextAtSize(footer, 8);
+      page.drawText(footer, { x: (595.28 - fw) / 2, y: 40, size: 8, font: fontReg, color: rgb(0.5, 0.5, 0.5) });
+
+      const bytes = await pdf.save();
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `recibo-${receipt.sequentialNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      btn.textContent = "✓ Baixado";
+      setTimeout(() => { btn.textContent = "↓ Baixar PDF"; btn.disabled = false; }, 2000);
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = "↓ Baixar PDF";
+      alert("Erro gerando PDF: " + (err?.message || "tente imprimir como alternativa"));
+    }
+  });
+</script>
+
+</body>
+</html>
