@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-36">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-37">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -364,6 +364,25 @@
         </div>
 
         <p id="pushHint" class="ep-text-xs ep-text-muted ep-mt-12 ep-hide"></p>
+      </section>
+
+      <!-- Privacidade & LGPD -->
+      <section class="ep-receita-form">
+        <h2 class="ep-h3 ep-mt-0">Privacidade e LGPD</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Direito de portabilidade (Art. 18 LGPD): você pode baixar um arquivo ZIP
+          com TODOS os dados que mantemos sobre você e seus pacientes — pacientes
+          decifrados, sessões, notas, financeiro, recibos, receitas, documentos,
+          anamneses, audit. Cifrados E2E são decifrados no seu navegador antes de empacotar.
+        </p>
+
+        <button type="button" id="exportDataBtn" class="ep-btn ep-btn--ghost ep-btn--sm ep-mt-12">↓ Exportar meus dados (ZIP)</button>
+        <div id="exportDataStatus" class="ep-status ep-mt-12"></div>
+
+        <p class="ep-text-xs ep-text-muted ep-mt-12">
+          <strong>Para apagar a conta:</strong> entre em contato pelo suporte. O processo é manual
+          (conforme exigências do CFP/CFM para retenção de registros clínicos).
+        </p>
       </section>
 
       <!-- 2FA -->
@@ -734,6 +753,219 @@
   $("pushEnableBtn").addEventListener("click", pushEnable);
   $("pushDisableBtn").addEventListener("click", pushDisable);
   pushUiRender().catch(() => {});
+
+  // ─── Exportar dados LGPD ─────────────────────────────────────────────
+  function csvEscape(v) {
+    const s = String(v == null ? "" : v);
+    if (s.includes("\"") || s.includes(",") || s.includes(";") || s.includes("\n")) {
+      return "\"" + s.replace(/"/g, "\"\"") + "\"";
+    }
+    return s;
+  }
+  function rowsToCsv(rows, columns) {
+    const header = columns.map(c => csvEscape(c.label)).join(";");
+    const body = rows.map(r => columns.map(c => csvEscape(typeof c.get === "function" ? c.get(r) : r[c.key])).join(";"));
+    return [header, ...body].join("\n");
+  }
+  function fmtTs(ms) {
+    if (!ms) return "";
+    return new Date(ms).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
+  }
+
+  $("exportDataBtn").addEventListener("click", async () => {
+    if (!confirm("Vamos baixar TODOS os seus dados como ZIP. Continuar?")) return;
+    const btn = $("exportDataBtn");
+    const st = $("exportDataStatus");
+    btn.disabled = true;
+    btn.textContent = "Preparando…";
+    st.textContent = "";
+    st.className = "ep-status";
+
+    try {
+      const { default: JSZip } = await import("https://esm.sh/jszip@3.10.1");
+      const { decryptNote, recallDek } = await import("./js/crypto.js");
+      const dekLocal = recallDek();
+      if (!dekLocal) throw new Error("Sessão sem chave de cifragem. Abra a página Pacientes e tente de novo.");
+
+      const zip = new JSZip();
+      const hdr = (msg) => { st.textContent = msg; };
+
+      hdr("Baixando perfil…");
+      const meRes = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const meData = await meRes.json();
+      zip.file("01-perfil.json", JSON.stringify(meData.therapist || {}, null, 2));
+
+      hdr("Baixando pacientes (decifrando)…");
+      const pacRes = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const pacData = await pacRes.json();
+      const decryptedPatients = [];
+      for (const p of (pacData.patients || [])) {
+        try {
+          const json = await decryptNote({ ciphertext: p.ciphertext, iv: p.iv }, dekLocal);
+          const data = JSON.parse(json);
+          decryptedPatients.push({ patientId: p.patientId, ...data, createdAt: p.createdAt, updatedAt: p.updatedAt });
+        } catch (e) {
+          decryptedPatients.push({ patientId: p.patientId, name: "[falha decifrar]", _error: e.message });
+        }
+      }
+      zip.file("02-pacientes.csv", rowsToCsv(decryptedPatients, [
+        { key: "patientId", label: "patient_id" },
+        { key: "name",      label: "nome" },
+        { key: "contact",   label: "contato" },
+        { key: "birthdate", label: "nascimento" },
+        { key: "observations", label: "observacoes" },
+        { label: "criado_em", get: r => fmtTs(r.createdAt) },
+        { label: "atualizado_em", get: r => fmtTs(r.updatedAt) }
+      ]));
+
+      hdr("Baixando sessões…");
+      const sessRes = await fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const sessData = await sessRes.json();
+      const sessions = sessData.sessions || [];
+      zip.file("03-sessoes.csv", rowsToCsv(sessions, [
+        { key: "sessionId",   label: "session_id" },
+        { key: "patientName", label: "paciente_nome" },
+        { key: "patientId",   label: "patient_id" },
+        { key: "status",      label: "status" },
+        { label: "agendada_em",  get: r => fmtTs(r.scheduledAt) },
+        { label: "encerrada_em", get: r => fmtTs(r.completedAt) },
+        { label: "cancelada_em", get: r => fmtTs(r.canceledAt) },
+        { key: "canceledBy",   label: "cancelada_por" },
+        { key: "cancelReason", label: "motivo_cancelamento" },
+        { label: "confirmada_em", get: r => fmtTs(r.confirmedAt) },
+        { label: "criada_em",     get: r => fmtTs(r.createdAt) }
+      ]));
+
+      hdr("Baixando notas (decifrando)…");
+      const notesEntries = [];
+      const CONCURRENCY = 5;
+      for (let i = 0; i < sessions.length; i += CONCURRENCY) {
+        const batch = sessions.slice(i, i + CONCURRENCY);
+        await Promise.allSettled(batch.map(async s => {
+          const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(s.sessionId)}/notas`, { headers: { "Authorization": `Bearer ${idToken}` } });
+          const d = await r.json().catch(() => ({}));
+          for (const n of (d.notes || [])) {
+            let text = "";
+            try { text = await decryptNote({ ciphertext: n.ciphertext, iv: n.iv }, dekLocal); }
+            catch { text = "[falha decifrar]"; }
+            notesEntries.push({ sessionId: s.sessionId, patientName: s.patientName, createdAt: n.createdAt, text });
+          }
+        }));
+      }
+      zip.file("04-notas-sessao.csv", rowsToCsv(notesEntries, [
+        { key: "sessionId", label: "session_id" },
+        { key: "patientName", label: "paciente_nome" },
+        { label: "criada_em", get: r => fmtTs(r.createdAt) },
+        { key: "text", label: "texto" }
+      ]));
+
+      hdr("Baixando financeiro…");
+      const finRes = await fetch(`${BACKEND_BASE_URL}/therapy/financeiro/transacoes`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const finData = await finRes.json();
+      const txs = finData.transactions || finData.transacoes || [];
+      zip.file("05-financeiro.csv", rowsToCsv(txs, [
+        { key: "txId",                label: "tx_id" },
+        { key: "type",                label: "tipo" },
+        { key: "category",            label: "categoria" },
+        { label: "valor_brl",         get: r => (Number(r.amount) / 100).toFixed(2).replace(".", ",") },
+        { key: "status",              label: "status" },
+        { key: "paymentMethod",       label: "metodo_pagamento" },
+        { key: "patientNameSnapshot", label: "paciente_nome" },
+        { key: "description",         label: "descricao" },
+        { label: "emissao",           get: r => fmtTs(r.issueDate) },
+        { label: "vencimento",        get: r => fmtTs(r.dueDate) },
+        { label: "pago_em",           get: r => fmtTs(r.paidDate) }
+      ]));
+
+      hdr("Baixando recibos…");
+      try {
+        const recRes = await fetch(`${BACKEND_BASE_URL}/therapy/recibos`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const recData = await recRes.json();
+        const recibos = recData.receipts || recData.recibos || [];
+        zip.file("06-recibos.csv", rowsToCsv(recibos, [
+          { key: "sequentialNumber",   label: "numero" },
+          { key: "receiptId",          label: "recibo_id" },
+          { key: "txId",               label: "tx_id" },
+          { key: "patientName",        label: "paciente_nome" },
+          { label: "valor_brl",        get: r => (Number(r.amount) / 100).toFixed(2).replace(".", ",") },
+          { key: "amountExtenso",      label: "valor_extenso" },
+          { key: "paymentMethodLabel", label: "metodo_pagamento" },
+          { label: "emitido_em",       get: r => fmtTs(r.createdAt?.toMillis ? r.createdAt.toMillis() : r.createdAt) },
+          { label: "pago_em",          get: r => fmtTs(r.paidDate) }
+        ]));
+      } catch { zip.file("06-recibos.csv", "(endpoint indisponivel)"); }
+
+      hdr("Baixando anamneses…");
+      try {
+        const r4 = await fetch(`${BACKEND_BASE_URL}/therapy/anamneses`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const d4 = await r4.json();
+        const anam = (d4.anamneses || []).filter(a => a.status === "answered");
+        const detailed = [];
+        for (const a of anam) {
+          try {
+            const dRes = await fetch(`${BACKEND_BASE_URL}/therapy/anamneses/${encodeURIComponent(a.anamneseId)}`, { headers: { "Authorization": `Bearer ${idToken}` } });
+            const dData = await dRes.json();
+            detailed.push({ ...a, formatted: dData.anamnese?.formatted || [] });
+          } catch { detailed.push(a); }
+        }
+        zip.file("09-anamneses.json", JSON.stringify(detailed, null, 2));
+      } catch { zip.file("09-anamneses.json", "[]"); }
+
+      hdr("Baixando audit…");
+      try {
+        const r5 = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/audit?limit=2000`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const d5 = await r5.json();
+        const events = d5.events || d5.items || [];
+        zip.file("10-audit.csv", rowsToCsv(events, [
+          { label: "quando", get: r => fmtTs(r.createdAt?.toMillis ? r.createdAt.toMillis() : r.createdAt) },
+          { key: "type",     label: "tipo" },
+          { key: "description", label: "descricao" }
+        ]));
+      } catch { zip.file("10-audit.csv", "(endpoint indisponivel)"); }
+
+      zip.file("README.txt", `EXPORTAÇÃO DE DADOS — ESPAÇO PRELÚDIO (STAGING)
+Gerada em ${new Date().toLocaleString("pt-BR")}
+Usuário: ${meData.therapist?.displayName || ""} (uid: ${user.uid})
+
+Conteúdo:
+  01-perfil.json         Seu perfil profissional completo
+  02-pacientes.csv       Lista de pacientes (decifrados com sua DEK)
+  03-sessoes.csv         Sessões + status + datas
+  04-notas-sessao.csv    Anotações de cada sessão (decifradas)
+  05-financeiro.csv      Lançamentos financeiros
+  06-recibos.csv         Recibos emitidos
+  09-anamneses.json      Anamneses respondidas
+  10-audit.csv           Histórico de atividades
+
+Pacientes e notas são cifrados E2E. Esta exportação foi decifrada
+localmente com sua chave (DEK) que está só no navegador.
+
+Direito de portabilidade — LGPD Art. 18, V.
+`);
+
+      hdr("Empacotando ZIP…");
+      const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+      const url = URL.createObjectURL(blob);
+      const ymd = new Date().toISOString().slice(0, 10);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `espaco-preludio-export-${ymd}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      st.textContent = "✓ Arquivo baixado.";
+      st.className = "ep-status is-ok";
+    } catch (e) {
+      console.error("export_data_failed", e);
+      st.textContent = "Erro: " + (e?.message || "desconhecido");
+      st.className = "ep-status is-err";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "↓ Exportar meus dados (ZIP)";
+    }
+  });
 
   $("asaasClearBtn").addEventListener("click", async () => {
     if (!confirm("Apagar a chave Asaas? As cobranças geradas continuam visíveis mas não dá pra gerar novas até reconectar.")) return;

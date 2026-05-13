@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-36">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-37">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -179,6 +179,51 @@
   </div>
 </div>
 
+<!-- Modal: Enviar Escala (PHQ-9 / GAD-7) -->
+<div class="ep-modal" id="escalaModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 520px;">
+    <h3 class="ep-modal__title">Enviar escala de acompanhamento</h3>
+    <p class="ep-modal__sub">Paciente <strong id="escalaPatientName">—</strong></p>
+
+    <div style="padding: 0 28px;">
+      <div class="ep-field">
+        <label class="ep-label" for="escalaType">Qual escala</label>
+        <select id="escalaType" class="ep-select">
+          <option value="phq9">PHQ-9 — Depressão (9 perguntas)</option>
+          <option value="gad7">GAD-7 — Ansiedade (7 perguntas)</option>
+        </select>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">Validadas em pt-BR. Score calculado automaticamente.</p>
+      </div>
+      <div class="ep-row ep-mt-12">
+        <div class="ep-field">
+          <label class="ep-label" for="escalaEmail">E-mail do paciente</label>
+          <input id="escalaEmail" class="ep-input" type="email" maxlength="120">
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="escalaPhone">WhatsApp do paciente</label>
+          <input id="escalaPhone" class="ep-input" type="tel" maxlength="20">
+        </div>
+      </div>
+      <div class="ep-flex ep-mt-12" style="gap: 16px; flex-wrap: wrap; align-items: center;">
+        <label class="ep-flex" style="gap: 6px; cursor: pointer; align-items: center;">
+          <input id="escalaSendEmail" type="checkbox" style="width: 16px; height: 16px;">
+          <span class="ep-text-sm">Enviar por e-mail</span>
+        </label>
+        <label class="ep-flex" style="gap: 6px; cursor: pointer; align-items: center;">
+          <input id="escalaSendWa" type="checkbox" style="width: 16px; height: 16px;">
+          <span class="ep-text-sm">Enviar por WhatsApp</span>
+        </label>
+      </div>
+      <div class="ep-status ep-mt-12" id="escalaStatus"></div>
+    </div>
+
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="escalaCloseBtn">Fechar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="escalaSubmitBtn">Enviar escala</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: Anamnese (enviar / ver respostas) -->
 <div class="ep-modal" id="anamneseModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel" style="max-width: 560px;">
@@ -336,6 +381,7 @@
       <div class="ep-session__actions">
         <a class="ep-btn ep-btn--primary ep-btn--sm" href="./prontuario.html?p=${encodeURIComponent(p.patientId)}">Prontuário</a>
         <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="anamnese" data-id="${p.patientId}">${anamBtnLabel}</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="escala" data-id="${p.patientId}" title="Enviar escala (PHQ-9 ou GAD-7)">Escala</button>
         <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="edit"   data-id="${p.patientId}">Editar</button>
         <button class="ep-btn ep-btn--danger ep-btn--sm" data-action="delete" data-id="${p.patientId}">Apagar</button>
       </div>
@@ -607,6 +653,83 @@
       }
     } else if (action === "anamnese") {
       await openAnamneseModal(data);
+    } else if (action === "escala") {
+      openEscalaModal(data);
+    }
+  });
+
+  // ─── Modal Escala ──────────────────────────────────────────
+  function openEscalaModal(patient) {
+    if (!patient) return;
+    const modal = document.getElementById("escalaModal");
+    modal._patient = patient;
+    document.getElementById("escalaPatientName").textContent = patient.name || "—";
+    document.getElementById("escalaType").value = "phq9";
+    document.getElementById("escalaEmail").value = patient.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patient.contact) ? patient.contact : "";
+    document.getElementById("escalaPhone").value = patient.contact && !/^[^\s@]+@/.test(patient.contact) ? patient.contact : "";
+    document.getElementById("escalaSendEmail").checked = !!document.getElementById("escalaEmail").value;
+    document.getElementById("escalaSendWa").checked    = !!document.getElementById("escalaPhone").value;
+    document.getElementById("escalaStatus").textContent = "";
+    document.getElementById("escalaStatus").className = "ep-status";
+    document.getElementById("escalaSubmitBtn").disabled = false;
+    document.getElementById("escalaSubmitBtn").textContent = "Enviar escala";
+    modal.classList.add("is-open");
+  }
+  document.getElementById("escalaCloseBtn").addEventListener("click", () => {
+    document.getElementById("escalaModal").classList.remove("is-open");
+  });
+  document.getElementById("escalaSubmitBtn").addEventListener("click", async () => {
+    const modal = document.getElementById("escalaModal");
+    const patient = modal._patient;
+    if (!patient) return;
+    const scaleType = document.getElementById("escalaType").value;
+    const patientEmail = document.getElementById("escalaEmail").value.trim().toLowerCase() || null;
+    const patientPhone = document.getElementById("escalaPhone").value.trim() || null;
+    const sendEmail    = document.getElementById("escalaSendEmail").checked;
+    const sendWhatsapp = document.getElementById("escalaSendWa").checked;
+    if (!sendEmail && !sendWhatsapp) {
+      const st = document.getElementById("escalaStatus");
+      st.textContent = "Selecione pelo menos um canal.";
+      st.className = "ep-status is-err";
+      return;
+    }
+    const btn = document.getElementById("escalaSubmitBtn");
+    btn.disabled = true;
+    btn.textContent = "Enviando…";
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/escalas/enviar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ scaleType, patientId: patient.patientId, patientNameSnapshot: patient.name, patientEmail, patientPhone, sendEmail, sendWhatsapp })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        const st = document.getElementById("escalaStatus");
+        st.textContent = "Erro: " + (data?.hint || data?.error || res.status);
+        st.className = "ep-status is-err";
+        btn.disabled = false;
+        btn.textContent = "Enviar escala";
+        return;
+      }
+      const ch = data.channels || {};
+      const lines = [];
+      if (ch.email?.attempted) lines.push(ch.email.ok ? "✓ E-mail enviado" : "✗ E-mail falhou");
+      if (ch.whatsapp?.attempted) {
+        if (ch.whatsapp.ok) lines.push("✓ WhatsApp enviado");
+        else if (ch.whatsapp.reason === "WHATSAPP_NAO_HABILITADO") lines.push("⚠ WhatsApp não habilitado");
+        else lines.push("✗ WhatsApp falhou");
+      }
+      const st = document.getElementById("escalaStatus");
+      st.innerHTML = lines.join("<br>") + `<br><a href="${data.escalaUrl}" target="_blank" rel="noopener" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; word-break: break-all;">${data.escalaUrl}</a>`;
+      st.className = "ep-status is-ok";
+      btn.disabled = false;
+      btn.textContent = "Enviar outra";
+    } catch (e) {
+      const st = document.getElementById("escalaStatus");
+      st.textContent = "Erro de conexão.";
+      st.className = "ep-status is-err";
+      btn.disabled = false;
+      btn.textContent = "Enviar escala";
     }
   });
 

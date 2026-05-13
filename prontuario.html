@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-36">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-37">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -95,6 +95,12 @@
   <section class="ep-mt-24">
     <div class="ep-eyebrow ep-mb-12">Observações iniciais</div>
     <div class="ep-observations" id="patientObs"></div>
+  </section>
+
+  <!-- Evolução de escalas (PHQ-9 / GAD-7) — só aparece se houver dados -->
+  <section class="ep-mt-32 ep-hide" id="escalasBlock" aria-label="Evolução de escalas clínicas">
+    <div class="ep-eyebrow ep-mb-12">Evolução de escalas</div>
+    <div id="escalasGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px;"></div>
   </section>
 
   <!-- Histórico clínico -->
@@ -479,6 +485,9 @@
 
     renderStats(sessions);
 
+    // Carrega + renderiza evolução de escalas (não bloqueia se falhar)
+    loadAndRenderEscalas(patient).catch(e => console.warn("escalas_load_failed", e));
+
     if (sessions.length === 0) {
       document.getElementById("sessionsLoading").classList.add("ep-hide");
       document.getElementById("sessionsEmpty").classList.remove("ep-hide");
@@ -493,6 +502,119 @@
 
     document.getElementById("sessionsLoading").classList.add("ep-hide");
     renderTimeline(sessions, notesBySession);
+  }
+
+  // ─── Evolução de escalas (PHQ-9 / GAD-7) ───────────────────────────
+  // Fetch + render via Chart.js (já carregado via CDN nesta página? — se
+  // não, lazy import). Mostra 1 gráfico por escala com pelo menos 1 resposta.
+  async function loadAndRenderEscalas(patient) {
+    if (!patient || !patient.patientId) return;
+    const block = document.getElementById("escalasBlock");
+    const grid  = document.getElementById("escalasGrid");
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/escalas?patientId=${encodeURIComponent(patient.patientId)}`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) return;
+      const answered = (data.escalas || []).filter(e => e.status === "answered" && Number.isFinite(e.score));
+      if (!answered.length) return;
+
+      // Agrupa por scaleType
+      const byType = {};
+      answered.forEach(e => {
+        if (!byType[e.scaleType]) byType[e.scaleType] = { scaleName: e.scaleName, points: [] };
+        byType[e.scaleType].points.push({ at: e.respondedAt || e.createdAt, score: e.score, band: e.band?.label || "", suicide: !!e.suicideFlag });
+      });
+      // Ordena
+      Object.values(byType).forEach(g => g.points.sort((a, b) => a.at - b.at));
+
+      // Lazy import Chart.js
+      const ChartMod = await import("https://esm.sh/chart.js@4.4.0/auto");
+      const Chart = ChartMod.default || ChartMod.Chart;
+
+      // Limites por tipo (max scale + bandas)
+      const yMax = { phq9: 27, gad7: 21 };
+      const bandColors = { phq9: [
+        { from: 0, to: 4,  color: "rgba(45,138,82,0.10)" },     // mínima — verde
+        { from: 5, to: 9,  color: "rgba(176,125,44,0.10)" },    // leve — amarelo
+        { from: 10, to: 14, color: "rgba(176,125,44,0.18)" },   // moderada
+        { from: 15, to: 19, color: "rgba(184,69,61,0.15)" },    // mod-grave — laranja-terracota
+        { from: 20, to: 27, color: "rgba(184,69,61,0.25)" }     // grave
+      ], gad7: [
+        { from: 0, to: 4,  color: "rgba(45,138,82,0.10)" },
+        { from: 5, to: 9,  color: "rgba(176,125,44,0.10)" },
+        { from: 10, to: 14, color: "rgba(176,125,44,0.18)" },
+        { from: 15, to: 21, color: "rgba(184,69,61,0.25)" }
+      ]};
+
+      grid.innerHTML = "";
+      for (const [type, g] of Object.entries(byType)) {
+        const card = document.createElement("div");
+        card.className = "ep-card";
+        card.style.padding = "14px 16px";
+        const latest = g.points[g.points.length - 1];
+        card.innerHTML = `
+          <div class="ep-flex" style="justify-content: space-between; align-items: baseline;">
+            <div>
+              <div class="ep-eyebrow">${escapeHtml(g.scaleName)}</div>
+              <div class="ep-text-sm ep-text-muted">${g.points.length} resposta(s)</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 22px; font-weight: 700; color: var(--ep-ink);">${latest.score}</div>
+              <div class="ep-text-xs ep-text-muted">${escapeHtml(latest.band)}${latest.suicide ? " · ⚠ alerta" : ""}</div>
+            </div>
+          </div>
+          <canvas style="margin-top: 8px; max-height: 200px;"></canvas>
+        `;
+        grid.appendChild(card);
+
+        const canvas = card.querySelector("canvas");
+        const labels = g.points.map(p => new Date(p.at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }));
+        const scores = g.points.map(p => p.score);
+        const ymax = yMax[type] || 30;
+        // Bandas como dataset hidden? Mais simples: plugin background. Vou usar background nas zonas via annotation manual.
+        new Chart(canvas, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [{
+              label: "Score",
+              data: scores,
+              borderColor: "#2d4a3e",
+              backgroundColor: "rgba(45,74,62,0.10)",
+              borderWidth: 2,
+              pointRadius: 4,
+              pointBackgroundColor: g.points.map(p => p.suicide ? "#a02b1f" : "#2d4a3e"),
+              tension: 0.25,
+              fill: false
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => {
+                    const p = g.points[ctx.dataIndex];
+                    return `Score ${p.score} — ${p.band}${p.suicide ? " · ⚠ alerta" : ""}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              y: { min: 0, max: ymax, ticks: { stepSize: type === "gad7" ? 3 : 5 } },
+              x: { ticks: { autoSkip: true, maxRotation: 0 } }
+            }
+          }
+        });
+      }
+      block.classList.remove("ep-hide");
+    } catch (e) {
+      console.warn("render_escalas_failed", e);
+    }
   }
 
   // ─── Receitas digitais — listagem por paciente ─────────────────────
