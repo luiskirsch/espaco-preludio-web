@@ -255,8 +255,25 @@ function prefetchNavLinks() {
 // Hidrata o avatar do topbar + monta o botão de ajuda SYNC a partir do cache
 // em sessionStorage, antes de qualquer await. Elimina o flicker "·" → "RF"
 // na navegação entre páginas (mesma aba).
+function groupProfileWithLogout() {
+  const link = document.getElementById("topProfileLink");
+  const btn  = document.getElementById("logoutBtn");
+  if (!link || !btn) return;
+  const parent = link.parentElement;
+  if (!parent || btn.parentElement !== parent) return;
+  if (parent.classList.contains("ep-profile-group")) return;
+  if (link.parentElement?.classList?.contains("ep-profile-group")) return;
+
+  const wrap = document.createElement("div");
+  wrap.className = "ep-profile-group";
+  parent.insertBefore(wrap, link);
+  wrap.appendChild(link);
+  wrap.appendChild(btn);
+}
+
 (function hydrateChromeFromCache() {
   if (typeof document === "undefined") return;
+  groupProfileWithLogout();
   try {
     const raw = sessionStorage.getItem(PROFILE_CACHE_KEY);
     if (!raw) return;
