@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-31">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-32">
 </head>
 <body>
 
@@ -241,6 +241,67 @@
   </div>
 </div>
 
+<!-- Modal: Cobrança Pix (Asaas) -->
+<div class="ep-modal" id="cobrancaModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 480px;">
+    <h3 class="ep-modal__title">Cobrança Pix <span id="cobrancaEnvBadge" class="ep-badge ep-badge--muted" style="margin-left: 8px; font-size: 11px; vertical-align: middle;">sandbox</span></h3>
+    <p class="ep-modal__sub">
+      O dinheiro cai direto na sua conta Asaas. Quando o paciente pagar, marcamos
+      a transação como paga automaticamente (via webhook).
+    </p>
+
+    <div style="padding: 0 28px;">
+      <div style="padding: 12px 14px; background: var(--ep-bg-2); border-radius: 8px;">
+        <div class="ep-text-xs ep-text-muted">Paciente</div>
+        <div style="font-weight: 600;" id="cobrancaTxPatient">—</div>
+        <div class="ep-text-xs ep-text-muted ep-mt-8">Descrição</div>
+        <div id="cobrancaTxDescription">—</div>
+        <div class="ep-text-xs ep-text-muted ep-mt-8">Valor</div>
+        <div style="font-size: 18px; font-weight: 600; color: var(--ep-ok);" id="cobrancaTxAmount">—</div>
+      </div>
+
+      <!-- Formulário de contato (só na 1ª cobrança) -->
+      <div id="cobrancaContactWrap" class="ep-stack ep-mt-16">
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Dados do paciente (opcionais — ajudam o Asaas a personalizar a cobrança).
+        </p>
+        <div class="ep-row">
+          <div class="ep-field">
+            <label class="ep-label" for="cobrancaEmail">E-mail</label>
+            <input id="cobrancaEmail" class="ep-input" type="email" maxlength="120" placeholder="paciente@exemplo.com">
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="cobrancaPhone">Telefone</label>
+            <input id="cobrancaPhone" class="ep-input" type="tel" maxlength="20" placeholder="(48) 99999-9999">
+          </div>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="cobrancaCpf">CPF (opcional)</label>
+          <input id="cobrancaCpf" class="ep-input" type="text" maxlength="14" placeholder="000.000.000-00">
+        </div>
+      </div>
+
+      <!-- Pix gerado -->
+      <div id="cobrancaPixWrap" class="ep-hide ep-mt-16" style="text-align: center;">
+        <img id="cobrancaPixQr" alt="QR Code Pix" style="width: 220px; height: 220px; border: 1px solid var(--ep-line); border-radius: 8px; background: #fff;">
+        <div class="ep-mt-12 ep-text-sm ep-text-muted">Pix copia-e-cola:</div>
+        <div style="display: flex; gap: 6px; align-items: stretch; margin-top: 6px;">
+          <code id="cobrancaPixCode" style="flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 11px; word-break: break-all; padding: 10px 12px; background: var(--ep-bg-2); border-radius: 6px; text-align: left; max-height: 90px; overflow-y: auto;">—</code>
+          <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="cobrancaCopyBtn" style="align-self: stretch;">Copiar</button>
+        </div>
+        <a id="cobrancaInvoiceLink" href="#" target="_blank" rel="noopener" class="ep-text-sm ep-mt-12 ep-hide" style="display: inline-block;">Abrir fatura Asaas no navegador →</a>
+      </div>
+
+      <div class="ep-status ep-mt-12" id="cobrancaStatus"></div>
+    </div>
+
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="cobrancaCloseBtn">Fechar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="cobrancaGenerateBtn">Gerar Pix</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
@@ -457,20 +518,36 @@
     const statusBadge = tx.status === "pago"      ? '<span class="ep-badge ep-badge--ok">Pago</span>'
                       : tx.status === "pendente"  ? '<span class="ep-badge">Pendente</span>'
                       : '<span class="ep-badge ep-badge--muted">Cancelado</span>';
+    // Badge Asaas — só aparece se houver cobrança aberta. Status mapeado client-side.
+    let asaasBadge = "";
+    if (tx.asaasPaymentId && tx.status !== "pago") {
+      const s = String(tx.asaasStatus || "").toUpperCase();
+      if (s === "PENDING" || s === "AWAITING_RISK_ANALYSIS") asaasBadge = '<span class="ep-badge ep-badge--warn" title="Cobrança Asaas aguardando pagamento">Pix gerado</span>';
+      else if (s === "OVERDUE")                              asaasBadge = '<span class="ep-badge ep-badge--muted" title="Cobrança Asaas vencida">Pix vencido</span>';
+    }
     const patientLine = tx.patientNameSnapshot
       ? `<span>· ${escapeHtml(tx.patientNameSnapshot)}</span>`
+      : "";
+    // Botão "Cobrar Pix" só pra receitas pendentes e quando o terapeuta tem Asaas configurado.
+    const showCobrarBtn = tx.type === "receita"
+      && tx.status === "pendente"
+      && therapist.asaasConfigured;
+    const cobrarBtn = showCobrarBtn
+      ? `<button class="ep-btn ${tx.asaasPaymentId ? "ep-btn--ghost" : "ep-btn--primary"} ep-btn--sm" data-action="cobrar" data-id="${tx.txId}">${tx.asaasPaymentId ? "Ver Pix" : "Cobrar Pix"}</button>`
       : "";
     div.innerHTML = `
       <div>
         <div class="ep-session__name">${escapeHtml(catLabel)}${tx.description ? ` — ${escapeHtml(tx.description)}` : ""}</div>
         <div class="ep-session__meta">
           ${statusBadge}
+          ${asaasBadge}
           <span>${fmtDate(tx.issueDate)}</span>
           ${patientLine}
         </div>
       </div>
       <div class="ep-session__actions" style="gap: 10px; align-items: center;">
         <strong style="color: ${color}; font-size: 16px;">${sign} ${fmtCents(tx.amount)}</strong>
+        ${cobrarBtn}
         ${tx.type === "receita" && tx.status === "pago"
           ? `<button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="receipt" data-id="${tx.txId}">Recibo</button>`
           : ""}
@@ -769,8 +846,131 @@
         btn.textContent = original;
         alert("Erro ao gerar recibo: " + err.message);
       }
+    } else if (action === "cobrar") {
+      await openCobrancaModal(tx);
     }
   });
+
+  // ─── Modal Pix (Asaas) ───────────────────────────────────────────────
+  async function openCobrancaModal(tx) {
+    const modal = document.getElementById("cobrancaModal");
+    document.getElementById("cobrancaTxAmount").textContent = fmtCents(tx.amount);
+    document.getElementById("cobrancaTxDescription").textContent = tx.description || (tx.patientNameSnapshot || "Consulta");
+    document.getElementById("cobrancaTxPatient").textContent = tx.patientNameSnapshot || "—";
+    document.getElementById("cobrancaStatus").textContent = "";
+    document.getElementById("cobrancaContactWrap").classList.remove("ep-hide");
+    document.getElementById("cobrancaPixWrap").classList.add("ep-hide");
+    document.getElementById("cobrancaGenerateBtn").disabled = false;
+    document.getElementById("cobrancaGenerateBtn").textContent = tx.asaasPaymentId ? "Atualizar status" : "Gerar Pix";
+    modal._tx = tx;
+    modal.classList.add("is-open");
+
+    // Se já existe pagamento, busca status + QR atualizado.
+    if (tx.asaasPaymentId) {
+      await refreshCobranca(tx.txId, /*forceRefresh*/ true);
+    }
+  }
+  document.getElementById("cobrancaCloseBtn").addEventListener("click", () => {
+    document.getElementById("cobrancaModal").classList.remove("is-open");
+  });
+  document.getElementById("cobrancaGenerateBtn").addEventListener("click", async () => {
+    const modal = document.getElementById("cobrancaModal");
+    const tx = modal._tx;
+    if (!tx) return;
+    const btn = document.getElementById("cobrancaGenerateBtn");
+    btn.disabled = true;
+    document.getElementById("cobrancaStatus").textContent = tx.asaasPaymentId ? "Consultando Asaas…" : "Gerando Pix…";
+    document.getElementById("cobrancaStatus").className = "ep-status";
+
+    try {
+      if (tx.asaasPaymentId) {
+        await refreshCobranca(tx.txId, true);
+      } else {
+        const body = {
+          patientEmail:   document.getElementById("cobrancaEmail").value.trim().toLowerCase() || null,
+          patientPhone:   document.getElementById("cobrancaPhone").value.trim() || null,
+          patientCpfCnpj: document.getElementById("cobrancaCpf").value.trim() || null
+        };
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/financeiro/transacoes/${encodeURIComponent(tx.txId)}/cobranca/criar`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          document.getElementById("cobrancaStatus").textContent = "Erro: " + (data?.hint || data?.error || res.status);
+          document.getElementById("cobrancaStatus").classList.add("is-err");
+          btn.disabled = false;
+          return;
+        }
+        renderCobrancaUi(data.cobranca);
+        invalidateApi("financeiro", uid);
+        await loadFinancial();
+        // Atualiza modal._tx (referência ao tx novo)
+        const updated = allTransactions.find(t => t.txId === tx.txId);
+        if (updated) modal._tx = updated;
+      }
+    } catch (e) {
+      document.getElementById("cobrancaStatus").textContent = "Erro de conexão.";
+      document.getElementById("cobrancaStatus").classList.add("is-err");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  document.getElementById("cobrancaCopyBtn").addEventListener("click", async () => {
+    const code = document.getElementById("cobrancaPixCode").textContent;
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      const b = document.getElementById("cobrancaCopyBtn");
+      const orig = b.textContent;
+      b.textContent = "Copiado!";
+      setTimeout(() => { b.textContent = orig; }, 1500);
+    } catch {}
+  });
+
+  async function refreshCobranca(txId, forceRefresh) {
+    try {
+      const url = `${BACKEND_BASE_URL}/therapy/financeiro/transacoes/${encodeURIComponent(txId)}/cobranca${forceRefresh ? "?refresh=1" : ""}`;
+      const res = await fetch(url, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok && data.cobranca) {
+        renderCobrancaUi(data.cobranca);
+        document.getElementById("cobrancaStatus").textContent = "";
+        document.getElementById("cobrancaStatus").className = "ep-status";
+        if (data.txStatus === "pago") {
+          document.getElementById("cobrancaStatus").textContent = "✓ Pago! O status da transação foi atualizado.";
+          document.getElementById("cobrancaStatus").classList.add("is-ok");
+          invalidateApi("financeiro", uid);
+          await loadFinancial();
+        }
+      }
+    } catch (e) {
+      document.getElementById("cobrancaStatus").textContent = "Falha ao consultar Asaas.";
+      document.getElementById("cobrancaStatus").classList.add("is-err");
+    }
+  }
+  function renderCobrancaUi(c) {
+    document.getElementById("cobrancaContactWrap").classList.add("ep-hide");
+    document.getElementById("cobrancaPixWrap").classList.remove("ep-hide");
+    document.getElementById("cobrancaGenerateBtn").textContent = "Atualizar status";
+    const img = document.getElementById("cobrancaPixQr");
+    if (c.asaasPixQrCodeBase64) {
+      img.src = `data:image/png;base64,${c.asaasPixQrCodeBase64}`;
+      img.classList.remove("ep-hide");
+    } else {
+      img.classList.add("ep-hide");
+    }
+    document.getElementById("cobrancaPixCode").textContent = c.asaasPixCopyPaste || "—";
+    const invoiceLink = document.getElementById("cobrancaInvoiceLink");
+    if (c.asaasInvoiceUrl) {
+      invoiceLink.href = c.asaasInvoiceUrl;
+      invoiceLink.classList.remove("ep-hide");
+    } else {
+      invoiceLink.classList.add("ep-hide");
+    }
+    document.getElementById("cobrancaEnvBadge").textContent = c.asaasEnv === "production" ? "produção" : "sandbox";
+  }
 
   // ─── Geração de PDF do recibo (client-side via pdf-lib) ──────────────
   async function downloadReceiptPdf(receipt) {

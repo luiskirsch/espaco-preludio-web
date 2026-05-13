@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-31">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-32">
 </head>
 <body>
 
@@ -302,6 +302,48 @@
         </div>
       </section>
 
+      <!-- Cobranças online (Asaas) -->
+      <section class="ep-receita-form">
+        <h2 class="ep-h3 ep-mt-0">Cobranças online (Asaas)</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Conecte sua conta <a href="https://www.asaas.com" target="_blank" rel="noopener">Asaas</a> pra gerar
+          Pix direto dos lançamentos do financeiro. O dinheiro cai na sua conta — Espaço Prelúdio só
+          orquestra a chamada (não somos intermediários financeiros).
+        </p>
+
+        <div class="ep-row ep-mt-16">
+          <div class="ep-field">
+            <label class="ep-label" for="asaasEnv">Ambiente</label>
+            <select id="asaasEnv" class="ep-select">
+              <option value="sandbox">Sandbox (testes)</option>
+              <option value="production">Produção</option>
+            </select>
+          </div>
+          <div class="ep-field" style="flex: 2;">
+            <label class="ep-label" for="asaasApiKey">Chave de API <span id="asaasKeyConfigured" class="ep-text-xs ep-text-muted" style="margin-left: 6px;"></span></label>
+            <input id="asaasApiKey" class="ep-input" type="password" maxlength="500" placeholder="Deixe em branco pra manter a atual" autocomplete="off">
+            <p class="ep-text-xs ep-text-muted ep-mt-0">
+              Painel Asaas → Integrações → API. Sandbox e produção têm chaves distintas. Sua chave fica server-side e nunca volta pelo /me.
+            </p>
+          </div>
+        </div>
+
+        <div id="asaasAccountInfo" class="ep-hide ep-mt-12" style="padding: 10px 14px; background: var(--ep-accent-soft); border-radius: 8px;">
+          <div class="ep-text-xs ep-text-muted">Conta Asaas conectada:</div>
+          <div style="font-weight: 600;" id="asaasAccountName">—</div>
+          <div class="ep-text-xs ep-text-muted" id="asaasAccountEmail">—</div>
+        </div>
+
+        <div class="ep-flex ep-mt-12" style="gap: 8px; align-items: center;">
+          <input id="asaasEnabled" type="checkbox" style="width: 18px; height: 18px;">
+          <label for="asaasEnabled" class="ep-text-sm" style="cursor: pointer;">
+            Habilitar cobranças online (botão "Cobrar Pix" aparece no financeiro)
+          </label>
+        </div>
+
+        <button type="button" id="asaasClearBtn" class="ep-btn ep-btn--ghost ep-btn--sm ep-mt-12">Limpar chave Asaas</button>
+      </section>
+
       <!-- 2FA -->
       <section class="ep-receita-form">
         <h2 class="ep-h3 ep-mt-0">Verificação em 2 etapas (2FA)</h2>
@@ -533,8 +575,51 @@
     $("schedMinNotice").value   = t.publicSchedulingMinNoticeHours ?? "";
     $("schedMaxAdvance").value  = t.publicSchedulingMaxAdvanceDays ?? "";
     renderSchedActiveLink(t.publicSchedulingSlug || "", !!t.publicSchedulingEnabled);
+
+    // Asaas.
+    $("asaasEnv").value = t.asaasEnv === "production" ? "production" : "sandbox";
+    $("asaasEnabled").checked = !!t.asaasEnabled;
+    if (t.asaasConfigured) {
+      $("asaasKeyConfigured").textContent = "(chave salva)";
+      $("asaasApiKey").placeholder = "•••••••• (chave existente — deixe em branco pra manter)";
+      if (t.asaasAccount && t.asaasAccount.name) {
+        $("asaasAccountName").textContent = t.asaasAccount.name;
+        $("asaasAccountEmail").textContent = t.asaasAccount.email || "";
+        $("asaasAccountInfo").classList.remove("ep-hide");
+      }
+    } else {
+      $("asaasKeyConfigured").textContent = "(não configurada)";
+    }
   }
   applyTherapist(therapist);
+
+  $("asaasClearBtn").addEventListener("click", async () => {
+    if (!confirm("Apagar a chave Asaas? As cobranças geradas continuam visíveis mas não dá pra gerar novas até reconectar.")) return;
+    $("asaasClearBtn").disabled = true;
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ asaasApiKey: "" })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        alert("Erro: " + (data?.error || res.status));
+        $("asaasClearBtn").disabled = false;
+        return;
+      }
+      invalidateProfileCache();
+      $("asaasKeyConfigured").textContent = "(não configurada)";
+      $("asaasApiKey").placeholder = "Cole a chave aqui";
+      $("asaasEnabled").checked = false;
+      $("asaasAccountInfo").classList.add("ep-hide");
+      $("asaasClearBtn").disabled = false;
+      setStatus("Chave Asaas removida.", "ok");
+    } catch (e) {
+      $("asaasClearBtn").disabled = false;
+      alert("Erro de rede.");
+    }
+  });
 
   function renderSchedActiveLink(slug, enabled) {
     const box = $("schedActiveLinkBox");
@@ -869,10 +954,14 @@
       publicSchedulingSlug:            $("schedSlug").value.trim().toLowerCase(),
       publicSchedulingEnabled:         $("schedEnabled").checked,
       publicSchedulingMinNoticeHours:  $("schedMinNotice").value === "" ? undefined : Number($("schedMinNotice").value),
-      publicSchedulingMaxAdvanceDays:  $("schedMaxAdvance").value === "" ? undefined : Number($("schedMaxAdvance").value)
+      publicSchedulingMaxAdvanceDays:  $("schedMaxAdvance").value === "" ? undefined : Number($("schedMaxAdvance").value),
+      asaasEnv:                        $("asaasEnv").value,
+      asaasEnabled:                    $("asaasEnabled").checked
     };
     if (body.publicSchedulingMinNoticeHours === undefined) delete body.publicSchedulingMinNoticeHours;
     if (body.publicSchedulingMaxAdvanceDays === undefined) delete body.publicSchedulingMaxAdvanceDays;
+    const asaasKeyTyped = $("asaasApiKey").value;
+    if (asaasKeyTyped) body.asaasApiKey = asaasKeyTyped;
 
     if (pendingLogo && pendingLogo.dirty) {
       if (pendingLogo.removed) {
@@ -913,7 +1002,9 @@
           ? "Esse identificador de link já está em uso. Escolha outro."
           : code === "SLUG_INVALIDO"
             ? "Identificador inválido: use 3-40 caracteres, letras minúsculas, números e hífens."
-            : `Erro: ${code}`;
+            : code === "ASAAS_KEY_INVALIDA"
+              ? "Chave Asaas inválida. Verifique se copiou a chave correta para o ambiente selecionado."
+              : `Erro: ${code}`;
         setStatus(friendly, "err");
         $("saveBtn").disabled = false;
         return;
