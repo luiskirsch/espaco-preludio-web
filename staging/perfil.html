@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-29">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-30">
 </head>
 <body>
 
@@ -254,6 +254,54 @@
         </div>
       </section>
 
+      <!-- Agendamento público -->
+      <section class="ep-receita-form">
+        <h2 class="ep-h3 ep-mt-0">Agendamento online</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Compartilhe um link público pra pacientes solicitarem horário direto.
+          Você aprova ou recusa cada pedido pelo painel — nada é confirmado sozinho.
+        </p>
+
+        <div class="ep-field ep-mt-12">
+          <label class="ep-label" for="schedSlug">Identificador do seu link</label>
+          <div class="ep-flex" style="gap: 0; align-items: stretch;">
+            <span class="ep-input" style="display: inline-flex; align-items: center; padding: 9px 12px; background: var(--ep-bg-2); border-right: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; color: var(--ep-ink-2); font-size: 13.5px; white-space: nowrap;">espacopreludio.com.br/staging/agendar.html?p=</span>
+            <input id="schedSlug" class="ep-input" type="text" maxlength="40" placeholder="dr-roberto-fernandes" style="border-top-left-radius: 0; border-bottom-left-radius: 0; font-family: 'JetBrains Mono', monospace; font-size: 13.5px;">
+          </div>
+          <p class="ep-text-xs ep-text-muted ep-mt-0">
+            Use letras minúsculas, números e hífens (3-40 caracteres). Ex.: <code>dr-roberto-fernandes</code>.
+          </p>
+        </div>
+
+        <div id="schedActiveLinkBox" class="ep-hide ep-mt-12" style="padding: 12px 14px; background: var(--ep-accent-soft); border-radius: 8px;">
+          <div class="ep-text-xs ep-text-muted">Seu link público:</div>
+          <div class="ep-flex" style="gap: 8px; align-items: center; margin-top: 4px;">
+            <a id="schedActiveLink" href="#" target="_blank" rel="noopener" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ep-accent); word-break: break-all; flex: 1;">—</a>
+            <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="schedCopyLinkBtn">Copiar</button>
+          </div>
+        </div>
+
+        <div class="ep-row ep-mt-16">
+          <div class="ep-field">
+            <label class="ep-label" for="schedMinNotice">Antecedência mínima (horas)</label>
+            <input id="schedMinNotice" class="ep-input" type="number" min="0" max="720" step="1" placeholder="24">
+            <p class="ep-text-xs ep-text-muted ep-mt-0">Quanto tempo antes o paciente precisa marcar. Default 24h.</p>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="schedMaxAdvance">Janela máxima (dias à frente)</label>
+            <input id="schedMaxAdvance" class="ep-input" type="number" min="1" max="180" step="1" placeholder="60">
+            <p class="ep-text-xs ep-text-muted ep-mt-0">Até quantos dias à frente aceita pedidos. Default 60.</p>
+          </div>
+        </div>
+
+        <div class="ep-flex ep-mt-12" style="gap: 8px; align-items: center;">
+          <input id="schedEnabled" type="checkbox" style="width: 18px; height: 18px;">
+          <label for="schedEnabled" class="ep-text-sm" style="cursor: pointer;">
+            Aceitar pedidos de agendamento online (link ativo)
+          </label>
+        </div>
+      </section>
+
       <!-- 2FA -->
       <section class="ep-receita-form">
         <h2 class="ep-h3 ep-mt-0">Verificação em 2 etapas (2FA)</h2>
@@ -478,8 +526,42 @@
     // Foto de perfil — mesma lógica da logo.
     renderPhotoPreview(t.photoBase64 || "", t.photoMime || "", t.displayName || "");
     if (t.photoBase64) pendingPhoto = { base64: t.photoBase64, mime: t.photoMime, dirty: false };
+
+    // Agendamento público.
+    $("schedSlug").value        = t.publicSchedulingSlug || "";
+    $("schedEnabled").checked   = !!t.publicSchedulingEnabled;
+    $("schedMinNotice").value   = t.publicSchedulingMinNoticeHours ?? "";
+    $("schedMaxAdvance").value  = t.publicSchedulingMaxAdvanceDays ?? "";
+    renderSchedActiveLink(t.publicSchedulingSlug || "", !!t.publicSchedulingEnabled);
   }
   applyTherapist(therapist);
+
+  function renderSchedActiveLink(slug, enabled) {
+    const box = $("schedActiveLinkBox");
+    if (slug && enabled) {
+      const url = `${location.origin}${location.pathname.replace(/\/perfil\.html.*/, "")}/agendar.html?p=${encodeURIComponent(slug)}`;
+      $("schedActiveLink").textContent = url;
+      $("schedActiveLink").href = url;
+      box.classList.remove("ep-hide");
+    } else {
+      box.classList.add("ep-hide");
+    }
+  }
+  $("schedSlug").addEventListener("input", () => {
+    renderSchedActiveLink($("schedSlug").value.trim().toLowerCase(), $("schedEnabled").checked);
+  });
+  $("schedEnabled").addEventListener("change", () => {
+    renderSchedActiveLink($("schedSlug").value.trim().toLowerCase(), $("schedEnabled").checked);
+  });
+  $("schedCopyLinkBtn").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText($("schedActiveLink").href);
+      const btn = $("schedCopyLinkBtn");
+      const orig = btn.textContent;
+      btn.textContent = "Copiado!";
+      setTimeout(() => { btn.textContent = orig; }, 1200);
+    } catch {}
+  });
 
   // ─── 2FA ─────────────────────────────────────────────────────────────
   // Carrega Chart.js via CDN só se precisar (não usado aqui, mas QR usa qrcode-generator)
@@ -783,8 +865,14 @@
         uf:          $("uf").value.trim().toUpperCase(),
         cep:         $("cep").value.trim(),
         telefone:    $("telefone").value.trim()
-      }
+      },
+      publicSchedulingSlug:            $("schedSlug").value.trim().toLowerCase(),
+      publicSchedulingEnabled:         $("schedEnabled").checked,
+      publicSchedulingMinNoticeHours:  $("schedMinNotice").value === "" ? undefined : Number($("schedMinNotice").value),
+      publicSchedulingMaxAdvanceDays:  $("schedMaxAdvance").value === "" ? undefined : Number($("schedMaxAdvance").value)
     };
+    if (body.publicSchedulingMinNoticeHours === undefined) delete body.publicSchedulingMinNoticeHours;
+    if (body.publicSchedulingMaxAdvanceDays === undefined) delete body.publicSchedulingMaxAdvanceDays;
 
     if (pendingLogo && pendingLogo.dirty) {
       if (pendingLogo.removed) {
@@ -820,7 +908,13 @@
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
-        setStatus("Erro: " + (data?.error || res.status), "err");
+        const code = data?.error || res.status;
+        const friendly = code === "SLUG_EM_USO"
+          ? "Esse identificador de link já está em uso. Escolha outro."
+          : code === "SLUG_INVALIDO"
+            ? "Identificador inválido: use 3-40 caracteres, letras minúsculas, números e hífens."
+            : `Erro: ${code}`;
+        setStatus(friendly, "err");
         $("saveBtn").disabled = false;
         return;
       }

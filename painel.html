@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-29">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-30">
 </head>
 <body>
 
@@ -60,6 +60,22 @@
 
     <!-- Banner do tier estudante: aparece se em revisão / aprovado / rejeitado -->
     <div id="studentBanner" class="ep-alert ep-hide ep-mt-16"></div>
+
+    <!-- Solicitações pendentes (agendamento público) — só aparece com itens -->
+    <section id="schedRequestsSection" class="ep-hide ep-mt-16">
+      <div class="ep-flex--end-wrap ep-flex ep-mt-0">
+        <div>
+          <div class="ep-eyebrow">Solicitações de agendamento</div>
+          <h2 class="ep-h3 ep-mt-12" style="margin: 0;">
+            <span id="schedRequestsCount">0</span> pedido(s) pendente(s)
+          </h2>
+          <p class="ep-text-muted ep-text-sm ep-mt-8 ep-mt-0">
+            Pacientes que solicitaram horário pelo seu link público. Aprove para criar a consulta + enviar confirmação por e-mail.
+          </p>
+        </div>
+      </div>
+      <div id="schedRequestsList" class="ep-session-list ep-mt-12"></div>
+    </section>
 
     <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando suas consultas…</div>
 
@@ -263,6 +279,120 @@
     await signOut(auth);
     window.location.href = "./login.html";
   });
+
+  // ─── Solicitações de agendamento público ────────────────────
+  // Lista pedidos pendentes do link público do terapeuta. Renderiza só
+  // se houver pelo menos 1 — caso contrário, seção fica oculta.
+  function fmtSchedRequestSlot(ms) {
+    return new Date(ms).toLocaleString("pt-BR", {
+      weekday: "long", day: "2-digit", month: "short",
+      hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo"
+    });
+  }
+  function escapeHtmlBasic(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+    }[c]));
+  }
+  async function loadSchedulingRequests() {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/agendamentos/solicitacoes`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) return;
+      const pending = (data.requests || []).filter(r => r.status === "pending");
+      const section = document.getElementById("schedRequestsSection");
+      const list    = document.getElementById("schedRequestsList");
+      document.getElementById("schedRequestsCount").textContent = String(pending.length);
+      if (!pending.length) {
+        section.classList.add("ep-hide");
+        return;
+      }
+      section.classList.remove("ep-hide");
+      list.innerHTML = "";
+      pending.forEach(r => list.appendChild(renderSchedRequestCard(r)));
+    } catch (e) {
+      console.error("scheduling_requests_load_failed", e);
+    }
+  }
+  function renderSchedRequestCard(r) {
+    const div = document.createElement("article");
+    div.className = "ep-session ep-session--patient";
+    div.dataset.requestId = r.requestId;
+    const phoneLine = r.patientPhone ? ` · ${escapeHtmlBasic(r.patientPhone)}` : "";
+    const notesLine = r.notes
+      ? `<div class="ep-text-sm ep-mt-8" style="padding: 8px 10px; background: var(--ep-bg-2); border-radius: 6px; color: var(--ep-ink-2);">${escapeHtmlBasic(r.notes)}</div>`
+      : "";
+    div.innerHTML = `
+      <div>
+        <div class="ep-session__name">${escapeHtmlBasic(r.patientName)}</div>
+        <div class="ep-session__meta">
+          <span>Pediu para <strong>${escapeHtmlBasic(fmtSchedRequestSlot(r.requestedSlot))}</strong></span>
+        </div>
+        <div class="ep-text-xs ep-text-muted ep-mt-8">${escapeHtmlBasic(r.patientEmail)}${phoneLine}</div>
+        ${notesLine}
+      </div>
+      <div class="ep-session__actions">
+        <button class="ep-btn ep-btn--primary ep-btn--sm" data-sched-action="approve">Aprovar</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm"   data-sched-action="reject">Recusar</button>
+      </div>
+    `;
+    return div;
+  }
+  document.getElementById("schedRequestsList").addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-sched-action]");
+    if (!btn) return;
+    const card = btn.closest(".ep-session");
+    const id = card?.dataset?.requestId;
+    if (!id) return;
+    const action = btn.dataset.schedAction;
+
+    if (action === "approve") {
+      if (!confirm("Aprovar este pedido? Vamos criar a consulta e enviar a confirmação por e-mail pro paciente.")) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/agendamentos/solicitacoes/${encodeURIComponent(id)}/aprovar`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${idToken}` }
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          alert("Erro ao aprovar: " + (data?.error || res.status));
+          btn.disabled = false;
+          return;
+        }
+        invalidateApi("sessoes", uid);
+        await Promise.all([loadSchedulingRequests(), loadSessions()]);
+      } catch (e) {
+        alert("Erro de rede.");
+        btn.disabled = false;
+      }
+    } else if (action === "reject") {
+      const reason = prompt("Quer informar um motivo? (opcional, vai pro audit)") || "";
+      if (reason === null) return; // cancel
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/agendamentos/solicitacoes/${encodeURIComponent(id)}/rejeitar`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+          body: JSON.stringify({ reason })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          alert("Erro ao recusar: " + (data?.error || res.status));
+          btn.disabled = false;
+          return;
+        }
+        await loadSchedulingRequests();
+      } catch (e) {
+        alert("Erro de rede.");
+        btn.disabled = false;
+      }
+    }
+  });
+  // Boot: carrega na mesma hora que carrega as sessões.
+  loadSchedulingRequests().catch(() => {});
 
   // ─── Helpers ────────────────────────────────────────────────
   function fmtDate(ms) {

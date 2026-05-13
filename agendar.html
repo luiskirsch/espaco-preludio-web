@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agendar consulta · Espaço Prelúdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-30">
+</head>
+<body>
+
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav">
+      <span class="ep-text-sm ep-text-muted">Agendamento online</span>
+    </nav>
+  </header>
+
+  <main class="ep-main" style="max-width: 760px; margin: 0 auto;">
+
+    <!-- Loading inicial -->
+    <div id="loadingBox" class="ep-skeleton ep-mt-32">Carregando profissional…</div>
+
+    <!-- Erro: slug inválido / desabilitado / não encontrado -->
+    <div id="errorBox" class="ep-hide ep-mt-32">
+      <div class="ep-verify-hero ep-verify-hero--err">
+        <div class="ep-verify-hero__icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        </div>
+        <div>
+          <h1 class="ep-h2 ep-mt-0" id="errorTitle">Link indisponível.</h1>
+          <p class="ep-text-muted ep-mt-0" id="errorMsg">Esse profissional não está aceitando agendamentos online no momento.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmação após enviar pedido -->
+    <div id="successBox" class="ep-hide ep-mt-32">
+      <div class="ep-verify-hero ep-verify-hero--ok">
+        <div class="ep-verify-hero__icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
+        </div>
+        <div class="ep-verify-hero__body">
+          <div class="ep-eyebrow" style="color: #1f6b3e;">Pedido enviado</div>
+          <h1 class="ep-h1 ep-mt-12">Seu pedido foi enviado.</h1>
+          <p class="ep-text-muted ep-mt-0" id="successMsg">Você vai receber um e-mail assim que o profissional confirmar.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conteúdo principal -->
+    <div id="content" class="ep-hide">
+
+      <!-- Hero: foto + nome + conselho + especialidade -->
+      <section class="ep-stack ep-mt-32" style="display: flex; align-items: center; gap: 20px;">
+        <div id="therapistAvatar" class="ep-nav-avatar" style="width: 80px; height: 80px; font-size: 26px;">·</div>
+        <div style="flex: 1;">
+          <div class="ep-eyebrow">Agendar consulta com</div>
+          <h1 class="ep-h1 ep-mt-12" id="therapistName" style="margin-bottom: 6px;">—</h1>
+          <p class="ep-text-muted ep-mt-0" id="therapistMeta">—</p>
+        </div>
+      </section>
+
+      <p id="therapistBio" class="ep-text-muted ep-mt-16 ep-hide" style="line-height: 1.55; font-size: 14.5px;"></p>
+
+      <!-- Passo 1: escolher dia -->
+      <section class="ep-mt-32">
+        <h2 class="ep-h3 ep-mt-0">1. Escolha o dia</h2>
+        <p class="ep-text-muted ep-text-sm ep-mt-0" id="schedulingRulesHint">—</p>
+        <div id="dayPicker" class="ep-mt-16" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px;"></div>
+      </section>
+
+      <!-- Passo 2: escolher horário -->
+      <section class="ep-mt-32 ep-hide" id="slotSection">
+        <h2 class="ep-h3 ep-mt-0">2. Escolha o horário</h2>
+        <div id="slotPicker" class="ep-mt-16" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px;"></div>
+        <div id="slotsEmpty" class="ep-hide ep-text-muted ep-mt-16">Sem horários disponíveis nesse dia. Tente outro.</div>
+        <div id="slotsLoading" class="ep-skeleton ep-hide ep-mt-16">Carregando horários…</div>
+      </section>
+
+      <!-- Passo 3: dados de contato -->
+      <section class="ep-mt-32 ep-hide" id="formSection">
+        <h2 class="ep-h3 ep-mt-0">3. Seus dados</h2>
+        <p class="ep-text-muted ep-text-sm ep-mt-0">
+          Horário selecionado: <strong id="selectedSlotLbl">—</strong>
+          <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="changeSlotBtn" style="margin-left: 8px;">Trocar</button>
+        </p>
+
+        <form id="requestForm" class="ep-stack ep-mt-16" novalidate>
+          <div class="ep-field">
+            <label class="ep-label" for="patientName">Seu nome <span aria-hidden="true">*</span></label>
+            <input id="patientName" class="ep-input" type="text" maxlength="80" required>
+          </div>
+          <div class="ep-row">
+            <div class="ep-field">
+              <label class="ep-label" for="patientEmail">E-mail <span aria-hidden="true">*</span></label>
+              <input id="patientEmail" class="ep-input" type="email" maxlength="120" required>
+            </div>
+            <div class="ep-field">
+              <label class="ep-label" for="patientPhone">Telefone (opcional)</label>
+              <input id="patientPhone" class="ep-input" type="tel" maxlength="20" placeholder="(48) 99999-9999">
+            </div>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="notes">Mensagem para o profissional (opcional)</label>
+            <textarea id="notes" class="ep-textarea" maxlength="1000" rows="3" placeholder="Conte brevemente o motivo da consulta, se desejar."></textarea>
+          </div>
+          <div class="ep-status" id="formStatus"></div>
+          <div class="ep-flex ep-gap-8 ep-flex--wrap">
+            <button type="submit" class="ep-btn ep-btn--primary ep-btn--lg" id="submitBtn">Enviar pedido</button>
+          </div>
+        </form>
+        <p class="ep-text-muted ep-text-xs ep-mt-16">
+          O pedido é enviado pra aprovação do profissional. Você recebe um e-mail
+          quando ele confirmar (ou se preferir outro horário). Seus dados são
+          processados conforme a LGPD.
+        </p>
+      </section>
+
+    </div>
+
+  </main>
+</div>
+
+<script type="module">
+  import { BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  const $ = id => document.getElementById(id);
+
+  const params = new URLSearchParams(location.search);
+  const slug = (params.get("p") || params.get("slug") || "").trim().toLowerCase();
+
+  // ─── State ─────────────────────────────────────────────────────────────
+  let profile      = null;  // therapist info do backend
+  let rules        = null;  // schedulingRules
+  let agendaCfg    = null;  // agendaConfig
+  let selectedDay  = null;  // ms (00:00 do dia escolhido)
+  let selectedSlot = null;  // { start: ms, end: ms }
+
+  // ─── Helpers ───────────────────────────────────────────────────────────
+  function showError(title, msg) {
+    $("loadingBox").classList.add("ep-hide");
+    $("content").classList.add("ep-hide");
+    $("successBox").classList.add("ep-hide");
+    $("errorTitle").textContent = title;
+    $("errorMsg").textContent = msg;
+    $("errorBox").classList.remove("ep-hide");
+  }
+  function fmtDayLabel(ms) {
+    return new Date(ms).toLocaleDateString("pt-BR", {
+      weekday: "short", day: "2-digit", month: "short", timeZone: "America/Sao_Paulo"
+    });
+  }
+  function fmtTimeLabel(ms) {
+    return new Date(ms).toLocaleTimeString("pt-BR", {
+      hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo"
+    });
+  }
+  function fmtFullSlotLabel(ms) {
+    return new Date(ms).toLocaleString("pt-BR", {
+      weekday: "long", day: "2-digit", month: "long",
+      hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo"
+    });
+  }
+  function dayStartMs(d) {
+    // 00:00 em America/Sao_Paulo (UTC-3, sem DST desde 2019).
+    const local = new Date(d);
+    const localYmd = local.toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
+    return new Date(localYmd + "T00:00:00-03:00").getTime();
+  }
+
+  // ─── Boot ──────────────────────────────────────────────────────────────
+  if (!slug) {
+    showError("Link incompleto.", "Use o link completo enviado pelo profissional.");
+    throw new Error("NO_SLUG");
+  }
+
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(slug)}`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      const code = data?.error || "ERRO";
+      const msg = code === "AGENDAMENTO_PUBLICO_DESABILITADO"
+        ? "Esse profissional não está aceitando agendamentos online agora."
+        : code === "PROFISSIONAL_NAO_VERIFICADO"
+          ? "Esse profissional ainda não foi verificado."
+          : "Link inválido ou expirado.";
+      showError("Link indisponível.", msg);
+      throw new Error(code);
+    }
+    profile   = data.profissional;
+    rules     = data.schedulingRules;
+    agendaCfg = data.agendaConfig;
+  } catch (e) {
+    if (!$("errorBox").classList.contains("ep-hide")) throw e;
+    showError("Erro de conexão.", "Tente recarregar a página.");
+    throw e;
+  }
+
+  // Renderiza hero do profissional
+  $("therapistName").textContent = profile.displayName || "Profissional";
+  const metaParts = [];
+  if (profile.especialidade) metaParts.push(profile.especialidade);
+  if (profile.numeroConselho && profile.conselhoLabel) {
+    metaParts.push(`${profile.conselhoLabel} ${profile.numeroConselho}`);
+  } else if (profile.numeroConselho) {
+    metaParts.push(profile.numeroConselho);
+  }
+  if (profile.cidade && profile.uf) metaParts.push(`${profile.cidade}/${profile.uf}`);
+  $("therapistMeta").textContent = metaParts.join(" · ") || "—";
+  if (profile.bio) {
+    $("therapistBio").textContent = profile.bio;
+    $("therapistBio").classList.remove("ep-hide");
+  }
+  if (profile.photoBase64) {
+    const av = $("therapistAvatar");
+    av.style.backgroundImage = `url(data:${profile.photoMime || "image/jpeg"};base64,${profile.photoBase64})`;
+    av.style.backgroundSize = "cover";
+    av.style.backgroundPosition = "center";
+    av.textContent = "";
+  } else {
+    const initials = (profile.displayName.match(/\b\p{L}/gu) || []).slice(0, 2).join("").toUpperCase() || "·";
+    $("therapistAvatar").textContent = initials;
+  }
+
+  // Renderiza hint de regras
+  const hintParts = [];
+  if (rules.minNoticeHours > 0) {
+    hintParts.push(rules.minNoticeHours >= 24
+      ? `mínimo ${Math.round(rules.minNoticeHours/24)} dia${rules.minNoticeHours >= 48 ? "s" : ""} de antecedência`
+      : `mínimo ${rules.minNoticeHours}h de antecedência`);
+  }
+  hintParts.push(`até ${rules.maxAdvanceDays} dias à frente`);
+  $("schedulingRulesHint").textContent = hintParts.join(" · ");
+
+  // Renderiza day picker — próximos 14 dias úteis a partir do primeiro
+  // dia elegível (respeita minNoticeHours).
+  const earliest = Date.now() + rules.minNoticeHours * 3600 * 1000;
+  const latest   = Date.now() + rules.maxAdvanceDays * 86400 * 1000;
+  const dayList = [];
+  let cursor = new Date(earliest);
+  cursor.setHours(0, 0, 0, 0);
+  while (dayList.length < 14 && cursor.getTime() <= latest) {
+    const dow = cursor.getDay();
+    if (dow !== 0 && dow !== 6) {
+      dayList.push(dayStartMs(cursor.getTime()));
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  const dayPickerEl = $("dayPicker");
+  dayPickerEl.innerHTML = "";
+  dayList.forEach(dayMs => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ep-btn ep-btn--ghost ep-btn--sm";
+    btn.style.flexShrink = "0";
+    btn.style.minWidth = "100px";
+    btn.style.flexDirection = "column";
+    btn.style.alignItems = "stretch";
+    btn.style.padding = "10px 12px";
+    btn.style.lineHeight = "1.2";
+    btn.dataset.day = String(dayMs);
+    const parts = fmtDayLabel(dayMs).replace(",", "").split(" ");
+    btn.innerHTML = `<span style="font-size: 11px; color: var(--ep-ink-2); text-transform: uppercase; letter-spacing: 0.05em;">${parts[0]}</span><span style="font-size: 15px; font-weight: 600;">${parts[1]} ${parts[2] || ""}</span>`;
+    btn.addEventListener("click", () => selectDay(dayMs, btn));
+    dayPickerEl.appendChild(btn);
+  });
+
+  $("loadingBox").classList.add("ep-hide");
+  $("content").classList.remove("ep-hide");
+
+  async function selectDay(dayMs, btnEl) {
+    selectedDay = dayMs;
+    selectedSlot = null;
+    document.querySelectorAll("#dayPicker .ep-btn").forEach(b => b.classList.remove("ep-btn--primary"));
+    document.querySelectorAll("#dayPicker .ep-btn").forEach(b => b.classList.add("ep-btn--ghost"));
+    if (btnEl) {
+      btnEl.classList.remove("ep-btn--ghost");
+      btnEl.classList.add("ep-btn--primary");
+    }
+    $("slotSection").classList.remove("ep-hide");
+    $("formSection").classList.add("ep-hide");
+    $("slotsLoading").classList.remove("ep-hide");
+    $("slotPicker").innerHTML = "";
+    $("slotsEmpty").classList.add("ep-hide");
+
+    const from = dayMs;
+    const to   = dayMs + 24 * 3600 * 1000 - 1;
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(slug)}/slots?from=${from}&to=${to}`);
+      const data = await res.json().catch(() => ({}));
+      $("slotsLoading").classList.add("ep-hide");
+      if (!res.ok || !data.ok) {
+        $("slotsEmpty").textContent = "Erro carregando horários. Tente outro dia.";
+        $("slotsEmpty").classList.remove("ep-hide");
+        return;
+      }
+      const avail = (data.slots || []).filter(s => s.available);
+      if (!avail.length) {
+        $("slotsEmpty").classList.remove("ep-hide");
+        return;
+      }
+      const picker = $("slotPicker");
+      picker.innerHTML = "";
+      avail.forEach(slot => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "ep-btn ep-btn--ghost ep-btn--sm";
+        btn.textContent = fmtTimeLabel(slot.start);
+        btn.addEventListener("click", () => selectSlot(slot));
+        picker.appendChild(btn);
+      });
+    } catch (e) {
+      $("slotsLoading").classList.add("ep-hide");
+      $("slotsEmpty").textContent = "Erro de conexão. Tente novamente.";
+      $("slotsEmpty").classList.remove("ep-hide");
+    }
+  }
+
+  function selectSlot(slot) {
+    selectedSlot = slot;
+    $("selectedSlotLbl").textContent = fmtFullSlotLabel(slot.start);
+    $("formSection").classList.remove("ep-hide");
+    $("formStatus").textContent = "";
+    $("formStatus").className = "ep-status";
+    document.querySelectorAll("#slotPicker .ep-btn").forEach(b => {
+      b.classList.remove("ep-btn--primary");
+      b.classList.add("ep-btn--ghost");
+    });
+    // Marca o slot selecionado (procura por label igual)
+    const lbl = fmtTimeLabel(slot.start);
+    document.querySelectorAll("#slotPicker .ep-btn").forEach(b => {
+      if (b.textContent === lbl) {
+        b.classList.remove("ep-btn--ghost");
+        b.classList.add("ep-btn--primary");
+      }
+    });
+    $("formSection").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  $("changeSlotBtn").addEventListener("click", () => {
+    selectedSlot = null;
+    $("formSection").classList.add("ep-hide");
+    document.querySelectorAll("#slotPicker .ep-btn").forEach(b => {
+      b.classList.remove("ep-btn--primary");
+      b.classList.add("ep-btn--ghost");
+    });
+  });
+
+  $("requestForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!selectedSlot) {
+      $("formStatus").textContent = "Escolha um horário primeiro.";
+      $("formStatus").classList.add("is-err");
+      return;
+    }
+    const patientName  = $("patientName").value.trim();
+    const patientEmail = $("patientEmail").value.trim().toLowerCase();
+    const patientPhone = $("patientPhone").value.trim();
+    const notes        = $("notes").value.trim();
+
+    if (!patientName) {
+      $("formStatus").textContent = "Informe seu nome.";
+      $("formStatus").classList.add("is-err");
+      return;
+    }
+    if (!patientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patientEmail)) {
+      $("formStatus").textContent = "Informe um e-mail válido.";
+      $("formStatus").classList.add("is-err");
+      return;
+    }
+
+    $("submitBtn").disabled = true;
+    $("formStatus").textContent = "Enviando…";
+    $("formStatus").className = "ep-status";
+
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(slug)}/solicitar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patientName, patientEmail, patientPhone, notes,
+          requestedSlot: selectedSlot.start
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        const code = data?.error || "ERRO";
+        const msg = code === "HORARIO_INDISPONIVEL"
+          ? "Esse horário ficou indisponível enquanto você preenchia. Escolha outro."
+          : code === "RATE_LIMIT_EXCEDIDO"
+            ? "Muitas tentativas. Aguarde 1h e tente novamente."
+            : code === "EMAIL_INVALIDO"
+              ? "E-mail inválido."
+              : "Erro ao enviar pedido. Tente novamente.";
+        $("formStatus").textContent = msg;
+        $("formStatus").classList.add("is-err");
+        $("submitBtn").disabled = false;
+        return;
+      }
+      $("content").classList.add("ep-hide");
+      $("successMsg").textContent = `Pedido para ${fmtFullSlotLabel(selectedSlot.start)} enviado. Você vai receber um e-mail (${patientEmail}) assim que ${profile.displayName} confirmar.`;
+      $("successBox").classList.remove("ep-hide");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (e) {
+      $("formStatus").textContent = "Erro de conexão. Tente novamente.";
+      $("formStatus").classList.add("is-err");
+      $("submitBtn").disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>
