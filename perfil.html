@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-37">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-38">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -301,6 +301,16 @@
             Aceitar pedidos de agendamento online (link ativo)
           </label>
         </div>
+
+        <div class="ep-flex ep-mt-8" style="gap: 8px; align-items: center;">
+          <input id="listPublicly" type="checkbox" style="width: 18px; height: 18px;">
+          <label for="listPublicly" class="ep-text-sm" style="cursor: pointer;">
+            Aparecer no <a href="./profissionais.html" target="_blank">diretório público</a> (pacientes podem te encontrar)
+          </label>
+        </div>
+        <p class="ep-text-xs ep-text-muted ep-mt-8">
+          O diretório lista só profissionais verificados com agendamento ativo. Você pode tirar a qualquer momento.
+        </p>
       </section>
 
       <!-- Cobranças online (Asaas) -->
@@ -613,6 +623,7 @@
     $("schedEnabled").checked   = !!t.publicSchedulingEnabled;
     $("schedMinNotice").value   = t.publicSchedulingMinNoticeHours ?? "";
     $("schedMaxAdvance").value  = t.publicSchedulingMaxAdvanceDays ?? "";
+    $("listPublicly").checked   = !!t.listPublicly;
     renderSchedActiveLink(t.publicSchedulingSlug || "", !!t.publicSchedulingEnabled);
 
     // Asaas.
@@ -1401,6 +1412,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       publicSchedulingEnabled:         $("schedEnabled").checked,
       publicSchedulingMinNoticeHours:  $("schedMinNotice").value === "" ? undefined : Number($("schedMinNotice").value),
       publicSchedulingMaxAdvanceDays:  $("schedMaxAdvance").value === "" ? undefined : Number($("schedMaxAdvance").value),
+      listPublicly:                    $("listPublicly").checked,
       asaasEnv:                        $("asaasEnv").value,
       asaasEnabled:                    $("asaasEnabled").checked
     };
