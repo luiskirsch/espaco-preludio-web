@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-42">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-43">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -312,6 +312,22 @@
       <ul id="reciboSuccessChannels" class="ep-mt-12 ep-text-sm" style="list-style: none; padding: 0; margin: 0;"></ul>
       <p class="ep-text-xs ep-text-muted ep-mt-16">Link público (válido por 1 ano):</p>
       <a id="reciboPublicLink" href="#" target="_blank" rel="noopener" class="ep-text-sm" style="font-family: 'JetBrains Mono', monospace; word-break: break-all; color: var(--ep-accent);">—</a>
+
+      <!-- NFS-e: aparece só se profissional configurou NFE.io -->
+      <div id="nfseEmitBox" class="ep-hide ep-mt-16" style="padding: 14px; border: 1px solid var(--ep-line); border-radius: 10px; background: var(--ep-bg-2);">
+        <div class="ep-flex" style="justify-content: space-between; align-items: flex-start; gap: 12px;">
+          <div style="flex: 1;">
+            <div class="ep-eyebrow" style="margin: 0;">NFS-e</div>
+            <div class="ep-text-sm ep-mt-8 ep-mt-0">Emitir Nota Fiscal de Serviço eletrônica via NFE.io. Custo NFE.io: ~R$ 0,15-0,40/nota.</div>
+            <div id="nfseEmitStatus" class="ep-status ep-mt-8"></div>
+          </div>
+          <button type="button" id="nfseEmitBtn" class="ep-btn ep-btn--ghost ep-btn--sm">Emitir NFS-e</button>
+        </div>
+        <div id="nfseEmittedBox" class="ep-hide ep-mt-12">
+          <a id="nfsePdfLink" href="#" target="_blank" rel="noopener" class="ep-btn ep-btn--primary ep-btn--sm">↓ Baixar NFS-e (PDF)</a>
+          <span id="nfseNumberLbl" class="ep-text-xs ep-text-muted" style="margin-left: 10px;"></span>
+        </div>
+      </div>
     </div>
 
     <div class="ep-modal__actions">
@@ -982,6 +998,9 @@
       document.getElementById("reciboSuccessChannels").innerHTML = lines.map(l => `<li>${l}</li>`).join("");
       document.getElementById("reciboPublicLink").href = data.reciboUrl;
       document.getElementById("reciboPublicLink").textContent = data.reciboUrl;
+
+      // NFS-e: se o profissional configurou, mostra opção de emitir.
+      maybeShowNfseEmit(data.receiptId, sess);
     } catch (e) {
       const st = document.getElementById("reciboStatus");
       st.textContent = "Erro de conexão.";
@@ -990,6 +1009,125 @@
       submitBtn.textContent = "Gerar e enviar";
     }
   });
+
+  // ─── NFS-e (NFE.io): emissão pós-recibo ────────────────────
+  let _nfseConfigCache = null;
+  async function loadNfseConfig() {
+    if (_nfseConfigCache) return _nfseConfigCache;
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      _nfseConfigCache = d.therapist?.nfseConfig || null;
+    } catch { _nfseConfigCache = null; }
+    return _nfseConfigCache;
+  }
+  function isNfseReady(cfg) {
+    return !!(cfg && cfg.companyId && cfg.codServicoMunicipal
+      && cfg.aliquotaIss != null && cfg.apiTokenConfigured);
+  }
+
+  let _currentReceiptForNfse = null;
+  let _currentSessionForNfse = null;
+
+  async function maybeShowNfseEmit(receiptId, sess) {
+    const box = document.getElementById("nfseEmitBox");
+    box.classList.add("ep-hide");
+    document.getElementById("nfseEmittedBox").classList.add("ep-hide");
+    document.getElementById("nfseEmitStatus").textContent = "";
+    document.getElementById("nfseEmitStatus").className = "ep-status";
+    if (!receiptId) return;
+    const cfg = await loadNfseConfig();
+    if (!isNfseReady(cfg)) return;
+    _currentReceiptForNfse = receiptId;
+    _currentSessionForNfse = sess;
+    box.classList.remove("ep-hide");
+  }
+
+  async function decryptNfseToken() {
+    // Busca o token cifrado e decifra com DEK local.
+    const r = await fetch(`${BACKEND_BASE_URL}/therapy/nfse/encrypted-token`, {
+      headers: { "Authorization": `Bearer ${idToken}` }
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok || !d.apiTokenEncrypted) throw new Error("Token NFE.io não configurado.");
+    return decryptNote(d.apiTokenEncrypted, dek);
+  }
+
+  document.getElementById("nfseEmitBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("nfseEmitBtn");
+    const st  = document.getElementById("nfseEmitStatus");
+    btn.disabled = true;
+    btn.textContent = "Emitindo…";
+    st.textContent = "";
+    st.className = "ep-status";
+
+    try {
+      const apiToken = await decryptNfseToken();
+      // Borrower: o paciente. Como só temos nome (e-mail vem da sessão), passa
+      // o que dá sem expor CPF (que não temos por padrão).
+      const borrower = {
+        name: _currentSessionForNfse?.patientName || null,
+        email: _currentSessionForNfse?.patientEmail || null
+      };
+
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/nfse/emitir`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`,
+          "X-Nfse-Token": apiToken
+        },
+        body: JSON.stringify({ receiptId: _currentReceiptForNfse, borrower })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        throw new Error(data?.detail || data?.error || `HTTP ${res.status}`);
+      }
+
+      // Sucesso. Pode ser status "Issued" (NFE.io ainda processando) ou "Authorized" (já tem PDF).
+      st.textContent = `✓ NFS-e ${data.number ? `nº ${data.number}` : ""} ${data.status === "Authorized" ? "autorizada" : "em processamento"}.`;
+      st.className = "ep-status is-ok";
+      btn.classList.add("ep-hide");
+
+      if (data.pdfUrl) {
+        document.getElementById("nfsePdfLink").href = data.pdfUrl;
+        document.getElementById("nfseNumberLbl").textContent = data.number ? `Nº ${data.number}` : "";
+        document.getElementById("nfseEmittedBox").classList.remove("ep-hide");
+      } else {
+        // Polling: NFE.io retorna PDF só depois que prefeitura processa (alguns segundos).
+        // Tenta consultar 3x com 5s entre cada.
+        setTimeout(() => pollNfseStatus(data.nfseId, apiToken, 0), 5000);
+      }
+    } catch (e) {
+      console.error("nfse_emitir_failed", e);
+      st.textContent = "Erro: " + (e?.message || "desconhecido");
+      st.className = "ep-status is-err";
+      btn.disabled = false;
+      btn.textContent = "Emitir NFS-e";
+    }
+  });
+
+  async function pollNfseStatus(nfseId, apiToken, attempt) {
+    if (attempt > 5) return; // ~30s total, desiste
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/nfse/consultar/${encodeURIComponent(nfseId)}`, {
+        headers: { "Authorization": `Bearer ${idToken}`, "X-Nfse-Token": apiToken }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.ok && d.pdfUrl) {
+        document.getElementById("nfsePdfLink").href = d.pdfUrl;
+        document.getElementById("nfseNumberLbl").textContent = d.number ? `Nº ${d.number}` : "";
+        document.getElementById("nfseEmittedBox").classList.remove("ep-hide");
+        const st = document.getElementById("nfseEmitStatus");
+        st.textContent = `✓ NFS-e ${d.number ? `nº ${d.number}` : ""} autorizada.`;
+        st.className = "ep-status is-ok";
+        return;
+      }
+    } catch {}
+    setTimeout(() => pollNfseStatus(nfseId, apiToken, attempt + 1), 5000);
+  }
 
   // ─── Nova consulta ──────────────────────────────────────────
   const newSessionModal = document.getElementById("newSessionModal");

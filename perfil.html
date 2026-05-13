@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-42">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-43">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -374,27 +374,46 @@
         <p id="pushHint" class="ep-text-xs ep-text-muted ep-mt-12 ep-hide"></p>
       </section>
 
-      <!-- NFS-e (Nota Fiscal de Serviço eletrônica) -->
+      <!-- NFS-e via NFE.io -->
       <section class="ep-receita-form">
         <h2 class="ep-h3 ep-mt-0">NFS-e (Nota Fiscal eletrônica)</h2>
         <p class="ep-text-xs ep-text-muted ep-mt-0">
-          Emissão automática de NFS-e diretamente pela plataforma. <strong>Cobertura inicial: Florianópolis (GINFES).</strong> Outras cidades em breve.
+          Emissão de NFS-e via <a href="https://nfe.io" target="_blank" rel="noopener">NFE.io</a> — cobre <strong>todos os ~5.500 municípios do Brasil</strong>. Você configura sua empresa uma vez no painel da NFE.io e cola o token aqui.
         </p>
+
+        <details class="ep-mt-16">
+          <summary style="cursor:pointer;font-size:13px;color:var(--ep-accent);font-weight:600;">Como configurar (passo a passo)</summary>
+          <ol style="margin:12px 0 0 18px;padding:0;font-size:13px;line-height:1.65;color:var(--ep-ink-2);">
+            <li>Crie conta em <a href="https://app.nfe.io" target="_blank" rel="noopener">app.nfe.io</a> e cadastre sua empresa (CNPJ, inscrição municipal, certificado A1).</li>
+            <li>No painel NFE.io, vá em <strong>Configurações → API</strong> e gere um <strong>API Token</strong>.</li>
+            <li>Anote o <strong>Company ID</strong> (UUID da empresa, aparece na URL do painel).</li>
+            <li>Cole os dois abaixo + complete o código de serviço municipal e alíquota ISS da sua cidade.</li>
+            <li>Salve. Pronto — botão "Emitir NFS-e" aparece nos recibos pagos.</li>
+          </ol>
+        </details>
+
         <div class="ep-row ep-mt-16">
           <div class="ep-field">
-            <label class="ep-label" for="nfseInscMun">Inscrição Municipal</label>
-            <input id="nfseInscMun" class="ep-input" type="text" maxlength="30" placeholder="Ex.: 1234567">
+            <label class="ep-label" for="nfseApiToken">API Token NFE.io</label>
+            <input id="nfseApiToken" class="ep-input" type="password" maxlength="200" placeholder="Bearer token gerado no painel">
           </div>
           <div class="ep-field">
-            <label class="ep-label" for="nfseCnaeServico">Código de serviço municipal</label>
-            <input id="nfseCnaeServico" class="ep-input" type="text" maxlength="20" placeholder="Ex.: 04231 (psicologia)">
+            <label class="ep-label" for="nfseCompanyId">Company ID (UUID)</label>
+            <input id="nfseCompanyId" class="ep-input" type="text" maxlength="50" placeholder="Ex.: 5f8a3b...">
           </div>
         </div>
         <div class="ep-row">
           <div class="ep-field">
+            <label class="ep-label" for="nfseCnaeServico">Código de serviço municipal</label>
+            <input id="nfseCnaeServico" class="ep-input" type="text" maxlength="20" placeholder="Ex.: 04231">
+            <p class="ep-text-xs ep-text-muted ep-mt-0">Consulta na sua prefeitura. Floripa psicologia: <code>04231</code>.</p>
+          </div>
+          <div class="ep-field">
             <label class="ep-label" for="nfseAliquotaIss">Alíquota ISS (%)</label>
             <input id="nfseAliquotaIss" class="ep-input" type="text" maxlength="6" placeholder="Ex.: 2.5">
           </div>
+        </div>
+        <div class="ep-row">
           <div class="ep-field">
             <label class="ep-label" for="nfseRegimeTrib">Regime tributário</label>
             <select id="nfseRegimeTrib" class="ep-select">
@@ -405,25 +424,21 @@
               <option value="real">Lucro Real</option>
             </select>
           </div>
-        </div>
-        <div class="ep-field">
-          <label class="ep-label" for="nfseCertA1">Certificado digital A1 (.pfx)</label>
-          <input id="nfseCertA1" class="ep-input" type="file" accept=".pfx,.p12,application/x-pkcs12">
-          <p class="ep-text-xs ep-text-muted ep-mt-0">
-            Necessário para assinar XML antes de submeter ao webservice da prefeitura. <strong>Armazenado cifrado E2EE</strong> — só o servidor de emissão decifra na hora do envio.
-          </p>
-        </div>
-        <div class="ep-field">
-          <label class="ep-label" for="nfseCertSenha">Senha do certificado</label>
-          <input id="nfseCertSenha" class="ep-input" type="password" placeholder="Senha que protege o .pfx">
+          <div class="ep-field">
+            <label class="ep-label" for="nfseEnv">Ambiente NFE.io</label>
+            <select id="nfseEnv" class="ep-select">
+              <option value="sandbox">Sandbox (testes)</option>
+              <option value="production">Produção</option>
+            </select>
+          </div>
         </div>
         <div class="ep-flex ep-gap-8 ep-flex--wrap ep-mt-12">
           <button type="button" id="nfseSaveBtn" class="ep-btn ep-btn--primary ep-btn--sm">Salvar configuração NFS-e</button>
-          <button type="button" id="nfseTestBtn" class="ep-btn ep-btn--ghost ep-btn--sm" disabled title="Será habilitado quando integração com webservice estiver liberada">Testar emissão</button>
+          <button type="button" id="nfseTestBtn" class="ep-btn ep-btn--ghost ep-btn--sm">Testar conexão</button>
         </div>
         <div id="nfseStatus" class="ep-status ep-mt-12"></div>
         <p class="ep-text-xs ep-text-muted ep-mt-12">
-          <strong>Status:</strong> configuração salva, emissão pelo webservice em fase final de homologação com a prefeitura de Florianópolis. Use o botão <em>Recibo</em> nas transações pagas enquanto isso — o paciente leva ao convênio.
+          <strong>Custo:</strong> NFE.io cobra ~R$ 0,15-0,40 por nota emitida. Você paga direto pra eles. Plano e cobrança são deles — a gente só intermedia a emissão.
         </p>
       </section>
 
@@ -1208,22 +1223,23 @@ Direito de portabilidade — LGPD Art. 18, V.
     }
   });
 
-  // ─── NFS-e: salvar configuração ────────────────────────────────────────
-  // Cert .pfx fica em memória + cifra-se com DEK antes de subir. Backend
-  // armazena ciphertext do .pfx + senha cifrada; só a função de emissão
-  // (server-side, futura) decifra na hora de assinar o XML.
+  // ─── NFS-e (NFE.io): salvar configuração ───────────────────────────────
+  // API token cifrado com DEK antes de subir — só backend (quando emite)
+  // decifra. CompanyId, código serviço, alíquota, regime ficam claro.
   (async () => {
-    // Pre-popula com config existente.
     try {
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, {
         headers: { "Authorization": `Bearer ${idToken}` }
       });
       const d = await r.json().catch(() => ({}));
       const nfse = d.therapist?.nfseConfig || {};
-      $("nfseInscMun").value      = nfse.inscMunicipal || "";
+      $("nfseCompanyId").value    = nfse.companyId || "";
       $("nfseCnaeServico").value  = nfse.codServicoMunicipal || "";
       $("nfseAliquotaIss").value  = nfse.aliquotaIss != null ? String(nfse.aliquotaIss) : "";
       $("nfseRegimeTrib").value   = nfse.regimeTributario || "";
+      $("nfseEnv").value          = nfse.environment || "sandbox";
+      // Token nunca volta — backend não devolve. Só mostra placeholder se já configurado.
+      $("nfseApiToken").placeholder = nfse.apiTokenConfigured ? "••••••••• (já configurado)" : "Bearer token gerado no painel";
     } catch {}
   })();
 
@@ -1238,43 +1254,22 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const body = {
         nfseConfig: {
-          inscMunicipal:        $("nfseInscMun").value.trim().slice(0, 30) || null,
-          codServicoMunicipal:  $("nfseCnaeServico").value.trim().slice(0, 20) || null,
-          aliquotaIss:          $("nfseAliquotaIss").value.trim() ? Number($("nfseAliquotaIss").value.replace(",", ".")) : null,
-          regimeTributario:     $("nfseRegimeTrib").value || null
+          companyId:           $("nfseCompanyId").value.trim().slice(0, 50) || null,
+          codServicoMunicipal: $("nfseCnaeServico").value.trim().slice(0, 20) || null,
+          aliquotaIss:         $("nfseAliquotaIss").value.trim() ? Number($("nfseAliquotaIss").value.replace(",", ".")) : null,
+          regimeTributario:    $("nfseRegimeTrib").value || null,
+          environment:         $("nfseEnv").value || "sandbox"
         }
       };
 
-      // Cert .pfx: se enviado, cifra com DEK antes de mandar.
-      const certFile = $("nfseCertA1").files?.[0];
-      const certSenha = $("nfseCertSenha").value;
-      if (certFile) {
-        if (certFile.size > 200 * 1024) {
-          throw new Error("Certificado muito grande (max 200KB).");
-        }
-        const buf = await certFile.arrayBuffer();
+      // API token: só envia se user digitou algo novo (input vazio = mantém o atual).
+      const apiToken = $("nfseApiToken").value;
+      if (apiToken) {
         const dekLocal = (await import("./js/crypto.js")).recallDek();
         if (!dekLocal) throw new Error("Sessão sem chave de cifragem. Faça login novamente.");
         const { encryptNote } = await import("./js/crypto.js");
-        // Codifica .pfx em base64 + cifra.
-        let bin = "";
-        const bytes = new Uint8Array(buf);
-        for (let i = 0; i < bytes.length; i += 0x8000) {
-          bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-        }
-        const certB64 = btoa(bin);
-        const certEnc = await encryptNote(certB64, dekLocal);
-        body.nfseConfig.certA1Encrypted = certEnc; // { ciphertext, iv }
-        if (certSenha) {
-          const senhaEnc = await encryptNote(certSenha, dekLocal);
-          body.nfseConfig.certSenhaEncrypted = senhaEnc;
-        }
-      } else if (certSenha) {
-        const dekLocal = (await import("./js/crypto.js")).recallDek();
-        if (!dekLocal) throw new Error("Sessão sem chave de cifragem.");
-        const { encryptNote } = await import("./js/crypto.js");
-        const senhaEnc = await encryptNote(certSenha, dekLocal);
-        body.nfseConfig.certSenhaEncrypted = senhaEnc;
+        const tokenEnc = await encryptNote(apiToken, dekLocal);
+        body.nfseConfig.apiTokenEncrypted = tokenEnc; // { ciphertext, iv }
       }
 
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
@@ -1286,10 +1281,10 @@ Direito de portabilidade — LGPD Art. 18, V.
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
 
       invalidateProfileCache();
-      st.textContent = "✓ Configuração salva. Emissão pelo webservice será liberada em breve.";
+      st.textContent = "✓ Configuração salva.";
       st.className = "ep-status is-ok";
-      $("nfseCertA1").value = "";
-      $("nfseCertSenha").value = "";
+      $("nfseApiToken").value = "";
+      $("nfseApiToken").placeholder = "••••••••• (já configurado)";
     } catch (e) {
       console.error("nfse_save_failed", e);
       st.textContent = "Erro: " + (e?.message || "desconhecido");
@@ -1297,6 +1292,31 @@ Direito de portabilidade — LGPD Art. 18, V.
     } finally {
       btn.disabled = false;
       btn.textContent = "Salvar configuração NFS-e";
+    }
+  });
+
+  $("nfseTestBtn").addEventListener("click", async () => {
+    const btn = $("nfseTestBtn");
+    const st  = $("nfseStatus");
+    btn.disabled = true;
+    btn.textContent = "Testando…";
+    st.textContent = "";
+    st.className = "ep-status";
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/nfse/test`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      st.textContent = `✓ Conectado à NFE.io. Empresa: ${data.companyName || data.companyId} · ${data.environment}.`;
+      st.className = "ep-status is-ok";
+    } catch (e) {
+      st.textContent = "Erro: " + (e?.message || "desconhecido");
+      st.className = "ep-status is-err";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Testar conexão";
     }
   });
 
