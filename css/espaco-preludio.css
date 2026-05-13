@@ -80,6 +80,12 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
   font-size: 15px;
   line-height: 1.55;
+  /* Trava scroll lateral. Elementos que extrapolam (modais wide, tables,
+     view-transition snapshots) eventualmente vazariam pro lado direito —
+     com isso, o browser nunca permite pan horizontal. Scroll vertical
+     continua funcionando normal. */
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 a { color: var(--ep-accent); text-decoration: none; }
