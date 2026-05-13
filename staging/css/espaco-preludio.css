@@ -628,7 +628,8 @@ body:not(:has(.ep-help-bubble)) .ep-theme-toggle {
 }
 
 /* Botão flutuante de suporte (canto inferior direito) — injetado pelo
-   auth-guard.js após login. Não aparece em /suporte.html nem 2fa-verify.html. */
+   auth-guard.js após login. Não aparece em /suporte.html nem 2fa-verify.html.
+   Visualmente pareado com o theme toggle (fundo neutro, ícone accent). */
 .ep-help-bubble {
   position: fixed;
   right: 24px;
@@ -636,25 +637,29 @@ body:not(:has(.ep-help-bubble)) .ep-theme-toggle {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: var(--ep-accent);
-  color: #fff;
+  border: 1px solid var(--ep-line);
+  background: var(--ep-surface);
+  color: var(--ep-accent);
   display: grid;
   place-items: center;
   cursor: pointer;
   text-decoration: none;
-  box-shadow: 0 4px 14px rgba(45,74,62,0.28), 0 1px 3px rgba(28,31,29,0.10);
-  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  box-shadow: 0 4px 14px rgba(28,31,29,0.10), 0 1px 3px rgba(28,31,29,0.06);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, color 160ms ease, border-color 160ms ease;
   z-index: 180;
 }
 .ep-help-bubble:hover {
   transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 8px 22px rgba(45,74,62,0.36), 0 2px 4px rgba(28,31,29,0.14);
-  background: var(--ep-accent-hover);
+  box-shadow: 0 8px 22px rgba(28,31,29,0.16), 0 2px 4px rgba(28,31,29,0.10);
+  background: var(--ep-bg-2);
+  color: var(--ep-accent);
+  border-color: var(--ep-accent);
 }
+.ep-help-bubble svg { width: 22px; height: 22px; }
 .ep-help-bubble:active { transform: translateY(0) scale(1); }
 .ep-help-bubble:focus-visible {
-  outline: 2px solid var(--ep-gold);
-  outline-offset: 3px;
+  outline: 2px solid var(--ep-accent);
+  outline-offset: 2px;
 }
 @media print { .ep-help-bubble { display: none !important; } }
 
