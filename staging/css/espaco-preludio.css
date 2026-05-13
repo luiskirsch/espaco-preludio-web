@@ -261,6 +261,23 @@ a:hover { color: var(--ep-accent-hover); }
   text-overflow: ellipsis;
 }
 
+/* View Transitions API — mantém topbar visualmente fixo ao navegar.
+   Suporte: Chrome 126+, Edge, Safari 18+. Sem suporte = navegação normal. */
+@view-transition { navigation: auto; }
+.ep-topbar { view-transition-name: ep-topbar; }
+.ep-help-bubble { view-transition-name: ep-help-bubble; }
+.ep-staging-banner { view-transition-name: ep-staging-banner; }
+
+::view-transition-old(ep-topbar),
+::view-transition-new(ep-topbar),
+::view-transition-old(ep-help-bubble),
+::view-transition-new(ep-help-bubble),
+::view-transition-old(ep-staging-banner),
+::view-transition-new(ep-staging-banner) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
 /* Botão flutuante de suporte (canto inferior direito) — injetado pelo
    auth-guard.js após login. Não aparece em /suporte.html nem 2fa-verify.html. */
 .ep-help-bubble {
