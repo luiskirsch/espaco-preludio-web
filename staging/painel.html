@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-38">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-39">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -65,6 +65,20 @@
 
     <!-- Banner do tier estudante: aparece se em revisão / aprovado / rejeitado -->
     <div id="studentBanner" class="ep-alert ep-hide ep-mt-16"></div>
+
+    <!-- Hero: próxima consulta + KPIs do mês -->
+    <section id="painelHero" class="ep-hide ep-mt-16" aria-label="Resumo do dia">
+      <div id="heroNextSession" class="ep-hide" style="padding: 16px 20px; background: linear-gradient(135deg, var(--ep-accent-soft) 0%, rgba(200,155,74,0.10) 100%); border-radius: 12px; border: 1px solid var(--ep-gold-line); display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 240px;">
+          <div class="ep-eyebrow" id="heroNextLabel">Próxima consulta</div>
+          <div style="font-size: 18px; font-weight: 600; margin-top: 4px;" id="heroNextPatient">—</div>
+          <div class="ep-text-sm" style="margin-top: 2px;" id="heroNextWhen">—</div>
+          <div class="ep-text-xs ep-text-muted ep-mt-8" id="heroNextBadges"></div>
+        </div>
+        <button type="button" class="ep-btn ep-btn--primary" id="heroEnterBtn" data-session-id="">Entrar na consulta</button>
+      </div>
+      <div id="heroKpis" class="ep-mt-12" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;"></div>
+    </section>
 
     <!-- Solicitações pendentes (agendamento público) — só aparece com itens -->
     <section id="schedRequestsSection" class="ep-hide ep-mt-16">
@@ -483,6 +497,77 @@
     }
   });
   loadSchedulingRequests().catch(() => {});
+
+  // ─── Dashboard "Hoje" ────────────────────────────────────────
+  async function loadHero() {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/painel/hoje`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) return;
+      renderHero(data);
+    } catch {}
+  }
+  function fmtCents(c) { return "R$ " + (Number(c || 0) / 100).toFixed(2).replace(".", ","); }
+  function fmtSessionWhen(ms) {
+    if (!ms) return "—";
+    const d = new Date(ms);
+    const now = new Date();
+    const sameDay = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    const time = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
+    if (sameDay) return `Hoje, ${time}`;
+    const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+    if (d.getFullYear() === tomorrow.getFullYear() && d.getMonth() === tomorrow.getMonth() && d.getDate() === tomorrow.getDate()) {
+      return `Amanhã, ${time}`;
+    }
+    return d.toLocaleString("pt-BR", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
+  }
+  function renderHero(data) {
+    const hero = document.getElementById("painelHero");
+    const nextBlock = document.getElementById("heroNextSession");
+    const kpisBlock = document.getElementById("heroKpis");
+    if (data.nextSession) {
+      const s = data.nextSession;
+      document.getElementById("heroNextPatient").textContent = s.patientName || "Paciente";
+      document.getElementById("heroNextWhen").textContent = fmtSessionWhen(s.scheduledAt);
+      const badges = [];
+      if (s.confirmedAt) badges.push('<span class="ep-badge ep-badge--ok">✓ Confirmada</span>');
+      const diffMin = (s.scheduledAt - Date.now()) / 60000;
+      if (diffMin <= 0) badges.push('<span class="ep-badge ep-badge--warn">Já no horário</span>');
+      else if (diffMin < 60) badges.push(`<span class="ep-badge ep-badge--warn">Em ${Math.round(diffMin)}min</span>`);
+      document.getElementById("heroNextBadges").innerHTML = badges.join(" ");
+      const btn = document.getElementById("heroEnterBtn");
+      btn.dataset.sessionId = s.sessionId;
+      btn.onclick = () => {
+        const target = sessionList.querySelector(`button[data-action="enter"][data-id="${s.sessionId}"]`);
+        if (target) target.click();
+        else window.location.href = `./consultorio.html?session=${encodeURIComponent(s.sessionId)}`;
+      };
+      nextBlock.classList.remove("ep-hide");
+    } else {
+      nextBlock.classList.add("ep-hide");
+    }
+    const tm = data.thisMonth || {};
+    const todayBadge = data.todayCount > 0
+      ? `${data.todayCount} consulta${data.todayCount > 1 ? "s" : ""} hoje${data.todayConfirmedCount > 0 ? ` · ${data.todayConfirmedCount} confirmada${data.todayConfirmedCount > 1 ? "s" : ""}` : ""}`
+      : "Sem consultas agendadas hoje";
+    const kpis = [
+      { eyebrow: "Hoje", value: data.todayCount || 0, hint: todayBadge },
+      { eyebrow: "Realizadas no mês", value: tm.sessoesRealizadas || 0, hint: `${tm.sessoesAgendadasFuturas || 0} agendadas à frente` },
+      { eyebrow: "Faturamento (pago)", value: fmtCents(tm.faturamentoPagoCents || 0), hint: tm.faturamentoPendenteCents > 0 ? `${fmtCents(tm.faturamentoPendenteCents)} a receber` : "no mês corrente", valueColor: "var(--ep-ok)" },
+      { eyebrow: "Confirmação", value: (tm.taxaConfirmacao != null) ? `${tm.taxaConfirmacao}%` : "—", hint: (tm.taxaConfirmacao != null) ? "pacientes que confirmaram presença" : "sem dados ainda" }
+    ];
+    kpisBlock.innerHTML = kpis.map(k => `
+      <div class="ep-card" style="padding: 12px 14px;">
+        <div class="ep-eyebrow" style="font-size: 10.5px;">${escapeHtml(k.eyebrow)}</div>
+        <div style="font-size: 22px; font-weight: 700; margin-top: 4px; color: ${k.valueColor || "var(--ep-ink)"};">${escapeHtml(k.value)}</div>
+        <div class="ep-text-xs ep-text-muted" style="margin-top: 2px;">${escapeHtml(k.hint)}</div>
+      </div>
+    `).join("");
+    hero.classList.remove("ep-hide");
+  }
+  loadHero();
 
   // ─── Helpers ────────────────────────────────────────────────
   function fmtDate(ms) {
