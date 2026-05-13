@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-41">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-42">
 </head>
 <body>
 
@@ -22,10 +22,17 @@
         <span>Prelúdio</span>
       </span>
     </a>
-    <nav class="ep-nav">
+    <nav class="ep-nav" id="agendarNav">
       <span class="ep-text-sm ep-text-muted">Agendamento online</span>
     </nav>
   </header>
+
+  <script type="module">
+    // i18n toggle injection (lazy)
+    import("./js/i18n.js").then(({ mountLangToggle }) => {
+      mountLangToggle(document.getElementById("agendarNav"));
+    });
+  </script>
 
   <main class="ep-main" style="max-width: 760px; margin: 0 auto;">
 

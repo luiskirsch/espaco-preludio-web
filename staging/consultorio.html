@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-41">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-42">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -141,11 +141,49 @@
         <button class="ep-ctrl" id="ctrlCam" type="button" title="Desligar câmera" aria-pressed="false">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="m17 10 4-2v8l-4-2z"/></svg>
         </button>
+        <button class="ep-ctrl" id="ctrlRecord" type="button" title="Gravar sessão (cifrada local)" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6" fill="currentColor"/></svg>
+        </button>
         <button class="ep-ctrl ep-ctrl--leave" id="ctrlLeave" type="button" title="Encerrar consulta">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" transform="rotate(135 12 12)"/></svg>
         </button>
       </div>
+
+      <div id="recIndicator" class="ep-hide" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:200;display:flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(220,38,38,0.92);color:#fff;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(220,38,38,0.35);">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;animation:ep-rec-blink 1.4s infinite ease-in-out;"></span>
+        <span>REC</span>
+        <span id="recTimer">00:00</span>
+        <span id="recChunkInfo" style="opacity:0.75;font-weight:400;">0 chunks</span>
+      </div>
     </section>
+
+    <div class="ep-modal" id="recConsentModal" role="dialog" aria-modal="true">
+      <div class="ep-modal__panel" style="max-width:560px;">
+        <h3 class="ep-modal__title">Gravar esta sessão?</h3>
+        <p class="ep-modal__sub">
+          A gravação fica <strong>cifrada com sua chave</strong> e é baixada direto pro seu computador. <strong>Nada sobe pro nosso servidor.</strong>
+        </p>
+        <div style="padding:0 28px;">
+          <div class="ep-alert ep-mt-0" style="background:rgba(220,170,80,0.10);border-left:3px solid var(--ep-gold);font-size:13px;line-height:1.55;">
+            <strong>Conforme LGPD (Art. 11) e CFP/CFM:</strong>
+            <ul style="margin:8px 0 0 18px;padding:0;">
+              <li>Você precisa do <strong>consentimento expresso do paciente</strong> antes de iniciar a gravação. Avise verbalmente agora.</li>
+              <li>A finalidade deve ser explicada (registro clínico, supervisão, etc).</li>
+              <li>A retenção do arquivo é responsabilidade sua — guarde em local seguro pelo prazo do conselho de classe.</li>
+              <li>Paciente tem direito a pedir exclusão a qualquer momento.</li>
+            </ul>
+          </div>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-top:14px;cursor:pointer;line-height:1.4;">
+            <input id="recConsentCheck" type="checkbox" style="margin-top:3px;">
+            <span class="ep-text-sm">Confirmo que <strong>obtive consentimento verbal do paciente</strong>, expliquei a finalidade e me responsabilizo pela guarda do arquivo gravado.</span>
+          </label>
+        </div>
+        <div class="ep-modal__actions">
+          <button type="button" class="ep-btn ep-btn--ghost" id="recCancelBtn">Cancelar</button>
+          <button type="button" class="ep-btn ep-btn--primary" id="recStartBtn" disabled>Iniciar gravação</button>
+        </div>
+      </div>
+    </div>
   </main>
 
   <div class="ep-session-timeline" aria-hidden="true">
@@ -477,8 +515,90 @@
         headers: { "Authorization": `Bearer ${idToken}` }
       });
     } catch {}
+    try { recorder?.stop(); } catch {}
     try { await room?.disconnect(); } catch {}
     window.location.href = "./painel.html";
+  });
+
+  // ─── Gravação local cifrada ──────────────────────────────────
+  const { SessionRecorder, downloadRecording } = await import("./js/session-record.js");
+  const ctrlRecord       = document.getElementById("ctrlRecord");
+  const recConsentModal  = document.getElementById("recConsentModal");
+  const recConsentCheck  = document.getElementById("recConsentCheck");
+  const recStartBtn      = document.getElementById("recStartBtn");
+  const recCancelBtn     = document.getElementById("recCancelBtn");
+  const recIndicator     = document.getElementById("recIndicator");
+  const recTimer         = document.getElementById("recTimer");
+  const recChunkInfo     = document.getElementById("recChunkInfo");
+  let recorder = null;
+  let recTimerInterval = null;
+
+  function fmtRecTime(ms) {
+    const s = Math.floor(ms / 1000);
+    const mm = String(Math.floor(s / 60)).padStart(2, "0");
+    const ss = String(s % 60).padStart(2, "0");
+    return `${mm}:${ss}`;
+  }
+
+  recConsentCheck.addEventListener("change", () => {
+    recStartBtn.disabled = !recConsentCheck.checked;
+  });
+  recCancelBtn.addEventListener("click", () => {
+    recConsentModal.classList.remove("is-open");
+    recConsentCheck.checked = false;
+    recStartBtn.disabled = true;
+  });
+
+  ctrlRecord.addEventListener("click", () => {
+    if (recorder) {
+      if (!confirm("Encerrar gravação e baixar o arquivo cifrado?")) return;
+      recorder.stop();
+    } else {
+      recConsentCheck.checked = false;
+      recStartBtn.disabled = true;
+      recConsentModal.classList.add("is-open");
+    }
+  });
+
+  recStartBtn.addEventListener("click", async () => {
+    if (!recConsentCheck.checked) return;
+    recConsentModal.classList.remove("is-open");
+    try {
+      fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/recording-consent`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ consentedAt: Date.now() })
+      }).catch(() => {});
+
+      recorder = new SessionRecorder({
+        sessionId,
+        dek,
+        onChunk: (n) => { recChunkInfo.textContent = `${n} chunk${n === 1 ? "" : "s"}`; },
+        onStop: (blob) => {
+          downloadRecording(blob, sessionId);
+          recorder = null;
+          ctrlRecord.classList.remove("is-recording");
+          ctrlRecord.setAttribute("aria-pressed", "false");
+          recIndicator.classList.add("ep-hide");
+          if (recTimerInterval) clearInterval(recTimerInterval);
+        }
+      });
+      await recorder.start({ video: true, audio: true });
+
+      ctrlRecord.classList.add("is-recording");
+      ctrlRecord.setAttribute("aria-pressed", "true");
+      recIndicator.classList.remove("ep-hide");
+      recTimer.textContent = "00:00";
+      recChunkInfo.textContent = "0 chunks";
+      const startedAt = Date.now();
+      recTimerInterval = setInterval(() => {
+        recTimer.textContent = fmtRecTime(Date.now() - startedAt);
+      }, 1000);
+    } catch (e) {
+      console.error("recording_start_failed", e);
+      alert("Erro ao iniciar gravação: " + (e?.message || "Permissão de câmera/microfone negada?"));
+      recorder = null;
+    }
   });
 
   // ─── Notas cifradas ─────────────────────────────────────────

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-41">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-42">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -372,6 +372,59 @@
         </div>
 
         <p id="pushHint" class="ep-text-xs ep-text-muted ep-mt-12 ep-hide"></p>
+      </section>
+
+      <!-- NFS-e (Nota Fiscal de Serviço eletrônica) -->
+      <section class="ep-receita-form">
+        <h2 class="ep-h3 ep-mt-0">NFS-e (Nota Fiscal eletrônica)</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Emissão automática de NFS-e diretamente pela plataforma. <strong>Cobertura inicial: Florianópolis (GINFES).</strong> Outras cidades em breve.
+        </p>
+        <div class="ep-row ep-mt-16">
+          <div class="ep-field">
+            <label class="ep-label" for="nfseInscMun">Inscrição Municipal</label>
+            <input id="nfseInscMun" class="ep-input" type="text" maxlength="30" placeholder="Ex.: 1234567">
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="nfseCnaeServico">Código de serviço municipal</label>
+            <input id="nfseCnaeServico" class="ep-input" type="text" maxlength="20" placeholder="Ex.: 04231 (psicologia)">
+          </div>
+        </div>
+        <div class="ep-row">
+          <div class="ep-field">
+            <label class="ep-label" for="nfseAliquotaIss">Alíquota ISS (%)</label>
+            <input id="nfseAliquotaIss" class="ep-input" type="text" maxlength="6" placeholder="Ex.: 2.5">
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="nfseRegimeTrib">Regime tributário</label>
+            <select id="nfseRegimeTrib" class="ep-select">
+              <option value="">— selecione —</option>
+              <option value="mei">MEI — Microempreendedor Individual</option>
+              <option value="simples">Simples Nacional</option>
+              <option value="presumido">Lucro Presumido</option>
+              <option value="real">Lucro Real</option>
+            </select>
+          </div>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="nfseCertA1">Certificado digital A1 (.pfx)</label>
+          <input id="nfseCertA1" class="ep-input" type="file" accept=".pfx,.p12,application/x-pkcs12">
+          <p class="ep-text-xs ep-text-muted ep-mt-0">
+            Necessário para assinar XML antes de submeter ao webservice da prefeitura. <strong>Armazenado cifrado E2EE</strong> — só o servidor de emissão decifra na hora do envio.
+          </p>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="nfseCertSenha">Senha do certificado</label>
+          <input id="nfseCertSenha" class="ep-input" type="password" placeholder="Senha que protege o .pfx">
+        </div>
+        <div class="ep-flex ep-gap-8 ep-flex--wrap ep-mt-12">
+          <button type="button" id="nfseSaveBtn" class="ep-btn ep-btn--primary ep-btn--sm">Salvar configuração NFS-e</button>
+          <button type="button" id="nfseTestBtn" class="ep-btn ep-btn--ghost ep-btn--sm" disabled title="Será habilitado quando integração com webservice estiver liberada">Testar emissão</button>
+        </div>
+        <div id="nfseStatus" class="ep-status ep-mt-12"></div>
+        <p class="ep-text-xs ep-text-muted ep-mt-12">
+          <strong>Status:</strong> configuração salva, emissão pelo webservice em fase final de homologação com a prefeitura de Florianópolis. Use o botão <em>Recibo</em> nas transações pagas enquanto isso — o paciente leva ao convênio.
+        </p>
       </section>
 
       <!-- Privacidade & LGPD -->
@@ -1152,6 +1205,98 @@ Direito de portabilidade — LGPD Art. 18, V.
     } finally {
       btn.disabled = false;
       btn.textContent = "🔒 Backup cifrado (.epbk)";
+    }
+  });
+
+  // ─── NFS-e: salvar configuração ────────────────────────────────────────
+  // Cert .pfx fica em memória + cifra-se com DEK antes de subir. Backend
+  // armazena ciphertext do .pfx + senha cifrada; só a função de emissão
+  // (server-side, futura) decifra na hora de assinar o XML.
+  (async () => {
+    // Pre-popula com config existente.
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      const nfse = d.therapist?.nfseConfig || {};
+      $("nfseInscMun").value      = nfse.inscMunicipal || "";
+      $("nfseCnaeServico").value  = nfse.codServicoMunicipal || "";
+      $("nfseAliquotaIss").value  = nfse.aliquotaIss != null ? String(nfse.aliquotaIss) : "";
+      $("nfseRegimeTrib").value   = nfse.regimeTributario || "";
+    } catch {}
+  })();
+
+  $("nfseSaveBtn").addEventListener("click", async () => {
+    const btn = $("nfseSaveBtn");
+    const st  = $("nfseStatus");
+    btn.disabled = true;
+    btn.textContent = "Salvando…";
+    st.textContent = "";
+    st.className = "ep-status";
+
+    try {
+      const body = {
+        nfseConfig: {
+          inscMunicipal:        $("nfseInscMun").value.trim().slice(0, 30) || null,
+          codServicoMunicipal:  $("nfseCnaeServico").value.trim().slice(0, 20) || null,
+          aliquotaIss:          $("nfseAliquotaIss").value.trim() ? Number($("nfseAliquotaIss").value.replace(",", ".")) : null,
+          regimeTributario:     $("nfseRegimeTrib").value || null
+        }
+      };
+
+      // Cert .pfx: se enviado, cifra com DEK antes de mandar.
+      const certFile = $("nfseCertA1").files?.[0];
+      const certSenha = $("nfseCertSenha").value;
+      if (certFile) {
+        if (certFile.size > 200 * 1024) {
+          throw new Error("Certificado muito grande (max 200KB).");
+        }
+        const buf = await certFile.arrayBuffer();
+        const dekLocal = (await import("./js/crypto.js")).recallDek();
+        if (!dekLocal) throw new Error("Sessão sem chave de cifragem. Faça login novamente.");
+        const { encryptNote } = await import("./js/crypto.js");
+        // Codifica .pfx em base64 + cifra.
+        let bin = "";
+        const bytes = new Uint8Array(buf);
+        for (let i = 0; i < bytes.length; i += 0x8000) {
+          bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+        }
+        const certB64 = btoa(bin);
+        const certEnc = await encryptNote(certB64, dekLocal);
+        body.nfseConfig.certA1Encrypted = certEnc; // { ciphertext, iv }
+        if (certSenha) {
+          const senhaEnc = await encryptNote(certSenha, dekLocal);
+          body.nfseConfig.certSenhaEncrypted = senhaEnc;
+        }
+      } else if (certSenha) {
+        const dekLocal = (await import("./js/crypto.js")).recallDek();
+        if (!dekLocal) throw new Error("Sessão sem chave de cifragem.");
+        const { encryptNote } = await import("./js/crypto.js");
+        const senhaEnc = await encryptNote(certSenha, dekLocal);
+        body.nfseConfig.certSenhaEncrypted = senhaEnc;
+      }
+
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+
+      invalidateProfileCache();
+      st.textContent = "✓ Configuração salva. Emissão pelo webservice será liberada em breve.";
+      st.className = "ep-status is-ok";
+      $("nfseCertA1").value = "";
+      $("nfseCertSenha").value = "";
+    } catch (e) {
+      console.error("nfse_save_failed", e);
+      st.textContent = "Erro: " + (e?.message || "desconhecido");
+      st.className = "ep-status is-err";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Salvar configuração NFS-e";
     }
   });
 

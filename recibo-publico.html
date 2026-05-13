@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-41">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-42">
 </head>
 <body>
 
@@ -86,6 +86,12 @@
             <div class="ep-text-xs ep-text-muted">Forma</div>
             <strong id="paymentMethodLbl">—</strong>
           </div>
+        </div>
+
+        <!-- TUSS (reembolso convênio) — só aparece se preenchido -->
+        <div id="tussBox" class="ep-hide ep-mt-12" style="padding: 12px 16px; background: rgba(45,74,62,0.06); border-left: 3px solid var(--ep-accent); border-radius: 8px; font-size: 13px;">
+          <div class="ep-text-xs ep-text-muted">Procedimento (TUSS) — para reembolso de convênio</div>
+          <strong id="tussCodeLbl">—</strong> <span id="tussDescLbl"></span>
         </div>
 
         <p class="ep-mt-24 ep-text-sm ep-text-muted" style="text-align: center; padding-top: 16px; border-top: 1px solid var(--ep-line);">
@@ -174,6 +180,11 @@
   $("reciboDescription").textContent = receipt.description || "atendimento";
   $("paidDateLbl").textContent = fmtDate(receipt.paidDate);
   $("paymentMethodLbl").textContent = receipt.paymentMethodLabel || receipt.paymentMethod || "—";
+  if (receipt.tussCode || receipt.tussLabel) {
+    $("tussCodeLbl").textContent = receipt.tussCode || "";
+    $("tussDescLbl").textContent = receipt.tussLabel ? ` — ${receipt.tussLabel}` : "";
+    $("tussBox").classList.remove("ep-hide");
+  }
 
   $("loading").classList.add("ep-hide");
   $("content").classList.remove("ep-hide");
@@ -247,6 +258,10 @@
       // Dados de pagamento
       draw(`Data do pagamento: ${fmtDate(receipt.paidDate)}`, { size: 10, color: rgb(0.3, 0.32, 0.3) });
       draw(`Forma: ${receipt.paymentMethodLabel || receipt.paymentMethod || "—"}`, { size: 10, color: rgb(0.3, 0.32, 0.3) });
+      // TUSS (reembolso de convênio) — só renderiza se preenchido.
+      if (receipt.tussCode || receipt.tussLabel) {
+        draw(`Procedimento (TUSS): ${[receipt.tussCode, receipt.tussLabel].filter(Boolean).join(" — ")}`, { size: 10, color: rgb(0.3, 0.32, 0.3) });
+      }
       y -= 20;
 
       // Local + data + assinatura

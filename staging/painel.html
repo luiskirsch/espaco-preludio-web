@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-41">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-42">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -247,6 +247,28 @@
         <label class="ep-label" for="reciboPaidDate">Data do pagamento</label>
         <input id="reciboPaidDate" class="ep-input" type="date">
       </div>
+
+      <details class="ep-mt-12" style="background:var(--ep-bg-2);border-radius:8px;padding:10px 14px;">
+        <summary style="cursor:pointer;font-size:13px;color:var(--ep-ink-2);font-weight:500;">
+          Adicionar TUSS (pra reembolso de convênio)
+        </summary>
+        <div class="ep-mt-12">
+          <p class="ep-text-xs ep-text-muted ep-mt-0">
+            Inclui o código TUSS + CBO no recibo. Convênios costumam exigir essas informações pra reembolso. Deixe em branco se for particular.
+          </p>
+          <div class="ep-row ep-mt-12">
+            <div class="ep-field" style="position:relative;">
+              <label class="ep-label" for="reciboTussCode">Código TUSS</label>
+              <input id="reciboTussCode" class="ep-input" type="text" maxlength="20" placeholder="Digite código ou descrição…" autocomplete="off">
+              <div id="reciboTussResults" class="ep-hide" style="position:absolute;top:100%;left:0;right:0;margin-top:2px;max-height:240px;overflow-y:auto;background:var(--ep-surface);border:1px solid var(--ep-line);border-radius:8px;box-shadow:0 6px 18px rgba(28,31,29,0.12);z-index:100;"></div>
+            </div>
+            <div class="ep-field">
+              <label class="ep-label" for="reciboTussLabel">Descrição</label>
+              <input id="reciboTussLabel" class="ep-input" type="text" maxlength="200" placeholder="Preenchido automaticamente" readonly>
+            </div>
+          </div>
+        </div>
+      </details>
 
       <div class="ep-row">
         <div class="ep-field">
@@ -810,8 +832,41 @@
     document.getElementById("reciboSuccessCloseBtn").classList.add("ep-hide");
     document.getElementById("reciboSubmitBtn").disabled = false;
     document.getElementById("reciboSubmitBtn").textContent = "Gerar e enviar";
+    document.getElementById("reciboTussCode").value = "";
+    document.getElementById("reciboTussLabel").value = "";
+    document.getElementById("reciboTussResults").classList.add("ep-hide");
     modal.classList.add("is-open");
   }
+
+  // TUSS autocomplete inline
+  (async () => {
+    const tuss = await import("./js/tuss.js");
+    const inp = document.getElementById("reciboTussCode");
+    const lbl = document.getElementById("reciboTussLabel");
+    const box = document.getElementById("reciboTussResults");
+    function render() {
+      const q = inp.value.trim();
+      if (q.length < 2) { box.classList.add("ep-hide"); return; }
+      const results = tuss.searchTUSS(q, null, 10);
+      if (!results.length) { box.classList.add("ep-hide"); return; }
+      box.innerHTML = results.map(r => `
+        <button type="button" data-code="${r.code}" data-desc="${r.description.replace(/"/g, "&quot;")}" style="display:block;width:100%;padding:8px 10px;text-align:left;background:transparent;border:0;cursor:pointer;color:var(--ep-ink);font-size:13px;line-height:1.4;border-bottom:1px solid var(--ep-line);">
+          <strong>${r.code}</strong> · ${r.description}
+        </button>
+      `).join("");
+      box.classList.remove("ep-hide");
+    }
+    inp.addEventListener("input", render);
+    inp.addEventListener("blur", () => setTimeout(() => box.classList.add("ep-hide"), 180));
+    box.addEventListener("mousedown", (e) => {
+      const btn = e.target.closest("button[data-code]");
+      if (!btn) return;
+      e.preventDefault();
+      inp.value = btn.getAttribute("data-code");
+      lbl.value = btn.getAttribute("data-desc");
+      box.classList.add("ep-hide");
+    });
+  })();
   document.getElementById("reciboCloseBtn").addEventListener("click", () => {
     document.getElementById("reciboModal").classList.remove("is-open");
   });
@@ -851,7 +906,9 @@
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sess.sessionId)}/recibo/enviar`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
-        body: JSON.stringify({ amount, paymentMethod, paidDate, patientEmail, patientPhone, sendEmail, sendWhatsapp })
+        body: JSON.stringify({ amount, paymentMethod, paidDate, patientEmail, patientPhone, sendEmail, sendWhatsapp,
+          tussCode: document.getElementById("reciboTussCode").value.trim() || null,
+          tussLabel: document.getElementById("reciboTussLabel").value.trim() || null })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
