@@ -81,7 +81,9 @@ html[data-theme="dark"] {
   --ep-line-strong:  rgba(232,230,223,0.18);
   --ep-accent:       #6fbf99;
   --ep-accent-soft:  rgba(111,191,153,0.12);
-  --ep-accent-hover: #87cda9;
+  /* Hover ESCURECE em dark mode (oposto do light) — em fundo escuro, um tom
+     mais escuro lê como "ativo/pressionado" e mantém contraste do ícone branco. */
+  --ep-accent-hover: #5dad88;
   --ep-gold:         #d7b06b;
   --ep-gold-soft:    rgba(215,176,107,0.14);
   --ep-gold-line:    rgba(215,176,107,0.55);
@@ -293,14 +295,14 @@ a:hover { color: var(--ep-accent-hover); }
   margin-left: 4px;
 }
 
-/* Toggle de tema (sol/lua) — botão flutuante empilhado acima do help bubble
-   (que vive em right:24px / bottom:24px / 52x52). 14px de gap entre eles. */
+/* Toggle de tema (sol/lua) — botão flutuante mesma medida do help bubble
+   (52x52, right:24px). Empilhado 14px acima do help. */
 .ep-theme-toggle {
   position: fixed;
-  right: 28px;            /* (52 - 44)/2 = 4px a mais que o help → alinhado pelo centro */
-  bottom: 90px;           /* 24 (help bottom) + 52 (help height) + 14 (gap) = 90 */
-  width: 44px;
-  height: 44px;
+  right: 24px;
+  bottom: 90px;           /* 24 (help bottom) + 52 (help height) + 14 (gap) */
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   border: 1px solid var(--ep-line);
   background: var(--ep-surface);
@@ -320,17 +322,14 @@ a:hover { color: var(--ep-accent-hover); }
   color: var(--ep-ink);
   border-color: var(--ep-ink-2);
 }
+.ep-theme-toggle svg { width: 22px; height: 22px; }
 .ep-theme-toggle:focus-visible {
   outline: 2px solid var(--ep-accent);
   outline-offset: 2px;
 }
-/* Em páginas sem help bubble (suporte.html), o toggle assume a posição
-   de baixo (mesmo right:24px / bottom:24px do help). */
+/* Em páginas sem help bubble (suporte.html), o toggle assume a posição de baixo. */
 body:not(:has(.ep-help-bubble)) .ep-theme-toggle {
-  right: 24px;
   bottom: 24px;
-  width: 52px;
-  height: 52px;
 }
 @media print { .ep-theme-toggle { display: none !important; } }
 
