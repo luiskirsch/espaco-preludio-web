@@ -137,9 +137,8 @@ a:hover { color: var(--ep-accent-hover); }
    independentemente do max-width do container do conteúdo. */
 .ep-topbar > .ep-container {
   max-width: none;
-  padding: 0 32px 0 32px;
-  /* Padding direito maior pra deixar "Sair" longe do scrollbar. */
-  padding-right: 56px;
+  padding: 0 120px 0 32px;
+  /* padding-right grande reserva espaço pro #logoutBtn (position: absolute). */
 }
 
 /* Páginas que usam <header class="ep-topbar"> sem container interno
@@ -150,7 +149,7 @@ a:hover { color: var(--ep-accent-hover); }
   align-items: center;
   justify-content: space-between;
   height: 64px;
-  padding: 0 56px 0 32px;
+  padding: 0 120px 0 32px;
   gap: 16px;
 }
 
@@ -222,8 +221,18 @@ a:hover { color: var(--ep-accent-hover); }
   gap: 8px;
   align-items: center;
 }
-/* Empurra "Sair" pra esquerda — fica longe do scrollbar. !important blindado. */
-.ep-topbar #logoutBtn { margin-right: 120px !important; }
+/* Sair fica posicionado absolutamente na topbar — fora do fluxo flex do .ep-nav.
+   Motivo: com 11+ itens de menu, a nav extrapola o container e o body tem
+   overflow-x: clip, então margin-right vira clip. Absolute ancora o botão
+   relativo ao .ep-topbar (sticky = positioning context). */
+.ep-topbar #logoutBtn {
+  position: absolute !important;
+  right: 24px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  z-index: 2;
+}
 
 .ep-nav a:not(.ep-btn) {
   color: var(--ep-ink-2);
