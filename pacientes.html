@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-33">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-34">
 </head>
 <body>
 
@@ -110,6 +110,59 @@
   </div>
 </div>
 
+<!-- Modal: Anamnese (enviar / ver respostas) -->
+<div class="ep-modal" id="anamneseModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 560px;">
+    <h3 class="ep-modal__title">Anamnese pré-consulta</h3>
+    <p class="ep-modal__sub">
+      Paciente <strong id="anamnesePatientName">—</strong>
+    </p>
+
+    <!-- Forma de envio -->
+    <div id="anamneseSendWrap" style="padding: 0 28px;">
+      <p class="ep-text-sm ep-text-muted ep-mt-0">
+        Envia um link único pro paciente preencher um formulário de ~10 minutos.
+        Quando responder, você recebe um e-mail e vê as respostas aqui.
+      </p>
+
+      <div class="ep-row ep-mt-16">
+        <div class="ep-field">
+          <label class="ep-label" for="anamneseEmail">E-mail do paciente</label>
+          <input id="anamneseEmail" class="ep-input" type="email" maxlength="120" placeholder="paciente@exemplo.com">
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="anamnesePhone">WhatsApp do paciente</label>
+          <input id="anamnesePhone" class="ep-input" type="tel" maxlength="20" placeholder="(48) 99999-9999">
+        </div>
+      </div>
+
+      <div class="ep-flex ep-mt-12" style="gap: 16px; flex-wrap: wrap; align-items: center;">
+        <label class="ep-flex" style="gap: 6px; cursor: pointer; align-items: center;">
+          <input id="anamneseSendEmail" type="checkbox" style="width: 16px; height: 16px;">
+          <span class="ep-text-sm">Enviar por e-mail</span>
+        </label>
+        <label class="ep-flex" style="gap: 6px; cursor: pointer; align-items: center;">
+          <input id="anamneseSendWa" type="checkbox" style="width: 16px; height: 16px;">
+          <span class="ep-text-sm">Enviar por WhatsApp</span>
+        </label>
+      </div>
+
+      <div class="ep-status ep-mt-12" id="anamneseStatus"></div>
+    </div>
+
+    <!-- View de respostas -->
+    <div id="anamneseViewWrap" class="ep-hide" style="padding: 0 28px;">
+      <div id="anamneseAnswersView" style="max-height: 520px; overflow-y: auto;"></div>
+    </div>
+
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="anamneseCloseBtn">Cancelar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="anamneseSubmitBtn">Enviar anamnese</button>
+      <button type="button" class="ep-btn ep-btn--primary ep-hide" id="anamneseViewCloseBtn">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
@@ -194,10 +247,23 @@
   function renderPatient(p) {
     const div = document.createElement("article");
     div.className = "ep-session ep-session--patient";
+    const anam = anamneseByPatient[p.patientId];
+    let anamBadge = "";
+    let anamBtnLabel = "Anamnese";
+    if (anam) {
+      if (anam.status === "answered") {
+        anamBadge = `<span class="ep-badge ep-badge--ok" title="Anamnese respondida em ${fmtDate(anam.respondedAt)}">✓ Anamnese</span>`;
+        anamBtnLabel = "Ver anamnese";
+      } else if (anam.status === "pending") {
+        anamBadge = `<span class="ep-badge ep-badge--warn" title="Aguardando paciente preencher (enviada ${fmtDate(anam.lastSentAt)})">Anamnese enviada</span>`;
+        anamBtnLabel = "Reenviar anamnese";
+      }
+    }
     div.innerHTML = `
       <div>
         <div class="ep-session__name">${escapeHtml(p.name || "—")}</div>
         <div class="ep-session__meta">
+          ${anamBadge}
           ${p.contact ? `<span>${escapeHtml(p.contact)}</span>` : ""}
           ${p.birthdate ? `<span>· nasc. ${fmtDate(new Date(p.birthdate).getTime())}</span>` : ""}
           <span>· atualizado ${fmtDate(p.updatedAt)}</span>
@@ -205,12 +271,31 @@
       </div>
       <div class="ep-session__actions">
         <a class="ep-btn ep-btn--primary ep-btn--sm" href="./prontuario.html?p=${encodeURIComponent(p.patientId)}">Prontuário</a>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="anamnese" data-id="${p.patientId}">${anamBtnLabel}</button>
         <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="edit"   data-id="${p.patientId}">Editar</button>
         <button class="ep-btn ep-btn--danger ep-btn--sm" data-action="delete" data-id="${p.patientId}">Apagar</button>
       </div>
     `;
     div._patientData = p;
     return div;
+  }
+
+  // Map patientId → anamnese (last). Populado em loadAnamneses(), usado em renderPatient.
+  let anamneseByPatient = {};
+  async function loadAnamneses() {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/anamneses`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) return;
+      anamneseByPatient = {};
+      // Anamneses ordenadas por createdAt desc — pega a mais recente por paciente.
+      for (const a of (data.anamneses || [])) {
+        if (!a.patientId) continue;
+        if (!anamneseByPatient[a.patientId]) anamneseByPatient[a.patientId] = a;
+      }
+    } catch { /* silencioso — UX continua sem badge */ }
   }
 
   patientList.addEventListener("click", async (e) => {
@@ -237,6 +322,146 @@
         btn.disabled = false;
         alert("Erro ao apagar.");
       }
+    } else if (action === "anamnese") {
+      await openAnamneseModal(data);
+    }
+  });
+
+  // ─── Modal Anamnese ────────────────────────────────────────
+  async function openAnamneseModal(patient) {
+    if (!patient) return;
+    const modal = document.getElementById("anamneseModal");
+    modal._patient = patient;
+    const existing = anamneseByPatient[patient.patientId];
+    document.getElementById("anamnesePatientName").textContent = patient.name || "—";
+    document.getElementById("anamneseStatus").textContent = "";
+    document.getElementById("anamneseStatus").className = "ep-status";
+
+    // Decide se mostra form de envio ou view de resposta.
+    if (existing && existing.status === "answered") {
+      document.getElementById("anamneseSendWrap").classList.add("ep-hide");
+      document.getElementById("anamneseViewWrap").classList.remove("ep-hide");
+      document.getElementById("anamneseSubmitBtn").classList.add("ep-hide");
+      document.getElementById("anamneseCloseBtn").classList.add("ep-hide");
+      document.getElementById("anamneseViewCloseBtn").classList.remove("ep-hide");
+      await loadAnamneseDetail(existing.anamneseId);
+    } else {
+      document.getElementById("anamneseSendWrap").classList.remove("ep-hide");
+      document.getElementById("anamneseViewWrap").classList.add("ep-hide");
+      document.getElementById("anamneseSubmitBtn").classList.remove("ep-hide");
+      document.getElementById("anamneseCloseBtn").classList.remove("ep-hide");
+      document.getElementById("anamneseViewCloseBtn").classList.add("ep-hide");
+      // Pré-preenche email/phone vindos do paciente cadastrado
+      document.getElementById("anamneseEmail").value = patient.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patient.contact)
+        ? patient.contact : "";
+      document.getElementById("anamnesePhone").value = patient.contact && !/^[^\s@]+@/.test(patient.contact)
+        ? patient.contact : "";
+      document.getElementById("anamneseSendEmail").checked = !!document.getElementById("anamneseEmail").value;
+      document.getElementById("anamneseSendWa").checked    = !!document.getElementById("anamnesePhone").value;
+      document.getElementById("anamneseSubmitBtn").disabled = false;
+      document.getElementById("anamneseSubmitBtn").textContent = existing ? "Reenviar link" : "Enviar anamnese";
+      if (existing) {
+        const st = document.getElementById("anamneseStatus");
+        st.textContent = `Já foi enviada (${existing.sentCount}× em ${fmtDate(existing.lastSentAt)}). Aguardando paciente preencher.`;
+      }
+    }
+    modal.classList.add("is-open");
+  }
+
+  async function loadAnamneseDetail(anamneseId) {
+    const view = document.getElementById("anamneseAnswersView");
+    view.innerHTML = "<div class=\"ep-skeleton\">Carregando…</div>";
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/anamneses/${encodeURIComponent(anamneseId)}`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        view.innerHTML = `<div class="ep-text-sm" style="color: var(--ep-danger);">Erro: ${data?.error || res.status}</div>`;
+        return;
+      }
+      const a = data.anamnese;
+      const respondedLabel = a.respondedAt
+        ? `Respondida em ${new Date(a.respondedAt).toLocaleString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })}`
+        : "";
+      const items = (a.formatted || []).map(f => `
+        <div class="ep-mt-12">
+          <div class="ep-text-xs ep-text-muted" style="font-weight: 500;">${escapeHtml(f.label)}</div>
+          <div style="white-space: pre-wrap; line-height: 1.55; margin-top: 2px;">${escapeHtml(f.value)}</div>
+        </div>
+      `).join("");
+      view.innerHTML = `
+        <div class="ep-text-xs ep-text-muted">${escapeHtml(respondedLabel)}</div>
+        ${items}
+      `;
+    } catch (e) {
+      view.innerHTML = `<div class="ep-text-sm" style="color: var(--ep-danger);">Erro de conexão.</div>`;
+    }
+  }
+
+  document.getElementById("anamneseCloseBtn").addEventListener("click", () => {
+    document.getElementById("anamneseModal").classList.remove("is-open");
+  });
+  document.getElementById("anamneseViewCloseBtn").addEventListener("click", () => {
+    document.getElementById("anamneseModal").classList.remove("is-open");
+  });
+  document.getElementById("anamneseSubmitBtn").addEventListener("click", async () => {
+    const modal = document.getElementById("anamneseModal");
+    const patient = modal._patient;
+    if (!patient) return;
+    const patientEmail = document.getElementById("anamneseEmail").value.trim().toLowerCase() || null;
+    const patientPhone = document.getElementById("anamnesePhone").value.trim() || null;
+    const sendEmail    = document.getElementById("anamneseSendEmail").checked;
+    const sendWhatsapp = document.getElementById("anamneseSendWa").checked;
+    if (!sendEmail && !sendWhatsapp) {
+      const st = document.getElementById("anamneseStatus");
+      st.textContent = "Selecione pelo menos um canal de envio.";
+      st.className = "ep-status is-err";
+      return;
+    }
+    const btn = document.getElementById("anamneseSubmitBtn");
+    btn.disabled = true;
+    btn.textContent = "Enviando…";
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/anamnese/enviar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({
+          patientId: patient.patientId,
+          patientNameSnapshot: patient.name,
+          patientEmail, patientPhone, sendEmail, sendWhatsapp
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        const st = document.getElementById("anamneseStatus");
+        st.textContent = "Erro: " + (data?.hint || data?.error || res.status);
+        st.className = "ep-status is-err";
+        btn.disabled = false;
+        btn.textContent = "Enviar anamnese";
+        return;
+      }
+      const ch = data.channels || {};
+      const lines = [];
+      if (ch.email?.attempted) lines.push(ch.email.ok ? "✓ E-mail enviado" : "✗ E-mail falhou");
+      if (ch.whatsapp?.attempted) {
+        if (ch.whatsapp.ok) lines.push("✓ WhatsApp enviado");
+        else if (ch.whatsapp.reason === "WHATSAPP_NAO_HABILITADO") lines.push("⚠ WhatsApp não habilitado (Perfil → WhatsApp)");
+        else lines.push("✗ WhatsApp falhou");
+      }
+      const st = document.getElementById("anamneseStatus");
+      st.innerHTML = lines.join("<br>") + `<br><a href="${data.anamneseUrl}" target="_blank" rel="noopener" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; word-break: break-all;">${data.anamneseUrl}</a>`;
+      st.className = "ep-status is-ok";
+      btn.disabled = false;
+      btn.textContent = "Reenviar link";
+      // Atualiza o cache local pra refletir o status pending no próximo render.
+      await loadAnamneses();
+    } catch (e) {
+      const st = document.getElementById("anamneseStatus");
+      st.textContent = "Erro de conexão.";
+      st.className = "ep-status is-err";
+      btn.disabled = false;
+      btn.textContent = "Enviar anamnese";
     }
   });
 
@@ -329,6 +554,8 @@
     if (e.key === "Escape") closeModal();
   });
 
+  // Carrega anamneses primeiro (em paralelo) pra badge aparecer no 1º render.
+  await loadAnamneses();
   await loadPatients();
 </script>
 

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anamnese · Espaço Prelúdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-34">
+</head>
+<body>
+
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav">
+      <span class="ep-text-sm ep-text-muted">Anamnese</span>
+    </nav>
+  </header>
+
+  <main class="ep-main" style="max-width: 720px; margin: 0 auto;">
+
+    <div id="loadingBox" class="ep-skeleton ep-mt-32">Carregando…</div>
+
+    <div id="errorBox" class="ep-hide ep-mt-32">
+      <div class="ep-verify-hero ep-verify-hero--err">
+        <div class="ep-verify-hero__icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        </div>
+        <div>
+          <h1 class="ep-h2 ep-mt-0" id="errorTitle">Link indisponível.</h1>
+          <p class="ep-text-muted ep-mt-0" id="errorMsg">O link da anamnese está inválido ou expirou.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="successBox" class="ep-hide ep-mt-32">
+      <div class="ep-verify-hero ep-verify-hero--ok">
+        <div class="ep-verify-hero__icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
+        </div>
+        <div class="ep-verify-hero__body">
+          <div class="ep-eyebrow" style="color: #1f6b3e;">Tudo certo</div>
+          <h1 class="ep-h1 ep-mt-12">Suas respostas foram enviadas.</h1>
+          <p class="ep-text-muted ep-mt-0" id="successMsg">O profissional vai revisar antes da primeira sessão. Obrigado!</p>
+        </div>
+      </div>
+      <p class="ep-text-sm ep-text-muted ep-mt-16" style="text-align: center;">
+        Pode fechar esta página. Se precisar ajustar algo, abra o link de novo e edite suas respostas.
+      </p>
+    </div>
+
+    <div id="content" class="ep-hide">
+
+      <!-- Hero — terapeuta -->
+      <section class="ep-stack ep-mt-32" style="display: flex; align-items: center; gap: 16px;">
+        <div id="therapistAvatar" class="ep-nav-avatar" style="width: 64px; height: 64px; font-size: 22px;">·</div>
+        <div style="flex: 1;">
+          <div class="ep-eyebrow">Anamnese para</div>
+          <h1 class="ep-h1 ep-mt-12" id="therapistName" style="margin-bottom: 0;">—</h1>
+        </div>
+      </section>
+
+      <div class="ep-mt-24" style="padding: 16px 20px; background: var(--ep-accent-soft); border-radius: 10px;">
+        <p class="ep-mt-0" style="margin: 0; line-height: 1.55;">
+          Olá <strong id="patientHello">—</strong>. Antes da primeira sessão, o profissional preparou algumas perguntas pra entender melhor seu contexto.
+        </p>
+        <p class="ep-text-sm ep-text-muted ep-mt-8" style="margin: 8px 0 0;">
+          ⏱ Leva uns 10 minutos · Suas respostas só são vistas pelo profissional · Você pode salvar e voltar depois pelo mesmo link.
+        </p>
+      </div>
+
+      <!-- Form renderizado dinamicamente -->
+      <form id="anamneseForm" class="ep-stack ep-mt-32" novalidate></form>
+
+      <div class="ep-status ep-mt-16" id="formStatus"></div>
+
+      <div class="ep-flex ep-mt-16 ep-gap-8 ep-flex--wrap">
+        <button type="button" class="ep-btn ep-btn--primary ep-btn--lg" id="submitBtn">Enviar respostas</button>
+      </div>
+
+      <p class="ep-text-xs ep-text-muted ep-mt-24" style="text-align: center;">
+        Suas respostas são tratadas conforme a LGPD. Caso queira saber mais, fale com o profissional.
+      </p>
+
+    </div>
+
+  </main>
+</div>
+
+<script type="module">
+  import { BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  const $ = id => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  const token = (params.get("t") || "").trim();
+
+  function show(boxId) {
+    ["loadingBox", "errorBox", "successBox", "content"].forEach(x => {
+      $(x).classList.toggle("ep-hide", x !== boxId);
+    });
+  }
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+    }[c]));
+  }
+
+  if (!token) {
+    show("errorBox");
+    throw new Error("NO_TOKEN");
+  }
+
+  let payload = null;
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/therapy/anamnese/publica?t=${encodeURIComponent(token)}`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      show("errorBox");
+      throw new Error(data?.error || "ERRO");
+    }
+    payload = data;
+  } catch (e) {
+    if (!$("errorBox").classList.contains("ep-hide")) throw e;
+    show("errorBox");
+    $("errorMsg").textContent = "Erro de conexão. Tente recarregar.";
+    throw e;
+  }
+
+  // Renderiza hero
+  const t = payload.therapist || {};
+  $("therapistName").textContent = t.displayName || "Profissional";
+  const initials = (t.displayName || "").match(/\b\p{L}/gu)?.slice(0, 2)?.join("")?.toUpperCase() || "·";
+  if (t.photoBase64) {
+    const av = $("therapistAvatar");
+    av.style.backgroundImage = `url(data:${t.photoMime || "image/jpeg"};base64,${t.photoBase64})`;
+    av.style.backgroundSize = "cover";
+    av.style.backgroundPosition = "center";
+    av.textContent = "";
+  } else {
+    $("therapistAvatar").textContent = initials;
+  }
+  $("patientHello").textContent = payload.anamnese?.patientNameSnapshot || "paciente";
+
+  // Renderiza form dinâmico baseado no template + responses (se existirem)
+  const template = payload.template;
+  const responses = payload.anamnese?.responses || {};
+  const formEl = $("anamneseForm");
+
+  function renderQuestion(q) {
+    const wrap = document.createElement("div");
+    wrap.className = "ep-field";
+    wrap.dataset.questionId = q.id;
+    if (q.dependsOn) wrap.dataset.dependsOn = JSON.stringify(q.dependsOn);
+    const required = q.required ? ` <span style="color: var(--ep-danger);" aria-hidden="true">*</span>` : "";
+    const label = `<label class="ep-label" for="q-${q.id}">${escapeHtml(q.label)}${required}</label>`;
+    const current = responses[q.id];
+
+    let field = "";
+    if (q.type === "text") {
+      field = `<input id="q-${q.id}" name="${q.id}" class="ep-input" type="text" maxlength="${q.maxLen || 200}" value="${escapeHtml(current || "")}">`;
+    } else if (q.type === "date") {
+      field = `<input id="q-${q.id}" name="${q.id}" class="ep-input" type="date" value="${escapeHtml(current || "")}">`;
+    } else if (q.type === "textarea") {
+      field = `<textarea id="q-${q.id}" name="${q.id}" class="ep-textarea" rows="3" maxlength="${q.maxLen || 2000}">${escapeHtml(current || "")}</textarea>`;
+    } else if (q.type === "select") {
+      const opts = ["<option value=\"\">— Selecione —</option>"]
+        .concat((q.options || []).map(o => `<option value="${escapeHtml(o)}" ${current === o ? "selected" : ""}>${escapeHtml(o)}</option>`)).join("");
+      field = `<select id="q-${q.id}" name="${q.id}" class="ep-select">${opts}</select>`;
+    } else if (q.type === "radio") {
+      const opts = (q.options || []).map((o, idx) => `
+        <label class="ep-flex" style="gap: 8px; align-items: center; cursor: pointer; padding: 8px 12px; border: 1px solid var(--ep-line); border-radius: 8px; margin-right: 8px;">
+          <input type="radio" name="${q.id}" value="${escapeHtml(o)}" ${current === o ? "checked" : ""} id="q-${q.id}-${idx}">
+          <span>${escapeHtml(o)}</span>
+        </label>`).join("");
+      field = `<div class="ep-flex ep-flex--wrap" style="gap: 8px;">${opts}</div>`;
+    }
+    wrap.innerHTML = label + field;
+    return wrap;
+  }
+
+  template.questions.forEach(q => formEl.appendChild(renderQuestion(q)));
+
+  function applyDependencies() {
+    document.querySelectorAll(".ep-field[data-depends-on]").forEach(el => {
+      try {
+        const dep = JSON.parse(el.dataset.dependsOn);
+        const parentName = dep.questionId;
+        const expected = String(dep.value).toLowerCase();
+        let actual = "";
+        // Radio: pega o checked. Outros: o input/select.
+        const inputs = formEl.querySelectorAll(`[name="${parentName}"]`);
+        for (const i of inputs) {
+          if (i.type === "radio") { if (i.checked) actual = String(i.value).toLowerCase(); }
+          else actual = String(i.value || "").toLowerCase();
+        }
+        el.style.display = (actual === expected) ? "" : "none";
+      } catch { /* deixa visível */ }
+    });
+  }
+  applyDependencies();
+  formEl.addEventListener("change", applyDependencies);
+  formEl.addEventListener("input", applyDependencies);
+
+  show("content");
+
+  $("submitBtn").addEventListener("click", async () => {
+    const responses = {};
+    template.questions.forEach(q => {
+      // Se invisível por depends, não coleta (backend revalida)
+      const wrap = formEl.querySelector(`[data-question-id="${q.id}"]`);
+      if (wrap && wrap.style.display === "none") return;
+      if (q.type === "radio") {
+        const sel = formEl.querySelector(`input[name="${q.id}"]:checked`);
+        if (sel) responses[q.id] = sel.value;
+      } else {
+        const el = formEl.querySelector(`[name="${q.id}"]`);
+        if (el && el.value) responses[q.id] = el.value.trim();
+      }
+    });
+
+    // Validação local rápida (UX) — backend revalida
+    const missing = [];
+    template.questions.forEach(q => {
+      if (!q.required) return;
+      const wrap = formEl.querySelector(`[data-question-id="${q.id}"]`);
+      if (wrap && wrap.style.display === "none") return;
+      if (!responses[q.id]) missing.push(q.label);
+    });
+    if (missing.length) {
+      $("formStatus").textContent = "Faltam algumas respostas obrigatórias: " + missing.slice(0, 3).join("; ") + (missing.length > 3 ? "…" : "");
+      $("formStatus").className = "ep-status is-err";
+      return;
+    }
+
+    $("submitBtn").disabled = true;
+    $("submitBtn").textContent = "Enviando…";
+    $("formStatus").textContent = "";
+    $("formStatus").className = "ep-status";
+
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/anamnese/publica/responder`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, responses })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        $("formStatus").textContent = "Erro ao enviar: " + (data?.error || res.status);
+        $("formStatus").className = "ep-status is-err";
+        $("submitBtn").disabled = false;
+        $("submitBtn").textContent = "Enviar respostas";
+        return;
+      }
+      if (data.resubmission) {
+        $("successMsg").textContent = "Atualizamos suas respostas. O profissional verá a versão mais recente.";
+      }
+      show("successBox");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (e) {
+      $("formStatus").textContent = "Erro de conexão. Tente de novo.";
+      $("formStatus").className = "ep-status is-err";
+      $("submitBtn").disabled = false;
+      $("submitBtn").textContent = "Enviar respostas";
+    }
+  });
+</script>
+
+</body>
+</html>
