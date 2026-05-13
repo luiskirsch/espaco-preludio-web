@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-30">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-31">
 </head>
 <body>
 
@@ -460,11 +460,15 @@
       sideClass = " ep-session--done";
     }
     div.className = "ep-session" + sideClass;
+    const confirmedTag = (s.confirmedAt && s.status === "scheduled")
+      ? `<span class="ep-badge ep-badge--ok" title="Paciente clicou no link de confirmação do e-mail de lembrete">✓ Confirmada pelo paciente</span>`
+      : "";
     div.innerHTML = `
       <div>
         <div class="ep-session__name">${escapeHtml(s.patientName)}</div>
         <div class="ep-session__meta">
           ${statusBadge(s.status)}
+          ${confirmedTag}
           <span>Criada ${fmtDate(s.createdAt)}</span>
           ${s.scheduledAt ? `<span>· Agendada ${fmtDate(s.scheduledAt)}</span>` : ""}
           ${s.completedAt ? `<span>· Encerrada ${fmtDate(s.completedAt)}</span>` : ""}
