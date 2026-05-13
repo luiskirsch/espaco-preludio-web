@@ -1,15 +1,15 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VerificaÃ§Ã£o 2FA Â· EspaÃ§o PrelÃºdio</title>
+  <title>Verificação 2FA · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-25">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-24">
   <style>
     body { background: var(--ep-bg); min-height: 100vh; }
     .twofa-shell { max-width: 460px; margin: 0 auto; padding: 64px 24px; }
@@ -32,24 +32,24 @@
 </head>
 <body>
 
-<div class="ep-staging-banner">Ambiente de teste Â· EspaÃ§o PrelÃºdio Â· staging</div>
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
 
 <div class="twofa-shell">
   <div style="text-align: center; margin-bottom: 24px;">
-    <a href="./painel.html" style="text-decoration: none; color: var(--ep-ink); font-family: var(--ep-font-serif); font-weight: 600; font-size: 18px;">EspaÃ§o PrelÃºdio</a>
+    <a href="./painel.html" style="text-decoration: none; color: var(--ep-ink); font-family: var(--ep-font-serif); font-weight: 600; font-size: 18px;">Espaço Prelúdio</a>
   </div>
 
   <div class="twofa-card">
-    <div class="ep-eyebrow" style="color: var(--ep-accent);">VerificaÃ§Ã£o em 2 etapas</div>
+    <div class="ep-eyebrow" style="color: var(--ep-accent);">Verificação em 2 etapas</div>
     <h1 style="font-family: var(--ep-font-serif); font-size: 24px; font-weight: 600; margin: 12px 0 14px; letter-spacing: -0.01em;">
-      Digite seu cÃ³digo
+      Digite seu código
     </h1>
     <p class="ep-text-muted" style="margin: 0 0 24px; font-size: 14px;">
-      Abra seu app de autenticador (Google Authenticator, Authy, 1Password) e digite o cÃ³digo de 6 dÃ­gitos.
+      Abra seu app de autenticador (Google Authenticator, Authy, 1Password) e digite o código de 6 dígitos.
     </p>
 
     <input id="codeInput" class="ep-input twofa-code-input" type="text" inputmode="numeric"
-           autocomplete="one-time-code" maxlength="6" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢" autofocus>
+           autocomplete="one-time-code" maxlength="6" placeholder="••••••" autofocus>
 
     <div class="ep-status" id="status"></div>
 
@@ -97,7 +97,7 @@
     if (!/^\d{6}$/.test(code)) return;
     btnEl.disabled = true;
     stEl.className = "ep-status";
-    stEl.textContent = "Verificandoâ€¦";
+    stEl.textContent = "Verificando…";
 
     try {
       const idToken = await user.getIdToken();
@@ -112,7 +112,7 @@
       window.location.href = redirect;
     } catch (e) {
       stEl.textContent = e.message === "CODIGO_INCORRETO"
-        ? "CÃ³digo incorreto. Tente o prÃ³ximo (cÃ³digos mudam a cada 30s)."
+        ? "Código incorreto. Tente o próximo (códigos mudam a cada 30s)."
         : "Erro: " + (e?.message || "desconhecido");
       stEl.classList.add("is-err");
       btnEl.disabled = false;

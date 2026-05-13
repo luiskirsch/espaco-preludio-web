@@ -1,27 +1,27 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Documento clÃ­nico Â· EspaÃ§o PrelÃºdio</title>
+  <title>Documento clínico · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-25">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-24">
 </head>
 <body>
 
-<div class="ep-staging-banner">Ambiente de teste Â· EspaÃ§o PrelÃºdio Â· staging</div>
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
-    <a href="./painel.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">EspaÃ§o</span>
-        <span>PrelÃºdio</span>
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
       </span>
     </a>
     <nav class="ep-nav" aria-label="Painel">
@@ -29,15 +29,15 @@
       <a href="./agenda.html">Agenda</a>
       <a href="./pacientes.html">Pacientes</a>
       <a href="./financeiro.html">Financeiro</a>
-      <a href="./relatorios.html">RelatÃ³rios</a>
-      <a href="./clinica.html">ClÃ­nica</a>
+      <a href="./relatorios.html">Relatórios</a>
+      <a href="./clinica.html">Clínica</a>
       <a href="./inventario.html">Estoque</a>
       <a href="./receita.html">Receitas</a>
       <a href="./calculadora.html">Calculadora</a>
       <a href="./documento.html?tipo=atestado" class="is-active">Atestado</a>
       <a href="./whatsapp.html">WhatsApp</a>
       <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
-        <span class="ep-nav-avatar" id="topUserAvatar">Â·</span>
+        <span class="ep-nav-avatar" id="topUserAvatar">·</span>
         <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
       </a>
       <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
@@ -48,16 +48,16 @@
 <main class="ep-container ep-mt-32 ep-mb-16">
     <div class="ep-flex ep-flex--end-wrap" style="justify-content: space-between; align-items: end; margin-bottom: 16px;">
       <div>
-        <div class="ep-eyebrow" id="pageEyebrow">Documento clÃ­nico</div>
+        <div class="ep-eyebrow" id="pageEyebrow">Documento clínico</div>
         <h1 class="ep-h1 ep-mt-12" id="pageTitle">Novo documento</h1>
         <p class="ep-text-muted ep-mt-0" id="pageSub">Assinatura ICP-Brasil dentro da plataforma ou externa.</p>
       </div>
       <div class="ep-flex ep-gap-6">
         <select id="tipoSwitcher" class="ep-select" aria-label="Tipo de documento">
           <option value="atestado">Atestado</option>
-          <option value="exames">SolicitaÃ§Ã£o de exames</option>
+          <option value="exames">Solicitação de exames</option>
           <option value="encaminhamento">Encaminhamento</option>
-          <option value="relatorio">RelatÃ³rio</option>
+          <option value="relatorio">Relatório</option>
         </select>
         <span id="statusBadge" class="ep-verif-pill is-pending ep-hide">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
@@ -72,8 +72,8 @@
       </div>
       <div class="ep-issuer-block__main">
         <div class="ep-eyebrow">Emitido por</div>
-        <div class="ep-issuer-block__name" id="issuerName">â€”</div>
-        <div class="ep-issuer-block__ids" id="issuerIds">â€”</div>
+        <div class="ep-issuer-block__name" id="issuerName">—</div>
+        <div class="ep-issuer-block__ids" id="issuerIds">—</div>
         <div class="ep-issuer-block__addr" id="issuerAddr"></div>
         <div class="ep-issuer-block__phone" id="issuerPhone"></div>
       </div>
@@ -82,11 +82,11 @@
       </div>
     </section>
     <script>
-      // ResoluÃ§Ã£o otimista do tÃ­tulo + bloco emissor a partir do cache do /me
-      // em sessionStorage. Roda sÃ­ncrono no fim do parse desses blocos, ANTES
-      // do primeiro paint â€” elimina os flashes "Novo documento" â†’ "Novo
-      // atestado psicolÃ³gico" e do fallback EP dourado â†’ imagem real do logo.
-      // Sem cache (1Âª visita), fica genÃ©rico atÃ© o mÃ³dulo principal corrigir.
+      // Resolução otimista do título + bloco emissor a partir do cache do /me
+      // em sessionStorage. Roda síncrono no fim do parse desses blocos, ANTES
+      // do primeiro paint — elimina os flashes "Novo documento" → "Novo
+      // atestado psicológico" e do fallback EP dourado → imagem real do logo.
+      // Sem cache (1ª visita), fica genérico até o módulo principal corrigir.
       (function() {
         try {
           const raw = sessionStorage.getItem("ep:profile:v2");
@@ -96,15 +96,15 @@
           const conselho = profile.conselho;
           const t = profile.therapist || {};
 
-          // â”€â”€â”€ TÃ­tulo do documento â”€â”€â”€
+          // ─── Título do documento ───
           if (conselho?.sigla) {
             const MAP = {
-              CRM:           { atestado: "Atestado MÃ©dico",                encaminhamento: "Encaminhamento MÃ©dico",            relatorio: "RelatÃ³rio MÃ©dico",                exames: "SolicitaÃ§Ã£o de exames" },
-              CRP:           { atestado: "Atestado PsicolÃ³gico",           encaminhamento: "Encaminhamento PsicolÃ³gico",       relatorio: "RelatÃ³rio PsicolÃ³gico",           exames: "SolicitaÃ§Ã£o de avaliaÃ§Ã£o" },
-              CREFITO_FISIO: { atestado: "Atestado FisioterapÃªutico",      encaminhamento: "Encaminhamento FisioterapÃªutico",  relatorio: "RelatÃ³rio FisioterapÃªutico",      exames: "SolicitaÃ§Ã£o de exames" },
-              CREFITO_TO:    { atestado: "Atestado de Terapia Ocupacional", encaminhamento: "Encaminhamento â€” Terapia Ocupacional", relatorio: "RelatÃ³rio de Terapia Ocupacional", exames: "SolicitaÃ§Ã£o de exames" },
-              CRN:           { atestado: "Atestado Nutricional",           encaminhamento: "Encaminhamento Nutricional",       relatorio: "RelatÃ³rio Nutricional",           exames: "SolicitaÃ§Ã£o de exames bioquÃ­micos" },
-              CRO:           { atestado: "Atestado OdontolÃ³gico",          encaminhamento: "Encaminhamento OdontolÃ³gico",      relatorio: "RelatÃ³rio OdontolÃ³gico",          exames: "SolicitaÃ§Ã£o de exames" }
+              CRM:           { atestado: "Atestado Médico",                encaminhamento: "Encaminhamento Médico",            relatorio: "Relatório Médico",                exames: "Solicitação de exames" },
+              CRP:           { atestado: "Atestado Psicológico",           encaminhamento: "Encaminhamento Psicológico",       relatorio: "Relatório Psicológico",           exames: "Solicitação de avaliação" },
+              CREFITO_FISIO: { atestado: "Atestado Fisioterapêutico",      encaminhamento: "Encaminhamento Fisioterapêutico",  relatorio: "Relatório Fisioterapêutico",      exames: "Solicitação de exames" },
+              CREFITO_TO:    { atestado: "Atestado de Terapia Ocupacional", encaminhamento: "Encaminhamento — Terapia Ocupacional", relatorio: "Relatório de Terapia Ocupacional", exames: "Solicitação de exames" },
+              CRN:           { atestado: "Atestado Nutricional",           encaminhamento: "Encaminhamento Nutricional",       relatorio: "Relatório Nutricional",           exames: "Solicitação de exames bioquímicos" },
+              CRO:           { atestado: "Atestado Odontológico",          encaminhamento: "Encaminhamento Odontológico",      relatorio: "Relatório Odontológico",          exames: "Solicitação de exames" }
             };
             let key = String(conselho.sigla).toUpperCase();
             if (key === "CREFITO") {
@@ -116,12 +116,12 @@
               const tipo = (new URLSearchParams(location.search).get("tipo") || "atestado").toLowerCase();
               const titulo = set[tipo];
               if (titulo) {
-                // "SolicitaÃ§Ã£o" Ã© feminino â€” Nova solicitaÃ§Ã£o. Resto Ã© masculino.
+                // "Solicitação" é feminino — Nova solicitação. Resto é masculino.
                 const artigo = tipo === "exames" ? "Nova" : "Novo";
                 document.getElementById("pageTitle").textContent = `${artigo} ${titulo.toLowerCase()}`;
-                // Atualiza TODAS as opÃ§Ãµes com nomes especÃ­ficos do conselho +
+                // Atualiza TODAS as opções com nomes específicos do conselho +
                 // seleciona o tipo correto. Sem isso, o switcher renderiza
-                // "Atestado" (default do HTML) e sÃ³ depois corrige.
+                // "Atestado" (default do HTML) e só depois corrige.
                 const switcher = document.getElementById("tipoSwitcher");
                 for (const opt of switcher.options) {
                   if (set[opt.value]) opt.textContent = set[opt.value];
@@ -131,16 +131,16 @@
             }
           }
 
-          // â”€â”€â”€ Issuer block (logo, nome, IDs, endereÃ§o, telefone) â”€â”€â”€
-          // Mesma lÃ³gica do renderIssuer() do mÃ³dulo principal â€” duplicada
-          // aqui porque inline script nÃ£o pode importar ES module. Se
+          // ─── Issuer block (logo, nome, IDs, endereço, telefone) ───
+          // Mesma lógica do renderIssuer() do módulo principal — duplicada
+          // aqui porque inline script não pode importar ES module. Se
           // divergir, ajustar nos dois lugares.
           const c = t.consultorio || {};
           const issuerLogo = document.getElementById("issuerLogo");
           if (t.logoBase64 && t.logoMime && issuerLogo) {
             issuerLogo.innerHTML = `<img src="data:${t.logoMime};base64,${t.logoBase64}" alt="Logo">`;
           } else {
-            const initials = (t.displayName || "").split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0]).join("").toUpperCase() || "â€”";
+            const initials = (t.displayName || "").split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0]).join("").toUpperCase() || "—";
             const fb = document.getElementById("issuerLogoFallback");
             if (fb) fb.textContent = initials;
           }
@@ -157,22 +157,22 @@
           if (t.rqe) idParts.push("RQE " + String(t.rqe).replace(/^RQE\s*/i, ""));
           if (t.especialidade) idParts.push(t.especialidade);
           const issuerIds = document.getElementById("issuerIds");
-          if (issuerIds) issuerIds.textContent = idParts.join("  Â·  ") || "(sem identificaÃ§Ã£o)";
+          if (issuerIds) issuerIds.textContent = idParts.join("  ·  ") || "(sem identificação)";
           const addrParts = [];
           if (c.endereco) {
             let line = c.endereco;
             if (c.numero) line += ", " + c.numero;
-            if (c.complemento) line += " â€” " + c.complemento;
+            if (c.complemento) line += " — " + c.complemento;
             addrParts.push(line);
           }
-          const cityLine = [c.bairro, c.cidade, c.uf, c.cep].filter(Boolean).join(" Â· ");
+          const cityLine = [c.bairro, c.cidade, c.uf, c.cep].filter(Boolean).join(" · ");
           if (cityLine) addrParts.push(cityLine);
           const issuerAddr = document.getElementById("issuerAddr");
           if (issuerAddr) issuerAddr.textContent = addrParts.join(" / ");
           const issuerPhone = document.getElementById("issuerPhone");
           if (issuerPhone) issuerPhone.textContent = c.telefone || "";
 
-          // Nome no topbar tambÃ©m
+          // Nome no topbar também
           const topUserName = document.getElementById("topUserName");
           if (topUserName) topUserName.textContent = t.displayName || "";
         } catch {}
@@ -187,7 +187,7 @@
           <div class="ep-field">
             <label class="ep-label" for="patientSelect">Paciente</label>
             <select id="patientSelect" class="ep-select">
-              <option value="">â€” Selecione ou digite o nome â€”</option>
+              <option value="">— Selecione ou digite o nome —</option>
             </select>
           </div>
           <div class="ep-field" id="freePatientField">
@@ -200,12 +200,12 @@
               <input id="patientCpf" class="ep-input" type="text" maxlength="14" placeholder="000.000.000-00">
             </div>
             <div class="ep-field">
-              <label class="ep-label" for="dataEmissao">Data de emissÃ£o</label>
+              <label class="ep-label" for="dataEmissao">Data de emissão</label>
               <input id="dataEmissao" class="ep-input" type="date" required>
             </div>
           </div>
 
-          <!-- Campos especÃ­ficos por tipo (renderizados via JS conforme `tipo`) -->
+          <!-- Campos específicos por tipo (renderizados via JS conforme `tipo`) -->
           <div id="typeFields"></div>
 
           <div class="ep-status" id="formStatus"></div>
@@ -218,7 +218,7 @@
 
       <aside class="ep-receita-side">
         <div id="previewBlock" class="ep-receita-preview">
-          <div class="ep-receita-preview__empty">Preencha e clique <strong>Gerar PDF</strong> para prÃ©-visualizar.</div>
+          <div class="ep-receita-preview__empty">Preencha e clique <strong>Gerar PDF</strong> para pré-visualizar.</div>
         </div>
 
         <div id="signBlock" class="ep-stack ep-mt-16 ep-hide" style="gap: 10px;">
@@ -228,7 +228,7 @@
             <button type="button" class="ep-receita-sign-tab" data-tab="external">Assinar fora</button>
           </div>
           <div class="ep-receita-sign-pane is-active" data-pane="a1">
-            <p class="ep-text-sm ep-text-muted ep-mt-0">Sobe o seu <strong>.pfx</strong> e a senha. Assinatura no navegador â€” arquivo nunca sai do dispositivo.</p>
+            <p class="ep-text-sm ep-text-muted ep-mt-0">Sobe o seu <strong>.pfx</strong> e a senha. Assinatura no navegador — arquivo nunca sai do dispositivo.</p>
             <div class="ep-field">
               <label class="ep-label" for="pfxFile">Arquivo .pfx</label>
               <input id="pfxFile" class="ep-input" type="file" accept=".pfx,.p12,application/x-pkcs12">
@@ -241,8 +241,8 @@
             <button type="button" class="ep-btn ep-btn--primary ep-btn--block" id="signA1Btn">Assinar com A1</button>
           </div>
           <div class="ep-receita-sign-pane" data-pane="external">
-            <p class="ep-text-sm ep-text-muted ep-mt-0">Baixe o PDF, assine externamente (gov.br, BirdID, Adobe + A1) e re-faÃ§a upload.</p>
-            <button type="button" class="ep-btn ep-btn--ghost ep-btn--block" id="downloadUnsignedBtn">Baixar PDF nÃ£o-assinado</button>
+            <p class="ep-text-sm ep-text-muted ep-mt-0">Baixe o PDF, assine externamente (gov.br, BirdID, Adobe + A1) e re-faça upload.</p>
+            <button type="button" class="ep-btn ep-btn--ghost ep-btn--block" id="downloadUnsignedBtn">Baixar PDF não-assinado</button>
             <div class="ep-field ep-mt-12">
               <label class="ep-label" for="signedFile">PDF assinado</label>
               <input id="signedFile" class="ep-input" type="file" accept="application/pdf,.pdf">
@@ -258,10 +258,10 @@
             <span id="signedSub">Compartilhe o link abaixo com o paciente.</span>
           </div>
           <div class="ep-field">
-            <label class="ep-label">Link pÃºblico</label>
+            <label class="ep-label">Link público</label>
             <input id="deliveryLink" class="ep-input" type="text" readonly style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">
           </div>
-          <p class="ep-text-xs ep-text-muted ep-mt-0">Validade do link: <span id="deliveryExp">â€”</span>.</p>
+          <p class="ep-text-xs ep-text-muted ep-mt-0">Validade do link: <span id="deliveryExp">—</span>.</p>
           <div class="ep-flex ep-gap-8">
             <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="copyLinkBtn">Copiar</button>
             <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="downloadSignedBtn">Baixar PDF</button>
@@ -287,7 +287,7 @@
     clearDek(); await signOut(auth); window.location.href = "./login.html";
   });
 
-  // â”€â”€â”€ Tipo: query param + switcher â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Tipo: query param + switcher ────────────────────────────────────
   const params = new URLSearchParams(location.search);
   const editId = params.get("id");
   const presetPatientId = params.get("patientId");
@@ -296,16 +296,16 @@
   let tipo = (params.get("tipo") || "atestado").toLowerCase();
   if (!VALID_TIPOS.includes(tipo)) tipo = "atestado";
 
-  // TÃ­tulo do documento varia por conselho â€” fisio/TO nÃ£o emite "atestado mÃ©dico",
-  // emite atestado fisioterapÃªutico/de TO. Mesmo helper que services/professional-councils.js
+  // Título do documento varia por conselho — fisio/TO não emite "atestado médico",
+  // emite atestado fisioterapêutico/de TO. Mesmo helper que services/professional-councils.js
   // no backend, espelhado aqui pra montar o PDF e o switcher.
   const TITULOS_POR_CONSELHO = {
-    CRM:           { atestado: "Atestado MÃ©dico",                encaminhamento: "Encaminhamento MÃ©dico",            relatorio: "RelatÃ³rio MÃ©dico",                exames: "SolicitaÃ§Ã£o de exames" },
-    CRP:           { atestado: "Atestado PsicolÃ³gico",           encaminhamento: "Encaminhamento PsicolÃ³gico",       relatorio: "RelatÃ³rio PsicolÃ³gico",           exames: "SolicitaÃ§Ã£o de avaliaÃ§Ã£o" },
-    CREFITO_FISIO: { atestado: "Atestado FisioterapÃªutico",      encaminhamento: "Encaminhamento FisioterapÃªutico",  relatorio: "RelatÃ³rio FisioterapÃªutico",      exames: "SolicitaÃ§Ã£o de exames" },
-    CREFITO_TO:    { atestado: "Atestado de Terapia Ocupacional", encaminhamento: "Encaminhamento â€” Terapia Ocupacional", relatorio: "RelatÃ³rio de Terapia Ocupacional", exames: "SolicitaÃ§Ã£o de exames" },
-    CRN:           { atestado: "Atestado Nutricional",           encaminhamento: "Encaminhamento Nutricional",       relatorio: "RelatÃ³rio Nutricional",           exames: "SolicitaÃ§Ã£o de exames bioquÃ­micos" },
-    CRO:           { atestado: "Atestado OdontolÃ³gico",          encaminhamento: "Encaminhamento OdontolÃ³gico",      relatorio: "RelatÃ³rio OdontolÃ³gico",          exames: "SolicitaÃ§Ã£o de exames" }
+    CRM:           { atestado: "Atestado Médico",                encaminhamento: "Encaminhamento Médico",            relatorio: "Relatório Médico",                exames: "Solicitação de exames" },
+    CRP:           { atestado: "Atestado Psicológico",           encaminhamento: "Encaminhamento Psicológico",       relatorio: "Relatório Psicológico",           exames: "Solicitação de avaliação" },
+    CREFITO_FISIO: { atestado: "Atestado Fisioterapêutico",      encaminhamento: "Encaminhamento Fisioterapêutico",  relatorio: "Relatório Fisioterapêutico",      exames: "Solicitação de exames" },
+    CREFITO_TO:    { atestado: "Atestado de Terapia Ocupacional", encaminhamento: "Encaminhamento — Terapia Ocupacional", relatorio: "Relatório de Terapia Ocupacional", exames: "Solicitação de exames" },
+    CRN:           { atestado: "Atestado Nutricional",           encaminhamento: "Encaminhamento Nutricional",       relatorio: "Relatório Nutricional",           exames: "Solicitação de exames bioquímicos" },
+    CRO:           { atestado: "Atestado Odontológico",          encaminhamento: "Encaminhamento Odontológico",      relatorio: "Relatório Odontológico",          exames: "Solicitação de exames" }
   };
 
   function resolveConselhoKey(c) {
@@ -322,7 +322,7 @@
     const set = key && TITULOS_POR_CONSELHO[key];
     const titulo = set?.[tipoArg] || ({
       atestado: "Atestado Profissional", encaminhamento: "Encaminhamento Profissional",
-      relatorio: "RelatÃ³rio Profissional", exames: "SolicitaÃ§Ã£o"
+      relatorio: "Relatório Profissional", exames: "Solicitação"
     })[tipoArg] || "Documento";
     return { titulo, cabecalho: titulo.toUpperCase() };
   }
@@ -334,7 +334,7 @@
     relatorio:       tituloFor("relatorio")
   };
 
-  // Atualiza os labels do switcher com os tÃ­tulos especÃ­ficos do conselho.
+  // Atualiza os labels do switcher com os títulos específicos do conselho.
   const tipoSwitcherEl = document.getElementById("tipoSwitcher");
   Array.from(tipoSwitcherEl.options).forEach(opt => {
     if (TIPO_META[opt.value]) opt.textContent = TIPO_META[opt.value].titulo;
@@ -352,15 +352,15 @@
     location.href = `./documento.html?tipo=${encodeURIComponent(novo)}`;
   });
 
-  // "SolicitaÃ§Ã£o" Ã© feminino â€” Nova solicitaÃ§Ã£o. Resto Ã© masculino.
+  // "Solicitação" é feminino — Nova solicitação. Resto é masculino.
   const artigoNovo = tipo === "exames" ? "Nova" : "Novo";
   document.getElementById("pageTitle").textContent = `${artigoNovo} ${TIPO_META[tipo].titulo.toLowerCase()}`;
-  document.getElementById("formHeading").textContent = `Dados â€” ${TIPO_META[tipo].titulo}`;
+  document.getElementById("formHeading").textContent = `Dados — ${TIPO_META[tipo].titulo}`;
 
-  // â”€â”€â”€ Issuer block â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Issuer block ────────────────────────────────────────────────────
   function renderIssuer() {
     const t = therapist; const c = t.consultorio || {};
-    const initials = (t.displayName || "").split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0]).join("").toUpperCase() || "â€”";
+    const initials = (t.displayName || "").split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0]).join("").toUpperCase() || "—";
     const logoEl = document.getElementById("issuerLogo");
     if (t.logoBase64 && t.logoMime) logoEl.innerHTML = `<img src="data:${t.logoMime};base64,${t.logoBase64}" alt="Logo">`;
     else document.getElementById("issuerLogoFallback").textContent = initials;
@@ -377,22 +377,22 @@
     }
     if (t.rqe) idParts.push("RQE " + String(t.rqe).replace(/^RQE\s*/i, ""));
     if (t.especialidade) idParts.push(t.especialidade);
-    document.getElementById("issuerIds").textContent = idParts.join("  Â·  ") || "(sem identificaÃ§Ã£o)";
+    document.getElementById("issuerIds").textContent = idParts.join("  ·  ") || "(sem identificação)";
     const addrParts = [];
     if (c.endereco) {
       let line = c.endereco;
       if (c.numero) line += ", " + c.numero;
-      if (c.complemento) line += " â€” " + c.complemento;
+      if (c.complemento) line += " — " + c.complemento;
       addrParts.push(line);
     }
-    const cityLine = [c.bairro, c.cidade, c.uf, c.cep].filter(Boolean).join(" Â· ");
+    const cityLine = [c.bairro, c.cidade, c.uf, c.cep].filter(Boolean).join(" · ");
     if (cityLine) addrParts.push(cityLine);
     document.getElementById("issuerAddr").textContent = addrParts.join(" / ");
     document.getElementById("issuerPhone").textContent = c.telefone || "";
   }
   renderIssuer();
 
-  // â”€â”€â”€ Form dinÃ¢mico por tipo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Form dinâmico por tipo ──────────────────────────────────────────
   const typeFieldsEl = document.getElementById("typeFields");
 
   const FORM_TEMPLATES = {
@@ -408,17 +408,17 @@
         </div>
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="periodo">PerÃ­odo (texto livre, opcional)</label>
+        <label class="ep-label" for="periodo">Período (texto livre, opcional)</label>
         <input id="periodo" class="ep-input" type="text" maxlength="120" placeholder="Ex.: de 07/05/2026 a 14/05/2026">
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="justificativa">Justificativa clÃ­nica</label>
-        <textarea id="justificativa" class="ep-input" rows="4" maxlength="800" placeholder="Atesto que o paciente esteve sob meu cuidado profissional e necessita afastamento por motivo de saÃºde."></textarea>
+        <label class="ep-label" for="justificativa">Justificativa clínica</label>
+        <textarea id="justificativa" class="ep-input" rows="4" maxlength="800" placeholder="Atesto que o paciente esteve sob meu cuidado profissional e necessita afastamento por motivo de saúde."></textarea>
       </div>`,
     exames: () => `
       <div class="ep-field">
-        <label class="ep-label" for="indicacao">IndicaÃ§Ã£o clÃ­nica</label>
-        <textarea id="indicacao" class="ep-input" rows="3" maxlength="500" placeholder="HipÃ³tese diagnÃ³stica ou contexto clÃ­nico que justifica a solicitaÃ§Ã£o."></textarea>
+        <label class="ep-label" for="indicacao">Indicação clínica</label>
+        <textarea id="indicacao" class="ep-input" rows="3" maxlength="500" placeholder="Hipótese diagnóstica ou contexto clínico que justifica a solicitação."></textarea>
       </div>
       <div class="ep-field">
         <label class="ep-label" for="exames">Exames solicitados (um por linha)</label>
@@ -426,7 +426,7 @@
       </div>
       <label class="ep-radio">
         <input id="urgente" type="checkbox">
-        <span>SolicitaÃ§Ã£o urgente</span>
+        <span>Solicitação urgente</span>
       </label>`,
     encaminhamento: () => `
       <div class="ep-row">
@@ -441,44 +441,44 @@
       </div>
       <div class="ep-field">
         <label class="ep-label" for="motivo">Motivo do encaminhamento</label>
-        <textarea id="motivo" class="ep-input" rows="3" maxlength="500" placeholder="O paciente necessita de avaliaÃ§Ã£o especializada por..."></textarea>
+        <textarea id="motivo" class="ep-input" rows="3" maxlength="500" placeholder="O paciente necessita de avaliação especializada por..."></textarea>
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="resumoClinico">Resumo clÃ­nico relevante</label>
-        <textarea id="resumoClinico" class="ep-input" rows="5" maxlength="1500" placeholder="HistÃ³ria, conduta atual, exames jÃ¡ realizados, medicaÃ§Ã£o em uso."></textarea>
+        <label class="ep-label" for="resumoClinico">Resumo clínico relevante</label>
+        <textarea id="resumoClinico" class="ep-input" rows="5" maxlength="1500" placeholder="História, conduta atual, exames já realizados, medicação em uso."></textarea>
       </div>`,
     relatorio: () => `
       <div class="ep-field">
         <label class="ep-label" for="finalidade">Finalidade</label>
         <select id="finalidade" class="ep-select">
-          <option value="perÃ­cia">PerÃ­cia (INSS, judicial, etc.)</option>
-          <option value="escola">Escola / instituiÃ§Ã£o de ensino</option>
-          <option value="plano">Plano de saÃºde / autorizaÃ§Ã£o</option>
+          <option value="perícia">Perícia (INSS, judicial, etc.)</option>
+          <option value="escola">Escola / instituição de ensino</option>
+          <option value="plano">Plano de saúde / autorização</option>
           <option value="trabalho">Empregador / RH</option>
           <option value="outro">Outro</option>
         </select>
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="diagnostico">DiagnÃ³stico (CID-10 + descriÃ§Ã£o)</label>
-        <input id="diagnostico" class="ep-input" type="text" maxlength="200" placeholder="Ex.: F32.1 â€” EpisÃ³dio depressivo moderado">
+        <label class="ep-label" for="diagnostico">Diagnóstico (CID-10 + descrição)</label>
+        <input id="diagnostico" class="ep-input" type="text" maxlength="200" placeholder="Ex.: F32.1 — Episódio depressivo moderado">
       </div>
       <div class="ep-field">
         <label class="ep-label" for="resumoCaso">Resumo do caso</label>
-        <textarea id="resumoCaso" class="ep-input" rows="6" maxlength="2000" placeholder="HistÃ³ria da doenÃ§a atual, evoluÃ§Ã£o, queixas principais."></textarea>
+        <textarea id="resumoCaso" class="ep-input" rows="6" maxlength="2000" placeholder="História da doença atual, evolução, queixas principais."></textarea>
       </div>
       <div class="ep-field">
         <label class="ep-label" for="conduta">Conduta atual</label>
-        <textarea id="conduta" class="ep-input" rows="4" maxlength="1000" placeholder="MedicaÃ§Ã£o prescrita, periodicidade da terapia, exames de seguimento."></textarea>
+        <textarea id="conduta" class="ep-input" rows="4" maxlength="1000" placeholder="Medicação prescrita, periodicidade da terapia, exames de seguimento."></textarea>
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="consideracoes">ConsideraÃ§Ãµes finais</label>
-        <textarea id="consideracoes" class="ep-input" rows="3" maxlength="800" placeholder="AvaliaÃ§Ã£o geral, prognÃ³stico, recomendaÃ§Ãµes."></textarea>
+        <label class="ep-label" for="consideracoes">Considerações finais</label>
+        <textarea id="consideracoes" class="ep-input" rows="3" maxlength="800" placeholder="Avaliação geral, prognóstico, recomendações."></textarea>
       </div>`
   };
 
   typeFieldsEl.innerHTML = FORM_TEMPLATES[tipo]();
 
-  // â”€â”€â”€ collectForm/applyForm especÃ­ficos por tipo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── collectForm/applyForm específicos por tipo ──────────────────────
   function val(id) { return document.getElementById(id)?.value?.trim() || ""; }
   function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v ?? ""; }
 
@@ -541,7 +541,7 @@
       setVal("motivo", f.motivo);
       setVal("resumoClinico", f.resumoClinico);
     } else {
-      setVal("finalidade", f.finalidade || "perÃ­cia");
+      setVal("finalidade", f.finalidade || "perícia");
       setVal("diagnostico", f.diagnostico);
       setVal("resumoCaso", f.resumoCaso);
       setVal("conduta", f.conduta);
@@ -551,7 +551,7 @@
   function todayISO() { return new Date().toISOString().slice(0, 10); }
   setVal("dataEmissao", todayISO());
 
-  // â”€â”€â”€ Pacientes (select) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Pacientes (select) ──────────────────────────────────────────────
   const patientSelect = document.getElementById("patientSelect");
   const patientNameEl = document.getElementById("patientName");
   const freePatientField = document.getElementById("freePatientField");
@@ -590,7 +590,7 @@
   }
   await loadPatientsIntoSelect();
 
-  // â”€â”€â”€ Carrega rascunho existente â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Carrega rascunho existente ──────────────────────────────────────
   let documentoId = editId || null;
   let receitaState = "draft"; // mesmo nome usado em receita.html pra reusar componentes
   const pageTitle = document.getElementById("pageTitle");
@@ -619,7 +619,7 @@
       if (res.ok && j.ok) {
         const d = j.documento;
         if (d.tipo !== tipo) {
-          // redireciona pra mantÃª-los alinhados
+          // redireciona pra mantê-los alinhados
           location.href = `./documento.html?tipo=${encodeURIComponent(d.tipo)}&id=${encodeURIComponent(editId)}`;
           throw new Error("redirected");
         }
@@ -640,11 +640,11 @@
     } catch (e) { if (e.message !== "redirected") console.warn("load_documento_failed", e); }
   }
 
-  // â”€â”€â”€ Salvar rascunho â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Salvar rascunho ─────────────────────────────────────────────────
   async function persistDraft() {
     const form = collectForm();
     if (!form.patientName) { setStatus(formStatus, "Informe o paciente.", "err"); return null; }
-    setStatus(formStatus, "Salvandoâ€¦");
+    setStatus(formStatus, "Salvando…");
     const { ciphertext, iv } = await encryptNote(JSON.stringify(form), dek);
     try {
       let res;
@@ -677,7 +677,7 @@
   }
   saveDraftBtn.addEventListener("click", persistDraft);
 
-  // â”€â”€â”€ PDF generation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── PDF generation ───────────────────────────────────────────────────
   async function buildPdf(form, verifyUrl = null) {
     const { PDFDocument, StandardFonts, rgb } = await import("https://esm.sh/pdf-lib@1.17.1");
     const pdfDoc = await PDFDocument.create();
@@ -710,7 +710,7 @@
       y -= 14;
     }
 
-    // CabeÃ§alho do issuer
+    // Cabeçalho do issuer
     const t = therapist; const c = t.consultorio || {};
     drawText(t.displayName || "(sem nome)", { font: fontBold, size: 14 });
     const idParts = [];
@@ -723,62 +723,62 @@
     }
     if (t.rqe) idParts.push("RQE " + String(t.rqe).replace(/^RQE\s*/i, ""));
     if (t.especialidade) idParts.push(t.especialidade);
-    drawText(idParts.join("  Â·  "), { size: 10, color: rgb(0.4,0.4,0.4) });
+    drawText(idParts.join("  ·  "), { size: 10, color: rgb(0.4,0.4,0.4) });
     if (c.endereco) {
       let line = c.endereco;
       if (c.numero) line += ", " + c.numero;
       drawText(line, { size: 9, color: rgb(0.4,0.4,0.4) });
     }
-    const cityLine = [c.bairro, c.cidade, c.uf, c.cep].filter(Boolean).join(" Â· ");
+    const cityLine = [c.bairro, c.cidade, c.uf, c.cep].filter(Boolean).join(" · ");
     if (cityLine) drawText(cityLine, { size: 9, color: rgb(0.4,0.4,0.4) });
     if (c.telefone) drawText("Tel.: " + c.telefone, { size: 9, color: rgb(0.4,0.4,0.4) });
 
     y -= 12; hr();
 
-    // TÃ­tulo do tipo
+    // Título do tipo
     drawText(TIPO_META[tipo].cabecalho, { font: fontBold, size: 16 });
     y -= 6;
 
     // Paciente
-    drawText("Paciente: " + (form.patientName || "â€”"), { font: fontBold, size: 12 });
+    drawText("Paciente: " + (form.patientName || "—"), { font: fontBold, size: 12 });
     if (form.patientCpf) drawText("CPF: " + form.patientCpf, { size: 10, color: rgb(0.4,0.4,0.4) });
-    if (form.dataEmissao) drawText("Data de emissÃ£o: " + new Date(form.dataEmissao).toLocaleDateString("pt-BR"), { size: 10, color: rgb(0.4,0.4,0.4) });
+    if (form.dataEmissao) drawText("Data de emissão: " + new Date(form.dataEmissao).toLocaleDateString("pt-BR"), { size: 10, color: rgb(0.4,0.4,0.4) });
 
     y -= 10; hr();
 
     // Corpo por tipo
     if (tipo === "atestado") {
-      drawText("ATESTO, para os devidos fins, que o(a) paciente acima esteve sob meus cuidados profissionais e necessita de afastamento de suas atividades por motivo de saÃºde.", { size: 11 });
+      drawText("ATESTO, para os devidos fins, que o(a) paciente acima esteve sob meus cuidados profissionais e necessita de afastamento de suas atividades por motivo de saúde.", { size: 11 });
       y -= 6;
       const dias = Number(form.dias || 0);
-      if (dias > 0) drawText(`PerÃ­odo de afastamento: ${dias} ${dias === 1 ? "dia" : "dias"}.`, { font: fontBold });
-      if (form.periodo) drawText("PerÃ­odo: " + form.periodo, {});
+      if (dias > 0) drawText(`Período de afastamento: ${dias} ${dias === 1 ? "dia" : "dias"}.`, { font: fontBold });
+      if (form.periodo) drawText("Período: " + form.periodo, {});
       if (form.cid10) drawText("CID-10: " + form.cid10, { size: 10, color: rgb(0.4,0.4,0.4) });
       if (form.justificativa) { y -= 6; drawText(form.justificativa, {}); }
     } else if (tipo === "exames") {
-      if (form.urgente) drawText("âš  URGENTE", { font: fontBold, color: rgb(0.6,0.1,0.1) });
-      if (form.indicacao) { drawText("IndicaÃ§Ã£o clÃ­nica:", { font: fontBold }); drawText(form.indicacao); y -= 4; }
+      if (form.urgente) drawText("⚠ URGENTE", { font: fontBold, color: rgb(0.6,0.1,0.1) });
+      if (form.indicacao) { drawText("Indicação clínica:", { font: fontBold }); drawText(form.indicacao); y -= 4; }
       drawText("Exames solicitados:", { font: fontBold });
       const exames = (form.exames || "").split(/\r?\n/).filter(Boolean);
-      for (const e of exames) drawText("â€¢ " + e, {});
+      for (const e of exames) drawText("• " + e, {});
     } else if (tipo === "encaminhamento") {
       if (form.especialidade) drawText("Especialidade destino: " + form.especialidade, { font: fontBold });
       if (form.profissionalDestino) drawText("Profissional: " + form.profissionalDestino, {});
       if (form.motivo) { y -= 4; drawText("Motivo:", { font: fontBold }); drawText(form.motivo, {}); }
-      if (form.resumoClinico) { y -= 4; drawText("Resumo clÃ­nico:", { font: fontBold }); drawText(form.resumoClinico, {}); }
+      if (form.resumoClinico) { y -= 4; drawText("Resumo clínico:", { font: fontBold }); drawText(form.resumoClinico, {}); }
     } else { // relatorio
       if (form.finalidade) drawText("Finalidade: " + form.finalidade, { font: fontBold });
-      if (form.diagnostico) drawText("DiagnÃ³stico: " + form.diagnostico, {});
+      if (form.diagnostico) drawText("Diagnóstico: " + form.diagnostico, {});
       if (form.resumoCaso) { y -= 4; drawText("Resumo do caso:", { font: fontBold }); drawText(form.resumoCaso, {}); }
       if (form.conduta) { y -= 4; drawText("Conduta atual:", { font: fontBold }); drawText(form.conduta, {}); }
-      if (form.consideracoes) { y -= 4; drawText("ConsideraÃ§Ãµes:", { font: fontBold }); drawText(form.consideracoes, {}); }
+      if (form.consideracoes) { y -= 4; drawText("Considerações:", { font: fontBold }); drawText(form.consideracoes, {}); }
     }
 
     // Assinatura + QR
     y = Math.max(y, 160);
     hr();
     drawText("Assinado digitalmente por " + (t.displayName || ""), { size: 10, color: rgb(0.4,0.4,0.4) });
-    drawText(idParts.join("  Â·  "), { size: 9, color: rgb(0.4,0.4,0.4) });
+    drawText(idParts.join("  ·  "), { size: 9, color: rgb(0.4,0.4,0.4) });
 
     if (verifyUrl) {
       try {
@@ -792,17 +792,17 @@
       } catch (e) { console.warn("qr_embed_failed", e); }
     }
 
-    page.drawText("Gerado por EspaÃ§o PrelÃºdio Â· espacopreludio.com.br", { x: left, y: 32, font: fontReg, size: 7.5, color: rgb(0.6,0.6,0.6) });
+    page.drawText("Gerado por Espaço Prelúdio · espacopreludio.com.br", { x: left, y: 32, font: fontReg, size: 7.5, color: rgb(0.6,0.6,0.6) });
 
     return await pdfDoc.save();
   }
 
-  // â”€â”€â”€ Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Preview ─────────────────────────────────────────────────────────
   let pendingPdfBytes = null;
   previewBtn.addEventListener("click", async () => {
     const form = await persistDraft();
     if (!form) return;
-    setStatus(formStatus, "Gerando PDFâ€¦");
+    setStatus(formStatus, "Gerando PDF…");
     let verifyUrl = null;
     try {
       const linkRes = await fetch(`${BACKEND_BASE_URL}/therapy/documentos/${documentoId}/preparar-link`, {
@@ -824,7 +824,7 @@
     } catch (e) { setStatus(formStatus, "Erro: " + e.message, "err"); }
   });
 
-  // â”€â”€â”€ Tabs assinatura â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Tabs assinatura ─────────────────────────────────────────────────
   document.querySelectorAll(".ep-receita-sign-tab").forEach(t => t.addEventListener("click", () => {
     document.querySelectorAll(".ep-receita-sign-tab").forEach(x => x.classList.remove("is-active"));
     document.querySelectorAll(".ep-receita-sign-pane").forEach(x => x.classList.remove("is-active"));
@@ -832,7 +832,7 @@
     document.querySelector(`.ep-receita-sign-pane[data-pane="${t.dataset.tab}"]`).classList.add("is-active");
   }));
 
-  // â”€â”€â”€ A1 inline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── A1 inline ───────────────────────────────────────────────────────
   function bytesToBase64(bytes) {
     let bin = ""; for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
     return btoa(bin);
@@ -844,7 +844,7 @@
     if (!file) { setStatus(signA1Status, "Selecione o .pfx.", "err"); return; }
     if (!pass) { setStatus(signA1Status, "Informe a senha.", "err"); return; }
     signA1Btn.disabled = true;
-    setStatus(signA1Status, "Carregando bibliotecasâ€¦");
+    setStatus(signA1Status, "Carregando bibliotecas…");
     try {
       const [{ default: signpdfLib }, { P12Signer }, placeholderMod, pdfLib] = await Promise.all([
         import("https://esm.sh/@signpdf/signpdf@3.2.4?bundle"),
@@ -854,11 +854,11 @@
       ]);
       const SignPdf = signpdfLib?.SignPdf || signpdfLib?.default || signpdfLib;
       const pdflibAddPlaceholder = placeholderMod?.pdflibAddPlaceholder || placeholderMod?.default;
-      setStatus(signA1Status, "Adicionando placeholderâ€¦");
+      setStatus(signA1Status, "Adicionando placeholder…");
       const pdfDoc = await pdfLib.PDFDocument.load(pendingPdfBytes);
       pdflibAddPlaceholder({ pdfDoc, reason: TIPO_META[tipo].titulo, contactInfo: "espaco.preludio@preludiojogos.com", name: therapist.displayName || "Profissional", location: "Brasil", signatureLength: 16384 });
       const placeholderBytes = await pdfDoc.save({ useObjectStreams: false });
-      setStatus(signA1Status, "Assinandoâ€¦");
+      setStatus(signA1Status, "Assinando…");
       const pfxBytes = new Uint8Array(await file.arrayBuffer());
       const signer = new P12Signer(pfxBytes, { passphrase: pass });
       const signer_instance = (typeof SignPdf === "function") ? new SignPdf() : SignPdf;
@@ -867,7 +867,7 @@
       await uploadSigned(signedB64, "a1_inline");
     } catch (e) {
       const msg = (e?.message || "").includes("password") || (e?.message || "").includes("MAC")
-        ? "Senha incorreta ou .pfx invÃ¡lido."
+        ? "Senha incorreta ou .pfx inválido."
         : "Erro: " + (e?.message || "desconhecido");
       setStatus(signA1Status, msg, "err");
       signA1Btn.disabled = false;
@@ -889,7 +889,7 @@
     if (!file) { setStatus(signExtStatus, "Selecione o PDF.", "err"); return; }
     if (file.size > 1024 * 1024) { setStatus(signExtStatus, "PDF > 1MB.", "err"); return; }
     uploadSignedBtn.disabled = true;
-    setStatus(signExtStatus, "Anexandoâ€¦");
+    setStatus(signExtStatus, "Anexando…");
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
       const b64 = bytesToBase64(bytes);
@@ -909,7 +909,7 @@
     showDelivery(j.deliveryToken, j.deliveryTokenExp);
   }
 
-  // â”€â”€â”€ Delivery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Delivery ────────────────────────────────────────────────────────
   function showDelivery(token, exp) {
     signBlock.classList.add("ep-hide");
     deliveryBlock.classList.remove("ep-hide");
@@ -918,7 +918,7 @@
     statusBadge.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg> Assinado`;
     const url = `${location.origin}/documento-publico.html?t=${encodeURIComponent(token)}`;
     document.getElementById("deliveryLink").value = url;
-    document.getElementById("deliveryExp").textContent = exp ? new Date(exp).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }) : "â€”";
+    document.getElementById("deliveryExp").textContent = exp ? new Date(exp).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }) : "—";
     import("https://esm.sh/qrcode@1.5.3").then(QR => {
       QR.toCanvas(url, { width: 180, margin: 1 }).then(canvas => {
         const wrap = document.getElementById("qrCanvas");

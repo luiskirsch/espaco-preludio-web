@@ -1,19 +1,19 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ConsultÃ³rio Â· EspaÃ§o PrelÃºdio</title>
+  <title>Consultório · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-25">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-24">
 </head>
 <body class="ep-consult">
 
-<div class="ep-staging-banner">Ambiente de teste Â· EspaÃ§o PrelÃºdio Â· staging</div>
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
 
 <div class="ep-shell">
 
@@ -21,12 +21,12 @@
     <a href="./painel.html" class="ep-brand" aria-label="Voltar ao painel">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">ConsultÃ³rio</span>
+        <span class="ep-brand__lead">Consultório</span>
         <span id="topPatientName" class="ep-brand__waiting">Aguardando paciente</span>
       </span>
     </a>
     <div class="ep-flex ep-flex--center ep-gap-14 ep-w-full">
-      <span id="connectionStatus" class="ep-consult__status">conectandoâ€¦</span>
+      <span id="connectionStatus" class="ep-consult__status">conectando…</span>
       <span id="e2eeBadge" class="ep-badge ep-badge--ok ep-hide" title="End-to-end encrypted">E2EE ativo</span>
       <span class="ep-text-xs ep-text-muted" id="infoDuration">0min 00s</span>
     </div>
@@ -41,35 +41,35 @@
 
       <div class="ep-tile ep-tile--gilded" id="tileLocal">
         <video id="videoLocal" autoplay muted playsinline></video>
-        <div class="ep-tile__name">VocÃª (profissional)</div>
+        <div class="ep-tile__name">Você (profissional)</div>
       </div>
       <div class="ep-tile ep-tile--gilded" id="tileRemote">
         <div class="ep-tile__placeholder" id="remotePlaceholder">
           <div class="ep-waiting">
             <div class="ep-waiting__pulse" aria-hidden="true"></div>
-            <div class="ep-waiting__text">A sala estÃ¡ aberta.</div>
-            <div class="ep-waiting__sub">O paciente entrarÃ¡ pelo link enviado.</div>
+            <div class="ep-waiting__text">A sala está aberta.</div>
+            <div class="ep-waiting__sub">O paciente entrará pelo link enviado.</div>
           </div>
         </div>
         <video id="videoRemote" autoplay playsinline class="ep-hide"></video>
         <div class="ep-tile__name ep-hide" id="remoteName"></div>
       </div>
 
-      <!-- AnotaÃ§Ãµes inline (largura total, abaixo dos tiles) -->
+      <!-- Anotações inline (largura total, abaixo dos tiles) -->
       <div class="ep-inline-notes">
         <div class="ep-inline-notes__head">
           <span class="ep-lock">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-            AnotaÃ§Ãµes cifradas Â· sÃ³ vocÃª lÃª
+            Anotações cifradas · só você lê
           </span>
           <span class="ep-text-xs ep-text-muted" id="noteStatus">&nbsp;</span>
         </div>
         <div class="ep-inline-notes__list" id="notesList"></div>
         <div id="notesEmpty" class="ep-inline-notes__empty ep-hide">
-          Nenhuma anotaÃ§Ã£o ainda. Use o campo abaixo durante a sessÃ£o.
+          Nenhuma anotação ainda. Use o campo abaixo durante a sessão.
         </div>
         <div class="ep-inline-notes__composer">
-          <textarea id="noteInput" placeholder="Digite uma anotaÃ§Ã£oâ€¦ (cifrada antes de enviar)"></textarea>
+          <textarea id="noteInput" placeholder="Digite uma anotação… (cifrada antes de enviar)"></textarea>
           <div class="ep-inline-notes__actions">
             <span class="ep-text-xs ep-text-muted">Ctrl + Enter pra salvar</span>
             <button class="ep-btn ep-btn--primary ep-btn--sm" type="button" id="saveNoteBtn">Salvar nota</button>
@@ -100,25 +100,25 @@
           <div class="ep-ambient__section">
             <div class="ep-ambient__label">Som ambiente</div>
             <div class="ep-ambient__pills" role="group" aria-label="Som ambiente">
-              <button class="ep-ambient__pill" type="button" data-sound="off">SilÃªncio</button>
+              <button class="ep-ambient__pill" type="button" data-sound="off">Silêncio</button>
               <button class="ep-ambient__pill" type="button" data-sound="brown">Acolhedor</button>
             </div>
             <input type="range" data-ambient-volume class="ep-ambient__slider" min="0" max="100" value="40" aria-label="Volume do som ambiente">
           </div>
-          <p class="ep-ambient__hint">Suas preferÃªncias ficam sÃ³ neste dispositivo.</p>
+          <p class="ep-ambient__hint">Suas preferências ficam só neste dispositivo.</p>
         </div>
       </div>
 
-      <!-- TÃ³picos clÃ­nicos (canto inferior direito, deck abre pra cima) -->
-      <button class="ep-topics-toggle ep-topics-toggle--bottom" id="topicsToggle" type="button" aria-expanded="false">ï¼‹ TÃ³picos</button>
+      <!-- Tópicos clínicos (canto inferior direito, deck abre pra cima) -->
+      <button class="ep-topics-toggle ep-topics-toggle--bottom" id="topicsToggle" type="button" aria-expanded="false">＋ Tópicos</button>
       <aside class="ep-topics-deck ep-topics-deck--bottom" id="topicsDeck" aria-hidden="true">
         <div class="ep-topics-deck__head">
-          <span class="ep-topics-deck__title">Cards de TÃ³picos</span>
-          <button class="ep-topics-deck__close" id="topicsClose" type="button" aria-label="Fechar">Ã—</button>
+          <span class="ep-topics-deck__title">Cards de Tópicos</span>
+          <button class="ep-topics-deck__close" id="topicsClose" type="button" aria-label="Fechar">×</button>
         </div>
         <div class="ep-topics-deck__filters" id="topicsFilters"></div>
         <div class="ep-topics-deck__list" id="topicsList"></div>
-        <button class="ep-topics-deck__draw" id="topicsDraw" type="button">Puxar tÃ³pico aleatÃ³rio</button>
+        <button class="ep-topics-deck__draw" id="topicsDraw" type="button">Puxar tópico aleatório</button>
       </aside>
 
       <!-- Controles centrais (mic / cam / leave) -->
@@ -126,7 +126,7 @@
         <button class="ep-ctrl" id="ctrlMic" type="button" title="Silenciar microfone" aria-pressed="false">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
         </button>
-        <button class="ep-ctrl" id="ctrlCam" type="button" title="Desligar cÃ¢mera" aria-pressed="false">
+        <button class="ep-ctrl" id="ctrlCam" type="button" title="Desligar câmera" aria-pressed="false">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="m17 10 4-2v8l-4-2z"/></svg>
         </button>
         <button class="ep-ctrl ep-ctrl--leave" id="ctrlLeave" type="button" title="Encerrar consulta">
@@ -142,7 +142,7 @@
 
   <div class="ep-ritual-open ep-hide" id="ritualOpen" aria-hidden="true">
     <div class="ep-ritual-open__circle"></div>
-    <div class="ep-ritual-open__text">a sessÃ£o comeÃ§ou</div>
+    <div class="ep-ritual-open__text">a sessão começou</div>
   </div>
 
 </div>
@@ -159,16 +159,16 @@
   // Todo o estado fica em localStorage; nada disso vai pro servidor.
   await initAtmosphere({ buttonId: "ambientBtn", panelId: "ambientPanel" });
 
-  // LiveKit via esm.sh â€” pin de versÃ£o para reprodutibilidade.
+  // LiveKit via esm.sh — pin de versão para reprodutibilidade.
   const LIVEKIT_VERSION = "2.5.6";
   const livekitMod = await import(`https://esm.sh/livekit-client@${LIVEKIT_VERSION}`);
   const { Room, RoomEvent, Track, ExternalE2EEKeyProvider } = livekitMod;
 
-  // â”€â”€â”€ Boot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Boot ───────────────────────────────────────────────────
   const params = new URLSearchParams(location.search);
   const sessionId = params.get("session");
   if (!sessionId) {
-    alert("SessÃ£o nÃ£o informada.");
+    alert("Sessão não informada.");
     window.location.href = "./painel.html";
     throw new Error("NO_SESSION");
   }
@@ -176,7 +176,7 @@
   const sess = await requireTherapist({ requireDek: true });
   const { idToken, therapist, dek } = sess;
 
-  // â”€â”€â”€ Pega token LiveKit + e2eeKey â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Pega token LiveKit + e2eeKey ───────────────────────────
   const tokenRes = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/livekit-token`, {
     method: "POST",
     headers: { "Authorization": `Bearer ${idToken}` }
@@ -188,7 +188,7 @@
     throw new Error("TOKEN_FAIL");
   }
 
-  // â”€â”€â”€ DOM refs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── DOM refs ───────────────────────────────────────────────
   const topPatientName    = document.getElementById("topPatientName");
   const connectionStatus  = document.getElementById("connectionStatus");
   const e2eeBadge         = document.getElementById("e2eeBadge");
@@ -206,7 +206,7 @@
   const saveNoteBtn       = document.getElementById("saveNoteBtn");
   const endSessionBtn     = document.getElementById("endSessionBtn");
 
-  // â”€â”€â”€ LiveKit + E2EE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── LiveKit + E2EE ─────────────────────────────────────────
   function setStatus(text) { connectionStatus.textContent = text; }
 
   function b64ToBytes(b64) {
@@ -220,14 +220,14 @@
   let e2eeWorker = null;
 
   try {
-    setStatus("preparando E2EEâ€¦");
+    setStatus("preparando E2EE…");
     // Worker E2EE do LiveKit. esm.sh serve o arquivo de worker do pacote.
     e2eeWorker = new Worker(
       `https://esm.sh/livekit-client@${LIVEKIT_VERSION}/dist/livekit-client.e2ee.worker.js`,
       { type: "module" }
     );
   } catch (err) {
-    console.warn("E2EE worker indisponÃ­vel, seguindo sem E2EE", err);
+    console.warn("E2EE worker indisponível, seguindo sem E2EE", err);
   }
 
   const e2eeKeyBytes = tokenData.e2eeKey ? b64ToBytes(tokenData.e2eeKey) : null;
@@ -284,18 +284,18 @@
   function onTrackUnsubscribed(track) {
     track.detach().forEach(el => el.remove());
   }
-  // Logs auxiliares â€” diagnosticar vÃ­deo unilateral / E2EE.
+  // Logs auxiliares — diagnosticar vídeo unilateral / E2EE.
   room
     .on(RoomEvent.LocalTrackPublished, (pub) => console.info("[lk] localPublished", { kind: pub?.kind, sid: pub?.trackSid }))
     .on(RoomEvent.TrackPublished, (pub, p) => console.info("[lk] trackPublished", { kind: pub?.kind, sid: pub?.trackSid, participant: p?.identity }))
     .on(RoomEvent.EncryptionError, (err) => console.error("[lk] encryptionError", err));
 
   try {
-    setStatus("conectandoâ€¦");
-    // Ordem canÃ´nica do LiveKit 2.x: setKey + setE2EEEnabled ANTES do connect.
-    // Se ativar E2EE depois de connect, auto-subscribe das tracks jÃ¡ publicadas
+    setStatus("conectando…");
+    // Ordem canônica do LiveKit 2.x: setKey + setE2EEEnabled ANTES do connect.
+    // Se ativar E2EE depois de connect, auto-subscribe das tracks já publicadas
     // pelo participante remoto pode rodar antes do worker estar pronto, o que
-    // deixa essa subscription permanentemente "muda" atÃ© a track ser republicada.
+    // deixa essa subscription permanentemente "muda" até a track ser republicada.
     if (useE2EE) {
       await keyProvider.setKey(e2eeKeyBytes);
       await room.setE2EEEnabled(true);
@@ -303,19 +303,19 @@
     }
     await room.connect(tokenData.livekitUrl, tokenData.livekitToken);
 
-    setStatus("ligando cÃ¢meraâ€¦");
+    setStatus("ligando câmera…");
     await room.localParticipant.enableCameraAndMicrophone();
     const camTrack = Array.from(room.localParticipant.videoTrackPublications.values())[0]?.videoTrack;
     if (camTrack) camTrack.attach(videoLocal);
 
-    setStatus("em sessÃ£o");
+    setStatus("em sessão");
   } catch (err) {
     console.error("connect_error", err);
     setStatus("erro ao conectar");
-    alert("NÃ£o foi possÃ­vel conectar Ã  consulta:\n" + (err?.message || err));
+    alert("Não foi possível conectar à consulta:\n" + (err?.message || err));
   }
 
-  // â”€â”€â”€ Controles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Controles ──────────────────────────────────────────────
   ctrlMic.addEventListener("click", async () => {
     const enabled = !ctrlMic.classList.contains("is-off");
     await room.localParticipant.setMicrophoneEnabled(!enabled);
@@ -329,13 +329,13 @@
     ctrlCam.setAttribute("aria-pressed", enabled ? "true" : "false");
   });
   ctrlLeave.addEventListener("click", async () => {
-    if (!confirm("Sair da consulta? A sessÃ£o continua aberta para o paciente atÃ© vocÃª encerrÃ¡-la.")) return;
+    if (!confirm("Sair da consulta? A sessão continua aberta para o paciente até você encerrá-la.")) return;
     try { await room?.disconnect(); } catch {}
     window.location.href = "./painel.html";
   });
 
   endSessionBtn.addEventListener("click", async () => {
-    if (!confirm("Encerrar definitivamente esta consulta? O paciente serÃ¡ desconectado.")) return;
+    if (!confirm("Encerrar definitivamente esta consulta? O paciente será desconectado.")) return;
     try {
       await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/encerrar`, {
         method: "POST",
@@ -346,7 +346,7 @@
     window.location.href = "./painel.html";
   });
 
-  // â”€â”€â”€ Notas cifradas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Notas cifradas ─────────────────────────────────────────
   let sessionStartTs = Date.now();
 
   async function loadNotes() {
@@ -357,7 +357,7 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
         notesEmpty.classList.remove("ep-hide");
-        notesEmpty.textContent = "Erro ao carregar anotaÃ§Ãµes.";
+        notesEmpty.textContent = "Erro ao carregar anotações.";
         return;
       }
       notesList.innerHTML = "";
@@ -390,7 +390,7 @@
     const text = noteInput.value.trim();
     if (!text) return;
     saveNoteBtn.disabled = true;
-    noteStatus.textContent = "cifrandoâ€¦";
+    noteStatus.textContent = "cifrando…";
     try {
       const { ciphertext, iv } = await encryptNote(text, dek);
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/notas`, {
@@ -408,9 +408,9 @@
         return;
       }
       noteInput.value = "";
-      noteStatus.textContent = "salva Â· cifrada";
+      noteStatus.textContent = "salva · cifrada";
       await loadNotes();
-      setTimeout(() => { noteStatus.textContent = "Â "; }, 2000);
+      setTimeout(() => { noteStatus.textContent = " "; }, 2000);
     } catch (err) {
       console.error("save_note_error", err);
       noteStatus.textContent = "erro ao salvar";
@@ -427,8 +427,8 @@
     }
   });
 
-  // â”€â”€â”€ DuraÃ§Ã£o + Linha do tempo dourada â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // SessÃ£o tÃ­pica: 50 min. A linha enche linearmente. Sem alarme â€” pista visual.
+  // ─── Duração + Linha do tempo dourada ───────────────────────
+  // Sessão típica: 50 min. A linha enche linearmente. Sem alarme — pista visual.
   const SESSION_TARGET_MS = 50 * 60 * 1000;
   const timelineFill = document.getElementById("timelineFill");
   const infoDuration = document.getElementById("infoDuration");
@@ -442,9 +442,9 @@
     timelineFill.style.width = pct + "%";
   }, 1000);
 
-  // â”€â”€â”€ Ritual de abertura (overlay + chime) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Ritual de abertura (overlay + chime) ───────────────────
   // Toca uma vez quando o paciente entra. Som suave gerado por Web Audio
-  // (sem assets) â€” duas oitavas em fade triangular, cabeÃ§alho de sessÃ£o.
+  // (sem assets) — duas oitavas em fade triangular, cabeçalho de sessão.
   function playOpeningRitual() {
     const overlay = document.getElementById("ritualOpen");
     overlay.classList.remove("ep-hide");
@@ -468,7 +468,7 @@
     } catch (e) { /* navegador sem WebAudio: ignora */ }
   }
 
-  // â”€â”€â”€ Cards de TÃ³picos ClÃ­nicos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Cards de Tópicos Clínicos ──────────────────────────────
   const topicsToggle  = document.getElementById("topicsToggle");
   const topicsDeck    = document.getElementById("topicsDeck");
   const topicsClose   = document.getElementById("topicsClose");
@@ -513,9 +513,9 @@
     card.appendChild(abord);
     card.appendChild(text);
     card.addEventListener("click", () => {
-      // Insere o tÃ³pico como prefixo na anotaÃ§Ã£o atual.
+      // Insere o tópico como prefixo na anotação atual.
       const prefix = noteInput.value.trim();
-      noteInput.value = (prefix ? prefix + "\n\n" : "") + "â€º " + t.text + "\n";
+      noteInput.value = (prefix ? prefix + "\n\n" : "") + "› " + t.text + "\n";
       noteInput.focus();
     });
     return card;
@@ -536,14 +536,14 @@
     if (pool.length === 0) return;
     const t = pool[Math.floor(Math.random() * pool.length)];
     const prefix = noteInput.value.trim();
-    noteInput.value = (prefix ? prefix + "\n\n" : "") + "â€º " + t.text + "\n";
+    noteInput.value = (prefix ? prefix + "\n\n" : "") + "› " + t.text + "\n";
     noteInput.focus();
   });
 
   renderFilters();
   renderList();
 
-  // Som ambiente e clima jÃ¡ foram inicializados por initAtmosphere() acima.
+  // Som ambiente e clima já foram inicializados por initAtmosphere() acima.
 
   await loadNotes();
 

@@ -1,25 +1,25 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel Â· EspaÃ§o PrelÃºdio</title>
+  <title>Painel · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-25">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-24">
 </head>
 <body>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
-    <a href="./painel.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">EspaÃ§o</span>
-        <span>PrelÃºdio</span>
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
       </span>
     </a>
     <nav class="ep-nav" aria-label="Painel">
@@ -27,15 +27,15 @@
       <a href="./agenda.html">Agenda</a>
       <a href="./pacientes.html">Pacientes</a>
       <a href="./financeiro.html">Financeiro</a>
-      <a href="./relatorios.html">RelatÃ³rios</a>
-      <a href="./clinica.html">ClÃ­nica</a>
+      <a href="./relatorios.html">Relatórios</a>
+      <a href="./clinica.html">Clínica</a>
       <a href="./inventario.html">Estoque</a>
       <a href="./receita.html">Receitas</a>
       <a href="./calculadora.html">Calculadora</a>
       <a href="./documento.html?tipo=atestado">Atestado</a>
       <a href="./whatsapp.html">WhatsApp</a>
       <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
-        <span class="ep-nav-avatar" id="topUserAvatar">Â·</span>
+        <span class="ep-nav-avatar" id="topUserAvatar">·</span>
         <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
       </a>
       <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
@@ -51,17 +51,17 @@
         <div class="ep-eyebrow">Painel do profissional</div>
         <h1 class="ep-h1 ep-mt-12">Suas consultas</h1>
         <p class="ep-text-muted ep-mt-8 ep-mt-0">
-          Crie um link Ãºnico para cada paciente. Cifragem ponta-a-ponta ativa em todas as sessÃµes.
+          Crie um link único para cada paciente. Cifragem ponta-a-ponta ativa em todas as sessões.
         </p>
-        <a href="./verificacao.html" id="verifPill" class="ep-verif-pill ep-hide ep-mt-12" aria-label="Status de verificaÃ§Ã£o"></a>
+        <a href="./verificacao.html" id="verifPill" class="ep-verif-pill ep-hide ep-mt-12" aria-label="Status de verificação"></a>
       </div>
       <button id="newSessionBtn" type="button" class="ep-btn ep-btn--primary ep-btn--lg">+ Nova consulta</button>
     </div>
 
-    <!-- Banner do tier estudante: aparece se em revisÃ£o / aprovado / rejeitado -->
+    <!-- Banner do tier estudante: aparece se em revisão / aprovado / rejeitado -->
     <div id="studentBanner" class="ep-alert ep-hide ep-mt-16"></div>
 
-    <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando suas consultasâ€¦</div>
+    <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando suas consultas…</div>
 
     <div id="sessionList" class="ep-session-list ep-mt-16 ep-hide"></div>
 
@@ -81,50 +81,50 @@
   <div class="ep-modal__panel">
     <h3 class="ep-modal__title">Nova consulta</h3>
     <p class="ep-modal__sub">
-      Defina o nome do paciente (apelido se preferir) e gere um link Ãºnico.
-      O link expira em 2 horas â€” perfeito para enviar pouco antes da sessÃ£o.
+      Defina o nome do paciente (apelido se preferir) e gere um link único.
+      O link expira em 2 horas — perfeito para enviar pouco antes da sessão.
     </p>
 
     <form id="newSessionForm" class="ep-stack">
       <div class="ep-field">
         <label class="ep-label" for="patientSelect">Paciente</label>
         <select id="patientSelect" class="ep-select">
-          <option value="">â€” Selecione ou digite o nome â€”</option>
+          <option value="">— Selecione ou digite o nome —</option>
         </select>
         <span class="ep-text-xs ep-text-muted">
-          <a href="./pacientes.html" target="_blank" rel="noopener">Gerenciar pacientes â†’</a>
+          <a href="./pacientes.html" target="_blank" rel="noopener">Gerenciar pacientes →</a>
         </span>
       </div>
       <div class="ep-field" id="freeNameField">
         <label class="ep-label" for="patientName">Nome do paciente</label>
-        <input id="patientName" class="ep-input" type="text" maxlength="80" placeholder="Ex.: JoÃ£o S.">
+        <input id="patientName" class="ep-input" type="text" maxlength="80" placeholder="Ex.: João S.">
       </div>
       <div class="ep-field">
         <label class="ep-label" for="patientEmail">E-mail do paciente (opcional)</label>
         <input id="patientEmail" class="ep-input" type="email" maxlength="120" placeholder="paciente@exemplo.com">
-        <span class="ep-text-xs ep-text-muted">Para enviar confirmaÃ§Ã£o agora e lembrete 24h antes.</span>
+        <span class="ep-text-xs ep-text-muted">Para enviar confirmação agora e lembrete 24h antes.</span>
       </div>
       <div class="ep-field">
         <label class="ep-label" for="patientPhone">WhatsApp do paciente (opcional)</label>
         <input id="patientPhone" class="ep-input" type="tel" maxlength="30" placeholder="(48) 99999-9999">
-        <span class="ep-text-xs ep-text-muted">Recebe confirmaÃ§Ã£o e lembrete via WhatsApp. Ative no Perfil â†’ WhatsApp.</span>
+        <span class="ep-text-xs ep-text-muted">Recebe confirmação e lembrete via WhatsApp. Ative no Perfil → WhatsApp.</span>
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="scheduledAt">HorÃ¡rio (opcional)</label>
+        <label class="ep-label" for="scheduledAt">Horário (opcional)</label>
         <input id="scheduledAt" class="ep-input" type="datetime-local">
-        <span class="ep-text-xs ep-text-muted">Use para agendar futura â€” vocÃª pode entrar antes.</span>
+        <span class="ep-text-xs ep-text-muted">Use para agendar futura — você pode entrar antes.</span>
       </div>
       <div class="ep-field">
         <label class="ep-label" for="recurrenceWeeks">Repetir semanalmente</label>
         <select id="recurrenceWeeks" class="ep-select">
-          <option value="1">NÃ£o repetir</option>
+          <option value="1">Não repetir</option>
           <option value="4">Por 4 semanas</option>
           <option value="8">Por 8 semanas</option>
           <option value="12">Por 12 semanas</option>
           <option value="24">Por 24 semanas</option>
           <option value="52">Por 52 semanas (1 ano)</option>
         </select>
-        <span class="ep-text-xs ep-text-muted">Cria N consultas no mesmo horÃ¡rio, espaÃ§adas 7 dias. Exige horÃ¡rio definido.</span>
+        <span class="ep-text-xs ep-text-muted">Cria N consultas no mesmo horário, espaçadas 7 dias. Exige horário definido.</span>
       </div>
       <div class="ep-status" id="newSessionStatus"></div>
     </form>
@@ -141,7 +141,7 @@
   <div class="ep-modal__panel">
     <h3 class="ep-modal__title">Link da consulta gerado</h3>
     <p class="ep-modal__sub">
-      Envie este link diretamente ao paciente. Ele expira em 2 horas e sÃ³ pode ser usado uma vez.
+      Envie este link diretamente ao paciente. Ele expira em 2 horas e só pode ser usado uma vez.
     </p>
     <p class="ep-text-xs ep-text-muted ep-mt-0" id="linkSubtitle"></p>
 
@@ -162,14 +162,14 @@
   import { clearDek, recallUser, decryptNote } from "./js/crypto.js";
   import { runOnboarding } from "./js/onboarding.js?v=3-12";
 
-  // â”€â”€â”€ Boot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Boot ───────────────────────────────────────────────────
   const session = await requireTherapist({ requireDek: true });
   const { user, idToken, therapist, dek } = session;
   const uid = user.uid;
 
   document.getElementById("topUserName").textContent = therapist.displayName || "";
 
-  // â”€â”€â”€ VerificaÃ§Ã£o CRP/CRM (e-Psi) â€” pill dinÃ¢mica â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Verificação CRP/CRM (e-Psi) — pill dinâmica ────────────
   (async () => {
     const pill = document.getElementById("verifPill");
     try {
@@ -189,27 +189,27 @@
         pill.classList.add("is-pending");
         pill.innerHTML = `
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-          VerificaÃ§Ã£o em anÃ¡lise
+          Verificação em análise
         `;
       } else if (data.status === "rejected") {
         pill.classList.add("is-rejected");
         pill.innerHTML = `
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
-          VerificaÃ§Ã£o recusada â€” reenviar
+          Verificação recusada — reenviar
         `;
       } else {
         pill.classList.add("is-none");
         pill.innerHTML = `
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
-          Verificar perfil profissional â†’
+          Verificar perfil profissional →
         `;
       }
-    } catch (e) { /* silencioso â€” pill fica oculta */ }
+    } catch (e) { /* silencioso — pill fica oculta */ }
   })();
 
-  // â”€â”€â”€ Banner tier estudante / recÃ©m-formado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Banner tier estudante / recém-formado ─────────────────
   // Faz duas chamadas (pode rodar em paralelo) e mostra o banner do tier
-  // ATIVO. Prioridade: estudante > recÃ©m-formado (estudante Ã© gratuito).
+  // ATIVO. Prioridade: estudante > recém-formado (estudante é gratuito).
   (async () => {
     const banner = document.getElementById("studentBanner");
     function setBanner(cls, html) {
@@ -232,60 +232,60 @@
 
       // Tier estudante tem prioridade (gratuito)
       if (plano === "student-pending-review") {
-        return setBanner("ep-alert--info", `<strong>Comprovante em revisÃ£o.</strong> Recebemos sua declaraÃ§Ã£o de matrÃ­cula. Nossa equipe revisa em atÃ© 48h e vocÃª Ã© avisado por e-mail.`);
+        return setBanner("ep-alert--info", `<strong>Comprovante em revisão.</strong> Recebemos sua declaração de matrícula. Nossa equipe revisa em até 48h e você é avisado por e-mail.`);
       }
       if (plano === "student-active") {
         const until = studentRes?.studentVerifiedUntil ? new Date(studentRes.studentVerifiedUntil).toLocaleDateString("pt-BR") : "1 ano";
-        return setBanner("ep-alert--success", `<strong>Plano Estudante ativo</strong> atÃ© ${until}. No vencimento, vamos pedir um comprovante atualizado.`);
+        return setBanner("ep-alert--success", `<strong>Plano Estudante ativo</strong> até ${until}. No vencimento, vamos pedir um comprovante atualizado.`);
       }
       if (studentRes?.studentDoc?.decision === "rejected") {
         const reasons = (studentRes.studentDoc.reasons || []).map(r => `<li>${r}</li>`).join("");
-        return setBanner("ep-alert--warn", `<strong>Comprovante de matrÃ­cula nÃ£o aprovado.</strong> ${reasons ? `<ul style="margin: 6px 0 8px 18px; padding: 0;">${reasons}</ul>` : ""} <a href="./comprovante-estudante.html">Enviar outro â†’</a>`);
+        return setBanner("ep-alert--warn", `<strong>Comprovante de matrícula não aprovado.</strong> ${reasons ? `<ul style="margin: 6px 0 8px 18px; padding: 0;">${reasons}</ul>` : ""} <a href="./comprovante-estudante.html">Enviar outro →</a>`);
       }
 
-      // Tier recÃ©m-formado
+      // Tier recém-formado
       if (plano === "recem-formado-pending-review") {
-        return setBanner("ep-alert--info", `<strong>Comprovante de inscriÃ§Ã£o em revisÃ£o.</strong> Recebemos sua carteira/print do conselho. Nossa equipe revisa em atÃ© 48h.`);
+        return setBanner("ep-alert--info", `<strong>Comprovante de inscrição em revisão.</strong> Recebemos sua carteira/print do conselho. Nossa equipe revisa em até 48h.`);
       }
       if (plano === "recem-formado-eligible") {
-        return setBanner("ep-alert--success", `<strong>VocÃª estÃ¡ habilitado para o plano RecÃ©m-formado</strong> (R$ 49,90/mÃªs). Quando contratar a assinatura, esse serÃ¡ seu preÃ§o.`);
+        return setBanner("ep-alert--success", `<strong>Você está habilitado para o plano Recém-formado</strong> (R$ 49,90/mês). Quando contratar a assinatura, esse será seu preço.`);
       }
       if (recemRes?.recemFormadoDoc?.decision === "rejected") {
         const reasons = (recemRes.recemFormadoDoc.reasons || []).map(r => `<li>${r}</li>`).join("");
-        return setBanner("ep-alert--warn", `<strong>Comprovante de inscriÃ§Ã£o nÃ£o aprovado.</strong> ${reasons ? `<ul style="margin: 6px 0 8px 18px; padding: 0;">${reasons}</ul>` : ""} <a href="./comprovante-recem-formado.html">Enviar outro â†’</a>`);
+        return setBanner("ep-alert--warn", `<strong>Comprovante de inscrição não aprovado.</strong> ${reasons ? `<ul style="margin: 6px 0 8px 18px; padding: 0;">${reasons}</ul>` : ""} <a href="./comprovante-recem-formado.html">Enviar outro →</a>`);
       }
-    } catch (e) { /* silencioso â€” banner fica oculto */ }
+    } catch (e) { /* silencioso — banner fica oculto */ }
   })();
 
-  // â”€â”€â”€ Logout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Logout ─────────────────────────────────────────────────
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     clearDek();
     await signOut(auth);
     window.location.href = "./login.html";
   });
 
-  // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Helpers ────────────────────────────────────────────────
   function fmtDate(ms) {
-    if (!ms) return "â€”";
+    if (!ms) return "—";
     return new Date(ms).toLocaleString("pt-BR", {
       day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
     });
   }
   function statusBadge(status) {
     if (status === "completed")   return '<span class="ep-badge ep-badge--done">Encerrada</span>';
-    if (status === "in_progress") return '<span class="ep-badge ep-badge--ok">Em sessÃ£o</span>';
+    if (status === "in_progress") return '<span class="ep-badge ep-badge--ok">Em sessão</span>';
     return '<span class="ep-badge ep-badge--warn">Agendada</span>';
   }
   function buildPatientLink(joinToken) {
     return `${location.origin}/entrar.html?t=${encodeURIComponent(joinToken)}`;
   }
 
-  // â”€â”€â”€ Listar sessÃµes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Listar sessões ─────────────────────────────────────────
   const loadingBanner = document.getElementById("loadingBanner");
   const sessionList   = document.getElementById("sessionList");
   const emptyState    = document.getElementById("emptyState");
 
-  // Cache global das sessÃµes â€” usado tanto pra render quanto pra extrair
+  // Cache global das sessões — usado tanto pra render quanto pra extrair
   // pacientes "atendidos antes" (avulsos sem patientId) no select de nova consulta.
   let allSessions = [];
 
@@ -305,7 +305,7 @@
 
   async function loadSessions() {
     // SWR: mostra cache imediato + revalida em background. Loading banner
-    // sÃ³ fica visÃ­vel se NÃƒO houver cache (1Âª carga).
+    // só fica visível se NÃO houver cache (1ª carga).
     loadingBanner.classList.remove("ep-hide");
     try {
       await cachedGet({
@@ -324,7 +324,7 @@
 
   function renderSession(s) {
     const div = document.createElement("article");
-    // Marca lateral colorida â€” espelha o badge: ouro pra agendada/em-sessÃ£o,
+    // Marca lateral colorida — espelha o badge: ouro pra agendada/em-sessão,
     // terracota pra encerrada. Identifica o status sem ler o badge.
     let sideClass = "";
     if (s.status === "in_progress" || (s.status !== "completed" && s.status !== "canceled")) {
@@ -339,8 +339,8 @@
         <div class="ep-session__meta">
           ${statusBadge(s.status)}
           <span>Criada ${fmtDate(s.createdAt)}</span>
-          ${s.scheduledAt ? `<span>Â· Agendada ${fmtDate(s.scheduledAt)}</span>` : ""}
-          ${s.completedAt ? `<span>Â· Encerrada ${fmtDate(s.completedAt)}</span>` : ""}
+          ${s.scheduledAt ? `<span>· Agendada ${fmtDate(s.scheduledAt)}</span>` : ""}
+          ${s.completedAt ? `<span>· Encerrada ${fmtDate(s.completedAt)}</span>` : ""}
         </div>
       </div>
       <div class="ep-session__actions">
@@ -351,7 +351,7 @@
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="encerrar" data-id="${s.sessionId}">Encerrar</button>
         ` : ""}
         ${s.status === "completed" ? `
-          <button class="ep-btn-icon" data-action="ocultar" data-id="${s.sessionId}" aria-label="Remover da lista" title="Remover da lista (mantÃ©m no prontuÃ¡rio)">
+          <button class="ep-btn-icon" data-action="ocultar" data-id="${s.sessionId}" aria-label="Remover da lista" title="Remover da lista (mantém no prontuário)">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
         ` : ""}
@@ -375,7 +375,7 @@
     if (action === "enter") {
       window.location.href = `./consultorio.html?session=${encodeURIComponent(id)}`;
     } else if (action === "encerrar") {
-      if (!confirm("Encerrar esta consulta? Ela ficarÃ¡ marcada como concluÃ­da.")) return;
+      if (!confirm("Encerrar esta consulta? Ela ficará marcada como concluída.")) return;
       btn.disabled = true;
       try {
         await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/encerrar`, {
@@ -389,7 +389,7 @@
         alert("Erro ao encerrar.");
       }
     } else if (action === "ocultar") {
-      if (!confirm("Remover esta consulta da lista? O registro permanece no prontuÃ¡rio do paciente â€” sÃ³ some daqui.")) return;
+      if (!confirm("Remover esta consulta da lista? O registro permanece no prontuário do paciente — só some daqui.")) return;
       btn.disabled = true;
       try {
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/ocultar`, {
@@ -407,7 +407,7 @@
     }
   });
 
-  // â”€â”€â”€ Nova consulta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Nova consulta ──────────────────────────────────────────
   const newSessionModal = document.getElementById("newSessionModal");
   const linkModal       = document.getElementById("linkModal");
   const patientSelect   = document.getElementById("patientSelect");
@@ -415,12 +415,12 @@
 
   // Carrega pacientes do profissional (decifra nomes localmente) para o select.
   // O select tem 3 grupos:
-  //   â€¢ Pacientes cadastrados â€” value="id:<patientId>"
-  //   â€¢ Atendidos antes (avulso) â€” value="name:<nome>" (extraÃ­do de allSessions)
-  //   â€¢ + Cadastrar novo paciente â€” value="__new__"  â†’ pacientes.html
-  // Vazio (default) â†’ liberado para digitar nome avulso.
+  //   • Pacientes cadastrados — value="id:<patientId>"
+  //   • Atendidos antes (avulso) — value="name:<nome>" (extraído de allSessions)
+  //   • + Cadastrar novo paciente — value="__new__"  → pacientes.html
+  // Vazio (default) → liberado para digitar nome avulso.
   let patientsCache = [];   // cadastrados
-  let avulsoCache   = [];   // nomes Ãºnicos sem patientId em sessÃµes anteriores
+  let avulsoCache   = [];   // nomes únicos sem patientId em sessões anteriores
 
   async function loadPatientsForSelect() {
     try {
@@ -433,7 +433,7 @@
           try {
             const json = await decryptNote({ ciphertext: p.ciphertext, iv: p.iv }, dek);
             const obj = JSON.parse(json);
-            return { patientId: p.patientId, name: obj.name || "â€”" };
+            return { patientId: p.patientId, name: obj.name || "—" };
           } catch {
             return { patientId: p.patientId, name: "[corrompido]" };
           }
@@ -443,9 +443,9 @@
       console.warn("load_patients_for_select_error", err);
     }
 
-    // Extrai nomes avulsos Ãºnicos do histÃ³rico de sessÃµes jÃ¡ carregado.
-    // Considera apenas sessÃµes SEM patientId (nÃ£o vinculadas a cadastro)
-    // e que tÃªm nome significativo (â‰  "Paciente" default).
+    // Extrai nomes avulsos únicos do histórico de sessões já carregado.
+    // Considera apenas sessões SEM patientId (não vinculadas a cadastro)
+    // e que têm nome significativo (≠ "Paciente" default).
     const seen = new Set();
     avulsoCache = [];
     const cadastradosLower = new Set(patientsCache.map(p => p.name.toLowerCase()));
@@ -455,18 +455,18 @@
       if (!name || name.toLowerCase() === "paciente") continue;
       const key = name.toLowerCase();
       if (seen.has(key)) continue;
-      // nÃ£o duplicar: se jÃ¡ estÃ¡ cadastrado com mesmo nome, pula
+      // não duplicar: se já está cadastrado com mesmo nome, pula
       if (cadastradosLower.has(key)) continue;
       seen.add(key);
       avulsoCache.push({ name, lastSession: s.createdAt || 0 });
     }
     avulsoCache.sort((a, b) => (b.lastSession || 0) - (a.lastSession || 0));
 
-    // ReconstrÃ³i o select.
+    // Reconstrói o select.
     patientSelect.innerHTML = "";
     const optDefault = document.createElement("option");
     optDefault.value = "";
-    optDefault.textContent = "â€” Selecione ou digite o nome â€”";
+    optDefault.textContent = "— Selecione ou digite o nome —";
     patientSelect.appendChild(optDefault);
 
     const optNew = document.createElement("option");
@@ -578,11 +578,11 @@
       return;
     }
     if (recurrenceWeeks > 1 && !scheduledAtRaw) {
-      statusEl.textContent = "Defina um horÃ¡rio para repetir semanalmente.";
+      statusEl.textContent = "Defina um horário para repetir semanalmente.";
       statusEl.className = "ep-status is-err";
       return;
     }
-    statusEl.textContent = "Criandoâ€¦";
+    statusEl.textContent = "Criando…";
     statusEl.className = "ep-status";
 
     const scheduledAt = scheduledAtRaw ? new Date(scheduledAtRaw).getTime() : null;
@@ -607,7 +607,7 @@
       const data = await res.json().catch(() => ({}));
       if (res.status === 402) {
         // Trial expirado / sem assinatura ativa. Manda pro perfil pra contratar.
-        if (confirm("Sua trial expirou. VocÃª precisa contratar um plano para criar consultas. Ir para o perfil agora?")) {
+        if (confirm("Sua trial expirou. Você precisa contratar um plano para criar consultas. Ir para o perfil agora?")) {
           window.location.href = "./perfil.html";
         }
         return;
@@ -619,7 +619,7 @@
       }
       closeModal(newSessionModal);
 
-      // Veio da lista de espera? Remove a entrada apÃ³s criar a consulta.
+      // Veio da lista de espera? Remove a entrada após criar a consulta.
       const waitlistId = sessionStorage.getItem("ep:waitlist-after-create");
       if (waitlistId) {
         sessionStorage.removeItem("ep:waitlist-after-create");
@@ -631,12 +631,12 @@
 
       const link = buildPatientLink(data.session.joinToken);
       document.getElementById("linkValue").textContent = link;
-      // Indica sÃ©rie criada â€” link mostrado Ã© da PRIMEIRA ocorrÃªncia. Demais
-      // tÃªm joinToken on-demand (ver popover de cada uma na agenda).
+      // Indica série criada — link mostrado é da PRIMEIRA ocorrência. Demais
+      // têm joinToken on-demand (ver popover de cada uma na agenda).
       const linkSubEl = document.getElementById("linkSubtitle");
       if (linkSubEl) {
         linkSubEl.textContent = data.recurrence
-          ? `SÃ©rie de ${data.recurrence.count} consultas criada. Este Ã© o link da 1Âª â€” pegue os links das demais na agenda, no dia.`
+          ? `Série de ${data.recurrence.count} consultas criada. Este é o link da 1ª — pegue os links das demais na agenda, no dia.`
           : "";
       }
       linkModal.classList.add("is-open");
@@ -671,13 +671,13 @@
   await loadSessions();
   await loadPatientsForSelect();
 
-  // Tour de boas-vindas pro 1Âº acesso (no-op se jÃ¡ viu â€” flag em localStorage).
-  // Disparado depois do load pra nÃ£o bloquear a UI inicial.
+  // Tour de boas-vindas pro 1º acesso (no-op se já viu — flag em localStorage).
+  // Disparado depois do load pra não bloquear a UI inicial.
   runOnboarding();
 
-  // Recarrega a lista quando a aba volta a ficar visÃ­vel. Usa caso comum:
-  // profissional encerra sessÃ£o em consultorio.html, volta pra cÃ¡ â€” sem isso,
-  // o card permanece "Agendada" atÃ© refresh manual. SWR jÃ¡ evita flash.
+  // Recarrega a lista quando a aba volta a ficar visível. Usa caso comum:
+  // profissional encerra sessão em consultorio.html, volta pra cá — sem isso,
+  // o card permanece "Agendada" até refresh manual. SWR já evita flash.
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
       invalidateApi("sessoes", uid);
@@ -686,7 +686,7 @@
   });
 
   // Auto-abrir modal se vier de prontuario.html?newWith=ID&name=... ou de
-  // agenda.html?newAt=ISO (slot de horÃ¡rio clicado).
+  // agenda.html?newAt=ISO (slot de horário clicado).
   (function maybeAutoOpen() {
     const params = new URLSearchParams(location.search);
     const newWith = params.get("newWith");

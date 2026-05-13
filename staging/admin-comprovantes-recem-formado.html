@@ -1,33 +1,33 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Â· Comprovantes RecÃ©m-formado Â· EspaÃ§o PrelÃºdio</title>
+  <title>Admin · Comprovantes Recém-formado · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-25">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-24">
 </head>
 <body>
 
 <div class="ep-shell">
   <header class="ep-topbar">
-    <a href="./index.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">EspaÃ§o</span>
-        <span>PrelÃºdio Â· Admin</span>
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio · Admin</span>
       </span>
     </a>
     <nav class="ep-nav">
       <a href="./admin-verificacoes.html" class="ep-text-sm">CRP/CRM</a>
       <a href="./admin-comprovantes.html" class="ep-text-sm">Estudante</a>
-      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm" style="font-weight: 600;">RecÃ©m-formado</a>
+      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm" style="font-weight: 600;">Recém-formado</a>
       <a href="./admin-comprovantes-formacao.html" class="ep-text-sm">Sem conselho</a>
-      <span id="adminEmail" class="ep-text-sm ep-text-muted">â€¦</span>
+      <span id="adminEmail" class="ep-text-sm ep-text-muted">…</span>
       <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Sair</button>
     </nav>
   </header>
@@ -56,11 +56,11 @@
       <div class="ep-flex" style="justify-content: space-between; align-items: end; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
         <div>
           <div class="ep-eyebrow">Painel administrativo</div>
-          <h1 class="ep-h1 ep-mt-12">Comprovantes RecÃ©m-formado</h1>
-          <p class="ep-text-muted ep-mt-0">InscriÃ§Ãµes CRP/CRM cuja IA nÃ£o teve confianÃ§a automÃ¡tica suficiente.</p>
+          <h1 class="ep-h1 ep-mt-12">Comprovantes Recém-formado</h1>
+          <p class="ep-text-muted ep-mt-0">Inscrições CRP/CRM cuja IA não teve confiança automática suficiente.</p>
         </div>
         <div class="ep-flex" style="gap: 6px;">
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="pending-review">Em revisÃ£o</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="pending-review">Em revisão</button>
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="eligible">Aprovados</button>
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="rejected">Rejeitados</button>
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="all">Todos</button>
@@ -68,14 +68,14 @@
       </div>
 
       <div id="list" class="ep-stack" style="gap: 12px;">
-        <div class="ep-skeleton">Carregandoâ€¦</div>
+        <div class="ep-skeleton">Carregando…</div>
       </div>
     </section>
 
     <section id="forbiddenPanel" class="ep-hide" style="max-width: 460px; margin: 60px auto; text-align: center;">
       <div class="ep-auth__panel">
         <h2 class="ep-auth__title">Acesso negado.</h2>
-        <p class="ep-auth__sub">Sua conta nÃ£o estÃ¡ na allowlist de admin.</p>
+        <p class="ep-auth__sub">Sua conta não está na allowlist de admin.</p>
         <button class="ep-btn ep-btn--ghost ep-btn--block ep-mt-16" type="button" id="forbiddenLogout">Sair</button>
       </div>
     </section>
@@ -116,13 +116,13 @@
     }[c]));
   }
   function fmtDate(ms) {
-    if (!ms) return "â€”";
+    if (!ms) return "—";
     return new Date(ms).toLocaleString("pt-BR", {
       day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
     });
   }
   function fmtSize(bytes) {
-    if (!bytes) return "â€”";
+    if (!bytes) return "—";
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / 1024 / 1024).toFixed(2) + " MB";
@@ -139,10 +139,10 @@
     const statusEl = document.getElementById("loginStatus");
     const loginBtn = document.getElementById("loginBtn");
     loginBtn.disabled = true;
-    statusEl.textContent = "Autenticandoâ€¦";
+    statusEl.textContent = "Autenticando…";
     try { await signInWithEmailAndPassword(auth, email, password); }
     catch (err) {
-      statusEl.textContent = err?.message || "Erro de autenticaÃ§Ã£o.";
+      statusEl.textContent = err?.message || "Erro de autenticação.";
       statusEl.className = "ep-status is-err";
       loginBtn.disabled = false;
     }
@@ -170,7 +170,7 @@
   }
 
   async function loadList() {
-    listEl.innerHTML = `<div class="ep-skeleton">Carregandoâ€¦</div>`;
+    listEl.innerHTML = `<div class="ep-skeleton">Carregando…</div>`;
     try {
       const data = await api(`/therapy/admin/comprovantes-recem-formado?status=${currentFilter}`);
       renderList(data.items || []);
@@ -188,7 +188,7 @@
     listEl.innerHTML = "";
     for (const item of items) {
       const ext = item.recemFormadoDoc?.extracted || {};
-      const conf = item.recemFormadoDoc?.confidence != null ? Math.round(item.recemFormadoDoc.confidence * 100) + "%" : "â€”";
+      const conf = item.recemFormadoDoc?.confidence != null ? Math.round(item.recemFormadoDoc.confidence * 100) + "%" : "—";
       const card = document.createElement("article");
       card.className = "ep-admin-card";
       const meses = ext.monthsSinceInscricao;
@@ -196,13 +196,13 @@
         <div>
           <div class="ep-admin-card__name">${escapeHtml(item.displayName || "(sem nome)")}</div>
           <div class="ep-admin-card__meta">
-            ${ext.conselho ? escapeHtml(ext.conselho) : "?"} ${ext.registro ? "Â· " + escapeHtml(ext.registro) : ""}
+            ${ext.conselho ? escapeHtml(ext.conselho) : "?"} ${ext.registro ? "· " + escapeHtml(ext.registro) : ""}
             ${ext.regiao ? " (" + escapeHtml(ext.regiao) + ")" : ""}
-            ${meses != null ? " Â· inscrito hÃ¡ " + meses + (meses === 1 ? " mÃªs" : " meses") : ""}
+            ${meses != null ? " · inscrito há " + meses + (meses === 1 ? " mês" : " meses") : ""}
             <br>
             Plano: <strong>${escapeHtml(item.plano || "?")}</strong>
-            Â· IA: ${conf}
-            Â· Enviado ${fmtDate(item.recemFormadoDoc?.lastUploadedAt)}
+            · IA: ${conf}
+            · Enviado ${fmtDate(item.recemFormadoDoc?.lastUploadedAt)}
           </div>
         </div>
         <div class="ep-flex" style="gap: 8px; align-items: center;">
@@ -226,7 +226,7 @@
   async function openDetail(uid) {
     activeUid = uid;
     modal.classList.add("is-open");
-    modalBody.innerHTML = `<div class="ep-skeleton">Carregandoâ€¦</div>`;
+    modalBody.innerHTML = `<div class="ep-skeleton">Carregando…</div>`;
     approveBtn.disabled = true;
     rejectBtn.disabled  = true;
     try {
@@ -234,10 +234,10 @@
       const t = item.therapist || {};
       const ext = item.extracted || {};
       const dataUrl = `data:${item.mediaType};base64,${item.fileBase64}`;
-      modalTitle.textContent = `RecÃ©m-formado Â· ${t.displayName || ""}`;
+      modalTitle.textContent = `Recém-formado · ${t.displayName || ""}`;
 
       const reasonsHtml = (item.reasons || []).map(r => `<li>${escapeHtml(r)}</li>`).join("");
-      const conf = item.confidence != null ? Math.round(item.confidence * 100) + "%" : "â€”";
+      const conf = item.confidence != null ? Math.round(item.confidence * 100) + "%" : "—";
       const meses = ext.monthsSinceInscricao;
 
       modalBody.innerHTML = `
@@ -246,17 +246,17 @@
             <div class="ep-text-sm ep-text-muted ep-mt-0"><strong>Profissional cadastrado</strong></div>
             <p style="margin: 4px 0;">${escapeHtml(t.displayName || "")}<br>
               <span class="ep-text-sm ep-text-muted">${escapeHtml(t.email || "")}</span><br>
-              <span class="ep-text-sm ep-text-muted">${t.crp ? "CRP " + escapeHtml(t.crp) : ""} ${t.crm ? " Â· CRM " + escapeHtml(t.crm) : ""}</span>
+              <span class="ep-text-sm ep-text-muted">${t.crp ? "CRP " + escapeHtml(t.crp) : ""} ${t.crm ? " · CRM " + escapeHtml(t.crm) : ""}</span>
             </p>
 
-            <div class="ep-text-sm ep-text-muted ep-mt-16"><strong>ExtraÃ­do pela IA Â· confianÃ§a ${conf}</strong></div>
+            <div class="ep-text-sm ep-text-muted ep-mt-16"><strong>Extraído pela IA · confiança ${conf}</strong></div>
             <p style="margin: 4px 0; font-size: 13.5px;">
-              <strong>Nome:</strong> ${escapeHtml(ext.nome || "â€”")}<br>
-              <strong>Conselho:</strong> ${escapeHtml(ext.conselho || "â€”")}<br>
-              <strong>Registro:</strong> ${escapeHtml(ext.registro || "â€”")} ${ext.regiao ? "(" + escapeHtml(ext.regiao) + ")" : ""}<br>
-              <strong>Data inscriÃ§Ã£o:</strong> ${escapeHtml(ext.dataInscricao || "â€”")} ${meses != null ? "(" + meses + (meses === 1 ? " mÃªs" : " meses") + " atrÃ¡s)" : ""} ${meses != null && meses <= 12 ? "âœ“ dentro" : "âœ— fora"} da janela<br>
-              <strong>SituaÃ§Ã£o:</strong> ${escapeHtml(ext.situacao || "â€”")}<br>
-              <strong>Tipo doc:</strong> ${escapeHtml(ext.tipoDocumento || "â€”")}<br>
+              <strong>Nome:</strong> ${escapeHtml(ext.nome || "—")}<br>
+              <strong>Conselho:</strong> ${escapeHtml(ext.conselho || "—")}<br>
+              <strong>Registro:</strong> ${escapeHtml(ext.registro || "—")} ${ext.regiao ? "(" + escapeHtml(ext.regiao) + ")" : ""}<br>
+              <strong>Data inscrição:</strong> ${escapeHtml(ext.dataInscricao || "—")} ${meses != null ? "(" + meses + (meses === 1 ? " mês" : " meses") + " atrás)" : ""} ${meses != null && meses <= 12 ? "✓ dentro" : "✗ fora"} da janela<br>
+              <strong>Situação:</strong> ${escapeHtml(ext.situacao || "—")}<br>
+              <strong>Tipo doc:</strong> ${escapeHtml(ext.tipoDocumento || "—")}<br>
               ${ext.observacoes ? `<strong>Obs IA:</strong> <em>${escapeHtml(ext.observacoes)}</em>` : ""}
             </p>
 
@@ -269,13 +269,13 @@
             </div>
 
             <div class="ep-text-sm ep-text-muted ep-mt-12">
-              <strong>Tamanho:</strong> ${fmtSize(item.fileSize)} Â· ${escapeHtml(item.mediaType)}<br>
-              <strong>Hash:</strong> <code style="font-size: 11px;">${escapeHtml(item.fileHash || "").slice(0, 16)}â€¦</code>
+              <strong>Tamanho:</strong> ${fmtSize(item.fileSize)} · ${escapeHtml(item.mediaType)}<br>
+              <strong>Hash:</strong> <code style="font-size: 11px;">${escapeHtml(item.fileHash || "").slice(0, 16)}…</code>
             </div>
           </div>
           <div>
             ${item.mediaType === "application/pdf"
-              ? `<a class="ep-btn ep-btn--ghost ep-btn--block" href="${dataUrl}" target="_blank">Abrir PDF em nova aba â†—</a>`
+              ? `<a class="ep-btn ep-btn--ghost ep-btn--block" href="${dataUrl}" target="_blank">Abrir PDF em nova aba ↗</a>`
               : `<img src="${dataUrl}" alt="Comprovante" style="max-width: 100%; max-height: 600px; border-radius: 10px; border: 1px solid rgba(28,31,29,0.10);">`
             }
           </div>
@@ -290,7 +290,7 @@
 
   approveBtn.addEventListener("click", async () => {
     if (!activeUid) return;
-    if (!confirm("Aprovar inscriÃ§Ã£o como recÃ©m-formado? O profissional poderÃ¡ contratar a R$ 49,90/mÃªs.")) return;
+    if (!confirm("Aprovar inscrição como recém-formado? O profissional poderá contratar a R$ 49,90/mês.")) return;
     const notes = prompt("Notas internas (opcional):", "") || "";
     approveBtn.disabled = true;
     try {

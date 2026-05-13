@@ -1,38 +1,38 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Consulta Â· EspaÃ§o PrelÃºdio</title>
+  <title>Consulta · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-25">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-24">
 </head>
 <body class="ep-consult">
 
-<div class="ep-staging-banner">Ambiente de teste Â· EspaÃ§o PrelÃºdio Â· staging</div>
+<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
 
-<!-- Tela 1: prÃ©-entrada com nome + consentimento -->
+<!-- Tela 1: pré-entrada com nome + consentimento -->
 <div id="prejoin" style="min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--ep-bg); color: var(--ep-ink);">
   <div class="ep-auth__panel" style="max-width: 480px;">
-    <a href="./index.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">EspaÃ§o</span>
-        <span>PrelÃºdio</span>
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
       </span>
     </a>
 
-    <h1 class="ep-auth__title ep-mt-32">Sua consulta comeÃ§ou.</h1>
+    <h1 class="ep-auth__title ep-mt-32">Sua consulta começou.</h1>
     <p class="ep-auth__sub" id="prejoinHello">
-      VocÃª foi convidado(a) por <strong id="therapistNameLbl">um profissional</strong>.
+      Você foi convidado(a) por <strong id="therapistNameLbl">um profissional</strong>.
       Confirme seu nome e leia rapidamente como protegemos seus dados.
     </p>
 
-    <!-- Status da conta: badge (logado) ou CTA (anÃ´nimo) -->
+    <!-- Status da conta: badge (logado) ou CTA (anônimo) -->
     <div id="accountSlot" class="ep-mt-12"></div>
 
     <div class="ep-stack ep-mt-12">
@@ -44,15 +44,15 @@
       <div class="ep-alert ep-alert--info">
         <strong>O que protegemos:</strong>
         <ul style="margin: 8px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.55;">
-          <li>O Ã¡udio e vÃ­deo sÃ£o <strong>cifrados ponta a ponta</strong> â€” sÃ³ vocÃª e o(a) profissional veem/ouvem.</li>
-          <li>NÃ£o gravamos nada. NÃ£o hÃ¡ cookie de rastreio.</li>
-          <li>Suas informaÃ§Ãµes dadas em consulta ficam sob responsabilidade Ã©tica e legal do(a) profissional, conforme a ResoluÃ§Ã£o CFP nÂº 11/2018.</li>
+          <li>O áudio e vídeo são <strong>cifrados ponta a ponta</strong> — só você e o(a) profissional veem/ouvem.</li>
+          <li>Não gravamos nada. Não há cookie de rastreio.</li>
+          <li>Suas informações dadas em consulta ficam sob responsabilidade ética e legal do(a) profissional, conforme a Resolução CFP nº 11/2018.</li>
         </ul>
       </div>
 
       <label class="ep-checkbox">
         <input type="checkbox" id="consentLgpd">
-        <span>Confirmo que aceito iniciar a sessÃ£o de teleconsulta. ReconheÃ§o que os dados de saÃºde compartilhados sÃ£o protegidos pela LGPD (Art. 11) e seguem o sigilo profissional.</span>
+        <span>Confirmo que aceito iniciar a sessão de teleconsulta. Reconheço que os dados de saúde compartilhados são protegidos pela LGPD (Art. 11) e seguem o sigilo profissional.</span>
       </label>
 
       <div class="ep-status" id="prejoinStatus"></div>
@@ -69,11 +69,11 @@
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
         <span class="ep-brand__lead">Em consulta com</span>
-        <span id="topTherapistName">â€”</span>
+        <span id="topTherapistName">—</span>
       </span>
     </div>
     <div class="ep-flex ep-flex--center ep-gap-14 ep-w-full">
-      <span id="connectionStatus" class="ep-consult__status">conectandoâ€¦</span>
+      <span id="connectionStatus" class="ep-consult__status">conectando…</span>
       <span id="e2eeBadge" class="ep-badge ep-badge--ok ep-hide">E2EE ativo</span>
     </div>
   </header>
@@ -82,44 +82,44 @@
     <section class="ep-consult__video ep-consult__video--solo" id="videoArea">
       <div class="ep-tile ep-tile--gilded" id="tileLocal">
         <video id="videoLocal" autoplay muted playsinline></video>
-        <div class="ep-tile__name">VocÃª</div>
+        <div class="ep-tile__name">Você</div>
       </div>
       <div class="ep-tile ep-tile--gilded" id="tileRemote">
         <div class="ep-tile__placeholder" id="remotePlaceholder">
           <div class="ep-waiting">
             <div class="ep-waiting__pulse" aria-hidden="true"></div>
-            <div class="ep-waiting__text">Seu terapeuta estÃ¡ se preparando.</div>
-            <div class="ep-waiting__sub">A consulta comeÃ§arÃ¡ em instantes.</div>
+            <div class="ep-waiting__text">Seu terapeuta está se preparando.</div>
+            <div class="ep-waiting__sub">A consulta começará em instantes.</div>
           </div>
         </div>
         <video id="videoRemote" autoplay playsinline class="ep-hide"></video>
         <div class="ep-tile__name ep-hide" id="remoteName"></div>
       </div>
 
-      <!-- Bloco inferior: cÃ¡psula de tranquilizaÃ§Ã£o (waiting) ou anotaÃ§Ãµes pessoais (session) -->
+      <!-- Bloco inferior: cápsula de tranquilização (waiting) ou anotações pessoais (session) -->
       <div class="ep-bottom-stack" id="bottomStack" data-state="waiting">
-        <div class="ep-patient-info" data-show-on="waiting" aria-label="InformaÃ§Ãµes da sessÃ£o">
+        <div class="ep-patient-info" data-show-on="waiting" aria-label="Informações da sessão">
           <span class="ep-lock">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-            VÃ­deo cifrado
+            Vídeo cifrado
           </span>
-          <span class="ep-patient-info__sep" aria-hidden="true">Â·</span>
-          <span>Sua privacidade Ã© garantida durante toda a sessÃ£o.</span>
-          <span class="ep-patient-info__sep" aria-hidden="true">Â·</span>
-          <span>Respire. VocÃª estÃ¡ em um espaÃ§o cuidado.</span>
+          <span class="ep-patient-info__sep" aria-hidden="true">·</span>
+          <span>Sua privacidade é garantida durante toda a sessão.</span>
+          <span class="ep-patient-info__sep" aria-hidden="true">·</span>
+          <span>Respire. Você está em um espaço cuidado.</span>
         </div>
 
-        <div class="ep-patient-notes" data-show-on="session" aria-label="Suas anotaÃ§Ãµes pessoais">
+        <div class="ep-patient-notes" data-show-on="session" aria-label="Suas anotações pessoais">
           <div class="ep-patient-notes__head">
             <span class="ep-lock">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-              <span id="notesScopeLabel">Suas anotaÃ§Ãµes Â· sÃ³ vocÃª vÃª</span>
+              <span id="notesScopeLabel">Suas anotações · só você vê</span>
             </span>
             <span class="ep-text-xs ep-text-muted" id="patientNotesStatus">&nbsp;</span>
           </div>
           <div class="ep-patient-notes__list" id="patientNotesList"></div>
           <div class="ep-patient-notes__composer">
-            <textarea id="patientNoteInput" placeholder="Anote o que quiser lembrar dessa sessÃ£oâ€¦" maxlength="2000"></textarea>
+            <textarea id="patientNoteInput" placeholder="Anote o que quiser lembrar dessa sessão…" maxlength="2000"></textarea>
             <button id="patientNoteSave" type="button" class="ep-btn ep-btn--primary ep-btn--sm">Salvar</button>
           </div>
         </div>
@@ -129,7 +129,7 @@
         <button class="ep-ctrl" id="ctrlMic" type="button" title="Silenciar microfone" aria-pressed="false">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
         </button>
-        <button class="ep-ctrl" id="ctrlCam" type="button" title="Desligar cÃ¢mera" aria-pressed="false">
+        <button class="ep-ctrl" id="ctrlCam" type="button" title="Desligar câmera" aria-pressed="false">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="m17 10 4-2v8l-4-2z"/></svg>
         </button>
         <button class="ep-ctrl ep-ctrl--leave" id="ctrlLeave" type="button" title="Sair da consulta">
@@ -140,18 +140,18 @@
   </main>
 </div>
 
-<!-- Tela 3: erro / link invÃ¡lido -->
+<!-- Tela 3: erro / link inválido -->
 <div id="errorScreen" class="ep-hide" style="min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--ep-bg); color: var(--ep-ink);">
   <div class="ep-auth__panel" style="max-width: 460px; text-align: center;">
-    <a href="./index.html" class="ep-brand" style="justify-content: center;" aria-label="EspaÃ§o PrelÃºdio">
+    <a href="./index.html" class="ep-brand" style="justify-content: center;" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">EspaÃ§o</span>
-        <span>PrelÃºdio</span>
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
       </span>
     </a>
-    <h1 class="ep-auth__title ep-mt-32">Link invÃ¡lido ou expirado.</h1>
-    <p class="ep-auth__sub" id="errorMsg">PeÃ§a um novo link ao(Ã ) profissional.</p>
+    <h1 class="ep-auth__title ep-mt-32">Link inválido ou expirado.</h1>
+    <p class="ep-auth__sub" id="errorMsg">Peça um novo link ao(à) profissional.</p>
   </div>
 </div>
 
@@ -180,14 +180,14 @@
   }
 
   if (!joinToken) {
-    showError("O link da consulta estÃ¡ faltando. PeÃ§a um novo ao(Ã ) profissional.");
+    showError("O link da consulta está faltando. Peça um novo ao(à) profissional.");
     throw new Error("NO_TOKEN");
   }
 
-  // â”€â”€â”€ Detecta modo de auth ANTES de mostrar o prÃ©-join â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Detecta modo de auth ANTES de mostrar o pré-join ─────────────────
   // - "logged"   : Firebase user + perfil paciente carregado + DEK em sessionStorage
   // - "anon"     : sem login, ou login mas sem DEK (vai como visitante)
-  // AnotaÃ§Ãµes: server-side cifradas (logged) ou sessionStorage (anon).
+  // Anotações: server-side cifradas (logged) ou sessionStorage (anon).
 
   const consentEl = document.getElementById("consentLgpd");
   const startBtn  = document.getElementById("startBtn");
@@ -250,7 +250,7 @@
       const sub = document.createElement("p");
       sub.className = "ep-text-xs ep-text-muted ep-mt-8";
       sub.style.marginBottom = "0";
-      sub.innerHTML = `Suas anotaÃ§Ãµes desta sessÃ£o ficarÃ£o salvas na sua conta. <a href="./paciente-painel.html" target="_blank" style="color: var(--ep-accent); text-decoration: underline;">Ver minhas anotaÃ§Ãµes</a>`;
+      sub.innerHTML = `Suas anotações desta sessão ficarão salvas na sua conta. <a href="./paciente-painel.html" target="_blank" style="color: var(--ep-accent); text-decoration: underline;">Ver minhas anotações</a>`;
       accountSlot.appendChild(sub);
     } else {
       const cta = document.createElement("div");
@@ -260,10 +260,10 @@
       cta.style.color = "var(--ep-ink)";
       const back = encodeURIComponent(location.pathname + location.search);
       cta.innerHTML = `
-        <strong>Quer guardar suas anotaÃ§Ãµes?</strong>
-        VocÃª pode entrar como visitante (anotaÃ§Ãµes somem ao fechar a aba) ou
+        <strong>Quer guardar suas anotações?</strong>
+        Você pode entrar como visitante (anotações somem ao fechar a aba) ou
         <a href="./paciente-cadastro.html?next=${back}" style="color: var(--ep-accent); font-weight: 600;">criar uma conta gratuita</a>.
-        JÃ¡ tem conta?
+        Já tem conta?
         <a href="./paciente-login.html?redirect=${back}" style="color: var(--ep-accent); font-weight: 600;">Entrar</a>.
       `;
       accountSlot.appendChild(cta);
@@ -280,7 +280,7 @@
   startBtn.addEventListener("click", async () => {
     if (!consentEl.checked) return;
     startBtn.disabled = true;
-    statusEl.textContent = "conectandoâ€¦";
+    statusEl.textContent = "conectando…";
     statusEl.className = "ep-status";
 
     let joinRes;
@@ -308,7 +308,7 @@
     if (!joinRes.ok || !data.ok) {
       const code = data?.error || joinRes.status;
       if (code === "SESSAO_ENCERRADA" || code === "TOKEN_EXPIRADO" || code === 401 || code === 410) {
-        showError("A consulta jÃ¡ foi encerrada ou o link expirou.");
+        showError("A consulta já foi encerrada ou o link expirou.");
       } else {
         statusEl.textContent = "Erro: " + code;
         statusEl.className = "ep-status is-err";
@@ -366,9 +366,9 @@
     const bottomStack = document.getElementById("bottomStack");
     function setBottomState(state) { bottomStack.dataset.state = state; }
 
-    // â”€â”€â”€ AnotaÃ§Ãµes pessoais â€” duas formas de armazenar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    // mode "logged" â†’ POST /paciente/notas (cifrado E2EE com DEK do paciente)
-    // mode "anon"   â†’ sessionStorage (some ao fechar aba)
+    // ─── Anotações pessoais — duas formas de armazenar ──────────────────
+    // mode "logged" → POST /paciente/notas (cifrado E2EE com DEK do paciente)
+    // mode "anon"   → sessionStorage (some ao fechar aba)
     const sessionId = data.sessionId || "anon";
     const NOTES_KEY = "ep_patient_notes_" + sessionId;
 
@@ -379,8 +379,8 @@
     const notesScopeLbl = document.getElementById("notesScopeLabel");
 
     notesScopeLbl.textContent = (authMode === "logged")
-      ? "Suas anotaÃ§Ãµes Â· sÃ³ vocÃª vÃª Â· salvas na sua conta"
-      : "Suas anotaÃ§Ãµes Â· sÃ³ vocÃª vÃª Â· somem ao fechar";
+      ? "Suas anotações · só você vê · salvas na sua conta"
+      : "Suas anotações · só você vê · somem ao fechar";
 
     let notes = []; // [{ noteId?, text, createdAt }]
 
@@ -416,7 +416,7 @@
       if (notes.length === 0) {
         const empty = document.createElement("div");
         empty.className = "ep-patient-notes__empty";
-        empty.textContent = "VocÃª ainda nÃ£o escreveu nada. Use este espaÃ§o pra registrar o que quiser lembrar.";
+        empty.textContent = "Você ainda não escreveu nada. Use este espaço pra registrar o que quiser lembrar.";
         notesList.appendChild(empty);
         return;
       }
@@ -464,10 +464,10 @@
       try {
         await saveNote(t);
         noteInput.value = "";
-        noteStatus.textContent = (authMode === "logged") ? "salva na sua conta" : "salva (sessÃ£o atual)";
+        noteStatus.textContent = (authMode === "logged") ? "salva na sua conta" : "salva (sessão atual)";
         setTimeout(() => { noteStatus.textContent = " "; }, 1800);
       } catch (e) {
-        noteStatus.textContent = "Erro ao salvar â€” tente novamente.";
+        noteStatus.textContent = "Erro ao salvar — tente novamente.";
         setTimeout(() => { noteStatus.textContent = " "; }, 2500);
       }
       noteSaveBtn.disabled = false;
@@ -512,8 +512,8 @@
       .on(RoomEvent.Disconnected, () => setStatus("desconectado"));
 
     try {
-      // Ordem canÃ´nica do LiveKit 2.x: setKey + setE2EEEnabled ANTES do connect.
-      // SenÃ£o, auto-subscribe das tracks jÃ¡ publicadas pode rodar antes do
+      // Ordem canônica do LiveKit 2.x: setKey + setE2EEEnabled ANTES do connect.
+      // Senão, auto-subscribe das tracks já publicadas pode rodar antes do
       // worker E2EE estar pronto e essa subscription fica permanentemente muda.
       if (useE2EE) {
         await keyProvider.setKey(e2eeKeyBytes);
@@ -521,15 +521,15 @@
         e2eeBadge.classList.remove("ep-hide");
       }
       await room.connect(data.livekitUrl, data.livekitToken);
-      setStatus("ligando cÃ¢meraâ€¦");
+      setStatus("ligando câmera…");
       await room.localParticipant.enableCameraAndMicrophone();
       const camTrack = Array.from(room.localParticipant.videoTrackPublications.values())[0]?.videoTrack;
       if (camTrack) camTrack.attach(videoLocal);
-      setStatus("em sessÃ£o");
+      setStatus("em sessão");
     } catch (err) {
       console.error("join_error", err);
       setStatus("erro");
-      alert("NÃ£o foi possÃ­vel entrar na consulta:\n" + (err?.message || err));
+      alert("Não foi possível entrar na consulta:\n" + (err?.message || err));
       return;
     }
 

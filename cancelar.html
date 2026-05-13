@@ -1,25 +1,25 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cancelar consulta Â· EspaÃ§o PrelÃºdio</title>
+  <title>Cancelar consulta · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-25">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-24">
 </head>
 <body>
 
 <div class="ep-shell">
   <header class="ep-topbar">
-    <a href="./index.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">EspaÃ§o</span>
-        <span>PrelÃºdio</span>
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
       </span>
     </a>
     <nav class="ep-nav">
@@ -31,19 +31,19 @@
 
     <div id="missingToken" class="ep-hide ep-mt-32">
       <div class="ep-alert ep-alert--danger">
-        Link invÃ¡lido. Use o link enviado no e-mail de confirmaÃ§Ã£o ou de lembrete.
+        Link inválido. Use o link enviado no e-mail de confirmação ou de lembrete.
       </div>
     </div>
 
     <div id="confirmBox" class="ep-hide ep-mt-32">
       <h1 class="ep-h2 ep-mt-0">Cancelar a consulta?</h1>
       <p class="ep-text-muted ep-mt-0">
-        Ao confirmar, sua consulta serÃ¡ cancelada. Cancelamentos exigem antecedÃªncia mÃ­nima de 24 horas â€” abaixo disso, fale direto com o profissional.
+        Ao confirmar, sua consulta será cancelada. Cancelamentos exigem antecedência mínima de 24 horas — abaixo disso, fale direto com o profissional.
       </p>
       <div class="ep-field ep-mt-16">
         <label class="ep-label" for="reason">Motivo (opcional)</label>
         <textarea id="reason" class="ep-textarea" rows="3" maxlength="500"
-          placeholder="Algo que vocÃª queira que o profissional saiba"></textarea>
+          placeholder="Algo que você queira que o profissional saiba"></textarea>
       </div>
       <div class="ep-modal__actions ep-mt-16">
         <a href="./index.html" class="ep-btn ep-btn--ghost">Voltar</a>
@@ -53,13 +53,13 @@
 
     <div id="successBox" class="ep-hide ep-mt-32">
       <div class="ep-alert ep-alert--ok">
-        <strong>Consulta cancelada.</strong> VocÃª pode fechar esta janela.
+        <strong>Consulta cancelada.</strong> Você pode fechar esta janela.
       </div>
     </div>
 
     <div id="errorBox" class="ep-hide ep-mt-32">
       <div class="ep-alert ep-alert--danger">
-        <strong id="errorTitle">NÃ£o foi possÃ­vel cancelar.</strong>
+        <strong id="errorTitle">Não foi possível cancelar.</strong>
         <p id="errorMsg" class="ep-mt-0"></p>
       </div>
     </div>
@@ -84,7 +84,7 @@
     confirmBtn.addEventListener("click", async () => {
       const reason = document.getElementById("reason").value.trim();
       confirmBtn.disabled = true;
-      confirmBtn.textContent = "Cancelandoâ€¦";
+      confirmBtn.textContent = "Cancelando…";
       try {
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/cancelar-publico`, {
           method: "POST",
@@ -101,12 +101,12 @@
           const errorTitle = document.getElementById("errorTitle");
           if (data?.error === "PRAZO_CANCELAMENTO_EXPIRADO") {
             errorTitle.textContent = "Fora da janela de cancelamento.";
-            errorMsg.textContent = data.hint || "Cancelamentos pelo paciente exigem antecedÃªncia mÃ­nima. Fale direto com o profissional.";
+            errorMsg.textContent = data.hint || "Cancelamentos pelo paciente exigem antecedência mínima. Fale direto com o profissional.";
           } else if (data?.error === "SESSAO_JA_ENCERRADA") {
-            errorTitle.textContent = "Consulta jÃ¡ encerrada.";
-            errorMsg.textContent = "Esta consulta jÃ¡ aconteceu â€” nÃ£o hÃ¡ mais o que cancelar.";
+            errorTitle.textContent = "Consulta já encerrada.";
+            errorMsg.textContent = "Esta consulta já aconteceu — não há mais o que cancelar.";
           } else {
-            errorTitle.textContent = "NÃ£o foi possÃ­vel cancelar.";
+            errorTitle.textContent = "Não foi possível cancelar.";
             errorMsg.textContent = data?.error || `HTTP ${res.status}`;
           }
           errorBox.classList.remove("ep-hide");
