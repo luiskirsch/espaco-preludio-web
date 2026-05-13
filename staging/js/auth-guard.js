@@ -252,6 +252,21 @@ function prefetchNavLinks() {
   else window.addEventListener("load", () => setTimeout(run, 50), { once: true });
 }
 
+// Hidrata o avatar do topbar + monta o botão de ajuda SYNC a partir do cache
+// em sessionStorage, antes de qualquer await. Elimina o flicker "·" → "RF"
+// na navegação entre páginas (mesma aba).
+(function hydrateChromeFromCache() {
+  if (typeof document === "undefined") return;
+  try {
+    const raw = sessionStorage.getItem(PROFILE_CACHE_KEY);
+    if (!raw) return;
+    const entry = JSON.parse(raw);
+    if (!entry?.profile?.therapist) return;
+    applyTopUserSlot(entry.profile.therapist);
+    mountHelpBubble();
+  } catch { /* no-op */ }
+})();
+
 export async function requireTherapist({ requireDek = true } = {}) {
   const user = await authReady();
   if (!user) {

@@ -255,6 +255,25 @@ function prefetchNavLinks() {
   else window.addEventListener("load", () => setTimeout(run, 50), { once: true });
 }
 
+// Hidrata o avatar do topbar + monta o botão de ajuda SYNC a partir do cache
+// em sessionStorage, antes de qualquer await. Elimina o flicker "·" → "RF"
+// na navegação entre páginas (mesma aba). Sem cache (1ª visita) = no-op, e o
+// requireTherapist aplica depois com dados frescos.
+//
+// Módulos ES são deferred — quando este IIFE roda, o DOM já está parseado e
+// os elementos #topUserAvatar/#topUserName existem.
+(function hydrateChromeFromCache() {
+  if (typeof document === "undefined") return;
+  try {
+    const raw = sessionStorage.getItem(PROFILE_CACHE_KEY);
+    if (!raw) return;
+    const entry = JSON.parse(raw);
+    if (!entry?.profile?.therapist) return;
+    applyTopUserSlot(entry.profile.therapist);
+    mountHelpBubble();
+  } catch { /* no-op silencioso */ }
+})();
+
 export async function requireTherapist({ requireDek = true } = {}) {
   const user = await authReady();
   if (!user) {
