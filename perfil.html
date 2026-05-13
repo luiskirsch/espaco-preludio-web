@@ -9,7 +9,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-34">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-35">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#2d4a3e">
+  <script src="./js/pwa.js?v=1" defer></script>
 </head>
 <body>
 
@@ -342,6 +345,25 @@
         <button type="button" id="asaasClearBtn" class="ep-btn ep-btn--ghost ep-btn--sm ep-mt-12">Limpar chave Asaas</button>
       </section>
 
+      <!-- Notificações push -->
+      <section class="ep-receita-form">
+        <h2 class="ep-h3 ep-mt-0">Notificações push</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Receba alertas instantâneos do navegador quando: um paciente solicitar agendamento
+          via seu link público OU preencher anamnese. Funciona mesmo com a aba fechada
+          (se o navegador estiver ativo).
+        </p>
+
+        <div id="pushStatusBox" class="ep-mt-12 ep-text-sm ep-text-muted">Carregando…</div>
+
+        <div class="ep-flex ep-mt-12 ep-gap-8 ep-flex--wrap">
+          <button type="button" id="pushEnableBtn" class="ep-btn ep-btn--primary ep-btn--sm ep-hide">Ativar notificações</button>
+          <button type="button" id="pushDisableBtn" class="ep-btn ep-btn--ghost ep-btn--sm ep-hide">Desativar neste dispositivo</button>
+        </div>
+
+        <p id="pushHint" class="ep-text-xs ep-text-muted ep-mt-12 ep-hide"></p>
+      </section>
+
       <!-- 2FA -->
       <section class="ep-receita-form">
         <h2 class="ep-h3 ep-mt-0">Verificação em 2 etapas (2FA)</h2>
@@ -590,6 +612,146 @@
     }
   }
   applyTherapist(therapist);
+
+  // ─── Push notifications ──────────────────────────────────────────────
+  // Browser-side flow:
+  //   1. permissão (Notification.requestPermission)
+  //   2. registra SW (pwa.js já fez no load)
+  //   3. subscribe via PushManager com VAPID public key do backend
+  //   4. POST /therapy/push/subscribe pra salvar
+  //
+  // Status mostra: indisponível / permissão negada / habilitado neste dispositivo / pode habilitar.
+  function urlBase64ToUint8Array(base64String) {
+    const padding = "=".repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const raw = atob(base64);
+    const out = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
+  async function pushUiRender() {
+    const box = $("pushStatusBox");
+    const enableBtn = $("pushEnableBtn");
+    const disableBtn = $("pushDisableBtn");
+    const hint = $("pushHint");
+    enableBtn.classList.add("ep-hide");
+    disableBtn.classList.add("ep-hide");
+    hint.classList.add("ep-hide");
+
+    if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+      box.textContent = "Seu navegador não suporta notificações push.";
+      return;
+    }
+    if (location.protocol !== "https:" && location.hostname !== "localhost") {
+      box.textContent = "Push só funciona via HTTPS.";
+      return;
+    }
+    if (Notification.permission === "denied") {
+      box.textContent = "Permissão negada nas configurações do navegador. Limpe o bloqueio e recarregue.";
+      return;
+    }
+    let reg;
+    try { reg = await navigator.serviceWorker.ready; } catch { reg = null; }
+    if (!reg) {
+      box.textContent = "Service Worker indisponível neste navegador.";
+      return;
+    }
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      box.innerHTML = "✓ <strong>Habilitadas neste dispositivo.</strong>";
+      box.style.color = "var(--ep-ok)";
+      disableBtn.classList.remove("ep-hide");
+    } else {
+      box.textContent = "Não habilitadas neste dispositivo. Clique pra ativar.";
+      box.style.color = "";
+      enableBtn.classList.remove("ep-hide");
+    }
+  }
+  async function pushEnable() {
+    const btn = $("pushEnableBtn");
+    btn.disabled = true;
+    btn.textContent = "Solicitando permissão…";
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") {
+        const hint = $("pushHint");
+        hint.textContent = "Permissão não concedida. Verifique as configurações do navegador.";
+        hint.classList.remove("ep-hide");
+        btn.disabled = false;
+        btn.textContent = "Ativar notificações";
+        return;
+      }
+      // Busca chave pública do backend
+      const cfgRes = await fetch(`${BACKEND_BASE_URL}/therapy/push/config`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const cfgData = await cfgRes.json().catch(() => ({}));
+      if (!cfgRes.ok || !cfgData.ok || !cfgData.publicKey) {
+        const hint = $("pushHint");
+        hint.textContent = "Servidor de push não está configurado ainda. Tente em alguns minutos.";
+        hint.classList.remove("ep-hide");
+        btn.disabled = false;
+        btn.textContent = "Ativar notificações";
+        return;
+      }
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(cfgData.publicKey)
+      });
+      const subRes = await fetch(`${BACKEND_BASE_URL}/therapy/push/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ subscription: sub.toJSON() })
+      });
+      const subData = await subRes.json().catch(() => ({}));
+      if (!subRes.ok || !subData.ok) {
+        try { await sub.unsubscribe(); } catch {}
+        const hint = $("pushHint");
+        hint.textContent = "Erro salvando subscription: " + (subData?.error || subRes.status);
+        hint.classList.remove("ep-hide");
+        btn.disabled = false;
+        btn.textContent = "Ativar notificações";
+        return;
+      }
+      btn.disabled = false;
+      btn.textContent = "Ativar notificações";
+      await pushUiRender();
+    } catch (e) {
+      const hint = $("pushHint");
+      hint.textContent = "Erro: " + (e?.message || "desconhecido");
+      hint.classList.remove("ep-hide");
+      btn.disabled = false;
+      btn.textContent = "Ativar notificações";
+    }
+  }
+  async function pushDisable() {
+    const btn = $("pushDisableBtn");
+    btn.disabled = true;
+    btn.textContent = "Desativando…";
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        const endpoint = sub.endpoint;
+        await sub.unsubscribe();
+        await fetch(`${BACKEND_BASE_URL}/therapy/push/subscribe`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+          body: JSON.stringify({ endpoint })
+        }).catch(() => {});
+      }
+      btn.disabled = false;
+      btn.textContent = "Desativar neste dispositivo";
+      await pushUiRender();
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = "Desativar neste dispositivo";
+    }
+  }
+  $("pushEnableBtn").addEventListener("click", pushEnable);
+  $("pushDisableBtn").addEventListener("click", pushDisable);
+  pushUiRender().catch(() => {});
 
   $("asaasClearBtn").addEventListener("click", async () => {
     if (!confirm("Apagar a chave Asaas? As cobranças geradas continuam visíveis mas não dá pra gerar novas até reconectar.")) return;

@@ -9,7 +9,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-34">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-35">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#2d4a3e">
+  <script src="./js/pwa.js?v=1" defer></script>
 </head>
 <body class="ep-consult">
 
@@ -72,7 +75,11 @@
           <textarea id="noteInput" placeholder="Digite uma anotação… (cifrada antes de enviar)"></textarea>
           <div class="ep-inline-notes__actions">
             <span class="ep-text-xs ep-text-muted">Ctrl + Enter pra salvar</span>
-            <button class="ep-btn ep-btn--primary ep-btn--sm" type="button" id="saveNoteBtn">Salvar nota</button>
+            <div class="ep-flex ep-gap-8" style="align-items: center; position: relative;">
+              <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="templateBtn" title="Inserir template no campo">Templates ▾</button>
+              <button class="ep-btn ep-btn--primary ep-btn--sm" type="button" id="saveNoteBtn">Salvar nota</button>
+              <div id="templateMenu" class="ep-hide" style="position: absolute; top: 100%; right: 0; margin-top: 4px; min-width: 280px; max-width: 360px; background: var(--ep-surface); border: 1px solid var(--ep-line); border-radius: 10px; box-shadow: 0 8px 24px rgba(28,31,29,0.12); z-index: 100; padding: 6px;"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -205,6 +212,68 @@
   const noteStatus        = document.getElementById("noteStatus");
   const saveNoteBtn       = document.getElementById("saveNoteBtn");
   const endSessionBtn     = document.getElementById("endSessionBtn");
+  const templateBtn       = document.getElementById("templateBtn");
+  const templateMenu      = document.getElementById("templateMenu");
+
+  // ─── Templates de prontuário ─────────────────────────────
+  let _templatesCache = null;
+  async function loadTemplates() {
+    if (_templatesCache) return _templatesCache;
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/note-templates`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) _templatesCache = data.templates || [];
+      else _templatesCache = [];
+    } catch { _templatesCache = []; }
+    return _templatesCache;
+  }
+  function insertTemplate(content) {
+    const existing = noteInput.value;
+    noteInput.value = existing.trim() ? `${existing.trimEnd()}\n\n${content}` : content;
+    noteInput.focus();
+    noteInput.selectionStart = noteInput.selectionEnd = noteInput.value.length;
+  }
+  function renderTemplateMenu(templates) {
+    if (!templates.length) {
+      templateMenu.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding: 12px;">Nenhum template disponível.</div>`;
+      return;
+    }
+    templateMenu.innerHTML = templates.map(t => `
+      <button type="button" class="ep-template-item" data-template-id="${t.id}" style="display: block; width: 100%; padding: 10px 12px; text-align: left; background: transparent; border: 0; border-radius: 6px; cursor: pointer; color: var(--ep-ink);">
+        <div style="font-weight: 600; font-size: 14px;">${t.name}</div>
+        <div class="ep-text-xs ep-text-muted" style="margin-top: 2px; line-height: 1.4;">${t.description}</div>
+      </button>
+    `).join("");
+    templateMenu.querySelectorAll(".ep-template-item").forEach(btn => {
+      btn.addEventListener("mouseenter", () => btn.style.background = "var(--ep-accent-soft)");
+      btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
+      btn.addEventListener("click", () => {
+        const t = templates.find(x => x.id === btn.dataset.templateId);
+        if (t) {
+          insertTemplate(t.content);
+          templateMenu.classList.add("ep-hide");
+        }
+      });
+    });
+  }
+  templateBtn.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    if (!templateMenu.classList.contains("ep-hide")) {
+      templateMenu.classList.add("ep-hide");
+      return;
+    }
+    templateMenu.innerHTML = `<div class="ep-skeleton" style="margin: 8px;">Carregando templates…</div>`;
+    templateMenu.classList.remove("ep-hide");
+    const templates = await loadTemplates();
+    renderTemplateMenu(templates);
+  });
+  document.addEventListener("click", (e) => {
+    if (!templateMenu.contains(e.target) && e.target !== templateBtn) {
+      templateMenu.classList.add("ep-hide");
+    }
+  });
 
   // ─── LiveKit + E2EE ─────────────────────────────────────────
   function setStatus(text) { connectionStatus.textContent = text; }
