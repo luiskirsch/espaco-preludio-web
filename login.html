@@ -1,35 +1,35 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Entrar · Espaço Prelúdio</title>
+  <title>Entrar Â· EspaÃ§o PrelÃºdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-24">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-25">
 </head>
 <body>
 
 <main class="ep-auth">
   <div class="ep-auth__panel">
-    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+    <a href="./index.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead">EspaÃ§o</span>
+        <span>PrelÃºdio</span>
       </span>
     </a>
 
-    <h2 class="ep-auth__title ep-mt-32">Entrar no consultório</h2>
+    <h2 class="ep-auth__title ep-mt-32">Entrar no consultÃ³rio</h2>
     <p class="ep-auth__sub">
-      Use seu e-mail profissional. Sua senha desbloqueia também a chave que cifra suas anotações.
+      Use seu e-mail profissional. Sua senha desbloqueia tambÃ©m a chave que cifra suas anotaÃ§Ãµes.
     </p>
 
     <div id="reauthAlert" class="ep-alert ep-alert--info ep-mt-12 ep-hide">
-      Sua sessão de cifragem expirou. Confirme sua senha para continuar.
+      Sua sessÃ£o de cifragem expirou. Confirme sua senha para continuar.
     </div>
 
     <form id="loginForm" class="ep-stack ep-mt-16" novalidate>
@@ -46,12 +46,12 @@
 
       <div class="ep-stack" style="gap: 8px;">
         <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="submitBtn">Entrar</button>
-        <a href="./cadastro.html" class="ep-btn ep-btn--ghost ep-btn--block">Criar consultório</a>
+        <a href="./cadastro.html" class="ep-btn ep-btn--ghost ep-btn--block">Criar consultÃ³rio</a>
       </div>
     </form>
 
     <div class="ep-auth__bottom">
-      <a href="./recuperar.html">Esqueci minha senha · usar chave-semente</a>
+      <a href="./recuperar.html">Esqueci minha senha Â· usar chave-semente</a>
     </div>
   </div>
 </main>
@@ -78,7 +78,7 @@
   }
 
   if (errorParam === "NAO_REGISTRADO") {
-    setStatus("Você ainda não tem cadastro de profissional. Crie sua conta primeiro.", "err");
+    setStatus("VocÃª ainda nÃ£o tem cadastro de profissional. Crie sua conta primeiro.", "err");
   }
 
   async function fetchProfile(idToken) {
@@ -95,9 +95,9 @@
     const code = err?.code || "";
     if (code === "auth/invalid-credential") return "E-mail ou senha incorretos.";
     if (code === "auth/wrong-password")     return "Senha incorreta.";
-    if (code === "auth/user-not-found")     return "Conta não encontrada.";
+    if (code === "auth/user-not-found")     return "Conta nÃ£o encontrada.";
     if (code === "auth/too-many-requests")  return "Muitas tentativas. Tente novamente em alguns minutos.";
-    if (code === "auth/network-request-failed") return "Erro de conexão.";
+    if (code === "auth/network-request-failed") return "Erro de conexÃ£o.";
     return err?.message || "Erro ao entrar.";
   }
 
@@ -116,15 +116,15 @@
     }
 
     try {
-      setStatus("Autenticando…");
+      setStatus("Autenticandoâ€¦");
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await cred.user.getIdToken();
 
-      setStatus("Carregando perfil…");
+      setStatus("Carregando perfilâ€¦");
       const profile = await fetchProfile(idToken);
       if (!profile.ok) {
         if (profile.code === "NAO_REGISTRADO") {
-          setStatus("Sua conta existe mas o cadastro de profissional não foi finalizado. Indo para o cadastro…", "err");
+          setStatus("Sua conta existe mas o cadastro de profissional nÃ£o foi finalizado. Indo para o cadastroâ€¦", "err");
           setTimeout(() => { window.location.href = "./cadastro.html?step=profissional"; }, 1500);
           return;
         }
@@ -135,12 +135,12 @@
 
       const t = profile.therapist;
       if (!t.e2eeSalt || !t.wrappedDEK || !t.wrappedDEKIv) {
-        setStatus("Sua conta está sem chave de cifragem. Recadastre-se ou entre em contato.", "err");
+        setStatus("Sua conta estÃ¡ sem chave de cifragem. Recadastre-se ou entre em contato.", "err");
         submitBtn.disabled = false;
         return;
       }
 
-      setStatus("Desbloqueando sua chave…");
+      setStatus("Desbloqueando sua chaveâ€¦");
       let dek;
       try {
         dek = await unwrapDek({
@@ -149,7 +149,7 @@
           e2eeSalt:     t.e2eeSalt
         }, password);
       } catch {
-        setStatus("Senha aceita mas a chave não pôde ser desbloqueada — possivelmente o cadastro está corrompido.", "err");
+        setStatus("Senha aceita mas a chave nÃ£o pÃ´de ser desbloqueada â€” possivelmente o cadastro estÃ¡ corrompido.", "err");
         submitBtn.disabled = false;
         return;
       }
@@ -157,7 +157,7 @@
       rememberDek(dek);
       rememberUser({ uid: cred.user.uid, email, displayName: t.displayName });
 
-      setStatus("Entrando…", "ok");
+      setStatus("Entrandoâ€¦", "ok");
       window.location.href = redirect;
     } catch (error) {
       console.error("login_error", error);

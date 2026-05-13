@@ -1,27 +1,27 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Estoque · Espaço Prelúdio</title>
+  <title>Estoque Â· EspaÃ§o PrelÃºdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-24">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-25">
 </head>
 <body>
 
-<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
+<div class="ep-staging-banner">Ambiente de teste Â· EspaÃ§o PrelÃºdio Â· staging</div>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
-    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+    <a href="./painel.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead">EspaÃ§o</span>
+        <span>PrelÃºdio</span>
       </span>
     </a>
     <nav class="ep-nav" aria-label="Painel">
@@ -29,15 +29,15 @@
       <a href="./agenda.html">Agenda</a>
       <a href="./pacientes.html">Pacientes</a>
       <a href="./financeiro.html">Financeiro</a>
-      <a href="./relatorios.html">Relatórios</a>
-      <a href="./clinica.html">Clínica</a>
+      <a href="./relatorios.html">RelatÃ³rios</a>
+      <a href="./clinica.html">ClÃ­nica</a>
       <a href="./inventario.html" class="is-active">Estoque</a>
       <a href="./receita.html">Receitas</a>
       <a href="./calculadora.html">Calculadora</a>
       <a href="./documento.html?tipo=atestado">Atestado</a>
       <a href="./whatsapp.html">WhatsApp</a>
       <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
-        <span class="ep-nav-avatar" id="topUserAvatar">·</span>
+        <span class="ep-nav-avatar" id="topUserAvatar">Â·</span>
         <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
       </a>
       <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
@@ -53,35 +53,35 @@
         <div class="ep-eyebrow">Controle de estoque</div>
         <h1 class="ep-h1 ep-mt-12">Seus materiais</h1>
         <p class="ep-text-muted ep-mt-8 ep-mt-0">
-          Cadastre os itens que você usa no consultório e registre entradas e saídas.
+          Cadastre os itens que vocÃª usa no consultÃ³rio e registre entradas e saÃ­das.
         </p>
       </div>
       <button id="newItemBtn" type="button" class="ep-btn ep-btn--primary ep-btn--lg">+ Novo item</button>
     </div>
 
-    <!-- Banner de baixo estoque (só aparece se houver itens) -->
+    <!-- Banner de baixo estoque (sÃ³ aparece se houver itens) -->
     <div id="lowStockBanner" class="ep-alert ep-mt-16 ep-hide" style="background: var(--ep-gold-soft); border-color: var(--ep-gold-line); color: var(--ep-warn);">
-      <strong id="lowStockTitle">—</strong>
-      <span id="lowStockSub">—</span>
+      <strong id="lowStockTitle">â€”</strong>
+      <span id="lowStockSub">â€”</span>
     </div>
 
     <div class="ep-mt-16">
       <div class="ep-flex ep-gap-8" style="flex-wrap: wrap; align-items: center;">
-        <input id="searchInput" class="ep-input" type="text" placeholder="Buscar por nome…" style="max-width: 280px;">
+        <input id="searchInput" class="ep-input" type="text" placeholder="Buscar por nomeâ€¦" style="max-width: 280px;">
         <select id="categoryFilter" class="ep-select" aria-label="Filtrar por categoria">
           <option value="">Todas as categorias</option>
         </select>
         <label class="ep-flex" style="gap: 6px; align-items: center; cursor: pointer;">
-          <input type="checkbox" id="lowStockOnly"> <span class="ep-text-sm">Só baixo estoque</span>
+          <input type="checkbox" id="lowStockOnly"> <span class="ep-text-sm">SÃ³ baixo estoque</span>
         </label>
       </div>
 
-      <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando itens…</div>
+      <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando itensâ€¦</div>
       <div id="itemList" class="ep-session-list ep-mt-16 ep-hide"></div>
       <div id="emptyState" class="ep-empty ep-mt-16 ep-hide">
         <h3 class="ep-h3">Nenhum item no estoque ainda.</h3>
         <p class="ep-text-muted ep-mt-8" style="margin: 0;">
-          Cadastre o primeiro material — eletrodos, ataduras, amostras de suplemento, testes, etc.
+          Cadastre o primeiro material â€” eletrodos, ataduras, amostras de suplemento, testes, etc.
         </p>
         <button class="ep-btn ep-btn--primary ep-mt-16" type="button" id="emptyCta">Cadastrar primeiro item</button>
       </div>
@@ -95,13 +95,13 @@
   <div class="ep-modal__panel">
     <h3 class="ep-modal__title" id="itemModalTitle">Novo item</h3>
     <p class="ep-modal__sub">
-      Cadastre um material do consultório. Saldo só muda via entradas/saídas — preserva o histórico.
+      Cadastre um material do consultÃ³rio. Saldo sÃ³ muda via entradas/saÃ­das â€” preserva o histÃ³rico.
     </p>
 
     <form id="itemForm" class="ep-stack" novalidate>
       <div class="ep-field">
         <label class="ep-label" for="itemName">Nome *</label>
-        <input id="itemName" class="ep-input" type="text" maxlength="100" placeholder="Ex.: Eletrodo descartável" required>
+        <input id="itemName" class="ep-input" type="text" maxlength="100" placeholder="Ex.: Eletrodo descartÃ¡vel" required>
       </div>
       <div class="ep-row">
         <div class="ep-field">
@@ -136,7 +136,7 @@
         </div>
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="itemDescription">Descrição (opcional)</label>
+        <label class="ep-label" for="itemDescription">DescriÃ§Ã£o (opcional)</label>
         <input id="itemDescription" class="ep-input" type="text" maxlength="300" placeholder="Marca, fornecedor, etc.">
       </div>
       <div class="ep-status" id="itemStatusMsg"></div>
@@ -149,11 +149,11 @@
   </div>
 </div>
 
-<!-- Modal: Entrada / saída -->
+<!-- Modal: Entrada / saÃ­da -->
 <div class="ep-modal" id="movModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel">
-    <h3 class="ep-modal__title" id="movModalTitle">Movimentação</h3>
-    <p class="ep-modal__sub" id="movModalSub">—</p>
+    <h3 class="ep-modal__title" id="movModalTitle">MovimentaÃ§Ã£o</h3>
+    <p class="ep-modal__sub" id="movModalSub">â€”</p>
 
     <form id="movForm" class="ep-stack" novalidate>
       <div class="ep-row">
@@ -161,7 +161,7 @@
           <label class="ep-label" for="movType">Tipo *</label>
           <select id="movType" class="ep-select" required>
             <option value="entrada">Entrada (adicionar)</option>
-            <option value="saida">Saída (remover)</option>
+            <option value="saida">SaÃ­da (remover)</option>
           </select>
         </div>
         <div class="ep-field">
@@ -176,7 +176,7 @@
       </div>
       <div class="ep-field">
         <label class="ep-label" for="movReason">Motivo (opcional)</label>
-        <input id="movReason" class="ep-input" type="text" maxlength="200" placeholder="Ex.: Compra Fornecedor X / Uso na sessão">
+        <input id="movReason" class="ep-input" type="text" maxlength="200" placeholder="Ex.: Compra Fornecedor X / Uso na sessÃ£o">
       </div>
       <div class="ep-status" id="movStatusMsg"></div>
     </form>
@@ -188,11 +188,11 @@
   </div>
 </div>
 
-<!-- Modal: Histórico de movimentações -->
+<!-- Modal: HistÃ³rico de movimentaÃ§Ãµes -->
 <div class="ep-modal" id="historyModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel" style="max-width: 640px;">
-    <h3 class="ep-modal__title" id="historyTitle">Histórico</h3>
-    <p class="ep-modal__sub" id="historySub">—</p>
+    <h3 class="ep-modal__title" id="historyTitle">HistÃ³rico</h3>
+    <p class="ep-modal__sub" id="historySub">â€”</p>
     <div id="historyList" class="ep-stack"></div>
     <div class="ep-modal__actions">
       <button type="button" class="ep-btn ep-btn--primary" id="closeHistoryBtn">Fechar</button>
@@ -206,7 +206,7 @@
   import { requireTherapist } from "./js/auth-guard.js?v=3-15";
   import { clearDek } from "./js/crypto.js";
 
-  // ─── Boot ───────────────────────────────────────────────────
+  // â”€â”€â”€ Boot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const session = await requireTherapist({ requireDek: false });
   const { user, idToken, therapist } = session;
   const uid = user.uid;
@@ -217,14 +217,14 @@
     window.location.href = "./login.html";
   });
 
-  // ─── Helpers ───────────────────────────────────────────────────
+  // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function escapeHtml(s) {
     return String(s || "").replace(/[&<>"']/g, c => ({
       "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
     }[c]));
   }
   function fmtDate(ms) {
-    if (!ms) return "—";
+    if (!ms) return "â€”";
     return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
   }
   function isoDateInput(ms) {
@@ -248,10 +248,10 @@
     return item && typeof item.minStock === "number" && item.minStock > 0 && (item.currentStock || 0) <= item.minStock;
   }
 
-  // ─── Estado ────────────────────────────────────────────────────
+  // â”€â”€â”€ Estado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let allItems = [];
 
-  // ─── Carregamento ──────────────────────────────────────────────
+  // â”€â”€â”€ Carregamento â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const loadingBanner = document.getElementById("loadingBanner");
   const itemList      = document.getElementById("itemList");
   const emptyState    = document.getElementById("emptyState");
@@ -304,7 +304,7 @@
       document.getElementById("lowStockTitle").textContent = low.length === 1
         ? "1 item em estoque baixo."
         : `${low.length} itens em estoque baixo.`;
-      document.getElementById("lowStockSub").textContent = low.map(i => i.name).slice(0, 5).join(", ") + (low.length > 5 ? "…" : "");
+      document.getElementById("lowStockSub").textContent = low.map(i => i.name).slice(0, 5).join(", ") + (low.length > 5 ? "â€¦" : "");
     } else {
       banner.classList.add("ep-hide");
     }
@@ -347,7 +347,7 @@
     if (isLowStock(item)) div.classList.add("ep-session--active"); // marca lateral dourada
     const stockLine = `<strong style="font-size: 18px;">${item.currentStock} ${unitLabel(item.unit)}</strong>`;
     const lowBadge = isLowStock(item)
-      ? `<span class="ep-badge" style="background: var(--ep-gold-soft); color: var(--ep-warn); border-color: var(--ep-gold-line);">Baixo estoque (mín. ${item.minStock})</span>`
+      ? `<span class="ep-badge" style="background: var(--ep-gold-soft); color: var(--ep-warn); border-color: var(--ep-gold-line);">Baixo estoque (mÃ­n. ${item.minStock})</span>`
       : "";
     const catBadge = item.category
       ? `<span class="ep-badge ep-badge--muted">${escapeHtml(item.category)}</span>`
@@ -382,7 +382,7 @@
   document.getElementById("categoryFilter").addEventListener("change", renderAll);
   document.getElementById("lowStockOnly").addEventListener("change", renderAll);
 
-  // ─── Modal: item (criar/editar) ────────────────────────────────
+  // â”€â”€â”€ Modal: item (criar/editar) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const itemModal = document.getElementById("itemModal");
   const itemModalTitle = document.getElementById("itemModalTitle");
   const itemName = document.getElementById("itemName");
@@ -404,7 +404,7 @@
     itemInitialStock.value = "0";
     itemMinStock.value = item?.minStock ?? 0;
     itemDescription.value = item?.description || "";
-    // Estoque inicial só na criação
+    // Estoque inicial sÃ³ na criaÃ§Ã£o
     initialStockField.style.display = editingItemId ? "none" : "";
     itemStatusMsg.textContent = "";
     itemStatusMsg.className = "ep-status";
@@ -419,7 +419,7 @@
 
   document.getElementById("saveItemBtn").addEventListener("click", async () => {
     const name = itemName.value.trim();
-    if (!name) { itemStatusMsg.textContent = "Nome é obrigatório."; itemStatusMsg.className = "ep-status is-err"; return; }
+    if (!name) { itemStatusMsg.textContent = "Nome Ã© obrigatÃ³rio."; itemStatusMsg.className = "ep-status is-err"; return; }
     const body = {
       name,
       category: itemCategory.value.trim() || null,
@@ -449,7 +449,7 @@
     }
   });
 
-  // ─── Modal: movimentação ───────────────────────────────────────
+  // â”€â”€â”€ Modal: movimentaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const movModal = document.getElementById("movModal");
   const movModalTitle = document.getElementById("movModalTitle");
   const movModalSub = document.getElementById("movModalSub");
@@ -462,7 +462,7 @@
 
   function openMovModal(item) {
     movItemId = item.itemId;
-    movModalTitle.textContent = `Movimentação — ${item.name}`;
+    movModalTitle.textContent = `MovimentaÃ§Ã£o â€” ${item.name}`;
     movModalSub.textContent = `Estoque atual: ${item.currentStock} ${unitLabel(item.unit)}`;
     movType.value = "entrada";
     movQuantity.value = "1";
@@ -480,7 +480,7 @@
   document.getElementById("saveMovBtn").addEventListener("click", async () => {
     const quantity = Number(movQuantity.value);
     if (!Number.isInteger(quantity) || quantity < 1) {
-      movStatusMsg.textContent = "Quantidade inválida."; movStatusMsg.className = "ep-status is-err"; return;
+      movStatusMsg.textContent = "Quantidade invÃ¡lida."; movStatusMsg.className = "ep-status is-err"; return;
     }
     const body = {
       itemId: movItemId,
@@ -510,16 +510,16 @@
     }
   });
 
-  // ─── Modal: histórico ──────────────────────────────────────────
+  // â”€â”€â”€ Modal: histÃ³rico â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const historyModal = document.getElementById("historyModal");
   document.getElementById("closeHistoryBtn").addEventListener("click", () => historyModal.classList.remove("is-open"));
   historyModal.addEventListener("click", (e) => { if (e.target === historyModal) historyModal.classList.remove("is-open"); });
 
   async function openHistoryModal(item) {
-    document.getElementById("historyTitle").textContent = `Histórico — ${item.name}`;
+    document.getElementById("historyTitle").textContent = `HistÃ³rico â€” ${item.name}`;
     document.getElementById("historySub").textContent = `Estoque atual: ${item.currentStock} ${unitLabel(item.unit)}`;
     const listEl = document.getElementById("historyList");
-    listEl.innerHTML = "Carregando…";
+    listEl.innerHTML = "Carregandoâ€¦";
     historyModal.classList.add("is-open");
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/inventario/movimentos?itemId=${encodeURIComponent(item.itemId)}`, {
@@ -529,17 +529,17 @@
       if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
       const movs = data.movements || [];
       if (movs.length === 0) {
-        listEl.innerHTML = `<p class="ep-text-muted">Sem movimentações ainda.</p>`;
+        listEl.innerHTML = `<p class="ep-text-muted">Sem movimentaÃ§Ãµes ainda.</p>`;
         return;
       }
       listEl.innerHTML = movs.map(m => {
-        const sign = m.type === "entrada" ? "+" : "−";
+        const sign = m.type === "entrada" ? "+" : "âˆ’";
         const color = m.type === "entrada" ? "var(--ep-ok)" : "var(--ep-danger)";
         return `
           <div class="ep-flex" style="justify-content: space-between; padding: 10px 12px; border: 1px solid var(--ep-line); border-radius: 8px;">
             <div>
               <strong style="color: ${color};">${sign} ${m.quantity} ${unitLabel(item.unit)}</strong>
-              ${m.reason ? `<span class="ep-text-sm ep-text-muted"> — ${escapeHtml(m.reason)}</span>` : ""}
+              ${m.reason ? `<span class="ep-text-sm ep-text-muted"> â€” ${escapeHtml(m.reason)}</span>` : ""}
               <div class="ep-text-xs ep-text-muted">${fmtDate(m.movDate)}</div>
             </div>
           </div>
@@ -550,7 +550,7 @@
     }
   }
 
-  // ─── Lista: delegação de eventos ───────────────────────────────
+  // â”€â”€â”€ Lista: delegaÃ§Ã£o de eventos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   itemList.addEventListener("click", async (e) => {
     const btn = e.target.closest("button[data-action]");
     if (!btn) return;
@@ -562,7 +562,7 @@
     else if (action === "history") openHistoryModal(item);
     else if (action === "edit")    openItemModal(item);
     else if (action === "delete") {
-      if (!confirm(`Arquivar "${item.name}"? O histórico de movimentações fica preservado.`)) return;
+      if (!confirm(`Arquivar "${item.name}"? O histÃ³rico de movimentaÃ§Ãµes fica preservado.`)) return;
       btn.disabled = true;
       try {
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/inventario/itens/${encodeURIComponent(item.itemId)}`, {

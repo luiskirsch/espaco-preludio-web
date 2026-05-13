@@ -1,15 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Relatórios · Espaço Prelúdio</title>
+  <title>RelatÃ³rios Â· EspaÃ§o PrelÃºdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-24">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-25">
   <style>
     .ep-stat-grid {
       display: grid;
@@ -58,11 +58,11 @@
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
-    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+    <a href="./painel.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead">EspaÃ§o</span>
+        <span>PrelÃºdio</span>
       </span>
     </a>
     <nav class="ep-nav" aria-label="Painel">
@@ -70,15 +70,15 @@
       <a href="./agenda.html">Agenda</a>
       <a href="./pacientes.html">Pacientes</a>
       <a href="./financeiro.html">Financeiro</a>
-      <a href="./relatorios.html" class="is-active">Relatórios</a>
-      <a href="./clinica.html">Clínica</a>
+      <a href="./relatorios.html" class="is-active">RelatÃ³rios</a>
+      <a href="./clinica.html">ClÃ­nica</a>
       <a href="./inventario.html">Estoque</a>
       <a href="./receita.html">Receitas</a>
       <a href="./calculadora.html">Calculadora</a>
       <a href="./documento.html?tipo=atestado">Atestado</a>
       <a href="./whatsapp.html">WhatsApp</a>
       <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
-        <span class="ep-nav-avatar" id="topUserAvatar">·</span>
+        <span class="ep-nav-avatar" id="topUserAvatar">Â·</span>
         <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
       </a>
       <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
@@ -90,48 +90,48 @@
 
   <div class="ep-flex--end-wrap ep-flex">
     <div>
-      <div class="ep-eyebrow">Análise de carteira</div>
-      <h1 class="ep-h1 ep-mt-12">Relatórios</h1>
-      <p class="ep-text-muted ep-mt-0">Volume, frequência, retenção e taxa de no-show. Atualizado em tempo real.</p>
+      <div class="ep-eyebrow">AnÃ¡lise de carteira</div>
+      <h1 class="ep-h1 ep-mt-12">RelatÃ³rios</h1>
+      <p class="ep-text-muted ep-mt-0">Volume, frequÃªncia, retenÃ§Ã£o e taxa de no-show. Atualizado em tempo real.</p>
     </div>
     <div class="ep-flex ep-gap-8">
       <select id="rangeFilter" class="ep-select">
-        <option value="30d">Últimos 30 dias</option>
-        <option value="90d" selected>Últimos 90 dias</option>
-        <option value="year">Último ano</option>
+        <option value="30d">Ãšltimos 30 dias</option>
+        <option value="90d" selected>Ãšltimos 90 dias</option>
+        <option value="year">Ãšltimo ano</option>
         <option value="all">Tudo</option>
       </select>
     </div>
   </div>
 
-  <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando…</div>
+  <div id="loadingBanner" class="ep-alert ep-mt-16">Carregandoâ€¦</div>
 
   <div id="content" class="ep-hide">
-    <!-- Cards de números -->
+    <!-- Cards de nÃºmeros -->
     <section class="ep-stat-grid ep-mt-16">
       <div class="ep-stat-card">
         <div class="ep-stat-card__label">Consultas</div>
-        <div class="ep-stat-card__value" id="statTotal">—</div>
-        <div class="ep-stat-card__sub" id="statTotalSub">—</div>
+        <div class="ep-stat-card__value" id="statTotal">â€”</div>
+        <div class="ep-stat-card__sub" id="statTotalSub">â€”</div>
       </div>
       <div class="ep-stat-card">
-        <div class="ep-stat-card__label">Taxa de conclusão</div>
-        <div class="ep-stat-card__value" id="statCompletion">—</div>
-        <div class="ep-stat-card__sub" id="statCompletionSub">—</div>
+        <div class="ep-stat-card__label">Taxa de conclusÃ£o</div>
+        <div class="ep-stat-card__value" id="statCompletion">â€”</div>
+        <div class="ep-stat-card__sub" id="statCompletionSub">â€”</div>
       </div>
       <div class="ep-stat-card">
         <div class="ep-stat-card__label">Taxa de no-show</div>
-        <div class="ep-stat-card__value" id="statNoShow">—</div>
-        <div class="ep-stat-card__sub" id="statNoShowSub">—</div>
+        <div class="ep-stat-card__value" id="statNoShow">â€”</div>
+        <div class="ep-stat-card__sub" id="statNoShowSub">â€”</div>
       </div>
       <div class="ep-stat-card">
-        <div class="ep-stat-card__label">Pacientes únicos</div>
-        <div class="ep-stat-card__value" id="statPatients">—</div>
-        <div class="ep-stat-card__sub" id="statPatientsSub">—</div>
+        <div class="ep-stat-card__label">Pacientes Ãºnicos</div>
+        <div class="ep-stat-card__value" id="statPatients">â€”</div>
+        <div class="ep-stat-card__sub" id="statPatientsSub">â€”</div>
       </div>
     </section>
 
-    <!-- Gráficos -->
+    <!-- GrÃ¡ficos -->
     <section class="ep-mt-16" style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
       <div class="ep-chart-card">
         <h3>Volume mensal</h3>
@@ -155,43 +155,43 @@
     </section>
 
     <p class="ep-text-xs ep-text-muted ep-mt-16 ep-text-center">
-      No-show = consultas canceladas com menos de 24h de antecedência. Taxa de conclusão = concluídas ÷ (concluídas + canceladas).
+      No-show = consultas canceladas com menos de 24h de antecedÃªncia. Taxa de conclusÃ£o = concluÃ­das Ã· (concluÃ­das + canceladas).
     </p>
 
     <!-- NPS -->
     <section class="ep-mt-24">
       <div class="ep-flex--end-wrap ep-flex">
         <div>
-          <h2 class="ep-h3" style="margin: 0;">Satisfação dos pacientes (NPS)</h2>
-          <p class="ep-text-xs ep-text-muted ep-mt-0">Resposta automática 24h após cada consulta concluída. Escala 0-10.</p>
+          <h2 class="ep-h3" style="margin: 0;">SatisfaÃ§Ã£o dos pacientes (NPS)</h2>
+          <p class="ep-text-xs ep-text-muted ep-mt-0">Resposta automÃ¡tica 24h apÃ³s cada consulta concluÃ­da. Escala 0-10.</p>
         </div>
       </div>
 
       <div class="ep-stat-grid ep-mt-16">
         <div class="ep-stat-card">
           <div class="ep-stat-card__label">NPS</div>
-          <div class="ep-stat-card__value" id="npsScore">—</div>
-          <div class="ep-stat-card__sub" id="npsScoreSub">Promoters − Detractors</div>
+          <div class="ep-stat-card__value" id="npsScore">â€”</div>
+          <div class="ep-stat-card__sub" id="npsScoreSub">Promoters âˆ’ Detractors</div>
         </div>
         <div class="ep-stat-card">
-          <div class="ep-stat-card__label">Média</div>
-          <div class="ep-stat-card__value" id="npsAvg">—</div>
+          <div class="ep-stat-card__label">MÃ©dia</div>
+          <div class="ep-stat-card__value" id="npsAvg">â€”</div>
           <div class="ep-stat-card__sub" id="npsAvgSub">de 0 a 10</div>
         </div>
         <div class="ep-stat-card">
           <div class="ep-stat-card__label">Respostas</div>
-          <div class="ep-stat-card__value" id="npsTotal">—</div>
-          <div class="ep-stat-card__sub" id="npsTotalSub">no período</div>
+          <div class="ep-stat-card__value" id="npsTotal">â€”</div>
+          <div class="ep-stat-card__sub" id="npsTotalSub">no perÃ­odo</div>
         </div>
         <div class="ep-stat-card">
-          <div class="ep-stat-card__label">Distribuição</div>
-          <div class="ep-stat-card__value" style="font-size: 16px; line-height: 1.5;" id="npsDist">—</div>
-          <div class="ep-stat-card__sub">promoters · passives · detractors</div>
+          <div class="ep-stat-card__label">DistribuiÃ§Ã£o</div>
+          <div class="ep-stat-card__value" style="font-size: 16px; line-height: 1.5;" id="npsDist">â€”</div>
+          <div class="ep-stat-card__sub">promoters Â· passives Â· detractors</div>
         </div>
       </div>
 
       <div id="npsCommentsCard" class="ep-chart-card ep-mt-12 ep-hide">
-        <h3>Comentários recentes</h3>
+        <h3>ComentÃ¡rios recentes</h3>
         <div id="npsCommentsList" class="ep-stack" style="gap: 10px;"></div>
       </div>
     </section>
@@ -205,7 +205,7 @@
   import { requireTherapist } from "./js/auth-guard.js?v=3-15";
   import { clearDek } from "./js/crypto.js";
 
-  // Chart.js via CDN — único lugar do projeto que precisa de gráficos.
+  // Chart.js via CDN â€” Ãºnico lugar do projeto que precisa de grÃ¡ficos.
   await new Promise((resolve, reject) => {
     const s = document.createElement("script");
     s.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js";
@@ -231,7 +231,7 @@
   const TERRA      = "#b8453d";
   const TERRA_SOFT = "rgba(184,69,61,0.25)";
 
-  // Configurações comuns dos charts (sem grid agressivo, paleta consistente).
+  // ConfiguraÃ§Ãµes comuns dos charts (sem grid agressivo, paleta consistente).
   function baseOpts() {
     return {
       responsive: true,
@@ -245,7 +245,7 @@
   }
 
   function pct(v) {
-    if (v == null) return "—";
+    if (v == null) return "â€”";
     return Math.round(v * 1000) / 10 + "%";
   }
 
@@ -266,7 +266,7 @@
     const names = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
     return `${names[Number(m)-1]}/${y.slice(2)}`;
   }
-  const DAY_LABELS = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+  const DAY_LABELS = ["Dom","Seg","Ter","Qua","Qui","Sex","SÃ¡b"];
 
   async function loadData() {
     const range = $("rangeFilter").value;
@@ -281,7 +281,7 @@
 
       // Cards
       $("statTotal").textContent       = data.totals.sessions;
-      $("statTotalSub").textContent    = `${data.totals.completed} concluídas · ${data.totals.scheduled} futuras`;
+      $("statTotalSub").textContent    = `${data.totals.completed} concluÃ­das Â· ${data.totals.scheduled} futuras`;
       $("statCompletion").textContent  = pct(data.rates.completionRate);
       $("statCompletionSub").textContent = data.rates.completionRate == null
         ? "Sem dados ainda"
@@ -291,7 +291,7 @@
         ? "Sem dados ainda"
         : `${data.totals.noShow} cancelamentos em cima da hora`;
       $("statPatients").textContent    = data.patients.distinct;
-      $("statPatientsSub").textContent = `${data.patients.new} novos · ${data.patients.returning} retorno`;
+      $("statPatientsSub").textContent = `${data.patients.new} novos Â· ${data.patients.returning} retorno`;
 
       // Charts
       makeOrUpdate("chartMonth", "bar", {
@@ -310,7 +310,7 @@
       }, baseOpts());
 
       makeOrUpdate("chartNewVsRet", "doughnut", {
-        labels: ["Sessões de novos", "Sessões de retorno"],
+        labels: ["SessÃµes de novos", "SessÃµes de retorno"],
         datasets: [{
           data: [data.patients.sessionsFromNew, data.patients.sessionsFromReturning],
           backgroundColor: [GOLD, GREEN],
@@ -328,7 +328,7 @@
       $("loadingBanner").classList.add("ep-hide");
       $("content").classList.remove("ep-hide");
 
-      // NPS — load em paralelo, não bloqueia o resto.
+      // NPS â€” load em paralelo, nÃ£o bloqueia o resto.
       loadNps(range).catch(e => console.error("nps_load_error", e));
     } catch (e) {
       console.error("relatorios_error", e);
@@ -345,10 +345,10 @@
       const data = await res.json();
       if (!res.ok || !data.ok) return;
       const m = data.metrics;
-      $("npsScore").textContent  = m.npsScore == null ? "—" : (m.npsScore > 0 ? "+" + m.npsScore : String(m.npsScore));
-      $("npsAvg").textContent    = m.avg == null ? "—" : String(m.avg);
+      $("npsScore").textContent  = m.npsScore == null ? "â€”" : (m.npsScore > 0 ? "+" + m.npsScore : String(m.npsScore));
+      $("npsAvg").textContent    = m.avg == null ? "â€”" : String(m.avg);
       $("npsTotal").textContent  = String(m.total);
-      $("npsDist").textContent   = m.total > 0 ? `${m.promoters} · ${m.passives} · ${m.detractors}` : "—";
+      $("npsDist").textContent   = m.total > 0 ? `${m.promoters} Â· ${m.passives} Â· ${m.detractors}` : "â€”";
 
       const list = $("npsCommentsList");
       const card = $("npsCommentsCard");
@@ -369,7 +369,7 @@
         card.classList.add("ep-hide");
       }
     } catch (e) {
-      // Silent fail — NPS é opcional
+      // Silent fail â€” NPS Ã© opcional
     }
   }
 

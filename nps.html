@@ -1,15 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Avaliar consulta · Espaço Prelúdio</title>
+  <title>Avaliar consulta Â· EspaÃ§o PrelÃºdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-24">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-25">
   <style>
     body { background: var(--ep-bg); min-height: 100vh; }
     .nps-shell {
@@ -87,46 +87,46 @@
 
 <div class="nps-shell">
   <div style="text-align: center; margin-bottom: 24px;">
-    <a href="/" style="text-decoration: none; color: var(--ep-ink); font-family: var(--ep-font-serif); font-weight: 600; font-size: 18px;">Espaço Prelúdio</a>
+    <a href="/" style="text-decoration: none; color: var(--ep-ink); font-family: var(--ep-font-serif); font-weight: 600; font-size: 18px;">EspaÃ§o PrelÃºdio</a>
   </div>
 
   <div class="nps-card" id="formCard">
-    <div class="ep-eyebrow" id="formEyebrow">Carregando…</div>
-    <h1 class="nps-title" id="formTitle">—</h1>
-    <p class="ep-text-muted" id="formSub" style="margin: 0;">—</p>
+    <div class="ep-eyebrow" id="formEyebrow">Carregandoâ€¦</div>
+    <h1 class="nps-title" id="formTitle">â€”</h1>
+    <p class="ep-text-muted" id="formSub" style="margin: 0;">â€”</p>
 
     <div id="formContent" class="ep-hide" style="margin-top: 20px;">
       <p class="ep-text-sm" style="margin: 0 0 8px; color: var(--ep-ink-2);">
-        De 0 a 10, o quanto você indicaria <strong id="therapistNameSpan">—</strong> a um amigo ou familiar?
+        De 0 a 10, o quanto vocÃª indicaria <strong id="therapistNameSpan">â€”</strong> a um amigo ou familiar?
       </p>
 
       <div class="nps-scale" id="scale">
         <!-- 11 buttons 0-10 inserted by JS -->
       </div>
       <div class="nps-scale-labels">
-        <span>Pouco provável</span>
-        <span>Muito provável</span>
+        <span>Pouco provÃ¡vel</span>
+        <span>Muito provÃ¡vel</span>
       </div>
 
       <div class="ep-field">
-        <label class="ep-label" for="commentEl">Quer deixar um comentário? <span style="color: var(--ep-ink-2); font-weight: 400;">(opcional)</span></label>
-        <textarea id="commentEl" class="ep-input" rows="3" maxlength="500" placeholder="O que mais fez a diferença na sua consulta?"></textarea>
+        <label class="ep-label" for="commentEl">Quer deixar um comentÃ¡rio? <span style="color: var(--ep-ink-2); font-weight: 400;">(opcional)</span></label>
+        <textarea id="commentEl" class="ep-input" rows="3" maxlength="500" placeholder="O que mais fez a diferenÃ§a na sua consulta?"></textarea>
       </div>
 
       <div class="ep-status" id="formStatus"></div>
 
-      <button id="submitBtn" type="button" class="ep-btn ep-btn--primary ep-btn--block ep-mt-16" disabled>Enviar avaliação</button>
+      <button id="submitBtn" type="button" class="ep-btn ep-btn--primary ep-btn--block ep-mt-16" disabled>Enviar avaliaÃ§Ã£o</button>
     </div>
 
     <div id="thanksContent" class="ep-hide nps-thanks">
-      <div class="nps-thanks__icon">✓</div>
+      <div class="nps-thanks__icon">âœ“</div>
       <h2 class="nps-title" style="margin-top: 0;">Obrigado!</h2>
-      <p class="ep-text-muted" style="margin: 0;">Sua avaliação foi recebida. Tenha um ótimo dia.</p>
+      <p class="ep-text-muted" style="margin: 0;">Sua avaliaÃ§Ã£o foi recebida. Tenha um Ã³timo dia.</p>
     </div>
   </div>
 
   <p class="ep-text-xs ep-text-muted ep-text-center ep-mt-16">
-    Espaço Prelúdio · plataforma de teleconsulta
+    EspaÃ§o PrelÃºdio Â· plataforma de teleconsulta
   </p>
 </div>
 
@@ -139,8 +139,8 @@
   const $ = id => document.getElementById(id);
 
   if (!token) {
-    $("formEyebrow").textContent = "Link inválido";
-    $("formTitle").textContent   = "Esse link não funciona";
+    $("formEyebrow").textContent = "Link invÃ¡lido";
+    $("formTitle").textContent   = "Esse link nÃ£o funciona";
     $("formSub").textContent     = "Pode ser que tenha sido digitado errado. Volte ao e-mail e clique de novo.";
   } else {
     init();
@@ -156,17 +156,17 @@
 
       if (data.alreadyAnswered) {
         $("formEyebrow").textContent = "Pesquisa";
-        $("formTitle").textContent   = "Você já avaliou essa consulta";
+        $("formTitle").textContent   = "VocÃª jÃ¡ avaliou essa consulta";
         $("formSub").textContent     = "Obrigado! Seu feedback foi recebido anteriormente.";
         return;
       }
 
-      $("formEyebrow").textContent     = "Sua opinião conta";
+      $("formEyebrow").textContent     = "Sua opiniÃ£o conta";
       $("formTitle").textContent       = `Como foi sua consulta com ${data.therapistName}?`;
       $("formSub").textContent         = data.clinicName ? data.clinicName : "Leva menos de 30 segundos.";
       $("therapistNameSpan").textContent = data.therapistName;
 
-      // Monta os 11 botões 0-10
+      // Monta os 11 botÃµes 0-10
       const scale = $("scale");
       for (let i = 0; i <= 10; i++) {
         const btn = document.createElement("button");
@@ -186,8 +186,8 @@
       $("formContent").classList.remove("ep-hide");
     } catch (e) {
       $("formEyebrow").textContent = "Erro";
-      $("formTitle").textContent   = "Não foi possível carregar";
-      $("formSub").textContent     = "Tente abrir o link novamente. Se não funcionar, é porque expirou.";
+      $("formTitle").textContent   = "NÃ£o foi possÃ­vel carregar";
+      $("formSub").textContent     = "Tente abrir o link novamente. Se nÃ£o funcionar, Ã© porque expirou.";
     }
   }
 
@@ -197,7 +197,7 @@
     const status = $("formStatus");
     btn.disabled = true;
     status.className = "ep-status";
-    status.textContent = "Enviando…";
+    status.textContent = "Enviandoâ€¦";
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/nps/${encodeURIComponent(token)}`, {
         method: "POST",

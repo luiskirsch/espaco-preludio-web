@@ -1,30 +1,30 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meu painel · Espaço Prelúdio</title>
+  <title>Meu painel Â· EspaÃ§o PrelÃºdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-24">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-25">
 </head>
 <body>
 
 <div class="ep-shell">
   <header class="ep-topbar">
-    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+    <a href="./index.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead">EspaÃ§o</span>
+        <span>PrelÃºdio</span>
       </span>
     </a>
     <nav class="ep-nav">
-      <a href="./paciente-audit.html" class="ep-text-sm">Histórico</a>
-      <span id="navUser" class="ep-text-sm ep-text-muted">…</span>
+      <a href="./paciente-audit.html" class="ep-text-sm">HistÃ³rico</a>
+      <span id="navUser" class="ep-text-sm ep-text-muted">â€¦</span>
       <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="logoutBtn">Sair</button>
     </nav>
   </header>
@@ -33,8 +33,8 @@
     <section class="ep-prontuario__header">
       <div class="ep-prontuario__avatar" id="avatar" aria-hidden="true">P</div>
       <div class="ep-prontuario__title">
-        <div class="ep-eyebrow">Suas anotações</div>
-        <h1 class="ep-h1" id="patientName">…</h1>
+        <div class="ep-eyebrow">Suas anotaÃ§Ãµes</div>
+        <h1 class="ep-h1" id="patientName">â€¦</h1>
         <div class="ep-pill-row" id="pillRow"></div>
       </div>
       <div class="ep-prontuario__actions"></div>
@@ -44,14 +44,14 @@
 
     <section class="ep-stack ep-mt-24">
       <div class="ep-row" style="align-items: center; justify-content: space-between;">
-        <h2 class="ep-h2 ep-mt-0">Histórico de consultas</h2>
+        <h2 class="ep-h2 ep-mt-0">HistÃ³rico de consultas</h2>
         <span class="ep-text-xs ep-text-muted ep-lock">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-          Cifradas com a sua chave — só você lê
+          Cifradas com a sua chave â€” sÃ³ vocÃª lÃª
         </span>
       </div>
       <div class="ep-timeline" id="timeline">
-        <div class="ep-skeleton">Carregando…</div>
+        <div class="ep-skeleton">Carregandoâ€¦</div>
       </div>
     </section>
   </main>
@@ -79,7 +79,7 @@
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
   function fmtDate(ms) {
-    if (!ms) return "—";
+    if (!ms) return "â€”";
     return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
   }
   function fmtTime(ms) {
@@ -87,7 +87,7 @@
     return new Date(ms).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
   }
   function fmtMonthYear(ms) {
-    if (!ms) return "—";
+    if (!ms) return "â€”";
     const s = new Date(ms).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
@@ -97,22 +97,22 @@
     return `${d.getFullYear()}-${String(d.getMonth()).padStart(2, "0")}`;
   }
   function relative(ms) {
-    if (!ms) return "—";
+    if (!ms) return "â€”";
     const diff = Date.now() - ms;
     const d = Math.floor(diff / 86_400_000);
     if (d === 0) return "hoje";
     if (d === 1) return "ontem";
-    if (d < 7)  return `há ${d} dias`;
-    if (d < 30) return `há ${Math.floor(d/7)} semanas`;
-    if (d < 365) return `há ${Math.floor(d/30)} meses`;
-    return `há ${Math.floor(d/365)} anos`;
+    if (d < 7)  return `hÃ¡ ${d} dias`;
+    if (d < 30) return `hÃ¡ ${Math.floor(d/7)} semanas`;
+    if (d < 365) return `hÃ¡ ${Math.floor(d/30)} meses`;
+    return `hÃ¡ ${Math.floor(d/365)} anos`;
   }
 
   let dek = null;
   let idToken = null;
   let account = null;
   let allSessions = [];
-  const notesCache = new Map(); // sessionId → array de notas decifradas
+  const notesCache = new Map(); // sessionId â†’ array de notas decifradas
 
   logoutBtn.addEventListener("click", async () => {
     if (!confirm("Sair da sua conta?")) return;
@@ -136,9 +136,9 @@
   }
 
   function renderHeader() {
-    patientName.textContent = account.displayName || "Você";
+    patientName.textContent = account.displayName || "VocÃª";
     avatar.textContent = initials(account.displayName);
-    navUser.textContent = account.displayName ? `Olá, ${account.displayName}` : "…";
+    navUser.textContent = account.displayName ? `OlÃ¡, ${account.displayName}` : "â€¦";
 
     const since = account.createdAt?.toMillis
       ? account.createdAt.toMillis()
@@ -162,14 +162,14 @@
         <div class="ep-stat__sub">${total === 1 ? "encontro registrado" : "encontros registrados"}</div>
       </div>
       <div class="ep-stat">
-        <div class="ep-stat__label">Última</div>
+        <div class="ep-stat__label">Ãšltima</div>
         <div class="ep-stat__value">${relative(last)}</div>
-        <div class="ep-stat__sub">${last ? fmtDate(last) : "—"}</div>
+        <div class="ep-stat__sub">${last ? fmtDate(last) : "â€”"}</div>
       </div>
       <div class="ep-stat">
-        <div class="ep-stat__label">Anotações</div>
-        <div class="ep-stat__value" id="totalNotesValue">—</div>
-        <div class="ep-stat__sub">cifradas só com sua chave</div>
+        <div class="ep-stat__label">AnotaÃ§Ãµes</div>
+        <div class="ep-stat__value" id="totalNotesValue">â€”</div>
+        <div class="ep-stat__sub">cifradas sÃ³ com sua chave</div>
       </div>
     `;
   }
@@ -199,17 +199,17 @@
     if (allSessions.length === 0) {
       timeline.innerHTML = `
         <div class="ep-empty">
-          <h3 class="ep-h3 ep-mt-0">Nenhuma consulta vinculada à sua conta ainda.</h3>
+          <h3 class="ep-h3 ep-mt-0">Nenhuma consulta vinculada Ã  sua conta ainda.</h3>
           <p class="ep-text-sm ep-text-muted">
-            Da próxima vez que entrar pelo link do(a) profissional <strong>já logado(a)</strong>,
-            a sessão aparecerá aqui e suas notas ficam salvas.
+            Da prÃ³xima vez que entrar pelo link do(a) profissional <strong>jÃ¡ logado(a)</strong>,
+            a sessÃ£o aparecerÃ¡ aqui e suas notas ficam salvas.
           </p>
         </div>
       `;
       return;
     }
 
-    // Agrupa por mês
+    // Agrupa por mÃªs
     const groups = new Map();
     for (const s of allSessions) {
       const k = monthKey(s.createdAt);
@@ -232,7 +232,7 @@
     card.className = "ep-session-card";
     card.dataset.sessionId = session.sessionId;
 
-    const dateLine = `${fmtDate(session.createdAt)} · ${fmtTime(session.createdAt)}`;
+    const dateLine = `${fmtDate(session.createdAt)} Â· ${fmtTime(session.createdAt)}`;
     card.innerHTML = `
       <button class="ep-session-card__head" type="button" aria-expanded="false">
         <div>
@@ -240,12 +240,12 @@
           <div class="ep-session-card__therapist">com ${session.therapistDisplayName || "Profissional"}</div>
         </div>
         <div class="ep-session-card__meta">
-          <span class="ep-session-card__count" data-count>—</span>
+          <span class="ep-session-card__count" data-count>â€”</span>
           <svg class="ep-session-card__chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
         </div>
       </button>
       <div class="ep-session-card__body" hidden>
-        <div class="ep-skeleton">Carregando suas anotações…</div>
+        <div class="ep-skeleton">Carregando suas anotaÃ§Ãµesâ€¦</div>
       </div>
     `;
 
@@ -267,7 +267,7 @@
         countEl.textContent = notes.length === 1 ? "1 nota" : `${notes.length} notas`;
         renderNotesIntoBody(body, session.sessionId, notes);
       } catch (e) {
-        body.innerHTML = `<div class="ep-error-state">Erro ao carregar suas anotações: ${e.message}</div>`;
+        body.innerHTML = `<div class="ep-error-state">Erro ao carregar suas anotaÃ§Ãµes: ${e.message}</div>`;
       }
     });
 
@@ -280,7 +280,7 @@
       const empty = document.createElement("div");
       empty.className = "ep-text-sm ep-text-muted";
       empty.style.fontStyle = "italic";
-      empty.textContent = "Você não escreveu nada nessa sessão.";
+      empty.textContent = "VocÃª nÃ£o escreveu nada nessa sessÃ£o.";
       body.appendChild(empty);
       return;
     }
@@ -291,7 +291,7 @@
     const row = document.createElement("article");
     row.className = "ep-note ep-note--patient";
     row.innerHTML = `
-      <div class="ep-note__meta">${fmtDate(note.createdAt)} · ${fmtTime(note.createdAt)}</div>
+      <div class="ep-note__meta">${fmtDate(note.createdAt)} Â· ${fmtTime(note.createdAt)}</div>
       <div class="ep-note__text"></div>
       <div class="ep-note__actions">
         <button type="button" class="ep-btn ep-btn--ghost ep-btn--xs" data-edit>Editar</button>
@@ -314,14 +314,14 @@
         });
         note.text = trimmed;
         textEl.textContent = trimmed;
-        notesCache.set(sessionId, notesCache.get(sessionId)); // já mutado
+        notesCache.set(sessionId, notesCache.get(sessionId)); // jÃ¡ mutado
       } catch (e) {
-        alert("Erro ao salvar edição: " + e.message);
+        alert("Erro ao salvar ediÃ§Ã£o: " + e.message);
       }
     });
 
     row.querySelector("[data-delete]").addEventListener("click", async () => {
-      if (!confirm("Apagar esta anotação? Não dá para desfazer.")) return;
+      if (!confirm("Apagar esta anotaÃ§Ã£o? NÃ£o dÃ¡ para desfazer.")) return;
       try {
         await api(`/therapy/paciente/notas/${encodeURIComponent(note.noteId)}`, { method: "DELETE" });
         const arr = notesCache.get(sessionId).filter(n => n.noteId !== note.noteId);
@@ -335,7 +335,7 @@
     return row;
   }
 
-  // ─── Boot ──────────────────────────────────────────────────────────────
+  // â”€â”€â”€ Boot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   (async () => {
     try {
       const auth = await requirePatient();

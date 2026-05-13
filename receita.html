@@ -1,25 +1,25 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Receita digital · Espaço Prelúdio</title>
+  <title>Receita digital Â· EspaÃ§o PrelÃºdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-24">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-25">
 </head>
 <body>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
-    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+    <a href="./painel.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead">EspaÃ§o</span>
+        <span>PrelÃºdio</span>
       </span>
     </a>
     <nav class="ep-nav" aria-label="Painel">
@@ -27,15 +27,15 @@
       <a href="./agenda.html">Agenda</a>
       <a href="./pacientes.html">Pacientes</a>
       <a href="./financeiro.html">Financeiro</a>
-      <a href="./relatorios.html">Relatórios</a>
-      <a href="./clinica.html">Clínica</a>
+      <a href="./relatorios.html">RelatÃ³rios</a>
+      <a href="./clinica.html">ClÃ­nica</a>
       <a href="./inventario.html">Estoque</a>
       <a href="./receita.html" class="is-active">Receitas</a>
       <a href="./calculadora.html">Calculadora</a>
       <a href="./documento.html?tipo=atestado">Atestado</a>
       <a href="./whatsapp.html">WhatsApp</a>
       <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
-        <span class="ep-nav-avatar" id="topUserAvatar">·</span>
+        <span class="ep-nav-avatar" id="topUserAvatar">Â·</span>
         <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
       </a>
       <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
@@ -48,7 +48,7 @@
       <div>
         <div class="ep-eyebrow">Receita digital</div>
         <h1 class="ep-h1 ep-mt-12" id="pageTitle">Nova receita</h1>
-        <p class="ep-text-muted ep-mt-0" id="pageSub">Layout padrão CFM. Assinatura ICP-Brasil dentro da plataforma ou externa.</p>
+        <p class="ep-text-muted ep-mt-0" id="pageSub">Layout padrÃ£o CFM. Assinatura ICP-Brasil dentro da plataforma ou externa.</p>
       </div>
       <span id="statusBadge" class="ep-verif-pill is-pending ep-hide">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
@@ -56,15 +56,15 @@
       </span>
     </div>
 
-    <!-- Emitido por: dados do médico que aparecem no PDF -->
+    <!-- Emitido por: dados do mÃ©dico que aparecem no PDF -->
     <section class="ep-issuer-block" id="issuerBlock">
       <div class="ep-issuer-block__logo" id="issuerLogo">
         <span class="ep-issuer-block__logo-fallback" id="issuerLogoFallback">EP</span>
       </div>
       <div class="ep-issuer-block__main">
         <div class="ep-eyebrow">Emitido por</div>
-        <div class="ep-issuer-block__name" id="issuerName">—</div>
-        <div class="ep-issuer-block__ids" id="issuerIds">—</div>
+        <div class="ep-issuer-block__name" id="issuerName">â€”</div>
+        <div class="ep-issuer-block__ids" id="issuerIds">â€”</div>
         <div class="ep-issuer-block__addr" id="issuerAddr"></div>
         <div class="ep-issuer-block__phone" id="issuerPhone"></div>
       </div>
@@ -73,9 +73,9 @@
       </div>
     </section>
     <script>
-      // Resolução otimista do bloco emissor + topbar a partir do cache do /me.
-      // Evita o flash do EP dourado → imagem real do logo. Sem cache (1ª visita)
-      // fica como está; renderIssuer() do módulo principal corrige depois.
+      // ResoluÃ§Ã£o otimista do bloco emissor + topbar a partir do cache do /me.
+      // Evita o flash do EP dourado â†’ imagem real do logo. Sem cache (1Âª visita)
+      // fica como estÃ¡; renderIssuer() do mÃ³dulo principal corrige depois.
       (function() {
         try {
           const raw = sessionStorage.getItem("ep:profile:v2");
@@ -87,7 +87,7 @@
           if (t.logoBase64 && t.logoMime && issuerLogo) {
             issuerLogo.innerHTML = `<img src="data:${t.logoMime};base64,${t.logoBase64}" alt="Logo">`;
           } else {
-            const initials = (t.displayName || "").split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0]).join("").toUpperCase() || "—";
+            const initials = (t.displayName || "").split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0]).join("").toUpperCase() || "â€”";
             const fb = document.getElementById("issuerLogoFallback");
             if (fb) fb.textContent = initials;
           }
@@ -104,15 +104,15 @@
           if (t.rqe) idParts.push("RQE " + String(t.rqe).replace(/^RQE\s*/i, ""));
           if (t.especialidade) idParts.push(t.especialidade);
           const issuerIds = document.getElementById("issuerIds");
-          if (issuerIds) issuerIds.textContent = idParts.join("  ·  ") || "(sem identificação profissional)";
+          if (issuerIds) issuerIds.textContent = idParts.join("  Â·  ") || "(sem identificaÃ§Ã£o profissional)";
           const addrParts = [];
           if (c.endereco) {
             let line = c.endereco;
             if (c.numero) line += ", " + c.numero;
-            if (c.complemento) line += " — " + c.complemento;
+            if (c.complemento) line += " â€” " + c.complemento;
             addrParts.push(line);
           }
-          const cityLine = [c.bairro, c.cidade, c.uf, c.cep].filter(Boolean).join(" · ");
+          const cityLine = [c.bairro, c.cidade, c.uf, c.cep].filter(Boolean).join(" Â· ");
           if (cityLine) addrParts.push(cityLine);
           const issuerAddr = document.getElementById("issuerAddr");
           if (issuerAddr) issuerAddr.textContent = addrParts.join(" / ");
@@ -134,7 +134,7 @@
           <div class="ep-field">
             <label class="ep-label" for="patientSelect">Paciente</label>
             <select id="patientSelect" class="ep-select">
-              <option value="">— Selecione ou digite o nome —</option>
+              <option value="">â€” Selecione ou digite o nome â€”</option>
             </select>
           </div>
           <div class="ep-field" id="freePatientField">
@@ -147,7 +147,7 @@
               <input id="patientCpf" class="ep-input" type="text" maxlength="14" placeholder="000.000.000-00">
             </div>
             <div class="ep-field">
-              <label class="ep-label" for="dataEmissao">Data de emissão</label>
+              <label class="ep-label" for="dataEmissao">Data de emissÃ£o</label>
               <input id="dataEmissao" class="ep-input" type="date" required>
             </div>
           </div>
@@ -155,19 +155,19 @@
           <div class="ep-field">
             <label class="ep-label" for="tipoPrescricao">Tipo de receita *</label>
             <select id="tipoPrescricao" class="ep-select" required>
-              <!-- Opções inseridas dinamicamente baseadas em prescriptionTypes
+              <!-- OpÃ§Ãµes inseridas dinamicamente baseadas em prescriptionTypes
                    do conselho do profissional logado (vem de /me). -->
             </select>
             <p class="ep-text-xs ep-text-muted ep-mt-0" id="tipoPrescricaoHint"></p>
           </div>
 
-          <h3 class="ep-h3 ep-mt-16">Medicação</h3>
+          <h3 class="ep-h3 ep-mt-16">MedicaÃ§Ã£o</h3>
           <div id="medList" class="ep-stack" style="gap: 10px;"></div>
           <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="addMedBtn">+ Adicionar medicamento</button>
 
           <div class="ep-field ep-mt-16">
-            <label class="ep-label" for="observacoes">Observações ao paciente</label>
-            <textarea id="observacoes" class="ep-input" rows="3" maxlength="600" placeholder="Ex.: tomar sempre após as refeições; evitar dirigir nos primeiros dias."></textarea>
+            <label class="ep-label" for="observacoes">ObservaÃ§Ãµes ao paciente</label>
+            <textarea id="observacoes" class="ep-input" rows="3" maxlength="600" placeholder="Ex.: tomar sempre apÃ³s as refeiÃ§Ãµes; evitar dirigir nos primeiros dias."></textarea>
           </div>
 
           <div class="ep-field">
@@ -184,7 +184,7 @@
             <label class="ep-label" for="quantidadePrescrita">Quantidade total prescrita *</label>
             <input id="quantidadePrescrita" class="ep-input" type="number" min="1" max="24" step="1" value="1" required>
             <p class="ep-text-xs ep-text-muted ep-mt-0">
-              Total de unidades (caixas/embalagens) que a farmácia pode dispensar somando todas as visitas. Ex.: 2 caixas → paciente pode pegar 1 hoje e 1 outra hora.
+              Total de unidades (caixas/embalagens) que a farmÃ¡cia pode dispensar somando todas as visitas. Ex.: 2 caixas â†’ paciente pode pegar 1 hoje e 1 outra hora.
             </p>
           </div>
 
@@ -201,7 +201,7 @@
       <aside class="ep-receita-side">
         <div id="previewBlock" class="ep-receita-preview">
           <div class="ep-receita-preview__empty">
-            Preencha os dados e clique <strong>Gerar PDF</strong> para pré-visualizar.
+            Preencha os dados e clique <strong>Gerar PDF</strong> para prÃ©-visualizar.
           </div>
         </div>
 
@@ -217,7 +217,7 @@
           <div class="ep-receita-sign-pane is-active" data-pane="a1">
             <p class="ep-text-sm ep-text-muted ep-mt-0">
               Sobe o seu arquivo <strong>.pfx</strong> (certificado A1) e a senha. A assinatura
-              acontece no seu navegador — o arquivo nunca sai do seu dispositivo.
+              acontece no seu navegador â€” o arquivo nunca sai do seu dispositivo.
             </p>
             <div class="ep-field">
               <label class="ep-label" for="pfxFile">Arquivo .pfx</label>
@@ -234,13 +234,13 @@
           <!-- Tab external -->
           <div class="ep-receita-sign-pane" data-pane="external">
             <p class="ep-text-sm ep-text-muted ep-mt-0">
-              Baixe o PDF, assine onde preferir (gov.br, BirdID, Adobe + A1, etc.) e re-faça o upload.
-              Sugestões:
-              <a href="https://assinador.iti.br/" target="_blank" rel="noopener">gov.br/assina</a> (gratuito) ·
-              <a href="https://www.birdid.com.br/" target="_blank" rel="noopener">BirdID</a> ·
+              Baixe o PDF, assine onde preferir (gov.br, BirdID, Adobe + A1, etc.) e re-faÃ§a o upload.
+              SugestÃµes:
+              <a href="https://assinador.iti.br/" target="_blank" rel="noopener">gov.br/assina</a> (gratuito) Â·
+              <a href="https://www.birdid.com.br/" target="_blank" rel="noopener">BirdID</a> Â·
               <a href="https://receitadigital.cfm.org.br/" target="_blank" rel="noopener">Receita Digital CFM</a>.
             </p>
-            <button type="button" class="ep-btn ep-btn--ghost ep-btn--block" id="downloadUnsignedBtn">Baixar PDF não assinado</button>
+            <button type="button" class="ep-btn ep-btn--ghost ep-btn--block" id="downloadUnsignedBtn">Baixar PDF nÃ£o assinado</button>
             <div class="ep-field ep-mt-12">
               <label class="ep-label" for="signedFile">Re-upload do PDF assinado</label>
               <input id="signedFile" class="ep-input" type="file" accept="application/pdf">
@@ -258,7 +258,7 @@
             </div>
             <div>
               <div class="ep-status-card__title">Receita assinada</div>
-              <div class="ep-status-card__sub" id="signedSub">—</div>
+              <div class="ep-status-card__sub" id="signedSub">â€”</div>
             </div>
           </div>
 
@@ -269,8 +269,8 @@
               <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="copyLinkBtn">Copiar</button>
             </div>
             <p class="ep-text-xs ep-text-muted ep-mt-0">
-              Envie por WhatsApp/e-mail. Validade: <span id="deliveryExp">—</span>.
-              A farmácia abre o link para validar a assinatura.
+              Envie por WhatsApp/e-mail. Validade: <span id="deliveryExp">â€”</span>.
+              A farmÃ¡cia abre o link para validar a assinatura.
             </p>
           </div>
 
@@ -289,9 +289,9 @@
   import { cachedGet } from "./js/api-cache.js?v=2-82";
   import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
 
-  // ─── Boot ────────────────────────────────────────────────────────────
-  // Nome 'session' é o esperado pelo resto do código (session.conselho.* etc).
-  // Sem isso, allowedTypes = [] e o dropdown mostra "conselho não habilita".
+  // â”€â”€â”€ Boot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Nome 'session' Ã© o esperado pelo resto do cÃ³digo (session.conselho.* etc).
+  // Sem isso, allowedTypes = [] e o dropdown mostra "conselho nÃ£o habilita".
   const session = await requireTherapist({ requireDek: true });
   const { user, idToken, therapist, conselho, dek } = session;
   const uid = user.uid;
@@ -308,13 +308,13 @@
   const presetPatientId = params.get("patientId");
   const presetSessionId = params.get("sessionId");
 
-  // ─── Issuer block: renderiza dados do médico que vão pro PDF ────────
+  // â”€â”€â”€ Issuer block: renderiza dados do mÃ©dico que vÃ£o pro PDF â”€â”€â”€â”€â”€â”€â”€â”€
   function renderIssuer() {
     const t = therapist;
     const c = t.consultorio || {};
     const initials = (t.displayName || "")
       .split(/\s+/).filter(Boolean).slice(0, 2)
-      .map(s => s[0]).join("").toUpperCase() || "—";
+      .map(s => s[0]).join("").toUpperCase() || "â€”";
 
     const logoEl = document.getElementById("issuerLogo");
     if (t.logoBase64 && t.logoMime) {
@@ -330,30 +330,30 @@
     if (t.crp) idParts.push("CRP " + t.crp);
     if (t.rqe) idParts.push("RQE " + t.rqe.replace(/^RQE\s*/i, ""));
     if (t.especialidade) idParts.push(t.especialidade);
-    document.getElementById("issuerIds").textContent = idParts.join("  ·  ") || "(sem identificação profissional)";
+    document.getElementById("issuerIds").textContent = idParts.join("  Â·  ") || "(sem identificaÃ§Ã£o profissional)";
 
     const addrParts = [];
     if (c.endereco) {
       let line = c.endereco;
       if (c.numero) line += ", " + c.numero;
-      if (c.complemento) line += " — " + c.complemento;
+      if (c.complemento) line += " â€” " + c.complemento;
       addrParts.push(line);
     }
-    const cityLine = [c.bairro, c.cidade, c.uf, c.cep].filter(Boolean).join(" · ");
+    const cityLine = [c.bairro, c.cidade, c.uf, c.cep].filter(Boolean).join(" Â· ");
     if (cityLine) addrParts.push(cityLine);
     document.getElementById("issuerAddr").textContent = addrParts.join(" / ");
     document.getElementById("issuerPhone").textContent = c.telefone || "";
 
     // Warning de campos faltando
     const missing = [];
-    if (!c.endereco || !c.cidade) missing.push("endereço do consultório");
+    if (!c.endereco || !c.cidade) missing.push("endereÃ§o do consultÃ³rio");
     if (!c.telefone)              missing.push("telefone");
     if (!t.crm && !t.crp)         missing.push("CRM/CRP");
     if (missing.length > 0) {
       const w = document.getElementById("issuerWarning");
       w.classList.remove("ep-hide");
-      w.innerHTML = `<strong>Atenção:</strong> faltam dados no perfil para emitir uma receita completa: ${missing.join(", ")}.
-        <a href="./perfil.html" style="color: inherit; text-decoration: underline;">Editar perfil →</a>`;
+      w.innerHTML = `<strong>AtenÃ§Ã£o:</strong> faltam dados no perfil para emitir uma receita completa: ${missing.join(", ")}.
+        <a href="./perfil.html" style="color: inherit; text-decoration: underline;">Editar perfil â†’</a>`;
     }
   }
   renderIssuer();
@@ -367,20 +367,20 @@
   const tipoPrescricaoEl    = document.getElementById("tipoPrescricao");
   const tipoPrescricaoHintEl = document.getElementById("tipoPrescricaoHint");
 
-  // Opções de tipo de prescrição filtradas pelo conselho do profissional.
+  // OpÃ§Ãµes de tipo de prescriÃ§Ã£o filtradas pelo conselho do profissional.
   // session.conselho.prescriptionTypes vem do backend (/me) refletindo a
-  // matriz em professional-councils.js — fonte da verdade.
+  // matriz em professional-councils.js â€” fonte da verdade.
   const PRESCRIPTION_TYPE_LABELS = {
-    "mip":              { label: "MIP — livre prescrição (sem tarja)",                                hint: "Medicamentos isentos de prescrição. Sem tarja, dispensação livre." },
-    "insumo-injetavel": { label: "Insumos / injetáveis (estética)",                                   hint: "Acórdão COFFITO 735/2024 — fisioterapeutas podem prescrever insumos e injetáveis dentro do escopo." },
-    "controlado":       { label: "Controle especial (Portaria SVS/MS 344/98)",                        hint: "Medicamentos sob controle especial (tarja vermelha — C1/C5). Validade clínica 30 dias. Psicotrópicos B1/B2 (azuis) e A1/A2/A3 (amarelas) ainda exigem talonário físico." }
+    "mip":              { label: "MIP â€” livre prescriÃ§Ã£o (sem tarja)",                                hint: "Medicamentos isentos de prescriÃ§Ã£o. Sem tarja, dispensaÃ§Ã£o livre." },
+    "insumo-injetavel": { label: "Insumos / injetÃ¡veis (estÃ©tica)",                                   hint: "AcÃ³rdÃ£o COFFITO 735/2024 â€” fisioterapeutas podem prescrever insumos e injetÃ¡veis dentro do escopo." },
+    "controlado":       { label: "Controle especial (Portaria SVS/MS 344/98)",                        hint: "Medicamentos sob controle especial (tarja vermelha â€” C1/C5). Validade clÃ­nica 30 dias. PsicotrÃ³picos B1/B2 (azuis) e A1/A2/A3 (amarelas) ainda exigem talonÃ¡rio fÃ­sico." }
   };
   const allowedTypes = session?.conselho?.prescriptionTypes || [];
   function renderTipoPrescricaoOptions() {
     tipoPrescricaoEl.innerHTML = "";
     if (allowedTypes.length === 0) {
       const opt = document.createElement("option");
-      opt.value = ""; opt.textContent = "Seu conselho não habilita receitas — contate o suporte.";
+      opt.value = ""; opt.textContent = "Seu conselho nÃ£o habilita receitas â€” contate o suporte.";
       opt.disabled = true; opt.selected = true;
       tipoPrescricaoEl.appendChild(opt);
       tipoPrescricaoEl.disabled = true;
@@ -388,7 +388,7 @@
     }
     if (allowedTypes.length > 1) {
       const placeholder = document.createElement("option");
-      placeholder.value = ""; placeholder.textContent = "Selecione o tipo…";
+      placeholder.value = ""; placeholder.textContent = "Selecione o tipoâ€¦";
       placeholder.disabled = true; placeholder.selected = true;
       tipoPrescricaoEl.appendChild(placeholder);
     }
@@ -428,10 +428,10 @@
 
   let receitaId = editId || null;
   let receitaState = "draft"; // "draft" | "signed"
-  let pendingPdfBytes = null; // Uint8Array do PDF não assinado (após preview)
+  let pendingPdfBytes = null; // Uint8Array do PDF nÃ£o assinado (apÃ³s preview)
   let signedDeliveryToken = null;
 
-  // ─── Helpers ─────────────────────────────────────────────────────────
+  // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function setStatus(el, text, type = "") {
     el.textContent = text;
     el.className = "ep-status";
@@ -460,7 +460,7 @@
     return out;
   }
 
-  // ─── Medicação dinâmica ──────────────────────────────────────────────
+  // â”€â”€â”€ MedicaÃ§Ã£o dinÃ¢mica â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function addMedRow(prefill = {}) {
     const row = document.createElement("div");
     row.className = "ep-receita-med";
@@ -477,7 +477,7 @@
       </div>
       <div class="ep-field">
         <label class="ep-label">Posologia</label>
-        <input class="ep-input" data-field="posologia" type="text" maxlength="200" placeholder="Ex.: 1 comprimido pela manhã, por 30 dias">
+        <input class="ep-input" data-field="posologia" type="text" maxlength="200" placeholder="Ex.: 1 comprimido pela manhÃ£, por 30 dias">
       </div>
       <button type="button" class="ep-btn ep-btn--ghost ep-btn--xs" data-remove>Remover</button>
     `;
@@ -520,7 +520,7 @@
     patientNameEl.value = f.patientName || "";
     patientCpfEl.value  = f.patientCpf  || "";
     dataEmissaoEl.value = f.dataEmissao || todayISO();
-    // Compat: rascunhos antigos têm `tipoReceita` ("simples"|"controle-especial");
+    // Compat: rascunhos antigos tÃªm `tipoReceita` ("simples"|"controle-especial");
     // mapeia pra novo `tipoPrescricao` ("mip"|"controlado") quando carregar.
     let novoTipo = f.tipoPrescricao;
     if (!novoTipo && f.tipoReceita) {
@@ -538,7 +538,7 @@
     if ((f.meds || []).length === 0) addMedRow();
   }
 
-  // ─── Pacientes (para select) ─────────────────────────────────────────
+  // â”€â”€â”€ Pacientes (para select) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function populatePatientOptions(j) {
     while (patientSelect.options.length > 1) patientSelect.remove(1);
     for (const p of (j.patients || [])) {
@@ -579,7 +579,7 @@
   }
   await loadPatientsIntoSelect();
 
-  // ─── Carrega rascunho existente, se houver id ────────────────────────
+  // â”€â”€â”€ Carrega rascunho existente, se houver id â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (editId) {
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/receitas/${editId}`, {
@@ -595,7 +595,7 @@
         }
         if (r.status === "signed") {
           pageTitle.textContent = "Receita assinada";
-          pageSub.textContent   = "Esta receita já foi assinada e pode ser entregue ao paciente.";
+          pageSub.textContent   = "Esta receita jÃ¡ foi assinada e pode ser entregue ao paciente.";
           statusBadge.classList.remove("ep-hide", "is-pending");
           statusBadge.classList.add("is-verified");
           statusBadge.innerHTML = `
@@ -610,7 +610,7 @@
     } catch (e) { console.warn("load_receita_failed", e); }
   }
 
-  // ─── Salvar rascunho ─────────────────────────────────────────────────
+  // â”€â”€â”€ Salvar rascunho â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function persistDraft() {
     const form = collectForm();
     if (!form.patientName) {
@@ -629,7 +629,7 @@
       setStatus(formStatus, "Selecione o tipo de receita.", "err");
       return null;
     }
-    setStatus(formStatus, "Salvando…");
+    setStatus(formStatus, "Salvandoâ€¦");
     const payload = JSON.stringify(form);
     const { ciphertext, iv } = await encryptNote(payload, dek);
 
@@ -675,11 +675,11 @@
   }
   saveDraftBtn.addEventListener("click", persistDraft);
 
-  // ─── Geração de PDF (pdf-lib) ────────────────────────────────────────
-  // Layout: cabeçalho do consultório do médico (logo + identidade) →
-  // corpo flowing (título, paciente, prescrição, observações, validade) →
-  // bloco de assinatura logo após corpo → QR de verificação no canto direito →
-  // rodapé sutil do Prelúdio.
+  // â”€â”€â”€ GeraÃ§Ã£o de PDF (pdf-lib) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Layout: cabeÃ§alho do consultÃ³rio do mÃ©dico (logo + identidade) â†’
+  // corpo flowing (tÃ­tulo, paciente, prescriÃ§Ã£o, observaÃ§Ãµes, validade) â†’
+  // bloco de assinatura logo apÃ³s corpo â†’ QR de verificaÃ§Ã£o no canto direito â†’
+  // rodapÃ© sutil do PrelÃºdio.
   async function buildPdf(form, verifyUrl = null) {
     const { PDFDocument, StandardFonts, rgb } = await import("https://esm.sh/pdf-lib@1.17.1");
     const pdfDoc = await PDFDocument.create();
@@ -730,7 +730,7 @@
     const t = therapist;
     const c = t.consultorio || {};
 
-    // ── Embed logo (PNG/JPEG direto; WebP via canvas → PNG) ───────────
+    // â”€â”€ Embed logo (PNG/JPEG direto; WebP via canvas â†’ PNG) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     let logoImg = null;
     if (t.logoBase64 && t.logoMime) {
       try {
@@ -743,7 +743,7 @@
           bytes = base64ToBytes(t.logoBase64);
           logoImg = await pdfDoc.embedJpg(bytes);
         } else if (mime === "image/webp") {
-          // Converte WebP → PNG via canvas (pdf-lib não suporta WebP nativo)
+          // Converte WebP â†’ PNG via canvas (pdf-lib nÃ£o suporta WebP nativo)
           const dataUrl = `data:${mime};base64,${t.logoBase64}`;
           const img = new Image();
           await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataUrl; });
@@ -757,7 +757,7 @@
       } catch (e) { console.warn("logo_embed_failed", e); logoImg = null; }
     }
 
-    // ── HEADER (consultório do médico) ────────────────────────────────
+    // â”€â”€ HEADER (consultÃ³rio do mÃ©dico) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const headerTopY = y;
     let textX = left;
     if (logoImg) {
@@ -780,16 +780,16 @@
     if (t.rqe) idParts.push("RQE " + t.rqe.replace(/^RQE\s*/i, ""));
     if (t.especialidade) idParts.push(t.especialidade);
     if (idParts.length) {
-      drawAt(idParts.join("  ·  "), textX, { size: 9.5, color: rgb(0.32,0.32,0.32) });
+      drawAt(idParts.join("  Â·  "), textX, { size: 9.5, color: rgb(0.32,0.32,0.32) });
       y -= 13;
     }
 
-    // Endereço
+    // EndereÃ§o
     const addrLines = [];
     if (c.endereco) {
       let line = c.endereco;
       if (c.numero) line += ", " + c.numero;
-      if (c.complemento) line += " — " + c.complemento;
+      if (c.complemento) line += " â€” " + c.complemento;
       addrLines.push(line);
     }
     const cityBits = [];
@@ -798,7 +798,7 @@
     else if (c.cidade) cityBits.push(c.cidade);
     else if (c.uf) cityBits.push(c.uf);
     if (c.cep) cityBits.push("CEP " + c.cep);
-    if (cityBits.length) addrLines.push(cityBits.join(" · "));
+    if (cityBits.length) addrLines.push(cityBits.join(" Â· "));
     for (const line of addrLines) {
       drawAt(line, textX, { size: 9, color: rgb(0.42,0.42,0.42) });
       y -= 11;
@@ -808,11 +808,11 @@
     if (c.telefone) contactBits.push("Tel.: " + c.telefone);
     if (t.cnpj)     contactBits.push("CNPJ: " + t.cnpj);
     if (contactBits.length) {
-      drawAt(contactBits.join("  ·  "), textX, { size: 9, color: rgb(0.42,0.42,0.42) });
+      drawAt(contactBits.join("  Â·  "), textX, { size: 9, color: rgb(0.42,0.42,0.42) });
       y -= 11;
     }
 
-    // Garante que o bloco header tem espaço pro logo
+    // Garante que o bloco header tem espaÃ§o pro logo
     if (logoImg) {
       const logoBottom = headerTopY - 56;
       if (y > logoBottom) y = logoBottom;
@@ -820,24 +820,24 @@
     y -= 14;
     hr();
 
-    // ── Título do receituário ─────────────────────────────────────────
+    // â”€â”€ TÃ­tulo do receituÃ¡rio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const titulos = {
-      "mip":              "RECEITUÁRIO",
-      "insumo-injetavel": "RECEITUÁRIO — INSUMOS / INJETÁVEIS",
-      "controlado":       "RECEITUÁRIO DE CONTROLE ESPECIAL"
+      "mip":              "RECEITUÃRIO",
+      "insumo-injetavel": "RECEITUÃRIO â€” INSUMOS / INJETÃVEIS",
+      "controlado":       "RECEITUÃRIO DE CONTROLE ESPECIAL"
     };
-    drawText(titulos[form.tipoPrescricao] || titulos[form.tipoReceita === "controle-especial" ? "controlado" : "mip"] || "RECEITUÁRIO", { font: fontBold, size: 13 });
+    drawText(titulos[form.tipoPrescricao] || titulos[form.tipoReceita === "controle-especial" ? "controlado" : "mip"] || "RECEITUÃRIO", { font: fontBold, size: 13 });
     y -= 4;
 
-    // ── Paciente ──────────────────────────────────────────────────────
+    // â”€â”€ Paciente â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     drawText("Paciente: " + form.patientName, { font: fontBold });
     if (form.patientCpf) drawText("CPF: " + form.patientCpf);
     drawText("Data: " + new Date(form.dataEmissao + "T00:00:00").toLocaleDateString("pt-BR"));
     y -= 6;
     hr();
 
-    // ── Prescrição ────────────────────────────────────────────────────
-    drawText("PRESCRIÇÃO", { font: fontBold, size: 12 });
+    // â”€â”€ PrescriÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    drawText("PRESCRIÃ‡ÃƒO", { font: fontBold, size: 12 });
     y -= 2;
     form.meds.forEach((m, i) => {
       drawText(`${i + 1}. ${m.nome}`, { font: fontBold });
@@ -846,48 +846,48 @@
       y -= 4;
     });
 
-    // ── Observações ───────────────────────────────────────────────────
+    // â”€â”€ ObservaÃ§Ãµes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (form.observacoes) {
       y -= 4;
       hr();
-      drawText("OBSERVAÇÕES", { font: fontBold, size: 12 });
+      drawText("OBSERVAÃ‡Ã•ES", { font: fontBold, size: 12 });
       drawText(form.observacoes);
     }
 
-    // ── Validade + quantidade dispensável ─────────────────────────────
+    // â”€â”€ Validade + quantidade dispensÃ¡vel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     y -= 6;
     hr();
-    drawText("Validade: " + form.validade + " dias a partir da emissão.", { size: 10, color: rgb(0.35,0.35,0.35) });
+    drawText("Validade: " + form.validade + " dias a partir da emissÃ£o.", { size: 10, color: rgb(0.35,0.35,0.35) });
     if (form.quantidadePrescrita) {
       const unidade = form.quantidadePrescrita === 1 ? "unidade" : "unidades";
-      drawText(`Total dispensável: ${form.quantidadePrescrita} ${unidade}. A farmácia registra cada retirada no link de verificação — após esgotar, o link bloqueia novas dispensações.`,
+      drawText(`Total dispensÃ¡vel: ${form.quantidadePrescrita} ${unidade}. A farmÃ¡cia registra cada retirada no link de verificaÃ§Ã£o â€” apÃ³s esgotar, o link bloqueia novas dispensaÃ§Ãµes.`,
         { size: 9, color: rgb(0.35,0.35,0.35) });
     }
 
-    // ── Base legal pra prescritor não-médico ──────────────────────────
-    // Documenta a base legal pro farmacêutico que conferir e não é médico:
-    // fisioterapeuta tem competência via Acórdão COFFITO 735/2024.
+    // â”€â”€ Base legal pra prescritor nÃ£o-mÃ©dico â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // Documenta a base legal pro farmacÃªutico que conferir e nÃ£o Ã© mÃ©dico:
+    // fisioterapeuta tem competÃªncia via AcÃ³rdÃ£o COFFITO 735/2024.
     const conselhoSigla = (session?.conselho?.sigla || "").toUpperCase();
     const subtipo       = (session?.conselho?.subtipo || "").toLowerCase();
     if (conselhoSigla === "CREFITO" && subtipo === "fisio") {
-      drawText("Prescrição emitida por fisioterapeuta com base no Acórdão COFFITO nº 735/2024 (DOU 11/09/2024).",
+      drawText("PrescriÃ§Ã£o emitida por fisioterapeuta com base no AcÃ³rdÃ£o COFFITO nÂº 735/2024 (DOU 11/09/2024).",
         { size: 8, color: rgb(0.35,0.35,0.35) });
     } else if (conselhoSigla === "CREFITO" && subtipo === "to") {
-      drawText("Prescrição de MIPs emitida por terapeuta ocupacional no escopo de sua competência profissional.",
+      drawText("PrescriÃ§Ã£o de MIPs emitida por terapeuta ocupacional no escopo de sua competÃªncia profissional.",
         { size: 8, color: rgb(0.35,0.35,0.35) });
     }
 
-    // ── BLOCO INFERIOR (assinatura à esquerda, QR à direita, mesmo nível) ──
-    // Duas colunas claramente separadas pra evitar colisão entre IDs longos
-    // do médico e a label de verificação.
+    // â”€â”€ BLOCO INFERIOR (assinatura Ã  esquerda, QR Ã  direita, mesmo nÃ­vel) â”€â”€
+    // Duas colunas claramente separadas pra evitar colisÃ£o entre IDs longos
+    // do mÃ©dico e a label de verificaÃ§Ã£o.
     const SIG_COL_W   = 230;                 // largura da coluna da assinatura
-    const VERIF_COL_X = 320;                 // x onde começa a coluna de verificação
+    const VERIF_COL_X = 320;                 // x onde comeÃ§a a coluna de verificaÃ§Ã£o
     const qrSize    = 78;
     const qrX       = right - qrSize;        // 467
-    const qrY       = 50;                    // base do QR (acima do rodapé y=32)
-    const blockTopY = qrY + qrSize;          // 128 — topo do bloco inferior
+    const qrY       = 50;                    // base do QR (acima do rodapÃ© y=32)
+    const blockTopY = qrY + qrSize;          // 128 â€” topo do bloco inferior
 
-    // LEFT — assinatura, com IDs em multi-linha quando longos
+    // LEFT â€” assinatura, com IDs em multi-linha quando longos
     const sigLineY = blockTopY;
     page.drawLine({
       start: { x: left, y: sigLineY },
@@ -904,7 +904,7 @@
     });
     sigY -= 13;
     if (idParts.length) {
-      const idLines = wrapText(idParts.join("  ·  "), fontReg, 9, SIG_COL_W);
+      const idLines = wrapText(idParts.join("  Â·  "), fontReg, 9, SIG_COL_W);
       for (const ln of idLines) {
         page.drawText(ln, {
           x: left, y: sigY, font: fontReg, size: 9, color: rgb(0.35, 0.35, 0.35)
@@ -913,7 +913,7 @@
       }
     }
 
-    // RIGHT — QR + label/helper, isolado da coluna da esquerda
+    // RIGHT â€” QR + label/helper, isolado da coluna da esquerda
     if (verifyUrl) {
       try {
         const QRLib = await import("https://esm.sh/qrcode@1.5.3");
@@ -924,12 +924,12 @@
         const qrImg = await pdfDoc.embedPng(qrBytes);
         page.drawImage(qrImg, { x: qrX, y: qrY, width: qrSize, height: qrSize });
 
-        // Texto de verificação à esquerda do QR, dentro da coluna
+        // Texto de verificaÃ§Ã£o Ã  esquerda do QR, dentro da coluna
         const labelX     = VERIF_COL_X;
         const labelMaxW  = qrX - labelX - 8; // ~139px
         let labelY = blockTopY - 4;
 
-        page.drawText("VERIFICAÇÃO DE AUTENTICIDADE", {
+        page.drawText("VERIFICAÃ‡ÃƒO DE AUTENTICIDADE", {
           x: labelX, y: labelY,
           font: fontBold, size: 7, color: rgb(0.30, 0.30, 0.30)
         });
@@ -948,21 +948,21 @@
       } catch (e) { console.warn("qr_embed_failed", e); }
     }
 
-    // ── Rodapé sutil (Prelúdio) ───────────────────────────────────────
-    page.drawText("Documento emitido via Espaço Prelúdio · espacopreludio.com.br · Validar a assinatura ICP-Brasil em verificador.iti.gov.br", {
+    // â”€â”€ RodapÃ© sutil (PrelÃºdio) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    page.drawText("Documento emitido via EspaÃ§o PrelÃºdio Â· espacopreludio.com.br Â· Validar a assinatura ICP-Brasil em verificador.iti.gov.br", {
       x: left, y: 32, font: fontReg, size: 7.5, color: rgb(0.60,0.60,0.60)
     });
 
     return pdfDoc.save();
   }
 
-  // ─── Preview ─────────────────────────────────────────────────────────
+  // â”€â”€â”€ Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   previewBtn.addEventListener("click", async () => {
     const form = await persistDraft();
     if (!form) return;
-    setStatus(formStatus, "Reservando link de verificação…");
+    setStatus(formStatus, "Reservando link de verificaÃ§Ã£oâ€¦");
 
-    // Pede o deliveryToken pré-assinatura pra que o QR já saia embutido no PDF.
+    // Pede o deliveryToken prÃ©-assinatura pra que o QR jÃ¡ saia embutido no PDF.
     let verifyUrl = null;
     try {
       const linkRes = await fetch(`${BACKEND_BASE_URL}/therapy/receitas/${receitaId}/preparar-link`, {
@@ -979,7 +979,7 @@
       console.warn("preparar_link_network_error", e);
     }
 
-    setStatus(formStatus, "Gerando PDF…");
+    setStatus(formStatus, "Gerando PDFâ€¦");
     try {
       const bytes = await buildPdf(form, verifyUrl);
       pendingPdfBytes = new Uint8Array(bytes);
@@ -995,7 +995,7 @@
     }
   });
 
-  // ─── Tabs de assinatura ──────────────────────────────────────────────
+  // â”€â”€â”€ Tabs de assinatura â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   document.querySelectorAll(".ep-receita-sign-tab").forEach(tab => {
     tab.addEventListener("click", () => {
       document.querySelectorAll(".ep-receita-sign-tab").forEach(t => t.classList.remove("is-active"));
@@ -1005,7 +1005,7 @@
     });
   });
 
-  // ─── Assinatura A1 inline ────────────────────────────────────────────
+  // â”€â”€â”€ Assinatura A1 inline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   signA1Btn.addEventListener("click", async () => {
     if (!pendingPdfBytes) {
       setStatus(signA1Status, "Gere o PDF primeiro.", "err"); return;
@@ -1019,7 +1019,7 @@
     if (!pass) { setStatus(signA1Status, "Informe a senha do certificado.", "err"); return; }
 
     signA1Btn.disabled = true;
-    setStatus(signA1Status, "Carregando bibliotecas de assinatura…");
+    setStatus(signA1Status, "Carregando bibliotecas de assinaturaâ€¦");
 
     try {
       const [{ default: signpdfLib }, { P12Signer }, placeholderMod, pdfLib] = await Promise.all([
@@ -1031,11 +1031,11 @@
       const SignPdf = signpdfLib?.SignPdf || signpdfLib?.default || signpdfLib;
       const pdflibAddPlaceholder = placeholderMod?.pdflibAddPlaceholder || placeholderMod?.default;
 
-      setStatus(signA1Status, "Adicionando placeholder de assinatura…");
+      setStatus(signA1Status, "Adicionando placeholder de assinaturaâ€¦");
       const pdfDoc = await pdfLib.PDFDocument.load(pendingPdfBytes);
       pdflibAddPlaceholder({
         pdfDoc,
-        reason: "Receita médica eletrônica",
+        reason: "Receita mÃ©dica eletrÃ´nica",
         contactInfo: "espaco.preludio@preludiojogos.com",
         name: therapist.displayName || "Profissional",
         location: "Brasil",
@@ -1043,7 +1043,7 @@
       });
       const placeholderBytes = await pdfDoc.save({ useObjectStreams: false });
 
-      setStatus(signA1Status, "Assinando com seu certificado…");
+      setStatus(signA1Status, "Assinando com seu certificadoâ€¦");
       const pfxBytes = new Uint8Array(await file.arrayBuffer());
       const signer = new P12Signer(pfxBytes, { passphrase: pass });
       const signer_instance = (typeof SignPdf === "function") ? new SignPdf() : SignPdf;
@@ -1054,14 +1054,14 @@
     } catch (e) {
       console.error("sign_a1_error", e);
       const msg = (e?.message || "").includes("password") || (e?.message || "").includes("MAC")
-        ? "Senha incorreta ou .pfx inválido."
+        ? "Senha incorreta ou .pfx invÃ¡lido."
         : "Erro ao assinar: " + (e?.message || "desconhecido") + ". Tente o caminho 'Assinar fora'.";
       setStatus(signA1Status, msg, "err");
       signA1Btn.disabled = false;
     }
   });
 
-  // ─── Assinatura externa: download + re-upload ────────────────────────
+  // â”€â”€â”€ Assinatura externa: download + re-upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   downloadUnsignedBtn.addEventListener("click", () => {
     if (!pendingPdfBytes) {
       setStatus(signExtStatus, "Gere o PDF primeiro.", "err"); return;
@@ -1087,7 +1087,7 @@
       setStatus(signExtStatus, "PDF muito grande (limite 1 MB).", "err"); return;
     }
     uploadSignedBtn.disabled = true;
-    setStatus(signExtStatus, "Anexando…");
+    setStatus(signExtStatus, "Anexandoâ€¦");
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
       const b64 = bytesToBase64(bytes);
@@ -1110,7 +1110,7 @@
     showDelivery(j.deliveryToken, j.deliveryTokenExp);
   }
 
-  // ─── Delivery (após assinada) ────────────────────────────────────────
+  // â”€â”€â”€ Delivery (apÃ³s assinada) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function showDelivery(token, exp) {
     signedDeliveryToken = token;
     signBlock.classList.add("ep-hide");
@@ -1126,9 +1126,9 @@
     document.getElementById("deliveryLink").value = url;
     document.getElementById("deliveryExp").textContent = exp
       ? new Date(exp).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
-      : "—";
+      : "â€”";
     document.getElementById("signedSub").textContent =
-      "Compartilhe o link abaixo com o paciente. A farmácia abre o mesmo link para validar.";
+      "Compartilhe o link abaixo com o paciente. A farmÃ¡cia abre o mesmo link para validar.";
 
     // QR code
     import("https://esm.sh/qrcode@1.5.3").then(QR => {
