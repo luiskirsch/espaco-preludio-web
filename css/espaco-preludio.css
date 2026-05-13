@@ -70,6 +70,8 @@ html {
   /* Reserva o espaço do scrollbar SEMPRE — viewport não muda quando aparece/
      some scroll, e topbar não escorrega pra baixo dele. */
   scrollbar-gutter: stable;
+  /* Sem overflow-x aqui — deixa o html ser o scroll container do documento.
+     Clip horizontal cai no body abaixo. */
 }
 
 html, body {
@@ -86,13 +88,14 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
   font-size: 15px;
   line-height: 1.55;
-  /* Trava scroll lateral. Elementos que extrapolam (modais wide, tables,
-     view-transition snapshots) eventualmente vazariam pro lado direito —
-     com isso, o browser nunca permite pan horizontal. Scroll vertical
-     continua funcionando normal.
-     IMPORTANTE: sem `max-width: 100vw` — 100vw inclui largura do scrollbar,
-     fazendo o body cobrir o conteúdo por baixo dele. overflow-x sozinho basta. */
-  overflow-x: hidden;
+}
+
+/* Clip horizontal só no body — html mantém o scroll vertical natural com
+   scrollbar-gutter reservado. Body clippa qualquer elemento que extrapole.
+   IMPORTANTE: sem `max-width: 100vw` — 100vw inclui largura do scrollbar,
+   fazendo o body cobrir o conteúdo por baixo dele. overflow-x sozinho basta. */
+body {
+  overflow-x: clip;
 }
 
 a { color: var(--ep-accent); text-decoration: none; }
