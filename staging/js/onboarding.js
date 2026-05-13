@@ -2,37 +2,51 @@
 // marca como visto em localStorage. Pode ser disparado de novo via
 // window.epRunOnboarding() (botão "Refazer tour" na página Suporte).
 
-const STORAGE_KEY = "ep:onboarded:v1";
+// v2: tour atualizado com diretório público, escalas/anamnese, Cmd+K, tema escuro,
+// tags, recibos. Bump da chave força rerun mesmo pra quem já viu a v1.
+const STORAGE_KEY = "ep:onboarded:v2";
 
 const STEPS = [
   {
     eyebrow: "Bem-vindo",
     title: "Sua plataforma clínica completa",
-    body: "Em 4 passos vamos te mostrar o essencial pra começar a atender hoje.\n\nNada de cadastro complicado: o que você precisa pra ver paciente, emitir receita e fechar o mês.",
+    body: "Em 6 passos rápidos vamos te mostrar tudo que você ganha aqui — do diretório público à emissão de receita.\n\nNão precisa decorar nada: vai aparecer no canto sempre que voltar pelo Suporte.",
     cta: "Começar tour"
   },
   {
-    eyebrow: "Passo 1 de 4",
-    title: "Crie consultas em segundos",
-    body: "No painel principal, clique em \"+ Nova consulta\". Defina horário, paciente, e a plataforma gera um link único.\n\nO paciente entra com 1 clique no link — sem login, sem instalar app. Videochamada com criptografia ponta-a-ponta (E2EE).",
+    eyebrow: "Passo 1 de 6",
+    title: "Apareça no diretório público",
+    body: "Pacientes encontram você pelo diretório (/profissionais) e marcam consulta direto — você só aprova as solicitações no painel.\n\nProfissionais com inscrição no conselho verificada ganham o <strong>selo azul</strong>, igual nas redes sociais. Mais credibilidade, mais agendamentos.",
     cta: "Próximo"
   },
   {
-    eyebrow: "Passo 2 de 4",
-    title: "Pacientes cifrados no seu navegador",
-    body: "Cadastre seus pacientes uma vez (nome, telefone, dados clínicos) e use em toda consulta futura.\n\nDados sensíveis são cifrados no SEU navegador antes de subir. Mesmo o servidor não consegue ler — só você.",
+    eyebrow: "Passo 2 de 6",
+    title: "Crie consultas e atenda em E2EE",
+    body: "\"+ Nova consulta\" no painel: defina horário e paciente, a plataforma gera um link único. Paciente entra com 1 clique — sem login, sem app.\n\nVídeo com criptografia ponta-a-ponta (E2EE). Nem o servidor vê o conteúdo da sessão.",
     cta: "Próximo"
   },
   {
-    eyebrow: "Passo 3 de 4",
-    title: "Receita e documentos com 1 clique",
-    body: "Emita receita digital, atestado, encaminhamento, relatório — tudo conforme seu conselho (CRM, CRP, CREFITO, CRN, CRO, etc).\n\nPDF com sua identificação e logo. Paciente recebe por e-mail ou baixa direto.",
+    eyebrow: "Passo 3 de 6",
+    title: "Pacientes cifrados, com tags",
+    body: "Dados de paciente cifrados no SEU navegador antes de subir — só você lê.\n\nAdicione <strong>tags</strong> (ansiedade, casal, convênio…) pra categorizar e achar rápido. Envie <strong>anamnese</strong> e <strong>escalas validadas</strong> (PHQ-9, GAD-7) direto pro paciente responder em casa.",
     cta: "Próximo"
   },
   {
-    eyebrow: "Passo 4 de 4",
-    title: "Tudo no piloto automático",
-    body: "WhatsApp manda confirmação ao criar consulta e lembrete 24h antes (ative em \"WhatsApp\").\n\nFinanceiro, agenda, estoque, calculadora clínica — você tem 30 dias de trial grátis pra explorar.\n\nDúvidas? A página \"Suporte\" tem FAQ e contato direto.",
+    eyebrow: "Passo 4 de 6",
+    title: "Receita, documentos e recibos",
+    body: "Emita receita digital, atestado, encaminhamento, laudo — conforme seu conselho (CRM, CRP, CREFITO, CRN, CRO…). PDF com sua logo.\n\nFechou consulta? Botão <strong>Recibo</strong> gera transação no financeiro + envia por e-mail e WhatsApp. Tudo num clique.",
+    cta: "Próximo"
+  },
+  {
+    eyebrow: "Passo 5 de 6",
+    title: "Cmd+K, tema escuro e notas",
+    body: "Aperte <kbd>Cmd+K</kbd> (ou <kbd>Ctrl+K</kbd>) em qualquer página pra navegação instantânea.\n\nLua/sol no canto superior alterna <strong>tema escuro</strong>. E cada consulta tem nota pré-sessão (📝) — lembrete rápido pra você consultar antes da chamada.",
+    cta: "Próximo"
+  },
+  {
+    eyebrow: "Passo 6 de 6",
+    title: "Automatize e relaxe",
+    body: "WhatsApp confirma a consulta na hora e lembra 24h antes. Aniversariantes recebem mensagem automática. Relatórios mostram analytics e NPS.\n\n30 dias de trial grátis. Dúvidas? Página \"Suporte\" tem FAQ e contato direto.",
     cta: "Começar a usar"
   }
 ];
@@ -91,8 +105,9 @@ export function runOnboarding({ force = false } = {}) {
     const step = STEPS[index];
     eyebrowEl.textContent = step.eyebrow;
     titleEl.textContent   = step.title;
-    // Escapa o corpo e converte \n\n em parágrafos / \n em <br>.
-    textEl.innerHTML = escapeHtml(step.body).replace(/\n\n/g, "<br><br>").replace(/\n/g, "<br>");
+    // Os corpos da v2 incluem HTML inline (<strong>, <kbd>) — não escapa.
+    // Conteúdo é trusted (constante hardcoded), sem user input.
+    textEl.innerHTML = step.body.replace(/\n\n/g, "<br><br>").replace(/\n/g, "<br>");
     nextBtn.textContent   = step.cta;
     prevBtn.style.display = index === 0 ? "none" : "inline-flex";
     skipBtn.style.display = index === STEPS.length - 1 ? "none" : "inline-flex";

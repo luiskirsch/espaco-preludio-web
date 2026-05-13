@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-39">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-40">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -184,6 +184,26 @@
     <div class="ep-modal__actions">
       <button type="button" class="ep-btn ep-btn--ghost" id="copyLinkBtn">Copiar link</button>
       <button type="button" class="ep-btn ep-btn--primary" id="closeLinkModal">Pronto</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nota pré-sessão (local-only) -->
+<div class="ep-modal" id="preNoteModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 460px;">
+    <h3 class="ep-modal__title">Nota pré-sessão</h3>
+    <p class="ep-modal__sub">
+      Lembrete rápido pra você consultar antes/durante a consulta. Fica salvo
+      <strong>só neste navegador</strong> — não vai pro servidor.
+    </p>
+    <div style="padding: 0 28px;">
+      <textarea id="preNoteText" class="ep-textarea" maxlength="600" rows="4" placeholder="Ex.: explorar tema do trabalho · checar sono · cobrar exercício passado"></textarea>
+      <p class="ep-text-xs ep-text-muted ep-mt-0">Máx 600 caracteres.</p>
+    </div>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="preNoteCancelBtn">Cancelar</button>
+      <button type="button" class="ep-btn ep-btn--ghost" id="preNoteClearBtn">Apagar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="preNoteSaveBtn">Salvar</button>
     </div>
   </div>
 </div>
@@ -675,6 +695,10 @@
     const confirmedTag = (s.confirmedAt && s.status === "scheduled")
       ? `<span class="ep-badge ep-badge--ok" title="Paciente clicou no link de confirmação do e-mail de lembrete">✓ Confirmada pelo paciente</span>`
       : "";
+    const preNote = readPreNote(s.sessionId);
+    const preNoteBlock = preNote
+      ? `<div class="ep-prenote" title="Sua nota pré-sessão (salva só neste navegador)">📝 ${escapeHtml(preNote.length > 110 ? preNote.slice(0, 110) + "…" : preNote)}</div>`
+      : "";
     div.innerHTML = `
       <div>
         <div class="ep-session__name">${escapeHtml(s.patientName)}</div>
@@ -685,10 +709,14 @@
           ${s.scheduledAt ? `<span>· Agendada ${fmtDate(s.scheduledAt)}</span>` : ""}
           ${s.completedAt ? `<span>· Encerrada ${fmtDate(s.completedAt)}</span>` : ""}
         </div>
+        ${preNoteBlock}
       </div>
       <div class="ep-session__actions">
         ${s.status !== "completed" ? `
           <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="enter" data-id="${s.sessionId}">Entrar</button>
+        ` : ""}
+        ${s.status !== "completed" ? `
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="prenote" data-id="${s.sessionId}" title="Nota pré-sessão (só neste navegador)">${preNote ? "📝 Nota" : "Nota"}</button>
         ` : ""}
         ${s.status !== "completed" ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="encerrar" data-id="${s.sessionId}">Encerrar</button>
@@ -752,7 +780,45 @@
       }
     } else if (action === "recibo") {
       openReciboModal(allSessions.find(x => x.sessionId === id));
+    } else if (action === "prenote") {
+      openPreNoteModal(id);
     }
+  });
+
+  // ─── Notas pré-sessão (local-only, localStorage) ───────────
+  function preNoteKey(sid) { return `ep:prenote:${sid}`; }
+  function readPreNote(sid) {
+    try { return localStorage.getItem(preNoteKey(sid)) || ""; }
+    catch { return ""; }
+  }
+  function writePreNote(sid, text) {
+    try {
+      if (text && text.trim()) localStorage.setItem(preNoteKey(sid), text.trim().slice(0, 600));
+      else localStorage.removeItem(preNoteKey(sid));
+    } catch {}
+  }
+  let preNoteSessionId = null;
+  function openPreNoteModal(sid) {
+    preNoteSessionId = sid;
+    document.getElementById("preNoteText").value = readPreNote(sid);
+    document.getElementById("preNoteModal").classList.add("is-open");
+    setTimeout(() => document.getElementById("preNoteText").focus(), 50);
+  }
+  function closePreNoteModal() {
+    document.getElementById("preNoteModal").classList.remove("is-open");
+    preNoteSessionId = null;
+  }
+  document.getElementById("preNoteCancelBtn").addEventListener("click", closePreNoteModal);
+  document.getElementById("preNoteClearBtn").addEventListener("click", () => {
+    if (preNoteSessionId) { writePreNote(preNoteSessionId, ""); renderSessionsFromData({ sessions: allSessions }); }
+    closePreNoteModal();
+  });
+  document.getElementById("preNoteSaveBtn").addEventListener("click", () => {
+    if (preNoteSessionId) {
+      writePreNote(preNoteSessionId, document.getElementById("preNoteText").value);
+      renderSessionsFromData({ sessions: allSessions });
+    }
+    closePreNoteModal();
   });
 
   // ─── Modal: Enviar recibo ────────────────────────────────────

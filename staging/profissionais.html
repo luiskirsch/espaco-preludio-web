@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-39">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-40">
 </head>
 <body>
 
@@ -139,9 +139,11 @@
 
   function renderItem(item) {
     const initials = (item.displayName.match(/\b\p{L}/gu) || []).slice(0, 2).join("").toUpperCase() || "·";
-    const avatar = item.photoBase64
-      ? `<div style="width: 64px; height: 64px; border-radius: 50%; background-image: url(data:${item.photoMime || "image/jpeg"};base64,${item.photoBase64}); background-size: cover; background-position: center; flex-shrink: 0;"></div>`
-      : `<div class="ep-nav-avatar" style="width: 64px; height: 64px; font-size: 22px; flex-shrink: 0;">${initials}</div>`;
+    const avatarInner = item.photoBase64
+      ? `<div style="width: 64px; height: 64px; border-radius: 50%; background-image: url(data:${item.photoMime || "image/jpeg"};base64,${item.photoBase64}); background-size: cover; background-position: center;"></div>`
+      : `<div class="ep-nav-avatar" style="width: 64px; height: 64px; font-size: 22px;">${initials}</div>`;
+    const badge = `<span class="ep-verified-badge ep-verified-badge--lg" title="Profissional verificado · inscrição no conselho confirmada"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+    const avatar = `<div class="ep-avatar-wrap">${avatarInner}${badge}</div>`;
     const espLabel = ESP_LABELS[item.especialidade] || item.especialidade;
     const cityLine = [item.cidade, item.uf].filter(Boolean).join("/");
     const conselhoLine = item.conselhoLabel && item.numeroConselho

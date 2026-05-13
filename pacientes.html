@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-39">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-40">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -103,6 +103,12 @@
       <div class="ep-field">
         <label class="ep-label" for="patientObs">Observações iniciais</label>
         <textarea id="patientObs" class="ep-textarea" maxlength="2000" placeholder="Queixa principal, encaminhamento, etc."></textarea>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="patientTagsInput">Tags (opcional)</label>
+        <div id="patientTagsChips" class="ep-tags-chips"></div>
+        <input id="patientTagsInput" class="ep-input" type="text" maxlength="30" placeholder="Ex.: ansiedade, casal, convênio · Enter ou vírgula pra adicionar">
+        <p class="ep-text-xs ep-text-muted ep-mt-0">Categorize seus pacientes por perfil clínico, convênio, etc. Cifrado junto ao prontuário.</p>
       </div>
       <div class="ep-status" id="patientStatus"></div>
     </form>
@@ -386,6 +392,10 @@
         anamBtnLabel = "Reenviar anamnese";
       }
     }
+    const tags = Array.isArray(p.tags) ? p.tags : [];
+    const tagsHtml = tags.length
+      ? `<div class="ep-tag-row">${tags.map(t => `<span class="ep-tag">${escapeHtml(t)}</span>`).join("")}</div>`
+      : "";
     div.innerHTML = `
       <div>
         <div class="ep-session__name">${escapeHtml(p.name || "—")}</div>
@@ -395,6 +405,7 @@
           ${p.birthdate ? `<span>· nasc. ${fmtDate(new Date(p.birthdate).getTime())}</span>` : ""}
           <span>· atualizado ${fmtDate(p.updatedAt)}</span>
         </div>
+        ${tagsHtml}
       </div>
       <div class="ep-session__actions">
         <a class="ep-btn ep-btn--primary ep-btn--sm" href="./prontuario.html?p=${encodeURIComponent(p.patientId)}">Prontuário</a>
@@ -951,10 +962,41 @@
   const contactEl     = document.getElementById("patientContact");
   const birthEl       = document.getElementById("patientBirth");
   const obsEl         = document.getElementById("patientObs");
+  const tagsInputEl   = document.getElementById("patientTagsInput");
+  const tagsChipsEl   = document.getElementById("patientTagsChips");
   const statusEl      = document.getElementById("patientStatus");
   const saveBtn       = document.getElementById("savePatient");
 
   let editingId = null;
+  let editingTags = [];
+
+  function renderTagsChips() {
+    tagsChipsEl.innerHTML = editingTags.map((t, i) =>
+      `<span class="ep-tag-chip">${escapeHtml(t)}<button type="button" class="ep-tag-chip__x" data-i="${i}" aria-label="Remover">×</button></span>`
+    ).join("");
+  }
+  function addTagFromInput() {
+    const raw = tagsInputEl.value.trim().replace(/,$/, "").trim();
+    if (!raw) return;
+    const t = raw.slice(0, 30);
+    if (!editingTags.includes(t) && editingTags.length < 10) editingTags.push(t);
+    tagsInputEl.value = "";
+    renderTagsChips();
+  }
+  tagsInputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTagFromInput(); }
+    else if (e.key === "Backspace" && !tagsInputEl.value && editingTags.length) {
+      editingTags.pop(); renderTagsChips();
+    }
+  });
+  tagsInputEl.addEventListener("blur", () => { if (tagsInputEl.value.trim()) addTagFromInput(); });
+  tagsChipsEl.addEventListener("click", (e) => {
+    const x = e.target.closest(".ep-tag-chip__x");
+    if (!x) return;
+    const idx = Number(x.getAttribute("data-i"));
+    editingTags.splice(idx, 1);
+    renderTagsChips();
+  });
 
   function openModal({ mode, patient }) {
     editingId = mode === "edit" ? patient.patientId : null;
@@ -963,6 +1005,9 @@
     contactEl.value = patient?.contact   || "";
     birthEl.value   = patient?.birthdate || "";
     obsEl.value     = patient?.observations || "";
+    editingTags     = Array.isArray(patient?.tags) ? patient.tags.slice(0, 10) : [];
+    tagsInputEl.value = "";
+    renderTagsChips();
     statusEl.textContent = "";
     statusEl.className = "ep-status";
     patientModal.classList.add("is-open");
@@ -988,11 +1033,13 @@
     statusEl.textContent = "cifrando…";
     statusEl.className = "ep-status";
 
+    if (tagsInputEl.value.trim()) addTagFromInput();
     const payload = {
       name,
       contact: contactEl.value.trim(),
       birthdate: birthEl.value || "",
-      observations: obsEl.value.trim()
+      observations: obsEl.value.trim(),
+      tags: editingTags.slice(0, 10)
     };
 
     try {

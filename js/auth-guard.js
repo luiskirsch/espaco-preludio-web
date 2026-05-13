@@ -6,6 +6,8 @@
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
 import { recallDek } from "./crypto.js";
+import { getTheme, toggleTheme } from "./theme.js";
+import "./cmdk.js";
 
 // ─── 2FA session ─────────────────────────────────────────────────────
 // Token TOTP-session salvo em sessionStorage após verify. Validade = 8h
@@ -230,7 +232,28 @@ export function applyTopUserSlot(therapist) {
       const initials = (name.match(/\b\p{L}/gu) || []).slice(0, 2).join("").toUpperCase() || "·";
       elAvatar.textContent = initials;
     }
+    // Selo de verificado — só se status === "verified". Idempotente: remove
+    // anteriores antes de adicionar. Garante avatar tenha class .ep-avatar-wrap.
+    // O #topUserAvatar é o próprio span da imagem, então o badge fica como
+    // filho dele com position:absolute.
+    elAvatar.classList.add("ep-avatar-wrap");
+    const old = elAvatar.querySelector(".ep-verified-badge");
+    if (old) old.remove();
+    if (therapist?.verificationStatus === "verified") {
+      const badge = document.createElement("span");
+      badge.className = "ep-verified-badge";
+      badge.setAttribute("title", "Profissional verificado · inscrição no conselho confirmada");
+      badge.setAttribute("aria-label", "Profissional verificado");
+      badge.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      elAvatar.appendChild(badge);
+    }
   }
+}
+
+// Helper exportado: cria HTML do selo (string) pra páginas usarem inline.
+export function verifiedBadgeHtml(size) {
+  const sz = size === "lg" ? " ep-verified-badge--lg" : size === "xl" ? " ep-verified-badge--xl" : "";
+  return `<span class="ep-verified-badge${sz}" title="Profissional verificado · inscrição no conselho confirmada" aria-label="Profissional verificado"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
 }
 
 // Prefetch HTML das páginas do nav após render — próxima navegação chega
@@ -277,6 +300,34 @@ function groupProfileWithLogout() {
   wrap.appendChild(btn);
 }
 
+// Injeta toggle de tema (sol/lua) na topbar, à esquerda do perfil. Idempotente.
+// Aparece em qualquer página que tenha #topProfileLink (todas pós-login).
+function mountThemeToggle() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById("epThemeToggle")) return;
+  const link = document.getElementById("topProfileLink");
+  if (!link) return;
+  const parent = link.parentElement;
+  if (!parent) return;
+
+  const SUN = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>';
+  const MOON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+
+  const btn = document.createElement("button");
+  btn.id = "epThemeToggle";
+  btn.type = "button";
+  btn.className = "ep-theme-toggle";
+  function paint() {
+    const dark = getTheme() === "dark";
+    btn.innerHTML = dark ? SUN : MOON;
+    btn.setAttribute("aria-label", dark ? "Alternar para tema claro" : "Alternar para tema escuro");
+    btn.setAttribute("title", dark ? "Tema claro" : "Tema escuro");
+  }
+  paint();
+  btn.addEventListener("click", () => { toggleTheme(); paint(); });
+  parent.insertBefore(btn, link);
+}
+
 // Hidrata o avatar do topbar + monta o botão de ajuda SYNC a partir do cache
 // em sessionStorage, antes de qualquer await. Elimina o flicker "·" → "RF"
 // na navegação entre páginas (mesma aba). Sem cache (1ª visita) = no-op, e o
@@ -287,6 +338,7 @@ function groupProfileWithLogout() {
 (function hydrateChromeFromCache() {
   if (typeof document === "undefined") return;
   groupProfileWithLogout();
+  mountThemeToggle();
   try {
     const raw = sessionStorage.getItem(PROFILE_CACHE_KEY);
     if (!raw) return;
