@@ -293,23 +293,29 @@ a:hover { color: var(--ep-accent-hover); }
   margin-left: 4px;
 }
 
-/* Toggle de tema (sol/lua) na topbar — botão fantasma circular pequeno. */
+/* Toggle de tema (sol/lua) — botão flutuante empilhado acima do help bubble
+   (que vive em right:24px / bottom:24px / 52x52). 14px de gap entre eles. */
 .ep-theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
+  position: fixed;
+  right: 28px;            /* (52 - 44)/2 = 4px a mais que o help → alinhado pelo centro */
+  bottom: 90px;           /* 24 (help bottom) + 52 (help height) + 14 (gap) = 90 */
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 1px solid var(--ep-line);
-  background: transparent;
+  background: var(--ep-surface);
   color: var(--ep-ink-2);
   cursor: pointer;
   padding: 0;
-  margin-right: 6px;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 14px rgba(28,31,29,0.10), 0 1px 3px rgba(28,31,29,0.06);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, color 160ms ease, border-color 160ms ease;
+  z-index: 180;
 }
 .ep-theme-toggle:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 22px rgba(28,31,29,0.16), 0 2px 4px rgba(28,31,29,0.10);
   background: var(--ep-bg-2);
   color: var(--ep-ink);
   border-color: var(--ep-ink-2);
@@ -318,6 +324,15 @@ a:hover { color: var(--ep-accent-hover); }
   outline: 2px solid var(--ep-accent);
   outline-offset: 2px;
 }
+/* Em páginas sem help bubble (suporte.html), o toggle assume a posição
+   de baixo (mesmo right:24px / bottom:24px do help). */
+body:not(:has(.ep-help-bubble)) .ep-theme-toggle {
+  right: 24px;
+  bottom: 24px;
+  width: 52px;
+  height: 52px;
+}
+@media print { .ep-theme-toggle { display: none !important; } }
 
 /* Tags de pacientes — chips coloridos pequenos. */
 .ep-tag-row {
