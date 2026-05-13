@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-35">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-36">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -61,6 +61,7 @@
       </div>
       <div class="ep-flex ep-flex--wrap ep-gap-8">
         <a href="./aniversarios.html" class="ep-btn ep-btn--ghost">🎂 E-mails de aniversário</a>
+        <button id="importCsvBtn" type="button" class="ep-btn ep-btn--ghost" title="Importar pacientes de um arquivo CSV (ex.: export da iClinic)">↑ Importar CSV</button>
         <button id="newPatientBtn" type="button" class="ep-btn ep-btn--primary ep-btn--lg">+ Novo paciente</button>
       </div>
     </div>
@@ -111,6 +112,69 @@
     <div class="ep-modal__actions">
       <button type="button" class="ep-btn ep-btn--ghost" id="cancelPatient">Cancelar</button>
       <button type="button" class="ep-btn ep-btn--primary" id="savePatient">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Importar CSV -->
+<div class="ep-modal" id="importCsvModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 720px;">
+    <h3 class="ep-modal__title">Importar pacientes de CSV</h3>
+    <p class="ep-modal__sub">
+      Importa em lote a partir de um arquivo CSV (export da iClinic, planilha do Excel, etc.). Dados são cifrados localmente antes de subir.
+    </p>
+
+    <div id="csvUploadWrap" style="padding: 0 28px;">
+      <div class="ep-field">
+        <label class="ep-label" for="csvFile">Arquivo CSV</label>
+        <input id="csvFile" class="ep-input" type="file" accept=".csv,text/csv,text/plain">
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Cabeçalho na 1ª linha. Separador <code>,</code> ou <code>;</code> (detectado automaticamente). UTF-8 recomendado. Máx 5MB.
+        </p>
+      </div>
+      <div class="ep-status" id="csvUploadStatus"></div>
+    </div>
+
+    <div id="csvPreviewWrap" class="ep-hide" style="padding: 0 28px;">
+      <p class="ep-text-sm ep-mt-0">
+        Detectei <strong id="csvRowCount">0</strong> linhas. Mapeie as colunas:
+      </p>
+      <div id="csvMapping" class="ep-stack ep-mt-12"></div>
+      <details class="ep-mt-16">
+        <summary class="ep-text-sm" style="cursor: pointer;">Ver primeiras 5 linhas (preview)</summary>
+        <div id="csvPreview" class="ep-mt-8" style="max-height: 260px; overflow: auto; border: 1px solid var(--ep-line); border-radius: 8px; padding: 8px;"></div>
+      </details>
+      <div class="ep-status ep-mt-12" id="csvPreviewStatus"></div>
+    </div>
+
+    <div id="csvProgressWrap" class="ep-hide" style="padding: 0 28px;">
+      <p class="ep-text-sm ep-mt-0">
+        Importando <strong id="csvProgressDone">0</strong> de <strong id="csvProgressTotal">0</strong>…
+      </p>
+      <div style="height: 8px; background: var(--ep-bg-2); border-radius: 4px; overflow: hidden; margin-top: 8px;">
+        <div id="csvProgressBar" style="height: 100%; background: var(--ep-accent); width: 0%; transition: width 150ms ease;"></div>
+      </div>
+      <div id="csvProgressErrors" class="ep-mt-12 ep-text-sm" style="max-height: 160px; overflow-y: auto;"></div>
+    </div>
+
+    <div id="csvResultWrap" class="ep-hide" style="padding: 0 28px;">
+      <div class="ep-verify-hero ep-verify-hero--ok" style="margin-top: 8px;">
+        <div class="ep-verify-hero__icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
+        </div>
+        <div class="ep-verify-hero__body">
+          <div class="ep-eyebrow" style="color: #1f6b3e;">Importação concluída</div>
+          <h2 class="ep-h3 ep-mt-12" style="margin: 0;"><span id="csvResultOk">0</span> paciente(s) importado(s)</h2>
+        </div>
+      </div>
+      <div id="csvResultErrors" class="ep-mt-16 ep-text-sm" style="max-height: 200px; overflow-y: auto;"></div>
+    </div>
+
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="csvCancelBtn">Cancelar</button>
+      <button type="button" class="ep-btn ep-btn--primary ep-hide" id="csvPreviewBtn">Pré-visualizar</button>
+      <button type="button" class="ep-btn ep-btn--primary ep-hide" id="csvImportBtn">Importar pacientes</button>
+      <button type="button" class="ep-btn ep-btn--primary ep-hide" id="csvDoneBtn">Pronto</button>
     </div>
   </div>
 </div>
@@ -278,6 +342,227 @@
     `;
     div._patientData = p;
     return div;
+  }
+
+  // ─── Import CSV ──────────────────────────────────────────────────────
+  function parseCsv(text) {
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    const firstLine = text.slice(0, text.indexOf("\n") >= 0 ? text.indexOf("\n") : text.length);
+    let inQ = false;
+    let commas = 0, semis = 0;
+    for (let i = 0; i < firstLine.length; i++) {
+      const ch = firstLine[i];
+      if (ch === "\"") inQ = !inQ;
+      else if (!inQ && ch === ",") commas++;
+      else if (!inQ && ch === ";") semis++;
+    }
+    const sep = semis > commas ? ";" : ",";
+    const rows = [];
+    let cur = [], field = "";
+    inQ = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (inQ) {
+        if (ch === "\"") {
+          if (text[i + 1] === "\"") { field += "\""; i++; }
+          else inQ = false;
+        } else { field += ch; }
+      } else {
+        if (ch === "\"") inQ = true;
+        else if (ch === sep) { cur.push(field); field = ""; }
+        else if (ch === "\n") { cur.push(field); rows.push(cur); cur = []; field = ""; }
+        else if (ch === "\r") { /* skip */ }
+        else field += ch;
+      }
+    }
+    if (field !== "" || cur.length) { cur.push(field); rows.push(cur); }
+    return rows.filter(r => r.some(c => String(c).trim() !== ""));
+  }
+  function autoMapColumns(header) {
+    const map = { name: -1, contact: -1, contactPhone: -1, contactEmail: -1, birthdate: -1, observations: -1 };
+    header.forEach((h, idx) => {
+      const k = String(h || "").toLowerCase().trim().normalize("NFD").replace(/[̀-ͯ]/g, "");
+      if (map.name === -1 && /^(nome|name|paciente|patient)/.test(k)) map.name = idx;
+      else if (map.contactEmail === -1 && /(e-?mail|email)/.test(k)) map.contactEmail = idx;
+      else if (map.contactPhone === -1 && /(telefone|celular|phone|whatsapp|fone)/.test(k)) map.contactPhone = idx;
+      else if (map.birthdate === -1 && /(nascimento|dt.*nasc|birth|aniversa)/.test(k)) map.birthdate = idx;
+      else if (map.observations === -1 && /(obs|observa|notas|anamnese|queixa)/.test(k)) map.observations = idx;
+    });
+    return map;
+  }
+  function normalizeBirthdate(raw) {
+    const s = String(raw || "").trim();
+    if (!s) return "";
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+    const m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+    if (!m) return "";
+    let [, dd, mm, yy] = m;
+    if (yy.length === 2) yy = (Number(yy) > 50 ? "19" : "20") + yy;
+    if (yy.length !== 4) return "";
+    return `${yy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+  }
+  let csvData = null;
+  document.getElementById("importCsvBtn").addEventListener("click", () => openCsvModal());
+  function openCsvModal() {
+    document.getElementById("csvFile").value = "";
+    document.getElementById("csvUploadStatus").textContent = "";
+    document.getElementById("csvUploadStatus").className = "ep-status";
+    showCsvStep("upload");
+    document.getElementById("importCsvModal").classList.add("is-open");
+  }
+  function showCsvStep(step) {
+    const wraps = ["csvUploadWrap", "csvPreviewWrap", "csvProgressWrap", "csvResultWrap"];
+    wraps.forEach(w => {
+      const want = (step === "upload" && w === "csvUploadWrap")
+                || (step === "preview" && w === "csvPreviewWrap")
+                || (step === "progress" && w === "csvProgressWrap")
+                || (step === "result" && w === "csvResultWrap");
+      document.getElementById(w).classList.toggle("ep-hide", !want);
+    });
+    document.getElementById("csvPreviewBtn").classList.toggle("ep-hide", step !== "upload");
+    document.getElementById("csvImportBtn").classList.toggle("ep-hide", step !== "preview");
+    document.getElementById("csvDoneBtn").classList.toggle("ep-hide", step !== "result");
+    document.getElementById("csvCancelBtn").textContent = (step === "result" || step === "progress") ? "Fechar" : "Cancelar";
+  }
+  document.getElementById("csvCancelBtn").addEventListener("click", () => {
+    document.getElementById("importCsvModal").classList.remove("is-open");
+  });
+  document.getElementById("csvDoneBtn").addEventListener("click", async () => {
+    document.getElementById("importCsvModal").classList.remove("is-open");
+    invalidateApi("pacientes", uid);
+    await loadPatients();
+  });
+  document.getElementById("csvPreviewBtn").addEventListener("click", async () => {
+    const file = document.getElementById("csvFile").files?.[0];
+    if (!file) { setCsvUploadStatus("Selecione um arquivo CSV.", "err"); return; }
+    if (file.size > 5 * 1024 * 1024) { setCsvUploadStatus("Arquivo grande demais (limite 5MB).", "err"); return; }
+    setCsvUploadStatus("Lendo arquivo…");
+    let text;
+    try { text = await file.text(); } catch { setCsvUploadStatus("Erro lendo arquivo.", "err"); return; }
+    const rows = parseCsv(text);
+    if (rows.length < 2) { setCsvUploadStatus("CSV vazio ou sem dados.", "err"); return; }
+    const header = rows[0].map(h => String(h).trim());
+    const dataRows = rows.slice(1);
+    const mapping = autoMapColumns(header);
+    csvData = { header, rows: dataRows, mapping };
+    document.getElementById("csvRowCount").textContent = String(dataRows.length);
+    renderCsvMapping(header, mapping);
+    renderCsvPreview(header, dataRows.slice(0, 5));
+    showCsvStep("preview");
+  });
+  function setCsvUploadStatus(msg, kind) {
+    const el = document.getElementById("csvUploadStatus");
+    el.textContent = msg;
+    el.className = "ep-status" + (kind === "err" ? " is-err" : "");
+  }
+  function renderCsvMapping(header, mapping) {
+    const fields = [
+      { key: "name",          label: "Nome (obrigatório)" },
+      { key: "contactEmail",  label: "E-mail" },
+      { key: "contactPhone",  label: "Telefone / WhatsApp" },
+      { key: "birthdate",     label: "Data de nascimento" },
+      { key: "observations",  label: "Observações" }
+    ];
+    const html = fields.map(f => {
+      const options = ["<option value=\"-1\">— Ignorar —</option>"]
+        .concat(header.map((h, idx) => `<option value="${idx}" ${mapping[f.key] === idx ? "selected" : ""}>${escapeHtml(h)} (col ${idx + 1})</option>`))
+        .join("");
+      return `
+        <div class="ep-field" data-field-key="${f.key}">
+          <label class="ep-label">${f.label}</label>
+          <select class="ep-select csv-map-select" data-field-key="${f.key}">${options}</select>
+        </div>`;
+    }).join("");
+    document.getElementById("csvMapping").innerHTML = html;
+    document.querySelectorAll(".csv-map-select").forEach(sel => {
+      sel.addEventListener("change", () => {
+        csvData.mapping[sel.dataset.fieldKey] = Number(sel.value);
+      });
+    });
+  }
+  function renderCsvPreview(header, rows) {
+    const cols = header.map(h => `<th style="text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--ep-line); font-size: 12px; color: var(--ep-ink-2); font-weight: 600;">${escapeHtml(h)}</th>`).join("");
+    const body = rows.map(r => `<tr>${r.map(c => `<td style="padding: 6px 10px; border-bottom: 1px solid var(--ep-line); font-size: 12px;">${escapeHtml(c || "")}</td>`).join("")}</tr>`).join("");
+    document.getElementById("csvPreview").innerHTML = `<table style="width: 100%; border-collapse: collapse;"><thead><tr>${cols}</tr></thead><tbody>${body}</tbody></table>`;
+  }
+  document.getElementById("csvImportBtn").addEventListener("click", async () => {
+    if (!csvData) return;
+    if (csvData.mapping.name < 0) {
+      const st = document.getElementById("csvPreviewStatus");
+      st.textContent = "Selecione qual coluna é o Nome.";
+      st.className = "ep-status is-err";
+      return;
+    }
+    const total = csvData.rows.length;
+    document.getElementById("csvProgressTotal").textContent = String(total);
+    document.getElementById("csvProgressDone").textContent = "0";
+    document.getElementById("csvProgressBar").style.width = "0%";
+    document.getElementById("csvProgressErrors").innerHTML = "";
+    showCsvStep("progress");
+    const errors = [];
+    let ok = 0;
+    for (let i = 0; i < total; i++) {
+      const row = csvData.rows[i];
+      const get = (key) => {
+        const idx = csvData.mapping[key];
+        return idx >= 0 ? String(row[idx] || "").trim() : "";
+      };
+      const name = get("name").slice(0, 80);
+      if (!name) {
+        errors.push({ row: i + 2, name: "—", reason: "Nome vazio" });
+        updateCsvProgress(i + 1, total, ok, errors);
+        continue;
+      }
+      const email = get("contactEmail").toLowerCase();
+      const phone = get("contactPhone");
+      const contact = email || phone || "";
+      const birthdate = normalizeBirthdate(get("birthdate"));
+      const observations = get("observations").slice(0, 2000);
+      try {
+        const payload = { name, contact, birthdate, observations };
+        const enc = await encryptPatientPayload(payload);
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+          body: JSON.stringify({ ciphertext: enc.ciphertext, iv: enc.iv })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          errors.push({ row: i + 2, name, reason: data?.error || `HTTP ${res.status}` });
+        } else {
+          ok++;
+        }
+      } catch (e) {
+        errors.push({ row: i + 2, name, reason: e?.message || "Erro local" });
+      }
+      updateCsvProgress(i + 1, total, ok, errors);
+    }
+    document.getElementById("csvResultOk").textContent = String(ok);
+    if (errors.length) {
+      const items = errors.slice(0, 50).map(e => `
+        <div style="padding: 6px 0; border-bottom: 1px solid var(--ep-line);">
+          <strong>Linha ${e.row}</strong> (${escapeHtml(e.name)}): ${escapeHtml(e.reason)}
+        </div>`).join("");
+      const overflow = errors.length > 50 ? `<div class="ep-text-xs ep-text-muted ep-mt-8">…e mais ${errors.length - 50} erros.</div>` : "";
+      document.getElementById("csvResultErrors").innerHTML = `
+        <p class="ep-text-sm" style="color: var(--ep-danger);"><strong>${errors.length}</strong> linha(s) falharam:</p>
+        ${items}${overflow}`;
+    } else {
+      document.getElementById("csvResultErrors").innerHTML = "";
+    }
+    showCsvStep("result");
+  });
+  function updateCsvProgress(done, total, ok, errors) {
+    document.getElementById("csvProgressDone").textContent = String(done);
+    document.getElementById("csvProgressBar").style.width = `${Math.round((done / total) * 100)}%`;
+    if (errors.length) {
+      const last3 = errors.slice(-3).map(e => `
+        <div class="ep-text-xs" style="color: var(--ep-danger); padding: 2px 0;">
+          Linha ${e.row}: ${escapeHtml(e.reason)}
+        </div>`).join("");
+      document.getElementById("csvProgressErrors").innerHTML =
+        `<div class="ep-text-xs ep-text-muted">Últimos erros (${errors.length} total):</div>${last3}`;
+    }
   }
 
   let anamneseByPatient = {};

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-35">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-36">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -288,6 +288,54 @@
     clearDek(); await signOut(auth); window.location.href = "./login.html";
   });
 
+  // ─── CID-10 autocomplete inline ──────────────────────────────────────
+  (function attachCidAutocomplete() {
+    const input = document.getElementById("cid10");
+    const list  = document.getElementById("cid10AutocompleteList");
+    if (!input || !list) return;
+    let debounce = null;
+    let lastQ = "";
+
+    async function search(q) {
+      if (q === lastQ) return;
+      lastQ = q;
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/cid10?q=${encodeURIComponent(q)}&limit=10`, {
+          headers: { "Authorization": `Bearer ${idToken}` }
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok || !data.results.length) { list.classList.add("ep-hide"); return; }
+        list.innerHTML = data.results.map(r => `
+          <button type="button" class="ep-cid-ac-item" data-code="${r.code}" data-desc="${r.description.replace(/"/g, "&quot;")}" style="display: block; width: 100%; padding: 8px 10px; text-align: left; background: transparent; border: 0; cursor: pointer; color: var(--ep-ink); font-size: 13px; line-height: 1.4; border-bottom: 1px solid var(--ep-line);">
+            <strong style="font-family: 'JetBrains Mono', monospace; color: var(--ep-accent);">${r.code}</strong> · ${r.description}
+          </button>`).join("");
+        list.classList.remove("ep-hide");
+        list.querySelectorAll(".ep-cid-ac-item").forEach(btn => {
+          btn.addEventListener("mouseenter", () => btn.style.background = "var(--ep-accent-soft)");
+          btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
+          btn.addEventListener("click", () => {
+            input.value = `${btn.dataset.code} - ${btn.dataset.desc}`;
+            list.classList.add("ep-hide");
+            input.dispatchEvent(new Event("change"));
+          });
+        });
+      } catch { list.classList.add("ep-hide"); }
+    }
+    input.addEventListener("input", () => {
+      const q = input.value.trim();
+      clearTimeout(debounce);
+      if (q.length < 2) { list.classList.add("ep-hide"); return; }
+      debounce = setTimeout(() => search(q), 200);
+    });
+    input.addEventListener("focus", () => {
+      const q = input.value.trim();
+      if (q.length >= 2) search(q);
+    });
+    document.addEventListener("click", (e) => {
+      if (!list.contains(e.target) && e.target !== input) list.classList.add("ep-hide");
+    });
+  })();
+
   // ─── Tipo: query param + switcher ────────────────────────────────────
   const params = new URLSearchParams(location.search);
   const editId = params.get("id");
@@ -403,9 +451,10 @@
           <label class="ep-label" for="dias">Dias de afastamento</label>
           <input id="dias" class="ep-input" type="number" min="0" max="365" step="1" value="1">
         </div>
-        <div class="ep-field">
+        <div class="ep-field" style="position: relative;">
           <label class="ep-label" for="cid10">CID-10 (opcional)</label>
-          <input id="cid10" class="ep-input" type="text" maxlength="20" placeholder="Ex.: F32.1">
+          <input id="cid10" class="ep-input" type="text" maxlength="20" placeholder="F32 ou depressivo… (autocompleta)" autocomplete="off">
+          <div id="cid10AutocompleteList" class="ep-hide" style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 2px; max-height: 280px; overflow-y: auto; background: var(--ep-surface); border: 1px solid var(--ep-line); border-radius: 8px; box-shadow: 0 6px 18px rgba(28,31,29,0.12); z-index: 100;"></div>
         </div>
       </div>
       <div class="ep-field">

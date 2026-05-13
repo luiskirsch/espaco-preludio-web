@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-35">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-36">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -74,9 +74,14 @@
           <div class="ep-inline-notes__actions">
             <span class="ep-text-xs ep-text-muted">Ctrl + Enter pra salvar</span>
             <div class="ep-flex ep-gap-8" style="align-items: center; position: relative;">
+              <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="cidBtn" title="Buscar e inserir CID-10">+ CID</button>
               <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="templateBtn" title="Inserir template no campo">Templates ▾</button>
               <button class="ep-btn ep-btn--primary ep-btn--sm" type="button" id="saveNoteBtn">Salvar nota</button>
               <div id="templateMenu" class="ep-hide" style="position: absolute; top: 100%; right: 0; margin-top: 4px; min-width: 280px; max-width: 360px; background: var(--ep-surface); border: 1px solid var(--ep-line); border-radius: 10px; box-shadow: 0 8px 24px rgba(28,31,29,0.12); z-index: 100; padding: 6px;"></div>
+              <div id="cidMenu" class="ep-hide" style="position: absolute; top: 100%; right: 0; margin-top: 4px; min-width: 360px; max-width: 480px; background: var(--ep-surface); border: 1px solid var(--ep-line); border-radius: 10px; box-shadow: 0 8px 24px rgba(28,31,29,0.12); z-index: 100; padding: 8px;">
+                <input id="cidSearch" class="ep-input" type="text" placeholder="Código (F32) ou nome (depressivo)…" style="margin-bottom: 8px;">
+                <div id="cidResults" style="max-height: 320px; overflow-y: auto;"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -273,6 +278,73 @@
   document.addEventListener("click", (e) => {
     if (!templateMenu.contains(e.target) && e.target !== templateBtn) {
       templateMenu.classList.add("ep-hide");
+    }
+  });
+
+  // ─── CID-10 autocomplete ─────────────────────────────────────────
+  const cidBtn      = document.getElementById("cidBtn");
+  const cidMenu     = document.getElementById("cidMenu");
+  const cidSearch   = document.getElementById("cidSearch");
+  const cidResults  = document.getElementById("cidResults");
+  let cidDebounce = null;
+
+  function insertCid(item) {
+    const snippet = `${item.code} — ${item.description}`;
+    const existing = noteInput.value;
+    noteInput.value = existing.trim() ? `${existing.trimEnd()}\n${snippet}\n` : snippet + "\n";
+    noteInput.focus();
+    noteInput.selectionStart = noteInput.selectionEnd = noteInput.value.length;
+  }
+
+  async function searchCid(q) {
+    cidResults.innerHTML = `<div class="ep-skeleton" style="margin: 8px;">Buscando…</div>`;
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/cid10?q=${encodeURIComponent(q)}&limit=20`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) { cidResults.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding: 8px;">Erro buscando CID.</div>`; return; }
+      if (!data.results.length) { cidResults.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding: 8px;">Nenhum resultado pra "${q}".</div>`; return; }
+      cidResults.innerHTML = data.results.map(r => `
+        <button type="button" class="ep-cid-item" data-code="${r.code}" style="display: block; width: 100%; padding: 8px 10px; text-align: left; background: transparent; border: 0; border-radius: 6px; cursor: pointer; color: var(--ep-ink); font-size: 13px; line-height: 1.4;">
+          <strong style="font-family: 'JetBrains Mono', monospace; color: var(--ep-accent);">${r.code}</strong> · ${r.description}
+        </button>
+      `).join("");
+      cidResults.querySelectorAll(".ep-cid-item").forEach(btn => {
+        btn.addEventListener("mouseenter", () => btn.style.background = "var(--ep-accent-soft)");
+        btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
+        btn.addEventListener("click", () => {
+          const r = data.results.find(x => x.code === btn.dataset.code);
+          if (r) {
+            insertCid(r);
+            cidMenu.classList.add("ep-hide");
+          }
+        });
+      });
+    } catch {
+      cidResults.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding: 8px;">Erro de conexão.</div>`;
+    }
+  }
+  cidBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (!cidMenu.classList.contains("ep-hide")) { cidMenu.classList.add("ep-hide"); return; }
+    cidMenu.classList.remove("ep-hide");
+    cidSearch.value = "";
+    cidResults.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding: 8px;">Digite 2+ caracteres pra buscar…</div>`;
+    setTimeout(() => cidSearch.focus(), 50);
+  });
+  cidSearch.addEventListener("input", () => {
+    const q = cidSearch.value.trim();
+    clearTimeout(cidDebounce);
+    if (q.length < 2) {
+      cidResults.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding: 8px;">Digite 2+ caracteres pra buscar…</div>`;
+      return;
+    }
+    cidDebounce = setTimeout(() => searchCid(q), 200);
+  });
+  document.addEventListener("click", (e) => {
+    if (!cidMenu.contains(e.target) && e.target !== cidBtn) {
+      cidMenu.classList.add("ep-hide");
     }
   });
 
