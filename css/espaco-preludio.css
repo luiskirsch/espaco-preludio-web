@@ -3873,6 +3873,59 @@ body.ep-consult.ep-mode-calmo .ep-consult__topbar {
   filter: grayscale(0.4);
 }
 
+/* Dark mode overrides — agenda usa rgba(28,31,29,X) hardcoded em vários pontos
+   que desaparecem no fundo escuro. Repintar com tons claros equivalentes. */
+html[data-theme="dark"] .ep-agenda-grid {
+  background: var(--ep-surface);
+  border-color: var(--ep-line);
+}
+html[data-theme="dark"] .ep-agenda-grid__corner {
+  background: rgba(255,255,255,0.02);
+  border-bottom-color: var(--ep-line);
+  border-right-color: var(--ep-line);
+}
+html[data-theme="dark"] .ep-agenda-grid__day-header {
+  color: var(--ep-ink-2);
+  border-bottom-color: var(--ep-line);
+  border-right-color: var(--ep-line);
+}
+html[data-theme="dark"] .ep-agenda-grid__day-header strong {
+  color: var(--ep-ink);
+}
+html[data-theme="dark"] .ep-agenda-grid__day-month {
+  color: var(--ep-ink-3);
+}
+html[data-theme="dark"] .ep-agenda-grid__day-header.is-today strong {
+  color: var(--ep-gold);
+}
+html[data-theme="dark"] .ep-agenda-grid__hour-col {
+  background: rgba(255,255,255,0.02);
+  border-right-color: var(--ep-line);
+}
+html[data-theme="dark"] .ep-agenda-grid__hour-label {
+  color: var(--ep-ink-3);
+  border-bottom-color: var(--ep-line);
+}
+html[data-theme="dark"] .ep-agenda-grid__day-col {
+  border-right-color: var(--ep-line);
+  background-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 55px,
+    rgba(232,230,223,0.06) 55px,
+    rgba(232,230,223,0.06) 56px
+  );
+}
+html[data-theme="dark"] .ep-agenda-legend__item {
+  color: var(--ep-ink-2);
+}
+html[data-theme="dark"] .ep-agenda-legend__item.is-done .ep-agenda-legend__dot {
+  background: rgba(232,230,223,0.35);
+}
+html[data-theme="dark"] .ep-agenda-legend__item.is-canceled .ep-agenda-legend__dot {
+  background: rgba(232,122,110,0.65);
+}
+
 /* Estilo de impressão — esconde toolbar/nav, abre o grid em tela cheia. */
 @media print {
   .ep-no-print,
