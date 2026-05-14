@@ -354,7 +354,10 @@ body:has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
 @media print { .ep-theme-toggle { display: none !important; } }
 
 /* Botão flutuante de mensagens — entre help e theme. Cor accent (verde)
-   pra distinguir visualmente dos outros dois. Badge unread no canto sup-dir. */
+   pra distinguir visualmente dos outros dois. Badge unread no canto sup-dir.
+   Ícone adapta ao tema: branco em light (sobre verde escuro), preto em dark
+   (sobre verde claro) — mesma lógica do theme toggle. Mantém contraste
+   no hover (que escurece o bg via color-mix). */
 .ep-msg-bubble-fab {
   position: fixed;
   right: 24px;
@@ -375,10 +378,11 @@ body:has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
 .ep-msg-bubble-fab:hover {
   transform: translateY(-2px) scale(1.04);
   box-shadow: 0 8px 22px rgba(45,74,62,0.40), 0 2px 4px rgba(28,31,29,0.14);
-  /* Escurece o accent via color-mix (sempre +preto, independe do tema) →
-     ícone branco mantém contraste em light e dark mode. */
   background: color-mix(in srgb, var(--ep-accent) 82%, #000);
 }
+/* Em dark mode o accent é verde-claro (#6fbf99) → branco no ícone seria
+   ilegível no hover. Inverte pra ícone escuro sobre verde-claro. */
+html[data-theme="dark"] .ep-msg-bubble-fab { color: #1a1a1a; }
 .ep-msg-bubble-fab:active { transform: translateY(0) scale(1); }
 .ep-msg-bubble-fab:focus-visible {
   outline: 2px solid var(--ep-gold);
