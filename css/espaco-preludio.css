@@ -353,20 +353,19 @@ body:has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
 }
 @media print { .ep-theme-toggle { display: none !important; } }
 
-/* Botão flutuante de mensagens — entre help e theme. Cor accent (verde)
-   pra distinguir visualmente dos outros dois. Badge unread no canto sup-dir.
-   Ícone adapta ao tema: branco em light (sobre verde escuro), preto em dark
-   (sobre verde claro) — mesma lógica do theme toggle. Mantém contraste
-   no hover (que escurece o bg via color-mix). */
+/* Botão flutuante de mensagens — entre help e theme. Cores HARDCODED iguais
+   nos dois temas pra garantir contraste do ícone branco. Hover só escurece
+   levemente. Mesmo esqueleto do .ep-help-bubble (que funciona). */
 .ep-msg-bubble-fab {
   position: fixed;
   right: 24px;
-  bottom: 90px;           /* 24 (help bottom) + 52 (help height) + 14 (gap) */
+  bottom: 90px;
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: var(--ep-accent);
-  color: #fff;
+  border: none;
+  background: #2d4a3e;
+  color: #ffffff;
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -378,19 +377,10 @@ body:has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
 .ep-msg-bubble-fab:hover {
   transform: translateY(-2px) scale(1.04);
   box-shadow: 0 8px 22px rgba(45,74,62,0.40), 0 2px 4px rgba(28,31,29,0.14);
-  /* Cor fixa em vez de color-mix — alguns browsers (Safari antigo, Firefox
-     ESR) caem pra valor inicial (transparent) e o ícone branco some sobre
-     o fundo da página. #25402f é o mesmo que --ep-accent-hover em light mode. */
-  background: #25402f;
+  background: #1f3329;
+  color: #ffffff;
 }
-/* Em dark mode --ep-accent é verde-claro → ícone fica escuro pra contraste.
-   Hover também precisa ser claro pra harmonizar (não escurece como light). */
-html[data-theme="dark"] .ep-msg-bubble-fab {
-  color: #1a1a1a;
-}
-html[data-theme="dark"] .ep-msg-bubble-fab:hover {
-  background: #5dad88; /* --ep-accent-hover do dark mode (verde médio) */
-}
+.ep-msg-bubble-fab svg { width: 22px; height: 22px; display: block; }
 .ep-msg-bubble-fab:active { transform: translateY(0) scale(1); }
 .ep-msg-bubble-fab:focus-visible {
   outline: 2px solid var(--ep-gold);
