@@ -3902,6 +3902,35 @@ html[data-theme="dark"] .ep-agenda-legend__item.is-canceled .ep-agenda-legend__d
   background: rgba(232,122,110,0.65);
 }
 
+/* Sessões dentro do grid — textos eram hardcoded preto, ficam ilegíveis no dark.
+   Repintar fundos pra mais contraste + cor de texto clara. */
+html[data-theme="dark"] .ep-agenda-session__name {
+  color: var(--ep-ink);
+}
+html[data-theme="dark"] .ep-agenda-session.is-scheduled {
+  --ep-sess-bg: rgba(111,191,153,0.22);
+  --ep-sess-accent: #6fbf99;
+}
+html[data-theme="dark"] .ep-agenda-session.is-progress {
+  --ep-sess-bg: rgba(215,176,107,0.28);
+  --ep-sess-accent: var(--ep-gold);
+}
+html[data-theme="dark"] .ep-agenda-session.is-done {
+  --ep-sess-bg: rgba(232,230,223,0.08);
+  --ep-sess-accent: rgba(232,230,223,0.45);
+}
+html[data-theme="dark"] .ep-agenda-session.is-canceled {
+  --ep-sess-bg: rgba(232,122,110,0.16);
+  --ep-sess-accent: rgba(232,122,110,0.65);
+}
+html[data-theme="dark"] .ep-agenda-session.is-canceled .ep-agenda-session__time,
+html[data-theme="dark"] .ep-agenda-session.is-canceled .ep-agenda-session__name {
+  color: var(--ep-ink-2);
+}
+html[data-theme="dark"] .ep-agenda-grid__slot:hover {
+  background: rgba(215,176,107,0.16);
+}
+
 /* Estilo de impressão — esconde toolbar/nav, abre o grid em tela cheia. */
 @media print {
   .ep-no-print,
