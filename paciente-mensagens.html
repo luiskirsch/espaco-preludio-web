@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-63">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-64">
 </head>
 <body>
 
@@ -108,6 +108,10 @@
       myEcdhPrivBytes = await unwrapKey(d.ecdhPrivateWrapped, dek);
       return;
     }
+    if (r.status !== 404) {
+      const body = await r.text().catch(() => "");
+      throw new Error(`GET keypair falhou: HTTP ${r.status} ${body.slice(0, 200)}`);
+    }
     const kp = await generateEcdhKeypair();
     const privWrapped = await wrapKey(kp.privateRaw, dek);
     const post = await fetch(`${BACKEND_BASE_URL}/therapy/chat/keypair`, {
@@ -115,11 +119,26 @@
       headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({ ecdhPublicJwk: kp.publicJwk, ecdhPrivateWrapped: privWrapped })
     });
-    if (!post.ok) throw new Error("Erro ao registrar keypair ECDH");
+    if (!post.ok) {
+      const body = await post.text().catch(() => "");
+      throw new Error(`POST keypair falhou: HTTP ${post.status} ${body.slice(0, 200)}`);
+    }
     myEcdhPublicJwk = kp.publicJwk;
     myEcdhPrivBytes = kp.privateRaw;
   }
-  await ensureEcdhKeypair();
+  let ecdhReady = false;
+  try {
+    await ensureEcdhKeypair();
+    ecdhReady = true;
+  } catch (e) {
+    console.error("ecdh_init_failed", e);
+    document.getElementById("threadList").innerHTML =
+      `<div class="ep-status is-err" style="margin:12px;font-size:12px;">Não consegui inicializar a chave ECDH do chat. Detalhe: ${escapeHtmlSafeFn(e?.message || "desconhecido")}<br><br>Recarregue a página em 30s.</div>`;
+  }
+  function escapeHtmlSafeFn(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+  }
 
   // ─── Push subscription (best-effort, prompt na 1ª visita) ───────
   // Pra paciente receber notificação quando profissional enviar mensagem.
@@ -219,7 +238,7 @@
       `;
     }).join("");
   }
-  await loadThreads();
+  if (ecdhReady) await loadThreads();
 
   $("threadList").addEventListener("click", async (e) => {
     const btn = e.target.closest("button[data-thread-id]");
@@ -346,7 +365,7 @@
     }
   }
 
-  setInterval(() => loadThreads(), 30_000);
+  if (ecdhReady) setInterval(() => loadThreads(), 30_000);
 </script>
 
 </body>

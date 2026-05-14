@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-63">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-64">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -150,7 +150,10 @@
       myEcdhPrivBytes = await unwrapKey(d.ecdhPrivateWrapped, dek);
       return;
     }
-    // Gera novo
+    if (r.status !== 404) {
+      const body = await r.text().catch(() => "");
+      throw new Error(`GET keypair falhou: HTTP ${r.status} ${body.slice(0, 200)}`);
+    }
     const kp = await generateEcdhKeypair();
     const privWrapped = await wrapKey(kp.privateRaw, dek);
     const post = await fetch(`${BACKEND_BASE_URL}/therapy/chat/keypair`, {
@@ -158,12 +161,27 @@
       headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({ ecdhPublicJwk: kp.publicJwk, ecdhPrivateWrapped: privWrapped })
     });
-    if (!post.ok) throw new Error("Erro ao registrar keypair ECDH");
+    if (!post.ok) {
+      const body = await post.text().catch(() => "");
+      throw new Error(`POST keypair falhou: HTTP ${post.status} ${body.slice(0, 200)}`);
+    }
     myEcdhPublicJwk = kp.publicJwk;
     myEcdhPrivBytes = kp.privateRaw;
   }
 
-  await ensureEcdhKeypair();
+  let ecdhReady = false;
+  try {
+    await ensureEcdhKeypair();
+    ecdhReady = true;
+  } catch (e) {
+    console.error("ecdh_init_failed", e);
+    document.getElementById("threadList").innerHTML =
+      `<div class="ep-status is-err" style="margin:12px;font-size:12px;">Não consegui inicializar a chave ECDH do chat. Detalhe: ${escapeHtmlSafe(e?.message || "desconhecido")}<br><br>Recarregue a página em 30s — o servidor pode estar atualizando.</div>`;
+  }
+  function escapeHtmlSafe(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+  }
 
   // ─── Helpers ─────────────────────────────────────────────────────
   const $ = id => document.getElementById(id);
@@ -197,33 +215,38 @@
 
   // ─── Listar threads ──────────────────────────────────────────────
   async function loadThreads() {
-    const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, {
-      headers: { "Authorization": `Bearer ${idToken}` }
-    });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok || !d.ok) {
-      $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">Erro ao carregar.</div>`;
-      return;
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) {
+        $("threadList").innerHTML = `<div class="ep-status is-err" style="margin:12px;font-size:12px;">Erro: HTTP ${r.status} · ${escapeHtml(d?.error || "")}</div>`;
+        return;
+      }
+      const threads = d.threads || [];
+      if (!threads.length) {
+        $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">Nenhuma conversa ainda.<br>Clique em <strong>+ Nova</strong>.</div>`;
+        return;
+      }
+      $("threadList").innerHTML = threads.map(t => {
+        const peerName = t.patientDisplayName || "Paciente";
+        const unreadDot = t.hasUnread ? `<span class="ep-msg-unread"></span>` : "";
+        const lastTime = t.lastMessageAt ? fmtTime(t.lastMessageAt) : "";
+        const cls = t.threadId === currentThreadId ? " is-active" : "";
+        return `
+          <button type="button" class="ep-msg-thread-item${cls}" data-thread-id="${t.threadId}">
+            <div class="ep-msg-thread-item__name">${escapeHtml(peerName)} ${unreadDot}</div>
+            <div class="ep-msg-thread-item__time">${lastTime}</div>
+          </button>
+        `;
+      }).join("");
+    } catch (e) {
+      console.error("loadThreads_failed", e);
+      $("threadList").innerHTML = `<div class="ep-status is-err" style="margin:12px;font-size:12px;">Erro de conexão: ${escapeHtml(e?.message || "")}</div>`;
     }
-    const threads = d.threads || [];
-    if (!threads.length) {
-      $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">Nenhuma conversa ainda.<br>Clique em <strong>+ Nova</strong>.</div>`;
-      return;
-    }
-    $("threadList").innerHTML = threads.map(t => {
-      const peerName = t.patientDisplayName || "Paciente";
-      const unreadDot = t.hasUnread ? `<span class="ep-msg-unread"></span>` : "";
-      const lastTime = t.lastMessageAt ? fmtTime(t.lastMessageAt) : "";
-      const cls = t.threadId === currentThreadId ? " is-active" : "";
-      return `
-        <button type="button" class="ep-msg-thread-item${cls}" data-thread-id="${t.threadId}">
-          <div class="ep-msg-thread-item__name">${escapeHtml(peerName)} ${unreadDot}</div>
-          <div class="ep-msg-thread-item__time">${lastTime}</div>
-        </button>
-      `;
-    }).join("");
   }
-  await loadThreads();
+  if (ecdhReady) await loadThreads();
 
   $("threadList").addEventListener("click", async (e) => {
     const btn = e.target.closest("button[data-thread-id]");
@@ -449,7 +472,7 @@
   }
 
   // Polling da lista de threads (a cada 30s) pra atualizar unread dots
-  setInterval(() => loadThreads(), 30_000);
+  if (ecdhReady) setInterval(() => loadThreads(), 30_000);
 </script>
 
 <a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" aria-label="Abrir suporte"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
