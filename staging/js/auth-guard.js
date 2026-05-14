@@ -319,6 +319,10 @@ function mountThemeToggle() {
   if (typeof document === "undefined") return;
   groupProfileWithLogout();
   mountThemeToggle();
+  mountUnreadBadgePoller(async () => {
+    const u = auth.currentUser;
+    return u ? u.getIdToken() : null;
+  });
   try {
     const raw = sessionStorage.getItem(PROFILE_CACHE_KEY);
     if (!raw) return;
@@ -328,6 +332,39 @@ function mountThemeToggle() {
     mountHelpBubble();
   } catch { /* no-op */ }
 })();
+
+// Badge unread no link "Mensagens" da topbar (polling 60s).
+function mountUnreadBadgePoller(idTokenGetter) {
+  if (typeof document === "undefined") return;
+  const link = document.querySelector('a[href="./mensagens.html"]');
+  if (!link) return;
+  let badge = link.querySelector(".ep-unread-pill");
+  if (!badge) {
+    badge = document.createElement("span");
+    badge.className = "ep-unread-pill ep-hide";
+    link.appendChild(badge);
+  }
+  async function refresh() {
+    try {
+      const token = await idTokenGetter();
+      if (!token) return;
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) return;
+      const unread = (d.threads || []).filter(t => t.hasUnread).length;
+      if (unread > 0) {
+        badge.textContent = String(unread);
+        badge.classList.remove("ep-hide");
+      } else {
+        badge.classList.add("ep-hide");
+      }
+    } catch {}
+  }
+  refresh();
+  setInterval(refresh, 60_000);
+}
 
 export async function requireTherapist({ requireDek = true } = {}) {
   const user = await authReady();

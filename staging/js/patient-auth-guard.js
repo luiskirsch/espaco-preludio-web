@@ -50,8 +50,41 @@ export async function requirePatient({ requireDek = true } = {}) {
       window.location.href = "./paciente-login.html?reauth=1&redirect=" + encodeURIComponent(location.pathname + location.search);
       throw new Error("DEK_AUSENTE");
     }
+    mountUnreadBadgePoller(idToken);
     return { user, idToken, account: profile.account, dek };
   }
 
+  mountUnreadBadgePoller(idToken);
   return { user, idToken, account: profile.account };
+}
+
+// Badge unread no link "Mensagens" da topbar do paciente. Polling 60s.
+function mountUnreadBadgePoller(idToken) {
+  if (typeof document === "undefined") return;
+  const link = document.querySelector('a[href="./paciente-mensagens.html"]');
+  if (!link) return;
+  let badge = link.querySelector(".ep-unread-pill");
+  if (!badge) {
+    badge = document.createElement("span");
+    badge.className = "ep-unread-pill ep-hide";
+    link.appendChild(badge);
+  }
+  async function refresh() {
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) return;
+      const unread = (d.threads || []).filter(t => t.hasUnread).length;
+      if (unread > 0) {
+        badge.textContent = String(unread);
+        badge.classList.remove("ep-hide");
+      } else {
+        badge.classList.add("ep-hide");
+      }
+    } catch {}
+  }
+  refresh();
+  setInterval(refresh, 60_000);
 }

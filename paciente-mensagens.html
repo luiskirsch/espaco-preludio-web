@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-55">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-56">
 </head>
 <body>
 
@@ -121,6 +121,49 @@
     myEcdhPrivBytes = kp.privateRaw;
   }
   await ensureEcdhKeypair();
+
+  // ─── Push subscription (best-effort, prompt na 1ª visita) ───────
+  // Pra paciente receber notificação quando profissional enviar mensagem.
+  (async () => {
+    try {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+      if (Notification.permission === "denied") return;
+      const reg = await navigator.serviceWorker.ready;
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) return; // já subscrito
+      if (Notification.permission !== "granted") {
+        // pede permissão sem ser invasivo — só na 1ª visita à página de chat
+        const flagKey = "ep:paciente:push-prompted";
+        if (localStorage.getItem(flagKey)) return;
+        localStorage.setItem(flagKey, "1");
+        const perm = await Notification.requestPermission();
+        if (perm !== "granted") return;
+      }
+      const cfgRes = await fetch(`${BACKEND_BASE_URL}/therapy/push/config`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const cfg = await cfgRes.json().catch(() => ({}));
+      if (!cfg.ok || !cfg.publicKey) return;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(cfg.publicKey)
+      });
+      await fetch(`${BACKEND_BASE_URL}/therapy/paciente/push/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ subscription: sub.toJSON() })
+      });
+    } catch (e) { /* push é best-effort */ }
+  })();
+
+  function urlBase64ToUint8Array(b64) {
+    const padding = "=".repeat((4 - b64.length % 4) % 4);
+    const base64 = (b64 + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const raw = atob(base64);
+    const out = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
 
   // ─── Helpers ────────────────────────────────────────────────────
   const $ = id => document.getElementById(id);

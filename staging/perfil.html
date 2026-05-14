@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-55">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-56">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -1006,6 +1006,81 @@
         ]));
       } catch { zip.file("10-audit.csv", "(endpoint indisponivel)"); }
 
+      // 11) Mensagens (chat E2EE)
+      hdr("Baixando mensagens…");
+      try {
+        const { unwrapKey, unwrapThreadKeyFromPeer, decryptNote } = await import("./js/crypto.js");
+        let myEcdhPriv = null;
+        try {
+          const kpRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/keypair`, { headers: { "Authorization": `Bearer ${idToken}` } });
+          if (kpRes.ok) {
+            const kpData = await kpRes.json();
+            myEcdhPriv = await unwrapKey(kpData.ecdhPrivateWrapped, dekLocal);
+          }
+        } catch {}
+
+        const threadsRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const threadsData = await threadsRes.json();
+        const threads = threadsData.threads || [];
+        const allMessages = [];
+
+        for (const tMeta of threads) {
+          const tRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(tMeta.threadId)}`, {
+            headers: { "Authorization": `Bearer ${idToken}` }
+          });
+          const tData = await tRes.json();
+          if (!tData.ok) continue;
+          const t = tData.thread;
+
+          let threadKey;
+          if (t.myThreadKeyWrappedVia === "own-dek") {
+            threadKey = await unwrapKey(t.myThreadKeyWrapper, dekLocal);
+          } else if (myEcdhPriv) {
+            threadKey = await unwrapThreadKeyFromPeer(t.myThreadKeyWrapper, myEcdhPriv, t.peerEcdhPublicJwk);
+          } else {
+            continue;
+          }
+
+          const msgsRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(tMeta.threadId)}/messages?limit=500`, {
+            headers: { "Authorization": `Bearer ${idToken}` }
+          });
+          const msgsData = await msgsRes.json();
+          for (const m of (msgsData.messages || [])) {
+            try {
+              const plain = await decryptNote({ ciphertext: m.ciphertext, iv: m.iv }, threadKey);
+              allMessages.push({
+                threadId: tMeta.threadId,
+                paciente: t.patientDisplayName,
+                profissional: t.therapistDisplayName,
+                de: m.senderRole === "therapist" ? "profissional" : "paciente",
+                texto: plain,
+                quando: m.createdAt
+              });
+            } catch {
+              allMessages.push({
+                threadId: tMeta.threadId,
+                paciente: t.patientDisplayName,
+                profissional: t.therapistDisplayName,
+                de: m.senderRole,
+                texto: "[mensagem corrompida]",
+                quando: m.createdAt
+              });
+            }
+          }
+        }
+
+        zip.file("11-mensagens.csv", rowsToCsv(allMessages, [
+          { key: "threadId",     label: "thread_id" },
+          { key: "paciente",     label: "paciente" },
+          { key: "profissional", label: "profissional" },
+          { key: "de",           label: "remetente" },
+          { key: "texto",        label: "texto" },
+          { label: "quando",     get: r => fmtTs(r.quando) }
+        ]));
+      } catch (e) {
+        zip.file("11-mensagens.csv", "(erro ao exportar chat: " + (e?.message || "desconhecido") + ")");
+      }
+
       zip.file("README.txt", `EXPORTAÇÃO DE DADOS — ESPAÇO PRELÚDIO (STAGING)
 Gerada em ${new Date().toLocaleString("pt-BR")}
 Usuário: ${meData.therapist?.displayName || ""} (uid: ${user.uid})
@@ -1017,6 +1092,7 @@ Conteúdo:
   04-notas-sessao.csv    Anotações de cada sessão (decifradas)
   05-financeiro.csv      Lançamentos financeiros
   06-recibos.csv         Recibos emitidos
+  11-mensagens.csv       Conversas E2EE com pacientes (decifradas)
   09-anamneses.json      Anamneses respondidas
   10-audit.csv           Histórico de atividades
 
