@@ -378,11 +378,19 @@ body:has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
 .ep-msg-bubble-fab:hover {
   transform: translateY(-2px) scale(1.04);
   box-shadow: 0 8px 22px rgba(45,74,62,0.40), 0 2px 4px rgba(28,31,29,0.14);
-  background: color-mix(in srgb, var(--ep-accent) 82%, #000);
+  /* Cor fixa em vez de color-mix — alguns browsers (Safari antigo, Firefox
+     ESR) caem pra valor inicial (transparent) e o ícone branco some sobre
+     o fundo da página. #25402f é o mesmo que --ep-accent-hover em light mode. */
+  background: #25402f;
 }
-/* Em dark mode o accent é verde-claro (#6fbf99) → branco no ícone seria
-   ilegível no hover. Inverte pra ícone escuro sobre verde-claro. */
-html[data-theme="dark"] .ep-msg-bubble-fab { color: #1a1a1a; }
+/* Em dark mode --ep-accent é verde-claro → ícone fica escuro pra contraste.
+   Hover também precisa ser claro pra harmonizar (não escurece como light). */
+html[data-theme="dark"] .ep-msg-bubble-fab {
+  color: #1a1a1a;
+}
+html[data-theme="dark"] .ep-msg-bubble-fab:hover {
+  background: #5dad88; /* --ep-accent-hover do dark mode (verde médio) */
+}
 .ep-msg-bubble-fab:active { transform: translateY(0) scale(1); }
 .ep-msg-bubble-fab:focus-visible {
   outline: 2px solid var(--ep-gold);
