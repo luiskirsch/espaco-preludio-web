@@ -50,25 +50,35 @@ export async function requirePatient({ requireDek = true } = {}) {
       window.location.href = "./paciente-login.html?reauth=1&redirect=" + encodeURIComponent(location.pathname + location.search);
       throw new Error("DEK_AUSENTE");
     }
-    mountUnreadBadgePoller(idToken);
+    mountMessagesBubble(idToken);
     return { user, idToken, account: profile.account, dek };
   }
 
-  mountUnreadBadgePoller(idToken);
+  mountMessagesBubble(idToken);
   return { user, idToken, account: profile.account };
 }
 
-// Badge unread no link "Mensagens" da topbar do paciente. Polling 60s.
-function mountUnreadBadgePoller(idToken) {
+// Botão flutuante de mensagens — entre help e theme toggle. Polling 60s.
+function mountMessagesBubble(idToken) {
   if (typeof document === "undefined") return;
-  const link = document.querySelector('a[href="./paciente-mensagens.html"]');
-  if (!link) return;
-  let badge = link.querySelector(".ep-unread-pill");
-  if (!badge) {
-    badge = document.createElement("span");
-    badge.className = "ep-unread-pill ep-hide";
-    link.appendChild(badge);
-  }
+  if (document.getElementById("epMessagesBubble")) return;
+  if (location.pathname.toLowerCase().endsWith("/paciente-mensagens.html")) return;
+
+  const a = document.createElement("a");
+  a.id = "epMessagesBubble";
+  a.href = "./paciente-mensagens.html";
+  a.className = "ep-msg-bubble-fab";
+  a.title = "Mensagens";
+  a.setAttribute("aria-label", "Abrir mensagens");
+  a.innerHTML = `
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+    <span class="ep-msg-bubble-fab__badge ep-hide" aria-hidden="true">0</span>
+  `;
+  document.body.appendChild(a);
+  const badge = a.querySelector(".ep-msg-bubble-fab__badge");
+
   async function refresh() {
     try {
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, {
@@ -78,7 +88,7 @@ function mountUnreadBadgePoller(idToken) {
       if (!r.ok || !d.ok) return;
       const unread = (d.threads || []).filter(t => t.hasUnread).length;
       if (unread > 0) {
-        badge.textContent = String(unread);
+        badge.textContent = unread > 99 ? "99+" : String(unread);
         badge.classList.remove("ep-hide");
       } else {
         badge.classList.add("ep-hide");

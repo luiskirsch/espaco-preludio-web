@@ -319,7 +319,7 @@ function mountThemeToggle() {
   if (typeof document === "undefined") return;
   groupProfileWithLogout();
   mountThemeToggle();
-  mountUnreadBadgePoller(async () => {
+  mountMessagesBubble(async () => {
     const u = auth.currentUser;
     return u ? u.getIdToken() : null;
   });
@@ -333,17 +333,29 @@ function mountThemeToggle() {
   } catch { /* no-op */ }
 })();
 
-// Badge unread no link "Mensagens" da topbar (polling 60s).
-function mountUnreadBadgePoller(idTokenGetter) {
+// Botão flutuante de mensagens — entre help (gold) e theme toggle.
+function mountMessagesBubble(idTokenGetter) {
   if (typeof document === "undefined") return;
-  const link = document.querySelector('a[href="./mensagens.html"]');
-  if (!link) return;
-  let badge = link.querySelector(".ep-unread-pill");
-  if (!badge) {
-    badge = document.createElement("span");
-    badge.className = "ep-unread-pill ep-hide";
-    link.appendChild(badge);
-  }
+  if (document.getElementById("epMessagesBubble")) return;
+  const path = location.pathname.toLowerCase();
+  if (path.endsWith("/2fa-verify.html")) return;
+  if (path.endsWith("/mensagens.html")) return;
+
+  const a = document.createElement("a");
+  a.id = "epMessagesBubble";
+  a.href = "./mensagens.html";
+  a.className = "ep-msg-bubble-fab";
+  a.title = "Mensagens";
+  a.setAttribute("aria-label", "Abrir mensagens");
+  a.innerHTML = `
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+    <span class="ep-msg-bubble-fab__badge ep-hide" aria-hidden="true">0</span>
+  `;
+  document.body.appendChild(a);
+  const badge = a.querySelector(".ep-msg-bubble-fab__badge");
+
   async function refresh() {
     try {
       const token = await idTokenGetter();
@@ -355,7 +367,7 @@ function mountUnreadBadgePoller(idTokenGetter) {
       if (!r.ok || !d.ok) return;
       const unread = (d.threads || []).filter(t => t.hasUnread).length;
       if (unread > 0) {
-        badge.textContent = String(unread);
+        badge.textContent = unread > 99 ? "99+" : String(unread);
         badge.classList.remove("ep-hide");
       } else {
         badge.classList.add("ep-hide");

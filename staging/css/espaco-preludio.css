@@ -272,13 +272,11 @@ a:hover { color: var(--ep-accent-hover); }
   margin-left: 4px;
 }
 
-/* Toggle de tema (sol/lua) — duas faces:
-   - LIGHT mode (mostra a LUA, promete escuro): fundo escuro, ícone branco.
-   - DARK mode (mostra o SOL, promete claro):   fundo branco, ícone branco. */
+/* Toggle de tema (sol/lua) — empilhado acima do botão de mensagens. */
 .ep-theme-toggle {
   position: fixed;
   right: 24px;
-  bottom: 90px;
+  bottom: 156px;
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -316,10 +314,66 @@ html[data-theme="dark"] .ep-theme-toggle:hover {
   outline: 2px solid var(--ep-accent);
   outline-offset: 2px;
 }
-body:not(:has(.ep-help-bubble)) .ep-theme-toggle {
+body:not(:has(.ep-help-bubble)):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
   bottom: 24px;
 }
+body:not(:has(.ep-help-bubble)):has(.ep-msg-bubble-fab) .ep-theme-toggle {
+  bottom: 90px;
+}
+body:has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
+  bottom: 90px;
+}
 @media print { .ep-theme-toggle { display: none !important; } }
+
+/* Botão flutuante de mensagens — entre help e theme. */
+.ep-msg-bubble-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 90px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--ep-accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(45,74,62,0.30), 0 1px 3px rgba(28,31,29,0.10);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  z-index: 180;
+}
+.ep-msg-bubble-fab:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 22px rgba(45,74,62,0.40), 0 2px 4px rgba(28,31,29,0.14);
+  background: var(--ep-accent-hover);
+}
+.ep-msg-bubble-fab:active { transform: translateY(0) scale(1); }
+.ep-msg-bubble-fab:focus-visible {
+  outline: 2px solid var(--ep-gold);
+  outline-offset: 2px;
+}
+.ep-msg-bubble-fab__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--ep-gold);
+  color: var(--ep-ink);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+  border: 2px solid var(--ep-surface);
+  box-shadow: 0 2px 6px rgba(28,31,29,0.20);
+}
+body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
+  bottom: 24px;
+}
+@media print { .ep-msg-bubble-fab { display: none !important; } }
 
 /* Tags de pacientes — chips coloridos pequenos. */
 .ep-tag-row {
@@ -977,19 +1031,6 @@ h3.ep-h3 {
   color: var(--ep-ink);
 }
 
-/* Badge unread no link de Mensagens da topbar. */
-.ep-unread-pill {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: var(--ep-gold);
-  color: var(--ep-ink);
-  font-size: 10.5px;
-  font-weight: 700;
-  line-height: 1.5;
-  vertical-align: middle;
-}
 
 /* ─── Cards ─────────────────────────────────────────────── */
 

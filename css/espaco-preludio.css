@@ -295,14 +295,12 @@ a:hover { color: var(--ep-accent-hover); }
   margin-left: 4px;
 }
 
-/* Toggle de tema (sol/lua) — duas faces:
-   - LIGHT mode (mostra a LUA, promete escuro): fundo escuro, ícone branco.
-   - DARK mode (mostra o SOL, promete claro):   fundo branco, ícone branco
-     (botão vira um disco branco luminoso sobre fundo escuro da página). */
+/* Toggle de tema (sol/lua) — empilhado ACIMA do botão de mensagens.
+   Stack: help(24) → mensagens(90) → theme(156). */
 .ep-theme-toggle {
   position: fixed;
   right: 24px;
-  bottom: 90px;
+  bottom: 156px;
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -341,10 +339,71 @@ html[data-theme="dark"] .ep-theme-toggle:hover {
   outline-offset: 2px;
 }
 /* Em páginas sem help bubble (suporte.html), o toggle assume a posição de baixo. */
-body:not(:has(.ep-help-bubble)) .ep-theme-toggle {
+/* Sem help nem msg (suporte.html, etc): theme toggle vai pra base. */
+body:not(:has(.ep-help-bubble)):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
   bottom: 24px;
 }
+/* Sem help mas com msg: theme toggle 14px acima do msg. */
+body:not(:has(.ep-help-bubble)):has(.ep-msg-bubble-fab) .ep-theme-toggle {
+  bottom: 90px;
+}
+/* Com help mas sem msg: theme toggle 14px acima do help. */
+body:has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
+  bottom: 90px;
+}
 @media print { .ep-theme-toggle { display: none !important; } }
+
+/* Botão flutuante de mensagens — entre help e theme. Cor accent (verde)
+   pra distinguir visualmente dos outros dois. Badge unread no canto sup-dir. */
+.ep-msg-bubble-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 90px;           /* 24 (help bottom) + 52 (help height) + 14 (gap) */
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--ep-accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(45,74,62,0.30), 0 1px 3px rgba(28,31,29,0.10);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  z-index: 180;
+}
+.ep-msg-bubble-fab:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 22px rgba(45,74,62,0.40), 0 2px 4px rgba(28,31,29,0.14);
+  background: var(--ep-accent-hover);
+}
+.ep-msg-bubble-fab:active { transform: translateY(0) scale(1); }
+.ep-msg-bubble-fab:focus-visible {
+  outline: 2px solid var(--ep-gold);
+  outline-offset: 2px;
+}
+.ep-msg-bubble-fab__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--ep-gold);
+  color: var(--ep-ink);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+  border: 2px solid var(--ep-surface);
+  box-shadow: 0 2px 6px rgba(28,31,29,0.20);
+}
+/* Sem help bubble: msg bubble vai pra base. */
+body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
+  bottom: 24px;
+}
+@media print { .ep-msg-bubble-fab { display: none !important; } }
 
 /* Tags de pacientes — chips coloridos pequenos. */
 .ep-tag-row {
@@ -1009,19 +1068,6 @@ h3.ep-h3 {
   color: var(--ep-ink);
 }
 
-/* Badge unread no link de Mensagens da topbar (auth-guard.js injeta). */
-.ep-unread-pill {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: var(--ep-gold);
-  color: var(--ep-ink);
-  font-size: 10.5px;
-  font-weight: 700;
-  line-height: 1.5;
-  vertical-align: middle;
-}
 
 /* ─── Cards ─────────────────────────────────────────────── */
 
