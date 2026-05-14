@@ -375,7 +375,9 @@ body:has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
 .ep-msg-bubble-fab:hover {
   transform: translateY(-2px) scale(1.04);
   box-shadow: 0 8px 22px rgba(45,74,62,0.40), 0 2px 4px rgba(28,31,29,0.14);
-  background: var(--ep-accent-hover);
+  /* Escurece o accent via color-mix (sempre +preto, independe do tema) →
+     ícone branco mantém contraste em light e dark mode. */
+  background: color-mix(in srgb, var(--ep-accent) 82%, #000);
 }
 .ep-msg-bubble-fab:active { transform: translateY(0) scale(1); }
 .ep-msg-bubble-fab:focus-visible {
