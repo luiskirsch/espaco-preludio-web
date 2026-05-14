@@ -220,6 +220,141 @@ export function recoveryPhraseToDek(phrase) {
   return bytes.slice(0, DEK_BYTES);
 }
 
+// ─── ECDH P-256 — troca de chaves entre 2 usuários ──────────
+//
+// Cada user gera um keypair ECDH P-256 no primeiro acesso ao chat:
+//   - publicJwk: armazenado em claro no doc do user (não é secreto)
+//   - privateRaw: cifrado com o DEK do user (so o user pode usar)
+//
+// Pra cifrar uma threadKey pro outro user:
+//   1. Faz ECDH(meu_priv, outro_pub) → shared secret (32 bytes AES)
+//   2. AES-GCM(threadKey, shared_secret, iv) → ciphertext
+// O outro user faz o ECDH inverso: ECDH(seu_priv, meu_pub) gera o mesmo
+// shared secret → consegue decifrar.
+
+export async function generateEcdhKeypair() {
+  const kp = await crypto.subtle.generateKey(
+    { name: "ECDH", namedCurve: "P-256" },
+    true,
+    ["deriveKey", "deriveBits"]
+  );
+  const publicJwk  = await crypto.subtle.exportKey("jwk", kp.publicKey);
+  const privateRaw = await crypto.subtle.exportKey("pkcs8", kp.privateKey);
+  return {
+    publicJwk,
+    privateRaw: new Uint8Array(privateRaw)
+  };
+}
+
+async function importEcdhPrivate(rawBytes) {
+  return crypto.subtle.importKey(
+    "pkcs8", rawBytes,
+    { name: "ECDH", namedCurve: "P-256" },
+    false,
+    ["deriveKey", "deriveBits"]
+  );
+}
+
+async function importEcdhPublic(jwk) {
+  return crypto.subtle.importKey(
+    "jwk", jwk,
+    { name: "ECDH", namedCurve: "P-256" },
+    false,
+    []
+  );
+}
+
+async function deriveSharedAesKey(myPrivBytes, theirPubJwk) {
+  const myPriv  = await importEcdhPrivate(myPrivBytes);
+  const theirPub = await importEcdhPublic(theirPubJwk);
+  return crypto.subtle.deriveKey(
+    { name: "ECDH", public: theirPub },
+    myPriv,
+    { name: "AES-GCM", length: AES_LENGTH },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+// Cifra threadKey (raw bytes) com shared secret derivado de ECDH.
+export async function wrapThreadKeyForPeer(threadKeyBytes, myEcdhPrivBytes, peerEcdhPubJwk) {
+  const aesKey = await deriveSharedAesKey(myEcdhPrivBytes, peerEcdhPubJwk);
+  const iv = generateIv();
+  const ct = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    aesKey,
+    threadKeyBytes
+  );
+  return {
+    ciphertext: bytesToB64(new Uint8Array(ct)),
+    iv:         bytesToB64(iv)
+  };
+}
+
+// Decifra threadKey usando shared secret ECDH.
+export async function unwrapThreadKeyFromPeer({ ciphertext, iv }, myEcdhPrivBytes, peerEcdhPubJwk) {
+  const aesKey = await deriveSharedAesKey(myEcdhPrivBytes, peerEcdhPubJwk);
+  try {
+    const plain = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: b64ToBytes(iv) },
+      aesKey,
+      b64ToBytes(ciphertext)
+    );
+    return new Uint8Array(plain);
+  } catch {
+    throw new Error("THREAD_KEY_INVALIDA_OU_CHAVE_PEER_INCORRETA");
+  }
+}
+
+// ─── Chat E2EE: wrap/unwrap de threadKey ────────────────────
+//
+// Modelo:
+//   - threadKey é uma chave AES-256 aleatória por conversa paciente↔terapeuta.
+//   - Cifrada DUAS vezes (com a DEK do terapeuta + DEK do paciente),
+//     armazenada como dois ciphertexts independentes no doc da thread.
+//   - Cada parte usa seu próprio DEK pra desembrulhar a threadKey, depois
+//     decifra/cifra mensagens individuais usando a threadKey.
+//   - Servidor armazena 2 wrappers de chave + N ciphertexts de mensagens.
+//     Não pode ler nada — não tem nenhum DEK.
+//
+// API genérica: wrapKey/unwrapKey operam sobre raw bytes de qualquer chave,
+// usando outra chave (em raw bytes) como wrapper. Mesma primitiva do
+// wrapDek/unwrapDek, mas sem PBKDF2 (a "wrapper key" já vem derivada/gerada).
+
+export function generateThreadKey() {
+  const arr = new Uint8Array(DEK_BYTES);
+  crypto.getRandomValues(arr);
+  return arr;
+}
+
+export async function wrapKey(rawKeyBytes, wrapperKeyBytes) {
+  const wrapper = await importDek(wrapperKeyBytes);
+  const iv = generateIv();
+  const ct = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    wrapper,
+    rawKeyBytes
+  );
+  return {
+    ciphertext: bytesToB64(new Uint8Array(ct)),
+    iv:         bytesToB64(iv)
+  };
+}
+
+export async function unwrapKey({ ciphertext, iv }, wrapperKeyBytes) {
+  const wrapper = await importDek(wrapperKeyBytes);
+  try {
+    const plain = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: b64ToBytes(iv) },
+      wrapper,
+      b64ToBytes(ciphertext)
+    );
+    return new Uint8Array(plain);
+  } catch {
+    throw new Error("CHAVE_INCORRETA_OU_BLOB_CORROMPIDO");
+  }
+}
+
 // ─── Sessão (DEK em sessionStorage durante a aba) ───────────
 
 export function rememberDek(dekBytes) {

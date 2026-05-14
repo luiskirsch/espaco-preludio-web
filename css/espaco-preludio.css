@@ -891,6 +891,124 @@ h3.ep-h3 {
    3 cards caberem confortavelmente. */
 #planos { padding-top: 13px; }
 
+/* ─── Chat E2EE (mensagens.html / paciente-painel.html) ─────────── */
+.ep-msg-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  min-height: 60vh;
+  height: calc(100vh - 220px);
+}
+@media (max-width: 720px) {
+  .ep-msg-layout { grid-template-columns: 1fr; height: auto; }
+}
+.ep-msg-threads {
+  border: 1px solid var(--ep-line);
+  border-radius: 12px;
+  background: var(--ep-surface);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ep-msg-threads__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--ep-line);
+}
+.ep-msg-threads__list { overflow-y: auto; flex: 1; }
+.ep-msg-thread-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--ep-line);
+  cursor: pointer;
+  text-align: left;
+  color: var(--ep-ink);
+}
+.ep-msg-thread-item:hover { background: var(--ep-bg-2); }
+.ep-msg-thread-item.is-active { background: var(--ep-accent-soft); }
+.ep-msg-thread-item__name { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+.ep-msg-thread-item__time { font-size: 11px; color: var(--ep-ink-2); }
+.ep-msg-unread {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--ep-gold);
+}
+
+.ep-msg-main {
+  border: 1px solid var(--ep-line);
+  border-radius: 12px;
+  background: var(--ep-surface);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ep-msg-empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 32px;
+}
+.ep-msg-thread { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.ep-msg-thread__head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--ep-line);
+}
+.ep-msg-thread__list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--ep-bg-2);
+}
+.ep-msg-bubble {
+  max-width: 75%;
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.ep-msg-bubble__text { white-space: pre-wrap; word-wrap: break-word; }
+.ep-msg-bubble__time { font-size: 10.5px; opacity: 0.7; margin-top: 4px; }
+.ep-msg-bubble.is-mine {
+  align-self: flex-end;
+  background: var(--ep-accent);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.ep-msg-bubble.is-theirs {
+  align-self: flex-start;
+  background: var(--ep-surface);
+  color: var(--ep-ink);
+  border: 1px solid var(--ep-line);
+  border-bottom-left-radius: 4px;
+}
+.ep-msg-thread__composer {
+  border-top: 1px solid var(--ep-line);
+  background: var(--ep-surface);
+}
+.ep-msg-thread__composer textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  color: var(--ep-ink);
+}
+
 /* ─── Cards ─────────────────────────────────────────────── */
 
 .ep-card {
