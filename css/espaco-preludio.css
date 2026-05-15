@@ -1965,6 +1965,33 @@ body.ep-consult .ep-theme-toggle {
   height: 100%;
   overflow: hidden;
 }
+
+/* Variant da sessão do paciente: mesma grid 2 colunas pros tiles, mas a
+   linha de baixo é APENAS notas full-width (paciente não tem deck de tópicos). */
+.ep-consult__video--inline.ep-consult__video--patient {
+  grid-template-areas:
+    "local patient"
+    "notes notes";
+}
+.ep-consult__video--inline .ep-patient-notes--inline {
+  grid-area: notes;
+  /* override do .ep-patient-notes base — sem backdrop-filter, sem max-height,
+     fundo sólido (mesma paleta do .ep-inline-notes do profissional) */
+  position: relative;
+  z-index: 50;
+  isolation: isolate;
+  background: #14110d;
+  border: 1px solid rgba(215,176,107,0.18);
+  max-height: none;
+  height: 100%;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.ep-consult__video--inline .ep-patient-notes--inline .ep-patient-notes__composer textarea {
+  /* textarea cresce — mais espaço pra anotações longas */
+  min-height: 64px;
+  max-height: none;
+}
 .ep-consult__video--inline #tileLocal,
 .ep-consult__video--inline #tileRemote {
   aspect-ratio: auto;          /* tiles preenchem a célula em vez de impor 16/11 */

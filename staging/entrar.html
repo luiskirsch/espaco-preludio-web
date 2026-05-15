@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-110">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-111">
 </head>
 <body class="ep-consult">
 
@@ -73,11 +73,25 @@
     <div class="ep-flex ep-flex--center ep-gap-14 ep-w-full">
       <span id="connectionStatus" class="ep-consult__status">conectando…</span>
       <span id="e2eeBadge" class="ep-badge ep-badge--ok ep-hide">E2EE ativo</span>
+
+      <!-- Controles centrais (mic / cam / leave) ABSOLUTOS no centro da topbar.
+           Mesma variante do lado profissional, mas sem record (paciente não grava). -->
+      <div class="ep-controls-bar ep-controls-bar--topbar">
+        <button class="ep-ctrl" id="ctrlMic" type="button" title="Silenciar microfone" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        </button>
+        <button class="ep-ctrl" id="ctrlCam" type="button" title="Desligar câmera" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="m17 10 4-2v8l-4-2z"/></svg>
+        </button>
+        <button class="ep-ctrl ep-ctrl--leave" id="ctrlLeave" type="button" title="Sair da consulta">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" transform="rotate(135 12 12)"/></svg>
+        </button>
+      </div>
     </div>
   </header>
 
   <main class="ep-consult__main ep-consult__main--solo">
-    <section class="ep-consult__video ep-consult__video--solo" id="videoArea">
+    <section class="ep-consult__video ep-consult__video--inline ep-consult__video--patient" id="videoArea">
       <div class="ep-tile ep-tile--gilded" id="tileLocal">
         <video id="videoLocal" autoplay muted playsinline></video>
         <div class="ep-tile__name">Você</div>
@@ -94,45 +108,22 @@
         <div class="ep-tile__name ep-hide" id="remoteName"></div>
       </div>
 
-      <!-- Bloco inferior: cápsula de tranquilização (waiting) ou anotações pessoais (session) -->
-      <div class="ep-bottom-stack" id="bottomStack" data-state="waiting">
-        <div class="ep-patient-info" data-show-on="waiting" aria-label="Informações da sessão">
+      <!-- Anotações pessoais ocupam a linha inferior, full-width (paciente não
+           tem deck de tópicos como o profissional). Sempre visíveis — paciente
+           pode anotar desde a entrada, mesmo antes do terapeuta conectar. -->
+      <div class="ep-patient-notes ep-patient-notes--inline" aria-label="Suas anotações pessoais">
+        <div class="ep-patient-notes__head">
           <span class="ep-lock">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-            Vídeo cifrado
+            <span id="notesScopeLabel">Suas anotações · só você vê</span>
           </span>
-          <span class="ep-patient-info__sep" aria-hidden="true">·</span>
-          <span>Sua privacidade é garantida durante toda a sessão.</span>
-          <span class="ep-patient-info__sep" aria-hidden="true">·</span>
-          <span>Respire. Você está em um espaço cuidado.</span>
+          <span class="ep-text-xs ep-text-muted" id="patientNotesStatus">&nbsp;</span>
         </div>
-
-        <div class="ep-patient-notes" data-show-on="session" aria-label="Suas anotações pessoais">
-          <div class="ep-patient-notes__head">
-            <span class="ep-lock">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-              <span id="notesScopeLabel">Suas anotações · só você vê</span>
-            </span>
-            <span class="ep-text-xs ep-text-muted" id="patientNotesStatus">&nbsp;</span>
-          </div>
-          <div class="ep-patient-notes__list" id="patientNotesList"></div>
-          <div class="ep-patient-notes__composer">
-            <textarea id="patientNoteInput" placeholder="Anote o que quiser lembrar dessa sessão…" maxlength="2000"></textarea>
-            <button id="patientNoteSave" type="button" class="ep-btn ep-btn--primary ep-btn--sm">Salvar</button>
-          </div>
+        <div class="ep-patient-notes__list" id="patientNotesList"></div>
+        <div class="ep-patient-notes__composer">
+          <textarea id="patientNoteInput" placeholder="Anote o que quiser lembrar dessa sessão…" maxlength="2000"></textarea>
+          <button id="patientNoteSave" type="button" class="ep-btn ep-btn--primary ep-btn--sm">Salvar</button>
         </div>
-      </div>
-
-      <div class="ep-controls-bar">
-        <button class="ep-ctrl" id="ctrlMic" type="button" title="Silenciar microfone" aria-pressed="false">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
-        </button>
-        <button class="ep-ctrl" id="ctrlCam" type="button" title="Desligar câmera" aria-pressed="false">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="m17 10 4-2v8l-4-2z"/></svg>
-        </button>
-        <button class="ep-ctrl ep-ctrl--leave" id="ctrlLeave" type="button" title="Sair da consulta">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" transform="rotate(135 12 12)"/></svg>
-        </button>
       </div>
     </section>
   </main>
@@ -379,9 +370,6 @@
       e2ee: useE2EE ? { keyProvider, worker: e2eeWorker } : undefined
     });
 
-    const bottomStack = document.getElementById("bottomStack");
-    function setBottomState(state) { bottomStack.dataset.state = state; }
-
     // ─── Anotações pessoais — duas formas de armazenar ──────────────────
     // mode "logged" → POST /paciente/notas (cifrado E2EE com DEK do paciente)
     // mode "anon"   → sessionStorage (some ao fechar aba)
@@ -503,14 +491,12 @@
         videoRemote.classList.remove("ep-hide");
         remoteName.classList.remove("ep-hide");
         remoteName.textContent = p.name || "Profissional";
-        setBottomState("session");
       })
       .on(RoomEvent.ParticipantDisconnected, () => {
         remotePlaceholder.classList.remove("ep-hide");
         videoRemote.classList.add("ep-hide");
         remoteName.classList.add("ep-hide");
         tileRemote.classList.remove("ep-tile--has-video");
-        setBottomState("waiting");
       })
       .on(RoomEvent.TrackSubscribed, (track, pub, p) => {
         console.info("[lk] trackSubscribed", { kind: track.kind, sid: pub?.trackSid, participant: p?.identity });

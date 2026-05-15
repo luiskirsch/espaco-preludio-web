@@ -33,7 +33,12 @@
    gamificado.
    ============================================================ */
 
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap");
+/* IMPORTANT: As fontes Fraunces + Inter sao carregadas via <link> em cada
+   HTML (URL combinada do Google Fonts), NAO via @import aqui. @import em
+   CSS bloqueia o paint da pagina ate baixar o CSS importado — adiciona
+   um round-trip serial ao Google Fonts antes do primeiro paint. Carregando
+   no <head> do HTML, o navegador inicia o download em paralelo com este
+   CSS. Ver consultorio.html, index.html, painel.html etc. */
 
 :root {
   --ep-bg:           #f6f5f1;
@@ -1959,6 +1964,33 @@ body.ep-consult .ep-theme-toggle {
   min-height: 0;
   height: 100%;
   overflow: hidden;
+}
+
+/* Variant da sessão do paciente: mesma grid 2 colunas pros tiles, mas a
+   linha de baixo é APENAS notas full-width (paciente não tem deck de tópicos). */
+.ep-consult__video--inline.ep-consult__video--patient {
+  grid-template-areas:
+    "local patient"
+    "notes notes";
+}
+.ep-consult__video--inline .ep-patient-notes--inline {
+  grid-area: notes;
+  /* override do .ep-patient-notes base — sem backdrop-filter, sem max-height,
+     fundo sólido (mesma paleta do .ep-inline-notes do profissional) */
+  position: relative;
+  z-index: 50;
+  isolation: isolate;
+  background: #14110d;
+  border: 1px solid rgba(215,176,107,0.18);
+  max-height: none;
+  height: 100%;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.ep-consult__video--inline .ep-patient-notes--inline .ep-patient-notes__composer textarea {
+  /* textarea cresce — mais espaço pra anotações longas */
+  min-height: 64px;
+  max-height: none;
 }
 .ep-consult__video--inline #tileLocal,
 .ep-consult__video--inline #tileRemote {
