@@ -1489,16 +1489,47 @@ html[data-theme="dark"] .ep-badge--muted { background: rgba(232,230,223,0.08); c
   border-radius: var(--ep-radius-lg);
   box-shadow: var(--ep-shadow-card);
   padding: 36px;
-  /* Limita a altura ao viewport (menos margem de 24px+24px que o prejoin
-     ja aplica como padding). Se o conteudo passar, scroll INTERNO no
-     painel sem mostrar scrollbar visual — assim em telas pequenas/zoom
-     alto o usuario rola dentro do card, sem barra branca atravessando
-     a borda do painel. */
+  /* Fallback pra zoom alto / telas muito pequenas: scroll interno invisivel. */
   max-height: calc(100vh - 48px);
   overflow-y: auto;
   scrollbar-width: none;
 }
 .ep-auth__panel::-webkit-scrollbar { display: none; }
+
+/* Prejoin do paciente — compacto pra caber em viewport padrao sem scroll.
+   Overrides escopados em #prejoin pra nao afetar outras paginas que usam
+   .ep-auth__panel (login, cadastro, etc). */
+#prejoin .ep-auth__panel { padding: 24px 28px; }
+#prejoin .ep-brand { margin-bottom: 4px; }
+#prejoin .ep-brand__mark { width: 36px; height: 36px; }
+#prejoin .ep-auth__title {
+  font-size: 22px;
+  margin: 6px 0 4px;
+}
+#prejoin .ep-auth__sub {
+  font-size: 13.5px;
+  line-height: 1.45;
+  margin: 0 0 12px;
+}
+#prejoin .ep-mt-32 { margin-top: 14px; }
+#prejoin .ep-mt-12 { margin-top: 8px; }
+#prejoin .ep-stack { gap: 10px; }
+#prejoin .ep-alert {
+  padding: 12px 14px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+#prejoin .ep-alert ul {
+  margin: 6px 0 0 !important;
+  padding-left: 16px !important;
+}
+#prejoin .ep-alert li { margin-bottom: 3px; }
+#prejoin .ep-checkbox {
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+#prejoin .ep-label { font-size: 13px; margin-bottom: 4px; }
+#prejoin .ep-input { padding: 10px 12px; }
 .ep-auth__panel--wide { max-width: 1080px; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 0; padding: 0; overflow: hidden; }
 @media (max-width: 920px) { .ep-auth__panel--wide { grid-template-columns: 1fr; } }
 
