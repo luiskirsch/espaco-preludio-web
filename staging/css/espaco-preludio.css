@@ -1897,7 +1897,7 @@ body.ep-consult .ep-theme-toggle {
 .ep-consult__video--inline {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: minmax(0, 1fr) 260px;        /* tiles | notas+tópicos */
+  grid-template-rows: minmax(0, 1fr) minmax(280px, 0.6fr);  /* tiles | notas+tópicos */
   grid-template-areas:
     "local patient"
     "notes topics";
@@ -1919,16 +1919,31 @@ body.ep-consult .ep-theme-toggle {
 .ep-consult__video--inline .ep-topics-deck--pinned { grid-area: topics; }
 
 /* Deck de tópicos PINADO na coluna direita — sempre visível, alinhado com o
-   tile do paciente em cima. Não é mais overlay flutuante. */
+   tile do paciente em cima. Não é mais overlay flutuante. Preenche toda a
+   altura disponível da row do grid, com lista interna rolando. */
 .ep-topics-deck--pinned {
   position: static !important;
   top: auto;
   right: auto;
   bottom: auto;
   width: 100%;
+  height: 100%;
   max-height: 100%;
+  min-height: 0;
   z-index: auto;
   display: flex !important;     /* override do "display:none quando !is-open" */
+  flex-direction: column;
+}
+/* Lista cresce e rola; head/filtros/draw ficam fixos no topo/rodapé. */
+.ep-topics-deck--pinned .ep-topics-deck__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.ep-topics-deck--pinned .ep-topics-deck__head,
+.ep-topics-deck--pinned .ep-topics-deck__filters,
+.ep-topics-deck--pinned .ep-topics-deck__draw {
+  flex-shrink: 0;
 }
 
 @media (max-width: 860px) {
@@ -2286,7 +2301,8 @@ body.ep-consult .ep-theme-toggle {
   z-index: 10;
 }
 
-/* Variante "topbar" dos controles — sem fundo/borda/blur, inline no header. */
+/* Variante "topbar" dos controles — sem fundo/borda/blur, inline no header.
+   margin-left grande pra afastar do cronômetro/status. */
 .ep-controls-bar--topbar {
   position: static;
   left: auto;
@@ -2296,6 +2312,7 @@ body.ep-consult .ep-theme-toggle {
   border: none;
   padding: 0;
   gap: 6px;
+  margin-left: 32px;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   box-shadow: none;
