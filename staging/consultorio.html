@@ -9,14 +9,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-99">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-100">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
 </head>
 <body class="ep-consult">
-
-<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
 
 <div class="ep-shell">
 
@@ -139,9 +137,9 @@
               <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="cidBtn" title="Buscar e inserir CID-10">+ CID</button>
               <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="templateBtn" title="Inserir template no campo">Templates ▾</button>
               <button class="ep-btn ep-btn--primary ep-btn--sm" type="button" id="saveNoteBtn">Salvar nota</button>
-              <div id="templateMenu" class="ep-hide" style="position: absolute; bottom: calc(100% + 6px); right: 0; min-width: 280px; max-width: 360px; max-height: 320px; overflow-y: auto; background: rgba(20,17,13,0.96); border: 1px solid rgba(215,176,107,0.22); border-radius: 10px; box-shadow: 0 -12px 32px rgba(0,0,0,0.6); z-index: 100; padding: 6px; backdrop-filter: blur(10px);"></div>
-              <div id="cidMenu" class="ep-hide" style="position: absolute; bottom: calc(100% + 6px); right: 0; min-width: 360px; max-width: 480px; background: rgba(20,17,13,0.96); border: 1px solid rgba(215,176,107,0.22); border-radius: 10px; box-shadow: 0 -12px 32px rgba(0,0,0,0.6); z-index: 100; padding: 8px; backdrop-filter: blur(10px);">
-                <input id="cidSearch" class="ep-input" type="text" placeholder="Código (F32) ou nome (depressivo)…" style="margin-bottom: 8px;">
+              <div id="templateMenu" class="ep-hide" style="position: absolute; bottom: calc(100% + 6px); right: 0; min-width: 280px; max-width: 360px; max-height: 320px; overflow-y: auto; background: #14110d; border: 1px solid rgba(215,176,107,0.32); border-radius: 10px; box-shadow: 0 -16px 40px rgba(0,0,0,0.75), 0 0 0 1px rgba(0,0,0,0.4); z-index: 9999; padding: 6px;"></div>
+              <div id="cidMenu" class="ep-hide" style="position: absolute; bottom: calc(100% + 6px); right: 0; min-width: 360px; max-width: 480px; background: #14110d; border: 1px solid rgba(215,176,107,0.32); border-radius: 10px; box-shadow: 0 -16px 40px rgba(0,0,0,0.75), 0 0 0 1px rgba(0,0,0,0.4); z-index: 9999; padding: 8px;">
+                <input id="cidSearch" type="text" placeholder="Código (F32) ou nome (depressivo)…" style="margin-bottom: 8px; width: 100%; padding: 8px 10px; background: rgba(255,251,240,0.05); border: 1px solid rgba(215,176,107,0.22); border-radius: 8px; color: #fbf7ec; font: inherit; font-size: 13px;">
                 <div id="cidResults" style="max-height: 320px; overflow-y: auto;"></div>
               </div>
             </div>
@@ -149,6 +147,7 @@
         </div>
       </div>
 
+      <!-- Indicador "REC" visível quando gravando -->
       <div id="recIndicator" class="ep-hide" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:200;display:flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(220,38,38,0.92);color:#fff;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(220,38,38,0.35);">
         <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;animation:ep-rec-blink 1.4s infinite ease-in-out;"></span>
         <span>REC</span>
@@ -157,6 +156,7 @@
       </div>
     </section>
 
+    <!-- Modal de consentimento LGPD pra gravação -->
     <div class="ep-modal" id="recConsentModal" role="dialog" aria-modal="true">
       <div class="ep-modal__panel" style="max-width:560px;">
         <h3 class="ep-modal__title">Gravar esta sessão?</h3>
@@ -259,6 +259,7 @@
   const templateMenu      = document.getElementById("templateMenu");
 
   // ─── Templates de prontuário ─────────────────────────────
+  // Lazy load no 1º clique. Cached client-side por sessão.
   let _templatesCache = null;
   async function loadTemplates() {
     if (_templatesCache) return _templatesCache;
@@ -274,23 +275,25 @@
   }
   function insertTemplate(content) {
     const existing = noteInput.value;
+    // Se composer vazio, insere direto. Caso contrário, anexa com 2 quebras de linha.
     noteInput.value = existing.trim() ? `${existing.trimEnd()}\n\n${content}` : content;
     noteInput.focus();
+    // Posiciona cursor no fim
     noteInput.selectionStart = noteInput.selectionEnd = noteInput.value.length;
   }
   function renderTemplateMenu(templates) {
     if (!templates.length) {
-      templateMenu.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding: 12px;">Nenhum template disponível.</div>`;
+      templateMenu.innerHTML = `<div style="padding: 12px; font-size: 12px; color: rgba(255,251,240,0.55);">Nenhum template disponível.</div>`;
       return;
     }
     templateMenu.innerHTML = templates.map(t => `
-      <button type="button" class="ep-template-item" data-template-id="${t.id}" style="display: block; width: 100%; padding: 10px 12px; text-align: left; background: transparent; border: 0; border-radius: 6px; cursor: pointer; color: var(--ep-ink);">
-        <div style="font-weight: 600; font-size: 14px;">${t.name}</div>
-        <div class="ep-text-xs ep-text-muted" style="margin-top: 2px; line-height: 1.4;">${t.description}</div>
+      <button type="button" class="ep-template-item" data-template-id="${t.id}" style="display: block; width: 100%; padding: 10px 12px; text-align: left; background: transparent; border: 0; border-radius: 6px; cursor: pointer; color: #fbf7ec;">
+        <div style="font-weight: 600; font-size: 14px; color: #fbf7ec;">${t.name}</div>
+        <div style="margin-top: 3px; line-height: 1.4; font-size: 12px; color: rgba(255,251,240,0.65);">${t.description}</div>
       </button>
     `).join("");
     templateMenu.querySelectorAll(".ep-template-item").forEach(btn => {
-      btn.addEventListener("mouseenter", () => btn.style.background = "var(--ep-accent-soft)");
+      btn.addEventListener("mouseenter", () => btn.style.background = "rgba(215,176,107,0.14)");
       btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
       btn.addEventListener("click", () => {
         const t = templates.find(x => x.id === btn.dataset.templateId);
@@ -324,6 +327,7 @@
   const cidSearch   = document.getElementById("cidSearch");
   const cidResults  = document.getElementById("cidResults");
   let cidDebounce = null;
+
   function insertCid(item) {
     const snippet = `${item.code} — ${item.description}`;
     const existing = noteInput.value;
@@ -331,6 +335,7 @@
     noteInput.focus();
     noteInput.selectionStart = noteInput.selectionEnd = noteInput.value.length;
   }
+
   async function searchCid(q) {
     cidResults.innerHTML = `<div class="ep-skeleton" style="margin: 8px;">Buscando…</div>`;
     try {
@@ -338,22 +343,26 @@
         headers: { "Authorization": `Bearer ${idToken}` }
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) { cidResults.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding: 8px;">Erro buscando CID.</div>`; return; }
-      if (!data.results.length) { cidResults.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding: 8px;">Nenhum resultado pra "${q}".</div>`; return; }
+      if (!res.ok || !data.ok) { cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.6);">Erro buscando CID.</div>`; return; }
+      if (!data.results.length) { cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.6);">Nenhum resultado pra "${q}".</div>`; return; }
       cidResults.innerHTML = data.results.map(r => `
-        <button type="button" class="ep-cid-item" data-code="${r.code}" style="display: block; width: 100%; padding: 8px 10px; text-align: left; background: transparent; border: 0; border-radius: 6px; cursor: pointer; color: var(--ep-ink); font-size: 13px; line-height: 1.4;">
-          <strong style="font-family: 'JetBrains Mono', monospace; color: var(--ep-accent);">${r.code}</strong> · ${r.description}
-        </button>`).join("");
+        <button type="button" class="ep-cid-item" data-code="${r.code}" style="display: block; width: 100%; padding: 8px 10px; text-align: left; background: transparent; border: 0; border-radius: 6px; cursor: pointer; color: #fbf7ec; font-size: 13px; line-height: 1.4;">
+          <strong style="font-family: 'JetBrains Mono', monospace; color: #d7b06b;">${r.code}</strong> · ${r.description}
+        </button>
+      `).join("");
       cidResults.querySelectorAll(".ep-cid-item").forEach(btn => {
-        btn.addEventListener("mouseenter", () => btn.style.background = "var(--ep-accent-soft)");
+        btn.addEventListener("mouseenter", () => btn.style.background = "rgba(215,176,107,0.14)");
         btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
         btn.addEventListener("click", () => {
           const r = data.results.find(x => x.code === btn.dataset.code);
-          if (r) { insertCid(r); cidMenu.classList.add("ep-hide"); }
+          if (r) {
+            insertCid(r);
+            cidMenu.classList.add("ep-hide");
+          }
         });
       });
     } catch {
-      cidResults.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding: 8px;">Erro de conexão.</div>`;
+      cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.6);">Erro de conexão.</div>`;
     }
   }
   cidBtn.addEventListener("click", (e) => {
@@ -361,14 +370,14 @@
     if (!cidMenu.classList.contains("ep-hide")) { cidMenu.classList.add("ep-hide"); return; }
     cidMenu.classList.remove("ep-hide");
     cidSearch.value = "";
-    cidResults.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding: 8px;">Digite 2+ caracteres pra buscar…</div>`;
+    cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.55);">Digite 2+ caracteres pra buscar…</div>`;
     setTimeout(() => cidSearch.focus(), 50);
   });
   cidSearch.addEventListener("input", () => {
     const q = cidSearch.value.trim();
     clearTimeout(cidDebounce);
     if (q.length < 2) {
-      cidResults.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding: 8px;">Digite 2+ caracteres pra buscar…</div>`;
+      cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.55);">Digite 2+ caracteres pra buscar…</div>`;
       return;
     }
     cidDebounce = setTimeout(() => searchCid(q), 200);
@@ -551,6 +560,7 @@
 
   ctrlRecord.addEventListener("click", () => {
     if (recorder) {
+      // Parar gravação em andamento
       if (!confirm("Encerrar gravação e baixar o arquivo cifrado?")) return;
       recorder.stop();
     } else {
@@ -564,6 +574,7 @@
     if (!recConsentCheck.checked) return;
     recConsentModal.classList.remove("is-open");
     try {
+      // Audit log do consentimento (best-effort, não bloqueia).
       fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/recording-consent`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
