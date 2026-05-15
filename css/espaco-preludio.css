@@ -1935,10 +1935,11 @@ body.ep-consult .ep-theme-toggle {
 .ep-consult__video--inline {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: minmax(0, 1fr) 460px;        /* tiles | notas+tópicos (linha mais alta) */
+  grid-template-rows: minmax(0, 1fr) 240px 220px;  /* tiles | notas full | tópicos full */
   grid-template-areas:
     "local patient"
-    "notes topics";
+    "notes notes"
+    "topics topics";
   padding: 16px;
   gap: 14px;
   position: relative;
@@ -1957,42 +1958,84 @@ body.ep-consult .ep-theme-toggle {
 .ep-consult__video--inline .ep-inline-notes        { grid-area: notes; }
 .ep-consult__video--inline .ep-topics-deck--pinned { grid-area: topics; }
 
-/* Deck de tópicos PINADO na coluna direita — sempre visível, alinhado com o
-   tile do paciente em cima. Não é mais overlay flutuante. Preenche toda a
-   altura disponível da row do grid, com lista interna rolando. */
+/* Deck de tópicos PINADO em faixa horizontal full-width no rodapé do video area.
+   Layout interno: head + filtros + botão "Puxar" em linha; lista de cards rola
+   horizontalmente abaixo (overflow-x). !important nas props chave para vencer
+   o .ep-topics-deck base (que vem depois no CSS) que tem width: 320px e
+   position: absolute. */
 .ep-topics-deck--pinned {
   position: static !important;
-  top: auto;
-  right: auto;
-  bottom: auto;
-  width: 100%;
-  height: 100%;
-  max-height: 100%;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  max-height: 100% !important;
   min-height: 0;
   z-index: auto;
-  display: flex !important;     /* override do "display:none quando !is-open" */
-  flex-direction: column;
+  display: grid !important;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "head filters draw"
+    "list list list";
+  gap: 10px 16px;
+  align-items: center;
+  padding: 12px 16px;
+  overflow: hidden;
 }
-/* Lista cresce e rola; head/filtros/draw ficam fixos no topo/rodapé. */
-.ep-topics-deck--pinned .ep-topics-deck__list {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
+.ep-topics-deck--pinned .ep-topics-deck__head {
+  grid-area: head;
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
 }
-.ep-topics-deck--pinned .ep-topics-deck__head,
-.ep-topics-deck--pinned .ep-topics-deck__filters,
+.ep-topics-deck--pinned .ep-topics-deck__filters {
+  grid-area: filters;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
 .ep-topics-deck--pinned .ep-topics-deck__draw {
-  flex-shrink: 0;
+  grid-area: draw;
+  margin: 0;
+  white-space: nowrap;
+}
+.ep-topics-deck--pinned .ep-topics-deck__list {
+  grid-area: list;
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-right: 0;
+  padding-bottom: 4px;
+  gap: 10px;
+  scrollbar-width: thin;
+  min-height: 0;
+}
+.ep-topics-deck--pinned .ep-topic-card {
+  flex: 0 0 auto;
+  width: 240px;
 }
 
 @media (max-width: 860px) {
   .ep-consult__video--inline {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
     grid-template-areas:
       "local"
       "patient"
       "notes"
       "topics";
+  }
+  .ep-topics-deck--pinned {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas:
+      "head"
+      "filters"
+      "list"
+      "draw";
   }
 }
 
