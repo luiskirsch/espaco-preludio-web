@@ -1489,7 +1489,16 @@ html[data-theme="dark"] .ep-badge--muted { background: rgba(232,230,223,0.08); c
   border-radius: var(--ep-radius-lg);
   box-shadow: var(--ep-shadow-card);
   padding: 36px;
+  /* Limita a altura ao viewport (menos margem de 24px+24px que o prejoin
+     ja aplica como padding). Se o conteudo passar, scroll INTERNO no
+     painel sem mostrar scrollbar visual — assim em telas pequenas/zoom
+     alto o usuario rola dentro do card, sem barra branca atravessando
+     a borda do painel. */
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  scrollbar-width: none;
 }
+.ep-auth__panel::-webkit-scrollbar { display: none; }
 .ep-auth__panel--wide { max-width: 1080px; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 0; padding: 0; overflow: hidden; }
 @media (max-width: 920px) { .ep-auth__panel--wide { grid-template-columns: 1fr; } }
 
@@ -1688,14 +1697,20 @@ body.ep-consult {
     linear-gradient(180deg, #14110d 0%, #0a0805 100%);
   color: #f3f3f0;
   margin: 0;
-  /* Trava html+body em 100vh SEMPRE — tanto na tela de prejoin do paciente
-     (consentimento) quanto durante a sessao de video. Elimina scrollbar
-     fantasma na borda direita e tambem evita scroll da tela de consentimento. */
+  padding: 0;
+  /* Trava html+body em 100vw x 100vh sem nenhum overflow — elimina a
+     barra branca fantasma na borda direita que aparecia mesmo com .ep-shell
+     overflow:hidden. width 100vw explicito + overflow hidden em ambos
+     eixos = nao reserva espaco pra scrollbar nativo. */
+  width: 100vw;
   height: 100vh;
   overflow: hidden;
 }
 html:has(body.ep-consult) {
+  width: 100vw;
   height: 100vh;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
 }
 body.ep-consult .ep-shell { height: 100vh; max-height: 100vh; overflow: hidden; display: grid; grid-template-rows: auto 1fr; }
