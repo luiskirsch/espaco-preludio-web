@@ -422,18 +422,30 @@
   room = new Room({
     adaptiveStream: true,
     dynacast: true,
-    // Cap em 720p@30 em vez do default 1080p — telessaúde 1:1 não precisa de
-    // mais; reduz CPU/GPU local, sobe rápido em redes instáveis.
+    // Captura em 1280x720@30 com facingMode: user (frontal) — telessaúde 1:1
+    // não precisa de mais resolução; reduz CPU/GPU local.
     videoCaptureDefaults: {
-      resolution: { width: 1280, height: 720, frameRate: 30 }
+      resolution: { width: 1280, height: 720, frameRate: 30 },
+      facingMode: "user"
     },
     publishDefaults: {
       dtx: true,
-      simulcast: false,
-      // Cap explícito de bitrate — sem isso o LiveKit chuta agressivamente
-      // (até 4-6 Mbps em redes boas) e congestiona o uplink em conexões
-      // residenciais médias.
-      videoEncoding: { maxBitrate: 1_500_000, maxFramerate: 30 },
+      red: true,                 // redundância pra audio em redes ruins
+      simulcast: false,          // 1:1, simulcast só adiciona custo CPU
+      // VP9 produz QUALIDADE NOTAVELMENTE melhor que VP8 (default) em
+      // bitrates médio-baixos — menos blockiness, menos smear de movimento,
+      // melhor preservação de detalhes faciais. Custo: ~30% mais CPU no
+      // encoder local. Vale muito para telessaúde.
+      videoCodec: "vp9",
+      // 2.5 Mbps de teto (era 1.5) — dá headroom pra VP9 entregar imagem
+      // limpa quando a banda permite. adaptiveStream + dynacast cuidam de
+      // baixar quando a banda piora.
+      videoEncoding: { maxBitrate: 2_500_000, maxFramerate: 30, priority: "high" },
+      // degradationPreference: maintain-resolution
+      // Quando a banda cai, o encoder PRIMEIRO reduz framerate (movimento
+      // mais "telegráfico") em vez de borrar a resolução. Pra talking head
+      // de terapia (rosto estável), nitidez >> fluidez.
+      degradationPreference: "maintain-resolution",
       audioPreset: { maxBitrate: 32_000 }
     },
     e2ee: useE2EE ? { keyProvider, worker: e2eeWorker } : undefined
@@ -510,6 +522,15 @@
     if (camTrack) {
       camTrack.attach(videoLocal);
       tileLocal.classList.add("ep-tile--has-video");
+      // contentHint: 'detail' diz pro encoder que cena tem pouco movimento
+      // e muito detalhe estatico (rosto). Resultado: mais bits gastos em
+      // qualidade espacial (nitidez) e menos em temporal (frame rate).
+      // Sem isso, o encoder assume "motion" por default e borra detalhes
+      // pra preservar fluidez — exatamente o oposto do que queremos.
+      try {
+        const ms = camTrack.mediaStreamTrack;
+        if (ms && "contentHint" in ms) ms.contentHint = "detail";
+      } catch (e) { console.warn("contentHint_set_failed", e); }
     }
 
     setStatus("em sessão");
