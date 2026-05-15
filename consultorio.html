@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-102">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-103">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -204,6 +204,7 @@
   import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
   import { TOPIC_LIBRARY, ABORDAGEM_LABEL, shuffle } from "./js/topics.js";
   import { initAtmosphere } from "./js/atmosphere.js";
+  import { searchCID10 } from "./js/cid10.js?v=1";
 
   // Inicializa clima + som ambiente + painel "Ajustar ambiente".
   // Todo o estado fica em localStorage; nada disso vai pro servidor.
@@ -326,44 +327,41 @@
   const cidMenu     = document.getElementById("cidMenu");
   const cidSearch   = document.getElementById("cidSearch");
   const cidResults  = document.getElementById("cidResults");
-  let cidDebounce = null;
 
   function insertCid(item) {
-    const snippet = `${item.code} — ${item.description}`;
+    const desc = item.description || item.title;
+    const snippet = `${item.code} — ${desc}`;
     const existing = noteInput.value;
     noteInput.value = existing.trim() ? `${existing.trimEnd()}\n${snippet}\n` : snippet + "\n";
     noteInput.focus();
     noteInput.selectionStart = noteInput.selectionEnd = noteInput.value.length;
   }
 
-  async function searchCid(q) {
-    cidResults.innerHTML = `<div class="ep-skeleton" style="margin: 8px;">Buscando…</div>`;
-    try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/cid10?q=${encodeURIComponent(q)}&limit=20`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) { cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.6);">Erro buscando CID.</div>`; return; }
-      if (!data.results.length) { cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.6);">Nenhum resultado pra "${q}".</div>`; return; }
-      cidResults.innerHTML = data.results.map(r => `
-        <button type="button" class="ep-cid-item" data-code="${r.code}" style="display: block; width: 100%; padding: 8px 10px; text-align: left; background: transparent; border: 0; border-radius: 6px; cursor: pointer; color: #fbf7ec; font-size: 13px; line-height: 1.4;">
-          <strong style="font-family: 'JetBrains Mono', monospace; color: #d7b06b;">${r.code}</strong> · ${r.description}
-        </button>
-      `).join("");
-      cidResults.querySelectorAll(".ep-cid-item").forEach(btn => {
-        btn.addEventListener("mouseenter", () => btn.style.background = "rgba(215,176,107,0.14)");
-        btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
-        btn.addEventListener("click", () => {
-          const r = data.results.find(x => x.code === btn.dataset.code);
-          if (r) {
-            insertCid(r);
-            cidMenu.classList.add("ep-hide");
-          }
-        });
-      });
-    } catch {
-      cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.6);">Erro de conexão.</div>`;
+  // Busca CID local — usa js/cid10.js (~165 codigos F/Z). Sem fetch, sem
+  // dependencia de backend. Backend tem rota /therapy/cid10 mas o Railway
+  // esta servindo versao desatualizada que nao tem ela registrada.
+  function searchCid(q) {
+    const results = searchCID10(q, 20);
+    if (!results.length) {
+      cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.6);">Nenhum resultado pra "${q}".</div>`;
+      return;
     }
+    cidResults.innerHTML = results.map(r => `
+      <button type="button" class="ep-cid-item" data-code="${r.code}" style="display: block; width: 100%; padding: 8px 10px; text-align: left; background: transparent; border: 0; border-radius: 6px; cursor: pointer; color: #fbf7ec; font-size: 13px; line-height: 1.4;">
+        <strong style="font-family: 'JetBrains Mono', monospace; color: #d7b06b;">${r.code}</strong> · ${r.title}
+      </button>
+    `).join("");
+    cidResults.querySelectorAll(".ep-cid-item").forEach(btn => {
+      btn.addEventListener("mouseenter", () => btn.style.background = "rgba(215,176,107,0.14)");
+      btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
+      btn.addEventListener("click", () => {
+        const r = results.find(x => x.code === btn.dataset.code);
+        if (r) {
+          insertCid(r);
+          cidMenu.classList.add("ep-hide");
+        }
+      });
+    });
   }
   cidBtn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -375,12 +373,11 @@
   });
   cidSearch.addEventListener("input", () => {
     const q = cidSearch.value.trim();
-    clearTimeout(cidDebounce);
     if (q.length < 2) {
       cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.55);">Digite 2+ caracteres pra buscar…</div>`;
       return;
     }
-    cidDebounce = setTimeout(() => searchCid(q), 200);
+    searchCid(q);
   });
   document.addEventListener("click", (e) => {
     if (!cidMenu.contains(e.target) && e.target !== cidBtn) {
