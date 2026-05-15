@@ -1873,10 +1873,13 @@ body.ep-consult .ep-theme-toggle {
   overflow: hidden;
   /* Centraliza todo o conteudo da sessao com max-width — em monitores
      largos (>1600px) ficava esticado demais. Topbar fica fora do main
-     entao continua full-width (esticada de borda a borda). */
+     entao continua full-width (esticada de borda a borda).
+     justify-self: center eh a forma grid-native de centralizar (margin
+     auto nao funciona pra grid items com max-width — eles vao pra
+     'start' por default, nao pro centro). */
   width: 100%;
   max-width: 1600px;
-  margin: 0 auto;
+  justify-self: center;
 }
 .ep-consult__main--solo { grid-template-columns: 1fr; }
 
