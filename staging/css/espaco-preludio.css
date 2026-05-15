@@ -66,6 +66,9 @@
   color-scheme: light;
 }
 
+/* Modo escuro — ativado por data-theme="dark" no <html>. Mantém todas as
+   variáveis com os mesmos nomes, só inverte. Cores quentes (gold) ficam
+   um tom mais frio pra equilibrar contraste em fundo escuro. */
 html[data-theme="dark"] {
   --ep-bg:           #131716;
   --ep-bg-warm:      #1a1f1d;
@@ -93,6 +96,9 @@ html[data-theme="dark"] {
   color-scheme: dark;
 }
 
+/* ─── Selo de verificado (Meta-style azul) ────────────────────────────
+   Wrapper deve ter position:relative. Posicionamento absoluto no canto
+   inferior direito. SVG embutido (sem fetch). */
 .ep-avatar-wrap { position: relative; display: inline-block; flex-shrink: 0; line-height: 0; }
 .ep-verified-badge {
   position: absolute;
@@ -111,7 +117,13 @@ html[data-theme="dark"] {
   cursor: help;
   box-shadow: 0 1px 4px rgba(29,155,240,0.35);
 }
-.ep-verified-badge svg { width: 11px; height: 11px; stroke: #fff; stroke-width: 3.2; fill: none; }
+.ep-verified-badge svg {
+  width: 11px;
+  height: 11px;
+  stroke: #fff;
+  stroke-width: 3.2;
+  fill: none;
+}
 .ep-verified-badge--lg { width: 22px; height: 22px; bottom: -3px; right: -3px; }
 .ep-verified-badge--lg svg { width: 14px; height: 14px; }
 .ep-verified-badge--xl { width: 28px; height: 28px; bottom: -4px; right: -4px; }
@@ -120,7 +132,11 @@ html[data-theme="dark"] {
 * { box-sizing: border-box; }
 
 html {
+  /* Reserva o espaço do scrollbar SEMPRE — viewport não muda quando aparece/
+     some scroll, e topbar não escorrega pra baixo dele. */
   scrollbar-gutter: stable;
+  /* Sem overflow-x aqui — deixa o html ser o scroll container do documento.
+     Clip horizontal cai no body abaixo. */
 }
 
 html, body {
@@ -139,6 +155,10 @@ html, body {
   line-height: 1.55;
 }
 
+/* Clip horizontal só no body — html mantém o scroll vertical natural com
+   scrollbar-gutter reservado. Body clippa qualquer elemento que extrapole.
+   IMPORTANTE: sem `max-width: 100vw` — 100vw inclui largura do scrollbar,
+   fazendo o body cobrir o conteúdo por baixo dele. overflow-x sozinho basta. */
 body {
   overflow-x: clip;
 }
@@ -195,6 +215,9 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   padding: 0 56px 0 32px;
 }
 
+/* Páginas que usam <header class="ep-topbar"> sem container interno
+   (verificacao, paciente-painel, etc.) ganham flex-layout + padding
+   direto no topbar. */
 .ep-topbar:not(:has(> .ep-container)) {
   display: flex;
   align-items: center;
@@ -282,7 +305,8 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   margin-left: 4px;
 }
 
-/* Toggle de tema (sol/lua) — empilhado acima do botão de mensagens. */
+/* Toggle de tema (sol/lua) — empilhado ACIMA do botão de mensagens.
+   Stack: help(24) → mensagens(90) → theme(156). */
 .ep-theme-toggle {
   position: fixed;
   right: 16px;
@@ -324,18 +348,24 @@ html[data-theme="dark"] .ep-theme-toggle:hover {
   outline: 2px solid var(--ep-accent);
   outline-offset: 2px;
 }
+/* Em páginas sem help bubble (suporte.html), o toggle assume a posição de baixo. */
+/* Sem help nem msg (suporte.html, etc): theme toggle vai pra base. */
 body:not(:has(.ep-help-bubble)):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
   bottom: 24px;
 }
+/* Sem help mas com msg: theme toggle 14px acima do msg. */
 body:not(:has(.ep-help-bubble)):has(.ep-msg-bubble-fab) .ep-theme-toggle {
   bottom: 90px;
 }
+/* Com help mas sem msg: theme toggle 14px acima do help. */
 body:has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
   bottom: 90px;
 }
 @media print { .ep-theme-toggle { display: none !important; } }
 
-/* Botão flutuante de mensagens — entre help e theme. */
+/* Botão flutuante de mensagens — entre help e theme. Cores HARDCODED iguais
+   nos dois temas pra garantir contraste do ícone branco. Hover só escurece
+   levemente. Mesmo esqueleto do .ep-help-bubble (que funciona). */
 .ep-msg-bubble-fab {
   position: fixed;
   right: 16px;
@@ -383,6 +413,7 @@ body:has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
   border: 2px solid var(--ep-surface);
   box-shadow: 0 2px 6px rgba(28,31,29,0.20);
 }
+/* Sem help bubble: msg bubble vai pra base. */
 body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
   bottom: 24px;
 }
@@ -695,13 +726,18 @@ body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
   text-overflow: ellipsis;
 }
 
-/* View Transitions API — mantém topbar visualmente fixo ao navegar.
-   Suporte: Chrome 126+, Edge, Safari 18+. Sem suporte = navegação normal. */
+/* View Transitions API — mantém o topbar "fixo" visualmente ao navegar entre
+   páginas. Browser captura snapshot do topbar antes do unload, mantém durante
+   a navegação, e morfa pro novo (mesmo nome = match estável). Conteúdo
+   principal faz crossfade default. Suporte: Chrome 126+, Edge, Safari 18+;
+   sem suporte = navegação normal (no-op gracioso). */
 @view-transition { navigation: auto; }
 .ep-topbar { view-transition-name: ep-topbar; }
 .ep-help-bubble { view-transition-name: ep-help-bubble; }
 .ep-staging-banner { view-transition-name: ep-staging-banner; }
 
+/* Garante que o snapshot do topbar não anime — fica realmente fixo (em vez de
+   crossfade default entre old/new). */
 ::view-transition-old(ep-topbar),
 ::view-transition-new(ep-topbar),
 ::view-transition-old(ep-help-bubble),
@@ -712,7 +748,8 @@ body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
   mix-blend-mode: normal;
 }
 
-/* Botão flutuante de suporte — em dourado (gold da marca). */
+/* Botão flutuante de suporte (canto inferior direito) — em dourado (gold da
+   marca). Ícone escuro pra bom contraste sobre gold. */
 .ep-help-bubble {
   position: fixed;
   right: 16px;
@@ -929,7 +966,8 @@ h3.ep-h3 {
 .ep-section--alt { background: var(--ep-bg-2); border-top: 1px solid var(--ep-line); border-bottom: 1px solid var(--ep-line); }
 
 /* Âncora #planos — quando user clica "Ver planos", a palavra PLANOS aparece
-   logo abaixo da topbar (sem ar de 56px). padding-bottom preservado. */
+   logo abaixo da topbar (sem ar de 56px). padding-bottom preservado pros
+   3 cards caberem confortavelmente. */
 #planos { padding-top: 13px; }
 
 /* ─── Chat E2EE (mensagens.html / paciente-painel.html) ─────────── */
@@ -1897,10 +1935,11 @@ body.ep-consult .ep-theme-toggle {
 .ep-consult__video--inline {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: minmax(0, 1fr) 360px;        /* tiles | notas+tópicos */
+  grid-template-rows: minmax(0, 1fr) 240px auto;   /* tiles | notas full | tópicos horizontal */
   grid-template-areas:
     "local patient"
-    "notes topics";
+    "notes notes"
+    "topics topics";
   padding: 16px;
   gap: 14px;
   position: relative;
@@ -1919,42 +1958,79 @@ body.ep-consult .ep-theme-toggle {
 .ep-consult__video--inline .ep-inline-notes        { grid-area: notes; }
 .ep-consult__video--inline .ep-topics-deck--pinned { grid-area: topics; }
 
-/* Deck de tópicos PINADO na coluna direita — sempre visível, alinhado com o
-   tile do paciente em cima. Não é mais overlay flutuante. Preenche toda a
-   altura disponível da row do grid, com lista interna rolando. */
+/* Deck de tópicos PINADO em faixa horizontal de largura total no rodapé.
+   Layout interno: título + filtros + botão "Puxar" em linha de cima;
+   lista de cards rola horizontalmente embaixo, full-width. */
 .ep-topics-deck--pinned {
   position: static !important;
   top: auto;
   right: auto;
   bottom: auto;
   width: 100%;
-  height: 100%;
-  max-height: 100%;
+  height: auto;
+  max-height: none;
   min-height: 0;
   z-index: auto;
-  display: flex !important;     /* override do "display:none quando !is-open" */
-  flex-direction: column;
+  display: grid !important;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "head filters draw"
+    "list list list";
+  gap: 10px 16px;
+  align-items: center;
+  padding: 12px 16px;
 }
-/* Lista cresce e rola; head/filtros/draw ficam fixos no topo/rodapé. */
-.ep-topics-deck--pinned .ep-topics-deck__list {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
+.ep-topics-deck--pinned .ep-topics-deck__head {
+  grid-area: head;
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
 }
-.ep-topics-deck--pinned .ep-topics-deck__head,
-.ep-topics-deck--pinned .ep-topics-deck__filters,
+.ep-topics-deck--pinned .ep-topics-deck__filters {
+  grid-area: filters;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
 .ep-topics-deck--pinned .ep-topics-deck__draw {
-  flex-shrink: 0;
+  grid-area: draw;
+  margin: 0;
+  white-space: nowrap;
+}
+.ep-topics-deck--pinned .ep-topics-deck__list {
+  grid-area: list;
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-right: 0;
+  padding-bottom: 4px;
+  gap: 10px;
+  scrollbar-width: thin;
+}
+.ep-topics-deck--pinned .ep-topic-card {
+  flex: 0 0 auto;
+  width: 240px;
 }
 
 @media (max-width: 860px) {
   .ep-consult__video--inline {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
     grid-template-areas:
       "local"
       "patient"
       "notes"
       "topics";
+  }
+  .ep-topics-deck--pinned {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas:
+      "head"
+      "filters"
+      "list"
+      "draw";
   }
 }
 
@@ -2431,20 +2507,6 @@ body.ep-consult .ep-theme-toggle {
 .ep-text-center { text-align: center; }
 
 .ep-hide { display: none !important; }
-
-.ep-staging-banner {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: #b07d2c;
-  color: #fff;
-  text-align: center;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  padding: 6px 16px;
-  text-transform: uppercase;
-}
 
 /* ============================================================
    PRONTUÁRIO — header card + stats + timeline expandível
@@ -4139,6 +4201,7 @@ html[data-theme="dark"] .ep-receita-sign-tab {
   }
   .ep-agenda-session__name,
   .ep-agenda-session__time { color: #000 !important; }
+  /* Página A4 paisagem — semana inteira cabe melhor */
   @page { size: A4 landscape; margin: 10mm; }
 }
 
