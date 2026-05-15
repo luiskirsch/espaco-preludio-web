@@ -486,13 +486,15 @@
 
     loadNotesInitial();
 
+    function onRemoteConnected(p) {
+      remotePlaceholder.classList.add("ep-hide");
+      videoRemote.classList.remove("ep-hide");
+      remoteName.classList.remove("ep-hide");
+      remoteName.textContent = p.name || "Profissional";
+    }
+
     room
-      .on(RoomEvent.ParticipantConnected, (p) => {
-        remotePlaceholder.classList.add("ep-hide");
-        videoRemote.classList.remove("ep-hide");
-        remoteName.classList.remove("ep-hide");
-        remoteName.textContent = p.name || "Profissional";
-      })
+      .on(RoomEvent.ParticipantConnected, onRemoteConnected)
       .on(RoomEvent.ParticipantDisconnected, () => {
         remotePlaceholder.classList.remove("ep-hide");
         videoRemote.classList.add("ep-hide");
@@ -532,6 +534,17 @@
         e2eeBadge.classList.remove("ep-hide");
       }
       await room.connect(data.livekitUrl, data.livekitToken);
+
+      // BUG histórico: RoomEvent.ParticipantConnected só dispara pra quem
+      // entra DEPOIS de nós. Se o profissional já tá na sala quando o
+      // paciente chega (ou vice-versa), o handler nunca rodava — placeholder
+      // "Seu terapeuta esta se preparando" ficava visivel mesmo com o video
+      // do profissional chegando. Tracks ja sao subscribed automaticamente
+      // via TrackSubscribed, mas a UI precisa ser disparada manualmente.
+      for (const p of room.remoteParticipants.values()) {
+        onRemoteConnected(p);
+      }
+
       setStatus("ligando câmera…");
       await room.localParticipant.enableCameraAndMicrophone();
       const camTrack = Array.from(room.localParticipant.videoTrackPublications.values())[0]?.videoTrack;

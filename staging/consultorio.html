@@ -512,6 +512,17 @@
     }
     await room.connect(tokenData.livekitUrl, tokenData.livekitToken);
 
+    // BUG histórico: RoomEvent.ParticipantConnected só dispara pra quem
+    // entra DEPOIS de nós. Se o paciente já tá na sala quando o profissional
+    // chega (ou vice-versa), o handler nunca rodava — placeholder ficava
+    // visível mesmo com o video chegando. Tracks ja sao subscribed
+    // automaticamente via TrackSubscribed (que pega ambos os casos), mas
+    // a UI (esconder placeholder, atualizar nome) precisa ser disparada
+    // manualmente pra quem ja tava la.
+    for (const p of room.remoteParticipants.values()) {
+      onRemoteConnected(p);
+    }
+
     setStatus("ligando câmera…");
     await room.localParticipant.enableCameraAndMicrophone();
     const camTrack = Array.from(room.localParticipant.videoTrackPublications.values())[0]?.videoTrack;
