@@ -2107,6 +2107,19 @@ body.ep-consult .ep-theme-toggle {
   flex-shrink: 0;
   white-space: nowrap;
 }
+/* Ghost buttons (+CID, Templates) ficavam quase invisiveis no fundo escuro
+   das anotacoes — herdavam var(--ep-ink) e var(--ep-line-strong) do tema
+   claro. Override pra paleta dourada igual a usada na topbar do consult. */
+.ep-inline-notes__composer .ep-btn--ghost {
+  background: transparent;
+  color: rgba(255,251,240,0.85);
+  border: 1px solid rgba(215,176,107,0.32);
+}
+.ep-inline-notes__composer .ep-btn--ghost:hover {
+  background: rgba(215,176,107,0.12);
+  border-color: rgba(215,176,107,0.52);
+  color: var(--ep-paper);
+}
 .ep-inline-notes__composer textarea:focus {
   outline: none;
   border-color: var(--ep-gold);
