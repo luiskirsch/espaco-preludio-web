@@ -1729,16 +1729,15 @@ body.ep-consult {
   color: #f3f3f0;
   margin: 0;
   padding: 0;
-  /* Trava html+body em 100vw x 100vh sem nenhum overflow — elimina a
-     barra branca fantasma na borda direita que aparecia mesmo com .ep-shell
-     overflow:hidden. width 100vw explicito + overflow hidden em ambos
-     eixos = nao reserva espaco pra scrollbar nativo. */
-  width: 100vw;
+  /* width: 100% (nao 100vw — 100vw inclui scrollbar gutter do OS, causando
+     micro-overflow horizontal que aparecia como faixa branca na borda
+     direita mostrando o Canvas default do html). */
+  width: 100%;
   height: 100vh;
   overflow: hidden;
 }
 html:has(body.ep-consult) {
-  width: 100vw;
+  width: 100%;
   height: 100vh;
   margin: 0;
   padding: 0;
