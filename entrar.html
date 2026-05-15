@@ -73,6 +73,7 @@
     <div class="ep-flex ep-flex--center ep-gap-14 ep-w-full">
       <span id="connectionStatus" class="ep-consult__status">conectando…</span>
       <span id="e2eeBadge" class="ep-badge ep-badge--ok ep-hide">E2EE ativo</span>
+      <span class="ep-text-xs ep-text-muted" id="infoDuration">0min 00s</span>
 
       <!-- Controles centrais (mic / cam / leave) ABSOLUTOS no centro da topbar.
            Mesma variante do lado profissional, mas sem record (paciente não grava). -->
@@ -539,6 +540,18 @@
         tileLocal.classList.add("ep-tile--has-video");
       }
       setStatus("em sessão");
+
+      // Cronometro da sessao — comeca quando paciente entra (sessao do
+      // paciente comeca aqui, antes do terapeuta conectar). Mesmo formato
+      // do lado profissional: "Xmin YYs", monospace, atualiza a cada 1s.
+      const sessionStartTs = Date.now();
+      const infoDuration = document.getElementById("infoDuration");
+      setInterval(() => {
+        const ms = Date.now() - sessionStartTs;
+        const m = Math.floor(ms / 60000);
+        const s = Math.floor((ms % 60000) / 1000);
+        infoDuration.textContent = `${m}min ${String(s).padStart(2,"0")}s`;
+      }, 1000);
     } catch (err) {
       console.error("join_error", err);
       setStatus("erro");
