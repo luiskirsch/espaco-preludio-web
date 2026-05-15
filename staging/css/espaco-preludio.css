@@ -1731,26 +1731,21 @@ html[data-theme="dark"] .ep-badge--muted { background: rgba(232,230,223,0.08); c
    Pinning via position: fixed eh a forma mais bulletproof — body sai do
    flow normal e fica ancorado nos 4 cantos da viewport, eliminando
    qualquer possibilidade de scrollbar fantasma. */
-html.ep-consult-html {
+html.ep-consult-html,
+html.ep-consult-html > body.ep-consult {
   margin: 0;
   padding: 0;
-  overflow: hidden;
   width: 100%;
-  height: 100%;
-  /* Default = cream do prejoin. Quando entra na sessao, JS adiciona a
-     classe --session que troca o bg pra escuro pra combinar com o body
-     gradient (caso algum pixel de borda escape do body position:fixed). */
-  background: var(--ep-bg);
+  height: 100vh;
+  overflow: hidden;
+}
+/* html bg adapta ao contexto da tela ativa — eliminando faixa de cor
+   errada em borda caso body nao cubra perfeitamente o viewport. */
+html.ep-consult-html {
+  background: var(--ep-bg);  /* cream — combina com prejoin */
 }
 html.ep-consult-html.ep-consult-html--session {
-  background: #0a0805;
-}
-html.ep-consult-html > body.ep-consult {
-  position: fixed;
-  inset: 0;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
+  background: #0a0805;       /* escuro — combina com body em sessao */
 }
 body.ep-consult {
   background:
