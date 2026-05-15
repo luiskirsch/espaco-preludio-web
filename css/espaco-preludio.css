@@ -1935,11 +1935,10 @@ body.ep-consult .ep-theme-toggle {
 .ep-consult__video--inline {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: minmax(0, 1fr) auto 260px;   /* tiles | action-bar | notas */
+  grid-template-rows: minmax(0, 1fr) 260px;        /* tiles | notas+tópicos */
   grid-template-areas:
     "local patient"
-    "actions actions"
-    "notes notes";
+    "notes topics";
   padding: 16px;
   gap: 14px;
   position: relative;
@@ -1954,40 +1953,20 @@ body.ep-consult .ep-theme-toggle {
 }
 .ep-consult__video--inline #tileLocal   { grid-area: local; }
 .ep-consult__video--inline #tileRemote  { grid-area: patient; }
-.ep-consult__video--inline .ep-action-bar   { grid-area: actions; }
-.ep-consult__video--inline .ep-inline-notes { grid-area: notes; }
+.ep-consult__video--inline .ep-inline-notes        { grid-area: notes; }
+.ep-consult__video--inline .ep-topics-deck--pinned { grid-area: topics; }
 
-/* Barra de ação: ambient (esquerda) | controles (centro) | tópicos (direita).
-   Substitui os 3 elementos absolutos que sobrepunham anotações. */
-.ep-action-bar {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 12px;
-}
-.ep-action-bar > .ep-ambient   { justify-self: start; position: relative; }
-.ep-action-bar > .ep-controls-bar--inline {
-  justify-self: center;
-  position: static;
-  left: auto;
-  bottom: auto;
-  transform: none;
-}
-.ep-action-bar > .ep-topics-wrap { justify-self: end; position: relative; }
-.ep-action-bar > .ep-topics-wrap .ep-topics-toggle--inline {
-  position: static;
+/* Deck de tópicos PINADO na coluna direita — sempre visível, alinhado com o
+   tile do paciente em cima. Não é mais overlay flutuante. */
+.ep-topics-deck--pinned {
+  position: static !important;
   top: auto;
-  bottom: auto;
   right: auto;
-}
-/* Deck dos tópicos abre PRA CIMA a partir do toggle, sem sobrepor o vídeo. */
-.ep-action-bar > .ep-topics-wrap .ep-topics-deck--inline {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  right: 0;
-  top: auto;
-  max-height: 60vh;
-  z-index: 50;
+  bottom: auto;
+  width: 100%;
+  max-height: 100%;
+  z-index: auto;
+  display: flex !important;     /* override do "display:none quando !is-open" */
 }
 
 @media (max-width: 860px) {
@@ -1996,8 +1975,8 @@ body.ep-consult .ep-theme-toggle {
     grid-template-areas:
       "local"
       "patient"
-      "actions"
-      "notes";
+      "notes"
+      "topics";
   }
 }
 
@@ -2343,6 +2322,32 @@ body.ep-consult .ep-theme-toggle {
   backdrop-filter: blur(12px);
   box-shadow: 0 0 32px rgba(215,176,107,0.08), 0 12px 32px -12px rgba(0,0,0,0.6);
   z-index: 10;
+}
+
+/* Variante "topbar" dos controles — sem fundo/borda/blur, inline no header. */
+.ep-controls-bar--topbar {
+  position: static;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  gap: 6px;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  z-index: auto;
+}
+.ep-controls-bar--topbar .ep-ctrl { width: 36px; height: 36px; }
+
+/* Ambient na topbar — painel abre PRA BAIXO em vez de pra cima. */
+.ep-ambient--topbar { position: relative; }
+.ep-ambient--topbar .ep-ambient__panel {
+  top: calc(100% + 10px);
+  bottom: auto;
+  right: 0;
+  left: auto;
 }
 .ep-ctrl {
   appearance: none;
