@@ -1644,6 +1644,16 @@ body.ep-consult {
 }
 body.ep-consult .ep-shell { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
 
+/* Sessão em curso = foco total. Os 3 bubbles flutuantes globais (theme/
+   mensagens/help) ficam OCULTOS — concorrem com controles, anotações e
+   "+ Tópicos". O profissional não troca tema nem responde mensagem no meio
+   de uma consulta; e a topbar já tem "Encerrar"/"Painel" como saídas. */
+body.ep-consult .ep-help-bubble,
+body.ep-consult .ep-msg-bubble-fab,
+body.ep-consult .ep-theme-toggle {
+  display: none !important;
+}
+
 .ep-consult__topbar {
   background: rgba(20,17,13,0.88);
   border-bottom: 1px solid rgba(215,176,107,0.10);
@@ -1692,16 +1702,48 @@ body.ep-consult .ep-shell { min-height: 100vh; display: grid; grid-template-rows
 .ep-consult__status {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12.5px;
-  color: rgba(255,255,255,0.72);
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(255,251,240,0.88);
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(215,176,107,0.08);
+  border: 1px solid rgba(215,176,107,0.20);
+  text-transform: lowercase;
 }
 .ep-consult__status::before {
   content: "";
   width: 8px; height: 8px;
   border-radius: 50%;
-  background: var(--ep-ok);
-  box-shadow: 0 0 0 3px rgba(45,106,79,0.25);
+  background: #6fbf99;
+  box-shadow: 0 0 0 3px rgba(111,191,153,0.18), 0 0 12px rgba(111,191,153,0.55);
+  animation: ep-consult-pulse 2s ease-in-out infinite;
+}
+@keyframes ep-consult-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(111,191,153,0.18), 0 0 12px rgba(111,191,153,0.55); }
+  50%      { box-shadow: 0 0 0 5px rgba(111,191,153,0.10), 0 0 16px rgba(111,191,153,0.75); }
+}
+
+/* Cronômetro da sessão — monospace pra largura estável, tom dourado. */
+.ep-consult__topbar #infoDuration {
+  font-family: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(215,176,107,0.85);
+  letter-spacing: 0.04em;
+}
+
+/* Badge E2EE no topbar — leve glow dourado pra reforçar "premium". */
+.ep-consult__topbar #e2eeBadge {
+  background: rgba(45,106,79,0.18);
+  border: 1px solid rgba(111,191,153,0.32);
+  color: #6fbf99;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 10px;
 }
 
 .ep-consult__main {
