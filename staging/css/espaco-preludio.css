@@ -1722,26 +1722,35 @@ html[data-theme="dark"] .ep-badge--muted { background: rgba(232,230,223,0.08); c
 
 /* ─── Consultório (sala de vídeo) ───────────────────────── */
 
+/* Travamento do viewport pra paginas de sessao (consultorio + entrar).
+   Classe ep-consult-html aplicada manualmente no <html> de ambos os
+   arquivos — abandonado o seletor :has(body.ep-consult) anterior porque
+   :has() em alguns motores nao re-aplica overflow no html (mesmo
+   suportando o seletor).
+
+   Pinning via position: fixed eh a forma mais bulletproof — body sai do
+   flow normal e fica ancorado nos 4 cantos da viewport, eliminando
+   qualquer possibilidade de scrollbar fantasma. */
+html.ep-consult-html {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  background: #0a0805;  /* match do body em sessao — body position:fixed inset:0 cobre tudo, html bg fica invisivel */
+}
+html.ep-consult-html > body.ep-consult {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
 body.ep-consult {
   background:
     radial-gradient(1200px 600px at 50% -10%, rgba(215,176,107,0.04), transparent 55%),
     linear-gradient(180deg, #14110d 0%, #0a0805 100%);
   color: #f3f3f0;
-  margin: 0;
-  padding: 0;
-  /* width: 100% (nao 100vw — 100vw inclui scrollbar gutter do OS, causando
-     micro-overflow horizontal que aparecia como faixa branca na borda
-     direita mostrando o Canvas default do html). */
-  width: 100%;
-  height: 100vh;
-  overflow: hidden;
-}
-html:has(body.ep-consult) {
-  width: 100%;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
 }
 body.ep-consult .ep-shell { height: 100vh; max-height: 100vh; overflow: hidden; display: grid; grid-template-rows: auto 1fr; }
 
