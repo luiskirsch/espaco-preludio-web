@@ -330,6 +330,8 @@
     const e2eeBadge  = document.getElementById("e2eeBadge");
     const videoLocal = document.getElementById("videoLocal");
     const videoRemote= document.getElementById("videoRemote");
+    const tileLocal  = document.getElementById("tileLocal");
+    const tileRemote = document.getElementById("tileRemote");
     const remotePlaceholder = document.getElementById("remotePlaceholder");
     const remoteName = document.getElementById("remoteName");
     const ctrlMic    = document.getElementById("ctrlMic");
@@ -358,6 +360,22 @@
     const room = new Room({
       adaptiveStream: true,
       dynacast: true,
+      // Mesma config canonica do consultorio (lado profissional) — telessaude
+      // 1:1 calibrada pra rosto que se mexe naturalmente: 720p@30 + VP9 + 3.5
+      // Mbps + balanced degradation. Ver feedback memory ep-livekit-tuning.
+      videoCaptureDefaults: {
+        resolution: { width: 1280, height: 720, frameRate: 30 },
+        facingMode: "user"
+      },
+      publishDefaults: {
+        dtx: true,
+        red: true,
+        simulcast: false,
+        videoCodec: "vp9",
+        videoEncoding: { maxBitrate: 3_500_000, maxFramerate: 30, priority: "high" },
+        degradationPreference: "balanced",
+        audioPreset: { maxBitrate: 32_000 }
+      },
       e2ee: useE2EE ? { keyProvider, worker: e2eeWorker } : undefined
     });
 
@@ -491,19 +509,27 @@
         remotePlaceholder.classList.remove("ep-hide");
         videoRemote.classList.add("ep-hide");
         remoteName.classList.add("ep-hide");
+        tileRemote.classList.remove("ep-tile--has-video");
         setBottomState("waiting");
       })
       .on(RoomEvent.TrackSubscribed, (track, pub, p) => {
         console.info("[lk] trackSubscribed", { kind: track.kind, sid: pub?.trackSid, participant: p?.identity });
         if (track.kind === Track.Kind.Video) {
           track.attach(videoRemote);
+          // pausa animação do ::before do tile (fica coberta pelo video)
+          tileRemote.classList.add("ep-tile--has-video");
         } else if (track.kind === Track.Kind.Audio) {
           const a = track.attach();
           a.style.display = "none";
           document.body.appendChild(a);
         }
       })
-      .on(RoomEvent.TrackUnsubscribed, (track) => track.detach().forEach(el => el.remove()))
+      .on(RoomEvent.TrackUnsubscribed, (track) => {
+        track.detach().forEach(el => el.remove());
+        if (track.kind === Track.Kind.Video) {
+          tileRemote.classList.remove("ep-tile--has-video");
+        }
+      })
       .on(RoomEvent.LocalTrackPublished, (pub) => console.info("[lk] localPublished", { kind: pub?.kind, sid: pub?.trackSid }))
       .on(RoomEvent.TrackPublished, (pub, p) => console.info("[lk] trackPublished", { kind: pub?.kind, sid: pub?.trackSid, participant: p?.identity }))
       .on(RoomEvent.EncryptionError, (err) => console.error("[lk] encryptionError", err))
@@ -522,7 +548,10 @@
       setStatus("ligando câmera…");
       await room.localParticipant.enableCameraAndMicrophone();
       const camTrack = Array.from(room.localParticipant.videoTrackPublications.values())[0]?.videoTrack;
-      if (camTrack) camTrack.attach(videoLocal);
+      if (camTrack) {
+        camTrack.attach(videoLocal);
+        tileLocal.classList.add("ep-tile--has-video");
+      }
       setStatus("em sessão");
     } catch (err) {
       console.error("join_error", err);
@@ -533,13 +562,26 @@
 
     ctrlMic.addEventListener("click", async () => {
       const enabled = !ctrlMic.classList.contains("is-off");
-      await room.localParticipant.setMicrophoneEnabled(!enabled);
+      // UI atualiza ANTES do await — clique parece instantâneo, não espera RTC
       ctrlMic.classList.toggle("is-off", enabled);
+      try {
+        await room.localParticipant.setMicrophoneEnabled(!enabled);
+      } catch (err) {
+        ctrlMic.classList.toggle("is-off", !enabled);
+        console.error("mic_toggle_error", err);
+      }
     });
     ctrlCam.addEventListener("click", async () => {
       const enabled = !ctrlCam.classList.contains("is-off");
-      await room.localParticipant.setCameraEnabled(!enabled);
       ctrlCam.classList.toggle("is-off", enabled);
+      tileLocal.classList.toggle("ep-tile--has-video", !enabled);
+      try {
+        await room.localParticipant.setCameraEnabled(!enabled);
+      } catch (err) {
+        ctrlCam.classList.toggle("is-off", !enabled);
+        tileLocal.classList.toggle("ep-tile--has-video", enabled);
+        console.error("cam_toggle_error", err);
+      }
     });
     ctrlLeave.addEventListener("click", async () => {
       if (!confirm("Sair da consulta?")) return;
