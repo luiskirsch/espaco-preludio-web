@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-119">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-120">
 </head>
 <body class="ep-consult">
 
@@ -310,6 +310,9 @@
     document.getElementById("topTherapistName").textContent = data.therapistDisplayName || "Profissional";
     prejoin.classList.add("ep-hide");
     inSession.classList.remove("ep-hide");
+    // troca o bg do html de cream (prejoin) pra escuro (sessao) — match
+    // com o body em gradient pra qualquer pixel de borda que escape
+    document.documentElement.classList.add("ep-consult-html--session");
 
     await joinRoom(data);
   });
