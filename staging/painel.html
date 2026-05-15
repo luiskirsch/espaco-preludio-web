@@ -16,8 +16,6 @@
 </head>
 <body>
 
-<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
-
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
     <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
@@ -66,7 +64,7 @@
     <!-- Banner do tier estudante: aparece se em revisão / aprovado / rejeitado -->
     <div id="studentBanner" class="ep-alert ep-hide ep-mt-16"></div>
 
-    <!-- Hero: próxima consulta + KPIs do mês -->
+    <!-- Hero: próxima consulta + KPIs do mês (só aparece quando carrega) -->
     <section id="painelHero" class="ep-hide ep-mt-16" aria-label="Resumo do dia">
       <div id="heroNextSession" class="ep-hide" style="padding: 16px 20px; background: linear-gradient(135deg, var(--ep-accent-soft) 0%, rgba(200,155,74,0.10) 100%); border-radius: 12px; border: 1px solid var(--ep-gold-line); display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
         <div style="flex: 1; min-width: 240px;">
@@ -77,6 +75,7 @@
         </div>
         <button type="button" class="ep-btn ep-btn--primary" id="heroEnterBtn" data-session-id="">Entrar na consulta</button>
       </div>
+
       <div id="heroKpis" class="ep-mt-12" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;"></div>
     </section>
 
@@ -218,6 +217,7 @@
       pro paciente. Você pode reenviar depois pelo link público.
     </p>
 
+    <!-- Formulário -->
     <div id="reciboFormWrap" style="padding: 0 28px;">
       <div style="padding: 12px 14px; background: var(--ep-bg-2); border-radius: 8px;">
         <div class="ep-text-xs ep-text-muted">Paciente</div>
@@ -299,6 +299,7 @@
       <div class="ep-status ep-mt-12" id="reciboStatus"></div>
     </div>
 
+    <!-- Sucesso -->
     <div id="reciboSuccessWrap" class="ep-hide" style="padding: 0 28px;">
       <div class="ep-verify-hero ep-verify-hero--ok" style="margin-top: 8px;">
         <div class="ep-verify-hero__icon">
@@ -312,6 +313,7 @@
       <p class="ep-text-xs ep-text-muted ep-mt-16">Link público (válido por 1 ano):</p>
       <a id="reciboPublicLink" href="#" target="_blank" rel="noopener" class="ep-text-sm" style="font-family: 'JetBrains Mono', monospace; word-break: break-all; color: var(--ep-accent);">—</a>
 
+      <!-- NFS-e: aparece só se profissional configurou NFE.io -->
       <div id="nfseEmitBox" class="ep-hide ep-mt-16" style="padding: 14px; border: 1px solid var(--ep-line); border-radius: 10px; background: var(--ep-bg-2);">
         <div class="ep-flex" style="justify-content: space-between; align-items: flex-start; gap: 12px;">
           <div style="flex: 1;">
@@ -412,6 +414,7 @@
 
       const plano = studentRes?.plano || recemRes?.plano;
 
+      // Tier estudante tem prioridade (gratuito)
       if (plano === "student-pending-review") {
         return setBanner("ep-alert--info", `<strong>Comprovante em revisão.</strong> Recebemos sua declaração de matrícula. Nossa equipe revisa em até 48h e você é avisado por e-mail.`);
       }
@@ -424,6 +427,7 @@
         return setBanner("ep-alert--warn", `<strong>Comprovante de matrícula não aprovado.</strong> ${reasons ? `<ul style="margin: 6px 0 8px 18px; padding: 0;">${reasons}</ul>` : ""} <a href="./comprovante-estudante.html">Enviar outro →</a>`);
       }
 
+      // Tier recém-formado
       if (plano === "recem-formado-pending-review") {
         return setBanner("ep-alert--info", `<strong>Comprovante de inscrição em revisão.</strong> Recebemos sua carteira/print do conselho. Nossa equipe revisa em até 48h.`);
       }
@@ -445,6 +449,8 @@
   });
 
   // ─── Solicitações de agendamento público ────────────────────
+  // Lista pedidos pendentes do link público do terapeuta. Renderiza só
+  // se houver pelo menos 1 — caso contrário, seção fica oculta.
   function fmtSchedRequestSlot(ms) {
     return new Date(ms).toLocaleString("pt-BR", {
       weekday: "long", day: "2-digit", month: "short",
@@ -532,7 +538,7 @@
       }
     } else if (action === "reject") {
       const reason = prompt("Quer informar um motivo? (opcional, vai pro audit)") || "";
-      if (reason === null) return;
+      if (reason === null) return; // cancel
       btn.disabled = true;
       try {
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/agendamentos/solicitacoes/${encodeURIComponent(id)}/rejeitar`, {
@@ -553,9 +559,11 @@
       }
     }
   });
+  // Boot: carrega na mesma hora que carrega as sessões.
   loadSchedulingRequests().catch(() => {});
 
   // ─── Dashboard "Hoje" ────────────────────────────────────────
+  // Carrega agregação leve + renderiza hero. Falha silenciosa.
   async function loadHero() {
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/painel/hoje`, {
@@ -564,9 +572,11 @@
       const data = await res.json();
       if (!res.ok || !data.ok) return;
       renderHero(data);
-    } catch {}
+    } catch { /* silencioso */ }
   }
-  function fmtCents(c) { return "R$ " + (Number(c || 0) / 100).toFixed(2).replace(".", ","); }
+  function fmtCents(c) {
+    return "R$ " + (Number(c || 0) / 100).toFixed(2).replace(".", ",");
+  }
   function fmtSessionWhen(ms) {
     if (!ms) return "—";
     const d = new Date(ms);
@@ -584,6 +594,8 @@
     const hero = document.getElementById("painelHero");
     const nextBlock = document.getElementById("heroNextSession");
     const kpisBlock = document.getElementById("heroKpis");
+
+    // Próxima consulta
     if (data.nextSession) {
       const s = data.nextSession;
       document.getElementById("heroNextPatient").textContent = s.patientName || "Paciente";
@@ -596,7 +608,10 @@
       document.getElementById("heroNextBadges").innerHTML = badges.join(" ");
       const btn = document.getElementById("heroEnterBtn");
       btn.dataset.sessionId = s.sessionId;
+      // Reaproveita o handler de "Entrar" da lista — dispara o mesmo data-action="enter" virtualmente
       btn.onclick = () => {
+        sessionList.dispatchEvent(new CustomEvent("synthetic-enter", { detail: { sessionId: s.sessionId } }));
+        // Fallback: encontra na lista e clica
         const target = sessionList.querySelector(`button[data-action="enter"][data-id="${s.sessionId}"]`);
         if (target) target.click();
         else window.location.href = `./consultorio.html?session=${encodeURIComponent(s.sessionId)}`;
@@ -605,15 +620,34 @@
     } else {
       nextBlock.classList.add("ep-hide");
     }
+
+    // KPIs do mês
     const tm = data.thisMonth || {};
     const todayBadge = data.todayCount > 0
       ? `${data.todayCount} consulta${data.todayCount > 1 ? "s" : ""} hoje${data.todayConfirmedCount > 0 ? ` · ${data.todayConfirmedCount} confirmada${data.todayConfirmedCount > 1 ? "s" : ""}` : ""}`
       : "Sem consultas agendadas hoje";
     const kpis = [
-      { eyebrow: "Hoje", value: data.todayCount || 0, hint: todayBadge },
-      { eyebrow: "Realizadas no mês", value: tm.sessoesRealizadas || 0, hint: `${tm.sessoesAgendadasFuturas || 0} agendadas à frente` },
-      { eyebrow: "Faturamento (pago)", value: fmtCents(tm.faturamentoPagoCents || 0), hint: tm.faturamentoPendenteCents > 0 ? `${fmtCents(tm.faturamentoPendenteCents)} a receber` : "no mês corrente", valueColor: "var(--ep-ok)" },
-      { eyebrow: "Confirmação", value: (tm.taxaConfirmacao != null) ? `${tm.taxaConfirmacao}%` : "—", hint: (tm.taxaConfirmacao != null) ? "pacientes que confirmaram presença" : "sem dados ainda" }
+      {
+        eyebrow: "Hoje",
+        value: data.todayCount || 0,
+        hint: todayBadge
+      },
+      {
+        eyebrow: "Realizadas no mês",
+        value: tm.sessoesRealizadas || 0,
+        hint: `${tm.sessoesAgendadasFuturas || 0} agendadas à frente`
+      },
+      {
+        eyebrow: "Faturamento (pago)",
+        value: fmtCents(tm.faturamentoPagoCents || 0),
+        hint: tm.faturamentoPendenteCents > 0 ? `${fmtCents(tm.faturamentoPendenteCents)} a receber` : "no mês corrente",
+        valueColor: "var(--ep-ok)"
+      },
+      {
+        eyebrow: "Confirmação",
+        value: (tm.taxaConfirmacao != null) ? `${tm.taxaConfirmacao}%` : "—",
+        hint: (tm.taxaConfirmacao != null) ? "pacientes que confirmaram presença" : "sem dados ainda"
+      }
     ];
     kpisBlock.innerHTML = kpis.map(k => `
       <div class="ep-card" style="padding: 12px 14px;">
@@ -622,6 +656,7 @@
         <div class="ep-text-xs ep-text-muted" style="margin-top: 2px;">${escapeHtml(k.hint)}</div>
       </div>
     `).join("");
+
     hero.classList.remove("ep-hide");
   }
   loadHero();
@@ -730,7 +765,7 @@
         ${s.status !== "canceled" ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="recibo" data-id="${s.sessionId}" title="Enviar recibo ao paciente">Recibo</button>
         ` : ""}
-        ${s.status === "completed" ? `
+        ${(s.status === "completed" || s.status === "canceled") ? `
           <button class="ep-btn-icon" data-action="ocultar" data-id="${s.sessionId}" aria-label="Remover da lista" title="Remover da lista (mantém no prontuário)">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
@@ -836,7 +871,8 @@
     document.getElementById("reciboAmount").value = "";
     document.getElementById("reciboPaymentMethod").value = "pix";
     const today = new Date();
-    document.getElementById("reciboPaidDate").value = today.toISOString().slice(0, 10);
+    document.getElementById("reciboPaidDate").value =
+      today.toISOString().slice(0, 10);
     document.getElementById("reciboEmail").value = sess.patientEmail || "";
     document.getElementById("reciboPhone").value = sess.patientPhone || "";
     document.getElementById("reciboSendEmail").checked = !!sess.patientEmail;
@@ -917,16 +953,22 @@
       st.className = "ep-status is-err";
       return;
     }
+
     const submitBtn = document.getElementById("reciboSubmitBtn");
     submitBtn.disabled = true;
     submitBtn.textContent = "Enviando…";
+
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sess.sessionId)}/recibo/enviar`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
-        body: JSON.stringify({ amount, paymentMethod, paidDate, patientEmail, patientPhone, sendEmail, sendWhatsapp,
+        body: JSON.stringify({
+          amount, paymentMethod, paidDate,
+          patientEmail, patientPhone,
+          sendEmail, sendWhatsapp,
           tussCode: document.getElementById("reciboTussCode").value.trim() || null,
-          tussLabel: document.getElementById("reciboTussLabel").value.trim() || null })
+          tussLabel: document.getElementById("reciboTussLabel").value.trim() || null
+        })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
@@ -937,16 +979,20 @@
         submitBtn.textContent = "Gerar e enviar";
         return;
       }
+      // Sucesso — renderiza tela de confirmação com canais.
       document.getElementById("reciboFormWrap").classList.add("ep-hide");
       document.getElementById("reciboSuccessWrap").classList.remove("ep-hide");
       document.getElementById("reciboSubmitBtn").classList.add("ep-hide");
       document.getElementById("reciboCloseBtn").classList.add("ep-hide");
       document.getElementById("reciboSuccessCloseBtn").classList.remove("ep-hide");
+      // Invalida cache do financeiro: a tx nova precisa aparecer.
       invalidateApi("financeiro", uid);
       document.getElementById("reciboSuccessNumber").textContent = data.sequentialNumber;
       const channels = data.channels || {};
       const lines = [];
-      if (channels.email?.attempted) lines.push(channels.email.ok ? "✓ E-mail enviado" : "✗ E-mail falhou");
+      if (channels.email?.attempted) {
+        lines.push(channels.email.ok ? "✓ E-mail enviado" : "✗ E-mail falhou");
+      }
       if (channels.whatsapp?.attempted) {
         if (channels.whatsapp.ok) lines.push("✓ WhatsApp enviado");
         else if (channels.whatsapp.reason === "WHATSAPP_NAO_HABILITADO") lines.push("⚠ WhatsApp não habilitado (configure em Perfil → WhatsApp)");
@@ -955,6 +1001,8 @@
       document.getElementById("reciboSuccessChannels").innerHTML = lines.map(l => `<li>${l}</li>`).join("");
       document.getElementById("reciboPublicLink").href = data.reciboUrl;
       document.getElementById("reciboPublicLink").textContent = data.reciboUrl;
+
+      // NFS-e: se o profissional configurou, mostra opção de emitir.
       maybeShowNfseEmit(data.receiptId, sess);
     } catch (e) {
       const st = document.getElementById("reciboStatus");
@@ -1001,6 +1049,7 @@
   }
 
   async function decryptNfseToken() {
+    // Busca o token cifrado e decifra com DEK local.
     const r = await fetch(`${BACKEND_BASE_URL}/therapy/nfse/encrypted-token`, {
       headers: { "Authorization": `Bearer ${idToken}` }
     });
@@ -1019,6 +1068,8 @@
 
     try {
       const apiToken = await decryptNfseToken();
+      // Borrower: o paciente. Como só temos nome (e-mail vem da sessão), passa
+      // o que dá sem expor CPF (que não temos por padrão).
       const borrower = {
         name: _currentSessionForNfse?.patientName || null,
         email: _currentSessionForNfse?.patientEmail || null
@@ -1038,6 +1089,7 @@
         throw new Error(data?.detail || data?.error || `HTTP ${res.status}`);
       }
 
+      // Sucesso. Pode ser status "Issued" (NFE.io ainda processando) ou "Authorized" (já tem PDF).
       st.textContent = `✓ NFS-e ${data.number ? `nº ${data.number}` : ""} ${data.status === "Authorized" ? "autorizada" : "em processamento"}.`;
       st.className = "ep-status is-ok";
       btn.classList.add("ep-hide");
@@ -1047,6 +1099,8 @@
         document.getElementById("nfseNumberLbl").textContent = data.number ? `Nº ${data.number}` : "";
         document.getElementById("nfseEmittedBox").classList.remove("ep-hide");
       } else {
+        // Polling: NFE.io retorna PDF só depois que prefeitura processa (alguns segundos).
+        // Tenta consultar 3x com 5s entre cada.
         setTimeout(() => pollNfseStatus(data.nfseId, apiToken, 0), 5000);
       }
     } catch (e) {
@@ -1059,7 +1113,7 @@
   });
 
   async function pollNfseStatus(nfseId, apiToken, attempt) {
-    if (attempt > 5) return;
+    if (attempt > 5) return; // ~30s total, desiste
     try {
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/nfse/consultar/${encodeURIComponent(nfseId)}`, {
         headers: { "Authorization": `Bearer ${idToken}`, "X-Nfse-Token": apiToken }
@@ -1290,13 +1344,14 @@
       }
       closeModal(newSessionModal);
 
+      // Veio da lista de espera? Remove a entrada após criar a consulta.
       const waitlistId = sessionStorage.getItem("ep:waitlist-after-create");
       if (waitlistId) {
         sessionStorage.removeItem("ep:waitlist-after-create");
         fetch(`${BACKEND_BASE_URL}/therapy/waitlist/${encodeURIComponent(waitlistId)}`, {
           method: "DELETE",
           headers: { "Authorization": `Bearer ${idToken}` }
-        }).catch(() => {});
+        }).catch(() => { /* best-effort */ });
       }
 
       const link = buildPatientLink(data.session.joinToken);
@@ -1342,6 +1397,7 @@
   await loadPatientsForSelect();
 
   // Tour de boas-vindas pro 1º acesso (no-op se já viu — flag em localStorage).
+  // Disparado depois do load pra não bloquear a UI inicial.
   runOnboarding();
 
   // Recarrega a lista quando a aba volta a ficar visível. Usa caso comum:
@@ -1353,7 +1409,6 @@
       loadSessions();
     }
   });
-
 
   // Auto-abrir modal se vier de prontuario.html?newWith=ID&name=... ou de
   // agenda.html?newAt=ISO (slot de horário clicado).

@@ -765,7 +765,7 @@
         ${s.status !== "canceled" ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="recibo" data-id="${s.sessionId}" title="Enviar recibo ao paciente">Recibo</button>
         ` : ""}
-        ${s.status === "completed" ? `
+        ${(s.status === "completed" || s.status === "canceled") ? `
           <button class="ep-btn-icon" data-action="ocultar" data-id="${s.sessionId}" aria-label="Remover da lista" title="Remover da lista (mantém no prontuário)">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
