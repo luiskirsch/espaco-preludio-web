@@ -1992,6 +1992,28 @@ body.ep-consult .ep-theme-toggle {
   min-height: 64px;
   max-height: none;
 }
+/* Scrollbar dourada na lista de anotações do paciente — mesma paleta dos
+   scrolls do lado profissional (#templateMenu, #cidResults, topics list). */
+.ep-patient-notes__list {
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(215,176,107,0.45) rgba(255,251,240,0.04);
+}
+.ep-patient-notes__list::-webkit-scrollbar {
+  width: 8px;
+}
+.ep-patient-notes__list::-webkit-scrollbar-track {
+  background: rgba(255,251,240,0.04);
+  border-radius: 8px;
+}
+.ep-patient-notes__list::-webkit-scrollbar-thumb {
+  background: rgba(215,176,107,0.40);
+  border-radius: 8px;
+  border: 2px solid #14110d;
+}
+.ep-patient-notes__list::-webkit-scrollbar-thumb:hover {
+  background: rgba(215,176,107,0.65);
+}
 .ep-consult__video--inline #tileLocal,
 .ep-consult__video--inline #tileRemote {
   aspect-ratio: auto;          /* tiles preenchem a célula em vez de impor 16/11 */
