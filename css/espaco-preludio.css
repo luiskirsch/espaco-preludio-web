@@ -1935,11 +1935,12 @@ body.ep-consult .ep-theme-toggle {
 .ep-consult__video--inline {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: minmax(0, 1fr) 260px;     /* tiles preenchem o resto, notas fixas */
+  grid-template-rows: minmax(0, 1fr) auto 260px;   /* tiles | action-bar | notas */
   grid-template-areas:
     "local patient"
+    "actions actions"
     "notes notes";
-  padding: 16px 16px 96px;     /* espaço pros controles flutuantes embaixo */
+  padding: 16px;
   gap: 14px;
   position: relative;
   min-height: 0;
@@ -1953,7 +1954,41 @@ body.ep-consult .ep-theme-toggle {
 }
 .ep-consult__video--inline #tileLocal   { grid-area: local; }
 .ep-consult__video--inline #tileRemote  { grid-area: patient; }
+.ep-consult__video--inline .ep-action-bar   { grid-area: actions; }
 .ep-consult__video--inline .ep-inline-notes { grid-area: notes; }
+
+/* Barra de ação: ambient (esquerda) | controles (centro) | tópicos (direita).
+   Substitui os 3 elementos absolutos que sobrepunham anotações. */
+.ep-action-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+.ep-action-bar > .ep-ambient   { justify-self: start; position: relative; }
+.ep-action-bar > .ep-controls-bar--inline {
+  justify-self: center;
+  position: static;
+  left: auto;
+  bottom: auto;
+  transform: none;
+}
+.ep-action-bar > .ep-topics-wrap { justify-self: end; position: relative; }
+.ep-action-bar > .ep-topics-wrap .ep-topics-toggle--inline {
+  position: static;
+  top: auto;
+  bottom: auto;
+  right: auto;
+}
+/* Deck dos tópicos abre PRA CIMA a partir do toggle, sem sobrepor o vídeo. */
+.ep-action-bar > .ep-topics-wrap .ep-topics-deck--inline {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  top: auto;
+  max-height: 60vh;
+  z-index: 50;
+}
 
 @media (max-width: 860px) {
   .ep-consult__video--inline {
@@ -1961,6 +1996,7 @@ body.ep-consult .ep-theme-toggle {
     grid-template-areas:
       "local"
       "patient"
+      "actions"
       "notes";
   }
 }
