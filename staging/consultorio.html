@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-107">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-108">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -245,6 +245,8 @@
   const e2eeBadge         = document.getElementById("e2eeBadge");
   const videoLocal        = document.getElementById("videoLocal");
   const videoRemote       = document.getElementById("videoRemote");
+  const tileLocal         = document.getElementById("tileLocal");
+  const tileRemote        = document.getElementById("tileRemote");
   const remotePlaceholder = document.getElementById("remotePlaceholder");
   const remoteName        = document.getElementById("remoteName");
   const ctrlMic           = document.getElementById("ctrlMic");
@@ -420,7 +422,20 @@
   room = new Room({
     adaptiveStream: true,
     dynacast: true,
-    publishDefaults: { dtx: true, simulcast: false },
+    // Cap em 720p@30 em vez do default 1080p — telessaúde 1:1 não precisa de
+    // mais; reduz CPU/GPU local, sobe rápido em redes instáveis.
+    videoCaptureDefaults: {
+      resolution: { width: 1280, height: 720, frameRate: 30 }
+    },
+    publishDefaults: {
+      dtx: true,
+      simulcast: false,
+      // Cap explícito de bitrate — sem isso o LiveKit chuta agressivamente
+      // (até 4-6 Mbps em redes boas) e congestiona o uplink em conexões
+      // residenciais médias.
+      videoEncoding: { maxBitrate: 1_500_000, maxFramerate: 30 },
+      audioPreset: { maxBitrate: 32_000 }
+    },
     e2ee: useE2EE ? { keyProvider, worker: e2eeWorker } : undefined
   });
 
@@ -449,11 +464,15 @@
     remotePlaceholder.classList.remove("ep-hide");
     videoRemote.classList.add("ep-hide");
     remoteName.classList.add("ep-hide");
+    tileRemote.classList.remove("ep-tile--has-video");
   }
   function onTrackSubscribed(track, pub, p) {
     console.info("[lk] trackSubscribed", { kind: track.kind, sid: pub?.trackSid, participant: p?.identity });
     if (track.kind === Track.Kind.Video) {
       track.attach(videoRemote);
+      // pausa a animação do ::before do tile (fica coberta pelo video, mas
+      // continua consumindo GPU se nao for parada explicitamente)
+      tileRemote.classList.add("ep-tile--has-video");
     } else if (track.kind === Track.Kind.Audio) {
       const audioEl = track.attach();
       audioEl.style.display = "none";
@@ -462,6 +481,9 @@
   }
   function onTrackUnsubscribed(track) {
     track.detach().forEach(el => el.remove());
+    if (track.kind === Track.Kind.Video) {
+      tileRemote.classList.remove("ep-tile--has-video");
+    }
   }
   // Logs auxiliares — diagnosticar vídeo unilateral / E2EE.
   room
@@ -485,7 +507,10 @@
     setStatus("ligando câmera…");
     await room.localParticipant.enableCameraAndMicrophone();
     const camTrack = Array.from(room.localParticipant.videoTrackPublications.values())[0]?.videoTrack;
-    if (camTrack) camTrack.attach(videoLocal);
+    if (camTrack) {
+      camTrack.attach(videoLocal);
+      tileLocal.classList.add("ep-tile--has-video");
+    }
 
     setStatus("em sessão");
   } catch (err) {
@@ -497,15 +522,32 @@
   // ─── Controles ──────────────────────────────────────────────
   ctrlMic.addEventListener("click", async () => {
     const enabled = !ctrlMic.classList.contains("is-off");
-    await room.localParticipant.setMicrophoneEnabled(!enabled);
+    // feedback visual imediato — UI atualiza antes do await do LiveKit
     ctrlMic.classList.toggle("is-off", enabled);
     ctrlMic.setAttribute("aria-pressed", enabled ? "true" : "false");
+    try {
+      await room.localParticipant.setMicrophoneEnabled(!enabled);
+    } catch (err) {
+      ctrlMic.classList.toggle("is-off", !enabled);
+      ctrlMic.setAttribute("aria-pressed", !enabled ? "true" : "false");
+      console.error("mic_toggle_error", err);
+    }
   });
   ctrlCam.addEventListener("click", async () => {
     const enabled = !ctrlCam.classList.contains("is-off");
-    await room.localParticipant.setCameraEnabled(!enabled);
+    // feedback visual imediato — nao espera o await
     ctrlCam.classList.toggle("is-off", enabled);
     ctrlCam.setAttribute("aria-pressed", enabled ? "true" : "false");
+    tileLocal.classList.toggle("ep-tile--has-video", !enabled);
+    try {
+      await room.localParticipant.setCameraEnabled(!enabled);
+    } catch (err) {
+      // rollback se falhar
+      ctrlCam.classList.toggle("is-off", !enabled);
+      ctrlCam.setAttribute("aria-pressed", !enabled ? "true" : "false");
+      tileLocal.classList.toggle("ep-tile--has-video", enabled);
+      console.error("cam_toggle_error", err);
+    }
   });
   ctrlLeave.addEventListener("click", async () => {
     if (!confirm("Sair da consulta? A sessão continua aberta para o paciente até você encerrá-la.")) return;

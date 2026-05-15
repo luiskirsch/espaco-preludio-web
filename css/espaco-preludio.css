@@ -1190,15 +1190,18 @@ h3.ep-h3 {
   min-height: 44px;
   border-radius: var(--ep-radius-sm);
   cursor: pointer;
-  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+  transition: background 100ms ease, border-color 100ms ease, transform 80ms ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   text-decoration: none;
+  /* remove 300ms tap delay em mobile + suprime highlight cinza padrao do iOS */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .ep-btn:hover { transform: translateY(-1px); }
-.ep-btn:active { transform: translateY(0); }
+.ep-btn:active { transform: translateY(0) scale(0.98); }
 .ep-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 .ep-btn--primary,
@@ -1733,12 +1736,16 @@ body.ep-consult .ep-theme-toggle {
   background: transparent;
   color: rgba(255,251,240,0.85);
   border: 1px solid rgba(215,176,107,0.30);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 100ms ease, border-color 100ms ease, color 100ms ease, transform 80ms ease;
 }
 .ep-consult__topbar .ep-btn--ghost:hover {
   background: rgba(215,176,107,0.10);
   border-color: rgba(215,176,107,0.50);
   color: var(--ep-paper);
 }
+.ep-consult__topbar .ep-btn--ghost:active { transform: scale(0.96); }
 
 .ep-consult__status {
   display: inline-flex;
@@ -1989,6 +1996,10 @@ body.ep-consult .ep-theme-toggle {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  /* impede rubber-band do scroll propagar para o video grid acima
+     (causava sensacao de "travado" ao chegar no fim da lista) */
+  overscroll-behavior: contain;
+  scroll-behavior: auto;
 }
 .ep-topics-deck--pinned .ep-topics-deck__head,
 .ep-topics-deck--pinned .ep-topics-deck__filters,
@@ -2014,7 +2025,10 @@ body.ep-consult .ep-theme-toggle {
   position: relative;
   z-index: 50;
   isolation: isolate;
-  background: rgba(20,17,13,0.92);
+  /* fundo solido escuro substitui backdrop-filter — ja que o container
+     atras eh um gradient escuro estatico, o blur nao agrega nada visual e
+     forca repintura GPU. */
+  background: #14110d;
   border: 1px solid rgba(215,176,107,0.18);
   border-radius: 14px;
   padding: 12px 14px;
@@ -2022,8 +2036,6 @@ body.ep-consult .ep-theme-toggle {
   flex-direction: column;
   gap: 8px;
   min-height: 0;
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
 }
 .ep-inline-notes__head {
   display: flex;
@@ -2094,6 +2106,9 @@ body.ep-consult .ep-theme-toggle {
   font-size: 14px;
   line-height: 1.55;
   font-family: inherit;
+  overscroll-behavior: contain;
+  /* transition mais sutil que default (border + box-shadow no focus) */
+  transition: border-color 100ms ease, box-shadow 100ms ease;
 }
 .ep-inline-notes__actions {
   display: flex;
@@ -2123,6 +2138,8 @@ body.ep-consult .ep-theme-toggle {
 #templateMenu, #cidResults {
   scrollbar-width: thin;
   scrollbar-color: rgba(215,176,107,0.45) rgba(255,251,240,0.04);
+  overscroll-behavior: contain;
+  scroll-behavior: auto;
 }
 #templateMenu::-webkit-scrollbar,
 #cidResults::-webkit-scrollbar {
@@ -2217,6 +2234,10 @@ body.ep-consult .ep-theme-toggle {
   place-items: center;
   border: 1px solid rgba(215,176,107,0.10);
   box-shadow: 0 24px 48px -24px rgba(0,0,0,0.7);
+  /* promove para layer GPU dedicada — vital pra video 30fps sem repintar
+     o background gradient a cada frame */
+  transform: translateZ(0);
+  contain: layout paint;
 }
 /* Respiração ambiental — só fica visível quando o tile está sem vídeo. */
 .ep-tile::before {
@@ -2228,6 +2249,13 @@ body.ep-consult .ep-theme-toggle {
   pointer-events: none;
   animation: epTileBreathe 7s ease-in-out infinite;
   z-index: 0;
+  will-change: transform, opacity;
+}
+/* Quando o tile tem video ativo, pausa a animação do ::before — economiza
+   GPU porque o pseudo fica coberto pelo video de qualquer forma. */
+.ep-tile.ep-tile--has-video::before {
+  animation: none;
+  opacity: 0;
 }
 .ep-tile > * { position: relative; z-index: 1; }
 @keyframes epTileBreathe {
@@ -2238,18 +2266,22 @@ body.ep-consult .ep-theme-toggle {
   width: 100%; height: 100%;
   object-fit: cover;
   background: #000;
+  /* video element em GPU layer dedicada — evita re-compositing junto com
+     o tile container a cada frame */
+  transform: translateZ(0);
+  will-change: transform;
 }
 .ep-tile__name {
   position: absolute;
   left: 14px; bottom: 14px;
-  background: rgba(13,20,31,0.78);
+  /* fundo solido em vez de backdrop-filter — blur sobre video 30fps custa
+     GPU significativa em frames repintados. Visualmente quase identico. */
+  background: rgba(13,20,31,0.88);
   color: #fff;
   padding: 5px 12px;
   border-radius: 999px;
   font-size: 12.5px;
   font-weight: 500;
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
   display: inline-flex; align-items: center; gap: 6px;
 }
 .ep-tile__placeholder {
@@ -2443,9 +2475,16 @@ body.ep-consult .ep-theme-toggle {
   border-radius: 999px;
   display: grid; place-items: center;
   cursor: pointer;
-  transition: background 120ms ease, color 120ms ease;
+  /* touch-action: manipulation remove o 300ms tap delay em mobile; transform
+     no transition habilita feedback :active animado pela GPU. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: background 100ms ease, color 100ms ease, transform 80ms ease;
+  will-change: transform, background;
 }
 .ep-ctrl:hover { background: rgba(215,176,107,0.18); color: var(--ep-gold-soft); }
+.ep-ctrl:active { transform: scale(0.92); }
 .ep-ctrl.is-off { background: rgba(160,43,31,0.85); }
 .ep-ctrl.is-off:hover { background: rgba(160,43,31,1); }
 .ep-ctrl--leave { background: rgba(160,43,31,0.85); }
@@ -3048,12 +3087,12 @@ body.ep-consult.ep-mode-calmo .ep-consult__topbar {
   width: 320px;
   max-height: calc(100% - 80px);
   z-index: 9;
-  background: rgba(15,12,9,0.92);
+  /* fundo solido escuro substitui backdrop-filter blur(20px) — em 60fps de
+     video atras, esse blur era o maior consumidor de GPU do layout. */
+  background: #14110d;
   border: 1px solid rgba(215,176,107,0.24);
   border-radius: 14px;
   padding: 14px;
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
   box-shadow: 0 24px 48px -16px rgba(0,0,0,0.8);
   flex-direction: column;
   gap: 10px;
