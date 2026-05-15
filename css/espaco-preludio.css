@@ -1687,6 +1687,23 @@ body.ep-consult {
     radial-gradient(1200px 600px at 50% -10%, rgba(215,176,107,0.04), transparent 55%),
     linear-gradient(180deg, #14110d 0%, #0a0805 100%);
   color: #f3f3f0;
+  margin: 0;
+}
+/* Trava html+body em 100vh APENAS quando o .ep-shell esta visivel (em
+   sessao). Em entrar.html, antes da sessao, a tela de prejoin pode
+   precisar rolar pra mostrar consentimento — entao nao podemos forcar
+   overflow hidden no body inteiro.
+
+   Sem isso, em algumas resolucoes uma barra branca fantasma de scrollbar
+   aparecia na borda direita: o .ep-shell tem overflow hidden mas o body
+   por default permitia scrollbar reservada. */
+body.ep-consult:has(.ep-shell:not(.ep-hide)) {
+  height: 100vh;
+  overflow: hidden;
+}
+html:has(body.ep-consult .ep-shell:not(.ep-hide)) {
+  height: 100vh;
+  overflow: hidden;
 }
 body.ep-consult .ep-shell { height: 100vh; max-height: 100vh; overflow: hidden; display: grid; grid-template-rows: auto 1fr; }
 
