@@ -16,8 +16,6 @@
 </head>
 <body>
 
-<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
-
 <div class="ep-shell">
   <header class="ep-topbar">
     <div class="ep-container ep-topbar__inner">
@@ -237,8 +235,9 @@
         </div>
       </section>
 
-      <!-- Logo -->
-      <section class="ep-receita-form">
+      <!-- Logo — apenas pra profissionais que emitem receita (escondido pra
+           SEM_CONSELHO via JS após carregar therapist). -->
+      <section class="ep-receita-form" id="logoSection">
         <h2 class="ep-h3 ep-mt-0">Logo do consultório (opcional)</h2>
         <p class="ep-text-xs ep-text-muted ep-mt-0">
           Imagem PNG, JPEG ou WebP até 200 KB. Aparece no canto superior do PDF da receita.
@@ -268,7 +267,7 @@
         <div class="ep-field ep-mt-12">
           <label class="ep-label" for="schedSlug">Identificador do seu link</label>
           <div class="ep-flex" style="gap: 0; align-items: stretch;">
-            <span class="ep-input" style="display: inline-flex; align-items: center; padding: 9px 12px; background: var(--ep-bg-2); border-right: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; color: var(--ep-ink-2); font-size: 13.5px; white-space: nowrap;">espacopreludio.com.br/staging/agendar.html?p=</span>
+            <span class="ep-input" style="display: inline-flex; align-items: center; padding: 9px 12px; background: var(--ep-bg-2); border-right: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; color: var(--ep-ink-2); font-size: 13.5px; white-space: nowrap;">espacopreludio.com.br/agendar.html?p=</span>
             <input id="schedSlug" class="ep-input" type="text" maxlength="40" placeholder="dr-roberto-fernandes" style="border-top-left-radius: 0; border-bottom-left-radius: 0; font-family: 'JetBrains Mono', monospace; font-size: 13.5px;">
           </div>
           <p class="ep-text-xs ep-text-muted ep-mt-0">
@@ -716,7 +715,22 @@
   }
   applyTherapist(therapist);
 
+  // Esconde secao de logo do consultorio pra profissionais SEM_CONSELHO —
+  // eles nao podem emitir receita, entao o logo (que so aparece no PDF da
+  // receita) e irrelevante.
+  if (String(therapist.tipoConselho || "").toUpperCase() === "SEM_CONSELHO") {
+    const logoSection = document.getElementById("logoSection");
+    if (logoSection) logoSection.style.display = "none";
+  }
+
   // ─── Push notifications ──────────────────────────────────────────────
+  // Browser-side flow:
+  //   1. permissão (Notification.requestPermission)
+  //   2. registra SW (pwa.js já fez no load)
+  //   3. subscribe via PushManager com VAPID public key do backend
+  //   4. POST /therapy/push/subscribe pra salvar
+  //
+  // Status mostra: indisponível / permissão negada / habilitado neste dispositivo / pode habilitar.
   function urlBase64ToUint8Array(base64String) {
     const padding = "=".repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -733,6 +747,7 @@
     enableBtn.classList.add("ep-hide");
     disableBtn.classList.add("ep-hide");
     hint.classList.add("ep-hide");
+
     if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
       box.textContent = "Seu navegador não suporta notificações push.";
       return;
@@ -747,7 +762,10 @@
     }
     let reg;
     try { reg = await navigator.serviceWorker.ready; } catch { reg = null; }
-    if (!reg) { box.textContent = "Service Worker indisponível neste navegador."; return; }
+    if (!reg) {
+      box.textContent = "Service Worker indisponível neste navegador.";
+      return;
+    }
     const sub = await reg.pushManager.getSubscription();
     if (sub) {
       box.innerHTML = "✓ <strong>Habilitadas neste dispositivo.</strong>";
@@ -767,20 +785,23 @@
       const perm = await Notification.requestPermission();
       if (perm !== "granted") {
         const hint = $("pushHint");
-        hint.textContent = "Permissão não concedida.";
+        hint.textContent = "Permissão não concedida. Verifique as configurações do navegador.";
         hint.classList.remove("ep-hide");
-        btn.disabled = false; btn.textContent = "Ativar notificações";
+        btn.disabled = false;
+        btn.textContent = "Ativar notificações";
         return;
       }
+      // Busca chave pública do backend
       const cfgRes = await fetch(`${BACKEND_BASE_URL}/therapy/push/config`, {
         headers: { "Authorization": `Bearer ${idToken}` }
       });
       const cfgData = await cfgRes.json().catch(() => ({}));
       if (!cfgRes.ok || !cfgData.ok || !cfgData.publicKey) {
         const hint = $("pushHint");
-        hint.textContent = "Servidor de push não configurado.";
+        hint.textContent = "Servidor de push não está configurado ainda. Tente em alguns minutos.";
         hint.classList.remove("ep-hide");
-        btn.disabled = false; btn.textContent = "Ativar notificações";
+        btn.disabled = false;
+        btn.textContent = "Ativar notificações";
         return;
       }
       const reg = await navigator.serviceWorker.ready;
@@ -797,23 +818,27 @@
       if (!subRes.ok || !subData.ok) {
         try { await sub.unsubscribe(); } catch {}
         const hint = $("pushHint");
-        hint.textContent = "Erro: " + (subData?.error || subRes.status);
+        hint.textContent = "Erro salvando subscription: " + (subData?.error || subRes.status);
         hint.classList.remove("ep-hide");
-        btn.disabled = false; btn.textContent = "Ativar notificações";
+        btn.disabled = false;
+        btn.textContent = "Ativar notificações";
         return;
       }
-      btn.disabled = false; btn.textContent = "Ativar notificações";
+      btn.disabled = false;
+      btn.textContent = "Ativar notificações";
       await pushUiRender();
     } catch (e) {
       const hint = $("pushHint");
       hint.textContent = "Erro: " + (e?.message || "desconhecido");
       hint.classList.remove("ep-hide");
-      btn.disabled = false; btn.textContent = "Ativar notificações";
+      btn.disabled = false;
+      btn.textContent = "Ativar notificações";
     }
   }
   async function pushDisable() {
     const btn = $("pushDisableBtn");
-    btn.disabled = true; btn.textContent = "Desativando…";
+    btn.disabled = true;
+    btn.textContent = "Desativando…";
     try {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.getSubscription();
@@ -826,10 +851,12 @@
           body: JSON.stringify({ endpoint })
         }).catch(() => {});
       }
-      btn.disabled = false; btn.textContent = "Desativar neste dispositivo";
+      btn.disabled = false;
+      btn.textContent = "Desativar neste dispositivo";
       await pushUiRender();
     } catch (e) {
-      btn.disabled = false; btn.textContent = "Desativar neste dispositivo";
+      btn.disabled = false;
+      btn.textContent = "Desativar neste dispositivo";
     }
   }
   $("pushEnableBtn").addEventListener("click", pushEnable);
@@ -837,6 +864,8 @@
   pushUiRender().catch(() => {});
 
   // ─── Exportar dados LGPD ─────────────────────────────────────────────
+  // Fetch tudo do backend + decifra client-side (DEK) + empacota ZIP via
+  // JSZip CDN. Tudo em memória; download via blob.
   function csvEscape(v) {
     const s = String(v == null ? "" : v);
     if (s.includes("\"") || s.includes(",") || s.includes(";") || s.includes("\n")) {
@@ -855,7 +884,7 @@
   }
 
   $("exportDataBtn").addEventListener("click", async () => {
-    if (!confirm("Vamos baixar TODOS os seus dados como ZIP. Continuar?")) return;
+    if (!confirm("Vamos baixar TODOS os seus dados como ZIP. O arquivo pode ficar grande dependendo do volume. Continuar?")) return;
     const btn = $("exportDataBtn");
     const st = $("exportDataStatus");
     btn.disabled = true;
@@ -864,83 +893,98 @@
     st.className = "ep-status";
 
     try {
+      // Importa libs (lazy). JSZip via esm.sh.
       const { default: JSZip } = await import("https://esm.sh/jszip@3.10.1");
       const { decryptNote, recallDek } = await import("./js/crypto.js");
       const dekLocal = recallDek();
-      if (!dekLocal) throw new Error("Sessão sem chave de cifragem. Abra a página Pacientes e tente de novo.");
+      if (!dekLocal) throw new Error("Sessão sem chave de cifragem. Abra a página Pacientes (ou faça login novamente) e tente de novo.");
 
       const zip = new JSZip();
       const hdr = (msg) => { st.textContent = msg; };
 
+      // 1) Perfil (json completo)
       hdr("Baixando perfil…");
       const meRes = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, { headers: { "Authorization": `Bearer ${idToken}` } });
       const meData = await meRes.json();
       zip.file("01-perfil.json", JSON.stringify(meData.therapist || {}, null, 2));
 
+      // 2) Pacientes (decifrados)
       hdr("Baixando pacientes (decifrando)…");
       const pacRes = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, { headers: { "Authorization": `Bearer ${idToken}` } });
       const pacData = await pacRes.json();
       const decryptedPatients = [];
+      const patientNameByPatientId = {};
       for (const p of (pacData.patients || [])) {
         try {
           const json = await decryptNote({ ciphertext: p.ciphertext, iv: p.iv }, dekLocal);
           const data = JSON.parse(json);
-          decryptedPatients.push({ patientId: p.patientId, ...data, createdAt: p.createdAt, updatedAt: p.updatedAt });
+          const row = { patientId: p.patientId, ...data, createdAt: p.createdAt, updatedAt: p.updatedAt };
+          decryptedPatients.push(row);
+          patientNameByPatientId[p.patientId] = data.name || "";
         } catch (e) {
           decryptedPatients.push({ patientId: p.patientId, name: "[falha decifrar]", _error: e.message });
         }
       }
       zip.file("02-pacientes.csv", rowsToCsv(decryptedPatients, [
-        { key: "patientId", label: "patient_id" },
-        { key: "name",      label: "nome" },
-        { key: "contact",   label: "contato" },
-        { key: "birthdate", label: "nascimento" },
-        { key: "observations", label: "observacoes" },
-        { label: "criado_em", get: r => fmtTs(r.createdAt) },
+        { key: "patientId",   label: "patient_id" },
+        { key: "name",        label: "nome" },
+        { key: "contact",     label: "contato" },
+        { key: "birthdate",   label: "nascimento" },
+        { key: "observations",label: "observacoes" },
+        { label: "criado_em",  get: r => fmtTs(r.createdAt) },
         { label: "atualizado_em", get: r => fmtTs(r.updatedAt) }
       ]));
 
+      // 3) Sessões
       hdr("Baixando sessões…");
       const sessRes = await fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, { headers: { "Authorization": `Bearer ${idToken}` } });
       const sessData = await sessRes.json();
       const sessions = sessData.sessions || [];
       zip.file("03-sessoes.csv", rowsToCsv(sessions, [
-        { key: "sessionId",   label: "session_id" },
-        { key: "patientName", label: "paciente_nome" },
-        { key: "patientId",   label: "patient_id" },
-        { key: "status",      label: "status" },
-        { label: "agendada_em",  get: r => fmtTs(r.scheduledAt) },
-        { label: "encerrada_em", get: r => fmtTs(r.completedAt) },
-        { label: "cancelada_em", get: r => fmtTs(r.canceledAt) },
-        { key: "canceledBy",   label: "cancelada_por" },
-        { key: "cancelReason", label: "motivo_cancelamento" },
+        { key: "sessionId",     label: "session_id" },
+        { key: "patientName",   label: "paciente_nome" },
+        { key: "patientId",     label: "patient_id" },
+        { key: "status",        label: "status" },
+        { label: "agendada_em",   get: r => fmtTs(r.scheduledAt) },
+        { label: "encerrada_em",  get: r => fmtTs(r.completedAt) },
+        { label: "cancelada_em",  get: r => fmtTs(r.canceledAt) },
+        { key: "canceledBy",    label: "cancelada_por" },
+        { key: "cancelReason",  label: "motivo_cancelamento" },
         { label: "confirmada_em", get: r => fmtTs(r.confirmedAt) },
         { label: "criada_em",     get: r => fmtTs(r.createdAt) }
       ]));
 
+      // 4) Notas das sessões (decifradas) — usa fetch paralelo limitado
       hdr("Baixando notas (decifrando)…");
       const notesEntries = [];
       const CONCURRENCY = 5;
       for (let i = 0; i < sessions.length; i += CONCURRENCY) {
         const batch = sessions.slice(i, i + CONCURRENCY);
-        await Promise.allSettled(batch.map(async s => {
+        const results = await Promise.allSettled(batch.map(async s => {
           const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(s.sessionId)}/notas`, { headers: { "Authorization": `Bearer ${idToken}` } });
           const d = await r.json().catch(() => ({}));
-          for (const n of (d.notes || [])) {
+          const noteList = d.notes || [];
+          for (const n of noteList) {
             let text = "";
             try { text = await decryptNote({ ciphertext: n.ciphertext, iv: n.iv }, dekLocal); }
             catch { text = "[falha decifrar]"; }
-            notesEntries.push({ sessionId: s.sessionId, patientName: s.patientName, createdAt: n.createdAt, text });
+            notesEntries.push({
+              sessionId: s.sessionId,
+              patientName: s.patientName,
+              createdAt: n.createdAt,
+              text
+            });
           }
         }));
       }
       zip.file("04-notas-sessao.csv", rowsToCsv(notesEntries, [
-        { key: "sessionId", label: "session_id" },
+        { key: "sessionId",  label: "session_id" },
         { key: "patientName", label: "paciente_nome" },
         { label: "criada_em", get: r => fmtTs(r.createdAt) },
-        { key: "text", label: "texto" }
+        { key: "text",       label: "texto" }
       ]));
 
+      // 5) Financeiro
       hdr("Baixando financeiro…");
       const finRes = await fetch(`${BACKEND_BASE_URL}/therapy/financeiro/transacoes`, { headers: { "Authorization": `Bearer ${idToken}` } });
       const finData = await finRes.json();
@@ -959,24 +1003,55 @@
         { label: "pago_em",           get: r => fmtTs(r.paidDate) }
       ]));
 
+      // 6) Recibos
       hdr("Baixando recibos…");
-      try {
-        const recRes = await fetch(`${BACKEND_BASE_URL}/therapy/recibos`, { headers: { "Authorization": `Bearer ${idToken}` } });
-        const recData = await recRes.json();
-        const recibos = recData.receipts || recData.recibos || [];
-        zip.file("06-recibos.csv", rowsToCsv(recibos, [
-          { key: "sequentialNumber",   label: "numero" },
-          { key: "receiptId",          label: "recibo_id" },
-          { key: "txId",               label: "tx_id" },
-          { key: "patientName",        label: "paciente_nome" },
-          { label: "valor_brl",        get: r => (Number(r.amount) / 100).toFixed(2).replace(".", ",") },
-          { key: "amountExtenso",      label: "valor_extenso" },
-          { key: "paymentMethodLabel", label: "metodo_pagamento" },
-          { label: "emitido_em",       get: r => fmtTs(r.createdAt?.toMillis ? r.createdAt.toMillis() : r.createdAt) },
-          { label: "pago_em",          get: r => fmtTs(r.paidDate) }
-        ]));
-      } catch { zip.file("06-recibos.csv", "(endpoint indisponivel)"); }
+      const recRes = await fetch(`${BACKEND_BASE_URL}/therapy/recibos`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const recData = await recRes.json();
+      const recibos = recData.receipts || recData.recibos || [];
+      zip.file("06-recibos.csv", rowsToCsv(recibos, [
+        { key: "sequentialNumber",  label: "numero" },
+        { key: "receiptId",         label: "recibo_id" },
+        { key: "txId",              label: "tx_id" },
+        { key: "patientName",       label: "paciente_nome" },
+        { label: "valor_brl",       get: r => (Number(r.amount) / 100).toFixed(2).replace(".", ",") },
+        { key: "amountExtenso",     label: "valor_extenso" },
+        { key: "paymentMethodLabel",label: "metodo_pagamento" },
+        { label: "emitido_em",      get: r => fmtTs(r.createdAt?.toMillis ? r.createdAt.toMillis() : r.createdAt) },
+        { label: "pago_em",         get: r => fmtTs(r.paidDate) }
+      ]));
 
+      // 7) Receitas digitais
+      hdr("Baixando receitas…");
+      try {
+        const r2 = await fetch(`${BACKEND_BASE_URL}/therapy/receitas`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const d2 = await r2.json();
+        const receitas = d2.receitas || d2.receipts || d2.items || [];
+        zip.file("07-receitas.csv", rowsToCsv(receitas, [
+          { key: "id",          label: "receita_id" },
+          { key: "patientName", label: "paciente_nome" },
+          { key: "status",      label: "status" },
+          { label: "criada_em", get: r => fmtTs(r.createdAt?.toMillis ? r.createdAt.toMillis() : r.createdAt) },
+          { label: "assinada_em", get: r => fmtTs(r.assinadaAt?.toMillis ? r.assinadaAt.toMillis() : r.assinadaAt) }
+        ]));
+      } catch { zip.file("07-receitas.csv", "(endpoint indisponivel)"); }
+
+      // 8) Documentos
+      hdr("Baixando documentos…");
+      try {
+        const r3 = await fetch(`${BACKEND_BASE_URL}/therapy/documentos`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const d3 = await r3.json();
+        const documentos = d3.documentos || d3.items || [];
+        zip.file("08-documentos.csv", rowsToCsv(documentos, [
+          { key: "id",          label: "doc_id" },
+          { key: "tipo",        label: "tipo" },
+          { key: "patientName", label: "paciente_nome" },
+          { key: "status",      label: "status" },
+          { label: "criado_em",   get: r => fmtTs(r.createdAt?.toMillis ? r.createdAt.toMillis() : r.createdAt) },
+          { label: "assinado_em", get: r => fmtTs(r.assinadoAt?.toMillis ? r.assinadoAt.toMillis() : r.assinadoAt) }
+        ]));
+      } catch { zip.file("08-documentos.csv", "(endpoint indisponivel)"); }
+
+      // 9) Anamneses respondidas
       hdr("Baixando anamneses…");
       try {
         const r4 = await fetch(`${BACKEND_BASE_URL}/therapy/anamneses`, { headers: { "Authorization": `Bearer ${idToken}` } });
@@ -993,22 +1068,25 @@
         zip.file("09-anamneses.json", JSON.stringify(detailed, null, 2));
       } catch { zip.file("09-anamneses.json", "[]"); }
 
+      // 10) Audit log
       hdr("Baixando audit…");
       try {
         const r5 = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/audit?limit=2000`, { headers: { "Authorization": `Bearer ${idToken}` } });
         const d5 = await r5.json();
         const events = d5.events || d5.items || [];
         zip.file("10-audit.csv", rowsToCsv(events, [
-          { label: "quando", get: r => fmtTs(r.createdAt?.toMillis ? r.createdAt.toMillis() : r.createdAt) },
-          { key: "type",     label: "tipo" },
-          { key: "description", label: "descricao" }
+          { label: "quando",     get: r => fmtTs(r.createdAt?.toMillis ? r.createdAt.toMillis() : r.createdAt) },
+          { key: "type",         label: "tipo" },
+          { key: "description",  label: "descricao" }
         ]));
       } catch { zip.file("10-audit.csv", "(endpoint indisponivel)"); }
 
-      // 11) Mensagens (chat E2EE)
+      // 11) Mensagens (chat E2EE) — threads + mensagens decifradas
       hdr("Baixando mensagens…");
       try {
         const { unwrapKey, unwrapThreadKeyFromPeer, decryptNote } = await import("./js/crypto.js");
+
+        // Garante que tenho ECDH keypair (se não tiver, não tem chat)
         let myEcdhPriv = null;
         try {
           const kpRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/keypair`, { headers: { "Authorization": `Bearer ${idToken}` } });
@@ -1037,7 +1115,7 @@
           } else if (myEcdhPriv) {
             threadKey = await unwrapThreadKeyFromPeer(t.myThreadKeyWrapper, myEcdhPriv, t.peerEcdhPublicJwk);
           } else {
-            continue;
+            continue; // não tem como decifrar
           }
 
           const msgsRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(tMeta.threadId)}/messages?limit=500`, {
@@ -1061,7 +1139,7 @@
                 paciente: t.patientDisplayName,
                 profissional: t.therapistDisplayName,
                 de: m.senderRole,
-                texto: "[mensagem corrompida]",
+                texto: "[mensagem corrompida ou chave incompatível]",
                 quando: m.createdAt
               });
             }
@@ -1077,26 +1155,32 @@
           { label: "quando",     get: r => fmtTs(r.quando) }
         ]));
       } catch (e) {
+        console.warn("export_chat_failed", e);
         zip.file("11-mensagens.csv", "(erro ao exportar chat: " + (e?.message || "desconhecido") + ")");
       }
 
-      zip.file("README.txt", `EXPORTAÇÃO DE DADOS — ESPAÇO PRELÚDIO (STAGING)
+      // README
+      zip.file("README.txt", `EXPORTAÇÃO DE DADOS — ESPAÇO PRELÚDIO
 Gerada em ${new Date().toLocaleString("pt-BR")}
 Usuário: ${meData.therapist?.displayName || ""} (uid: ${user.uid})
 
 Conteúdo:
   01-perfil.json         Seu perfil profissional completo
-  02-pacientes.csv       Lista de pacientes (decifrados com sua DEK)
+  02-pacientes.csv       Lista de pacientes (decifrados client-side com sua DEK)
   03-sessoes.csv         Sessões + status + datas
   04-notas-sessao.csv    Anotações de cada sessão (decifradas)
   05-financeiro.csv      Lançamentos financeiros
   06-recibos.csv         Recibos emitidos
   11-mensagens.csv       Conversas E2EE com pacientes (decifradas)
-  09-anamneses.json      Anamneses respondidas
-  10-audit.csv           Histórico de atividades
+  07-receitas.csv        Receitas digitais
+  08-documentos.csv      Atestados / encaminhamentos
+  09-anamneses.json      Anamneses respondidas (perguntas + respostas)
+  10-audit.csv           Histórico de atividades da sua conta
 
-Pacientes e notas são cifrados E2E. Esta exportação foi decifrada
-localmente com sua chave (DEK) que está só no navegador.
+Sobre os dados cifrados:
+  Pacientes e notas são cifrados E2E no Firestore. Esta exportação foi
+  decifrada localmente com a sua chave (DEK) que está só no seu navegador.
+  Ninguém — nem o Espaço Prelúdio — consegue ler esses dados sem sua chave.
 
 Direito de portabilidade — LGPD Art. 18, V.
 `);
@@ -1125,6 +1209,12 @@ Direito de portabilidade — LGPD Art. 18, V.
     }
   });
 
+  // ─── Backup E2EE (.epbk) — mantém tudo cifrado ─────────────────────────
+  // Diferente do export LGPD que decifra: este baixa os ciphertexts crus do
+  // Firestore. Sem a senha do user, o arquivo é inútil. Útil pra cópia segura
+  // off-site sem expor dados clínicos a quem tem acesso ao computador.
+  //
+  // Formato: JSON com versão + metadata + arrays de blobs cifrados.
   $("backupE2eeBtn").addEventListener("click", async () => {
     if (!confirm("Baixar backup com seus dados ainda cifrados (.epbk)?\n\nO arquivo só pode ser aberto com sua senha do Espaço Prelúdio. Ideal para guardar em pen-drive ou nuvem pessoal.")) return;
     const btn = $("backupE2eeBtn");
@@ -1155,6 +1245,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       st.textContent = "Coletando notas cifradas das sessões…";
       const sessions = sessData.sessions || [];
       const allNotes = [];
+      // Limita concorrência a 6 simultâneas (browser já limita, mas evita estouro).
       const batchSize = 6;
       for (let i = 0; i < sessions.length; i += batchSize) {
         const batch = sessions.slice(i, i + batchSize);
@@ -1180,6 +1271,7 @@ Direito de portabilidade — LGPD Art. 18, V.
           uid: meData.therapist?.uid || null,
           displayName: meData.therapist?.displayName || null,
           email: meData.therapist?.email || null,
+          // Envelope cifrado do DEK fica no perfil — preciso pra reabrir o backup.
           dekEnvelope: meData.therapist?.dekEnvelope || null
         },
         patients: patients,
@@ -1220,6 +1312,8 @@ Direito de portabilidade — LGPD Art. 18, V.
   });
 
   // ─── NFS-e (NFE.io): salvar configuração ───────────────────────────────
+  // API token cifrado com DEK antes de subir — só backend (quando emite)
+  // decifra. CompanyId, código serviço, alíquota, regime ficam claro.
   (async () => {
     try {
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, {
@@ -1232,6 +1326,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       $("nfseAliquotaIss").value  = nfse.aliquotaIss != null ? String(nfse.aliquotaIss) : "";
       $("nfseRegimeTrib").value   = nfse.regimeTributario || "";
       $("nfseEnv").value          = nfse.environment || "sandbox";
+      // Token nunca volta — backend não devolve. Só mostra placeholder se já configurado.
       $("nfseApiToken").placeholder = nfse.apiTokenConfigured ? "••••••••• (já configurado)" : "Bearer token gerado no painel";
     } catch {}
   })();
@@ -1255,13 +1350,14 @@ Direito de portabilidade — LGPD Art. 18, V.
         }
       };
 
+      // API token: só envia se user digitou algo novo (input vazio = mantém o atual).
       const apiToken = $("nfseApiToken").value;
       if (apiToken) {
         const dekLocal = (await import("./js/crypto.js")).recallDek();
         if (!dekLocal) throw new Error("Sessão sem chave de cifragem. Faça login novamente.");
         const { encryptNote } = await import("./js/crypto.js");
         const tokenEnc = await encryptNote(apiToken, dekLocal);
-        body.nfseConfig.apiTokenEncrypted = tokenEnc;
+        body.nfseConfig.apiTokenEncrypted = tokenEnc; // { ciphertext, iv }
       }
 
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
@@ -1678,8 +1774,10 @@ Direito de portabilidade — LGPD Art. 18, V.
       asaasEnv:                        $("asaasEnv").value,
       asaasEnabled:                    $("asaasEnabled").checked
     };
+    // Remove campos undefined pra não sobrescrever default no backend.
     if (body.publicSchedulingMinNoticeHours === undefined) delete body.publicSchedulingMinNoticeHours;
     if (body.publicSchedulingMaxAdvanceDays === undefined) delete body.publicSchedulingMaxAdvanceDays;
+    // asaasApiKey só é enviado se o user digitou alguma coisa (campo vazio mantém a key salva).
     const asaasKeyTyped = $("asaasApiKey").value;
     if (asaasKeyTyped) body.asaasApiKey = asaasKeyTyped;
 

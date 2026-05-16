@@ -235,8 +235,9 @@
         </div>
       </section>
 
-      <!-- Logo -->
-      <section class="ep-receita-form">
+      <!-- Logo — apenas pra profissionais que emitem receita (escondido pra
+           SEM_CONSELHO via JS após carregar therapist). -->
+      <section class="ep-receita-form" id="logoSection">
         <h2 class="ep-h3 ep-mt-0">Logo do consultório (opcional)</h2>
         <p class="ep-text-xs ep-text-muted ep-mt-0">
           Imagem PNG, JPEG ou WebP até 200 KB. Aparece no canto superior do PDF da receita.
@@ -713,6 +714,14 @@
     }
   }
   applyTherapist(therapist);
+
+  // Esconde secao de logo do consultorio pra profissionais SEM_CONSELHO —
+  // eles nao podem emitir receita, entao o logo (que so aparece no PDF da
+  // receita) e irrelevante.
+  if (String(therapist.tipoConselho || "").toUpperCase() === "SEM_CONSELHO") {
+    const logoSection = document.getElementById("logoSection");
+    if (logoSection) logoSection.style.display = "none";
+  }
 
   // ─── Push notifications ──────────────────────────────────────────────
   // Browser-side flow:
