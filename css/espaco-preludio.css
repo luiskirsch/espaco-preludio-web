@@ -3657,7 +3657,7 @@ html[data-theme="dark"] .ep-note--patient .ep-note__text {
   margin: 0 0 12px;
   color: var(--ep-ink);
   letter-spacing: -0.005em;
-  border-bottom: 1px solid rgba(28,31,29,0.10);
+  border-bottom: 1px solid var(--ep-line);
   padding-bottom: 8px;
 }
 .ep-doc .ep-h3 {
@@ -3669,10 +3669,10 @@ html[data-theme="dark"] .ep-note--patient .ep-note__text {
 .ep-doc p {
   margin: 0 0 12px;
   font-size: 14.5px;
-  color: rgba(28,31,29,0.85);
+  color: var(--ep-ink);
 }
 .ep-doc strong { color: var(--ep-ink); font-weight: 600; }
-.ep-doc em { color: rgba(28,31,29,0.78); }
+.ep-doc em { color: var(--ep-ink-2); }
 .ep-doc a {
   color: var(--ep-accent);
   text-decoration: underline;
@@ -3682,7 +3682,7 @@ html[data-theme="dark"] .ep-note--patient .ep-note__text {
 
 .ep-doc__meta {
   font-size: 12.5px;
-  color: rgba(28,31,29,0.50);
+  color: var(--ep-ink-3);
   margin-top: 4px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -3699,14 +3699,14 @@ html[data-theme="dark"] .ep-note--patient .ep-note__text {
 .ep-doc__list li {
   margin-bottom: 6px;
   font-size: 14.5px;
-  color: rgba(28,31,29,0.85);
+  color: var(--ep-ink);
 }
 .ep-doc__list li::marker { color: var(--ep-gold); }
 
 .ep-doc__footer {
   margin-top: 56px;
   padding-top: 20px;
-  border-top: 1px solid rgba(28,31,29,0.10);
+  border-top: 1px solid var(--ep-line);
   text-align: center;
 }
 .ep-doc__footer a {
@@ -3836,18 +3836,48 @@ html[data-theme="dark"] .ep-note--patient .ep-note__text {
   color: #8a3a33;
 }
 
+/* Dark mode — inverte cores dos status-card pra ficar legivel em fundo escuro.
+   Mesmo padrao das ep-badge--ok/warn/done logo acima. */
+html[data-theme="dark"] .ep-status-card--ok {
+  background: rgba(111,191,153,0.10);
+  border-color: rgba(111,191,153,0.40);
+  color: #6fbf99;
+}
+html[data-theme="dark"] .ep-status-card--ok .ep-status-card__icon {
+  background: rgba(111,191,153,0.18);
+  color: #6fbf99;
+}
+html[data-theme="dark"] .ep-status-card--pending {
+  background: rgba(215,176,107,0.10);
+  border-color: rgba(215,176,107,0.40);
+  color: #f0d99c;
+}
+html[data-theme="dark"] .ep-status-card--pending .ep-status-card__icon {
+  background: rgba(215,176,107,0.18);
+  color: #f0d99c;
+}
+html[data-theme="dark"] .ep-status-card--err {
+  background: rgba(232,122,110,0.10);
+  border-color: rgba(232,122,110,0.40);
+  color: #f0a89e;
+}
+html[data-theme="dark"] .ep-status-card--err .ep-status-card__icon {
+  background: rgba(232,122,110,0.18);
+  color: #f0a89e;
+}
+
 /* Pré-visualização de documento ─────────────────────────────────── */
 
 .ep-doc__preview {
-  border: 1px solid rgba(28,31,29,0.10);
+  border: 1px solid var(--ep-line);
   border-radius: 10px;
   padding: 8px;
-  background: rgba(28,31,29,0.02);
+  background: var(--ep-bg-2);
 }
 .ep-doc__preview-pdf {
   padding: 16px;
   font-size: 13px;
-  color: rgba(28,31,29,0.65);
+  color: var(--ep-ink-2);
   font-family: ui-monospace, monospace;
 }
 
