@@ -684,10 +684,23 @@ body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
   margin-left: auto;
 }
 /* Contas nao regulamentadas: menu curto (sem Receitas/Calculadora/Atestado).
-   Remove a 1a auto-margem pra alinhar os links logo apos a brand — assim
-   a 2a auto-margem (.ep-nav-profile) absorve todo o espaco extra e joga o
-   grupo perfil+sair pra extrema direita do topbar. */
+   Tira o .ep-profile-group do fluxo flex e ancora ele no canto direito
+   absoluto do topbar — assim os itens de menu ficam livres pra centralizar
+   no espaco entre brand e a borda direita, sem a 2a auto-margem competindo. */
+.ep-topbar.ep-topbar--unregulated .ep-topbar__inner {
+  position: relative;
+}
+.ep-topbar.ep-topbar--unregulated .ep-nav {
+  justify-content: center;
+}
 .ep-topbar.ep-topbar--unregulated .ep-nav > a:first-child {
+  margin-left: 0;
+}
+.ep-topbar.ep-topbar--unregulated .ep-profile-group {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   margin-left: 0;
 }
 
