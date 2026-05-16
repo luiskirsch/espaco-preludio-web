@@ -671,15 +671,17 @@ body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
 }
 .ep-topbar .ep-nav {
   padding-right: 8px;
-  /* flex: 1 estica o nav pra ocupar TODO espaco entre brand e borda
-     direita. Sem isso, .ep-nav encolhe ao conteudo e nao sobra espaco
-     pro margin-left: auto do .ep-nav-profile empurrar avatar+sair pra
-     extrema direita. */
   flex: 1;
-  /* Quando o nome eh longo demais (LUIS HENRIQUE...), tem que ter
-     min-width: 0 senao o flex item se recusa a encolher e empurra todo
-     o nav pra fora da viewport. */
   min-width: 0;
+}
+/* Centraliza o grupo de menu links E mantem profile+sair na extrema direita.
+   Pattern: duas margens 'auto' competindo distribuem o espaco extra do
+   flex container igualmente entre elas, criando o efeito visual:
+     brand [   espaco   ] menu-items [   espaco   ] profile-sair
+   1a auto-margem: primeiro link do menu (empurra ele e os irmaos pro centro)
+   2a auto-margem: .ep-nav-profile (empurra ele e o Sair pra direita) */
+.ep-topbar .ep-nav > a:first-child {
+  margin-left: auto;
 }
 
 .ep-nav a:not(.ep-btn) {
