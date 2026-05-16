@@ -29,6 +29,16 @@
     if (!has("receita"))              hideSelectors.push('a[href*="receita.html"]', 'button[data-href*="receita.html"]');
     if (!has("documentos-clinicos"))  hideSelectors.push('a[href*="documento.html"]', 'button[data-href*="documento.html"]');
     if (!has("calculadora-clinica"))  hideSelectors.push('a[href*="calculadora.html"]', 'button[data-href*="calculadora.html"]');
+
+    // Conta nao regulamentada = sem nenhuma das capabilities reguladas.
+    // Aplica a classe no <html> aqui (sincrono, pre-paint) pra evitar
+    // FORC do topbar — sem isso o layout flex default aparece por ~100-500ms
+    // ate o auth-guard fazer o toggle, causando "salto" visivel ao recarregar.
+    var isRegulated = has("receita") || has("documentos-clinicos") || has("calculadora-clinica");
+    if (!isRegulated) {
+      document.documentElement.classList.add("ep-unregulated");
+    }
+
     if (hideSelectors.length === 0) return;
 
     var style = document.createElement("style");

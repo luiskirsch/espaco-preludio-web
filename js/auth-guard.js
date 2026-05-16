@@ -182,13 +182,11 @@ function applyCapabilityVisibility(capabilities) {
     }
   });
   // Conta "não regulamentada" = sem nenhuma capability do conjunto regulado
-  // acima. Nesses casos o menu fica curto e o padrão "two-auto-margins"
-  // centraliza os itens demais — sinaliza pra CSS empurrar perfil+sair pra
-  // extrema direita, alinhando os links de menu logo após a brand.
+  // acima. Toggla classe no <html> (mesma classe que o capability-preflight.js
+  // aplica sincrono no head pre-paint). Aqui cobre o caso de SWR retornar
+  // capabilities diferentes do cache — se cache era stale, ajusta sem reload.
   const isRegulated = RULES.some(r => set.has(r.capability));
-  document.querySelectorAll(".ep-topbar").forEach(el => {
-    el.classList.toggle("ep-topbar--unregulated", !isRegulated);
-  });
+  document.documentElement.classList.toggle("ep-unregulated", !isRegulated);
 }
 
 // Botão flutuante de suporte — injetado em todas as páginas pós-login.

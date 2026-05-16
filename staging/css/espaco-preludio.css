@@ -688,25 +688,27 @@ body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
    fica no centro REAL da topbar — fugindo do problema do flex onde o nav
    so cobre "depois da brand ate a direita", dando um centro deslocado.
    .ep-profile-group sai do fluxo (absolute right) e ocupa visualmente o
-   espaco da col 3, sem disputar layout com o nav central. */
-.ep-topbar.ep-topbar--unregulated .ep-topbar__inner {
+   espaco da col 3, sem disputar layout com o nav central.
+   Classe vai no <html> (aplicada sincrono pelo capability-preflight.js
+   pre-paint) pra evitar flash do layout default flex no reload. */
+html.ep-unregulated .ep-topbar__inner {
   position: relative;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
 }
-.ep-topbar.ep-topbar--unregulated .ep-brand {
+html.ep-unregulated .ep-brand {
   justify-self: start;
 }
-.ep-topbar.ep-topbar--unregulated .ep-nav {
+html.ep-unregulated .ep-nav {
   justify-self: center;
   flex: none;
   padding-right: 0;
   min-width: 0;
 }
-.ep-topbar.ep-topbar--unregulated .ep-nav > a:first-child {
+html.ep-unregulated .ep-nav > a:first-child {
   margin-left: 0;
 }
-.ep-topbar.ep-topbar--unregulated .ep-profile-group {
+html.ep-unregulated .ep-profile-group {
   position: absolute;
   right: 0;
   top: 50%;
