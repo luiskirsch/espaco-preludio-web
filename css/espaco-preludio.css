@@ -669,7 +669,18 @@ body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
   background: rgba(184,69,61,0.10);
   color: #8a3a33;
 }
-.ep-topbar .ep-nav { padding-right: 8px; }
+.ep-topbar .ep-nav {
+  padding-right: 8px;
+  /* flex: 1 estica o nav pra ocupar TODO espaco entre brand e borda
+     direita. Sem isso, .ep-nav encolhe ao conteudo e nao sobra espaco
+     pro margin-left: auto do .ep-nav-profile empurrar avatar+sair pra
+     extrema direita. */
+  flex: 1;
+  /* Quando o nome eh longo demais (LUIS HENRIQUE...), tem que ter
+     min-width: 0 senao o flex item se recusa a encolher e empurra todo
+     o nav pra fora da viewport. */
+  min-width: 0;
+}
 
 .ep-nav a:not(.ep-btn) {
   color: var(--ep-ink-2);
