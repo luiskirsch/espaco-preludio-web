@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-130">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-131">
 </head>
 <body class="ep-consult">
 
@@ -274,7 +274,6 @@
     statusEl.className = "ep-status";
 
     let joinRes;
-    let _sentPatientIdToken = false;
     try {
       const body = {
         joinToken,
@@ -283,9 +282,7 @@
       };
       if (authMode === "logged" && patientIdToken) {
         body.patientIdToken = patientIdToken;
-        _sentPatientIdToken = true;
       }
-      console.info("[ep-debug] /sessao/join request", { authMode, hasPatientIdToken: _sentPatientIdToken });
       joinRes = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -298,37 +295,6 @@
       return;
     }
     const data = await joinRes.json().catch(() => ({}));
-    console.info("[ep-debug] /sessao/join response", {
-      httpOk: joinRes.ok,
-      ok: data.ok,
-      sessionId: data.sessionId,
-      patientAccountUid: data.patientAccountUid,
-      bound: !!data.patientAccountUid
-    });
-    // Banner diagnostico TEMPORARIO
-    window.__epDiagState = {
-      authMode,
-      sentPatientIdToken: _sentPatientIdToken,
-      bound: !!data.patientAccountUid,
-      sessionId: data.sessionId,
-      saves: []
-    };
-    setTimeout(() => {
-      const el = document.createElement("div");
-      el.id = "__epDiagEntrar";
-      el.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:99999;padding:10px 16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;color:#fff;white-space:pre-wrap;max-height:30vh;overflow:auto;background:" + (window.__epDiagState.bound ? "#1a4730" : "#7a1d14");
-      const update = () => {
-        const s = window.__epDiagState;
-        let html = `<strong>[DIAG entrar]</strong> authMode=${s.authMode} · enviou_patientIdToken=${s.sentPatientIdToken} · bound=${s.bound} · sessionId=${(s.sessionId||"").slice(0,12)}...`;
-        if (!s.bound) html += `\n<strong>PROBLEMA:</strong> sessao nao foi vinculada a conta. Notas vao salvar no backend mas nao vao aparecer no painel (filtro patientAccountUid==uid).`;
-        if (s.saves.length) html += `\nSaves:\n` + s.saves.map((sv,i)=>`  ${i+1}. ${sv.ok ? "OK noteId="+sv.noteId.slice(0,10) : "ERRO "+sv.error}`).join("\n");
-        el.innerHTML = html;
-        el.style.background = s.bound ? "#1a4730" : "#7a1d14";
-      };
-      window.__epDiagUpdate = update;
-      update();
-      document.body.appendChild(el);
-    }, 100);
     if (!joinRes.ok || !data.ok) {
       const code = data?.error || joinRes.status;
       if (code === "SESSAO_ENCERRADA" || code === "TOKEN_EXPIRADO" || code === 401 || code === 410) {
@@ -489,11 +455,6 @@
           body: JSON.stringify({ sessionId, ciphertext, iv })
         });
         const j = await res.json().catch(() => ({}));
-        console.info("[ep-debug] saveNote response", { httpOk: res.ok, status: res.status, body: j });
-        if (window.__epDiagState) {
-          window.__epDiagState.saves.push(res.ok && j.ok ? { ok: true, noteId: j.noteId } : { ok: false, error: j?.error || ("HTTP_" + res.status) });
-          window.__epDiagUpdate?.();
-        }
         if (!res.ok || !j.ok) throw new Error(j?.error || ("HTTP_" + res.status));
         notes.push({ noteId: j.noteId, text, createdAt });
       } else {
