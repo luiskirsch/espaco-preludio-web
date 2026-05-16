@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-128">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-129">
 </head>
 <body>
 
@@ -348,6 +348,27 @@
     return row;
   }
 
+  // ─── Banner de diagnóstico (TEMPORÁRIO — debug do bug das notas) ─────
+  function renderDiagBanner(state) {
+    let el = document.getElementById("__epDiag");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "__epDiag";
+      el.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:99999;padding:10px 16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.5;color:#fff;white-space:pre-wrap;max-height:40vh;overflow:auto;";
+      document.body.appendChild(el);
+    }
+    const bg = state.problem ? "#7a1d14" : "#1a4730";
+    el.style.background = bg;
+    let html = `<strong>[DIAG painel-paciente]</strong> uid: ${state.uid || "—"} · totalNotas conta: ${state.totalNotes ?? "—"} · sessoes vinculadas: ${state.sessionsCount ?? "—"}`;
+    if (state.problem) html += `\n<strong>PROBLEMA:</strong> ${state.problem}`;
+    if (state.sessions && state.sessions.length) {
+      html += `\nSessoes:\n` + state.sessions.map(s =>
+        `  - ${s.sessionId.slice(0,8)}... status=${s.status} notas=${s.notesCount ?? "?"} ${s.decryptOk === false ? "DECRYPT_FALHOU" : ""}`
+      ).join("\n");
+    }
+    el.innerHTML = html;
+  }
+
   // ─── Boot ──────────────────────────────────────────────────────────────
   (async () => {
     try {
@@ -355,10 +376,46 @@
       idToken = auth.idToken;
       account = auth.account;
       dek     = auth.dek;
+      const state = { uid: auth.fbUser?.uid || account?.uid || "?" };
+      renderDiagBanner(state);
       renderHeader();
       await loadSessions();
+      state.sessionsCount = allSessions.length;
       renderStats();
       renderTimeline();
+
+      // Carrega TODAS as notas e por-sessao pra diagnosticar
+      try {
+        const totalRes = await api("/therapy/paciente/notas");
+        state.totalNotes = totalRes.notes.length;
+      } catch (e) { state.totalNotes = "ERRO: " + e.message; }
+
+      state.sessions = [];
+      for (const s of allSessions) {
+        const sInfo = { sessionId: s.sessionId, status: s.status };
+        try {
+          const notesRes = await api("/therapy/paciente/notas?sessionId=" + encodeURIComponent(s.sessionId));
+          sInfo.notesCount = notesRes.notes.length;
+          if (notesRes.notes.length > 0) {
+            try {
+              await decryptNote({ ciphertext: notesRes.notes[0].ciphertext, iv: notesRes.notes[0].iv }, dek);
+              sInfo.decryptOk = true;
+            } catch { sInfo.decryptOk = false; }
+          }
+        } catch (e) { sInfo.notesCount = "ERR"; }
+        state.sessions.push(sInfo);
+      }
+
+      // Diagnostica
+      if (state.sessionsCount === 0) {
+        state.problem = "Nenhuma sessao vinculada a esta conta. Sessao nao foi associada ao paciente_account_uid no backend (provavelmente porque entrou no link sem estar logado, ou patientIdToken nao foi enviado/aceito no /sessao/join).";
+      } else if (state.totalNotes === 0) {
+        state.problem = "Sessao(oes) vinculada(s) mas ZERO notas no backend. Save da nota nao chegou — verificar console do entrar.html durante a sessao.";
+      } else if (state.sessions.some(s => s.decryptOk === false)) {
+        state.problem = "Notas encontradas no backend mas decifragem falhou. DEK do painel diferente da DEK usada na hora do save (provavelmente conta foi recriada ou DEK perdida).";
+      }
+      renderDiagBanner(state);
+
       refreshTotalNotes();
     } catch (e) {
       console.error("paciente_painel_boot_error", e);
