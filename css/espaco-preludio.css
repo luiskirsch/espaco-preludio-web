@@ -3519,6 +3519,20 @@ body.ep-consult.ep-mode-calmo .ep-consult__topbar {
 .ep-note--patient:hover .ep-note__actions,
 .ep-note--patient:focus-within .ep-note__actions { opacity: 1; }
 
+/* Dark mode override — sem isso o card de anotacao do paciente fica
+   praticamente invisivel: bg cinza-escuro-transparente sobre fundo escuro,
+   meta dark sobre dark, etc. */
+html[data-theme="dark"] .ep-note--patient {
+  background: rgba(255,251,240,0.04);
+  border-color: rgba(255,251,240,0.10);
+}
+html[data-theme="dark"] .ep-note--patient .ep-note__meta {
+  color: rgba(255,251,240,0.55);
+}
+html[data-theme="dark"] .ep-note--patient .ep-note__text {
+  color: var(--ep-paper, #f3f3f0);
+}
+
 /* CTA "Quer guardar essas anotações?" no entrar.html ────────────── */
 
 .ep-account-cta {
