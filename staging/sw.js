@@ -8,19 +8,19 @@
 //
 // Bump SW_VERSION pra forçar refresh do cache em todas as instalações.
 
-const SW_VERSION = "ep-sw-v1-2026-05-13";
+const SW_VERSION = "ep-sw-v1-2026-05-16-preflight";
 const PRECACHE   = `precache-${SW_VERSION}`;
 const RUNTIME    = `runtime-${SW_VERSION}`;
 
 const PRECACHE_URLS = [
-  "/staging/painel.html",
-  "/staging/agenda.html",
-  "/staging/pacientes.html",
-  "/staging/perfil.html",
-  "/staging/financeiro.html",
-  "/staging/relatorios.html",
+  "/painel.html",
+  "/agenda.html",
+  "/pacientes.html",
+  "/perfil.html",
+  "/financeiro.html",
+  "/relatorios.html",
   "/favicon.svg",
-  "/staging/manifest.webmanifest"
+  "/manifest.webmanifest"
 ];
 
 self.addEventListener("install", (event) => {
@@ -78,7 +78,7 @@ self.addEventListener("fetch", (event) => {
         const cached = await caches.match(req);
         if (cached) return cached;
         // Fallback final: painel cacheado no precache (online estará indo).
-        const fallback = await caches.match("/staging/painel.html");
+        const fallback = await caches.match("/painel.html");
         if (fallback) return fallback;
         throw e;
       }
@@ -123,7 +123,7 @@ self.addEventListener("push", (event) => {
     icon: "/favicon.svg",
     badge: "/favicon.svg",
     tag: payload.tag || "ep-default",
-    data: { url: payload.url || "/staging/painel.html" },
+    data: { url: payload.url || "/painel.html" },
     requireInteraction: false,
     renotify: !!payload.tag
   };
@@ -133,7 +133,7 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = event.notification?.data?.url || "/staging/painel.html";
+  const target = event.notification?.data?.url || "/painel.html";
 
   event.waitUntil((async () => {
     const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });

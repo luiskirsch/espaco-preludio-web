@@ -8,7 +8,7 @@
 //
 // Bump SW_VERSION pra forçar refresh do cache em todas as instalações.
 
-const SW_VERSION = "ep-sw-v1-2026-05-13";
+const SW_VERSION = "ep-sw-v1-2026-05-16-preflight";
 const PRECACHE   = `precache-${SW_VERSION}`;
 const RUNTIME    = `runtime-${SW_VERSION}`;
 
