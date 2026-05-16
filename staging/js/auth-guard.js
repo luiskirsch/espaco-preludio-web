@@ -10,6 +10,8 @@ import { getTheme, toggleTheme } from "./theme.js";
 import "./cmdk.js";
 
 // ─── 2FA session ─────────────────────────────────────────────────────
+// Token TOTP-session salvo em sessionStorage após verify. Validade = 8h
+// (mesmo do access token). Limpo no logout.
 const TWOFA_KEY = "ep:twofa-session";
 const TWOFA_TTL_MS = 8 * 60 * 60 * 1000;
 
@@ -182,6 +184,7 @@ function applyCapabilityVisibility(capabilities) {
 }
 
 // Botão flutuante de suporte — injetado em todas as páginas pós-login.
+// No-op em /suporte.html (já estamos lá) e em /2fa-verify.html (foco no input).
 function mountHelpBubble() {
   if (typeof document === "undefined") return;
   const path = location.pathname.toLowerCase();
@@ -229,6 +232,10 @@ export function applyTopUserSlot(therapist) {
       const initials = (name.match(/\b\p{L}/gu) || []).slice(0, 2).join("").toUpperCase() || "·";
       elAvatar.textContent = initials;
     }
+    // Selo de verificado — só se status === "verified". Idempotente: remove
+    // anteriores antes de adicionar. Garante avatar tenha class .ep-avatar-wrap.
+    // O #topUserAvatar é o próprio span da imagem, então o badge fica como
+    // filho dele com position:absolute.
     elAvatar.classList.add("ep-avatar-wrap");
     const old = elAvatar.querySelector(".ep-verified-badge");
     if (old) old.remove();
@@ -243,6 +250,7 @@ export function applyTopUserSlot(therapist) {
   }
 }
 
+// Helper exportado: cria HTML do selo (string) pra páginas usarem inline.
 export function verifiedBadgeHtml(size) {
   const sz = size === "lg" ? " ep-verified-badge--lg" : size === "xl" ? " ep-verified-badge--xl" : "";
   return `<span class="ep-verified-badge${sz}" title="Profissional verificado · inscrição no conselho confirmada" aria-label="Profissional verificado"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
@@ -270,9 +278,12 @@ function prefetchNavLinks() {
   else window.addEventListener("load", () => setTimeout(run, 50), { once: true });
 }
 
-// Hidrata o avatar do topbar + monta o botão de ajuda SYNC a partir do cache
-// em sessionStorage, antes de qualquer await. Elimina o flicker "·" → "RF"
-// na navegação entre páginas (mesma aba).
+// Agrupa o link do perfil com o botão Sair num único wrapper, virando uma
+// "pill" composta na topbar. Resolve o problema do botão Sair colado no
+// scrollbar quando a nav tem 11+ itens. Idempotente — chamadas repetidas
+// no-op se já agrupado. Roda em toda página que tem ambos #topProfileLink
+// e #logoutBtn no mesmo parent (nav). Páginas admin (só #logoutBtn) ficam
+// com o botão standalone, sem grouping.
 function groupProfileWithLogout() {
   const link = document.getElementById("topProfileLink");
   const btn  = document.getElementById("logoutBtn");
@@ -289,9 +300,13 @@ function groupProfileWithLogout() {
   wrap.appendChild(btn);
 }
 
-// Injeta toggle de tema (sol/lua) na topbar, à esquerda do perfil. Idempotente.
-// Toggle de tema flutuante, empilhado acima do help bubble.
-function mountThemeToggle() {
+// Injeta toggle de tema (sol/lua) como botão flutuante, empilhado acima do
+// help bubble (canto inferior direito). Idempotente. No-op em /suporte.html
+// e /2fa-verify.html (mesmas exceções do help bubble — onde ele não aparece,
+// não há "âncora visual" pra empilhar). Aparece também em páginas sem login
+// (login.html, agendar.html, etc) pra usuário escolher tema antes mesmo de
+// estar logado. Persistência via theme.js → localStorage.
+export function mountThemeToggle() {
   if (typeof document === "undefined") return;
   if (document.getElementById("epThemeToggle")) return;
   const path = location.pathname.toLowerCase();
@@ -315,31 +330,22 @@ function mountThemeToggle() {
   document.body.appendChild(btn);
 }
 
-(function hydrateChromeFromCache() {
-  if (typeof document === "undefined") return;
-  groupProfileWithLogout();
-  mountThemeToggle();
-  mountMessagesBubble(async () => {
-    const u = auth.currentUser;
-    return u ? u.getIdToken() : null;
-  });
-  try {
-    const raw = sessionStorage.getItem(PROFILE_CACHE_KEY);
-    if (!raw) return;
-    const entry = JSON.parse(raw);
-    if (!entry?.profile?.therapist) return;
-    applyTopUserSlot(entry.profile.therapist);
-    mountHelpBubble();
-  } catch { /* no-op */ }
-})();
-
-// Botão flutuante de mensagens — entre help (gold) e theme toggle.
+// Hidrata o avatar do topbar + monta o botão de ajuda SYNC a partir do cache
+// em sessionStorage, antes de qualquer await. Elimina o flicker "·" → "RF"
+// na navegação entre páginas (mesma aba). Sem cache (1ª visita) = no-op, e o
+// requireTherapist aplica depois com dados frescos.
+//
+// Módulos ES são deferred — quando este IIFE roda, o DOM já está parseado e
+// os elementos #topUserAvatar/#topUserName existem.
+// Botão flutuante de mensagens — empilhado entre help (gold, em baixo) e
+// theme toggle (em cima). Click vai pra mensagens.html, badge de unread
+// no canto superior direito. Polling 60s.
 function mountMessagesBubble(idTokenGetter) {
   if (typeof document === "undefined") return;
   if (document.getElementById("epMessagesBubble")) return;
   const path = location.pathname.toLowerCase();
   if (path.endsWith("/2fa-verify.html")) return;
-  if (path.endsWith("/mensagens.html")) return;
+  if (path.endsWith("/mensagens.html")) return; // não mostra na própria página
 
   const a = document.createElement("a");
   a.id = "epMessagesBubble";
@@ -378,6 +384,24 @@ function mountMessagesBubble(idTokenGetter) {
   setInterval(refresh, 60_000);
 }
 
+(function hydrateChromeFromCache() {
+  if (typeof document === "undefined") return;
+  groupProfileWithLogout();
+  mountThemeToggle();
+  mountMessagesBubble(async () => {
+    const u = auth.currentUser;
+    return u ? u.getIdToken() : null;
+  });
+  try {
+    const raw = sessionStorage.getItem(PROFILE_CACHE_KEY);
+    if (!raw) return;
+    const entry = JSON.parse(raw);
+    if (!entry?.profile?.therapist) return;
+    applyTopUserSlot(entry.profile.therapist);
+    mountHelpBubble();
+  } catch { /* no-op silencioso */ }
+})();
+
 export async function requireTherapist({ requireDek = true } = {}) {
   const user = await authReady();
   if (!user) {
@@ -397,7 +421,9 @@ export async function requireTherapist({ requireDek = true } = {}) {
     throw new Error(profile.code);
   }
 
-  // 2FA gate.
+  // 2FA gate: se o profissional ativou 2FA, exige token válido em sessionStorage
+  // pra liberar acesso. Sem token, redirect pra página de verificação. A própria
+  // 2fa-verify.html pula este gate (skip2fa=true).
   if (profile.therapist?.twoFactorEnabled && !arguments[0]?.skip2fa) {
     if (!hasValid2faSession()) {
       const redirect = encodeURIComponent(location.pathname + location.search);
@@ -416,6 +442,7 @@ export async function requireTherapist({ requireDek = true } = {}) {
   // Preenche o slot de perfil no topbar (avatar + nome → link pra perfil.html).
   applyTopUserSlot(profile.therapist);
 
+  // Botão flutuante de suporte (canto inferior direito).
   mountHelpBubble();
 
   if (requireDek) {

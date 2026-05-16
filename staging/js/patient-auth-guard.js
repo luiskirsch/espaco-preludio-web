@@ -5,6 +5,7 @@
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
 import { recallPatientDek } from "./patient-session.js";
+import { mountThemeToggle } from "./auth-guard.js";
 
 export function authReady() {
   return new Promise((resolve) => {
@@ -51,10 +52,12 @@ export async function requirePatient({ requireDek = true } = {}) {
       throw new Error("DEK_AUSENTE");
     }
     mountMessagesBubble(idToken);
+    mountThemeToggle();
     return { user, idToken, account: profile.account, dek };
   }
 
   mountMessagesBubble(idToken);
+  mountThemeToggle();
   return { user, idToken, account: profile.account };
 }
 

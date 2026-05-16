@@ -306,7 +306,7 @@ function groupProfileWithLogout() {
 // não há "âncora visual" pra empilhar). Aparece também em páginas sem login
 // (login.html, agendar.html, etc) pra usuário escolher tema antes mesmo de
 // estar logado. Persistência via theme.js → localStorage.
-function mountThemeToggle() {
+export function mountThemeToggle() {
   if (typeof document === "undefined") return;
   if (document.getElementById("epThemeToggle")) return;
   const path = location.pathname.toLowerCase();
