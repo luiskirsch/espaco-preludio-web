@@ -181,6 +181,14 @@ function applyCapabilityVisibility(capabilities) {
       el.removeAttribute("aria-hidden");
     }
   });
+  // Conta "não regulamentada" = sem nenhuma capability do conjunto regulado
+  // acima. Nesses casos o menu fica curto e o padrão "two-auto-margins"
+  // centraliza os itens demais — sinaliza pra CSS empurrar perfil+sair pra
+  // extrema direita, alinhando os links de menu logo após a brand.
+  const isRegulated = RULES.some(r => set.has(r.capability));
+  document.querySelectorAll(".ep-topbar").forEach(el => {
+    el.classList.toggle("ep-topbar--unregulated", !isRegulated);
+  });
 }
 
 // Botão flutuante de suporte — injetado em todas as páginas pós-login.
