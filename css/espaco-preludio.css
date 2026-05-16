@@ -684,14 +684,24 @@ body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
   margin-left: auto;
 }
 /* Contas nao regulamentadas: menu curto (sem Receitas/Calculadora/Atestado).
-   Tira o .ep-profile-group do fluxo flex e ancora ele no canto direito
-   absoluto do topbar — assim os itens de menu ficam livres pra centralizar
-   no espaco entre brand e a borda direita, sem a 2a auto-margem competindo. */
+   Grid 1fr auto 1fr no topbar inner garante que .ep-nav (col central auto)
+   fica no centro REAL da topbar — fugindo do problema do flex onde o nav
+   so cobre "depois da brand ate a direita", dando um centro deslocado.
+   .ep-profile-group sai do fluxo (absolute right) e ocupa visualmente o
+   espaco da col 3, sem disputar layout com o nav central. */
 .ep-topbar.ep-topbar--unregulated .ep-topbar__inner {
   position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+}
+.ep-topbar.ep-topbar--unregulated .ep-brand {
+  justify-self: start;
 }
 .ep-topbar.ep-topbar--unregulated .ep-nav {
-  justify-content: center;
+  justify-self: center;
+  flex: none;
+  padding-right: 0;
+  min-width: 0;
 }
 .ep-topbar.ep-topbar--unregulated .ep-nav > a:first-child {
   margin-left: 0;
