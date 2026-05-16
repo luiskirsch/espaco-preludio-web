@@ -5,7 +5,7 @@
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
 import { recallPatientDek } from "./patient-session.js";
-import { mountThemeToggle } from "./auth-guard.js";
+import { mountThemeToggle } from "./theme-toggle.js";
 
 export function authReady() {
   return new Promise((resolve) => {
