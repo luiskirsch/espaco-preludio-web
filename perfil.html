@@ -79,7 +79,7 @@
           <input id="displayName" class="ep-input" type="text" maxlength="80" required>
         </div>
 
-        <div class="ep-row">
+        <div class="ep-row" id="conselhoRow">
           <div class="ep-field">
             <label class="ep-label" for="crp">CRP</label>
             <input id="crp" class="ep-input" type="text" maxlength="20" placeholder="Ex.: 12/12345">
@@ -91,7 +91,7 @@
         </div>
 
         <div class="ep-row">
-          <div class="ep-field">
+          <div class="ep-field" id="rqeField">
             <label class="ep-label" for="rqe">RQE (especialista)</label>
             <input id="rqe" class="ep-input" type="text" maxlength="30" placeholder="Ex.: RQE 12345">
             <p class="ep-text-xs ep-text-muted ep-mt-0">
@@ -715,12 +715,14 @@
   }
   applyTherapist(therapist);
 
-  // Esconde secao de logo do consultorio pra profissionais SEM_CONSELHO —
-  // eles nao podem emitir receita, entao o logo (que so aparece no PDF da
-  // receita) e irrelevante.
+  // Esconde campos/secoes irrelevantes pra profissionais SEM_CONSELHO.
+  // capabilities base do SEM_CONSELHO no backend: consulta, anotacoes,
+  // atestado-comparecimento. Sem receita, sem documentos clinicos formais.
   if (String(therapist.tipoConselho || "").toUpperCase() === "SEM_CONSELHO") {
-    const logoSection = document.getElementById("logoSection");
-    if (logoSection) logoSection.style.display = "none";
+    const hide = (id) => { const el = document.getElementById(id); if (el) el.style.display = "none"; };
+    hide("logoSection");     // logo so aparece no PDF da receita
+    hide("conselhoRow");     // CRP + CRM (nao tem registro em conselho)
+    hide("rqeField");        // RQE eh registro de especialista regulamentado
   }
 
   // ─── Push notifications ──────────────────────────────────────────────
