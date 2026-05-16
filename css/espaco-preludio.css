@@ -1531,6 +1531,16 @@ html[data-theme="dark"] .ep-badge--muted { background: rgba(232,230,223,0.08); c
 #prejoin .ep-label { font-size: 13px; margin-bottom: 4px; }
 #prejoin .ep-input { padding: 10px 12px; }
 .ep-auth__panel--wide { max-width: 1080px; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 0; padding: 0; overflow: hidden; }
+/* No --wide o overflow:hidden e padding:0 cancelam o scroll interno do panel
+   base. Mas a coluna .ep-auth__form pode crescer alem do viewport (form
+   longo de cadastro do profissional) — entao a coluna direita ganha scroll
+   interno invisivel, mantendo o hero (esquerda) fixo. */
+.ep-auth__panel--wide .ep-auth__form {
+  overflow-y: auto;
+  max-height: calc(100vh - 48px);
+  scrollbar-width: none;
+}
+.ep-auth__panel--wide .ep-auth__form::-webkit-scrollbar { display: none; }
 @media (max-width: 920px) { .ep-auth__panel--wide { grid-template-columns: 1fr; } }
 
 .ep-auth__hero {
