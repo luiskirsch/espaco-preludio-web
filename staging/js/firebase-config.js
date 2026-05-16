@@ -1,19 +1,33 @@
-// Espaço Prelúdio — Firebase + Backend config com detecção AUTOMÁTICA de
-// ambiente baseada no path da URL:
+// Espaço Prelúdio — Firebase + Backend config com 2 detecções automáticas:
 //
-//   /staging/* → ambiente STAGING (Firebase sextolugar-staging + backend staging)
-//   resto      → ambiente PRODUCTION (Firebase osextolugar-game + backend production)
+// (1) Ambiente (staging vs production) — por path:
+//     /staging/* → STAGING (Firebase sextolugar-staging + backend staging)
+//     resto      → PRODUCTION (Firebase osextolugar-game + backend production)
 //
-// O mesmo arquivo serve os 2 deploys do GitHub Pages (raiz e /staging/).
-// Refresh: o objeto IS_STAGING é avaliado SÍNCRONO no load do módulo, então
-// trocar de ambiente exige hard reload (cache do browser).
+// (2) Perfil (paciente vs profissional) — por path:
+//     /paciente-* ou /entrar.html → PACIENTE (Firebase app "patient")
+//     resto                       → PROFISSIONAL (Firebase app "[DEFAULT]")
+//
+// (2) RESOLVE bug critico: sem isso, ambos perfis compartilham a MESMA
+// instancia Firebase Auth, e login do paciente em outra aba derruba a
+// sessao do profissional (e vice-versa) — onAuthStateChanged dispara
+// pra todas as abas da mesma origem que compartilham a app.
+//
+// Cada Firebase app tem nome diferente => persistencia IndexedDB
+// namespaced separadamente => 2 sessoes independentes no mesmo browser.
 
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const IS_STAGING = typeof location !== "undefined" && location.pathname.startsWith("/staging/");
+// ─── Detecções ─────────────────────────────────────────────────────────
+const _path = typeof location !== "undefined" ? location.pathname : "";
+const IS_STAGING = _path.startsWith("/staging/");
+const IS_PATIENT_PAGE =
+  _path.includes("/paciente-") ||
+  _path.endsWith("/entrar.html");
 
+// ─── Configs por ambiente ─────────────────────────────────────────────────
 const STAGING_FIREBASE = {
   apiKey: "AIzaSyAflOnCIpF6NYCxdd23XSZTLK2V54XLGFU",
   authDomain: "sextolugar-staging.firebaseapp.com",
@@ -39,11 +53,41 @@ export const BACKEND_BASE_URL = IS_STAGING
   ? "https://osl-video-server-staging.up.railway.app"
   : "https://osl-video-server-production.up.railway.app";
 
-export const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
+// ─── 2 apps Firebase (default + patient) ─────────────────────────────────
+// getApps() retorna lista de TODOS apps inicializados — preciso checar
+// pelo NOME especifico se ja existe, em vez de assumir [DEFAULT].
+function _ensureApp(name, config) {
+  const existing = getApps().find(a => a.name === name);
+  if (existing) return existing;
+  return initializeApp(config, name);
+}
+
+// App default = profissional (mantem nome "[DEFAULT]" pra compat com
+// codigo legado que faz initializeApp() sem nome).
+const professionalApp = (() => {
+  const existing = getApps().find(a => a.name === "[DEFAULT]");
+  return existing || initializeApp(firebaseConfig);
+})();
+const patientApp = _ensureApp("patient", firebaseConfig);
+
+// Export padrao: aponta pro app correto baseado no perfil da pagina.
+// Codigo existente que faz `import { auth, db } from firebase-config` continua
+// funcionando sem mudanca — auth/db ja vem do app certo.
+export const app  = IS_PATIENT_PAGE ? patientApp : professionalApp;
 export const auth = getAuth(app);
 export const db   = getFirestore(app);
 
-// Console log único — facilita debug ao abrir DevTools em qualquer página.
+// Tambem exporta os 2 apps explicitos pra casos especiais (admin pages
+// que precisam consultar ambos perfis, por exemplo).
+export const authProfessional = getAuth(professionalApp);
+export const authPatient      = getAuth(patientApp);
+export const dbProfessional   = getFirestore(professionalApp);
+export const dbPatient        = getFirestore(patientApp);
+
 if (typeof console !== "undefined") {
-  console.info(`[ep] ambiente: ${IS_STAGING ? "STAGING" : "PRODUCTION"} · backend: ${BACKEND_BASE_URL} · firebase: ${firebaseConfig.projectId}`);
+  console.info(
+    `[ep] ambiente: ${IS_STAGING ? "STAGING" : "PRODUCTION"} · ` +
+    `perfil: ${IS_PATIENT_PAGE ? "PACIENTE" : "PROFISSIONAL"} · ` +
+    `backend: ${BACKEND_BASE_URL} · firebase: ${firebaseConfig.projectId}`
+  );
 }
