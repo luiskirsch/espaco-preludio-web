@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-110">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-128">
 </head>
 <body>
 
@@ -133,6 +133,10 @@
   async function loadSessions() {
     const data = await api("/therapy/paciente/sessoes");
     allSessions = data.sessions || [];
+    console.info("[ep-debug] paciente-painel loadSessions", {
+      count: allSessions.length,
+      sessionIds: allSessions.map(s => s.sessionId)
+    });
   }
 
   function renderHeader() {
@@ -177,18 +181,27 @@
   async function refreshTotalNotes() {
     try {
       const { notes } = await api("/therapy/paciente/notas");
+      console.info("[ep-debug] paciente-painel refreshTotalNotes", { totalNotes: notes.length });
       const el = document.getElementById("totalNotesValue");
       if (el) el.textContent = String(notes.length);
-    } catch (e) { /* silencioso */ }
+    } catch (e) {
+      console.warn("[ep-debug] refreshTotalNotes failed", e);
+    }
   }
 
   async function loadSessionNotes(sessionId) {
     if (notesCache.has(sessionId)) return notesCache.get(sessionId);
     const { notes } = await api("/therapy/paciente/notas?sessionId=" + encodeURIComponent(sessionId));
+    console.info("[ep-debug] loadSessionNotes", { sessionId, rawCount: notes.length });
     const decoded = [];
     for (const n of notes) {
-      const text = await decryptNote({ ciphertext: n.ciphertext, iv: n.iv }, dek);
-      decoded.push({ ...n, text });
+      try {
+        const text = await decryptNote({ ciphertext: n.ciphertext, iv: n.iv }, dek);
+        decoded.push({ ...n, text });
+      } catch (err) {
+        console.warn("[ep-debug] decryptNote failed", { noteId: n.noteId, err: err?.message });
+        decoded.push({ ...n, text: "[falha ao decifrar]" });
+      }
     }
     notesCache.set(sessionId, decoded);
     return decoded;

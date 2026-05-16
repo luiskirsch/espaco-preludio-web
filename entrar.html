@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-127">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-128">
 </head>
 <body class="ep-consult">
 
@@ -283,6 +283,7 @@
       if (authMode === "logged" && patientIdToken) {
         body.patientIdToken = patientIdToken;
       }
+      console.info("[ep-debug] /sessao/join request", { authMode, hasPatientIdToken: !!body.patientIdToken });
       joinRes = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -295,6 +296,13 @@
       return;
     }
     const data = await joinRes.json().catch(() => ({}));
+    console.info("[ep-debug] /sessao/join response", {
+      httpOk: joinRes.ok,
+      ok: data.ok,
+      sessionId: data.sessionId,
+      patientAccountUid: data.patientAccountUid,
+      bound: !!data.patientAccountUid
+    });
     if (!joinRes.ok || !data.ok) {
       const code = data?.error || joinRes.status;
       if (code === "SESSAO_ENCERRADA" || code === "TOKEN_EXPIRADO" || code === 401 || code === 410) {
@@ -445,6 +453,7 @@
       const createdAt = Date.now();
       if (authMode === "logged") {
         const { ciphertext, iv } = await encryptNote(text, patientDek);
+        console.info("[ep-debug] saveNote POST", { sessionId, textPreview: text.slice(0, 30) });
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/notas`, {
           method: "POST",
           headers: {
@@ -454,9 +463,11 @@
           body: JSON.stringify({ sessionId, ciphertext, iv })
         });
         const j = await res.json().catch(() => ({}));
+        console.info("[ep-debug] saveNote response", { httpOk: res.ok, status: res.status, body: j });
         if (!res.ok || !j.ok) throw new Error(j?.error || ("HTTP_" + res.status));
         notes.push({ noteId: j.noteId, text, createdAt });
       } else {
+        console.warn("[ep-debug] saveNote ANON — nota fica em sessionStorage e some ao fechar");
         notes.push({ text, createdAt });
         persistAnonNotes();
       }
