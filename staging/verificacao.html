@@ -309,6 +309,13 @@
     try {
       const ctx = await requireTherapist({ requireDek: false });
       idToken = ctx.idToken;
+      // Profissionais sem conselho (terapia-de-casal, coaching, etc.) tem
+      // fluxo de verificacao via comprovante-formacao.html, nao essa pagina
+      // (que e dedicada a CRP/CRM/CRESS/CREFITO/etc.). Redireciona.
+      if (ctx.therapist?.tipoConselho === "SEM_CONSELHO") {
+        window.location.replace("./comprovante-formacao.html");
+        return;
+      }
       await loadStatus();
     } catch (e) { /* requireTherapist redireciona */ }
   })();
