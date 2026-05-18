@@ -400,26 +400,29 @@ function prefetchNavLinks() {
   else window.addEventListener("load", () => setTimeout(run, 50), { once: true });
 }
 
-// Agrupa o link do perfil com o botão Sair num único wrapper, virando uma
-// "pill" composta na topbar. Resolve o problema do botão Sair colado no
-// scrollbar quando a nav tem 11+ itens. Idempotente — chamadas repetidas
-// no-op se já agrupado. Roda em toda página que tem ambos #topProfileLink
-// e #logoutBtn no mesmo parent (nav). Páginas admin (só #logoutBtn) ficam
-// com o botão standalone, sem grouping.
-function groupProfileWithLogout() {
-  const link = document.getElementById("topProfileLink");
-  const btn  = document.getElementById("logoutBtn");
-  if (!link || !btn) return;
-  const parent = link.parentElement;
-  if (!parent || btn.parentElement !== parent) return;
-  if (parent.classList.contains("ep-profile-group")) return;
-  if (link.parentElement?.classList?.contains("ep-profile-group")) return;
+// Move o #logoutBtn pra fora do nav e transforma em FAB (botão flutuante
+// no canto inferior direito, abaixo de help/msg/theme). Preserva o
+// elemento original — assim cada página que registrou seu próprio
+// onclick no #logoutBtn continua funcionando sem mudança.
+//
+// Idempotente — se já moveu, no-op. Páginas admin sem nav (só logoutBtn
+// standalone) também viram FAB.
+function mountLogoutFab() {
+  const btn = document.getElementById("logoutBtn");
+  if (!btn) return;
+  if (btn.classList.contains("ep-logout-fab")) return;
 
-  const wrap = document.createElement("div");
-  wrap.className = "ep-profile-group";
-  parent.insertBefore(wrap, link);
-  wrap.appendChild(link);
-  wrap.appendChild(btn);
+  btn.className = "ep-logout-fab";
+  btn.setAttribute("aria-label", "Sair");
+  btn.title = "Sair";
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+      <polyline points="16 17 21 12 16 7"></polyline>
+      <line x1="21" y1="12" x2="9" y2="12"></line>
+    </svg>
+  `;
+  document.body.appendChild(btn);
 }
 
 // mountThemeToggle: extraido para ./theme-toggle.js (re-export pra
@@ -482,7 +485,7 @@ function mountMessagesBubble(idTokenGetter) {
 
 (function hydrateChromeFromCache() {
   if (typeof document === "undefined") return;
-  groupProfileWithLogout();
+  mountLogoutFab();
   mountThemeToggle();
   mountMessagesBubble(async () => {
     const u = auth.currentUser;

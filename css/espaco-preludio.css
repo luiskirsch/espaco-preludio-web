@@ -310,12 +310,12 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   margin-left: 4px;
 }
 
-/* Toggle de tema (sol/lua) — empilhado ACIMA do botão de mensagens.
-   Stack: help(24) → mensagens(90) → theme(156). */
+/* Toggle de tema (sol/lua) — empilhado ACIMA dos outros FABs.
+   Stack (caso completo): sair(24) → help(90) → mensagens(156) → theme(222). */
 .ep-theme-toggle {
   position: fixed;
   right: 16px;
-  bottom: 156px;
+  bottom: 222px;
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -353,18 +353,16 @@ html[data-theme="dark"] .ep-theme-toggle:hover {
   outline: 2px solid var(--ep-accent);
   outline-offset: 2px;
 }
-/* Em páginas sem help bubble (suporte.html), o toggle assume a posição de baixo. */
-/* Sem help nem msg (suporte.html, etc): theme toggle vai pra base. */
+/* Em páginas sem alguns FABs do stack (ex: suporte.html sem help), o
+   theme toggle desce pra preencher o slot vazio acima do sair-fab. */
 body:not(:has(.ep-help-bubble)):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
-  bottom: 24px;
+  bottom: 90px;
 }
-/* Sem help mas com msg: theme toggle 14px acima do msg. */
 body:not(:has(.ep-help-bubble)):has(.ep-msg-bubble-fab) .ep-theme-toggle {
-  bottom: 90px;
+  bottom: 156px;
 }
-/* Com help mas sem msg: theme toggle 14px acima do help. */
 body:has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
-  bottom: 90px;
+  bottom: 156px;
 }
 @media print { .ep-theme-toggle { display: none !important; } }
 
@@ -374,7 +372,7 @@ body:has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
 .ep-msg-bubble-fab {
   position: fixed;
   right: 16px;
-  bottom: 90px;
+  bottom: 156px;
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -418,9 +416,9 @@ body:has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
   border: 2px solid var(--ep-surface);
   box-shadow: 0 2px 6px rgba(28,31,29,0.20);
 }
-/* Sem help bubble: msg bubble vai pra base. */
+/* Sem help bubble: msg bubble desce pra slot do help (90px acima do sair-fab). */
 body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
-  bottom: 24px;
+  bottom: 90px;
 }
 @media print { .ep-msg-bubble-fab { display: none !important; } }
 
@@ -797,12 +795,11 @@ body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
   mix-blend-mode: normal;
 }
 
-/* Botão flutuante de suporte (canto inferior direito) — em dourado (gold da
-   marca). Ícone escuro pra bom contraste sobre gold. */
+/* Botão flutuante de suporte — empilhado ACIMA do botão Sair. */
 .ep-help-bubble {
   position: fixed;
   right: 16px;
-  bottom: 24px;
+  bottom: 90px;
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -830,6 +827,49 @@ body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
   outline-offset: 2px;
 }
 @media print { .ep-help-bubble { display: none !important; } }
+
+/* Botão flutuante Sair — no fundo da stack (canto inferior direito).
+   Cor vermelha discreta pra sinalizar acao destrutiva sem competir
+   com os outros FABs. Ícone hardcoded pra evitar o bug recorrente de
+   sumir no hover (ver feedback_floating_bubbles). */
+.ep-logout-fab {
+  position: fixed;
+  right: 16px;
+  bottom: 24px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: #b8453d;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(184,69,61,0.30), 0 1px 3px rgba(28,31,29,0.10);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  z-index: 180;
+}
+.ep-logout-fab:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 22px rgba(184,69,61,0.42), 0 2px 4px rgba(28,31,29,0.14);
+  background: #9a3a33;
+  color: #ffffff;
+}
+.ep-logout-fab svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  color: #ffffff;
+}
+.ep-logout-fab:hover svg { color: #ffffff; }
+.ep-logout-fab:active { transform: translateY(0) scale(1); }
+.ep-logout-fab:focus-visible {
+  outline: 2px solid var(--ep-accent);
+  outline-offset: 2px;
+}
+@media print { .ep-logout-fab { display: none !important; } }
 
 /* Onboarding tour — modal centralizado com progresso, 5 passos. */
 .ep-onb-panel {
