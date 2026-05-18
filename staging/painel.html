@@ -1426,17 +1426,20 @@
 
   // Auto-abrir modal se vier de prontuario.html?newWith=ID&name=... ou de
   // agenda.html?newAt=ISO (slot de horário clicado).
-  (function maybeAutoOpen() {
+  // Awaita loadPatientsForSelect() como guarda defensivo: em conexão lenta, sem
+  // isso, patientSelect.value = "id:<ID>" falha porque a <option> ainda não
+  // existe e o select volta a "" → branch ambíguo na criação da sessão.
+  (async function maybeAutoOpen() {
     const params = new URLSearchParams(location.search);
     const newWith = params.get("newWith");
     const newAt   = params.get("newAt");
-    if (newWith || newAt) {
-      openModal({
-        patientId: newWith || null,
-        patientName: params.get("name") || "",
-        scheduledAt: newAt || ""
-      });
-    }
+    if (!newWith && !newAt) return;
+    await loadPatientsForSelect();
+    openModal({
+      patientId: newWith || null,
+      patientName: params.get("name") || "",
+      scheduledAt: newAt || ""
+    });
   })();
 </script>
 

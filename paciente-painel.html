@@ -344,10 +344,13 @@
   // ─── Boot ──────────────────────────────────────────────────────────────
   (async () => {
     try {
-      const auth = await requirePatient();
-      idToken = auth.idToken;
-      account = auth.account;
-      dek     = auth.dek;
+      // Renomeado de `auth` pra `session` para não sombrear o `auth` do
+      // firebase-config.js importado no topo (usado em signOut(auth) no
+      // logoutBtn handler). Padrão usado em painel.html / outras páginas.
+      const session = await requirePatient();
+      idToken = session.idToken;
+      account = session.account;
+      dek     = session.dek;
       renderHeader();
       await loadSessions();
       renderStats();

@@ -62,7 +62,10 @@ export async function requirePatient({ requireDek = true } = {}) {
 }
 
 // Botão flutuante de mensagens — entre help e theme toggle. Polling 60s.
-function mountMessagesBubble(idToken) {
+// Token Firebase eh re-buscado a cada refresh (TTL ~1h, getIdToken cuida
+// do refresh transparente). Antes capturava idToken inicial em closure e
+// apos 1h badge congelava — paciente nao via mensagens novas ate F5.
+function mountMessagesBubble() {
   if (typeof document === "undefined") return;
   if (document.getElementById("epMessagesBubble")) return;
   if (location.pathname.toLowerCase().endsWith("/paciente-mensagens.html")) return;
@@ -84,6 +87,9 @@ function mountMessagesBubble(idToken) {
 
   async function refresh() {
     try {
+      const u = auth.currentUser;
+      if (!u) return;
+      const idToken = await u.getIdToken();
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, {
         headers: { "Authorization": `Bearer ${idToken}` }
       });
