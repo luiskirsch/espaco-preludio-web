@@ -683,47 +683,10 @@ body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
 .ep-topbar .ep-nav > a:first-child {
   margin-left: auto;
 }
-/* Contas nao regulamentadas: menu curto (sem Receitas/Calculadora/Atestado).
-   Grid 1fr auto 1fr no topbar inner garante que .ep-nav (col central auto)
-   fica no centro REAL da topbar — fugindo do problema do flex onde o nav
-   so cobre "depois da brand ate a direita", dando um centro deslocado.
-   .ep-profile-group sai do fluxo (absolute right) e ocupa visualmente o
-   espaco da col 3, sem disputar layout com o nav central.
-   Classe vai no <html> (aplicada sincrono pelo capability-preflight.js
-   pre-paint) pra evitar flash do layout default flex no reload. */
-html.ep-unregulated .ep-topbar__inner {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-}
-html.ep-unregulated .ep-brand {
-  justify-self: start;
-}
-html.ep-unregulated .ep-nav {
-  justify-self: center;
-  flex: none;
-  gap: 2px;
-  padding-right: 0;
-  min-width: 0;
-}
-html.ep-unregulated .ep-nav > a:first-child {
-  margin-left: 0;
-}
-/* Nav mais comprido (Marketing + Clinica + WhatsApp etc.) ia sobrepor o
-   profile-group absolute na direita. Apertar padding/font dos links do
-   nav só nesse modo dá folga de uns ~80-100px, suficiente pra evitar
-   colisao em telas medias (≥1280px). */
-html.ep-unregulated .ep-nav a:not(.ep-btn) {
-  padding: 8px 9px;
-  font-size: 13px;
-}
-html.ep-unregulated .ep-profile-group {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  margin-left: 0;
-}
+/* Contas nao regulamentadas: usa o mesmo pattern flex das contas regulares.
+   As duas auto-margens existentes (.ep-nav > a:first-child e .ep-nav-profile)
+   distribuem brand [auto] menu [auto] perfil+sair uniformemente. Sem
+   tratamento especial — o pattern funciona pra qualquer comprimento de nav. */
 
 .ep-nav a:not(.ep-btn) {
   color: var(--ep-ink-2);
