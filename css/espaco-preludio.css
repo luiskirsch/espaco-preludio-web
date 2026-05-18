@@ -702,11 +702,20 @@ html.ep-unregulated .ep-brand {
 html.ep-unregulated .ep-nav {
   justify-self: center;
   flex: none;
+  gap: 2px;
   padding-right: 0;
   min-width: 0;
 }
 html.ep-unregulated .ep-nav > a:first-child {
   margin-left: 0;
+}
+/* Nav mais comprido (Marketing + Clinica + WhatsApp etc.) ia sobrepor o
+   profile-group absolute na direita. Apertar padding/font dos links do
+   nav só nesse modo dá folga de uns ~80-100px, suficiente pra evitar
+   colisao em telas medias (≥1280px). */
+html.ep-unregulated .ep-nav a:not(.ep-btn) {
+  padding: 8px 9px;
+  font-size: 13px;
 }
 html.ep-unregulated .ep-profile-group {
   position: absolute;
