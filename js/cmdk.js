@@ -6,7 +6,6 @@ const PAGES = [
   { label: "Painel",        sub: "Próximas sessões e atalhos",        href: "./painel.html" },
   { label: "Pacientes",     sub: "Cadastro e prontuário",             href: "./pacientes.html" },
   { label: "Agenda",        sub: "Sua agenda e disponibilidade",      href: "./agenda.html" },
-  { label: "Solicitações",  sub: "Pedidos de agendamento pendentes",  href: "./solicitacoes.html" },
   { label: "Financeiro",    sub: "Lançamentos, recibos, export",      href: "./financeiro.html" },
   { label: "Relatórios",    sub: "Analytics, NPS, KPIs",              href: "./relatorios.html" },
   { label: "Documentos",    sub: "Modelos de declarações e laudos",   href: "./documento.html", capability: "documentos-clinicos" },
@@ -14,7 +13,7 @@ const PAGES = [
   { label: "Calculadora",   sub: "Calculadoras clínicas",             href: "./calculadora.html", capability: "calculadora-clinica" },
   { label: "Diretório",     sub: "Como aparece no diretório público", href: "./profissionais.html" },
   { label: "Perfil",        sub: "Dados, conselho, foto, 2FA",        href: "./perfil.html" },
-  { label: "Plano",         sub: "Sua assinatura e cobrança",         href: "./plano.html" },
+  { label: "Plano",         sub: "Sua assinatura e cobrança",         href: "./planos.html" },
   { label: "Suporte",       sub: "Central de ajuda",                  href: "./suporte.html" }
 ];
 

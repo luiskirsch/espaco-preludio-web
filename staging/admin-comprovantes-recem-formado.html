@@ -224,15 +224,18 @@
   document.getElementById("closeModal").addEventListener("click", () => modal.classList.remove("is-open"));
 
   let activeUid = null;
+  let activeItem = null;
 
   async function openDetail(uid) {
     activeUid = uid;
+    activeItem = null;
     modal.classList.add("is-open");
     modalBody.innerHTML = `<div class="ep-skeleton">Carregando…</div>`;
     approveBtn.disabled = true;
     rejectBtn.disabled  = true;
     try {
       const { item } = await api(`/therapy/admin/comprovantes-recem-formado/${encodeURIComponent(uid)}`);
+      activeItem = item;
       const t = item.therapist || {};
       const ext = item.extracted || {};
       const dataUrl = `data:${item.mediaType};base64,${item.fileBase64}`;
@@ -293,12 +296,28 @@
   approveBtn.addEventListener("click", async () => {
     if (!activeUid) return;
     if (!confirm("Aprovar inscrição como recém-formado? O profissional poderá contratar a R$ 99,50/mês.")) return;
-    const notes = prompt("Notas internas (opcional):", "") || "";
+    // dataInscricao: usada pelo cron pra avisar 30d antes dos 12 meses
+    // (transição automática pra Profissional). Se a IA extraiu, vem
+    // prefilled; admin pode confirmar/corrigir lendo o doc.
+    // `item.extracted` vem direto no payload do GET /:uid (não aninhado).
+    const dataInscricaoPrefill = activeItem?.extracted?.dataInscricao || "";
+    const dataInscricao = prompt(
+      "Data de inscrição no conselho (YYYY-MM-DD) — usada pra calcular fim do tier:",
+      dataInscricaoPrefill
+    );
+    if (dataInscricao === null) return; // cancelar prompt aborta
+    const trimmedData = dataInscricao.trim();
+    if (trimmedData && !/^\d{4}-\d{2}-\d{2}$/.test(trimmedData)) {
+      alert("Formato inválido. Use YYYY-MM-DD (ex: 2025-03-15).");
+      return;
+    }
+    const notes = prompt("Notas internas (opcional):", "");
+    if (notes === null) return;
     approveBtn.disabled = true;
     try {
       await api(`/therapy/admin/comprovantes-recem-formado/${encodeURIComponent(activeUid)}/aprovar`, {
         method: "POST",
-        body: JSON.stringify({ notes })
+        body: JSON.stringify(trimmedData ? { notes, dataInscricao: trimmedData } : { notes })
       });
       modal.classList.remove("is-open");
       await loadList();

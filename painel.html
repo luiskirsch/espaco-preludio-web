@@ -540,8 +540,8 @@
         btn.disabled = false;
       }
     } else if (action === "reject") {
-      const reason = prompt("Quer informar um motivo? (opcional, vai pro audit)") || "";
-      if (reason === null) return; // cancel
+      const reason = prompt("Quer informar um motivo? (opcional, vai pro audit)");
+      if (reason === null) return; // cancelar prompt aborta o reject
       btn.disabled = true;
       try {
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/agendamentos/solicitacoes/${encodeURIComponent(id)}/rejeitar`, {
