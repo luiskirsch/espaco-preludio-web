@@ -32,9 +32,9 @@
       // Mesma matriz de RULES do applyCapabilityVisibility (auth-guard.js).
       // Se mudar lá, sincronizar aqui.
       var hideSelectors = [];
-      if (!has("receita"))              hideSelectors.push('a[href*="receita.html"]', 'button[data-href*="receita.html"]');
-      if (!has("documentos-clinicos"))  hideSelectors.push('a[href*="documento.html"]', 'button[data-href*="documento.html"]');
-      if (!has("calculadora-clinica"))  hideSelectors.push('a[href*="calculadora.html"]', 'button[data-href*="calculadora.html"]');
+      if (!has("receita"))              hideSelectors.push('a[href*="receita.html"]', 'button[data-href*="receita.html"]', '[data-capability="receita"]');
+      if (!has("documentos-clinicos"))  hideSelectors.push('a[href*="documento.html"]', 'button[data-href*="documento.html"]', '[data-capability="documentos-clinicos"]');
+      if (!has("calculadora-clinica"))  hideSelectors.push('a[href*="calculadora.html"]', 'button[data-href*="calculadora.html"]', '[data-capability="calculadora-clinica"]');
 
       // Conta nao regulamentada = sem nenhuma das capabilities reguladas.
       // Aplica a classe no <html> aqui (sincrono, pre-paint) pra evitar
