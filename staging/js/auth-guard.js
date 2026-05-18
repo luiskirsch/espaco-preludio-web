@@ -204,19 +204,20 @@ function applyCapabilityVisibility(capabilities) {
   document.documentElement.classList.toggle("ep-unregulated", !isRegulated);
 }
 
-// Botão flutuante de suporte — injetado em todas as páginas pós-login.
-// No-op em /suporte.html (já estamos lá) e em /2fa-verify.html (foco no input).
+// Botão flutuante de suporte — bubble vira chat ao vivo com Claude (Suporte 24/7).
+// History persiste em sessionStorage durante a aba.
 function mountHelpBubble() {
   if (typeof document === "undefined") return;
   const path = location.pathname.toLowerCase();
   if (path.endsWith("/suporte.html") || path.endsWith("/2fa-verify.html")) return;
   if (document.getElementById("epHelpBubble")) return;
 
-  const a = document.createElement("a");
+  // Bubble
+  const a = document.createElement("button");
   a.id = "epHelpBubble";
-  a.href = "./suporte.html";
+  a.type = "button";
   a.className = "ep-help-bubble";
-  a.title = "Suporte e ajuda";
+  a.title = "Suporte (chat IA 24/7)";
   a.setAttribute("aria-label", "Abrir suporte");
   a.innerHTML = `
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -226,6 +227,106 @@ function mountHelpBubble() {
     </svg>
   `;
   document.body.appendChild(a);
+
+  // Widget panel (oculto inicialmente)
+  const panel = document.createElement("div");
+  panel.id = "epSupportPanel";
+  panel.style.cssText = `position: fixed; bottom: 100px; right: 24px; width: 360px; max-height: 520px; background: var(--ep-bg, #fff); border: 1px solid var(--ep-line, #ddd); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); display: none; flex-direction: column; z-index: 9999; font-family: var(--ep-font-sans, system-ui);`;
+  panel.innerHTML = `
+    <div style="padding: 12px 16px; border-bottom: 1px solid var(--ep-line, #eee); display: flex; justify-content: space-between; align-items: center; background: var(--ep-accent, #2d4a3e); color: #fff; border-radius: 12px 12px 0 0;">
+      <div>
+        <div style="font-weight: 600; font-size: 14px;">Suporte IA · 24/7</div>
+        <div style="font-size: 11px; opacity: 0.85;">Respondo dúvidas sobre a plataforma</div>
+      </div>
+      <button type="button" id="epSupportClose" style="background: transparent; border: 0; color: #fff; font-size: 22px; cursor: pointer; line-height: 1; padding: 0 4px;" aria-label="Fechar">×</button>
+    </div>
+    <div id="epSupportMsgs" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-height: 200px; max-height: 350px; font-size: 13px; line-height: 1.45; color: var(--ep-ink, #1c1f1d);"></div>
+    <div style="padding: 10px 12px; border-top: 1px solid var(--ep-line, #eee); display: flex; gap: 6px;">
+      <input id="epSupportInput" type="text" placeholder="Digite sua pergunta…" style="flex: 1; padding: 8px 10px; border: 1px solid var(--ep-line, #ddd); border-radius: 6px; font-size: 13px; background: var(--ep-bg, #fff); color: var(--ep-ink, #1c1f1d);">
+      <button type="button" id="epSupportSend" style="padding: 8px 14px; background: var(--ep-accent, #2d4a3e); color: #fff; border: 0; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">↑</button>
+    </div>
+  `;
+  document.body.appendChild(panel);
+
+  const msgsEl = panel.querySelector("#epSupportMsgs");
+  const inputEl = panel.querySelector("#epSupportInput");
+  const sendBtn = panel.querySelector("#epSupportSend");
+  const closeBtn = panel.querySelector("#epSupportClose");
+
+  const HISTORY_KEY = "ep:support:history";
+  let history = [];
+  try { history = JSON.parse(sessionStorage.getItem(HISTORY_KEY) || "[]"); } catch {}
+
+  function persistHistory() {
+    try { sessionStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-20))); } catch {}
+  }
+  function escSup(s) { return String(s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+  function renderHistory() {
+    if (history.length === 0) {
+      msgsEl.innerHTML = `<div style="text-align: center; color: var(--ep-ink-3, #888); padding: 20px; font-size: 12px;">Oi! Me pergunte qualquer coisa sobre o Espaço Prelúdio — features, fluxos, troubleshooting. Respondo 24/7.</div>`;
+      return;
+    }
+    msgsEl.innerHTML = history.map(m => {
+      const mine = m.role === "user";
+      return `<div style="align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 85%; padding: 8px 12px; border-radius: 10px; background: ${mine ? "var(--ep-accent, #2d4a3e)" : "var(--ep-bg-2, #f3f1ea)"}; color: ${mine ? "#fff" : "var(--ep-ink, #1c1f1d)"}; white-space: pre-wrap; word-wrap: break-word;">${escSup(m.content)}</div>`;
+    }).join("");
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  }
+  renderHistory();
+
+  async function sendQ() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+    inputEl.value = "";
+    history.push({ role: "user", content: text });
+    persistHistory();
+    renderHistory();
+    sendBtn.disabled = true;
+
+    // Indicador "..."
+    const thinking = document.createElement("div");
+    thinking.style.cssText = `align-self: flex-start; padding: 8px 12px; border-radius: 10px; background: var(--ep-bg-2, #f3f1ea); color: var(--ep-ink-3, #888); font-size: 12px;`;
+    thinking.textContent = "Pensando…";
+    msgsEl.appendChild(thinking);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+
+    try {
+      const user = auth.currentUser;
+      const idToken = user ? await user.getIdToken() : null;
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/support/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(idToken ? { "Authorization": `Bearer ${idToken}` } : {}) },
+        body: JSON.stringify({ message: text, history: history.slice(0, -1) })
+      });
+      thinking.remove();
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) {
+        const errMsg = r.status === 429 ? "Você atingiu o limite de 30 perguntas/dia. Reset em 24h." : ("Erro: " + (d?.error || r.status));
+        history.push({ role: "assistant", content: errMsg });
+      } else {
+        history.push({ role: "assistant", content: d.reply });
+      }
+      persistHistory();
+      renderHistory();
+    } catch (e) {
+      thinking.remove();
+      history.push({ role: "assistant", content: "Erro de rede. Tente de novo." });
+      persistHistory();
+      renderHistory();
+    } finally {
+      sendBtn.disabled = false;
+      inputEl.focus();
+    }
+  }
+
+  a.addEventListener("click", () => {
+    const open = panel.style.display === "flex";
+    panel.style.display = open ? "none" : "flex";
+    if (!open) setTimeout(() => inputEl.focus(), 50);
+  });
+  closeBtn.addEventListener("click", () => { panel.style.display = "none"; });
+  sendBtn.addEventListener("click", sendQ);
+  inputEl.addEventListener("keypress", (e) => { if (e.key === "Enter") sendQ(); });
 }
 
 // Preenche o slot de perfil no topbar — avatar circular + nome clicável.

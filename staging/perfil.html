@@ -34,6 +34,7 @@
         <a href="./financeiro.html">Financeiro</a>
       <a href="./tiss.html" class="ep-text-sm" data-tiss-only style="display: none;">TISS</a>
       <a href="./mensagens-pro.html">Colegas</a>
+      <a href="./marketing.html">Marketing</a>
       
       <a href="./relatorios.html">Relatórios</a>
         <a href="./clinica.html">Clínica</a>
@@ -523,6 +524,46 @@
             </div>
           </details>
         </div>
+      </section>
+
+      <!-- SMS (Twilio) -->
+      <section class="ep-receita-form" id="smsSection">
+        <h2 class="ep-h3 ep-mt-0">SMS (Twilio)</h2>
+        <p class="ep-text-sm ep-text-muted ep-mt-8">
+          Envia lembretes via SMS além de email + WhatsApp. Útil pra pacientes que não têm WhatsApp.
+          Provider: <a href="https://www.twilio.com" target="_blank" rel="noopener">Twilio</a> — você
+          paga direto pra eles (~R$ 0,04 por SMS Brasil). Crie conta, ative SMS Brasil, copie credenciais.
+        </p>
+
+        <div class="ep-flex ep-gap-8 ep-mt-12" style="align-items: center;">
+          <label class="ep-flex ep-gap-8" style="align-items: center; cursor: pointer;">
+            <input type="checkbox" id="smsEnabled">
+            <span>Habilitar SMS nos lembretes</span>
+          </label>
+        </div>
+
+        <div class="ep-stack ep-mt-12" style="gap: 10px;">
+          <div class="ep-field">
+            <label class="ep-label ep-text-sm" for="smsAccountSid">Account SID</label>
+            <input id="smsAccountSid" class="ep-input" type="text" maxlength="100" placeholder="ACxxxxxxxxxxxxxxxxx (Twilio Console)">
+          </div>
+          <div class="ep-field">
+            <label class="ep-label ep-text-sm" for="smsAuthToken">Auth Token</label>
+            <input id="smsAuthToken" class="ep-input" type="password" maxlength="200" placeholder="(deixe em branco pra manter o atual)">
+            <p class="ep-text-xs ep-text-muted ep-mt-0" id="smsTokenStatus"></p>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label ep-text-sm" for="smsFromNumber">Número remetente (Twilio)</label>
+            <input id="smsFromNumber" class="ep-input" type="text" maxlength="30" placeholder="+551130000000 (formato E.164)">
+            <p class="ep-text-xs ep-text-muted ep-mt-0">Número Twilio aprovado pra Brasil. Twilio Console → Phone Numbers.</p>
+          </div>
+        </div>
+
+        <div class="ep-flex ep-gap-8 ep-flex--wrap ep-mt-12">
+          <button type="button" id="smsSaveBtn" class="ep-btn ep-btn--primary ep-btn--sm">Salvar config SMS</button>
+          <button type="button" id="smsTestBtn" class="ep-btn ep-btn--ghost ep-btn--sm">Testar envio</button>
+        </div>
+        <div id="smsStatus" class="ep-status ep-mt-12"></div>
       </section>
 
       <!-- TISS - Convênios -->
@@ -2255,6 +2296,71 @@ Direito de portabilidade — LGPD Art. 18, V.
   }
 
   loadClinic();
+
+  // ─── SMS (Twilio) ─────────────────────────────────────────────────
+  // Carrega config existente de therapist.smsConfig (token vem mascarado)
+  function loadSmsConfig() {
+    const sms = ctx.therapist?.smsConfig;
+    if (!sms) return;
+    $("smsEnabled").checked = !!sms.enabled;
+    $("smsAccountSid").value = sms.accountSid || "";
+    $("smsFromNumber").value = sms.fromNumber || "";
+    $("smsTokenStatus").textContent = sms.authTokenConfigured
+      ? "✓ Token salvo (deixe em branco pra manter)" : "Token não configurado.";
+  }
+  loadSmsConfig();
+
+  $("smsSaveBtn")?.addEventListener("click", async () => {
+    const enabled    = $("smsEnabled").checked;
+    const accountSid = $("smsAccountSid").value.trim();
+    const authToken  = $("smsAuthToken").value.trim();
+    const fromNumber = $("smsFromNumber").value.trim();
+    const sEl = $("smsStatus");
+    sEl.textContent = ""; sEl.className = "ep-status";
+    if (enabled && !accountSid) { sEl.textContent = "Account SID obrigatório quando habilitado."; sEl.classList.add("is-err"); return; }
+    if (enabled && !fromNumber) { sEl.textContent = "Número remetente obrigatório."; sEl.classList.add("is-err"); return; }
+
+    $("smsSaveBtn").disabled = true;
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ smsConfig: { provider: "twilio", enabled, accountSid, authToken, fromNumber } })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) { sEl.textContent = "Erro: " + (d?.error || r.status); sEl.classList.add("is-err"); return; }
+      sEl.textContent = "Configuração SMS salva.";
+      sEl.classList.add("is-ok");
+      $("smsAuthToken").value = "";
+      if (authToken) $("smsTokenStatus").textContent = "✓ Token salvo (deixe em branco pra manter)";
+    } catch (e) {
+      sEl.textContent = "Erro de rede: " + e.message;
+      sEl.classList.add("is-err");
+    } finally {
+      $("smsSaveBtn").disabled = false;
+    }
+  });
+
+  $("smsTestBtn")?.addEventListener("click", async () => {
+    const to = prompt("Digite um número pra receber o SMS de teste (formato +5548999998888):");
+    if (!to) return;
+    const sEl = $("smsStatus");
+    sEl.textContent = "Enviando teste…"; sEl.className = "ep-status";
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/sms/test`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ to })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) { sEl.textContent = "Falha: " + (d?.error || r.status) + (d?.detail ? ` (${d.detail})` : ""); sEl.classList.add("is-err"); return; }
+      sEl.textContent = `✓ SMS enviado. SID: ${d.sid || "—"}`;
+      sEl.classList.add("is-ok");
+    } catch (e) {
+      sEl.textContent = "Erro de rede: " + e.message;
+      sEl.classList.add("is-err");
+    }
+  });
 </script>
 
 <a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" aria-label="Abrir suporte"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
