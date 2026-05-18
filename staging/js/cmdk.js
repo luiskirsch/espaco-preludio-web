@@ -124,11 +124,19 @@ export function close() {
 }
 
 // Auto-registra listener global. Cmd+K (Mac) ou Ctrl+K.
+// Skip em consultorio.html — durante video-chamada o overlay atrapalha.
+// Skip tambem se foco esta em input de texto (e.target).
 if (typeof document !== "undefined") {
-  document.addEventListener("keydown", (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-      e.preventDefault();
-      open();
-    }
-  });
+  const isConsultorio = location.pathname.toLowerCase().includes("/consultorio.html");
+  if (!isConsultorio) {
+    document.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        // Skip se ja esta em campo de texto editavel (deixa Ctrl+K do browser passar)
+        const tag = (e.target?.tagName || "").toUpperCase();
+        if (tag === "INPUT" || tag === "TEXTAREA" || e.target?.isContentEditable) return;
+        e.preventDefault();
+        open();
+      }
+    });
+  }
 }

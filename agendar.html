@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-142">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-143">
 </head>
 <body>
 
@@ -240,16 +240,24 @@
     av.style.backgroundPosition = "center";
     av.textContent = "";
   } else {
-    const initials = (profile.displayName.match(/\b\p{L}/gu) || []).slice(0, 2).join("").toUpperCase() || "·";
+    // null-check do displayName antes do .match — perfil incompleto causa TypeError.
+    const safeName = String(profile.displayName || "").trim();
+    const matches = safeName.match(/\b\p{L}/gu) || [];
+    const initials = matches.slice(0, 2).join("").toUpperCase() || "·";
     $("therapistAvatar").textContent = initials;
   }
 
   // Renderiza hint de regras
   const hintParts = [];
   if (rules.minNoticeHours > 0) {
-    hintParts.push(rules.minNoticeHours >= 24
-      ? `mínimo ${Math.round(rules.minNoticeHours/24)} dia${rules.minNoticeHours >= 48 ? "s" : ""} de antecedência`
-      : `mínimo ${rules.minNoticeHours}h de antecedência`);
+    if (rules.minNoticeHours >= 24) {
+      // Pluralizacao pelo numero de DIAS (nao de horas) — antes "36h" virava
+      // "2 dia" (singular) porque flag de plural lia minNoticeHours >= 48.
+      const dias = Math.round(rules.minNoticeHours / 24);
+      hintParts.push(`mínimo ${dias} dia${dias > 1 ? "s" : ""} de antecedência`);
+    } else {
+      hintParts.push(`mínimo ${rules.minNoticeHours}h de antecedência`);
+    }
   }
   hintParts.push(`até ${rules.maxAdvanceDays} dias à frente`);
   $("schedulingRulesHint").textContent = hintParts.join(" · ");
@@ -420,7 +428,7 @@
         return;
       }
       $("content").classList.add("ep-hide");
-      $("successMsg").textContent = `Pedido para ${fmtFullSlotLabel(selectedSlot.start)} enviado. Você vai receber um e-mail (${patientEmail}) assim que ${profile.displayName} confirmar.`;
+      $("successMsg").textContent = `Pedido para ${fmtFullSlotLabel(selectedSlot.start)} enviado. Você vai receber um e-mail (${patientEmail}) assim que ${profile.displayName || "o profissional"} confirmar.`;
       $("successBox").classList.remove("ep-hide");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {

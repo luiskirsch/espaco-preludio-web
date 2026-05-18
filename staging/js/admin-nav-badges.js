@@ -28,19 +28,32 @@ async function fetchCount(url, idToken) {
     const res = await fetch(BACKEND_BASE_URL + url, {
       headers: { Authorization: `Bearer ${idToken}` }
     });
-    if (!res.ok) return null;
+    if (!res.ok) return { error: true, status: res.status };
     const data = await res.json().catch(() => ({}));
-    if (!data.ok) return null;
-    return Array.isArray(data.items) ? data.items.length : 0;
+    if (!data.ok) return { error: true };
+    return { count: Array.isArray(data.items) ? data.items.length : 0 };
   } catch {
-    return null;
+    return { error: true };
   }
 }
 
-function applyBadge(badgeId, count) {
+function applyBadge(badgeId, result) {
   const el = document.getElementById(badgeId);
   if (!el) return;
-  if (typeof count !== "number" || count <= 0) {
+  el.classList.remove("is-error");
+  el.removeAttribute("title");
+  if (result?.error) {
+    // Estado de erro visivel: "?" com title explicativo. Antes badges sumiam
+    // silenciosos em 401/network failure (token expirado), dando falsa
+    // impressao de "fila zerada".
+    el.textContent = "?";
+    el.classList.add("is-error");
+    el.classList.remove("ep-hide");
+    el.setAttribute("title", `Erro ao carregar contagem${result.status ? " (HTTP " + result.status + ")" : ""}. Atualize a pagina.`);
+    return;
+  }
+  const count = Number(result?.count) || 0;
+  if (count <= 0) {
     el.classList.add("ep-hide");
     return;
   }
@@ -51,8 +64,8 @@ function applyBadge(badgeId, count) {
 export async function refreshNavBadges(idToken) {
   if (!idToken) return;
   await Promise.all(ENDPOINTS.map(async (ep) => {
-    const count = await fetchCount(ep.url, idToken);
-    applyBadge(ep.badgeId, count);
+    const result = await fetchCount(ep.url, idToken);
+    applyBadge(ep.badgeId, result);
   }));
 }
 

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-142">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-143">
 </head>
 <body>
 
@@ -65,10 +65,20 @@
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { unwrapDek } from "./js/crypto.js";
   import { rememberPatientDek, rememberPatientUser } from "./js/patient-session.js";
+  // Sanitiza redirect: aceita so path relativo same-origin (./...). Bloqueia
+  // //evil, /\\evil, https://evil, javascript:, data:, etc. — protege phishing
+  // que abusava do redirect pra mandar user pro fake-login.
+  function sanitizeRedirect(raw, fallback) {
+    if (!raw || typeof raw !== "string") return fallback;
+    if (!/^\.\/[a-zA-Z0-9_\-/.?=&%]+$/.test(raw)) return fallback;
+    if (raw.includes(":") || raw.includes("//") || raw.includes("\\")) return fallback;
+    return raw;
+  }
+
 
   const params = new URLSearchParams(location.search);
   const reauth = params.get("reauth") === "1";
-  const redirect = params.get("redirect") || "./paciente-painel.html";
+  const redirect = sanitizeRedirect(params.get("redirect"), "./paciente-painel.html");
   const errorParam = params.get("error");
 
   if (reauth) document.getElementById("reauthAlert").classList.remove("ep-hide");

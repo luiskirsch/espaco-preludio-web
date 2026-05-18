@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=3"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-142">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-143">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -592,8 +592,13 @@
       const col = document.querySelector(`.ep-agenda-grid__day-col[data-day="${dayIdx}"]`);
       if (!col) continue;
 
-      const startMinutesFromTop = (sd.getHours() + sd.getMinutes() / 60 - START_HOUR) * 60;
-      // Recorta se cair antes do START_HOUR
+      const sessionStartHour = sd.getHours() + sd.getMinutes() / 60;
+      // Sessao fora do range visivel (antes do START_HOUR ou apos END_HOUR):
+      // pula renderizacao em vez de sobrepor outras sessoes em top=0.
+      // Profissional ve via "Hoje" no painel quando aplicavel.
+      if (sessionStartHour < START_HOUR - 0.01 || sessionStartHour >= END_HOUR) continue;
+
+      const startMinutesFromTop = (sessionStartHour - START_HOUR) * 60;
       const topPx = Math.max(0, (startMinutesFromTop / 60) * HOUR_PX);
       // Clamp ao tamanho do slot inteiro — bloco sempre preenche o horário.
       const heightPx = Math.max(HOUR_PX, (SESSION_DEFAULT_MIN / 60) * HOUR_PX);

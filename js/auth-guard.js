@@ -83,10 +83,15 @@ export function invalidateProfileCache() {
 // Invalida automaticamente em signOut ou troca de conta — listener global
 // roda uma vez quando este módulo é importado. Evita ter que adicionar
 // invalidateProfileCache() em cada handler de logout espalhado pelas páginas.
+// Tambem limpa sessao 2FA (TOTP em sessionStorage, validade 8h) — evita
+// que outro usuario logando na mesma aba post-logout reuse o gate aprovado.
 let lastSeenUid = null;
 onAuthStateChanged(auth, (user) => {
   const uid = user?.uid || null;
-  if (lastSeenUid && uid !== lastSeenUid) invalidateProfileCache();
+  if (lastSeenUid && uid !== lastSeenUid) {
+    invalidateProfileCache();
+    clear2faSession();
+  }
   lastSeenUid = uid;
 });
 

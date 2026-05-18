@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=3"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-142">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-143">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -1313,7 +1313,19 @@
     statusEl.textContent = "Criando…";
     statusEl.className = "ep-status";
 
-    const scheduledAt = scheduledAtRaw ? new Date(scheduledAtRaw).getTime() : null;
+    // Guard contra date inválida (input datetime-local manipulado, browser permissivo).
+    // Date.parse de string invalida retorna NaN; passar NaN pro backend gera 400.
+    let scheduledAt = null;
+    if (scheduledAtRaw) {
+      const parsed = new Date(scheduledAtRaw).getTime();
+      if (Number.isFinite(parsed)) {
+        scheduledAt = parsed;
+      } else {
+        statusEl.textContent = "Data/hora inválida.";
+        statusEl.className = "ep-status is-err";
+        return;
+      }
+    }
     const body = {
       patientName,
       patientId: patientId || undefined,

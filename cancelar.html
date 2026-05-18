@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-142">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-143">
 </head>
 <body>
 
@@ -107,7 +107,10 @@
             errorMsg.textContent = "Esta consulta já aconteceu — não há mais o que cancelar.";
           } else {
             errorTitle.textContent = "Não foi possível cancelar.";
-            errorMsg.textContent = data?.error || `HTTP ${res.status}`;
+            // Diferencia erro HTTP vs erro de aplicação. Antes mostrava "HTTP 200"
+            // quando backend retornava {ok:false} sem campo `error` definido.
+            errorMsg.textContent = data?.error
+              || (res.ok ? "Erro desconhecido. Tente novamente ou fale com o profissional." : `HTTP ${res.status}`);
           }
           errorBox.classList.remove("ep-hide");
         }

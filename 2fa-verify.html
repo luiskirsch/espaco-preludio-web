@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-142">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-143">
   <style>
     body { background: var(--ep-bg); min-height: 100vh; }
     .twofa-shell { max-width: 460px; margin: 0 auto; padding: 64px 24px; }
@@ -73,9 +73,19 @@
 
   const user = await authReady();
   if (!user) { window.location.href = "./login.html"; throw new Error("NOT_AUTH"); }
+  // Sanitiza redirect: aceita so path relativo same-origin (./...). Bloqueia
+  // //evil, /\\evil, https://evil, javascript:, data:, etc. — protege phishing
+  // que abusava do redirect pra mandar user pro fake-login.
+  function sanitizeRedirect(raw, fallback) {
+    if (!raw || typeof raw !== "string") return fallback;
+    if (!/^\.\/[a-zA-Z0-9_\-/.?=&%]+$/.test(raw)) return fallback;
+    if (raw.includes(":") || raw.includes("//") || raw.includes("\\")) return fallback;
+    return raw;
+  }
+
 
   const params = new URLSearchParams(location.search);
-  const redirect = params.get("redirect") || "./painel.html";
+  const redirect = sanitizeRedirect(params.get("redirect"), "./painel.html");
 
   const codeEl = document.getElementById("codeInput");
   const btnEl  = document.getElementById("verifyBtn");

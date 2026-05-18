@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-142">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-143">
 </head>
 <body>
 
@@ -143,6 +143,15 @@
     generateSalt, generateDEK, wrapDek, dekToRecoveryPhrase
   } from "./js/crypto.js";
   import { rememberPatientDek, rememberPatientUser } from "./js/patient-session.js";
+
+  // Sanitiza redirect: aceita so path relativo same-origin (./...). Bloqueia
+  // //evil, /\evil, https://evil, javascript:, data:, etc. — protege phishing.
+  function sanitizeRedirect(raw, fallback) {
+    if (!raw || typeof raw !== "string") return fallback;
+    if (!/^\.\/[a-zA-Z0-9_\-/.?=&%]+$/.test(raw)) return fallback;
+    if (raw.includes(":") || raw.includes("//") || raw.includes("\\")) return fallback;
+    return raw;
+  }
 
   const params = new URLSearchParams(location.search);
   const next = params.get("next"); // ex.: redirecionar de volta a entrar.html?t=...
@@ -313,7 +322,8 @@
       });
 
       show(stepDone);
-      const dest = next ? decodeURIComponent(next) : "./paciente-painel.html";
+      const decodedNext = next ? (() => { try { return decodeURIComponent(next); } catch { return null; } })() : null;
+      const dest = sanitizeRedirect(decodedNext, "./paciente-painel.html");
       doneText.textContent = next ? "Voltando à sua consulta…" : "Levando você ao seu painel pessoal…";
       setTimeout(() => { window.location.href = dest; }, 1200);
     } catch (error) {
