@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colegas · Espaço Prelúdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <script src="./js/capability-preflight.js?v=5"></script>
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-143">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#2d4a3e">
+  <script src="./js/pwa.js?v=1" defer></script>
+</head>
+<body>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html">Consultas</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./pacientes.html">Pacientes</a>
+      <a href="./financeiro.html">Financeiro</a>
+      <a href="./tiss.html" class="ep-text-sm" data-tiss-only style="display: none;">TISS</a>
+      <a href="./mensagens-pro.html" class="is-active">Colegas</a>
+      <a href="./relatorios.html">Relatórios</a>
+      <a href="./clinica.html">Clínica</a>
+      <a href="./inventario.html">Estoque</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./calculadora.html">Calculadora</a>
+      <a href="./documento.html?tipo=atestado">Atestado</a>
+      <a href="./whatsapp.html">WhatsApp</a>
+      <div class="ep-profile-group">
+        <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
+          <span class="ep-nav-avatar" id="topUserAvatar">·</span>
+          <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
+        </a>
+        <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16">
+  <section class="ep-stack">
+    <div>
+      <div class="ep-eyebrow">Conversas entre profissionais</div>
+      <h1 class="ep-h1 ep-mt-12">Colegas</h1>
+      <p class="ep-text-muted ep-mt-8">
+        Chat cifrado ponta-a-ponta com outros profissionais verificados no Espaço Prelúdio.
+        Útil pra trocar opinião sobre caso (sem nomes!), pedir indicação, ou só conversar.
+      </p>
+    </div>
+
+    <div class="ep-grid" style="grid-template-columns: 320px 1fr; gap: 16px; min-height: 500px; margin-top: 16px;">
+      <!-- Sidebar threads -->
+      <aside class="ep-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+        <div style="padding: 12px 14px; border-bottom: 1px solid var(--ep-line);">
+          <div class="ep-flex ep-gap-8" style="margin-bottom: 8px;">
+            <input id="searchInput" type="text" class="ep-input ep-input--sm" placeholder="🔍 Buscar colega (3+ letras)…" style="flex: 1;">
+          </div>
+          <div id="searchResults" class="ep-stack ep-hide" style="gap: 4px; max-height: 200px; overflow: auto;"></div>
+        </div>
+        <div id="threadList" class="ep-stack" style="gap: 0; flex: 1; overflow: auto;"></div>
+      </aside>
+
+      <!-- Painel da thread ativa -->
+      <section id="threadPanel" class="ep-card" style="display: flex; flex-direction: column; min-height: 500px;">
+        <div id="emptyState" style="margin: auto; text-align: center; padding: 40px; color: var(--ep-ink-3);">
+          <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
+          <p>Selecione uma conversa à esquerda ou busque um colega pra iniciar.</p>
+        </div>
+        <div id="threadActive" class="ep-hide" style="display: flex; flex-direction: column; flex: 1;">
+          <div id="threadHeader" style="padding: 12px 16px; border-bottom: 1px solid var(--ep-line); font-weight: 600;"></div>
+          <div id="messageList" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px;"></div>
+          <div style="padding: 12px 16px; border-top: 1px solid var(--ep-line); display: flex; gap: 8px;">
+            <input id="msgInput" type="text" class="ep-input" placeholder="Digite a mensagem…" style="flex: 1;">
+            <button type="button" id="msgSendBtn" class="ep-btn ep-btn--primary">Enviar</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+</main>
+
+<a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-20";
+  import {
+    unwrapKey, wrapKey,
+    generateEcdhKeypair, generateThreadKey,
+    wrapThreadKeyForPeer, unwrapThreadKeyFromPeer,
+    encryptNote, decryptNote
+  } from "./js/crypto.js";
+
+  const ctx = await requireTherapist({ requireDek: true });
+  const { idToken, dek } = ctx;
+  const myUid = ctx.user.uid;
+
+  // ─── ECDH keypair (reusa o do chat de pacientes) ─────────────────
+  let myEcdhPrivBytes = null;
+  let myEcdhPublicJwk = null;
+  async function ensureEcdhKeypair() {
+    const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/keypair`, {
+      headers: { "Authorization": `Bearer ${idToken}` }
+    });
+    if (r.ok) {
+      const d = await r.json();
+      myEcdhPublicJwk = d.ecdhPublicJwk;
+      myEcdhPrivBytes = await unwrapKey(d.ecdhPrivateWrapped, dek);
+      return;
+    }
+    if (r.status !== 404) throw new Error("ECDH_FETCH_FAIL");
+    const kp = await generateEcdhKeypair();
+    const privWrapped = await wrapKey(kp.privateRaw, dek);
+    await fetch(`${BACKEND_BASE_URL}/therapy/chat/keypair`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ ecdhPublicJwk: kp.publicJwk, ecdhPrivateWrapped: privWrapped })
+    });
+    myEcdhPublicJwk = kp.publicJwk;
+    myEcdhPrivBytes = kp.privateRaw;
+  }
+  await ensureEcdhKeypair();
+
+  // ─── Helpers ─────────────────────────────────────────────────────
+  function esc(s) { return String(s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+  function fmtTime(ms) {
+    if (!ms) return "";
+    const d = new Date(ms);
+    const today = new Date();
+    if (d.toDateString() === today.toDateString()) return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+  }
+  async function api(path, opts = {}) {
+    const headers = { ...(opts.headers || {}), "Authorization": `Bearer ${idToken}` };
+    if (opts.body) headers["Content-Type"] = "application/json";
+    const r = await fetch(BACKEND_BASE_URL + path, { ...opts, headers });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP_${r.status}`);
+    return d;
+  }
+
+  // ─── Estado ──────────────────────────────────────────────────────
+  let threads = [];
+  let activeThread = null;
+  let activeThreadKeyBytes = null;
+
+  // ─── Threads ─────────────────────────────────────────────────────
+  async function loadThreads() {
+    try {
+      const d = await api("/therapy/pro-chat/threads");
+      threads = d.threads || [];
+      renderThreadList();
+    } catch (e) {
+      document.getElementById("threadList").innerHTML = `<div class="ep-status is-err" style="margin:12px;">Erro: ${esc(e.message)}</div>`;
+    }
+  }
+
+  function renderThreadList() {
+    const el = document.getElementById("threadList");
+    if (threads.length === 0) {
+      el.innerHTML = `<div style="padding:20px; text-align:center; color: var(--ep-ink-3); font-size: 13px;">Nenhuma conversa. Busque um colega acima.</div>`;
+      return;
+    }
+    el.innerHTML = threads.map(t => `
+      <button type="button" data-thr="${esc(t.threadId)}" class="ep-thread-item${activeThread?.threadId === t.threadId ? " is-active" : ""}" style="text-align: left; padding: 12px 14px; border: 0; background: ${activeThread?.threadId === t.threadId ? "var(--ep-accent-soft)" : "transparent"}; border-bottom: 1px solid var(--ep-line); cursor: pointer; display: flex; flex-direction: column; gap: 4px;">
+        <div class="ep-flex" style="justify-content: space-between; align-items: center;">
+          <span style="font-weight: 600; font-size: 14px;">${esc(t.peerName || "—")}</span>
+          ${t.hasUnread ? `<span class="ep-badge ep-badge--ok" style="font-size: 10px;">novo</span>` : ""}
+        </div>
+        <span style="font-size: 11px; color: var(--ep-ink-3);">${t.lastMessageAt ? fmtTime(t.lastMessageAt) : "Sem mensagens"}</span>
+      </button>
+    `).join("");
+    el.querySelectorAll("[data-thr]").forEach(btn => {
+      btn.addEventListener("click", () => openThread(btn.getAttribute("data-thr")));
+    });
+  }
+
+  // ─── Busca de colegas ────────────────────────────────────────────
+  let searchTimer = null;
+  document.getElementById("searchInput").addEventListener("input", (e) => {
+    clearTimeout(searchTimer);
+    const q = e.target.value.trim();
+    const box = document.getElementById("searchResults");
+    if (q.length < 3) { box.classList.add("ep-hide"); return; }
+    searchTimer = setTimeout(async () => {
+      try {
+        const d = await api(`/therapy/pro-chat/buscar?q=${encodeURIComponent(q)}`);
+        const items = d.items || [];
+        if (items.length === 0) {
+          box.innerHTML = `<p class="ep-text-xs ep-text-muted" style="padding: 8px;">Nenhum colega verificado encontrado.</p>`;
+        } else {
+          box.innerHTML = items.map(p => `
+            <button type="button" data-peer="${esc(p.uid)}" data-peer-name="${esc(p.displayName)}" style="text-align: left; padding: 8px 10px; border: 1px solid var(--ep-line); background: var(--ep-bg-2); border-radius: 6px; cursor: pointer; font-size: 13px;">
+              <strong>${esc(p.displayName)}</strong>
+              ${p.crp ? `<span style="color: var(--ep-ink-3); font-size: 11px;"> · CRP ${esc(p.crp)}</span>` : ""}
+              ${p.crm ? `<span style="color: var(--ep-ink-3); font-size: 11px;"> · CRM ${esc(p.crm)}</span>` : ""}
+            </button>
+          `).join("");
+          box.querySelectorAll("[data-peer]").forEach(btn => {
+            btn.addEventListener("click", () => startThreadWithPeer(btn.getAttribute("data-peer"), btn.getAttribute("data-peer-name")));
+          });
+        }
+        box.classList.remove("ep-hide");
+      } catch (err) { console.error(err); }
+    }, 300);
+  });
+
+  async function startThreadWithPeer(peerUid, peerName) {
+    try {
+      // 1. Busca public key do peer
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/public-key/${encodeURIComponent(peerUid)}`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const pkData = await r.json();
+      if (!r.ok || !pkData.ok) { alert("Colega ainda não habilitou chat (sem ECDH keypair)."); return; }
+
+      // 2. Gera thread key, wrap pro creator (DEK) e pro peer (ECDH)
+      const threadKeyBytes = await generateThreadKey();
+      const threadKeyForCreator = await wrapKey(threadKeyBytes, dek);
+      const threadKeyForPeer = await wrapThreadKeyForPeer(threadKeyBytes, myEcdhPrivBytes, pkData.ecdhPublicJwk);
+
+      // 3. POST cria thread
+      const created = await api("/therapy/pro-chat/threads", {
+        method: "POST",
+        body: JSON.stringify({
+          peerUid,
+          threadKeyForCreator,
+          threadKeyForPeer,
+          creatorEcdhPublicJwk: myEcdhPublicJwk
+        })
+      });
+
+      document.getElementById("searchInput").value = "";
+      document.getElementById("searchResults").classList.add("ep-hide");
+      await loadThreads();
+      await openThread(created.threadId);
+    } catch (e) { alert("Erro: " + e.message); }
+  }
+
+  // ─── Thread ativa + mensagens ────────────────────────────────────
+  async function openThread(threadId) {
+    try {
+      const d = await api(`/therapy/pro-chat/threads/${encodeURIComponent(threadId)}`);
+      activeThread = d.thread;
+
+      // Desembrulha threadKey: se eu sou criador, wrapper é o meu DEK.
+      // Se sou peer, é via ECDH(meu_priv, creator_pub_snapshot).
+      if (activeThread.peerEcdhPublicJwkSnapshot) {
+        activeThreadKeyBytes = await unwrapThreadKeyFromPeer(
+          activeThread.myWrappedThreadKey,
+          myEcdhPrivBytes,
+          activeThread.peerEcdhPublicJwkSnapshot
+        );
+      } else {
+        activeThreadKeyBytes = await unwrapKey(activeThread.myWrappedThreadKey, dek);
+      }
+
+      document.getElementById("emptyState").classList.add("ep-hide");
+      document.getElementById("threadActive").classList.remove("ep-hide");
+      document.getElementById("threadHeader").textContent = activeThread.peerName || "—";
+      await loadMessages();
+      renderThreadList(); // re-render pra marcar ativa
+      // marcar lido
+      api(`/therapy/pro-chat/threads/${encodeURIComponent(threadId)}/marcar-lido`, {
+        method: "POST",
+        body: JSON.stringify({ until: Date.now() })
+      }).catch(() => {});
+    } catch (e) { alert("Erro abrindo conversa: " + e.message); }
+  }
+
+  async function loadMessages() {
+    if (!activeThread) return;
+    const list = document.getElementById("messageList");
+    list.innerHTML = `<div style="text-align: center; color: var(--ep-ink-3); padding: 20px;">Carregando…</div>`;
+    try {
+      const d = await api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}/messages?limit=100`);
+      const msgs = d.messages || [];
+      list.innerHTML = "";
+      for (const m of msgs) {
+        let text = "";
+        try {
+          text = await decryptNote({ ciphertext: m.ciphertext, iv: m.iv }, activeThreadKeyBytes);
+        } catch { text = "[mensagem corrompida]"; }
+        const mine = m.senderUid === myUid;
+        const div = document.createElement("div");
+        div.style.cssText = `align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 70%; padding: 8px 12px; border-radius: 12px; background: ${mine ? "var(--ep-accent)" : "var(--ep-bg-2)"}; color: ${mine ? "#fff" : "var(--ep-ink)"}; font-size: 14px;`;
+        div.innerHTML = `<div>${esc(text)}</div><div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">${fmtTime(m.createdAt)}</div>`;
+        list.appendChild(div);
+      }
+      list.scrollTop = list.scrollHeight;
+    } catch (e) {
+      list.innerHTML = `<div class="ep-status is-err">Erro: ${esc(e.message)}</div>`;
+    }
+  }
+
+  document.getElementById("msgSendBtn").addEventListener("click", sendMessage);
+  document.getElementById("msgInput").addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(); });
+
+  async function sendMessage() {
+    const input = document.getElementById("msgInput");
+    const text = input.value.trim();
+    if (!text || !activeThread || !activeThreadKeyBytes) return;
+    input.value = "";
+    try {
+      const enc = await encryptNote(text, activeThreadKeyBytes);
+      await api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}/messages`, {
+        method: "POST",
+        body: JSON.stringify({ ciphertext: enc.ciphertext, iv: enc.iv })
+      });
+      await loadMessages();
+      await loadThreads();
+    } catch (e) { alert("Erro enviando: " + e.message); }
+  }
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
+
+  // Polling pra novas mensagens enquanto thread aberta
+  setInterval(() => {
+    if (activeThread) { loadMessages(); }
+    loadThreads();
+  }, 15_000);
+
+  loadThreads();
+</script>
+
+</body>
+</html>
