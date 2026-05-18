@@ -63,6 +63,7 @@
       </div>
       <div class="ep-flex ep-flex--wrap ep-gap-8">
         <button type="button" class="ep-btn ep-btn--ghost" id="btnGerarLote">📦 Gerar lote mensal</button>
+        <button type="button" class="ep-btn ep-btn--primary ep-hide" id="btnEnviarConvenio">🚀 Enviar pro convênio</button>
         <button type="button" class="ep-btn ep-btn--ghost" id="btnImportarDp">📄 Importar demonstrativo</button>
       </div>
     </div>
@@ -99,6 +100,56 @@
         <div class="ep-modal__actions">
           <button type="button" class="ep-btn ep-btn--ghost" id="loteCancel">Cancelar</button>
           <button type="button" class="ep-btn ep-btn--primary" id="loteGerar">Gerar XML</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: enviar pro convênio (auto-submit via API) -->
+    <div class="ep-modal" id="submitModal" role="dialog" aria-modal="true">
+      <div class="ep-modal__panel" style="max-width: 540px;">
+        <h3 class="ep-modal__title">Enviar lote pro convênio</h3>
+        <p class="ep-modal__sub ep-text-sm">
+          Envia diretamente via API do convênio. Disponível só pra convênios com submitter implementado.
+          O <strong>cert A1 .pfx</strong> e a <strong>senha</strong> são usados localmente pra assinar o XML e <strong>nunca persistidos</strong> no servidor.
+        </p>
+        <div class="ep-stack ep-mt-12" style="gap: 10px;">
+          <div class="ep-field">
+            <label class="ep-label" for="submitConvenio">Convênio</label>
+            <select id="submitConvenio" class="ep-select"></select>
+          </div>
+          <div class="ep-grid-2col">
+            <div class="ep-field">
+              <label class="ep-label" for="submitAno">Ano</label>
+              <input id="submitAno" class="ep-input" type="number" min="2020" max="2030">
+            </div>
+            <div class="ep-field">
+              <label class="ep-label" for="submitMes">Mês</label>
+              <select id="submitMes" class="ep-select">
+                <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
+                <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
+                <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
+                <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
+              </select>
+            </div>
+          </div>
+          <div class="ep-field" id="submitCertField">
+            <label class="ep-label" for="submitCertFile">Certificado A1 (.pfx)</label>
+            <input id="submitCertFile" class="ep-input" type="file" accept=".pfx,application/x-pkcs12">
+            <p class="ep-text-xs ep-text-muted ep-mt-0">Cert do seu CPF/CNPJ, emitido por AC ICP-Brasil. <strong>Não fica salvo</strong> — usado só pra assinar este lote.</p>
+          </div>
+          <div class="ep-field" id="submitPassField">
+            <label class="ep-label" for="submitCertPass">Senha do cert</label>
+            <input id="submitCertPass" class="ep-input" type="password" maxlength="100">
+          </div>
+          <label class="ep-flex ep-gap-8" style="align-items: center; cursor: pointer; font-size: 13px;">
+            <input type="checkbox" id="submitSandbox" checked>
+            <span>Modo sandbox (não envia pra produção real)</span>
+          </label>
+          <div id="submitStatus" class="ep-status"></div>
+        </div>
+        <div class="ep-modal__actions">
+          <button type="button" class="ep-btn ep-btn--ghost" id="submitCancel">Cancelar</button>
+          <button type="button" class="ep-btn ep-btn--primary" id="submitGo">Enviar</button>
         </div>
       </div>
     </div>
@@ -385,11 +436,100 @@
     finally { e.target.value = ""; }
   });
 
+  // ─── Auto-submit (Fase 4) ────────────────────────────────────────
+  // Carrega submitters disponíveis. Botão "Enviar pro convênio" só aparece
+  // se há pelo menos 1 convênio do prof com submitter implementado.
+  let submittersDisponiveis = [];
+  async function loadSubmitters() {
+    try {
+      const d = await api("/therapy/tiss/submitters");
+      submittersDisponiveis = d.submitters || [];
+      // Intersect: convênios cadastrados pelo prof que TÊM submitter
+      const conveniosComSubmitter = conveniosAceitos.filter(c =>
+        submittersDisponiveis.some(s => s.convenioCode === c.code)
+      );
+      if (conveniosComSubmitter.length > 0) {
+        document.getElementById("btnEnviarConvenio").classList.remove("ep-hide");
+      }
+    } catch {}
+  }
+
+  const submitModal = document.getElementById("submitModal");
+  document.getElementById("btnEnviarConvenio").addEventListener("click", () => {
+    const sel = document.getElementById("submitConvenio");
+    const conveniosComSubmitter = conveniosAceitos.filter(c =>
+      submittersDisponiveis.some(s => s.convenioCode === c.code)
+    );
+    sel.innerHTML = conveniosComSubmitter.map(c => {
+      const sub = submittersDisponiveis.find(s => s.convenioCode === c.code);
+      return `<option value="${esc(c.code)}" data-requires-sig="${sub.requiresSignature ? "1" : "0"}">${esc(c.nome)} (${esc(sub.displayName)})</option>`;
+    }).join("");
+    const now = new Date();
+    document.getElementById("submitAno").value = now.getFullYear();
+    document.getElementById("submitMes").value = now.getMonth() + 1;
+    document.getElementById("submitCertPass").value = "";
+    document.getElementById("submitCertFile").value = "";
+    document.getElementById("submitStatus").textContent = "";
+    document.getElementById("submitStatus").className = "ep-status";
+    refreshCertVisibility();
+    submitModal.classList.add("is-open");
+  });
+  function refreshCertVisibility() {
+    const sel = document.getElementById("submitConvenio");
+    const opt = sel.selectedOptions[0];
+    const requiresSig = opt?.getAttribute("data-requires-sig") === "1";
+    document.getElementById("submitCertField").style.display = requiresSig ? "" : "none";
+    document.getElementById("submitPassField").style.display = requiresSig ? "" : "none";
+  }
+  document.getElementById("submitConvenio").addEventListener("change", refreshCertVisibility);
+  document.getElementById("submitCancel").addEventListener("click", () => submitModal.classList.remove("is-open"));
+
+  document.getElementById("submitGo").addEventListener("click", async () => {
+    const convenioCode = document.getElementById("submitConvenio").value;
+    const ano = Number(document.getElementById("submitAno").value);
+    const mes = Number(document.getElementById("submitMes").value);
+    const sandboxMode = document.getElementById("submitSandbox").checked;
+    const certFile = document.getElementById("submitCertFile").files?.[0];
+    const certPassword = document.getElementById("submitCertPass").value;
+    const statusEl = document.getElementById("submitStatus");
+    const goBtn = document.getElementById("submitGo");
+    statusEl.textContent = ""; statusEl.className = "ep-status";
+
+    const requiresSig = document.getElementById("submitConvenio").selectedOptions[0]?.getAttribute("data-requires-sig") === "1";
+    let certPfxBase64 = null;
+    if (requiresSig) {
+      if (!certFile) { statusEl.textContent = "Selecione o arquivo .pfx"; statusEl.classList.add("is-err"); return; }
+      if (!certPassword) { statusEl.textContent = "Informe a senha do cert"; statusEl.classList.add("is-err"); return; }
+      if (certFile.size > 200_000) { statusEl.textContent = "Cert grande demais (>200KB)"; statusEl.classList.add("is-err"); return; }
+      const buf = await certFile.arrayBuffer();
+      certPfxBase64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+    }
+
+    goBtn.disabled = true;
+    statusEl.textContent = "Enviando…";
+    try {
+      const d = await api(`/therapy/tiss/submeter/${encodeURIComponent(convenioCode)}`, {
+        method: "POST",
+        body: JSON.stringify({ ano, mes, sandboxMode, certPfxBase64, certPassword })
+      });
+      statusEl.textContent = `✅ Enviado! Protocolo: ${d.protocolo || "—"} · ${d.totalGuias} guia(s)`;
+      statusEl.classList.add("is-ok");
+      await loadGuias();
+      setTimeout(() => submitModal.classList.remove("is-open"), 2500);
+    } catch (e) {
+      statusEl.textContent = "Erro: " + e.message;
+      statusEl.classList.add("is-err");
+    } finally {
+      goBtn.disabled = false;
+    }
+  });
+
   (async () => {
     try {
       const ctx = await requireTherapist({ requireDek: false });
       idToken = ctx.idToken;
       await loadConveniosAceitos();
+      await loadSubmitters();
       await loadGuias();
     } catch (e) { /* requireTherapist redireciona */ }
   })();
