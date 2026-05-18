@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-141">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-142">
 </head>
 <body>
 
@@ -25,10 +25,10 @@
       </span>
     </a>
     <nav class="ep-nav">
-      <a href="./admin-verificacoes.html" class="ep-text-sm is-active">CRP/CRM</a>
-      <a href="./admin-comprovantes.html" class="ep-text-sm">Estudante</a>
-      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm">Recém-formado</a>
-      <a href="./admin-comprovantes-formacao.html" class="ep-text-sm">Sem conselho</a>
+      <a href="./admin-verificacoes.html" class="ep-text-sm is-active">CRP/CRM<span id="navBadgeCrpCrm" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-comprovantes.html" class="ep-text-sm">Estudante<span id="navBadgeEstudante" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm">Recém-formado<span id="navBadgeRecemFormado" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-comprovantes-formacao.html" class="ep-text-sm">Sem conselho<span id="navBadgeSemConselho" class="ep-nav-badge ep-hide">0</span></a>
       <span id="adminEmail" class="ep-text-sm ep-text-muted">…</span>
       <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Sair</button>
     </nav>
@@ -110,6 +110,8 @@
     onAuthStateChanged, signInWithEmailAndPassword, signOut
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { refreshNavBadges, startNavBadgePolling } from "./js/admin-nav-badges.js?v=1";
+  startNavBadgePolling(() => auth.currentUser ? auth.currentUser.getIdToken() : null);
 
   const loginPanel     = document.getElementById("loginPanel");
   const dashboardPanel = document.getElementById("dashboardPanel");
@@ -369,6 +371,7 @@
       idToken = await user.getIdToken();
       currentEmail = user.email || "";
       adminEmailEl.textContent = currentEmail;
+      refreshNavBadges(idToken);
 
       // Tenta uma chamada admin pra validar autorização
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/admin/verificacoes?status=pending`, {
