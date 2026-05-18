@@ -52,13 +52,55 @@
 
 <main class="ep-container ep-mt-32 ep-mb-16">
   <section class="ep-stack">
-    <div>
-      <div class="ep-eyebrow">Faturamento via convênio</div>
-      <h1 class="ep-h1 ep-mt-12">Guias TISS</h1>
-      <p class="ep-text-muted ep-mt-8">
-        Sessões marcadas como "via convênio". Acompanhe status (rascunho → enviada → paga/glosada).
-        Geração XML 4.01.00 entra na Fase 2.
-      </p>
+    <div class="ep-flex ep-flex--end-wrap" style="justify-content: space-between; align-items: end; gap: 12px;">
+      <div>
+        <div class="ep-eyebrow">Faturamento via convênio</div>
+        <h1 class="ep-h1 ep-mt-12">Guias TISS</h1>
+        <p class="ep-text-muted ep-mt-8">
+          Sessões marcadas como "via convênio". Status: rascunho → enviada → paga/glosada.
+          XML 4.01.00 + PDF disponíveis pra submissão manual nos portais dos convênios.
+        </p>
+      </div>
+      <div class="ep-flex ep-flex--wrap ep-gap-8">
+        <button type="button" class="ep-btn ep-btn--ghost" id="btnGerarLote">📦 Gerar lote mensal</button>
+        <button type="button" class="ep-btn ep-btn--ghost" id="btnImportarDp">📄 Importar demonstrativo</button>
+      </div>
+    </div>
+    <input type="file" id="dpFileInput" accept=".xml,application/xml,text/xml" style="display:none;">
+
+    <!-- Modal: gerar lote -->
+    <div class="ep-modal" id="loteModal" role="dialog" aria-modal="true">
+      <div class="ep-modal__panel" style="max-width: 480px;">
+        <h3 class="ep-modal__title">Gerar lote mensal TISS</h3>
+        <p class="ep-modal__sub ep-text-sm">
+          Empacota todas as guias <strong>rascunho</strong> do convênio escolhido no mês selecionado num XML único pronto pra submissão. TISS exige um lote por convênio.
+        </p>
+        <div class="ep-stack ep-mt-12" style="gap: 10px;">
+          <div class="ep-grid-2col">
+            <div class="ep-field">
+              <label class="ep-label" for="loteAno">Ano</label>
+              <input id="loteAno" class="ep-input" type="number" min="2020" max="2030">
+            </div>
+            <div class="ep-field">
+              <label class="ep-label" for="loteMes">Mês</label>
+              <select id="loteMes" class="ep-select">
+                <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+                <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+                <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+                <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+              </select>
+            </div>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="loteConvenio">Convênio</label>
+            <select id="loteConvenio" class="ep-select"></select>
+          </div>
+        </div>
+        <div class="ep-modal__actions">
+          <button type="button" class="ep-btn ep-btn--ghost" id="loteCancel">Cancelar</button>
+          <button type="button" class="ep-btn ep-btn--primary" id="loteGerar">Gerar XML</button>
+        </div>
+      </div>
     </div>
 
     <!-- Filtros -->
@@ -176,6 +218,8 @@
               </div>
               <div class="ep-flex ep-gap-8" style="align-items: center; flex-wrap: wrap;">
                 <span class="${st.cls}">${esc(st.label)}</span>
+                <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-xml-btn="${esc(it.sessionId)}" title="Baixar XML 4.01.00">XML</button>
+                <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-pdf-btn="${esc(it.sessionId)}" title="Abrir guia em formato imprimível">PDF</button>
                 <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-status-btn="${esc(it.sessionId)}">Mudar status</button>
               </div>
             </div>
@@ -185,6 +229,12 @@
 
       list.querySelectorAll("[data-status-btn]").forEach(btn => {
         btn.addEventListener("click", () => openStatusPrompt(btn.getAttribute("data-status-btn"), items.find(x => x.sessionId === btn.getAttribute("data-status-btn"))));
+      });
+      list.querySelectorAll("[data-xml-btn]").forEach(btn => {
+        btn.addEventListener("click", () => downloadGuia(btn.getAttribute("data-xml-btn"), "xml"));
+      });
+      list.querySelectorAll("[data-pdf-btn]").forEach(btn => {
+        btn.addEventListener("click", () => downloadGuia(btn.getAttribute("data-pdf-btn"), "pdf"));
       });
     } catch (e) {
       loading.classList.add("ep-hide");
@@ -237,6 +287,102 @@
     const { signOut } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
     await signOut(auth);
     window.location.href = "./login.html";
+  });
+
+  // Download de XML ou PDF (HTML imprimível) de uma guia individual.
+  async function downloadGuia(sessionId, format) {
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/tiss/guias/${encodeURIComponent(sessionId)}/${format}`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        alert("Erro ao gerar " + format.toUpperCase() + ": " + (d?.error || r.status));
+        return;
+      }
+      if (format === "pdf") {
+        // HTML — abre em nova aba pra usuário usar window.print()
+        const html = await r.text();
+        const w = window.open("", "_blank");
+        if (w) { w.document.write(html); w.document.close(); setTimeout(() => w.print(), 500); }
+        else alert("Bloqueador de popup impediu — habilite popups pra essa página.");
+        return;
+      }
+      // XML — força download
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `guia-${sessionId.slice(0, 8)}.xml`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) { alert("Erro de rede: " + e.message); }
+  }
+
+  // ─── Lote mensal ────────────────────────────────────────────────
+  const loteModal = document.getElementById("loteModal");
+  document.getElementById("btnGerarLote").addEventListener("click", () => {
+    const sel = document.getElementById("loteConvenio");
+    sel.innerHTML = conveniosAceitos.length
+      ? conveniosAceitos.map(c => `<option value="${esc(c.code)}">${esc(c.nome)}</option>`).join("")
+      : `<option value="">— Cadastre convênios em Perfil primeiro —</option>`;
+    const now = new Date();
+    document.getElementById("loteAno").value = now.getFullYear();
+    document.getElementById("loteMes").value = now.getMonth() + 1;
+    loteModal.classList.add("is-open");
+  });
+  document.getElementById("loteCancel").addEventListener("click", () => loteModal.classList.remove("is-open"));
+  document.getElementById("loteGerar").addEventListener("click", async () => {
+    const ano = Number(document.getElementById("loteAno").value);
+    const mes = Number(document.getElementById("loteMes").value);
+    const convenioCode = document.getElementById("loteConvenio").value;
+    if (!convenioCode) { alert("Selecione um convênio."); return; }
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/tiss/lote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ ano, mes, convenioCode, status: "rascunho" })
+      });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        alert("Erro ao gerar lote: " + (d?.error || r.status) + (d?.detail ? "\n" + d.detail : ""));
+        return;
+      }
+      const total = r.headers.get("X-Tiss-Lote-Total");
+      const hash  = r.headers.get("X-Tiss-Lote-Hash");
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `lote-${ano}${String(mes).padStart(2,"0")}-${convenioCode}.xml`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      loteModal.classList.remove("is-open");
+      alert(`Lote gerado: ${total} guia(s).\nHash MD5: ${hash}\n\nSubmeta no portal do convênio.`);
+    } catch (e) { alert("Erro: " + e.message); }
+  });
+
+  // ─── Demonstrativo de pagamento (DP) ─────────────────────────────
+  document.getElementById("btnImportarDp").addEventListener("click", () => {
+    document.getElementById("dpFileInput").click();
+  });
+  document.getElementById("dpFileInput").addEventListener("change", async (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.size > 5_000_000) { alert("Arquivo grande demais (>5MB)."); return; }
+    try {
+      const xml = await f.text();
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/tiss/demonstrativo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ xml })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) { alert("Erro: " + (d?.error || r.status)); return; }
+      alert(`Demonstrativo processado.\n• ${d.processed} guia(s) reconhecida(s) no XML\n• ${d.updated} atualizada(s)\n• ${d.notFound} não encontrada(s) no seu cadastro`);
+      await loadGuias();
+    } catch (err) { alert("Erro: " + err.message); }
+    finally { e.target.value = ""; }
   });
 
   (async () => {

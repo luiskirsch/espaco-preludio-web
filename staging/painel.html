@@ -165,6 +165,41 @@
         </select>
         <span class="ep-text-xs ep-text-muted">Cria N consultas no mesmo horário, espaçadas 7 dias. Exige horário definido.</span>
       </div>
+
+      <!-- TISS: faturar via convênio. Bloco aparece só se profissional tem
+           tissEnabled. Vem fechado por default (toggle expand). -->
+      <div class="ep-field ep-hide" data-tiss-only id="tissNewSessionBlock">
+        <details>
+          <summary style="cursor: pointer; color: var(--ep-accent); font-weight: 500;">+ Faturar via convênio (TISS)</summary>
+          <div class="ep-stack ep-mt-12" style="gap: 10px;">
+            <div class="ep-field">
+              <label class="ep-label ep-text-sm" for="tissNewConvSelect">Convênio do paciente</label>
+              <select id="tissNewConvSelect" class="ep-select">
+                <option value="">— Selecione (paciente precisa ter carteirinha cadastrada) —</option>
+              </select>
+            </div>
+            <div class="ep-grid-2col">
+              <div class="ep-field">
+                <label class="ep-label ep-text-sm" for="tissNewTussCode">Código TUSS</label>
+                <input id="tissNewTussCode" class="ep-input" type="text" maxlength="20" placeholder="ex: 50000489">
+              </div>
+              <div class="ep-field">
+                <label class="ep-label ep-text-sm" for="tissNewValor">Valor (R$)</label>
+                <input id="tissNewValor" class="ep-input" type="number" step="0.01" min="0" placeholder="ex: 150.00">
+              </div>
+            </div>
+            <div class="ep-field">
+              <label class="ep-label ep-text-sm" for="tissNewTussLabel">Descrição do procedimento</label>
+              <input id="tissNewTussLabel" class="ep-input" type="text" maxlength="200" placeholder="ex: Psicoterapia individual (45-60 min)">
+            </div>
+            <p class="ep-text-xs ep-text-muted ep-mt-0">
+              A guia TISS é criada após salvar a consulta. Status inicial: <strong>rascunho</strong>.
+              Acompanhe em <a href="./tiss.html" target="_blank">TISS → Guias</a>.
+            </p>
+          </div>
+        </details>
+      </div>
+
       <div class="ep-status" id="newSessionStatus"></div>
     </form>
 
@@ -1278,11 +1313,61 @@
       freeNameField.classList.remove("ep-hide");
     }
     newSessionModal.classList.add("is-open");
+    // TISS: popula select de convênio com base no paciente escolhido.
+    refreshTissNewSessionConvenios();
     setTimeout(() => {
       (prefill.patientId ? patientSelect : document.getElementById("patientName")).focus();
     }, 50);
   }
   function closeModal(el) { el.classList.remove("is-open"); }
+
+  // TISS: popula o select de convênio do modal de nova consulta com as
+  // carteirinhas do paciente selecionado. Se paciente não tem carteirinha
+  // ou é paciente novo (sem ID), select fica vazio + bloco some.
+  let _tissAceitos = null;
+  async function _loadTissAceitos() {
+    if (_tissAceitos !== null) return _tissAceitos;
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/tiss/convenios`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      _tissAceitos = (d.ok && Array.isArray(d.convenios)) ? d.convenios : [];
+    } catch { _tissAceitos = []; }
+    return _tissAceitos;
+  }
+  async function refreshTissNewSessionConvenios() {
+    const sel = document.getElementById("tissNewConvSelect");
+    const block = document.getElementById("tissNewSessionBlock");
+    if (!sel || !block) return;
+    sel.innerHTML = `<option value="">— Selecione (paciente precisa ter carteirinha) —</option>`;
+    const v = patientSelect.value;
+    if (!v.startsWith("id:")) {
+      block.classList.add("ep-hide");
+      return;
+    }
+    const patientId = v.slice(3);
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patientId)}`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      const carts = (d?.patient?.convenios) || [];
+      if (carts.length === 0) {
+        block.classList.add("ep-hide");
+        return;
+      }
+      const aceitos = await _loadTissAceitos();
+      const nomeOf = (code) => aceitos.find(c => c.code === code)?.nome || code;
+      sel.innerHTML = `<option value="">— Particular (sem convênio) —</option>` +
+        carts.map(c => `<option value="${c.convenioCode}">${nomeOf(c.convenioCode)} (${c.numeroCarteirinha})</option>`).join("");
+      block.classList.remove("ep-hide");
+    } catch {
+      block.classList.add("ep-hide");
+    }
+  }
+  // Atualiza convênios disponíveis quando paciente muda no select.
+  patientSelect.addEventListener("change", refreshTissNewSessionConvenios);
 
   document.getElementById("createNewSession").addEventListener("click", async () => {
     const v = patientSelect.value;
@@ -1316,6 +1401,7 @@
     statusEl.className = "ep-status";
 
     // Guard contra date inválida (input datetime-local manipulado, browser permissivo).
+    // Date.parse de string invalida retorna NaN; passar NaN pro backend gera 400.
     let scheduledAt = null;
     if (scheduledAtRaw) {
       const parsed = new Date(scheduledAtRaw).getTime();
@@ -1358,6 +1444,31 @@
         statusEl.className = "ep-status is-err";
         return;
       }
+
+      // TISS: se selecionou convênio, marca a sessão recém-criada como
+      // via convênio (gera numeroGuiaPrestador). Best-effort: se falhar,
+      // sessão fica criada mas guia precisa ser marcada manualmente em /tiss.html.
+      const tissConvCode = document.getElementById("tissNewConvSelect")?.value;
+      if (tissConvCode && data.session?.sessionId) {
+        const tussCode  = document.getElementById("tissNewTussCode").value.trim();
+        const tussLabel = document.getElementById("tissNewTussLabel").value.trim();
+        const valor     = Number(document.getElementById("tissNewValor").value) || 0;
+        if (tussCode) {
+          try {
+            await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(data.session.sessionId)}/tiss/marcar`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+              body: JSON.stringify({
+                convenioCode: tissConvCode,
+                tussCode,
+                tussLabel,
+                valorProcedimento: valor
+              })
+            });
+          } catch (e) { /* best-effort — usuário pode marcar depois em tiss.html */ }
+        }
+      }
+
       closeModal(newSessionModal);
 
       // Veio da lista de espera? Remove a entrada após criar a consulta.
