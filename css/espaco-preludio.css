@@ -703,27 +703,24 @@ body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
   font-weight: 600;
 }
 
-/* Slot de perfil no topbar — avatar circular + nome, ambos clicáveis e
-   linkando pra perfil.html. Substitui o antigo link "Perfil" + span solto. */
+/* Slot de perfil no topbar — só o avatar circular (nome do profissional
+   removido porque dava flash visual no canto enquanto carregava). Hover
+   redondo embrulhando a foto, em vez do pill retangular dos outros links. */
 .ep-nav-profile {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 12px 4px 4px;
-  border-radius: 999px;
+  padding: 2px;
+  border-radius: 50%;
   color: var(--ep-ink) !important;
-  font-size: 13.5px;
-  font-weight: 500;
   text-decoration: none;
-  transition: background 120ms ease, color 120ms ease;
-  /* margin-left: auto empurra o avatar+nome E o botao Sair (proximo
-     irmao) pra extrema direita do flex container, separando visualmente
-     do resto do menu sem mexer nos demais botoes. */
+  transition: background 120ms ease;
+  /* margin-left: auto empurra o avatar E o botao Sair (proximo irmao)
+     pra extrema direita do flex container. */
   margin-left: auto;
 }
 .ep-nav-profile:hover { background: var(--ep-accent-soft); }
 .ep-nav-profile.is-active { background: var(--ep-accent-soft); }
-.ep-nav-profile.is-active .ep-nav-profile__name { color: var(--ep-accent); }
+.ep-nav-profile__name { display: none; }
 
 /* Badge de contagem inline em links do nav (usado nos admins pra mostrar
    fila pendente em cada aba). Pill vermelho compacto colado a direita
