@@ -449,6 +449,82 @@
         </p>
       </section>
 
+      <!-- Clínica multidisciplinar -->
+      <section class="ep-receita-form" id="clinicSection">
+        <h2 class="ep-h3 ep-mt-0">Clínica multidisciplinar</h2>
+        <p class="ep-text-sm ep-text-muted ep-mt-8">
+          Convide outros profissionais pra atender pela sua clínica com regra de repasse automática.
+          Cada membro mantém conta individual no Espaço Prelúdio (R$ 199/mês cada) — repasse é só
+          divisão da receita das consultas marcadas como "via clínica".
+        </p>
+
+        <div id="clinicOwnerBlock" class="ep-hide ep-mt-16" style="border: 1px solid var(--ep-line); border-radius: 10px; padding: 14px 16px;">
+          <div class="ep-flex" style="justify-content: space-between; align-items: start; gap: 10px;">
+            <div>
+              <div class="ep-eyebrow">Sua clínica</div>
+              <div style="font-size: 16px; font-weight: 600;" id="clinicOwnerName">—</div>
+              <div class="ep-text-xs ep-text-muted" id="clinicOwnerCnpj"></div>
+            </div>
+            <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="clinicEditBtn">Editar</button>
+          </div>
+          <div class="ep-mt-12">
+            <h4 class="ep-text-sm" style="font-weight: 600; margin: 0 0 8px;">Membros</h4>
+            <div id="clinicMembersList" class="ep-stack" style="gap: 6px;"></div>
+            <details class="ep-mt-12">
+              <summary style="cursor: pointer; color: var(--ep-accent); font-size: 13px;">+ Convidar profissional</summary>
+              <div class="ep-stack ep-mt-8" style="gap: 8px;">
+                <div class="ep-field">
+                  <label class="ep-label ep-text-sm" for="clinicInviteEmail">Email do profissional *</label>
+                  <input id="clinicInviteEmail" class="ep-input" type="email" maxlength="120" placeholder="convidado@ex.com">
+                </div>
+                <div class="ep-grid-2col">
+                  <div class="ep-field">
+                    <label class="ep-label ep-text-sm" for="clinicInviteRepasseType">Regra de repasse</label>
+                    <select id="clinicInviteRepasseType" class="ep-select">
+                      <option value="percentual">% sobre receita</option>
+                      <option value="valor-fixo">Valor fixo por consulta</option>
+                    </select>
+                  </div>
+                  <div class="ep-field">
+                    <label class="ep-label ep-text-sm" for="clinicInviteRepasseValue">Valor *</label>
+                    <input id="clinicInviteRepasseValue" class="ep-input" type="number" step="0.01" min="0" placeholder="ex: 70 (%) ou 150.00 (R$)">
+                  </div>
+                </div>
+                <div class="ep-flex ep-gap-8">
+                  <button type="button" class="ep-btn ep-btn--primary ep-btn--sm" id="clinicInviteBtn">Enviar convite</button>
+                </div>
+                <div id="clinicInviteStatus" class="ep-status"></div>
+              </div>
+            </details>
+            <p class="ep-text-xs ep-text-muted ep-mt-12">
+              <a href="./clinica.html">Ver repasse mensal por membro →</a>
+            </p>
+          </div>
+        </div>
+
+        <div id="clinicMembershipsBlock" class="ep-hide ep-mt-16"></div>
+
+        <div id="clinicCreateBlock" class="ep-mt-16">
+          <details>
+            <summary class="ep-btn ep-btn--ghost ep-btn--sm" style="display: inline-block; cursor: pointer;">+ Criar minha clínica</summary>
+            <div class="ep-stack ep-mt-12" style="gap: 10px;">
+              <div class="ep-field">
+                <label class="ep-label ep-text-sm" for="clinicNewName">Nome da clínica *</label>
+                <input id="clinicNewName" class="ep-input" type="text" maxlength="100" placeholder="ex: Clínica Maria Silva">
+              </div>
+              <div class="ep-field">
+                <label class="ep-label ep-text-sm" for="clinicNewCnpj">CNPJ (opcional)</label>
+                <input id="clinicNewCnpj" class="ep-input" type="text" maxlength="18" placeholder="00.000.000/0001-00">
+              </div>
+              <div class="ep-flex ep-gap-8">
+                <button type="button" class="ep-btn ep-btn--primary ep-btn--sm" id="clinicCreateBtn">Criar clínica</button>
+              </div>
+              <div id="clinicCreateStatus" class="ep-status"></div>
+            </div>
+          </details>
+        </div>
+      </section>
+
       <!-- TISS - Convênios -->
       <section class="ep-receita-form" id="tissConveniosSection">
         <h2 class="ep-h3 ep-mt-0">Convênios TISS</h2>
@@ -2029,6 +2105,156 @@ Direito de portabilidade — LGPD Art. 18, V.
   }
 
   renderTissConvenios();
+
+  // ─── Clínica multidisciplinar ──────────────────────────────────────
+  const clinicApi = tissApi; // mesma fn
+
+  function escClinic(s) { return String(s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+
+  async function loadClinic() {
+    try {
+      const d = await clinicApi("/therapy/clinicas/me");
+      const owned = d.ownedClinic;
+      const memberships = d.memberships || [];
+
+      // Owner
+      if (owned) {
+        $("clinicOwnerBlock").classList.remove("ep-hide");
+        $("clinicCreateBlock").classList.add("ep-hide");
+        $("clinicOwnerName").textContent = owned.name || "—";
+        $("clinicOwnerCnpj").textContent = owned.cnpj ? `CNPJ: ${owned.cnpj}` : "";
+        await loadClinicMembers(owned.clinicId);
+      } else {
+        $("clinicOwnerBlock").classList.add("ep-hide");
+        $("clinicCreateBlock").classList.remove("ep-hide");
+      }
+
+      // Memberships (sou membro de outra clinica)
+      if (memberships.length > 0) {
+        const block = $("clinicMembershipsBlock");
+        block.classList.remove("ep-hide");
+        block.innerHTML = `
+          <div class="ep-eyebrow" style="margin-bottom: 8px;">Você é membro de:</div>
+          ${memberships.map(m => `
+            <div style="border: 1px solid var(--ep-line); border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; font-size: 13px;">
+              <strong>${escClinic(m.clinicName)}</strong>
+              ${m.repasseRule?.type === "percentual" ? ` · ${m.repasseRule.value}% sobre receita` :
+                m.repasseRule?.type === "valor-fixo" ? ` · R$ ${(m.repasseRule.value/100).toFixed(2).replace(".", ",")} fixo por consulta` : ""}
+            </div>
+          `).join("")}
+        `;
+      } else {
+        $("clinicMembershipsBlock").classList.add("ep-hide");
+      }
+    } catch (e) {
+      console.error("clinic_load_failed", e);
+    }
+  }
+
+  async function loadClinicMembers(clinicId) {
+    const listEl = $("clinicMembersList");
+    listEl.innerHTML = `<p class="ep-text-xs ep-text-muted">Carregando…</p>`;
+    try {
+      const d = await clinicApi(`/therapy/clinicas/${encodeURIComponent(clinicId)}/membros`);
+      const members = d.members || [];
+      if (members.length === 0) {
+        listEl.innerHTML = `<p class="ep-text-xs ep-text-muted">Nenhum membro cadastrado ainda.</p>`;
+        return;
+      }
+      listEl.innerHTML = members.map(m => {
+        const rule = m.repasseRule;
+        const repasseDesc = rule?.type === "percentual" ? `${rule.value}%` :
+                          rule?.type === "valor-fixo" ? `R$ ${(rule.value/100).toFixed(2).replace(".", ",")}` : "—";
+        const statusLabel = m.status === "active" ? "Ativo" : m.status === "pending" ? "Convite pendente" : "Removido";
+        const statusCls = m.status === "active" ? "ep-badge ep-badge--ok" : m.status === "pending" ? "ep-badge ep-badge--warn" : "ep-badge ep-badge--muted";
+        return `
+          <div class="ep-flex" style="justify-content: space-between; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--ep-line); border-radius: 6px; font-size: 13px;">
+            <div style="min-width: 0; flex: 1;">
+              <div>${escClinic(m.invitedEmail)}</div>
+              <div class="ep-text-xs ep-text-muted">${repasseDesc} ${rule?.type === "percentual" ? "" : "por consulta"}</div>
+            </div>
+            <div class="ep-flex ep-gap-8" style="align-items: center;">
+              <span class="${statusCls}">${statusLabel}</span>
+              ${m.status !== "removed" ? `<button type="button" data-mbr-del="${escClinic(m.memberId)}" class="ep-btn ep-btn--ghost ep-btn--sm" style="color: #b8453d; padding: 2px 8px;">×</button>` : ""}
+            </div>
+          </div>
+        `;
+      }).join("");
+      listEl.querySelectorAll("[data-mbr-del]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          if (!confirm("Remover este membro da clínica?")) return;
+          const memberId = btn.getAttribute("data-mbr-del");
+          try {
+            await clinicApi(`/therapy/clinicas/${encodeURIComponent(clinicId)}/membros/${encodeURIComponent(memberId)}`, { method: "DELETE" });
+            await loadClinicMembers(clinicId);
+          } catch (e) { alert("Erro: " + e.message); }
+        });
+      });
+    } catch (e) {
+      listEl.innerHTML = `<p class="ep-text-xs" style="color: #b8453d;">Erro: ${escClinic(e.message)}</p>`;
+    }
+  }
+
+  if ($("clinicCreateBtn")) {
+    $("clinicCreateBtn").addEventListener("click", async () => {
+      const name = $("clinicNewName").value.trim();
+      const cnpj = $("clinicNewCnpj").value.trim();
+      const statusEl = $("clinicCreateStatus");
+      statusEl.textContent = ""; statusEl.className = "ep-status";
+      if (!name) { statusEl.textContent = "Informe o nome."; statusEl.classList.add("is-err"); return; }
+      try {
+        await clinicApi("/therapy/clinicas", { method: "POST", body: JSON.stringify({ name, cnpj: cnpj || undefined }) });
+        await loadClinic();
+      } catch (e) {
+        statusEl.textContent = "Erro: " + e.message;
+        statusEl.classList.add("is-err");
+      }
+    });
+  }
+
+  if ($("clinicInviteBtn")) {
+    $("clinicInviteBtn").addEventListener("click", async () => {
+      const email = $("clinicInviteEmail").value.trim().toLowerCase();
+      const type  = $("clinicInviteRepasseType").value;
+      const rawV  = $("clinicInviteRepasseValue").value.trim();
+      const statusEl = $("clinicInviteStatus");
+      statusEl.textContent = ""; statusEl.className = "ep-status";
+
+      if (!email || !rawV) {
+        statusEl.textContent = "Preencha email e valor.";
+        statusEl.classList.add("is-err");
+        return;
+      }
+      const numV = Number(rawV);
+      if (!Number.isFinite(numV) || numV <= 0) {
+        statusEl.textContent = "Valor inválido.";
+        statusEl.classList.add("is-err");
+        return;
+      }
+      // valor-fixo: converte R$ pra centavos
+      const value = type === "valor-fixo" ? Math.round(numV * 100) : numV;
+      const repasseRule = { type, value };
+
+      try {
+        const d = await clinicApi("/therapy/clinicas/me");
+        if (!d.ownedClinic) throw new Error("CLINICA_NAO_ENCONTRADA");
+        await clinicApi(`/therapy/clinicas/${encodeURIComponent(d.ownedClinic.clinicId)}/membros`, {
+          method: "POST",
+          body: JSON.stringify({ email, repasseRule })
+        });
+        $("clinicInviteEmail").value = "";
+        $("clinicInviteRepasseValue").value = "";
+        statusEl.textContent = "Convite enviado por email.";
+        statusEl.classList.add("is-ok");
+        await loadClinicMembers(d.ownedClinic.clinicId);
+      } catch (e) {
+        statusEl.textContent = "Erro: " + e.message;
+        statusEl.classList.add("is-err");
+      }
+    });
+  }
+
+  loadClinic();
 </script>
 
 <a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" aria-label="Abrir suporte"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>

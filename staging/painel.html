@@ -69,6 +69,8 @@
 
     <!-- Banner do tier estudante: aparece se em revisão / aprovado / rejeitado -->
     <div id="studentBanner" class="ep-alert ep-hide ep-mt-16"></div>
+    <!-- Banner de convites de clínica pendentes -->
+    <div id="clinicInviteBanner" class="ep-alert ep-hide ep-mt-16"></div>
 
     <!-- Hero: próxima consulta + KPIs do mês (só aparece quando carrega) -->
     <section id="painelHero" class="ep-hide ep-mt-16" aria-label="Resumo do dia">
@@ -488,6 +490,67 @@
     await signOut(auth);
     window.location.href = "./login.html";
   });
+
+  // ─── Convites de clínica pendentes ─────────────────────────────────
+  // GET /clinicas/convites-pendentes retorna convites onde o email do user
+  // bate com invitedEmail E status=pending. Banner com botão "Aceitar".
+  async function loadClinicInvites() {
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/clinicas/convites-pendentes`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) return;
+      const invites = d.invites || [];
+      const banner = document.getElementById("clinicInviteBanner");
+      if (invites.length === 0) { banner.classList.add("ep-hide"); return; }
+      const inv = invites[0]; // mostra primeiro; depois de aceitar/recusar carrega de novo
+      const rule = inv.repasseRule;
+      const repasseDesc = rule?.type === "percentual" ? `${rule.value}% sobre receita`
+                       : rule?.type === "valor-fixo" ? `R$ ${(rule.value/100).toFixed(2).replace(".",",")} por consulta` : "—";
+      banner.className = "ep-alert ep-alert--info ep-mt-16";
+      banner.innerHTML = `
+        <div class="ep-flex" style="justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <div>
+            <strong>Convite pra clínica:</strong> ${(inv.clinicName || "—")} —
+            ${invites.length > 1 ? `<small>(${invites.length} convites)</small>` : ""}
+            <div style="font-size: 12px; opacity: 0.8;">Regra de repasse: ${repasseDesc}</div>
+          </div>
+          <div class="ep-flex ep-gap-8">
+            <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-clinic-invite-recusar="${inv.memberId}">Recusar</button>
+            <button type="button" class="ep-btn ep-btn--primary ep-btn--sm" data-clinic-invite-aceitar="${inv.memberId}">Aceitar</button>
+          </div>
+        </div>
+      `;
+      banner.classList.remove("ep-hide");
+      banner.querySelectorAll("[data-clinic-invite-aceitar]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const memberId = btn.getAttribute("data-clinic-invite-aceitar");
+          try {
+            await fetch(`${BACKEND_BASE_URL}/therapy/clinicas/convites/${encodeURIComponent(memberId)}/aceitar`, {
+              method: "POST",
+              headers: { "Authorization": `Bearer ${idToken}` }
+            });
+            await loadClinicInvites();
+          } catch {}
+        });
+      });
+      banner.querySelectorAll("[data-clinic-invite-recusar]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const memberId = btn.getAttribute("data-clinic-invite-recusar");
+          if (!confirm("Recusar este convite de clínica?")) return;
+          try {
+            await fetch(`${BACKEND_BASE_URL}/therapy/clinicas/convites/${encodeURIComponent(memberId)}/recusar`, {
+              method: "POST",
+              headers: { "Authorization": `Bearer ${idToken}` }
+            });
+            await loadClinicInvites();
+          } catch {}
+        });
+      });
+    } catch {}
+  }
+  loadClinicInvites();
 
   // ─── Solicitações de agendamento público ────────────────────
   // Lista pedidos pendentes do link público do terapeuta. Renderiza só
