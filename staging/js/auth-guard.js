@@ -154,6 +154,16 @@ export async function fetchTherapistProfile(idToken, uid) {
 // recuperou uma cap que estava escondida pelo cache stale.
 //
 // Backend continua sendo a fonte da verdade (requireCapability nos endpoints).
+// Mostra/esconde links com [data-tiss-only] (link "TISS" no nav e congeneres).
+// Default HTML eh display:none inline; quando habilitado, fica inline-block.
+// Pareado com o preflight (que faz o mesmo pre-paint via cache).
+function applyTissVisibility(therapist) {
+  const enabled = !!therapist?.tissEnabled;
+  document.querySelectorAll("[data-tiss-only]").forEach(el => {
+    el.style.display = enabled ? "" : "none";
+  });
+}
+
 function applyCapabilityVisibility(capabilities) {
   const set = new Set(capabilities || []);
   const RULES = [
@@ -420,6 +430,8 @@ export async function requireTherapist({ requireDek = true } = {}) {
   // Aplica visibilidade baseada nas capabilities do conselho — esconde
   // links/botões pra features que o profissional não pode usar.
   applyCapabilityVisibility(profile.conselho?.capabilities);
+  // TISS opt-in: mostra/esconde links com [data-tiss-only] (link "TISS" no nav).
+  applyTissVisibility(profile.therapist);
 
   // Prefetch da nav pra navegação subsequente parecer instantânea.
   prefetchNavLinks();

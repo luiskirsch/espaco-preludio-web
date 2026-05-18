@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <script src="./js/capability-preflight.js?v=4"></script>
+  <script src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-143">
   <style>
     .ep-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--ep-line); margin-bottom: 24px; }
@@ -48,6 +48,8 @@
       <a href="./agenda.html">Agenda</a>
       <a href="./pacientes.html">Pacientes</a>
       <a href="./financeiro.html">Financeiro</a>
+      <a href="./tiss.html" class="ep-text-sm" data-tiss-only style="display: none;">TISS</a>
+      
       <a href="./relatorios.html">Relatórios</a>
       <a href="./clinica.html" class="is-active">Clínica</a>
       <a href="./inventario.html">Estoque</a>
@@ -232,7 +234,7 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=3-19";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-20";
   import { clearDek } from "./js/crypto.js";
 
   const session = await requireTherapist({ requireDek: false });

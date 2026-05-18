@@ -53,6 +53,16 @@
       }
     }
 
+    // TISS opt-in — mostra link [data-tiss-only] na topbar quando profissional
+    // tem tissEnabled. Default no HTML eh display:none (inline style); aqui
+    // sobrescreve via classe quando habilitado.
+    if (therapist && therapist.tissEnabled) {
+      var tissStyle = document.createElement("style");
+      tissStyle.id = "ep-tiss-preflight";
+      tissStyle.textContent = "[data-tiss-only]{display:inline-block !important;}";
+      document.head.appendChild(tissStyle);
+    }
+
     // Slot do perfil — replica logica de applyTopUserSlot (auth-guard.js).
     // Sem MutationObserver os elementos #topUserName/#topUserAvatar so
     // ganham conteudo depois do auth-guard rodar, causando "Perfil" → nome

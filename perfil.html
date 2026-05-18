@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <script src="./js/capability-preflight.js?v=4"></script>
+  <script src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-143">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
@@ -32,6 +32,8 @@
         <a href="./agenda.html">Agenda</a>
         <a href="./pacientes.html">Pacientes</a>
         <a href="./financeiro.html">Financeiro</a>
+      <a href="./tiss.html" class="ep-text-sm" data-tiss-only style="display: none;">TISS</a>
+      
       <a href="./relatorios.html">Relatórios</a>
         <a href="./clinica.html">Clínica</a>
         <a href="./inventario.html">Estoque</a>
@@ -446,6 +448,66 @@
         </p>
       </section>
 
+      <!-- TISS - Convênios -->
+      <section class="ep-receita-form" id="tissConveniosSection">
+        <h2 class="ep-h3 ep-mt-0">Convênios TISS</h2>
+        <p class="ep-text-sm ep-text-muted ep-mt-8">
+          Cadastre os convênios que você aceita pra cobrar via TISS (Troca de Informação em Saúde Suplementar).
+          Cada paciente pode então ter a carteirinha vinculada, e suas sessões podem ser marcadas como "via convênio".
+        </p>
+
+        <div class="ep-flex ep-gap-8 ep-mt-12" style="align-items: center;">
+          <label class="ep-flex ep-gap-8" style="align-items: center; cursor: pointer;">
+            <input type="checkbox" id="tissEnabledToggle">
+            <span>Aceitar pagamento via convênio</span>
+          </label>
+        </div>
+
+        <div id="tissConveniosList" class="ep-stack ep-mt-16" style="gap: 8px;"></div>
+
+        <details class="ep-mt-16" id="tissAddDetails">
+          <summary class="ep-btn ep-btn--ghost ep-btn--sm" style="display: inline-block; cursor: pointer;">+ Adicionar convênio</summary>
+          <div class="ep-stack ep-mt-12" style="gap: 10px;">
+            <div class="ep-grid-2col">
+              <div class="ep-field">
+                <label class="ep-label" for="tissConvCode">Código interno *</label>
+                <input id="tissConvCode" class="ep-input" type="text" maxlength="40" placeholder="ex: unimed-rj">
+                <p class="ep-text-xs ep-text-muted ep-mt-0">Slug curto. Letras minúsculas, números e hífen.</p>
+              </div>
+              <div class="ep-field">
+                <label class="ep-label" for="tissConvNome">Nome do convênio *</label>
+                <input id="tissConvNome" class="ep-input" type="text" maxlength="80" placeholder="ex: Unimed Rio">
+              </div>
+            </div>
+            <div class="ep-grid-2col">
+              <div class="ep-field">
+                <label class="ep-label" for="tissConvAns">Registro ANS</label>
+                <input id="tissConvAns" class="ep-input" type="text" maxlength="20" placeholder="6 dígitos (opcional na Fase 1)">
+              </div>
+              <div class="ep-field">
+                <label class="ep-label" for="tissConvNumContratado">Nº matrícula prestador *</label>
+                <input id="tissConvNumContratado" class="ep-input" type="text" maxlength="40" placeholder="Sua matrícula no convênio">
+              </div>
+            </div>
+            <div class="ep-field">
+              <label class="ep-label" for="tissConvPlano">Plano específico (opcional)</label>
+              <input id="tissConvPlano" class="ep-input" type="text" maxlength="80" placeholder="ex: Empresarial Master">
+            </div>
+            <div class="ep-flex ep-gap-8 ep-flex--wrap">
+              <button type="button" id="tissSaveBtn" class="ep-btn ep-btn--primary ep-btn--sm">Salvar convênio</button>
+              <button type="button" id="tissCancelBtn" class="ep-btn ep-btn--ghost ep-btn--sm">Limpar</button>
+            </div>
+            <div id="tissStatus" class="ep-status"></div>
+          </div>
+        </details>
+
+        <p class="ep-text-xs ep-text-muted ep-mt-16">
+          <strong>Fase 1 (atual):</strong> cadastro de convênios + carteirinhas + marcação de sessão "via convênio" + status (paga/glosada).
+          <br><strong>Fase 2:</strong> geração de XML TISS 4.01.00 pra exportar e submeter manualmente no portal do convênio.
+          <br><strong>Fase 3+:</strong> auto-submit via API por convênio.
+        </p>
+      </section>
+
       <!-- Privacidade & LGPD -->
       <section class="ep-receita-form">
         <h2 class="ep-h3 ep-mt-0">Privacidade e LGPD</h2>
@@ -549,7 +611,7 @@
 <script type="module">
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-19";
+  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-20";
 
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     await signOut(auth);
@@ -1566,7 +1628,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
       // Salva session 2FA token (evita redirect imediato após ativar).
-      const { save2faSession } = await import("./js/auth-guard.js?v=3-19");
+      const { save2faSession } = await import("./js/auth-guard.js?v=3-20");
       save2faSession(data.sessionToken);
       therapist.twoFactorEnabled = true;
       twofaModal.classList.remove("is-open");
@@ -1613,7 +1675,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
       therapist.twoFactorEnabled = false;
-      const { clear2faSession } = await import("./js/auth-guard.js?v=3-19");
+      const { clear2faSession } = await import("./js/auth-guard.js?v=3-20");
       clear2faSession();
       twofaDisableModal.classList.remove("is-open");
       renderTwoFactorStatus();
@@ -1849,6 +1911,123 @@ Direito de portabilidade — LGPD Art. 18, V.
       $("saveBtn").disabled = false;
     }
   });
+
+  // ─── TISS: convênios aceitos pelo profissional ──────────────────────
+  const tissApi = async (path, opts = {}) => {
+    const headers = { ...(opts.headers || {}), "Authorization": `Bearer ${idToken}` };
+    if (opts.body) headers["Content-Type"] = "application/json";
+    const r = await fetch(BACKEND_BASE_URL + path, { ...opts, headers });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP_${r.status}`);
+    return d;
+  };
+
+  function escapeHtmlTiss(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  }
+
+  async function renderTissConvenios() {
+    const listEl = $("tissConveniosList");
+    if (!listEl) return;
+    try {
+      const data = await tissApi("/therapy/profissional/tiss/convenios");
+      $("tissEnabledToggle").checked = !!data.tissEnabled;
+      const convenios = data.convenios || [];
+      if (convenios.length === 0) {
+        listEl.innerHTML = `<p class="ep-text-sm ep-text-muted">Nenhum convênio cadastrado ainda.</p>`;
+        return;
+      }
+      listEl.innerHTML = convenios.map(c => `
+        <div class="ep-flex" style="justify-content: space-between; align-items: center; padding: 10px 14px; border: 1px solid var(--ep-line); border-radius: 8px; gap: 12px;">
+          <div style="min-width: 0; flex: 1;">
+            <div style="font-weight: 600;">${escapeHtmlTiss(c.nome)} <span class="ep-text-xs ep-text-muted">(${escapeHtmlTiss(c.code)})</span></div>
+            <div class="ep-text-xs ep-text-muted">
+              Matrícula: <strong>${escapeHtmlTiss(c.numeroContratado)}</strong>
+              ${c.registroAns ? ` · ANS ${escapeHtmlTiss(c.registroAns)}` : ""}
+              ${c.plano ? ` · ${escapeHtmlTiss(c.plano)}` : ""}
+            </div>
+          </div>
+          <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-tiss-del="${escapeHtmlTiss(c.code)}" style="color: #b8453d;">Remover</button>
+        </div>
+      `).join("");
+      listEl.querySelectorAll("[data-tiss-del]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const code = btn.getAttribute("data-tiss-del");
+          if (!confirm(`Remover convênio ${code}?`)) return;
+          try {
+            await tissApi(`/therapy/profissional/tiss/convenios/${encodeURIComponent(code)}`, { method: "DELETE" });
+            await renderTissConvenios();
+          } catch (e) { alert("Erro ao remover: " + e.message); }
+        });
+      });
+    } catch (e) {
+      listEl.innerHTML = `<p class="ep-text-xs" style="color: #b8453d;">Erro ao carregar: ${escapeHtmlTiss(e.message)}</p>`;
+    }
+  }
+
+  if ($("tissEnabledToggle")) {
+    $("tissEnabledToggle").addEventListener("change", async (e) => {
+      try {
+        await tissApi("/therapy/profissional/tiss/toggle", {
+          method: "POST",
+          body: JSON.stringify({ enabled: e.target.checked })
+        });
+      } catch (err) {
+        alert("Erro: " + err.message);
+        e.target.checked = !e.target.checked; // reverte
+      }
+    });
+  }
+
+  if ($("tissSaveBtn")) {
+    $("tissSaveBtn").addEventListener("click", async () => {
+      const code            = $("tissConvCode").value.trim().toLowerCase();
+      const nome            = $("tissConvNome").value.trim();
+      const registroAns     = $("tissConvAns").value.trim();
+      const numeroContratado= $("tissConvNumContratado").value.trim();
+      const plano           = $("tissConvPlano").value.trim();
+      const statusEl        = $("tissStatus");
+      statusEl.textContent = "";
+      statusEl.className = "ep-status";
+
+      if (!code || !nome || !numeroContratado) {
+        statusEl.textContent = "Preencha código, nome e matrícula.";
+        statusEl.classList.add("is-err");
+        return;
+      }
+      if (!/^[a-z0-9-]+$/.test(code)) {
+        statusEl.textContent = "Código: letras minúsculas, números e hífen.";
+        statusEl.classList.add("is-err");
+        return;
+      }
+      $("tissSaveBtn").disabled = true;
+      try {
+        await tissApi("/therapy/profissional/tiss/convenios", {
+          method: "POST",
+          body: JSON.stringify({ code, nome, registroAns, numeroContratado, plano })
+        });
+        ["tissConvCode","tissConvNome","tissConvAns","tissConvNumContratado","tissConvPlano"].forEach(id => $(id).value = "");
+        $("tissAddDetails").open = false;
+        statusEl.textContent = "Convênio salvo.";
+        statusEl.classList.add("is-ok");
+        await renderTissConvenios();
+      } catch (e) {
+        statusEl.textContent = "Erro: " + e.message;
+        statusEl.classList.add("is-err");
+      } finally {
+        $("tissSaveBtn").disabled = false;
+      }
+    });
+  }
+
+  if ($("tissCancelBtn")) {
+    $("tissCancelBtn").addEventListener("click", () => {
+      ["tissConvCode","tissConvNome","tissConvAns","tissConvNumContratado","tissConvPlano"].forEach(id => $(id).value = "");
+      $("tissStatus").textContent = "";
+    });
+  }
+
+  renderTissConvenios();
 </script>
 
 <a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" aria-label="Abrir suporte"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>

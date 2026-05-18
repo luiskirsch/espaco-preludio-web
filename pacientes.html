@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <script src="./js/capability-preflight.js?v=4"></script>
+  <script src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-143">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
@@ -31,6 +31,8 @@
       <a href="./agenda.html">Agenda</a>
       <a href="./pacientes.html" class="is-active">Pacientes</a>
       <a href="./financeiro.html">Financeiro</a>
+      <a href="./tiss.html" class="ep-text-sm" data-tiss-only style="display: none;">TISS</a>
+      
       <a href="./relatorios.html">Relatórios</a>
       <a href="./clinica.html">Clínica</a>
       <a href="./inventario.html">Estoque</a>
@@ -119,6 +121,49 @@
         <input id="patientTagsInput" class="ep-input" type="text" maxlength="30" placeholder="Ex.: ansiedade, casal, convênio · Enter ou vírgula pra adicionar">
         <p class="ep-text-xs ep-text-muted ep-mt-0">Categorize seus pacientes por perfil clínico, convênio, etc. Cifrado junto ao prontuário.</p>
       </div>
+
+      <!-- TISS: carteirinha(s) de convênio. Só visível ao EDITAR (não criar). -->
+      <div class="ep-field ep-hide" id="patientConvenioBlock">
+        <label class="ep-label">Convênios deste paciente</label>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Carteirinhas pra cobrar via TISS. Cadastre primeiro o convênio em <a href="./perfil.html#tissConveniosSection">Perfil → Convênios TISS</a>.
+        </p>
+        <div id="patientConveniosList" class="ep-stack ep-mt-8" style="gap: 6px;"></div>
+        <details class="ep-mt-8" id="patientConvenioAddDetails">
+          <summary class="ep-text-sm" style="cursor: pointer; color: var(--ep-accent);">+ Adicionar carteirinha</summary>
+          <div class="ep-stack ep-mt-8" style="gap: 8px;">
+            <div class="ep-field">
+              <label class="ep-label ep-text-sm" for="patientConvSelect">Convênio</label>
+              <select id="patientConvSelect" class="ep-select"></select>
+            </div>
+            <div class="ep-grid-2col">
+              <div class="ep-field">
+                <label class="ep-label ep-text-sm" for="patientConvNumero">Nº carteirinha *</label>
+                <input id="patientConvNumero" class="ep-input" type="text" maxlength="40">
+              </div>
+              <div class="ep-field">
+                <label class="ep-label ep-text-sm" for="patientConvValidade">Validade</label>
+                <input id="patientConvValidade" class="ep-input" type="date">
+              </div>
+            </div>
+            <div class="ep-grid-2col">
+              <div class="ep-field">
+                <label class="ep-label ep-text-sm" for="patientConvPlano">Plano específico</label>
+                <input id="patientConvPlano" class="ep-input" type="text" maxlength="80" placeholder="opcional">
+              </div>
+              <div class="ep-field">
+                <label class="ep-label ep-text-sm" for="patientConvTitular">Titular (se diferente)</label>
+                <input id="patientConvTitular" class="ep-input" type="text" maxlength="80" placeholder="opcional">
+              </div>
+            </div>
+            <div class="ep-flex ep-gap-8">
+              <button type="button" class="ep-btn ep-btn--primary ep-btn--sm" id="patientConvSaveBtn">Salvar carteirinha</button>
+            </div>
+            <div id="patientConvStatus" class="ep-status"></div>
+          </div>
+        </details>
+      </div>
+
       <div class="ep-status" id="patientStatus"></div>
     </form>
 
@@ -308,7 +353,7 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=3-19";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-20";
   import { cachedGet, invalidate as invalidateApi } from "./js/api-cache.js?v=2-82";
   import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
 
@@ -1085,9 +1130,123 @@
     renderTagsChips();
     statusEl.textContent = "";
     statusEl.className = "ep-status";
+    // TISS block: só aparece ao editar (paciente já existe).
+    const tissBlock = document.getElementById("patientConvenioBlock");
+    if (tissBlock) {
+      if (editingId) {
+        tissBlock.classList.remove("ep-hide");
+        renderPatientConvenios(editingId);
+      } else {
+        tissBlock.classList.add("ep-hide");
+      }
+    }
     patientModal.classList.add("is-open");
     setTimeout(() => nameEl.focus(), 50);
   }
+
+  // ─── TISS: carteirinhas do paciente ────────────────────────────────
+  const tissApiPac = async (path, opts = {}) => {
+    const headers = { ...(opts.headers || {}), "Authorization": `Bearer ${idToken}` };
+    if (opts.body) headers["Content-Type"] = "application/json";
+    const r = await fetch(BACKEND_BASE_URL + path, { ...opts, headers });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP_${r.status}`);
+    return d;
+  };
+  function escapeHtmlPac(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  }
+  let _tissConveniosAceitos = null;
+  async function loadTissConveniosAceitos() {
+    if (_tissConveniosAceitos !== null) return _tissConveniosAceitos;
+    try {
+      const d = await tissApiPac("/therapy/profissional/tiss/convenios");
+      _tissConveniosAceitos = (d.convenios || []).filter(c => c.enabled !== false);
+    } catch { _tissConveniosAceitos = []; }
+    return _tissConveniosAceitos;
+  }
+  async function renderPatientConvenios(patientId) {
+    const listEl = document.getElementById("patientConveniosList");
+    const selEl  = document.getElementById("patientConvSelect");
+    if (!listEl || !selEl) return;
+    listEl.innerHTML = `<p class="ep-text-xs ep-text-muted">Carregando…</p>`;
+
+    const aceitos = await loadTissConveniosAceitos();
+    if (aceitos.length === 0) {
+      listEl.innerHTML = `<p class="ep-text-xs ep-text-muted">Cadastre convênios em <a href="./perfil.html#tissConveniosSection">Perfil → Convênios TISS</a>.</p>`;
+      document.getElementById("patientConvenioAddDetails").style.display = "none";
+      return;
+    }
+    document.getElementById("patientConvenioAddDetails").style.display = "";
+    selEl.innerHTML = aceitos.map(c => `<option value="${escapeHtmlPac(c.code)}">${escapeHtmlPac(c.nome)}</option>`).join("");
+
+    // Carrega carteirinhas do paciente. Endpoint é GET no patient detail — usa
+    // o endpoint público de pacientes (que já retorna o doc completo).
+    try {
+      const d = await fetch(BACKEND_BASE_URL + `/therapy/pacientes/${encodeURIComponent(patientId)}`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await d.json().catch(() => ({}));
+      const carts = (data?.patient?.convenios) || [];
+      if (carts.length === 0) {
+        listEl.innerHTML = `<p class="ep-text-xs ep-text-muted">Nenhuma carteirinha cadastrada.</p>`;
+        return;
+      }
+      const nomeOf = (code) => aceitos.find(c => c.code === code)?.nome || code;
+      listEl.innerHTML = carts.map(c => `
+        <div class="ep-flex" style="justify-content: space-between; align-items: center; padding: 6px 10px; border: 1px solid var(--ep-line); border-radius: 6px; gap: 8px; font-size: 13px;">
+          <div style="min-width: 0; flex: 1;">
+            <strong>${escapeHtmlPac(nomeOf(c.convenioCode))}</strong>
+            · <span style="font-family: monospace;">${escapeHtmlPac(c.numeroCarteirinha)}</span>
+            ${c.validade ? ` · valido ate ${escapeHtmlPac(c.validade)}` : ""}
+            ${c.plano ? ` · ${escapeHtmlPac(c.plano)}` : ""}
+          </div>
+          <button type="button" data-cart-del="${escapeHtmlPac(c.convenioCode)}" class="ep-btn ep-btn--ghost ep-btn--sm" style="color: #b8453d; padding: 2px 8px;">×</button>
+        </div>
+      `).join("");
+      listEl.querySelectorAll("[data-cart-del]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const code = btn.getAttribute("data-cart-del");
+          if (!confirm("Remover carteirinha?")) return;
+          try {
+            await tissApiPac(`/therapy/paciente/${encodeURIComponent(patientId)}/convenio/${encodeURIComponent(code)}`, { method: "DELETE" });
+            await renderPatientConvenios(patientId);
+          } catch (e) { alert("Erro: " + e.message); }
+        });
+      });
+    } catch (e) {
+      listEl.innerHTML = `<p class="ep-text-xs" style="color: #b8453d;">Erro ao carregar: ${escapeHtmlPac(e.message)}</p>`;
+    }
+  }
+  document.getElementById("patientConvSaveBtn").addEventListener("click", async () => {
+    if (!editingId) return;
+    const convenioCode      = document.getElementById("patientConvSelect").value;
+    const numeroCarteirinha = document.getElementById("patientConvNumero").value.trim();
+    const validade          = document.getElementById("patientConvValidade").value || null;
+    const plano             = document.getElementById("patientConvPlano").value.trim() || null;
+    const titular           = document.getElementById("patientConvTitular").value.trim() || null;
+    const sEl = document.getElementById("patientConvStatus");
+    sEl.textContent = ""; sEl.className = "ep-status";
+    if (!convenioCode || !numeroCarteirinha) {
+      sEl.textContent = "Selecione convênio e informe número da carteirinha.";
+      sEl.classList.add("is-err");
+      return;
+    }
+    try {
+      await tissApiPac(`/therapy/paciente/${encodeURIComponent(editingId)}/convenio`, {
+        method: "POST",
+        body: JSON.stringify({ convenioCode, numeroCarteirinha, validade, plano, titular })
+      });
+      ["patientConvNumero","patientConvValidade","patientConvPlano","patientConvTitular"].forEach(id => document.getElementById(id).value = "");
+      document.getElementById("patientConvenioAddDetails").open = false;
+      sEl.textContent = "Carteirinha salva.";
+      sEl.classList.add("is-ok");
+      await renderPatientConvenios(editingId);
+    } catch (e) {
+      sEl.textContent = "Erro: " + e.message;
+      sEl.classList.add("is-err");
+    }
+  });
   function closeModal() {
     patientModal.classList.remove("is-open");
     editingId = null;

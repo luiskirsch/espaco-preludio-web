@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TISS · Espaço Prelúdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <script src="./js/capability-preflight.js?v=5"></script>
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-143">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#2d4a3e">
+  <script src="./js/pwa.js?v=1" defer></script>
+</head>
+<body>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav" aria-label="Painel">
+      <a href="./painel.html">Consultas</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./pacientes.html">Pacientes</a>
+      <a href="./financeiro.html">Financeiro</a>
+      <a href="./tiss.html" class="is-active">TISS</a>
+      <a href="./relatorios.html">Relatórios</a>
+      <a href="./clinica.html">Clínica</a>
+      <a href="./inventario.html">Estoque</a>
+      <a href="./receita.html">Receitas</a>
+      <a href="./calculadora.html">Calculadora</a>
+      <a href="./documento.html?tipo=atestado">Atestado</a>
+      <a href="./whatsapp.html">WhatsApp</a>
+      <div class="ep-profile-group">
+        <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
+          <span class="ep-nav-avatar" id="topUserAvatar">·</span>
+          <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
+        </a>
+        <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16">
+  <section class="ep-stack">
+    <div>
+      <div class="ep-eyebrow">Faturamento via convênio</div>
+      <h1 class="ep-h1 ep-mt-12">Guias TISS</h1>
+      <p class="ep-text-muted ep-mt-8">
+        Sessões marcadas como "via convênio". Acompanhe status (rascunho → enviada → paga/glosada).
+        Geração XML 4.01.00 entra na Fase 2.
+      </p>
+    </div>
+
+    <!-- Filtros -->
+    <div class="ep-flex ep-flex--wrap ep-gap-8 ep-mt-16" id="tissFilters" style="align-items: center;">
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm is-active" data-status="">Todas</button>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-status="rascunho">Rascunho</button>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-status="enviada">Enviada</button>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-status="em_analise">Em análise</button>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-status="paga">Paga</button>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-status="glosada">Glosada</button>
+      <span style="flex: 1;"></span>
+      <select id="tissConvenioFilter" class="ep-select ep-select--sm" style="max-width: 200px;">
+        <option value="">Todos os convênios</option>
+      </select>
+    </div>
+
+    <!-- Empty / loading / lista -->
+    <div id="tissLoading" class="ep-skeleton ep-mt-16">Carregando…</div>
+    <div id="tissEmpty" class="ep-empty ep-mt-16 ep-hide">
+      <p class="ep-text-muted ep-mt-0">Nenhuma guia TISS encontrada.</p>
+      <p class="ep-text-xs ep-text-muted ep-mt-8">
+        Pra criar uma guia: abra uma consulta e marque "via convênio" antes de salvar.
+      </p>
+    </div>
+    <div id="tissList" class="ep-stack ep-mt-16 ep-hide" style="gap: 10px;"></div>
+  </section>
+</main>
+
+<a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" aria-label="Abrir suporte"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
+
+<script type="module">
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-20";
+
+  let idToken = null;
+  let currentStatus = "";
+  let currentConvenio = "";
+  let conveniosAceitos = [];
+
+  function esc(s) { return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+  function fmtBR(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  }
+  function fmtMoney(v) {
+    const n = Number(v) || 0;
+    return "R$ " + n.toFixed(2).replace(".", ",");
+  }
+  const STATUS_LABEL = {
+    rascunho:   { label: "Rascunho",   cls: "ep-badge ep-badge--muted" },
+    enviada:    { label: "Enviada",    cls: "ep-badge ep-badge--warn" },
+    em_analise: { label: "Em análise", cls: "ep-badge ep-badge--warn" },
+    paga:       { label: "Paga",       cls: "ep-badge ep-badge--ok" },
+    glosada:    { label: "Glosada",    cls: "ep-badge ep-badge--done" }
+  };
+  function convenioNome(code) {
+    const c = conveniosAceitos.find(x => x.code === code);
+    return c?.nome || code;
+  }
+
+  async function api(path, opts = {}) {
+    const headers = { ...(opts.headers || {}), "Authorization": `Bearer ${idToken}` };
+    if (opts.body) headers["Content-Type"] = "application/json";
+    const r = await fetch(BACKEND_BASE_URL + path, { ...opts, headers });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP_${r.status}`);
+    return d;
+  }
+
+  async function loadConveniosAceitos() {
+    try {
+      const d = await api("/therapy/profissional/tiss/convenios");
+      conveniosAceitos = d.convenios || [];
+      const sel = document.getElementById("tissConvenioFilter");
+      sel.innerHTML = `<option value="">Todos os convênios</option>` + conveniosAceitos.map(c => `<option value="${esc(c.code)}">${esc(c.nome)}</option>`).join("");
+    } catch {}
+  }
+
+  async function loadGuias() {
+    const loading = document.getElementById("tissLoading");
+    const empty   = document.getElementById("tissEmpty");
+    const list    = document.getElementById("tissList");
+    loading.classList.remove("ep-hide");
+    empty.classList.add("ep-hide");
+    list.classList.add("ep-hide");
+    list.innerHTML = "";
+
+    try {
+      const qs = new URLSearchParams();
+      if (currentStatus)   qs.set("status", currentStatus);
+      if (currentConvenio) qs.set("convenioCode", currentConvenio);
+      const d = await api("/therapy/tiss/guias" + (qs.toString() ? "?" + qs : ""));
+      const items = d.items || [];
+      loading.classList.add("ep-hide");
+      if (items.length === 0) { empty.classList.remove("ep-hide"); return; }
+
+      list.classList.remove("ep-hide");
+      list.innerHTML = items.map(it => {
+        const st = STATUS_LABEL[it.tiss.status] || { label: it.tiss.status, cls: "ep-badge ep-badge--muted" };
+        return `
+          <article class="ep-admin-card" style="padding: 14px 18px;">
+            <div class="ep-flex" style="justify-content: space-between; align-items: start; gap: 16px; flex-wrap: wrap;">
+              <div style="min-width: 0; flex: 1;">
+                <div style="font-weight: 600; font-size: 15px;">
+                  Guia ${esc(it.tiss.numeroGuiaPrestador)} · ${esc(it.patientName || "—")}
+                </div>
+                <div class="ep-text-xs ep-text-muted ep-mt-4">
+                  ${esc(convenioNome(it.tiss.convenioCode))} ·
+                  ${esc(it.tiss.tussCode)} ${esc(it.tiss.tussLabel || "")} ·
+                  ${fmtMoney(it.tiss.valorProcedimento)}
+                  ${it.scheduledAt ? " · sessão " + fmtBR(it.scheduledAt) : ""}
+                </div>
+                ${it.tiss.numeroGuiaOperadora ? `<div class="ep-text-xs ep-text-muted ep-mt-4">Nº operadora: <strong>${esc(it.tiss.numeroGuiaOperadora)}</strong></div>` : ""}
+                ${it.tiss.status === "glosada" && it.tiss.motivoGlosa ? `<div class="ep-text-xs ep-mt-4" style="color: #b8453d;">Glosa ${esc(it.tiss.codigoGlosa || "—")}: ${esc(it.tiss.motivoGlosa)}</div>` : ""}
+              </div>
+              <div class="ep-flex ep-gap-8" style="align-items: center; flex-wrap: wrap;">
+                <span class="${st.cls}">${esc(st.label)}</span>
+                <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-status-btn="${esc(it.sessionId)}">Mudar status</button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      list.querySelectorAll("[data-status-btn]").forEach(btn => {
+        btn.addEventListener("click", () => openStatusPrompt(btn.getAttribute("data-status-btn"), items.find(x => x.sessionId === btn.getAttribute("data-status-btn"))));
+      });
+    } catch (e) {
+      loading.classList.add("ep-hide");
+      list.classList.remove("ep-hide");
+      list.innerHTML = `<p class="ep-text-xs" style="color: #b8453d;">Erro: ${esc(e.message)}</p>`;
+    }
+  }
+
+  async function openStatusPrompt(sessionId, item) {
+    const opts = ["rascunho","enviada","em_analise","paga","glosada"];
+    const current = item?.tiss?.status || "rascunho";
+    const next = prompt(`Status atual: ${current}\n\nNovo status (digite um):\n- rascunho\n- enviada\n- em_analise\n- paga\n- glosada`, current);
+    if (!next || !opts.includes(next)) return;
+    const body = { status: next };
+    if (next === "enviada") {
+      const numOp = prompt("Nº da guia na operadora (opcional, pode preencher depois):", item?.tiss?.numeroGuiaOperadora || "");
+      if (numOp === null) return;
+      if (numOp.trim()) body.numeroGuiaOperadora = numOp.trim();
+    }
+    if (next === "glosada") {
+      const cod = prompt("Código da glosa (ANS):", item?.tiss?.codigoGlosa || "");
+      if (cod === null) return;
+      const mot = prompt("Motivo da glosa:", item?.tiss?.motivoGlosa || "");
+      if (mot === null) return;
+      body.codigoGlosa = cod.trim();
+      body.motivoGlosa = mot.trim();
+    }
+    try {
+      await api(`/therapy/sessao/${encodeURIComponent(sessionId)}/tiss/status`, {
+        method: "POST",
+        body: JSON.stringify(body)
+      });
+      await loadGuias();
+    } catch (e) { alert("Erro: " + e.message); }
+  }
+
+  document.querySelectorAll("[data-status]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("[data-status]").forEach(b => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      currentStatus = btn.getAttribute("data-status");
+      loadGuias();
+    });
+  });
+  document.getElementById("tissConvenioFilter").addEventListener("change", (e) => {
+    currentConvenio = e.target.value;
+    loadGuias();
+  });
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    const { signOut } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
+
+  (async () => {
+    try {
+      const ctx = await requireTherapist({ requireDek: false });
+      idToken = ctx.idToken;
+      await loadConveniosAceitos();
+      await loadGuias();
+    } catch (e) { /* requireTherapist redireciona */ }
+  })();
+</script>
+
+</body>
+</html>

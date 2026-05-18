@@ -9,15 +9,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <script src="./js/capability-preflight.js?v=4"></script>
+  <script src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-143">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
 </head>
 <body>
-
-<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
@@ -33,6 +31,8 @@
       <a href="./agenda.html">Agenda</a>
       <a href="./pacientes.html" class="is-active">Pacientes</a>
       <a href="./financeiro.html">Financeiro</a>
+      <a href="./tiss.html" class="ep-text-sm" data-tiss-only style="display: none;">TISS</a>
+      
       <a href="./relatorios.html">Relatórios</a>
       <a href="./clinica.html">Clínica</a>
       <a href="./inventario.html">Estoque</a>
@@ -121,6 +121,49 @@
         <input id="patientTagsInput" class="ep-input" type="text" maxlength="30" placeholder="Ex.: ansiedade, casal, convênio · Enter ou vírgula pra adicionar">
         <p class="ep-text-xs ep-text-muted ep-mt-0">Categorize seus pacientes por perfil clínico, convênio, etc. Cifrado junto ao prontuário.</p>
       </div>
+
+      <!-- TISS: carteirinha(s) de convênio. Só visível ao EDITAR (não criar). -->
+      <div class="ep-field ep-hide" id="patientConvenioBlock">
+        <label class="ep-label">Convênios deste paciente</label>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Carteirinhas pra cobrar via TISS. Cadastre primeiro o convênio em <a href="./perfil.html#tissConveniosSection">Perfil → Convênios TISS</a>.
+        </p>
+        <div id="patientConveniosList" class="ep-stack ep-mt-8" style="gap: 6px;"></div>
+        <details class="ep-mt-8" id="patientConvenioAddDetails">
+          <summary class="ep-text-sm" style="cursor: pointer; color: var(--ep-accent);">+ Adicionar carteirinha</summary>
+          <div class="ep-stack ep-mt-8" style="gap: 8px;">
+            <div class="ep-field">
+              <label class="ep-label ep-text-sm" for="patientConvSelect">Convênio</label>
+              <select id="patientConvSelect" class="ep-select"></select>
+            </div>
+            <div class="ep-grid-2col">
+              <div class="ep-field">
+                <label class="ep-label ep-text-sm" for="patientConvNumero">Nº carteirinha *</label>
+                <input id="patientConvNumero" class="ep-input" type="text" maxlength="40">
+              </div>
+              <div class="ep-field">
+                <label class="ep-label ep-text-sm" for="patientConvValidade">Validade</label>
+                <input id="patientConvValidade" class="ep-input" type="date">
+              </div>
+            </div>
+            <div class="ep-grid-2col">
+              <div class="ep-field">
+                <label class="ep-label ep-text-sm" for="patientConvPlano">Plano específico</label>
+                <input id="patientConvPlano" class="ep-input" type="text" maxlength="80" placeholder="opcional">
+              </div>
+              <div class="ep-field">
+                <label class="ep-label ep-text-sm" for="patientConvTitular">Titular (se diferente)</label>
+                <input id="patientConvTitular" class="ep-input" type="text" maxlength="80" placeholder="opcional">
+              </div>
+            </div>
+            <div class="ep-flex ep-gap-8">
+              <button type="button" class="ep-btn ep-btn--primary ep-btn--sm" id="patientConvSaveBtn">Salvar carteirinha</button>
+            </div>
+            <div id="patientConvStatus" class="ep-status"></div>
+          </div>
+        </details>
+      </div>
+
       <div class="ep-status" id="patientStatus"></div>
     </form>
 
@@ -136,32 +179,39 @@
   <div class="ep-modal__panel" style="max-width: 720px;">
     <h3 class="ep-modal__title">Importar pacientes de CSV</h3>
     <p class="ep-modal__sub">
-      Importa em lote a partir de um arquivo CSV (export da iClinic, planilha do Excel, etc.). Dados são cifrados localmente antes de subir.
+      Importa em lote a partir de um arquivo CSV (export da iClinic, planilha
+      do Excel, etc.). Dados são cifrados localmente antes de subir.
     </p>
 
+    <!-- Passo 1: upload -->
     <div id="csvUploadWrap" style="padding: 0 28px;">
       <div class="ep-field">
         <label class="ep-label" for="csvFile">Arquivo CSV</label>
         <input id="csvFile" class="ep-input" type="file" accept=".csv,text/csv,text/plain">
         <p class="ep-text-xs ep-text-muted ep-mt-0">
-          Cabeçalho na 1ª linha. Separador <code>,</code> ou <code>;</code> (detectado automaticamente). UTF-8 recomendado. Máx 5MB.
+          Cabeçalho na 1ª linha. Separador <code>,</code> ou <code>;</code> (detectado automaticamente).
+          Codificação UTF-8 recomendada. Tamanho máx ~5MB.
         </p>
       </div>
       <div class="ep-status" id="csvUploadStatus"></div>
     </div>
 
+    <!-- Passo 2: preview + mapping -->
     <div id="csvPreviewWrap" class="ep-hide" style="padding: 0 28px;">
       <p class="ep-text-sm ep-mt-0">
-        Detectei <strong id="csvRowCount">0</strong> linhas. Mapeie as colunas:
+        Detectei <strong id="csvRowCount">0</strong> linhas. Mapeie as colunas do seu CSV pros campos:
       </p>
       <div id="csvMapping" class="ep-stack ep-mt-12"></div>
+
       <details class="ep-mt-16">
         <summary class="ep-text-sm" style="cursor: pointer;">Ver primeiras 5 linhas (preview)</summary>
         <div id="csvPreview" class="ep-mt-8" style="max-height: 260px; overflow: auto; border: 1px solid var(--ep-line); border-radius: 8px; padding: 8px;"></div>
       </details>
+
       <div class="ep-status ep-mt-12" id="csvPreviewStatus"></div>
     </div>
 
+    <!-- Passo 3: progresso -->
     <div id="csvProgressWrap" class="ep-hide" style="padding: 0 28px;">
       <p class="ep-text-sm ep-mt-0">
         Importando <strong id="csvProgressDone">0</strong> de <strong id="csvProgressTotal">0</strong>…
@@ -172,6 +222,7 @@
       <div id="csvProgressErrors" class="ep-mt-12 ep-text-sm" style="max-height: 160px; overflow-y: auto;"></div>
     </div>
 
+    <!-- Passo 4: resultado -->
     <div id="csvResultWrap" class="ep-hide" style="padding: 0 28px;">
       <div class="ep-verify-hero ep-verify-hero--ok" style="margin-top: 8px;">
         <div class="ep-verify-hero__icon">
@@ -198,7 +249,9 @@
 <div class="ep-modal" id="escalaModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel" style="max-width: 520px;">
     <h3 class="ep-modal__title">Enviar escala de acompanhamento</h3>
-    <p class="ep-modal__sub">Paciente <strong id="escalaPatientName">—</strong></p>
+    <p class="ep-modal__sub">
+      Paciente <strong id="escalaPatientName">—</strong>
+    </p>
 
     <div style="padding: 0 28px;">
       <div class="ep-field">
@@ -207,8 +260,11 @@
           <option value="phq9">PHQ-9 — Depressão (9 perguntas)</option>
           <option value="gad7">GAD-7 — Ansiedade (7 perguntas)</option>
         </select>
-        <p class="ep-text-xs ep-text-muted ep-mt-0">Validadas em pt-BR. Score calculado automaticamente.</p>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Validadas em pt-BR. Score calculado automaticamente após o paciente responder.
+        </p>
       </div>
+
       <div class="ep-row ep-mt-12">
         <div class="ep-field">
           <label class="ep-label" for="escalaEmail">E-mail do paciente</label>
@@ -219,6 +275,7 @@
           <input id="escalaPhone" class="ep-input" type="tel" maxlength="20">
         </div>
       </div>
+
       <div class="ep-flex ep-mt-12" style="gap: 16px; flex-wrap: wrap; align-items: center;">
         <label class="ep-flex" style="gap: 6px; cursor: pointer; align-items: center;">
           <input id="escalaSendEmail" type="checkbox" style="width: 16px; height: 16px;">
@@ -229,6 +286,7 @@
           <span class="ep-text-sm">Enviar por WhatsApp</span>
         </label>
       </div>
+
       <div class="ep-status ep-mt-12" id="escalaStatus"></div>
     </div>
 
@@ -247,11 +305,13 @@
       Paciente <strong id="anamnesePatientName">—</strong>
     </p>
 
+    <!-- Forma de envio -->
     <div id="anamneseSendWrap" style="padding: 0 28px;">
       <p class="ep-text-sm ep-text-muted ep-mt-0">
         Envia um link único pro paciente preencher um formulário de ~10 minutos.
         Quando responder, você recebe um e-mail e vê as respostas aqui.
       </p>
+
       <div class="ep-row ep-mt-16">
         <div class="ep-field">
           <label class="ep-label" for="anamneseEmail">E-mail do paciente</label>
@@ -262,6 +322,7 @@
           <input id="anamnesePhone" class="ep-input" type="tel" maxlength="20" placeholder="(48) 99999-9999">
         </div>
       </div>
+
       <div class="ep-flex ep-mt-12" style="gap: 16px; flex-wrap: wrap; align-items: center;">
         <label class="ep-flex" style="gap: 6px; cursor: pointer; align-items: center;">
           <input id="anamneseSendEmail" type="checkbox" style="width: 16px; height: 16px;">
@@ -272,9 +333,11 @@
           <span class="ep-text-sm">Enviar por WhatsApp</span>
         </label>
       </div>
+
       <div class="ep-status ep-mt-12" id="anamneseStatus"></div>
     </div>
 
+    <!-- View de respostas -->
     <div id="anamneseViewWrap" class="ep-hide" style="padding: 0 28px;">
       <div id="anamneseAnswersView" style="max-height: 520px; overflow-y: auto;"></div>
     </div>
@@ -290,7 +353,7 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=3-19";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-20";
   import { cachedGet, invalidate as invalidateApi } from "./js/api-cache.js?v=2-82";
   import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
 
@@ -340,6 +403,7 @@
   const tagFilterChips = document.getElementById("tagFilterChips");
   const clearFiltersBtn = document.getElementById("clearFiltersBtn");
 
+  // Cache de pacientes decifrados — mantém em memória pra filtrar sem refetch.
   let allDecrypted = [];
   let activeTagFilter = null;
   let searchTerm = "";
@@ -364,6 +428,7 @@
     patientList.innerHTML = "";
     if (filtered.length === 0) {
       patientList.classList.add("ep-hide");
+      // Mensagem inline em emptyState — sem alterar texto original quando há pacientes mas filtro 0
       if (allDecrypted.length > 0) {
         emptyState.classList.remove("ep-hide");
         emptyState.querySelector("h3").textContent = "Nenhum paciente bate com o filtro.";
@@ -475,8 +540,15 @@
   }
 
   // ─── Import CSV ──────────────────────────────────────────────────────
+  // Parser CSV simples (sem dependência externa). Suporta:
+  //   - Separador `,` ou `;` (autodetect pela 1ª linha)
+  //   - Aspas duplas pra valores com vírgula/quebra
+  //   - Aspas escapadas via duplicação ("")
+  //   - Quebras de linha dentro de campos quoteados
+  //   - UTF-8 (FileReader.readAsText default)
   function parseCsv(text) {
-    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // strip BOM
+    // Detecta separador: o que aparece MAIS na 1ª linha (fora de aspas).
     const firstLine = text.slice(0, text.indexOf("\n") >= 0 ? text.indexOf("\n") : text.length);
     let inQ = false;
     let commas = 0, semis = 0;
@@ -487,6 +559,7 @@
       else if (!inQ && ch === ";") semis++;
     }
     const sep = semis > commas ? ";" : ",";
+
     const rows = [];
     let cur = [], field = "";
     inQ = false;
@@ -496,7 +569,9 @@
         if (ch === "\"") {
           if (text[i + 1] === "\"") { field += "\""; i++; }
           else inQ = false;
-        } else { field += ch; }
+        } else {
+          field += ch;
+        }
       } else {
         if (ch === "\"") inQ = true;
         else if (ch === sep) { cur.push(field); field = ""; }
@@ -505,13 +580,19 @@
         else field += ch;
       }
     }
+    // Última linha (se sem \n final)
     if (field !== "" || cur.length) { cur.push(field); rows.push(cur); }
+    // Remove linhas totalmente vazias
     return rows.filter(r => r.some(c => String(c).trim() !== ""));
   }
+
+  // Heurística pra mapear cabeçalho do CSV → campo do paciente.
+  // Aceita variações comuns (iClinic, planilhas BR).
   function autoMapColumns(header) {
     const map = { name: -1, contact: -1, contactPhone: -1, contactEmail: -1, birthdate: -1, observations: -1 };
     header.forEach((h, idx) => {
-      const k = String(h || "").toLowerCase().trim().normalize("NFD").replace(/[̀-ͯ]/g, "");
+      const k = String(h || "").toLowerCase().trim()
+        .normalize("NFD").replace(/[̀-ͯ]/g, "");
       if (map.name === -1 && /^(nome|name|paciente|patient)/.test(k)) map.name = idx;
       else if (map.contactEmail === -1 && /(e-?mail|email)/.test(k)) map.contactEmail = idx;
       else if (map.contactPhone === -1 && /(telefone|celular|phone|whatsapp|fone)/.test(k)) map.contactPhone = idx;
@@ -520,6 +601,9 @@
     });
     return map;
   }
+
+  // Tenta converter "dd/mm/yyyy" ou "dd-mm-yyyy" pra "yyyy-mm-dd" (ISO).
+  // Aceita "yyyy-mm-dd" direto. Inválida → "".
   function normalizeBirthdate(raw) {
     const s = String(raw || "").trim();
     if (!s) return "";
@@ -531,7 +615,9 @@
     if (yy.length !== 4) return "";
     return `${yy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
   }
-  let csvData = null;
+
+  let csvData = null; // { header, rows, mapping }
+
   document.getElementById("importCsvBtn").addEventListener("click", () => openCsvModal());
   function openCsvModal() {
     document.getElementById("csvFile").value = "";
@@ -562,29 +648,44 @@
     invalidateApi("pacientes", uid);
     await loadPatients();
   });
+
+  // Preview: lê arquivo, parseia, mostra mapping + tabelinha
   document.getElementById("csvPreviewBtn").addEventListener("click", async () => {
     const file = document.getElementById("csvFile").files?.[0];
-    if (!file) { setCsvUploadStatus("Selecione um arquivo CSV.", "err"); return; }
-    if (file.size > 5 * 1024 * 1024) { setCsvUploadStatus("Arquivo grande demais (limite 5MB).", "err"); return; }
+    if (!file) {
+      setCsvUploadStatus("Selecione um arquivo CSV.", "err");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setCsvUploadStatus("Arquivo grande demais (limite 5MB). Divida em partes.", "err");
+      return;
+    }
     setCsvUploadStatus("Lendo arquivo…");
     let text;
-    try { text = await file.text(); } catch { setCsvUploadStatus("Erro lendo arquivo.", "err"); return; }
+    try { text = await file.text(); }
+    catch (e) { setCsvUploadStatus("Erro lendo arquivo.", "err"); return; }
     const rows = parseCsv(text);
-    if (rows.length < 2) { setCsvUploadStatus("CSV vazio ou sem dados.", "err"); return; }
+    if (rows.length < 2) {
+      setCsvUploadStatus("CSV vazio ou sem dados (precisa de cabeçalho + 1 linha).", "err");
+      return;
+    }
     const header = rows[0].map(h => String(h).trim());
     const dataRows = rows.slice(1);
     const mapping = autoMapColumns(header);
+
     csvData = { header, rows: dataRows, mapping };
     document.getElementById("csvRowCount").textContent = String(dataRows.length);
     renderCsvMapping(header, mapping);
     renderCsvPreview(header, dataRows.slice(0, 5));
     showCsvStep("preview");
   });
+
   function setCsvUploadStatus(msg, kind) {
     const el = document.getElementById("csvUploadStatus");
     el.textContent = msg;
     el.className = "ep-status" + (kind === "err" ? " is-err" : "");
   }
+
   function renderCsvMapping(header, mapping) {
     const fields = [
       { key: "name",          label: "Nome (obrigatório)" },
@@ -601,7 +702,8 @@
         <div class="ep-field" data-field-key="${f.key}">
           <label class="ep-label">${f.label}</label>
           <select class="ep-select csv-map-select" data-field-key="${f.key}">${options}</select>
-        </div>`;
+        </div>
+      `;
     }).join("");
     document.getElementById("csvMapping").innerHTML = html;
     document.querySelectorAll(".csv-map-select").forEach(sel => {
@@ -615,6 +717,7 @@
     const body = rows.map(r => `<tr>${r.map(c => `<td style="padding: 6px 10px; border-bottom: 1px solid var(--ep-line); font-size: 12px;">${escapeHtml(c || "")}</td>`).join("")}</tr>`).join("");
     document.getElementById("csvPreview").innerHTML = `<table style="width: 100%; border-collapse: collapse;"><thead><tr>${cols}</tr></thead><tbody>${body}</tbody></table>`;
   }
+
   document.getElementById("csvImportBtn").addEventListener("click", async () => {
     if (!csvData) return;
     if (csvData.mapping.name < 0) {
@@ -623,14 +726,17 @@
       st.className = "ep-status is-err";
       return;
     }
+
     const total = csvData.rows.length;
     document.getElementById("csvProgressTotal").textContent = String(total);
     document.getElementById("csvProgressDone").textContent = "0";
     document.getElementById("csvProgressBar").style.width = "0%";
     document.getElementById("csvProgressErrors").innerHTML = "";
     showCsvStep("progress");
+
     const errors = [];
     let ok = 0;
+
     for (let i = 0; i < total; i++) {
       const row = csvData.rows[i];
       const get = (key) => {
@@ -648,6 +754,7 @@
       const contact = email || phone || "";
       const birthdate = normalizeBirthdate(get("birthdate"));
       const observations = get("observations").slice(0, 2000);
+
       try {
         const payload = { name, contact, birthdate, observations };
         const enc = await encryptPatientPayload(payload);
@@ -667,21 +774,26 @@
       }
       updateCsvProgress(i + 1, total, ok, errors);
     }
+
+    // Resultado
     document.getElementById("csvResultOk").textContent = String(ok);
     if (errors.length) {
       const items = errors.slice(0, 50).map(e => `
         <div style="padding: 6px 0; border-bottom: 1px solid var(--ep-line);">
           <strong>Linha ${e.row}</strong> (${escapeHtml(e.name)}): ${escapeHtml(e.reason)}
-        </div>`).join("");
+        </div>
+      `).join("");
       const overflow = errors.length > 50 ? `<div class="ep-text-xs ep-text-muted ep-mt-8">…e mais ${errors.length - 50} erros.</div>` : "";
       document.getElementById("csvResultErrors").innerHTML = `
         <p class="ep-text-sm" style="color: var(--ep-danger);"><strong>${errors.length}</strong> linha(s) falharam:</p>
-        ${items}${overflow}`;
+        ${items}${overflow}
+      `;
     } else {
       document.getElementById("csvResultErrors").innerHTML = "";
     }
     showCsvStep("result");
   });
+
   function updateCsvProgress(done, total, ok, errors) {
     document.getElementById("csvProgressDone").textContent = String(done);
     document.getElementById("csvProgressBar").style.width = `${Math.round((done / total) * 100)}%`;
@@ -689,12 +801,14 @@
       const last3 = errors.slice(-3).map(e => `
         <div class="ep-text-xs" style="color: var(--ep-danger); padding: 2px 0;">
           Linha ${e.row}: ${escapeHtml(e.reason)}
-        </div>`).join("");
+        </div>
+      `).join("");
       document.getElementById("csvProgressErrors").innerHTML =
         `<div class="ep-text-xs ep-text-muted">Últimos erros (${errors.length} total):</div>${last3}`;
     }
   }
 
+  // Map patientId → anamnese (last). Populado em loadAnamneses(), usado em renderPatient.
   let anamneseByPatient = {};
   async function loadAnamneses() {
     try {
@@ -704,11 +818,12 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) return;
       anamneseByPatient = {};
+      // Anamneses ordenadas por createdAt desc — pega a mais recente por paciente.
       for (const a of (data.anamneses || [])) {
         if (!a.patientId) continue;
         if (!anamneseByPatient[a.patientId]) anamneseByPatient[a.patientId] = a;
       }
-    } catch { /* no-op */ }
+    } catch { /* silencioso — UX continua sem badge */ }
   }
 
   patientList.addEventListener("click", async (e) => {
@@ -784,7 +899,12 @@
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/escalas/enviar`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
-        body: JSON.stringify({ scaleType, patientId: patient.patientId, patientNameSnapshot: patient.name, patientEmail, patientPhone, sendEmail, sendWhatsapp })
+        body: JSON.stringify({
+          scaleType,
+          patientId: patient.patientId,
+          patientNameSnapshot: patient.name,
+          patientEmail, patientPhone, sendEmail, sendWhatsapp
+        })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
@@ -827,6 +947,7 @@
     document.getElementById("anamneseStatus").textContent = "";
     document.getElementById("anamneseStatus").className = "ep-status";
 
+    // Decide se mostra form de envio ou view de resposta.
     if (existing && existing.status === "answered") {
       document.getElementById("anamneseSendWrap").classList.add("ep-hide");
       document.getElementById("anamneseViewWrap").classList.remove("ep-hide");
@@ -840,6 +961,7 @@
       document.getElementById("anamneseSubmitBtn").classList.remove("ep-hide");
       document.getElementById("anamneseCloseBtn").classList.remove("ep-hide");
       document.getElementById("anamneseViewCloseBtn").classList.add("ep-hide");
+      // Pré-preenche email/phone vindos do paciente cadastrado
       document.getElementById("anamneseEmail").value = patient.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patient.contact)
         ? patient.contact : "";
       document.getElementById("anamnesePhone").value = patient.contact && !/^[^\s@]+@/.test(patient.contact)
@@ -942,6 +1064,7 @@
       st.className = "ep-status is-ok";
       btn.disabled = false;
       btn.textContent = "Reenviar link";
+      // Atualiza o cache local pra refletir o status pending no próximo render.
       await loadAnamneses();
     } catch (e) {
       const st = document.getElementById("anamneseStatus");
@@ -1007,9 +1130,123 @@
     renderTagsChips();
     statusEl.textContent = "";
     statusEl.className = "ep-status";
+    // TISS block: só aparece ao editar (paciente já existe).
+    const tissBlock = document.getElementById("patientConvenioBlock");
+    if (tissBlock) {
+      if (editingId) {
+        tissBlock.classList.remove("ep-hide");
+        renderPatientConvenios(editingId);
+      } else {
+        tissBlock.classList.add("ep-hide");
+      }
+    }
     patientModal.classList.add("is-open");
     setTimeout(() => nameEl.focus(), 50);
   }
+
+  // ─── TISS: carteirinhas do paciente ────────────────────────────────
+  const tissApiPac = async (path, opts = {}) => {
+    const headers = { ...(opts.headers || {}), "Authorization": `Bearer ${idToken}` };
+    if (opts.body) headers["Content-Type"] = "application/json";
+    const r = await fetch(BACKEND_BASE_URL + path, { ...opts, headers });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP_${r.status}`);
+    return d;
+  };
+  function escapeHtmlPac(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  }
+  let _tissConveniosAceitos = null;
+  async function loadTissConveniosAceitos() {
+    if (_tissConveniosAceitos !== null) return _tissConveniosAceitos;
+    try {
+      const d = await tissApiPac("/therapy/profissional/tiss/convenios");
+      _tissConveniosAceitos = (d.convenios || []).filter(c => c.enabled !== false);
+    } catch { _tissConveniosAceitos = []; }
+    return _tissConveniosAceitos;
+  }
+  async function renderPatientConvenios(patientId) {
+    const listEl = document.getElementById("patientConveniosList");
+    const selEl  = document.getElementById("patientConvSelect");
+    if (!listEl || !selEl) return;
+    listEl.innerHTML = `<p class="ep-text-xs ep-text-muted">Carregando…</p>`;
+
+    const aceitos = await loadTissConveniosAceitos();
+    if (aceitos.length === 0) {
+      listEl.innerHTML = `<p class="ep-text-xs ep-text-muted">Cadastre convênios em <a href="./perfil.html#tissConveniosSection">Perfil → Convênios TISS</a>.</p>`;
+      document.getElementById("patientConvenioAddDetails").style.display = "none";
+      return;
+    }
+    document.getElementById("patientConvenioAddDetails").style.display = "";
+    selEl.innerHTML = aceitos.map(c => `<option value="${escapeHtmlPac(c.code)}">${escapeHtmlPac(c.nome)}</option>`).join("");
+
+    // Carrega carteirinhas do paciente. Endpoint é GET no patient detail — usa
+    // o endpoint público de pacientes (que já retorna o doc completo).
+    try {
+      const d = await fetch(BACKEND_BASE_URL + `/therapy/pacientes/${encodeURIComponent(patientId)}`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await d.json().catch(() => ({}));
+      const carts = (data?.patient?.convenios) || [];
+      if (carts.length === 0) {
+        listEl.innerHTML = `<p class="ep-text-xs ep-text-muted">Nenhuma carteirinha cadastrada.</p>`;
+        return;
+      }
+      const nomeOf = (code) => aceitos.find(c => c.code === code)?.nome || code;
+      listEl.innerHTML = carts.map(c => `
+        <div class="ep-flex" style="justify-content: space-between; align-items: center; padding: 6px 10px; border: 1px solid var(--ep-line); border-radius: 6px; gap: 8px; font-size: 13px;">
+          <div style="min-width: 0; flex: 1;">
+            <strong>${escapeHtmlPac(nomeOf(c.convenioCode))}</strong>
+            · <span style="font-family: monospace;">${escapeHtmlPac(c.numeroCarteirinha)}</span>
+            ${c.validade ? ` · valido ate ${escapeHtmlPac(c.validade)}` : ""}
+            ${c.plano ? ` · ${escapeHtmlPac(c.plano)}` : ""}
+          </div>
+          <button type="button" data-cart-del="${escapeHtmlPac(c.convenioCode)}" class="ep-btn ep-btn--ghost ep-btn--sm" style="color: #b8453d; padding: 2px 8px;">×</button>
+        </div>
+      `).join("");
+      listEl.querySelectorAll("[data-cart-del]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const code = btn.getAttribute("data-cart-del");
+          if (!confirm("Remover carteirinha?")) return;
+          try {
+            await tissApiPac(`/therapy/paciente/${encodeURIComponent(patientId)}/convenio/${encodeURIComponent(code)}`, { method: "DELETE" });
+            await renderPatientConvenios(patientId);
+          } catch (e) { alert("Erro: " + e.message); }
+        });
+      });
+    } catch (e) {
+      listEl.innerHTML = `<p class="ep-text-xs" style="color: #b8453d;">Erro ao carregar: ${escapeHtmlPac(e.message)}</p>`;
+    }
+  }
+  document.getElementById("patientConvSaveBtn").addEventListener("click", async () => {
+    if (!editingId) return;
+    const convenioCode      = document.getElementById("patientConvSelect").value;
+    const numeroCarteirinha = document.getElementById("patientConvNumero").value.trim();
+    const validade          = document.getElementById("patientConvValidade").value || null;
+    const plano             = document.getElementById("patientConvPlano").value.trim() || null;
+    const titular           = document.getElementById("patientConvTitular").value.trim() || null;
+    const sEl = document.getElementById("patientConvStatus");
+    sEl.textContent = ""; sEl.className = "ep-status";
+    if (!convenioCode || !numeroCarteirinha) {
+      sEl.textContent = "Selecione convênio e informe número da carteirinha.";
+      sEl.classList.add("is-err");
+      return;
+    }
+    try {
+      await tissApiPac(`/therapy/paciente/${encodeURIComponent(editingId)}/convenio`, {
+        method: "POST",
+        body: JSON.stringify({ convenioCode, numeroCarteirinha, validade, plano, titular })
+      });
+      ["patientConvNumero","patientConvValidade","patientConvPlano","patientConvTitular"].forEach(id => document.getElementById(id).value = "");
+      document.getElementById("patientConvenioAddDetails").open = false;
+      sEl.textContent = "Carteirinha salva.";
+      sEl.classList.add("is-ok");
+      await renderPatientConvenios(editingId);
+    } catch (e) {
+      sEl.textContent = "Erro: " + e.message;
+      sEl.classList.add("is-err");
+    }
+  });
   function closeModal() {
     patientModal.classList.remove("is-open");
     editingId = null;
@@ -1077,6 +1314,7 @@
     if (e.key === "Escape") closeModal();
   });
 
+  // Carrega anamneses primeiro (em paralelo) pra badge aparecer no 1º render.
   await loadAnamneses();
   await loadPatients();
 </script>
