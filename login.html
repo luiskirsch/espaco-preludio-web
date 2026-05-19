@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="ep-consult-html">
+<html lang="pt-BR" class="ep-consult-html" data-i18n-ns="login">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Entrar · Espaço Prelúdio</title>
+  <title data-i18n="login:title">Entrar · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-149">
+  <script src="./i18n/init.js?v=1-0" defer></script>
 </head>
 <body>
 
@@ -18,40 +19,40 @@
     <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="common:brand.tail">Prelúdio</span>
       </span>
     </a>
 
-    <h2 class="ep-auth__title ep-mt-32">Entrar no consultório</h2>
-    <p class="ep-auth__sub">
+    <h2 class="ep-auth__title ep-mt-32" data-i18n="login:h2">Entrar no consultório</h2>
+    <p class="ep-auth__sub" data-i18n="login:sub">
       Use seu e-mail profissional. Sua senha desbloqueia também a chave que cifra suas anotações.
     </p>
 
-    <div id="reauthAlert" class="ep-alert ep-alert--info ep-mt-12 ep-hide">
+    <div id="reauthAlert" class="ep-alert ep-alert--info ep-mt-12 ep-hide" data-i18n="login:reauthAlert">
       Sua sessão de cifragem expirou. Confirme sua senha para continuar.
     </div>
 
     <form id="loginForm" class="ep-stack ep-mt-16" novalidate>
       <div class="ep-field">
-        <label class="ep-label" for="email">E-mail</label>
+        <label class="ep-label" for="email" data-i18n="login:labelEmail">E-mail</label>
         <input id="email" class="ep-input" type="email" autocomplete="email" maxlength="160" required>
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="password">Senha</label>
+        <label class="ep-label" for="password" data-i18n="login:labelPassword">Senha</label>
         <input id="password" class="ep-input" type="password" autocomplete="current-password" required>
       </div>
 
       <div class="ep-status" id="status"></div>
 
       <div class="ep-stack" style="gap: 8px;">
-        <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="submitBtn">Entrar</button>
-        <a href="./cadastro.html" class="ep-btn ep-btn--ghost ep-btn--block">Criar consultório</a>
+        <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="submitBtn" data-i18n="login:btnSubmit">Entrar</button>
+        <a href="./cadastro.html" class="ep-btn ep-btn--ghost ep-btn--block" data-i18n="login:btnCreate">Criar consultório</a>
       </div>
     </form>
 
     <div class="ep-auth__bottom">
-      <a href="./recuperar.html">Esqueci minha senha · usar chave-semente</a>
+      <a href="./recuperar.html" data-i18n="login:forgot">Esqueci minha senha · usar chave-semente</a>
     </div>
   </div>
 </main>
@@ -62,6 +63,14 @@
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { unwrapDek, rememberDek, rememberUser } from "./js/crypto.js";
+  // Tradução com fallback PT-BR — caso o i18n ainda não tenha carregado.
+  function tr(key, fallback) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback;
+  }
   // Sanitiza redirect: aceita so path relativo same-origin (./...). Bloqueia
   // //evil, /\\evil, https://evil, javascript:, data:, etc. — protege phishing
   // que abusava do redirect pra mandar user pro fake-login.
@@ -88,7 +97,7 @@
   }
 
   if (errorParam === "NAO_REGISTRADO") {
-    setStatus("Você ainda não tem cadastro de profissional. Crie sua conta primeiro.", "err");
+    setStatus(tr("login:errors.naoRegistrado", "Você ainda não tem cadastro de profissional. Crie sua conta primeiro."), "err");
   }
 
   async function fetchProfile(idToken) {
@@ -103,12 +112,12 @@
 
   function humanize(err) {
     const code = err?.code || "";
-    if (code === "auth/invalid-credential") return "E-mail ou senha incorretos.";
-    if (code === "auth/wrong-password")     return "Senha incorreta.";
-    if (code === "auth/user-not-found")     return "Conta não encontrada.";
-    if (code === "auth/too-many-requests")  return "Muitas tentativas. Tente novamente em alguns minutos.";
-    if (code === "auth/network-request-failed") return "Erro de conexão.";
-    return err?.message || "Erro ao entrar.";
+    if (code === "auth/invalid-credential") return tr("login:errors.invalidCredential", "E-mail ou senha incorretos.");
+    if (code === "auth/wrong-password")     return tr("login:errors.wrongPassword", "Senha incorreta.");
+    if (code === "auth/user-not-found")     return tr("login:errors.userNotFound", "Conta não encontrada.");
+    if (code === "auth/too-many-requests")  return tr("login:errors.tooManyRequests", "Muitas tentativas. Tente novamente em alguns minutos.");
+    if (code === "auth/network-request-failed") return tr("login:errors.networkError", "Erro de conexão.");
+    return err?.message || tr("login:errors.genericError", "Erro ao entrar.");
   }
 
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
@@ -120,37 +129,37 @@
     const password = document.getElementById("password").value;
 
     if (!email || !password) {
-      setStatus("Preencha e-mail e senha.", "err");
+      setStatus(tr("login:errors.emptyFields", "Preencha e-mail e senha."), "err");
       submitBtn.disabled = false;
       return;
     }
 
     try {
-      setStatus("Autenticando…");
+      setStatus(tr("login:errors.authenticating", "Autenticando…"));
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await cred.user.getIdToken();
 
-      setStatus("Carregando perfil…");
+      setStatus(tr("login:errors.loadingProfile", "Carregando perfil…"));
       const profile = await fetchProfile(idToken);
       if (!profile.ok) {
         if (profile.code === "NAO_REGISTRADO") {
-          setStatus("Sua conta existe mas o cadastro de profissional não foi finalizado. Indo para o cadastro…", "err");
+          setStatus(tr("login:errors.incompleteProfile", "Sua conta existe mas o cadastro de profissional não foi finalizado. Indo para o cadastro…"), "err");
           setTimeout(() => { window.location.href = "./cadastro.html?step=profissional"; }, 1500);
           return;
         }
-        setStatus("Erro: " + profile.code, "err");
+        setStatus(tr("login:errors.errorPrefix", "Erro: ") + profile.code, "err");
         submitBtn.disabled = false;
         return;
       }
 
       const t = profile.therapist;
       if (!t.e2eeSalt || !t.wrappedDEK || !t.wrappedDEKIv) {
-        setStatus("Sua conta está sem chave de cifragem. Recadastre-se ou entre em contato.", "err");
+        setStatus(tr("login:errors.noKey", "Sua conta está sem chave de cifragem. Recadastre-se ou entre em contato."), "err");
         submitBtn.disabled = false;
         return;
       }
 
-      setStatus("Desbloqueando sua chave…");
+      setStatus(tr("login:errors.unlockingKey", "Desbloqueando sua chave…"));
       let dek;
       try {
         dek = await unwrapDek({
@@ -159,7 +168,7 @@
           e2eeSalt:     t.e2eeSalt
         }, password);
       } catch {
-        setStatus("Senha aceita mas a chave não pôde ser desbloqueada — possivelmente o cadastro está corrompido.", "err");
+        setStatus(tr("login:errors.keyUnlockFailed", "Senha aceita mas a chave não pôde ser desbloqueada — possivelmente o cadastro está corrompido."), "err");
         submitBtn.disabled = false;
         return;
       }
@@ -167,7 +176,7 @@
       rememberDek(dek);
       rememberUser({ uid: cred.user.uid, email, displayName: t.displayName });
 
-      setStatus("Entrando…", "ok");
+      setStatus(tr("login:errors.entering", "Entrando…"), "ok");
       window.location.href = redirect;
     } catch (error) {
       console.error("login_error", error);
