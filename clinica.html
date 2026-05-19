@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-ns="clinica">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clínica · Espaço Prelúdio</title>
+  <title data-i18n="clinica:title">Clínica · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-150">
+  <script src="./i18n/init.js?v=1-0" defer></script>
   <style>
     .ep-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--ep-line); margin-bottom: 24px; }
     .ep-tab { padding: 12px 18px; font-weight: 500; color: var(--ep-ink-2); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; transition: color 120ms ease, border-color 120ms ease; font-family: var(--ep-font-sans); font-size: 14px; }
@@ -37,32 +38,32 @@
     <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="common:brand.tail">Prelúdio</span>
       </span>
     </a>
-    <nav class="ep-nav" aria-label="Painel">
-      <a href="./painel.html">Consultas</a>
-      <a href="./agenda.html">Agenda</a>
-      <a href="./pacientes.html">Pacientes</a>
-      <a href="./financeiro.html">Financeiro</a>
-      <a href="./tiss.html" class="ep-text-sm" data-tiss-only style="display: none;">TISS</a>
-      <a href="./mensagens-pro.html">Colegas</a>
-      <a href="./marketing.html">Marketing</a>
-      
-      <a href="./relatorios.html">Relatórios</a>
-      <a href="./clinica.html" class="is-active">Clínica</a>
-      <a href="./inventario.html">Estoque</a>
-      <a href="./receita.html">Receitas</a>
-      <a href="./calculadora.html">Calculadora</a>
-      <a href="./documento.html?tipo=atestado">Atestado</a>
-      <a href="./whatsapp.html">WhatsApp</a>
+    <nav class="ep-nav" data-i18n-aria-label="clinica:nav.ariaLabel" aria-label="Painel">
+      <a href="./painel.html" data-i18n="clinica:nav.consultas">Consultas</a>
+      <a href="./agenda.html" data-i18n="clinica:nav.agenda">Agenda</a>
+      <a href="./pacientes.html" data-i18n="clinica:nav.pacientes">Pacientes</a>
+      <a href="./financeiro.html" data-i18n="clinica:nav.financeiro">Financeiro</a>
+      <a href="./tiss.html" class="ep-text-sm" data-tiss-only style="display: none;" data-i18n="clinica:nav.tiss">TISS</a>
+      <a href="./mensagens-pro.html" data-i18n="clinica:nav.colegas">Colegas</a>
+      <a href="./marketing.html" data-i18n="clinica:nav.marketing">Marketing</a>
+
+      <a href="./relatorios.html" data-i18n="clinica:nav.relatorios">Relatórios</a>
+      <a href="./clinica.html" class="is-active" data-i18n="clinica:nav.clinica">Clínica</a>
+      <a href="./inventario.html" data-i18n="clinica:nav.estoque">Estoque</a>
+      <a href="./receita.html" data-i18n="clinica:nav.receitas">Receitas</a>
+      <a href="./calculadora.html" data-i18n="clinica:nav.calculadora">Calculadora</a>
+      <a href="./documento.html?tipo=atestado" data-i18n="clinica:nav.atestado">Atestado</a>
+      <a href="./whatsapp.html" data-i18n="clinica:nav.whatsapp">WhatsApp</a>
       <div class="ep-profile-group">
-        <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
+        <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" data-i18n-aria-label="clinica:nav.perfilAria" aria-label="Abrir perfil">
         <span class="ep-nav-avatar" id="topUserAvatar">·</span>
-        <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
+        <span class="ep-nav-profile__name" id="topUserName" data-i18n="clinica:nav.perfil">Perfil</span>
       </a>
-        <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+        <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="clinica:nav.sair">Sair</button>
       </div>
     </nav>
   </div>
@@ -71,37 +72,37 @@
 <main class="ep-container ep-mt-32 ep-mb-16">
 
   <!-- Bootstrap state: 3 caminhos -->
-  <div id="bootLoading" class="ep-alert">Carregando…</div>
+  <div id="bootLoading" class="ep-alert" data-i18n="clinica:boot.loading">Carregando…</div>
 
   <!-- Estado A: user não tem clínica nem é membro de nenhuma -->
   <section id="emptyState" class="ep-hide ep-stack">
     <div>
-      <div class="ep-eyebrow">Gestão multidisciplinar</div>
-      <h1 class="ep-h1 ep-mt-12">Clínica</h1>
-      <p class="ep-text-muted ep-mt-8">
+      <div class="ep-eyebrow" data-i18n="clinica:empty.eyebrow">Gestão multidisciplinar</div>
+      <h1 class="ep-h1 ep-mt-12" data-i18n="clinica:empty.h1">Clínica</h1>
+      <p class="ep-text-muted ep-mt-8" data-i18n="clinica:empty.lead">
         Crie uma clínica pra cadastrar outros profissionais e calcular repasse automático,
         ou aguarde um convite de outra clínica.
       </p>
     </div>
     <div class="ep-card ep-mt-16" style="padding: 32px;">
-      <h2 class="ep-h2 ep-mt-0">Criar sua clínica</h2>
-      <p class="ep-text-muted ep-mt-8">
+      <h2 class="ep-h2 ep-mt-0" data-i18n="clinica:empty.cardH2">Criar sua clínica</h2>
+      <p class="ep-text-muted ep-mt-8" data-i18n="clinica:empty.cardLead">
         Você será o dono. Pode convidar profissionais por e-mail, definir repasse por % ou
         valor fixo, e ver o relatório mensal do que cada um recebeu.
       </p>
       <form class="ep-stack ep-mt-16" id="createClinicForm">
         <div class="ep-row">
           <div class="ep-field">
-            <label class="ep-label" for="newClinicName">Nome da clínica *</label>
-            <input id="newClinicName" class="ep-input" type="text" maxlength="100" placeholder="Ex.: Espaço Vínculo" required>
+            <label class="ep-label" for="newClinicName" data-i18n="clinica:empty.nameLabel">Nome da clínica *</label>
+            <input id="newClinicName" class="ep-input" type="text" maxlength="100" placeholder="Ex.: Espaço Vínculo" data-i18n-placeholder="clinica:empty.namePh" required>
           </div>
           <div class="ep-field">
-            <label class="ep-label" for="newClinicCnpj">CNPJ (opcional)</label>
-            <input id="newClinicCnpj" class="ep-input" type="text" maxlength="18" placeholder="00.000.000/0001-00">
+            <label class="ep-label" for="newClinicCnpj" data-i18n="clinica:empty.cnpjLabel">CNPJ (opcional)</label>
+            <input id="newClinicCnpj" class="ep-input" type="text" maxlength="18" placeholder="00.000.000/0001-00" data-i18n-placeholder="clinica:empty.cnpjPh">
           </div>
         </div>
         <div class="ep-status" id="createClinicStatus"></div>
-        <button type="button" class="ep-btn ep-btn--primary ep-btn--lg" id="createClinicBtn">Criar clínica</button>
+        <button type="button" class="ep-btn ep-btn--primary ep-btn--lg" id="createClinicBtn" data-i18n="clinica:empty.createBtn">Criar clínica</button>
       </form>
     </div>
   </section>
@@ -110,65 +111,65 @@
   <section id="ownerView" class="ep-hide">
     <div class="ep-flex--end-wrap ep-flex">
       <div>
-        <div class="ep-eyebrow">Sua clínica</div>
+        <div class="ep-eyebrow" data-i18n="clinica:owner.eyebrow">Sua clínica</div>
         <h1 class="ep-h1 ep-mt-12" id="clinicNameTitle">—</h1>
         <p class="ep-text-muted ep-mt-12" id="clinicSubtitle">—</p>
       </div>
     </div>
 
     <div class="ep-tabs ep-mt-24">
-      <button type="button" class="ep-tab is-active" data-tab="membros">Membros</button>
-      <button type="button" class="ep-tab" data-tab="repasse">Repasse mensal</button>
+      <button type="button" class="ep-tab is-active" data-tab="membros" data-i18n="clinica:owner.tabMembros">Membros</button>
+      <button type="button" class="ep-tab" data-tab="repasse" data-i18n="clinica:owner.tabRepasse">Repasse mensal</button>
     </div>
 
     <!-- Tab: Membros -->
     <div class="ep-tab-panel is-active" data-panel="membros">
       <div class="ep-flex ep-flex--end-wrap" style="margin-bottom: 16px;">
-        <p class="ep-text-muted" style="margin: 0;">Profissionais cadastrados na sua clínica.</p>
-        <button type="button" class="ep-btn ep-btn--primary" id="addMemberBtn">+ Convidar profissional</button>
+        <p class="ep-text-muted" style="margin: 0;" data-i18n="clinica:owner.membrosLead">Profissionais cadastrados na sua clínica.</p>
+        <button type="button" class="ep-btn ep-btn--primary" id="addMemberBtn" data-i18n="clinica:owner.addBtn">+ Convidar profissional</button>
       </div>
       <div id="memberList" class="ep-session-list"></div>
       <div id="memberEmpty" class="ep-empty ep-hide">
-        <h3 class="ep-h3">Nenhum membro ainda.</h3>
-        <p class="ep-text-muted ep-mt-8" style="margin: 0;">Convide profissionais por e-mail pra começar a calcular repasses.</p>
+        <h3 class="ep-h3" data-i18n="clinica:owner.emptyTitle">Nenhum membro ainda.</h3>
+        <p class="ep-text-muted ep-mt-8" style="margin: 0;" data-i18n="clinica:owner.emptyLead">Convide profissionais por e-mail pra começar a calcular repasses.</p>
       </div>
     </div>
 
     <!-- Tab: Repasse -->
     <div class="ep-tab-panel" data-panel="repasse">
       <div class="ep-flex ep-flex--end-wrap" style="margin-bottom: 16px;">
-        <p class="ep-text-muted" style="margin: 0;">Relatório do que cada profissional recebe no mês. Calculado a partir das transações financeiras com "Atendido por" preenchido.</p>
-        <select id="repasseMonthFilter" class="ep-select" aria-label="Mês"></select>
+        <p class="ep-text-muted" style="margin: 0;" data-i18n="clinica:owner.repasseLead">Relatório do que cada profissional recebe no mês. Calculado a partir das transações financeiras com "Atendido por" preenchido.</p>
+        <select id="repasseMonthFilter" class="ep-select" data-i18n-aria-label="clinica:owner.monthAria" aria-label="Mês"></select>
       </div>
-      <div id="repasseLoading" class="ep-alert">Carregando…</div>
+      <div id="repasseLoading" class="ep-alert" data-i18n="clinica:owner.repasseLoading">Carregando…</div>
       <div id="repasseContent" class="ep-hide">
         <div class="ep-totals">
           <div>
-            <div class="ep-totals__label">Receita consultas (pago)</div>
+            <div class="ep-totals__label" data-i18n="clinica:owner.totalReceita">Receita consultas (pago)</div>
             <div class="ep-totals__value" id="repasseReceita">R$ 0,00</div>
           </div>
           <div>
-            <div class="ep-totals__label">Total repasse devido</div>
+            <div class="ep-totals__label" data-i18n="clinica:owner.totalRepasse">Total repasse devido</div>
             <div class="ep-totals__value" id="repasseTotal" style="color: var(--ep-warn);">R$ 0,00</div>
           </div>
           <div>
-            <div class="ep-totals__label">Sobra para a clínica</div>
+            <div class="ep-totals__label" data-i18n="clinica:owner.totalSobra">Sobra para a clínica</div>
             <div class="ep-totals__value" id="repasseSobra" style="color: var(--ep-ok);">R$ 0,00</div>
           </div>
         </div>
         <table class="ep-repasse-table">
           <thead>
             <tr>
-              <th>Profissional</th>
-              <th>Consultas</th>
-              <th>Receita gerada</th>
-              <th>Regra</th>
-              <th style="text-align: right;">Repasse</th>
+              <th data-i18n="clinica:owner.th.prof">Profissional</th>
+              <th data-i18n="clinica:owner.th.consultas">Consultas</th>
+              <th data-i18n="clinica:owner.th.receita">Receita gerada</th>
+              <th data-i18n="clinica:owner.th.regra">Regra</th>
+              <th style="text-align: right;" data-i18n="clinica:owner.th.repasse">Repasse</th>
             </tr>
           </thead>
           <tbody id="repasseTbody"></tbody>
         </table>
-        <p class="ep-text-xs ep-text-muted ep-mt-12">
+        <p class="ep-text-xs ep-text-muted ep-mt-12" data-i18n="clinica:owner.tableHint">
           Só conta receitas com status "Pago" e campo "Atendido por" preenchido.
           Pra contar uma consulta: ao registrar a transação no financeiro,
           escolha o profissional em "Atendido por".
@@ -179,9 +180,9 @@
 
   <!-- Estado C: user é membro (não dono) -->
   <section id="memberView" class="ep-hide">
-    <div class="ep-eyebrow">Você é membro de</div>
-    <h1 class="ep-h1 ep-mt-12">Clínicas</h1>
-    <p class="ep-text-muted ep-mt-8">
+    <div class="ep-eyebrow" data-i18n="clinica:member.eyebrow">Você é membro de</div>
+    <h1 class="ep-h1 ep-mt-12" data-i18n="clinica:member.h1">Clínicas</h1>
+    <p class="ep-text-muted ep-mt-8" data-i18n="clinica:member.lead">
       Você foi cadastrado como profissional em uma ou mais clínicas.
     </p>
     <div id="membershipList" class="ep-session-list ep-mt-24"></div>
@@ -189,7 +190,7 @@
 
   <!-- Convites pendentes (sempre que tiver) -->
   <section id="pendingInvites" class="ep-hide ep-mt-24">
-    <h2 class="ep-h3">Convites pendentes</h2>
+    <h2 class="ep-h3" data-i18n="clinica:invites.h2">Convites pendentes</h2>
     <div id="invitesList" class="ep-session-list ep-mt-12"></div>
   </section>
 
@@ -198,35 +199,35 @@
 <!-- Modal: convidar membro -->
 <div class="ep-modal" id="memberModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel">
-    <h3 class="ep-modal__title" id="memberModalTitle">Convidar profissional</h3>
-    <p class="ep-modal__sub">
+    <h3 class="ep-modal__title" id="memberModalTitle" data-i18n="clinica:modal.inviteTitle">Convidar profissional</h3>
+    <p class="ep-modal__sub" data-i18n="clinica:modal.sub">
       Digite o e-mail do profissional. Se ele já tem conta no Espaço Prelúdio, vai ver o convite
       no painel dele e poderá aceitar.
     </p>
     <form class="ep-stack" id="memberForm" novalidate>
       <div class="ep-field" id="memberEmailField">
-        <label class="ep-label" for="memberEmail">E-mail *</label>
-        <input id="memberEmail" class="ep-input" type="email" placeholder="profissional@exemplo.com" required>
+        <label class="ep-label" for="memberEmail" data-i18n="clinica:modal.emailLabel">E-mail *</label>
+        <input id="memberEmail" class="ep-input" type="email" placeholder="profissional@exemplo.com" data-i18n-placeholder="clinica:modal.emailPh" required>
       </div>
       <div class="ep-row">
         <div class="ep-field">
-          <label class="ep-label" for="memberRuleType">Tipo de repasse *</label>
+          <label class="ep-label" for="memberRuleType" data-i18n="clinica:modal.ruleTypeLabel">Tipo de repasse *</label>
           <select id="memberRuleType" class="ep-select" required>
-            <option value="percentual" selected>Percentual sobre receita</option>
-            <option value="valor-fixo">Valor fixo por consulta</option>
+            <option value="percentual" selected data-i18n="clinica:modal.rulePercent">Percentual sobre receita</option>
+            <option value="valor-fixo" data-i18n="clinica:modal.ruleFixed">Valor fixo por consulta</option>
           </select>
         </div>
         <div class="ep-field">
-          <label class="ep-label" for="memberRuleValue"><span id="memberRuleValueLabel">% sobre receita</span> *</label>
+          <label class="ep-label" for="memberRuleValue"><span id="memberRuleValueLabel" data-i18n="clinica:modal.ruleValueLabelDefault">% sobre receita</span> *</label>
           <input id="memberRuleValue" class="ep-input" type="text" inputmode="decimal" placeholder="70">
-          <p class="ep-text-xs ep-text-muted ep-mt-0" id="memberRuleHint">Quanto o profissional recebe de cada consulta paga.</p>
+          <p class="ep-text-xs ep-text-muted ep-mt-0" id="memberRuleHint" data-i18n="clinica:modal.ruleHintDefault">Quanto o profissional recebe de cada consulta paga.</p>
         </div>
       </div>
       <div class="ep-status" id="memberFormStatus"></div>
     </form>
     <div class="ep-modal__actions">
-      <button type="button" class="ep-btn ep-btn--ghost" id="cancelMemberBtn">Cancelar</button>
-      <button type="button" class="ep-btn ep-btn--primary" id="saveMemberBtn">Salvar</button>
+      <button type="button" class="ep-btn ep-btn--ghost" id="cancelMemberBtn" data-i18n="clinica:modal.cancelBtn">Cancelar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="saveMemberBtn" data-i18n="clinica:modal.saveBtn">Salvar</button>
     </div>
   </div>
 </div>
@@ -247,6 +248,18 @@
     window.location.href = "./login.html";
   });
 
+  // tr(): i18n helper com fallback PT-BR.
+  function tr(key, fallback, opts) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key, opts);
+      if (v && v !== key) return v;
+    }
+    if (opts && typeof fallback === "string") {
+      return fallback.replace(/\{\{(\w+)\}\}/g, (_, k) => (opts[k] != null ? String(opts[k]) : ""));
+    }
+    return fallback;
+  }
+
   // ─── Helpers ───────────────────────────────────────────────────
   function fmtCents(cents) {
     const v = (cents || 0) / 100;
@@ -254,8 +267,8 @@
   }
   function fmtRule(rule) {
     if (!rule) return "—";
-    if (rule.type === "percentual") return `${rule.value}% sobre receita`;
-    return `${fmtCents(rule.value)} por consulta`;
+    if (rule.type === "percentual") return `${rule.value}% ${tr("clinica:list.overRevenue", "sobre receita")}`;
+    return `${fmtCents(rule.value)} ${tr("clinica:list.perSession", "por consulta")}`;
   }
   function escapeHtml(s) {
     return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
@@ -292,7 +305,7 @@
       document.getElementById("bootLoading").classList.add("ep-hide");
       renderRoot();
     } catch (e) {
-      document.getElementById("bootLoading").textContent = "Erro: " + e.message;
+      document.getElementById("bootLoading").textContent = tr("clinica:errors.prefix", "Erro: ") + e.message;
       document.getElementById("bootLoading").className = "ep-alert ep-alert--danger";
     }
   }
@@ -308,7 +321,7 @@
       document.getElementById("ownerView").classList.remove("ep-hide");
       document.getElementById("clinicNameTitle").textContent = myClinic.name;
       document.getElementById("clinicSubtitle").textContent = myClinic.cnpj
-        ? `CNPJ ${myClinic.cnpj}` : "Você é o dono.";
+        ? `${tr("clinica:owner.cnpjPrefix", "CNPJ")} ${myClinic.cnpj}` : tr("clinica:owner.cnpjFallback", "Você é o dono.");
       buildRepasseMonthOptions();
       loadMembers();
     } else if (memberships.length > 0) {
@@ -321,15 +334,19 @@
 
   function renderInvites() {
     const list = document.getElementById("invitesList");
+    const clinicFallback = tr("clinica:list.clinicFallback", "Clínica");
+    const repasseLabel   = tr("clinica:invites.repasseLabel", "Repasse:");
+    const acceptBtn      = tr("clinica:invites.acceptBtn", "Aceitar");
+    const declineBtn     = tr("clinica:invites.declineBtn", "Recusar");
     list.innerHTML = pendingInvites.map(inv => `
       <article class="ep-session ep-session--active">
         <div>
-          <div class="ep-session__name">${escapeHtml(inv.clinicName || "Clínica")}</div>
-          <div class="ep-session__meta">Repasse: ${escapeHtml(fmtRule(inv.repasseRule))}</div>
+          <div class="ep-session__name">${escapeHtml(inv.clinicName || clinicFallback)}</div>
+          <div class="ep-session__meta">${escapeHtml(repasseLabel)} ${escapeHtml(fmtRule(inv.repasseRule))}</div>
         </div>
         <div class="ep-session__actions">
-          <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="accept" data-id="${inv.memberId}">Aceitar</button>
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="decline" data-id="${inv.memberId}">Recusar</button>
+          <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="accept" data-id="${inv.memberId}">${escapeHtml(acceptBtn)}</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="decline" data-id="${inv.memberId}">${escapeHtml(declineBtn)}</button>
         </div>
       </article>
     `).join("");
@@ -343,7 +360,7 @@
           location.reload();
         } catch (e) {
           btn.disabled = false;
-          alert("Erro: " + e.message);
+          alert(tr("clinica:errors.prefix", "Erro: ") + e.message);
         }
       });
     });
@@ -351,14 +368,17 @@
 
   function renderMemberships() {
     const list = document.getElementById("membershipList");
+    const clinicFallback = tr("clinica:list.clinicFallback", "Clínica");
+    const myRepasse      = tr("clinica:list.myRepasse", "Seu repasse:");
+    const badgeActive    = tr("clinica:list.badgeActive", "Ativo");
     list.innerHTML = memberships.map(m => `
       <article class="ep-session">
         <div>
-          <div class="ep-session__name">${escapeHtml(m.clinicName || "Clínica")}</div>
-          <div class="ep-session__meta">Seu repasse: ${escapeHtml(fmtRule(m.repasseRule))}</div>
+          <div class="ep-session__name">${escapeHtml(m.clinicName || clinicFallback)}</div>
+          <div class="ep-session__meta">${escapeHtml(myRepasse)} ${escapeHtml(fmtRule(m.repasseRule))}</div>
         </div>
         <div class="ep-session__actions">
-          <span class="ep-badge ep-badge--ok">Ativo</span>
+          <span class="ep-badge ep-badge--ok">${escapeHtml(badgeActive)}</span>
         </div>
       </article>
     `).join("");
@@ -369,12 +389,12 @@
     const name = document.getElementById("newClinicName").value.trim();
     const cnpj = document.getElementById("newClinicCnpj").value.trim();
     const statusEl = document.getElementById("createClinicStatus");
-    if (!name) { statusEl.textContent = "Nome obrigatório."; statusEl.className = "ep-status is-err"; return; }
+    if (!name) { statusEl.textContent = tr("clinica:errors.nameRequired", "Nome obrigatório."); statusEl.className = "ep-status is-err"; return; }
     try {
       await api("/therapy/clinicas", { method: "POST", body: JSON.stringify({ name, cnpj: cnpj || null }) });
       location.reload();
     } catch (e) {
-      statusEl.textContent = "Erro: " + e.message;
+      statusEl.textContent = tr("clinica:errors.prefix", "Erro: ") + e.message;
       statusEl.className = "ep-status is-err";
     }
   });
@@ -412,10 +432,15 @@
     }
     empty.classList.add("ep-hide");
     list.classList.remove("ep-hide");
+    const badgeActive  = tr("clinica:list.badgeActive", "Ativo");
+    const badgePending = tr("clinica:list.badgePending", "Convite pendente");
+    const editBtn      = tr("clinica:list.editRepasseBtn", "Editar repasse");
+    const removeAria   = tr("clinica:list.removeAria", "Remover");
+    const removeTitle  = tr("clinica:list.removeTitle", "Remover");
     list.innerHTML = membersData.map(m => {
       const statusBadge = m.status === "active"
-        ? '<span class="ep-badge ep-badge--ok">Ativo</span>'
-        : '<span class="ep-badge">Convite pendente</span>';
+        ? `<span class="ep-badge ep-badge--ok">${escapeHtml(badgeActive)}</span>`
+        : `<span class="ep-badge">${escapeHtml(badgePending)}</span>`;
       const isActive = m.status === "active";
       return `
         <article class="ep-session${m.status === "pending" ? " ep-session--active" : ""}">
@@ -428,8 +453,8 @@
             </div>
           </div>
           <div class="ep-session__actions">
-            <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="edit" data-id="${m.memberId}">Editar repasse</button>
-            <button class="ep-btn-icon" data-action="remove" data-id="${m.memberId}" aria-label="Remover" title="Remover">
+            <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="edit" data-id="${m.memberId}">${escapeHtml(editBtn)}</button>
+            <button class="ep-btn-icon" data-action="remove" data-id="${m.memberId}" aria-label="${escapeHtml(removeAria)}" title="${escapeHtml(removeTitle)}">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
             </button>
           </div>
@@ -448,12 +473,12 @@
   }
 
   async function removeMember(member) {
-    if (!confirm(`Remover "${member.name || member.invitedEmail}" da clínica?`)) return;
+    if (!confirm(tr("clinica:list.confirmRemove", "Remover \"{{name}}\" da clínica?", { name: member.name || member.invitedEmail }))) return;
     try {
       await api(`/therapy/clinicas/${myClinic.clinicId}/membros/${member.memberId}`, { method: "DELETE" });
       await loadMembers();
     } catch (e) {
-      alert("Erro: " + e.message);
+      alert(tr("clinica:errors.prefix", "Erro: ") + e.message);
     }
   }
 
@@ -471,20 +496,22 @@
   function updateRuleUI() {
     const t = memberRuleType.value;
     if (t === "percentual") {
-      memberRuleValueLabel.textContent = "% sobre receita";
+      memberRuleValueLabel.textContent = tr("clinica:modal.ruleValueLabelPct", "% sobre receita");
       memberRuleValue.placeholder = "70";
-      memberRuleHint.textContent = "Entre 0 e 100. Ex.: 70 = profissional recebe 70% de cada consulta paga.";
+      memberRuleHint.textContent = tr("clinica:modal.ruleHintPct", "Entre 0 e 100. Ex.: 70 = profissional recebe 70% de cada consulta paga.");
     } else {
-      memberRuleValueLabel.textContent = "Valor por consulta (R$)";
+      memberRuleValueLabel.textContent = tr("clinica:modal.ruleValueLabelFixed", "Valor por consulta (R$)");
       memberRuleValue.placeholder = "150,00";
-      memberRuleHint.textContent = "Valor fixo por consulta atendida, independente do que o paciente pagou.";
+      memberRuleHint.textContent = tr("clinica:modal.ruleHintFixed", "Valor fixo por consulta atendida, independente do que o paciente pagou.");
     }
   }
   memberRuleType.addEventListener("change", updateRuleUI);
 
   function openMemberModal(member) {
     editingMemberId = member?.memberId || null;
-    document.getElementById("memberModalTitle").textContent = editingMemberId ? "Editar repasse" : "Convidar profissional";
+    document.getElementById("memberModalTitle").textContent = editingMemberId
+      ? tr("clinica:modal.editTitle", "Editar repasse")
+      : tr("clinica:modal.inviteTitle", "Convidar profissional");
     if (editingMemberId) {
       memberEmailField.style.display = "none";
       memberEmail.value = "";
@@ -516,20 +543,20 @@
     const rawValue = memberRuleValue.value.trim().replace(",", ".");
     const value = Number(rawValue);
     if (!Number.isFinite(value) || value < 0) {
-      memberFormStatus.textContent = "Valor inválido.";
+      memberFormStatus.textContent = tr("clinica:errors.invalidValue", "Valor inválido.");
       memberFormStatus.className = "ep-status is-err"; return;
     }
     let ruleValue;
     if (type === "percentual") {
       if (value > 100) {
-        memberFormStatus.textContent = "Percentual entre 0 e 100.";
+        memberFormStatus.textContent = tr("clinica:errors.pctRange", "Percentual entre 0 e 100.");
         memberFormStatus.className = "ep-status is-err"; return;
       }
       ruleValue = value;
     } else {
       ruleValue = Math.round(value * 100); // centavos
       if (ruleValue < 1) {
-        memberFormStatus.textContent = "Valor deve ser maior que zero.";
+        memberFormStatus.textContent = tr("clinica:errors.valueGtZero", "Valor deve ser maior que zero.");
         memberFormStatus.className = "ep-status is-err"; return;
       }
     }
@@ -544,7 +571,7 @@
       } else {
         const email = memberEmail.value.trim();
         if (!email || !email.includes("@")) {
-          memberFormStatus.textContent = "E-mail inválido.";
+          memberFormStatus.textContent = tr("clinica:errors.invalidEmail", "E-mail inválido.");
           memberFormStatus.className = "ep-status is-err"; return;
         }
         await api(`/therapy/clinicas/${myClinic.clinicId}/membros`, {
@@ -555,7 +582,7 @@
       closeMemberModal();
       await loadMembers();
     } catch (e) {
-      memberFormStatus.textContent = "Erro: " + e.message;
+      memberFormStatus.textContent = tr("clinica:errors.prefix", "Erro: ") + e.message;
       memberFormStatus.className = "ep-status is-err";
     }
   });
@@ -568,7 +595,7 @@
     for (let i = 0; i < 12; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      const lbl = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+      const lbl = d.toLocaleDateString((window.EP_I18N?.locale?.() || document.documentElement.lang || "pt-BR"), { month: "long", year: "numeric" });
       const opt = document.createElement("option");
       opt.value = val;
       opt.textContent = lbl.charAt(0).toUpperCase() + lbl.slice(1);
@@ -590,7 +617,7 @@
       document.getElementById("repasseSobra").textContent = fmtCents(data.totals.sobraClinicaCents);
       const tbody = document.getElementById("repasseTbody");
       if (data.members.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--ep-ink-2); padding: 24px;">Nenhum membro ativo com transações no mês.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--ep-ink-2); padding: 24px;">${escapeHtml(tr("clinica:list.emptyTable", "Nenhum membro ativo com transações no mês."))}</td></tr>`;
         return;
       }
       tbody.innerHTML = data.members.map(m => `
@@ -603,7 +630,7 @@
         </tr>
       `).join("");
     } catch (e) {
-      document.getElementById("repasseLoading").textContent = "Erro: " + e.message;
+      document.getElementById("repasseLoading").textContent = tr("clinica:errors.prefix", "Erro: ") + e.message;
       document.getElementById("repasseLoading").className = "ep-alert ep-alert--danger";
     }
   }
@@ -611,6 +638,6 @@
   await bootstrap();
 </script>
 
-<a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" aria-label="Abrir suporte"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
+<a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" data-i18n-title="clinica:help.title" aria-label="Abrir suporte" data-i18n-aria-label="clinica:help.aria"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
 </body>
 </html>

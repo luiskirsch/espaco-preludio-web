@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-ns="admin-comprovantes-formacao">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin · Comprovantes de Formação · Espaço Prelúdio</title>
+  <title data-i18n="admin-comprovantes-formacao:title">Admin · Comprovantes de Formação · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-150">
+  <script src="./i18n/init.js?v=1-0" defer></script>
 </head>
 <body>
 
@@ -18,17 +19,17 @@
     <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio · Admin</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="admin-comprovantes-formacao:brand.tail">Prelúdio · Admin</span>
       </span>
     </a>
     <nav class="ep-nav">
-      <a href="./admin-verificacoes.html" class="ep-text-sm">CRP/CRM<span id="navBadgeCrpCrm" class="ep-nav-badge ep-hide">0</span></a>
-      <a href="./admin-comprovantes.html" class="ep-text-sm">Estudante<span id="navBadgeEstudante" class="ep-nav-badge ep-hide">0</span></a>
-      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm">Recém-formado<span id="navBadgeRecemFormado" class="ep-nav-badge ep-hide">0</span></a>
-      <a href="./admin-comprovantes-formacao.html" class="ep-text-sm is-active">Sem conselho<span id="navBadgeSemConselho" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-verificacoes.html" class="ep-text-sm"><span data-i18n="admin-comprovantes-formacao:nav.crpcrm">CRP/CRM</span><span id="navBadgeCrpCrm" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-comprovantes.html" class="ep-text-sm"><span data-i18n="admin-comprovantes-formacao:nav.estudante">Estudante</span><span id="navBadgeEstudante" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm"><span data-i18n="admin-comprovantes-formacao:nav.recemFormado">Recém-formado</span><span id="navBadgeRecemFormado" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-comprovantes-formacao.html" class="ep-text-sm is-active"><span data-i18n="admin-comprovantes-formacao:nav.semConselho">Sem conselho</span><span id="navBadgeSemConselho" class="ep-nav-badge ep-hide">0</span></a>
       <span id="adminEmail" class="ep-text-sm ep-text-muted">…</span>
-      <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Sair</button>
+      <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button" data-i18n="admin-comprovantes-formacao:nav.logout">Sair</button>
     </nav>
   </header>
 
@@ -36,18 +37,18 @@
 
     <section id="loginPanel" class="ep-hide" style="max-width: 400px; margin: 40px auto;">
       <div class="ep-auth__panel">
-        <h2 class="ep-auth__title">Acesso Admin</h2>
+        <h2 class="ep-auth__title" data-i18n="admin-comprovantes-formacao:login.h2">Acesso Admin</h2>
         <form id="loginForm" class="ep-stack ep-mt-16" novalidate>
           <div class="ep-field">
-            <label class="ep-label" for="email">E-mail</label>
+            <label class="ep-label" for="email" data-i18n="admin-comprovantes-formacao:login.email">E-mail</label>
             <input id="email" class="ep-input" type="email" autocomplete="email" required>
           </div>
           <div class="ep-field">
-            <label class="ep-label" for="password">Senha</label>
+            <label class="ep-label" for="password" data-i18n="admin-comprovantes-formacao:login.password">Senha</label>
             <input id="password" class="ep-input" type="password" autocomplete="current-password" required>
           </div>
           <div class="ep-status" id="loginStatus"></div>
-          <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="loginBtn">Entrar</button>
+          <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="loginBtn" data-i18n="admin-comprovantes-formacao:login.submit">Entrar</button>
         </form>
       </div>
     </section>
@@ -55,28 +56,28 @@
     <section id="dashboardPanel" class="ep-hide">
       <div class="ep-flex" style="justify-content: space-between; align-items: end; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
         <div>
-          <div class="ep-eyebrow">Painel administrativo</div>
-          <h1 class="ep-h1 ep-mt-12">Comprovantes de formação</h1>
-          <p class="ep-text-muted ep-mt-8">Diplomas de profissionais SEM_CONSELHO (psicanálise, terapia integrativa, hipnoterapia). Revisão sempre manual — não há OCR automático.</p>
+          <div class="ep-eyebrow" data-i18n="admin-comprovantes-formacao:dashboard.eyebrow">Painel administrativo</div>
+          <h1 class="ep-h1 ep-mt-12" data-i18n="admin-comprovantes-formacao:dashboard.h1">Comprovantes de formação</h1>
+          <p class="ep-text-muted ep-mt-8" data-i18n="admin-comprovantes-formacao:dashboard.subtitle">Diplomas de profissionais SEM_CONSELHO (psicanálise, terapia integrativa, hipnoterapia). Revisão sempre manual — não há OCR automático.</p>
         </div>
         <div class="ep-flex" style="gap: 6px;">
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="pending-review">Em revisão</button>
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="verified">Aprovados</button>
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="rejected">Rejeitados</button>
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="all">Todos</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="pending-review" data-i18n="admin-comprovantes-formacao:dashboard.filterPending">Em revisão</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="verified" data-i18n="admin-comprovantes-formacao:dashboard.filterApproved">Aprovados</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="rejected" data-i18n="admin-comprovantes-formacao:dashboard.filterRejected">Rejeitados</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="all" data-i18n="admin-comprovantes-formacao:dashboard.filterAll">Todos</button>
         </div>
       </div>
 
       <div id="list" class="ep-stack" style="gap: 12px;">
-        <div class="ep-skeleton">Carregando…</div>
+        <div class="ep-skeleton" data-i18n="admin-comprovantes-formacao:loading">Carregando…</div>
       </div>
     </section>
 
     <section id="forbiddenPanel" class="ep-hide" style="max-width: 460px; margin: 60px auto; text-align: center;">
       <div class="ep-auth__panel">
-        <h2 class="ep-auth__title">Acesso negado.</h2>
-        <p class="ep-auth__sub">Sua conta não está na allowlist de admin.</p>
-        <button class="ep-btn ep-btn--ghost ep-btn--block ep-mt-16" type="button" id="forbiddenLogout">Sair</button>
+        <h2 class="ep-auth__title" data-i18n="admin-comprovantes-formacao:forbidden.h2">Acesso negado.</h2>
+        <p class="ep-auth__sub" data-i18n="admin-comprovantes-formacao:forbidden.sub">Sua conta não está na allowlist de admin.</p>
+        <button class="ep-btn ep-btn--ghost ep-btn--block ep-mt-16" type="button" id="forbiddenLogout" data-i18n="admin-comprovantes-formacao:forbidden.logout">Sair</button>
       </div>
     </section>
 
@@ -85,12 +86,12 @@
 
 <div class="ep-modal" id="detailModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel" style="max-width: 920px;">
-    <h3 class="ep-modal__title" id="modalTitle">Comprovante</h3>
+    <h3 class="ep-modal__title" id="modalTitle" data-i18n="admin-comprovantes-formacao:modal.title">Comprovante</h3>
     <div id="modalBody"></div>
     <div class="ep-modal__actions">
-      <button type="button" class="ep-btn ep-btn--ghost" id="closeModal">Fechar</button>
-      <button type="button" class="ep-btn ep-btn--ghost" id="rejectBtn" style="color: #b8453d; border-color: rgba(184,69,61,0.3);">Rejeitar</button>
-      <button type="button" class="ep-btn ep-btn--primary" id="approveBtn">Aprovar</button>
+      <button type="button" class="ep-btn ep-btn--ghost" id="closeModal" data-i18n="admin-comprovantes-formacao:modal.close">Fechar</button>
+      <button type="button" class="ep-btn ep-btn--ghost" id="rejectBtn" style="color: #b8453d; border-color: rgba(184,69,61,0.3);" data-i18n="admin-comprovantes-formacao:modal.reject">Rejeitar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="approveBtn" data-i18n="admin-comprovantes-formacao:modal.approve">Aprovar</button>
     </div>
   </div>
 </div>
@@ -103,6 +104,23 @@
   import { refreshNavBadges, startNavBadgePolling } from "./js/admin-nav-badges.js?v=1";
   startNavBadgePolling(() => auth.currentUser ? auth.currentUser.getIdToken() : null);
 
+  function tr(key, fallback, opts) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key, opts);
+      if (v && v !== key) return v;
+    }
+    if (opts && typeof fallback === "string") {
+      return fallback.replace(/\{\{(\w+)\}\}/g, (_, k) => (opts[k] != null ? String(opts[k]) : ""));
+    }
+    return fallback;
+  }
+  function currentLocale() {
+    if (window.EP_I18N && window.EP_I18N.locale) {
+      try { return window.EP_I18N.locale(); } catch (_) { /* empty */ }
+    }
+    return (document.documentElement.lang || "pt-BR");
+  }
+
   const loginPanel     = document.getElementById("loginPanel");
   const dashboardPanel = document.getElementById("dashboardPanel");
   const forbiddenPanel = document.getElementById("forbiddenPanel");
@@ -112,11 +130,12 @@
   let idToken = null;
   let currentFilter = "pending-review";
 
-  const PRACTICE_LABELS = {
-    "psicanalise":          "Psicanálise (sem CRP)",
-    "terapia-integrativa":  "Terapia integrativa / holística",
-    "hipnoterapia":         "Hipnoterapia"
-  };
+  function practiceLabel(tipo) {
+    if (tipo === "psicanalise")         return tr("admin-comprovantes-formacao:js.practicePsicanalise", "Psicanálise (sem CRP)");
+    if (tipo === "terapia-integrativa") return tr("admin-comprovantes-formacao:js.practiceIntegrativa", "Terapia integrativa / holística");
+    if (tipo === "hipnoterapia")        return tr("admin-comprovantes-formacao:js.practiceHipnoterapia", "Hipnoterapia");
+    return tipo || "?";
+  }
 
   function escapeHtml(str) {
     return String(str || "").replace(/[&<>"']/g, c => ({
@@ -124,13 +143,13 @@
     }[c]));
   }
   function fmtDate(ms) {
-    if (!ms) return "—";
-    return new Date(ms).toLocaleString("pt-BR", {
+    if (!ms) return tr("admin-comprovantes-formacao:js.dash", "—");
+    return new Date(ms).toLocaleString(currentLocale(), {
       day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
     });
   }
   function fmtSize(bytes) {
-    if (!bytes) return "—";
+    if (!bytes) return tr("admin-comprovantes-formacao:js.dash", "—");
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / 1024 / 1024).toFixed(2) + " MB";
@@ -147,10 +166,10 @@
     const statusEl = document.getElementById("loginStatus");
     const loginBtn = document.getElementById("loginBtn");
     loginBtn.disabled = true;
-    statusEl.textContent = "Autenticando…";
+    statusEl.textContent = tr("admin-comprovantes-formacao:js.authenticating", "Autenticando…");
     try { await signInWithEmailAndPassword(auth, email, password); }
     catch (err) {
-      statusEl.textContent = err?.message || "Erro de autenticação.";
+      statusEl.textContent = err?.message || tr("admin-comprovantes-formacao:js.authError", "Erro de autenticação.");
       statusEl.className = "ep-status is-err";
       loginBtn.disabled = false;
     }
@@ -178,45 +197,50 @@
   }
 
   async function loadList() {
-    listEl.innerHTML = `<div class="ep-skeleton">Carregando…</div>`;
+    listEl.innerHTML = `<div class="ep-skeleton">${escapeHtml(tr("admin-comprovantes-formacao:loading", "Carregando…"))}</div>`;
     try {
       const data = await api(`/therapy/admin/comprovantes-formacao?status=${currentFilter}`);
       renderList(data.items || []);
     } catch (err) {
       if (err.status === 403) { show(forbiddenPanel); return; }
-      listEl.innerHTML = `<div class="ep-error-state">Erro: ${escapeHtml(err.message)}</div>`;
+      listEl.innerHTML = `<div class="ep-error-state">${escapeHtml(tr("admin-comprovantes-formacao:js.errorPrefix", "Erro:"))} ${escapeHtml(err.message)}</div>`;
     }
   }
 
   function renderList(items) {
     if (items.length === 0) {
-      listEl.innerHTML = `<div class="ep-empty"><p class="ep-text-muted ep-mt-8">Nenhum comprovante neste filtro.</p></div>`;
+      listEl.innerHTML = `<div class="ep-empty"><p class="ep-text-muted ep-mt-8">${escapeHtml(tr("admin-comprovantes-formacao:js.emptyFilter", "Nenhum comprovante neste filtro."))}</p></div>`;
       return;
     }
     listEl.innerHTML = "";
+    const dash = tr("admin-comprovantes-formacao:js.dash", "—");
     for (const item of items) {
       const f = item.formacaoNaoRegulamentada || {};
-      const tipoPratica = PRACTICE_LABELS[f.tipoPratica] || (f.tipoPratica || "?");
+      const tipoPratica = practiceLabel(f.tipoPratica);
       const card = document.createElement("article");
       card.className = "ep-admin-card";
       const hasDoc = !!item.formacaoDoc?.lastUploadId;
+      const yearsLabel = f.anosExperiencia === 1
+        ? tr("admin-comprovantes-formacao:js.yearSingular", "ano")
+        : tr("admin-comprovantes-formacao:js.yearPlural", "anos");
+      const practiceYears = tr("admin-comprovantes-formacao:js.practiceYears", "de prática");
       card.innerHTML = `
         <div>
-          <div class="ep-admin-card__name">${escapeHtml(item.displayName || "(sem nome)")}</div>
+          <div class="ep-admin-card__name">${escapeHtml(item.displayName || tr("admin-comprovantes-formacao:js.noName", "(sem nome)"))}</div>
           <div class="ep-admin-card__meta">
             <strong>${escapeHtml(tipoPratica)}</strong>
             ${f.instituicao ? "· " + escapeHtml(f.instituicao) : ""}
-            ${f.anosExperiencia != null ? " · " + f.anosExperiencia + (f.anosExperiencia === 1 ? " ano" : " anos") + " de prática" : ""}
+            ${f.anosExperiencia != null ? " · " + f.anosExperiencia + " " + escapeHtml(yearsLabel) + " " + escapeHtml(practiceYears) : ""}
             <br>
-            Status: <strong>${escapeHtml(item.verificationStatus || "?")}</strong>
-            · Doc: ${escapeHtml(item.formacaoDoc?.decision || "—")}
-            ${hasDoc ? "· Enviado " + fmtDate(item.formacaoDoc?.lastUploadedAt) : "· Sem upload ainda"}
+            ${escapeHtml(tr("admin-comprovantes-formacao:js.statusLabel", "Status:"))} <strong>${escapeHtml(item.verificationStatus || "?")}</strong>
+            · ${escapeHtml(tr("admin-comprovantes-formacao:js.docLabel", "Doc:"))} ${escapeHtml(item.formacaoDoc?.decision || dash)}
+            ${hasDoc ? "· " + escapeHtml(tr("admin-comprovantes-formacao:js.sentAt", "Enviado")) + " " + fmtDate(item.formacaoDoc?.lastUploadedAt) : "· " + escapeHtml(tr("admin-comprovantes-formacao:js.noUploadYet", "Sem upload ainda"))}
           </div>
         </div>
         <div class="ep-flex" style="gap: 8px; align-items: center;">
           ${hasDoc
-            ? `<button class="ep-btn ep-btn--primary ep-btn--sm" type="button" data-uid="${escapeHtml(item.therapistUid)}">Abrir</button>`
-            : `<span class="ep-text-xs ep-text-muted">aguardando upload</span>`
+            ? `<button class="ep-btn ep-btn--primary ep-btn--sm" type="button" data-uid="${escapeHtml(item.therapistUid)}">${escapeHtml(tr("admin-comprovantes-formacao:js.open", "Abrir"))}</button>`
+            : `<span class="ep-text-xs ep-text-muted">${escapeHtml(tr("admin-comprovantes-formacao:js.awaitingUpload", "aguardando upload"))}</span>`
           }
         </div>
       `;
@@ -238,52 +262,54 @@
   async function openDetail(uid) {
     activeUid = uid;
     modal.classList.add("is-open");
-    modalBody.innerHTML = `<div class="ep-skeleton">Carregando…</div>`;
+    modalBody.innerHTML = `<div class="ep-skeleton">${escapeHtml(tr("admin-comprovantes-formacao:loading", "Carregando…"))}</div>`;
     approveBtn.disabled = true;
     rejectBtn.disabled  = true;
     try {
       const { item } = await api(`/therapy/admin/comprovantes-formacao/${encodeURIComponent(uid)}`);
       const t = item.therapist || {};
       const f = t.formacaoNaoRegulamentada || {};
-      const tipoPratica = PRACTICE_LABELS[f.tipoPratica] || (f.tipoPratica || "?");
+      const tipoPratica = practiceLabel(f.tipoPratica);
       const dataUrl = `data:${item.mediaType};base64,${item.fileBase64}`;
-      modalTitle.textContent = `Sem conselho · ${t.displayName || ""}`;
+      modalTitle.textContent = tr("admin-comprovantes-formacao:js.modalTitlePrefix", "Sem conselho · ") + (t.displayName || "");
+      const dash = tr("admin-comprovantes-formacao:js.dash", "—");
+      const nameForVerify = t.displayName || dash;
 
       modalBody.innerHTML = `
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
           <div>
-            <div class="ep-text-sm ep-text-muted ep-mt-0"><strong>Profissional cadastrado</strong></div>
+            <div class="ep-text-sm ep-text-muted ep-mt-0"><strong>${escapeHtml(tr("admin-comprovantes-formacao:js.registeredPro", "Profissional cadastrado"))}</strong></div>
             <p style="margin: 4px 0;">${escapeHtml(t.displayName || "")}<br>
               <span class="ep-text-sm ep-text-muted">${escapeHtml(t.email || "")}</span><br>
               <span class="ep-text-sm ep-text-muted">${escapeHtml(t.especialidade || "")}</span>
             </p>
 
-            <div class="ep-text-sm ep-text-muted ep-mt-16"><strong>Dados declarados de formação</strong></div>
+            <div class="ep-text-sm ep-text-muted ep-mt-16"><strong>${escapeHtml(tr("admin-comprovantes-formacao:js.declaredTitle", "Dados declarados de formação"))}</strong></div>
             <p style="margin: 4px 0; font-size: 13.5px;">
-              <strong>Tipo de prática:</strong> ${escapeHtml(tipoPratica)}<br>
-              <strong>Instituição:</strong> ${escapeHtml(f.instituicao || "—")}<br>
-              <strong>Curso:</strong> ${escapeHtml(f.curso || "—")}<br>
-              <strong>Ano de conclusão:</strong> ${f.anoConclusao || "—"}<br>
-              <strong>Anos de prática declarados:</strong> ${f.anosExperiencia != null ? f.anosExperiencia : "—"}
+              <strong>${escapeHtml(tr("admin-comprovantes-formacao:js.fTipo", "Tipo de prática:"))}</strong> ${escapeHtml(tipoPratica)}<br>
+              <strong>${escapeHtml(tr("admin-comprovantes-formacao:js.fInstituicao", "Instituição:"))}</strong> ${escapeHtml(f.instituicao || dash)}<br>
+              <strong>${escapeHtml(tr("admin-comprovantes-formacao:js.fCurso", "Curso:"))}</strong> ${escapeHtml(f.curso || dash)}<br>
+              <strong>${escapeHtml(tr("admin-comprovantes-formacao:js.fAno", "Ano de conclusão:"))}</strong> ${f.anoConclusao || dash}<br>
+              <strong>${escapeHtml(tr("admin-comprovantes-formacao:js.fAnos", "Anos de prática declarados:"))}</strong> ${f.anosExperiencia != null ? f.anosExperiencia : dash}
             </p>
 
             <div class="ep-text-sm ep-text-muted ep-mt-16">
-              <strong>Como verificar:</strong><br>
-              1. Conferir se o nome no diploma bate com "${escapeHtml(t.displayName || "—")}"<br>
-              2. Confirmar a instituição declarada vs. o emissor do diploma<br>
-              3. Validar que o ano confere com o que foi declarado<br>
-              4. Avaliar se a instituição é reconhecida na área (ex.: SBPSP, ABRAP, IPHM, ABH)
+              <strong>${escapeHtml(tr("admin-comprovantes-formacao:js.howToVerify", "Como verificar:"))}</strong><br>
+              ${escapeHtml(tr("admin-comprovantes-formacao:js.verify1Prefix", "1. Conferir se o nome no diploma bate com \""))}${escapeHtml(nameForVerify)}${escapeHtml(tr("admin-comprovantes-formacao:js.verify1Suffix", "\""))}<br>
+              ${escapeHtml(tr("admin-comprovantes-formacao:js.verify2", "2. Confirmar a instituição declarada vs. o emissor do diploma"))}<br>
+              ${escapeHtml(tr("admin-comprovantes-formacao:js.verify3", "3. Validar que o ano confere com o que foi declarado"))}<br>
+              ${escapeHtml(tr("admin-comprovantes-formacao:js.verify4", "4. Avaliar se a instituição é reconhecida na área (ex.: SBPSP, ABRAP, IPHM, ABH)"))}
             </div>
 
             <div class="ep-text-sm ep-text-muted ep-mt-12">
-              <strong>Tamanho:</strong> ${fmtSize(item.fileSize)} · ${escapeHtml(item.mediaType)}<br>
-              <strong>Hash:</strong> <code style="font-size: 11px;">${escapeHtml(item.fileHash || "").slice(0, 16)}…</code>
+              <strong>${escapeHtml(tr("admin-comprovantes-formacao:js.fSize", "Tamanho:"))}</strong> ${fmtSize(item.fileSize)} · ${escapeHtml(item.mediaType)}<br>
+              <strong>${escapeHtml(tr("admin-comprovantes-formacao:js.fHash", "Hash:"))}</strong> <code style="font-size: 11px;">${escapeHtml(item.fileHash || "").slice(0, 16)}…</code>
             </div>
           </div>
           <div>
             ${item.mediaType === "application/pdf"
-              ? `<a class="ep-btn ep-btn--ghost ep-btn--block" href="${dataUrl}" target="_blank">Abrir PDF em nova aba ↗</a>`
-              : `<img src="${dataUrl}" alt="Diploma" style="max-width: 100%; max-height: 600px; border-radius: 10px; border: 1px solid rgba(28,31,29,0.10);">`
+              ? `<a class="ep-btn ep-btn--ghost ep-btn--block" href="${dataUrl}" target="_blank">${escapeHtml(tr("admin-comprovantes-formacao:js.openPdf", "Abrir PDF em nova aba ↗"))}</a>`
+              : `<img src="${dataUrl}" alt="${escapeHtml(tr("admin-comprovantes-formacao:js.imgAlt", "Diploma"))}" style="max-width: 100%; max-height: 600px; border-radius: 10px; border: 1px solid rgba(28,31,29,0.10);">`
             }
           </div>
         </div>
@@ -291,14 +317,14 @@
       approveBtn.disabled = false;
       rejectBtn.disabled  = false;
     } catch (err) {
-      modalBody.innerHTML = `<div class="ep-error-state">Erro: ${escapeHtml(err.message)}</div>`;
+      modalBody.innerHTML = `<div class="ep-error-state">${escapeHtml(tr("admin-comprovantes-formacao:js.errorPrefix", "Erro:"))} ${escapeHtml(err.message)}</div>`;
     }
   }
 
   approveBtn.addEventListener("click", async () => {
     if (!activeUid) return;
-    if (!confirm("Aprovar diploma? O perfil público fica visível com selo 'Verificado pela equipe' (com indicação de não regulamentado).")) return;
-    const notes = prompt("Notas internas (opcional):", "") || "";
+    if (!confirm(tr("admin-comprovantes-formacao:js.confirmApprove", "Aprovar diploma? O perfil público fica visível com selo 'Verificado pela equipe' (com indicação de não regulamentado)."))) return;
+    const notes = prompt(tr("admin-comprovantes-formacao:js.promptNotes", "Notas internas (opcional):"), "") || "";
     approveBtn.disabled = true;
     try {
       await api(`/therapy/admin/comprovantes-formacao/${encodeURIComponent(activeUid)}/aprovar`, {
@@ -308,17 +334,17 @@
       modal.classList.remove("is-open");
       await loadList();
     } catch (err) {
-      alert("Erro ao aprovar: " + err.message);
+      alert(tr("admin-comprovantes-formacao:js.approveError", "Erro ao aprovar: ") + err.message);
       approveBtn.disabled = false;
     }
   });
 
   rejectBtn.addEventListener("click", async () => {
     if (!activeUid) return;
-    const reason = prompt("Motivo da recusa (será enviado por e-mail ao profissional):", "");
+    const reason = prompt(tr("admin-comprovantes-formacao:js.promptReason", "Motivo da recusa (será enviado por e-mail ao profissional):"), "");
     if (reason == null) return;
     const trimmed = reason.trim();
-    if (!trimmed) { alert("Informe um motivo."); return; }
+    if (!trimmed) { alert(tr("admin-comprovantes-formacao:js.promptReasonEmpty", "Informe um motivo.")); return; }
     rejectBtn.disabled = true;
     try {
       await api(`/therapy/admin/comprovantes-formacao/${encodeURIComponent(activeUid)}/rejeitar`, {
@@ -328,7 +354,7 @@
       modal.classList.remove("is-open");
       await loadList();
     } catch (err) {
-      alert("Erro ao rejeitar: " + err.message);
+      alert(tr("admin-comprovantes-formacao:js.rejectError", "Erro ao rejeitar: ") + err.message);
       rejectBtn.disabled = false;
     }
   });
@@ -345,7 +371,7 @@
       if (res.status === 403 || res.status === 503) { show(forbiddenPanel); return; }
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        forbiddenPanel.querySelector(".ep-auth__sub").textContent = "Erro: " + (j.error || res.status);
+        forbiddenPanel.querySelector(".ep-auth__sub").textContent = tr("admin-comprovantes-formacao:js.errorPrefix", "Erro:") + " " + (j.error || res.status);
         show(forbiddenPanel);
         return;
       }
@@ -354,7 +380,7 @@
       document.querySelector('[data-filter="pending-review"]').classList.add("is-active");
       renderList(data.items || []);
     } catch (err) {
-      forbiddenPanel.querySelector(".ep-auth__sub").textContent = "Erro: " + err.message;
+      forbiddenPanel.querySelector(".ep-auth__sub").textContent = tr("admin-comprovantes-formacao:js.errorPrefix", "Erro:") + " " + err.message;
       show(forbiddenPanel);
     }
   });

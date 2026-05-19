@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="ep-consult-html ep-consult-html--session">
+<html lang="pt-BR" class="ep-consult-html ep-consult-html--session" data-i18n-ns="consultorio">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Consultório · Espaço Prelúdio</title>
+  <title data-i18n="consultorio:title">Consultório · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-150">
+  <script src="./i18n/init.js?v=1-0" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -20,30 +21,30 @@
 <div class="ep-shell">
 
   <header class="ep-consult__topbar">
-    <a href="./painel.html" class="ep-brand" aria-label="Voltar ao painel">
+    <a href="./painel.html" class="ep-brand" data-i18n-aria-label="consultorio:brand.ariaLabel" aria-label="Voltar ao painel">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Consultório</span>
-        <span id="topPatientName" class="ep-brand__waiting">Aguardando paciente</span>
+        <span class="ep-brand__lead" data-i18n="consultorio:brand.lead">Consultório</span>
+        <span id="topPatientName" class="ep-brand__waiting" data-i18n="consultorio:brand.waiting">Aguardando paciente</span>
       </span>
     </a>
     <div class="ep-flex ep-flex--center ep-gap-14 ep-w-full">
-      <span id="connectionStatus" class="ep-consult__status">conectando…</span>
-      <span id="e2eeBadge" class="ep-badge ep-badge--ok ep-hide" title="End-to-end encrypted">E2EE ativo</span>
+      <span id="connectionStatus" class="ep-consult__status" data-i18n="consultorio:status.connecting">conectando…</span>
+      <span id="e2eeBadge" class="ep-badge ep-badge--ok ep-hide" data-i18n-title="consultorio:e2ee.title" title="End-to-end encrypted" data-i18n="consultorio:e2ee.badge">E2EE ativo</span>
       <span class="ep-text-xs ep-text-muted" id="infoDuration">0min 00s</span>
 
       <!-- Controles centrais (mic / cam / rec / hangup) na topbar -->
       <div class="ep-controls-bar ep-controls-bar--topbar">
-        <button class="ep-ctrl" id="ctrlMic" type="button" title="Silenciar microfone" aria-pressed="false">
+        <button class="ep-ctrl" id="ctrlMic" type="button" title="Silenciar microfone" data-i18n-title="consultorio:controls.mic" aria-pressed="false">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
         </button>
-        <button class="ep-ctrl" id="ctrlCam" type="button" title="Desligar câmera" aria-pressed="false">
+        <button class="ep-ctrl" id="ctrlCam" type="button" title="Desligar câmera" data-i18n-title="consultorio:controls.cam" aria-pressed="false">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="m17 10 4-2v8l-4-2z"/></svg>
         </button>
-        <button class="ep-ctrl" id="ctrlRecord" type="button" title="Gravar sessão (cifrada local)" aria-pressed="false">
+        <button class="ep-ctrl" id="ctrlRecord" type="button" title="Gravar sessão (cifrada local)" data-i18n-title="consultorio:controls.rec" aria-pressed="false">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6" fill="currentColor"/></svg>
         </button>
-        <button class="ep-ctrl ep-ctrl--leave" id="ctrlLeave" type="button" title="Encerrar consulta">
+        <button class="ep-ctrl ep-ctrl--leave" id="ctrlLeave" type="button" title="Encerrar consulta" data-i18n-title="consultorio:controls.leave">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" transform="rotate(135 12 12)"/></svg>
         </button>
       </div>
@@ -58,30 +59,30 @@
             <circle cx="9" cy="9" r="2.2"/>
             <circle cx="15" cy="15" r="2.2"/>
           </svg>
-          Ajustar ambiente
+          <span data-i18n="consultorio:ambient.btn">Ajustar ambiente</span>
         </button>
-        <div class="ep-ambient__panel" id="ambientPanel" aria-label="Ajustes de ambiente">
+        <div class="ep-ambient__panel" id="ambientPanel" data-i18n-aria-label="consultorio:ambient.panelLabel" aria-label="Ajustes de ambiente">
           <div class="ep-ambient__section">
-            <div class="ep-ambient__label">Clima da sala</div>
-            <div class="ep-ambient__pills" role="group" aria-label="Modo de clima">
-              <button class="ep-ambient__pill" type="button" data-mode="foco">Foco</button>
-              <button class="ep-ambient__pill" type="button" data-mode="entardecer">Entardecer</button>
-              <button class="ep-ambient__pill" type="button" data-mode="calmo">Calmo</button>
+            <div class="ep-ambient__label" data-i18n="consultorio:ambient.moodLabel">Clima da sala</div>
+            <div class="ep-ambient__pills" role="group" data-i18n-aria-label="consultorio:ambient.moodGroup" aria-label="Modo de clima">
+              <button class="ep-ambient__pill" type="button" data-mode="foco" data-i18n="consultorio:ambient.moodFocus">Foco</button>
+              <button class="ep-ambient__pill" type="button" data-mode="entardecer" data-i18n="consultorio:ambient.moodSunset">Entardecer</button>
+              <button class="ep-ambient__pill" type="button" data-mode="calmo" data-i18n="consultorio:ambient.moodCalm">Calmo</button>
             </div>
           </div>
           <div class="ep-ambient__section">
-            <div class="ep-ambient__label">Som ambiente</div>
-            <div class="ep-ambient__pills" role="group" aria-label="Som ambiente">
-              <button class="ep-ambient__pill" type="button" data-sound="off">Silêncio</button>
-              <button class="ep-ambient__pill" type="button" data-sound="brown">Acolhedor</button>
+            <div class="ep-ambient__label" data-i18n="consultorio:ambient.soundLabel">Som ambiente</div>
+            <div class="ep-ambient__pills" role="group" data-i18n-aria-label="consultorio:ambient.soundGroup" aria-label="Som ambiente">
+              <button class="ep-ambient__pill" type="button" data-sound="off" data-i18n="consultorio:ambient.soundOff">Silêncio</button>
+              <button class="ep-ambient__pill" type="button" data-sound="brown" data-i18n="consultorio:ambient.soundWarm">Acolhedor</button>
             </div>
-            <input type="range" data-ambient-volume class="ep-ambient__slider" min="0" max="100" value="40" aria-label="Volume do som ambiente">
+            <input type="range" data-ambient-volume class="ep-ambient__slider" min="0" max="100" value="40" data-i18n-aria-label="consultorio:ambient.volumeAria" aria-label="Volume do som ambiente">
           </div>
-          <p class="ep-ambient__hint">Suas preferências ficam só neste dispositivo.</p>
+          <p class="ep-ambient__hint" data-i18n="consultorio:ambient.hint">Suas preferências ficam só neste dispositivo.</p>
         </div>
       </div>
-      <button type="button" id="endSessionBtn" class="ep-btn ep-btn--ghost ep-btn--sm">Encerrar</button>
-      <a href="./painel.html" class="ep-btn ep-btn--ghost ep-btn--sm">Painel</a>
+      <button type="button" id="endSessionBtn" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="consultorio:topbar.endBtn">Encerrar</button>
+      <a href="./painel.html" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="consultorio:topbar.dashboardBtn">Painel</a>
     </div>
   </header>
 
@@ -90,14 +91,14 @@
 
       <div class="ep-tile ep-tile--gilded" id="tileLocal">
         <video id="videoLocal" autoplay muted playsinline></video>
-        <div class="ep-tile__name">Você (profissional)</div>
+        <div class="ep-tile__name" data-i18n="consultorio:tile.youProfessional">Você (profissional)</div>
       </div>
       <div class="ep-tile ep-tile--gilded" id="tileRemote">
         <div class="ep-tile__placeholder" id="remotePlaceholder">
           <div class="ep-waiting">
             <div class="ep-waiting__pulse" aria-hidden="true"></div>
-            <div class="ep-waiting__text">A sala está aberta.</div>
-            <div class="ep-waiting__sub">O paciente entrará pelo link enviado.</div>
+            <div class="ep-waiting__text" data-i18n="consultorio:waiting.title">A sala está aberta.</div>
+            <div class="ep-waiting__sub" data-i18n="consultorio:waiting.sub">O paciente entrará pelo link enviado.</div>
           </div>
         </div>
         <video id="videoRemote" autoplay playsinline class="ep-hide"></video>
@@ -106,15 +107,15 @@
 
       <!-- Tópicos clínicos — pinado na coluna direita, sempre visível.
            Toggle e close ficam no DOM (JS depende deles) mas escondidos. -->
-      <button class="ep-topics-toggle" id="topicsToggle" type="button" aria-expanded="true" style="display:none;">＋ Tópicos</button>
+      <button class="ep-topics-toggle" id="topicsToggle" type="button" aria-expanded="true" style="display:none;" data-i18n="consultorio:topics.toggle">＋ Tópicos</button>
       <aside class="ep-topics-deck ep-topics-deck--pinned is-open" id="topicsDeck" aria-hidden="false">
         <div class="ep-topics-deck__head">
-          <span class="ep-topics-deck__title">Tópicos de assuntos e perguntas</span>
-          <button class="ep-topics-deck__close" id="topicsClose" type="button" aria-label="Fechar" style="display:none;">×</button>
+          <span class="ep-topics-deck__title" data-i18n="consultorio:topics.title">Tópicos de assuntos e perguntas</span>
+          <button class="ep-topics-deck__close" id="topicsClose" type="button" data-i18n-aria-label="consultorio:topics.close" aria-label="Fechar" style="display:none;">×</button>
         </div>
         <div class="ep-topics-deck__filters" id="topicsFilters"></div>
         <div class="ep-topics-deck__list" id="topicsList"></div>
-        <button class="ep-topics-deck__draw" id="topicsDraw" type="button">Puxar tópico aleatório</button>
+        <button class="ep-topics-deck__draw" id="topicsDraw" type="button" data-i18n="consultorio:topics.draw">Puxar tópico aleatório</button>
       </aside>
 
       <!-- Anotações inline (coluna ESQUERDA, alinhada com o tile do profissional) -->
@@ -122,25 +123,25 @@
         <div class="ep-inline-notes__head">
           <span class="ep-lock">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-            Anotações cifradas · só você lê
+            <span data-i18n="consultorio:notes.lock">Anotações cifradas · só você lê</span>
           </span>
           <span class="ep-text-xs ep-text-muted" id="noteStatus">&nbsp;</span>
         </div>
         <div class="ep-inline-notes__list" id="notesList"></div>
-        <div id="notesEmpty" class="ep-inline-notes__empty ep-hide">
+        <div id="notesEmpty" class="ep-inline-notes__empty ep-hide" data-i18n="consultorio:notes.empty">
           Nenhuma anotação ainda. Use o campo abaixo durante a sessão.
         </div>
         <div class="ep-inline-notes__composer">
-          <textarea id="noteInput" placeholder="Digite uma anotação… (cifrada antes de enviar)"></textarea>
+          <textarea id="noteInput" placeholder="Digite uma anotação… (cifrada antes de enviar)" data-i18n-placeholder="consultorio:notes.placeholder"></textarea>
           <div class="ep-inline-notes__actions">
-            <span class="ep-text-xs ep-text-muted">Ctrl + Enter pra salvar</span>
+            <span class="ep-text-xs ep-text-muted" data-i18n="consultorio:notes.shortcut">Ctrl + Enter pra salvar</span>
             <div class="ep-flex ep-gap-8" style="align-items: center; position: relative;">
-              <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="cidBtn" title="Buscar e inserir CID-10">+ CID</button>
-              <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="templateBtn" title="Inserir template no campo">Templates ▾</button>
-              <button class="ep-btn ep-btn--primary ep-btn--sm" type="button" id="saveNoteBtn">Salvar nota</button>
+              <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="cidBtn" title="Buscar e inserir CID-10" data-i18n-title="consultorio:notes.cidTitle" data-i18n="consultorio:notes.cidBtn">+ CID</button>
+              <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="templateBtn" title="Inserir template no campo" data-i18n-title="consultorio:notes.templateTitle" data-i18n="consultorio:notes.templateBtn">Templates ▾</button>
+              <button class="ep-btn ep-btn--primary ep-btn--sm" type="button" id="saveNoteBtn" data-i18n="consultorio:notes.saveBtn">Salvar nota</button>
               <div id="templateMenu" class="ep-hide" style="position: absolute; bottom: calc(100% + 14px); right: 0; min-width: 280px; max-width: 360px; max-height: 320px; overflow-y: auto; background: #14110d; border: 1px solid rgba(215,176,107,0.32); border-radius: 14px; box-shadow: 0 -30px 60px -8px rgba(0,0,0,0.65), 0 -8px 20px -4px rgba(0,0,0,0.5), 0 0 0 1px rgba(215,176,107,0.05); z-index: 9999; padding: 8px;"></div>
               <div id="cidMenu" class="ep-hide" style="position: absolute; bottom: calc(100% + 14px); right: 0; min-width: 360px; max-width: 480px; background: #14110d; border: 1px solid rgba(215,176,107,0.32); border-radius: 14px; box-shadow: 0 -30px 60px -8px rgba(0,0,0,0.65), 0 -8px 20px -4px rgba(0,0,0,0.5), 0 0 0 1px rgba(215,176,107,0.05); z-index: 9999; padding: 10px;">
-                <input id="cidSearch" type="text" placeholder="Código (F32) ou nome (depressivo)…" style="margin-bottom: 8px; width: 100%; padding: 8px 10px; background: rgba(255,251,240,0.05); border: 1px solid rgba(215,176,107,0.22); border-radius: 8px; color: #fbf7ec; font: inherit; font-size: 13px;">
+                <input id="cidSearch" type="text" placeholder="Código (F32) ou nome (depressivo)…" data-i18n-placeholder="consultorio:cid.searchPh" style="margin-bottom: 8px; width: 100%; padding: 8px 10px; background: rgba(255,251,240,0.05); border: 1px solid rgba(215,176,107,0.22); border-radius: 8px; color: #fbf7ec; font: inherit; font-size: 13px;">
                 <div id="cidResults" style="max-height: 320px; overflow-y: auto;"></div>
               </div>
             </div>
@@ -160,28 +161,28 @@
     <!-- Modal de consentimento LGPD pra gravação -->
     <div class="ep-modal" id="recConsentModal" role="dialog" aria-modal="true">
       <div class="ep-modal__panel" style="max-width:560px;">
-        <h3 class="ep-modal__title">Gravar esta sessão?</h3>
-        <p class="ep-modal__sub">
+        <h3 class="ep-modal__title" data-i18n="consultorio:rec.title">Gravar esta sessão?</h3>
+        <p class="ep-modal__sub" data-i18n-html="consultorio:rec.subHtml">
           A gravação fica <strong>cifrada com sua chave</strong> e é baixada direto pro seu computador. <strong>Nada sobe pro nosso servidor.</strong>
         </p>
         <div style="padding:0 28px;">
           <div class="ep-alert ep-mt-0" style="background:rgba(220,170,80,0.10);border-left:3px solid var(--ep-gold);font-size:13px;line-height:1.55;">
-            <strong>Conforme LGPD (Art. 11) e CFP/CFM:</strong>
+            <strong data-i18n="consultorio:rec.lgpdTitle">Conforme LGPD (Art. 11) e CFP/CFM:</strong>
             <ul style="margin:8px 0 0 18px;padding:0;">
-              <li>Você precisa do <strong>consentimento expresso do paciente</strong> antes de iniciar a gravação. Avise verbalmente agora.</li>
-              <li>A finalidade deve ser explicada (registro clínico, supervisão, etc).</li>
-              <li>A retenção do arquivo é responsabilidade sua — guarde em local seguro pelo prazo do conselho de classe.</li>
-              <li>Paciente tem direito a pedir exclusão a qualquer momento.</li>
+              <li data-i18n-html="consultorio:rec.bullet1Html">Você precisa do <strong>consentimento expresso do paciente</strong> antes de iniciar a gravação. Avise verbalmente agora.</li>
+              <li data-i18n="consultorio:rec.bullet2">A finalidade deve ser explicada (registro clínico, supervisão, etc).</li>
+              <li data-i18n="consultorio:rec.bullet3">A retenção do arquivo é responsabilidade sua — guarde em local seguro pelo prazo do conselho de classe.</li>
+              <li data-i18n="consultorio:rec.bullet4">Paciente tem direito a pedir exclusão a qualquer momento.</li>
             </ul>
           </div>
           <label style="display:flex;align-items:flex-start;gap:10px;margin-top:14px;cursor:pointer;line-height:1.4;">
             <input id="recConsentCheck" type="checkbox" style="margin-top:3px;">
-            <span class="ep-text-sm">Confirmo que <strong>obtive consentimento verbal do paciente</strong>, expliquei a finalidade e me responsabilizo pela guarda do arquivo gravado.</span>
+            <span class="ep-text-sm" data-i18n-html="consultorio:rec.consentHtml">Confirmo que <strong>obtive consentimento verbal do paciente</strong>, expliquei a finalidade e me responsabilizo pela guarda do arquivo gravado.</span>
           </label>
         </div>
         <div class="ep-modal__actions">
-          <button type="button" class="ep-btn ep-btn--ghost" id="recCancelBtn">Cancelar</button>
-          <button type="button" class="ep-btn ep-btn--primary" id="recStartBtn" disabled>Iniciar gravação</button>
+          <button type="button" class="ep-btn ep-btn--ghost" id="recCancelBtn" data-i18n="consultorio:rec.cancelBtn">Cancelar</button>
+          <button type="button" class="ep-btn ep-btn--primary" id="recStartBtn" disabled data-i18n="consultorio:rec.startBtn">Iniciar gravação</button>
         </div>
       </div>
     </div>
@@ -193,7 +194,7 @@
 
   <div class="ep-ritual-open ep-hide" id="ritualOpen" aria-hidden="true">
     <div class="ep-ritual-open__circle"></div>
-    <div class="ep-ritual-open__text">a sessão começou</div>
+    <div class="ep-ritual-open__text" data-i18n="consultorio:ritual.text">a sessão começou</div>
   </div>
 
 </div>
@@ -206,6 +207,24 @@
   import { TOPIC_LIBRARY, ABORDAGEM_LABEL, shuffle } from "./js/topics.js";
   import { initAtmosphere } from "./js/atmosphere.js";
   import { searchCID10 } from "./js/cid10.js?v=1";
+
+  // tr(): i18n helper com fallback PT-BR.
+  function tr(key, fallback, opts) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key, opts);
+      if (v && v !== key) return v;
+    }
+    if (opts && typeof fallback === "string") {
+      return fallback.replace(/\{\{(\w+)\}\}/g, (_, k) => (opts[k] != null ? String(opts[k]) : ""));
+    }
+    return fallback;
+  }
+  function currentLocale() {
+    if (window.EP_I18N && window.EP_I18N.locale) {
+      try { return window.EP_I18N.locale(); } catch (_) { /* empty */ }
+    }
+    return (document.documentElement.lang || "pt-BR");
+  }
 
   // Inicializa clima + som ambiente + painel "Ajustar ambiente".
   // Todo o estado fica em localStorage; nada disso vai pro servidor.
@@ -220,7 +239,7 @@
   const params = new URLSearchParams(location.search);
   const sessionId = params.get("session");
   if (!sessionId) {
-    alert("Sessão não informada.");
+    alert(tr("consultorio:alerts.noSession", "Sessão não informada."));
     window.location.href = "./painel.html";
     throw new Error("NO_SESSION");
   }
@@ -235,7 +254,7 @@
   });
   const tokenData = await tokenRes.json().catch(() => ({}));
   if (!tokenRes.ok || !tokenData.ok) {
-    alert("Erro ao entrar na consulta: " + (tokenData?.error || tokenRes.status));
+    alert(tr("consultorio:alerts.tokenError", "Erro ao entrar na consulta: ") + (tokenData?.error || tokenRes.status));
     window.location.href = "./painel.html";
     throw new Error("TOKEN_FAIL");
   }
@@ -287,7 +306,7 @@
   }
   function renderTemplateMenu(templates) {
     if (!templates.length) {
-      templateMenu.innerHTML = `<div style="padding: 12px; font-size: 12px; color: rgba(255,251,240,0.55);">Nenhum template disponível.</div>`;
+      templateMenu.innerHTML = `<div style="padding: 12px; font-size: 12px; color: rgba(255,251,240,0.55);">${tr("consultorio:templates.empty", "Nenhum template disponível.")}</div>`;
       return;
     }
     templateMenu.innerHTML = templates.map(t => `
@@ -314,7 +333,7 @@
       templateMenu.classList.add("ep-hide");
       return;
     }
-    templateMenu.innerHTML = `<div class="ep-skeleton" style="margin: 8px;">Carregando templates…</div>`;
+    templateMenu.innerHTML = `<div class="ep-skeleton" style="margin: 8px;">${tr("consultorio:templates.loading", "Carregando templates…")}</div>`;
     templateMenu.classList.remove("ep-hide");
     const templates = await loadTemplates();
     renderTemplateMenu(templates);
@@ -346,7 +365,7 @@
   function searchCid(q) {
     const results = searchCID10(q, 20);
     if (!results.length) {
-      cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.6);">Nenhum resultado pra "${q}".</div>`;
+      cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.6);">${tr("consultorio:cid.noResults", "Nenhum resultado pra \"{{q}}\".", { q })}</div>`;
       return;
     }
     cidResults.innerHTML = results.map(r => `
@@ -371,13 +390,13 @@
     if (!cidMenu.classList.contains("ep-hide")) { cidMenu.classList.add("ep-hide"); return; }
     cidMenu.classList.remove("ep-hide");
     cidSearch.value = "";
-    cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.55);">Digite 2+ caracteres pra buscar…</div>`;
+    cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.55);">${tr("consultorio:cid.promptShort", "Digite 2+ caracteres pra buscar…")}</div>`;
     setTimeout(() => cidSearch.focus(), 50);
   });
   cidSearch.addEventListener("input", () => {
     const q = cidSearch.value.trim();
     if (q.length < 2) {
-      cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.55);">Digite 2+ caracteres pra buscar…</div>`;
+      cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.55);">${tr("consultorio:cid.promptShort", "Digite 2+ caracteres pra buscar…")}</div>`;
       return;
     }
     searchCid(q);
@@ -402,7 +421,7 @@
   let e2eeWorker = null;
 
   try {
-    setStatus("preparando E2EE…");
+    setStatus(tr("consultorio:status.preparingE2ee", "preparando E2EE…"));
     // Worker E2EE do LiveKit. esm.sh serve o arquivo de worker do pacote.
     e2eeWorker = new Worker(
       `https://esm.sh/livekit-client@${LIVEKIT_VERSION}/dist/livekit-client.e2ee.worker.js`,
@@ -453,7 +472,7 @@
     .on(RoomEvent.ParticipantDisconnected, onRemoteDisconnected)
     .on(RoomEvent.TrackSubscribed, onTrackSubscribed)
     .on(RoomEvent.TrackUnsubscribed, onTrackUnsubscribed)
-    .on(RoomEvent.Disconnected, () => setStatus("desconectado"))
+    .on(RoomEvent.Disconnected, () => setStatus(tr("consultorio:status.disconnected", "desconectado")))
     .on(RoomEvent.ConnectionStateChanged, (s) => setStatus(String(s).toLowerCase()));
 
   let ritualPlayedThisSession = false;
@@ -461,8 +480,9 @@
     remotePlaceholder.classList.add("ep-hide");
     videoRemote.classList.remove("ep-hide");
     remoteName.classList.remove("ep-hide");
-    remoteName.textContent = p.name || p.identity || "Paciente";
-    topPatientName.textContent = p.name || "Paciente";
+    const patientFallback = tr("consultorio:tile.patient", "Paciente");
+    remoteName.textContent = p.name || p.identity || patientFallback;
+    topPatientName.textContent = p.name || patientFallback;
     topPatientName.classList.remove("ep-brand__waiting");
     if (!ritualPlayedThisSession) {
       ritualPlayedThisSession = true;
@@ -501,7 +521,7 @@
     .on(RoomEvent.EncryptionError, (err) => console.error("[lk] encryptionError", err));
 
   try {
-    setStatus("conectando…");
+    setStatus(tr("consultorio:status.connecting", "conectando…"));
     // Ordem canônica do LiveKit 2.x: setKey + setE2EEEnabled ANTES do connect.
     // Se ativar E2EE depois de connect, auto-subscribe das tracks já publicadas
     // pelo participante remoto pode rodar antes do worker estar pronto, o que
@@ -524,7 +544,7 @@
       onRemoteConnected(p);
     }
 
-    setStatus("ligando câmera…");
+    setStatus(tr("consultorio:status.turningOnCamera", "ligando câmera…"));
     await room.localParticipant.enableCameraAndMicrophone();
     const camTrack = Array.from(room.localParticipant.videoTrackPublications.values())[0]?.videoTrack;
     if (camTrack) {
@@ -536,11 +556,11 @@
       // entrega bom equilibrio nitidez/fluidez.
     }
 
-    setStatus("em sessão");
+    setStatus(tr("consultorio:status.inSession", "em sessão"));
   } catch (err) {
     console.error("connect_error", err);
-    setStatus("erro ao conectar");
-    alert("Não foi possível conectar à consulta:\n" + (err?.message || err));
+    setStatus(tr("consultorio:status.connectError", "erro ao conectar"));
+    alert(tr("consultorio:alerts.connectError", "Não foi possível conectar à consulta:\n") + (err?.message || err));
   }
 
   // ─── Controles ──────────────────────────────────────────────
@@ -574,13 +594,13 @@
     }
   });
   ctrlLeave.addEventListener("click", async () => {
-    if (!confirm("Sair da consulta? A sessão continua aberta para o paciente até você encerrá-la.")) return;
+    if (!confirm(tr("consultorio:alerts.leaveConfirm", "Sair da consulta? A sessão continua aberta para o paciente até você encerrá-la."))) return;
     try { await room?.disconnect(); } catch {}
     window.location.href = "./painel.html";
   });
 
   endSessionBtn.addEventListener("click", async () => {
-    if (!confirm("Encerrar definitivamente esta consulta? O paciente será desconectado.")) return;
+    if (!confirm(tr("consultorio:alerts.endConfirm", "Encerrar definitivamente esta consulta? O paciente será desconectado."))) return;
     try {
       await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/encerrar`, {
         method: "POST",
@@ -624,7 +644,7 @@
   ctrlRecord.addEventListener("click", () => {
     if (recorder) {
       // Parar gravação em andamento
-      if (!confirm("Encerrar gravação e baixar o arquivo cifrado?")) return;
+      if (!confirm(tr("consultorio:rec.stopConfirm", "Encerrar gravação e baixar o arquivo cifrado?"))) return;
       recorder.stop();
     } else {
       recConsentCheck.checked = false;
@@ -647,7 +667,7 @@
       recorder = new SessionRecorder({
         sessionId,
         dek,
-        onChunk: (n) => { recChunkInfo.textContent = `${n} chunk${n === 1 ? "" : "s"}`; },
+        onChunk: (n) => { recChunkInfo.textContent = tr("consultorio:rec.chunks", "{{n}} chunks", { n }); },
         onStop: (blob) => {
           downloadRecording(blob, sessionId);
           recorder = null;
@@ -670,7 +690,7 @@
       }, 1000);
     } catch (e) {
       console.error("recording_start_failed", e);
-      alert("Erro ao iniciar gravação: " + (e?.message || "Permissão de câmera/microfone negada?"));
+      alert(tr("consultorio:rec.startError", "Erro ao iniciar gravação: ") + (e?.message || tr("consultorio:rec.permissionDenied", "Permissão de câmera/microfone negada?")));
       recorder = null;
     }
   });
@@ -686,7 +706,7 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
         notesEmpty.classList.remove("ep-hide");
-        notesEmpty.textContent = "Erro ao carregar anotações.";
+        notesEmpty.textContent = tr("consultorio:notes.loadError", "Erro ao carregar anotações.");
         return;
       }
       notesList.innerHTML = "";
@@ -702,8 +722,8 @@
         const ts = n.createdAt ? new Date(n.createdAt) : null;
         el.innerHTML = `
           <div class="ep-note__meta">
-            <span>${ts ? ts.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : ""}</span>
-            <span class="ep-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg> cifrada</span>
+            <span>${ts ? ts.toLocaleTimeString(currentLocale(), { hour: "2-digit", minute: "2-digit" }) : ""}</span>
+            <span class="ep-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg> ${tr("consultorio:notes.encryptedTag", "cifrada")}</span>
           </div>
           <div></div>
         `;
@@ -719,7 +739,7 @@
     const text = noteInput.value.trim();
     if (!text) return;
     saveNoteBtn.disabled = true;
-    noteStatus.textContent = "cifrando…";
+    noteStatus.textContent = tr("consultorio:notes.encrypting", "cifrando…");
     try {
       const { ciphertext, iv } = await encryptNote(text, dek);
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/notas`, {
@@ -732,17 +752,17 @@
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
-        noteStatus.textContent = "erro: " + (data?.error || res.status);
+        noteStatus.textContent = tr("consultorio:notes.errorPrefix", "erro: ") + (data?.error || res.status);
         saveNoteBtn.disabled = false;
         return;
       }
       noteInput.value = "";
-      noteStatus.textContent = "salva · cifrada";
+      noteStatus.textContent = tr("consultorio:notes.saved", "salva · cifrada");
       await loadNotes();
       setTimeout(() => { noteStatus.textContent = " "; }, 2000);
     } catch (err) {
       console.error("save_note_error", err);
-      noteStatus.textContent = "erro ao salvar";
+      noteStatus.textContent = tr("consultorio:notes.saveError", "erro ao salvar");
     } finally {
       saveNoteBtn.disabled = false;
     }
@@ -814,7 +834,7 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "ep-topics-deck__filter" + (a === activeAbord ? " is-active" : "");
-      btn.textContent = a === "all" ? "Todas" : ABORDAGEM_LABEL[a];
+      btn.textContent = a === "all" ? tr("consultorio:topics.all", "Todas") : ABORDAGEM_LABEL[a];
       btn.addEventListener("click", () => {
         activeAbord = a;
         renderFilters();
@@ -882,6 +902,6 @@
   });
 </script>
 
-<a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" aria-label="Abrir suporte"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
+<a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" data-i18n-title="consultorio:help.title" aria-label="Abrir suporte" data-i18n-aria-label="consultorio:help.aria"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
 </body>
 </html>

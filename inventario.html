@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-ns="inventario">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Estoque · Espaço Prelúdio</title>
+  <title data-i18n="inventario:title">Estoque · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-150">
+  <script src="./i18n/init.js?v=1-0" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -22,32 +23,32 @@
     <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="common:brand.tail">Prelúdio</span>
       </span>
     </a>
-    <nav class="ep-nav" aria-label="Painel">
-      <a href="./painel.html">Consultas</a>
-      <a href="./agenda.html">Agenda</a>
-      <a href="./pacientes.html">Pacientes</a>
-      <a href="./financeiro.html">Financeiro</a>
-      <a href="./tiss.html" class="ep-text-sm" data-tiss-only style="display: none;">TISS</a>
-      <a href="./mensagens-pro.html">Colegas</a>
-      <a href="./marketing.html">Marketing</a>
-      
-      <a href="./relatorios.html">Relatórios</a>
-      <a href="./clinica.html">Clínica</a>
-      <a href="./inventario.html" class="is-active">Estoque</a>
-      <a href="./receita.html">Receitas</a>
-      <a href="./calculadora.html">Calculadora</a>
-      <a href="./documento.html?tipo=atestado">Atestado</a>
-      <a href="./whatsapp.html">WhatsApp</a>
+    <nav class="ep-nav" data-i18n-aria-label="inventario:nav.ariaLabel" aria-label="Painel">
+      <a href="./painel.html" data-i18n="inventario:nav.consultas">Consultas</a>
+      <a href="./agenda.html" data-i18n="inventario:nav.agenda">Agenda</a>
+      <a href="./pacientes.html" data-i18n="inventario:nav.pacientes">Pacientes</a>
+      <a href="./financeiro.html" data-i18n="inventario:nav.financeiro">Financeiro</a>
+      <a href="./tiss.html" class="ep-text-sm" data-tiss-only style="display: none;" data-i18n="inventario:nav.tiss">TISS</a>
+      <a href="./mensagens-pro.html" data-i18n="inventario:nav.colegas">Colegas</a>
+      <a href="./marketing.html" data-i18n="inventario:nav.marketing">Marketing</a>
+
+      <a href="./relatorios.html" data-i18n="inventario:nav.relatorios">Relatórios</a>
+      <a href="./clinica.html" data-i18n="inventario:nav.clinica">Clínica</a>
+      <a href="./inventario.html" class="is-active" data-i18n="inventario:nav.estoque">Estoque</a>
+      <a href="./receita.html" data-i18n="inventario:nav.receitas">Receitas</a>
+      <a href="./calculadora.html" data-i18n="inventario:nav.calculadora">Calculadora</a>
+      <a href="./documento.html?tipo=atestado" data-i18n="inventario:nav.atestado">Atestado</a>
+      <a href="./whatsapp.html" data-i18n="inventario:nav.whatsapp">WhatsApp</a>
       <div class="ep-profile-group">
-        <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
+        <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" data-i18n-aria-label="inventario:nav.perfilAria" aria-label="Abrir perfil">
         <span class="ep-nav-avatar" id="topUserAvatar">·</span>
-        <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
+        <span class="ep-nav-profile__name" id="topUserName" data-i18n="inventario:nav.perfil">Perfil</span>
       </a>
-        <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+        <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="inventario:nav.sair">Sair</button>
       </div>
     </nav>
   </div>
@@ -58,13 +59,13 @@
   <section class="ep-stack">
     <div class="ep-flex--end-wrap ep-flex">
       <div>
-        <div class="ep-eyebrow">Controle de estoque</div>
-        <h1 class="ep-h1 ep-mt-12">Seus materiais</h1>
-        <p class="ep-text-muted ep-mt-8">
+        <div class="ep-eyebrow" data-i18n="inventario:header.eyebrow">Controle de estoque</div>
+        <h1 class="ep-h1 ep-mt-12" data-i18n="inventario:header.h1">Seus materiais</h1>
+        <p class="ep-text-muted ep-mt-8" data-i18n="inventario:header.lead">
           Cadastre os itens que você usa no consultório e registre entradas e saídas.
         </p>
       </div>
-      <button id="newItemBtn" type="button" class="ep-btn ep-btn--primary ep-btn--lg">+ Novo item</button>
+      <button id="newItemBtn" type="button" class="ep-btn ep-btn--primary ep-btn--lg" data-i18n="inventario:header.newItem">+ Novo item</button>
     </div>
 
     <!-- Banner de baixo estoque (só aparece se houver itens) -->
@@ -75,23 +76,23 @@
 
     <div class="ep-mt-16">
       <div class="ep-flex ep-gap-8" style="flex-wrap: wrap; align-items: center;">
-        <input id="searchInput" class="ep-input" type="text" placeholder="Buscar por nome…" style="max-width: 280px;">
-        <select id="categoryFilter" class="ep-select" aria-label="Filtrar por categoria">
-          <option value="">Todas as categorias</option>
+        <input id="searchInput" class="ep-input" type="text" placeholder="Buscar por nome…" data-i18n-placeholder="inventario:filters.searchPh" style="max-width: 280px;">
+        <select id="categoryFilter" class="ep-select" data-i18n-aria-label="inventario:filters.categoryAria" aria-label="Filtrar por categoria">
+          <option value="" data-i18n="inventario:filters.allCategories">Todas as categorias</option>
         </select>
         <label class="ep-flex" style="gap: 6px; align-items: center; cursor: pointer;">
-          <input type="checkbox" id="lowStockOnly"> <span class="ep-text-sm">Só baixo estoque</span>
+          <input type="checkbox" id="lowStockOnly"> <span class="ep-text-sm" data-i18n="inventario:filters.onlyLowStock">Só baixo estoque</span>
         </label>
       </div>
 
-      <div id="loadingBanner" class="ep-alert ep-mt-16">Carregando itens…</div>
+      <div id="loadingBanner" class="ep-alert ep-mt-16" data-i18n="inventario:list.loading">Carregando itens…</div>
       <div id="itemList" class="ep-session-list ep-mt-16 ep-hide"></div>
       <div id="emptyState" class="ep-empty ep-mt-16 ep-hide">
-        <h3 class="ep-h3">Nenhum item no estoque ainda.</h3>
-        <p class="ep-text-muted ep-mt-8" style="margin: 0;">
+        <h3 class="ep-h3" data-i18n="inventario:list.emptyTitle">Nenhum item no estoque ainda.</h3>
+        <p class="ep-text-muted ep-mt-8" style="margin: 0;" data-i18n="inventario:list.emptyLead">
           Cadastre o primeiro material — eletrodos, ataduras, amostras de suplemento, testes, etc.
         </p>
-        <button class="ep-btn ep-btn--primary ep-mt-16" type="button" id="emptyCta">Cadastrar primeiro item</button>
+        <button class="ep-btn ep-btn--primary ep-mt-16" type="button" id="emptyCta" data-i18n="inventario:list.emptyCta">Cadastrar primeiro item</button>
       </div>
     </div>
   </section>
@@ -101,58 +102,58 @@
 <!-- Modal: Novo / editar item -->
 <div class="ep-modal" id="itemModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel">
-    <h3 class="ep-modal__title" id="itemModalTitle">Novo item</h3>
-    <p class="ep-modal__sub">
+    <h3 class="ep-modal__title" id="itemModalTitle" data-i18n="inventario:modal.newTitle">Novo item</h3>
+    <p class="ep-modal__sub" data-i18n="inventario:modal.sub">
       Cadastre um material do consultório. Saldo só muda via entradas/saídas — preserva o histórico.
     </p>
 
     <form id="itemForm" class="ep-stack" novalidate>
       <div class="ep-field">
-        <label class="ep-label" for="itemName">Nome *</label>
-        <input id="itemName" class="ep-input" type="text" maxlength="100" placeholder="Ex.: Eletrodo descartável" required>
+        <label class="ep-label" for="itemName" data-i18n="inventario:modal.nameLabel">Nome *</label>
+        <input id="itemName" class="ep-input" type="text" maxlength="100" placeholder="Ex.: Eletrodo descartável" data-i18n-placeholder="inventario:modal.namePh" required>
       </div>
       <div class="ep-row">
         <div class="ep-field">
-          <label class="ep-label" for="itemCategory">Categoria</label>
-          <input id="itemCategory" class="ep-input" type="text" maxlength="50" placeholder="Ex.: Eletro" list="categoryDatalist">
+          <label class="ep-label" for="itemCategory" data-i18n="inventario:modal.categoryLabel">Categoria</label>
+          <input id="itemCategory" class="ep-input" type="text" maxlength="50" placeholder="Ex.: Eletro" data-i18n-placeholder="inventario:modal.categoryPh" list="categoryDatalist">
           <datalist id="categoryDatalist"></datalist>
         </div>
         <div class="ep-field">
-          <label class="ep-label" for="itemUnit">Unidade *</label>
+          <label class="ep-label" for="itemUnit" data-i18n="inventario:modal.unitLabel">Unidade *</label>
           <select id="itemUnit" class="ep-select" required>
-            <option value="unidade">Unidade</option>
-            <option value="caixa">Caixa</option>
-            <option value="kg">Quilograma (kg)</option>
-            <option value="g">Grama (g)</option>
-            <option value="litro">Litro</option>
-            <option value="ml">Mililitro (ml)</option>
-            <option value="metro">Metro</option>
-            <option value="outro">Outro</option>
+            <option value="unidade" data-i18n="inventario:modal.unit.unidade">Unidade</option>
+            <option value="caixa" data-i18n="inventario:modal.unit.caixa">Caixa</option>
+            <option value="kg" data-i18n="inventario:modal.unit.kg">Quilograma (kg)</option>
+            <option value="g" data-i18n="inventario:modal.unit.g">Grama (g)</option>
+            <option value="litro" data-i18n="inventario:modal.unit.litro">Litro</option>
+            <option value="ml" data-i18n="inventario:modal.unit.ml">Mililitro (ml)</option>
+            <option value="metro" data-i18n="inventario:modal.unit.metro">Metro</option>
+            <option value="outro" data-i18n="inventario:modal.unit.outro">Outro</option>
           </select>
         </div>
       </div>
       <div class="ep-row">
         <div class="ep-field" id="initialStockField">
-          <label class="ep-label" for="itemInitialStock">Estoque inicial</label>
+          <label class="ep-label" for="itemInitialStock" data-i18n="inventario:modal.initialLabel">Estoque inicial</label>
           <input id="itemInitialStock" class="ep-input" type="number" min="0" step="1" value="0">
-          <p class="ep-text-xs ep-text-muted ep-mt-0">Cria movimento "Saldo inicial" automaticamente.</p>
+          <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="inventario:modal.initialHint">Cria movimento "Saldo inicial" automaticamente.</p>
         </div>
         <div class="ep-field">
-          <label class="ep-label" for="itemMinStock">Alerta de estoque baixo</label>
+          <label class="ep-label" for="itemMinStock" data-i18n="inventario:modal.minLabel">Alerta de estoque baixo</label>
           <input id="itemMinStock" class="ep-input" type="number" min="0" step="1" value="0">
-          <p class="ep-text-xs ep-text-muted ep-mt-0">0 desativa o alerta.</p>
+          <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="inventario:modal.minHint">0 desativa o alerta.</p>
         </div>
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="itemDescription">Descrição (opcional)</label>
-        <input id="itemDescription" class="ep-input" type="text" maxlength="300" placeholder="Marca, fornecedor, etc.">
+        <label class="ep-label" for="itemDescription" data-i18n="inventario:modal.descLabel">Descrição (opcional)</label>
+        <input id="itemDescription" class="ep-input" type="text" maxlength="300" placeholder="Marca, fornecedor, etc." data-i18n-placeholder="inventario:modal.descPh">
       </div>
       <div class="ep-status" id="itemStatusMsg"></div>
     </form>
 
     <div class="ep-modal__actions">
-      <button type="button" class="ep-btn ep-btn--ghost" id="cancelItemBtn">Cancelar</button>
-      <button type="button" class="ep-btn ep-btn--primary" id="saveItemBtn">Salvar</button>
+      <button type="button" class="ep-btn ep-btn--ghost" id="cancelItemBtn" data-i18n="inventario:modal.cancelBtn">Cancelar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="saveItemBtn" data-i18n="inventario:modal.saveBtn">Salvar</button>
     </div>
   </div>
 </div>
@@ -160,38 +161,38 @@
 <!-- Modal: Entrada / saída -->
 <div class="ep-modal" id="movModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel">
-    <h3 class="ep-modal__title" id="movModalTitle">Movimentação</h3>
+    <h3 class="ep-modal__title" id="movModalTitle" data-i18n="inventario:mov.title">Movimentação</h3>
     <p class="ep-modal__sub" id="movModalSub">—</p>
 
     <form id="movForm" class="ep-stack" novalidate>
       <div class="ep-row">
         <div class="ep-field">
-          <label class="ep-label" for="movType">Tipo *</label>
+          <label class="ep-label" for="movType" data-i18n="inventario:mov.typeLabel">Tipo *</label>
           <select id="movType" class="ep-select" required>
-            <option value="entrada">Entrada (adicionar)</option>
-            <option value="saida">Saída (remover)</option>
+            <option value="entrada" data-i18n="inventario:mov.typeIn">Entrada (adicionar)</option>
+            <option value="saida" data-i18n="inventario:mov.typeOut">Saída (remover)</option>
           </select>
         </div>
         <div class="ep-field">
-          <label class="ep-label" for="movQuantity">Quantidade *</label>
+          <label class="ep-label" for="movQuantity" data-i18n="inventario:mov.quantityLabel">Quantidade *</label>
           <input id="movQuantity" class="ep-input" type="number" min="1" step="1" value="1" required>
         </div>
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="movDate">Data</label>
+        <label class="ep-label" for="movDate" data-i18n="inventario:mov.dateLabel">Data</label>
         <input id="movDate" class="ep-input" type="date">
-        <p class="ep-text-xs ep-text-muted ep-mt-0">Em branco usa hoje.</p>
+        <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="inventario:mov.dateHint">Em branco usa hoje.</p>
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="movReason">Motivo (opcional)</label>
-        <input id="movReason" class="ep-input" type="text" maxlength="200" placeholder="Ex.: Compra Fornecedor X / Uso na sessão">
+        <label class="ep-label" for="movReason" data-i18n="inventario:mov.reasonLabel">Motivo (opcional)</label>
+        <input id="movReason" class="ep-input" type="text" maxlength="200" placeholder="Ex.: Compra Fornecedor X / Uso na sessão" data-i18n-placeholder="inventario:mov.reasonPh">
       </div>
       <div class="ep-status" id="movStatusMsg"></div>
     </form>
 
     <div class="ep-modal__actions">
-      <button type="button" class="ep-btn ep-btn--ghost" id="cancelMovBtn">Cancelar</button>
-      <button type="button" class="ep-btn ep-btn--primary" id="saveMovBtn">Registrar</button>
+      <button type="button" class="ep-btn ep-btn--ghost" id="cancelMovBtn" data-i18n="inventario:mov.cancelBtn">Cancelar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="saveMovBtn" data-i18n="inventario:mov.saveBtn">Registrar</button>
     </div>
   </div>
 </div>
@@ -199,11 +200,11 @@
 <!-- Modal: Histórico de movimentações -->
 <div class="ep-modal" id="historyModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel" style="max-width: 640px;">
-    <h3 class="ep-modal__title" id="historyTitle">Histórico</h3>
+    <h3 class="ep-modal__title" id="historyTitle" data-i18n="inventario:history.title">Histórico</h3>
     <p class="ep-modal__sub" id="historySub">—</p>
     <div id="historyList" class="ep-stack"></div>
     <div class="ep-modal__actions">
-      <button type="button" class="ep-btn ep-btn--primary" id="closeHistoryBtn">Fechar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="closeHistoryBtn" data-i18n="inventario:history.closeBtn">Fechar</button>
     </div>
   </div>
 </div>
@@ -225,6 +226,24 @@
     window.location.href = "./login.html";
   });
 
+  // tr(): i18n helper com fallback PT-BR.
+  function tr(key, fallback, opts) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key, opts);
+      if (v && v !== key) return v;
+    }
+    if (opts && typeof fallback === "string") {
+      return fallback.replace(/\{\{(\w+)\}\}/g, (_, k) => (opts[k] != null ? String(opts[k]) : ""));
+    }
+    return fallback;
+  }
+  function currentLocale() {
+    if (window.EP_I18N && window.EP_I18N.locale) {
+      try { return window.EP_I18N.locale(); } catch (_) { /* empty */ }
+    }
+    return (document.documentElement.lang || "pt-BR");
+  }
+
   // ─── Helpers ───────────────────────────────────────────────────
   function escapeHtml(s) {
     return String(s || "").replace(/[&<>"']/g, c => ({
@@ -233,7 +252,7 @@
   }
   function fmtDate(ms) {
     if (!ms) return "—";
-    return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+    return new Date(ms).toLocaleDateString(currentLocale(), { day: "2-digit", month: "short", year: "numeric" });
   }
   function isoDateInput(ms) {
     if (!ms) return "";
@@ -280,9 +299,9 @@
     } catch (error) {
       console.error("load_inventory_error", error);
       const human = error?.message === "ERRO_INTERNO"
-        ? "Algo deu errado no servidor. Tente novamente em alguns segundos."
-        : `Erro ao carregar: ${error?.message || "desconhecido"}`;
-      loadingBanner.innerHTML = `${human} <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" style="margin-left: 12px;" id="retryBtn">Tentar de novo</button>`;
+        ? tr("inventario:errors.internal", "Algo deu errado no servidor. Tente novamente em alguns segundos.")
+        : tr("inventario:errors.loadFailed", "Erro ao carregar: {{msg}}", { msg: error?.message || tr("inventario:errors.unknown", "desconhecido") });
+      loadingBanner.innerHTML = `${escapeHtml(human)} <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" style="margin-left: 12px;" id="retryBtn">${escapeHtml(tr("inventario:errors.retryBtn", "Tentar de novo"))}</button>`;
       loadingBanner.className = "ep-alert ep-alert--danger";
       document.getElementById("retryBtn")?.addEventListener("click", () => loadItems());
     }
@@ -310,8 +329,8 @@
     if (low.length > 0) {
       banner.classList.remove("ep-hide");
       document.getElementById("lowStockTitle").textContent = low.length === 1
-        ? "1 item em estoque baixo."
-        : `${low.length} itens em estoque baixo.`;
+        ? tr("inventario:lowStock.single", "1 item em estoque baixo.")
+        : tr("inventario:lowStock.many", "{{n}} itens em estoque baixo.", { n: low.length });
       document.getElementById("lowStockSub").textContent = low.map(i => i.name).slice(0, 5).join(", ") + (low.length > 5 ? "…" : "");
     } else {
       banner.classList.add("ep-hide");
@@ -336,7 +355,7 @@
         // Tem itens mas nenhum bate com o filtro
         itemList.innerHTML = "";
         itemList.classList.remove("ep-hide");
-        itemList.innerHTML = `<div class="ep-empty"><h3 class="ep-h3">Nenhum item bate com os filtros.</h3></div>`;
+        itemList.innerHTML = `<div class="ep-empty"><h3 class="ep-h3">${escapeHtml(tr("inventario:list.noMatch", "Nenhum item bate com os filtros."))}</h3></div>`;
       }
       return;
     }
@@ -355,7 +374,7 @@
     if (isLowStock(item)) div.classList.add("ep-session--active"); // marca lateral dourada
     const stockLine = `<strong style="font-size: 18px;">${item.currentStock} ${unitLabel(item.unit)}</strong>`;
     const lowBadge = isLowStock(item)
-      ? `<span class="ep-badge" style="background: var(--ep-gold-soft); color: var(--ep-warn); border-color: var(--ep-gold-line);">Baixo estoque (mín. ${item.minStock})</span>`
+      ? `<span class="ep-badge" style="background: var(--ep-gold-soft); color: var(--ep-warn); border-color: var(--ep-gold-line);">${escapeHtml(tr("inventario:lowStock.badge", "Baixo estoque (mín. {{min}})", { min: item.minStock }))}</span>`
       : "";
     const catBadge = item.category
       ? `<span class="ep-badge ep-badge--muted">${escapeHtml(item.category)}</span>`
@@ -371,10 +390,10 @@
       </div>
       <div class="ep-session__actions" style="gap: 10px; align-items: center;">
         ${stockLine}
-        <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="mov" data-id="${item.itemId}">Mov.</button>
-        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="history" data-id="${item.itemId}">Hist.</button>
-        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="edit" data-id="${item.itemId}">Editar</button>
-        <button class="ep-btn-icon" data-action="delete" data-id="${item.itemId}" aria-label="Arquivar" title="Arquivar">
+        <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="mov" data-id="${item.itemId}">${escapeHtml(tr("inventario:item.movBtn", "Mov."))}</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="history" data-id="${item.itemId}">${escapeHtml(tr("inventario:item.histBtn", "Hist."))}</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="edit" data-id="${item.itemId}">${escapeHtml(tr("inventario:item.editBtn", "Editar"))}</button>
+        <button class="ep-btn-icon" data-action="delete" data-id="${item.itemId}" aria-label="${escapeHtml(tr("inventario:item.archiveAria", "Arquivar"))}" title="${escapeHtml(tr("inventario:item.archiveTitle", "Arquivar"))}">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
@@ -405,7 +424,9 @@
 
   function openItemModal(item) {
     editingItemId = item?.itemId || null;
-    itemModalTitle.textContent = editingItemId ? "Editar item" : "Novo item";
+    itemModalTitle.textContent = editingItemId
+      ? tr("inventario:modal.editTitle", "Editar item")
+      : tr("inventario:modal.newTitle", "Novo item");
     itemName.value = item?.name || "";
     itemCategory.value = item?.category || "";
     itemUnit.value = item?.unit || "unidade";
@@ -427,7 +448,7 @@
 
   document.getElementById("saveItemBtn").addEventListener("click", async () => {
     const name = itemName.value.trim();
-    if (!name) { itemStatusMsg.textContent = "Nome é obrigatório."; itemStatusMsg.className = "ep-status is-err"; return; }
+    if (!name) { itemStatusMsg.textContent = tr("inventario:errors.nameRequired", "Nome é obrigatório."); itemStatusMsg.className = "ep-status is-err"; return; }
     const body = {
       name,
       category: itemCategory.value.trim() || null,
@@ -452,7 +473,7 @@
       closeItemModal();
       await loadItems();
     } catch (e) {
-      itemStatusMsg.textContent = "Erro ao salvar: " + e.message;
+      itemStatusMsg.textContent = tr("inventario:errors.saveFailed", "Erro ao salvar: ") + e.message;
       itemStatusMsg.className = "ep-status is-err";
     }
   });
@@ -470,8 +491,8 @@
 
   function openMovModal(item) {
     movItemId = item.itemId;
-    movModalTitle.textContent = `Movimentação — ${item.name}`;
-    movModalSub.textContent = `Estoque atual: ${item.currentStock} ${unitLabel(item.unit)}`;
+    movModalTitle.textContent = tr("inventario:mov.titleWith", "Movimentação — {{name}}", { name: item.name });
+    movModalSub.textContent = tr("inventario:mov.currentStock", "Estoque atual: {{value}} {{unit}}", { value: item.currentStock, unit: unitLabel(item.unit) });
     movType.value = "entrada";
     movQuantity.value = "1";
     movDate.value = isoDateInput(Date.now());
@@ -488,7 +509,7 @@
   document.getElementById("saveMovBtn").addEventListener("click", async () => {
     const quantity = Number(movQuantity.value);
     if (!Number.isInteger(quantity) || quantity < 1) {
-      movStatusMsg.textContent = "Quantidade inválida."; movStatusMsg.className = "ep-status is-err"; return;
+      movStatusMsg.textContent = tr("inventario:errors.qtyInvalid", "Quantidade inválida."); movStatusMsg.className = "ep-status is-err"; return;
     }
     const body = {
       itemId: movItemId,
@@ -506,7 +527,7 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
         if (data.error === "ESTOQUE_INSUFICIENTE") {
-          throw new Error(`Estoque insuficiente. Atual: ${data.currentStock}, pediu: ${data.requested}.`);
+          throw new Error(tr("inventario:errors.lowStockError", "Estoque insuficiente. Atual: {{current}}, pediu: {{requested}}.", { current: data.currentStock, requested: data.requested }));
         }
         throw new Error(data.error || ("HTTP_" + res.status));
       }
@@ -524,10 +545,10 @@
   historyModal.addEventListener("click", (e) => { if (e.target === historyModal) historyModal.classList.remove("is-open"); });
 
   async function openHistoryModal(item) {
-    document.getElementById("historyTitle").textContent = `Histórico — ${item.name}`;
-    document.getElementById("historySub").textContent = `Estoque atual: ${item.currentStock} ${unitLabel(item.unit)}`;
+    document.getElementById("historyTitle").textContent = tr("inventario:history.titleWith", "Histórico — {{name}}", { name: item.name });
+    document.getElementById("historySub").textContent = tr("inventario:history.currentStock", "Estoque atual: {{value}} {{unit}}", { value: item.currentStock, unit: unitLabel(item.unit) });
     const listEl = document.getElementById("historyList");
-    listEl.innerHTML = "Carregando…";
+    listEl.innerHTML = escapeHtml(tr("inventario:history.loading", "Carregando…"));
     historyModal.classList.add("is-open");
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/inventario/movimentos?itemId=${encodeURIComponent(item.itemId)}`, {
@@ -537,7 +558,7 @@
       if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
       const movs = data.movements || [];
       if (movs.length === 0) {
-        listEl.innerHTML = `<p class="ep-text-muted">Sem movimentações ainda.</p>`;
+        listEl.innerHTML = `<p class="ep-text-muted">${escapeHtml(tr("inventario:history.empty", "Sem movimentações ainda."))}</p>`;
         return;
       }
       listEl.innerHTML = movs.map(m => {
@@ -554,7 +575,7 @@
         `;
       }).join("");
     } catch (e) {
-      listEl.innerHTML = `<p class="ep-text-muted">Erro: ${escapeHtml(e.message)}</p>`;
+      listEl.innerHTML = `<p class="ep-text-muted">${escapeHtml(tr("inventario:errors.prefix", "Erro: "))}${escapeHtml(e.message)}</p>`;
     }
   }
 
@@ -570,7 +591,7 @@
     else if (action === "history") openHistoryModal(item);
     else if (action === "edit")    openItemModal(item);
     else if (action === "delete") {
-      if (!confirm(`Arquivar "${item.name}"? O histórico de movimentações fica preservado.`)) return;
+      if (!confirm(tr("inventario:confirm.archive", "Arquivar \"{{name}}\"? O histórico de movimentações fica preservado.", { name: item.name }))) return;
       btn.disabled = true;
       try {
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/inventario/itens/${encodeURIComponent(item.itemId)}`, {
@@ -582,12 +603,12 @@
         await loadItems();
       } catch (err) {
         btn.disabled = false;
-        alert("Erro: " + err.message);
+        alert(tr("inventario:errors.prefix", "Erro: ") + err.message);
       }
     }
   });
 </script>
 
-<a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" aria-label="Abrir suporte"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
+<a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" data-i18n-title="inventario:help.title" aria-label="Abrir suporte" data-i18n-aria-label="inventario:help.aria"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
 </body>
 </html>

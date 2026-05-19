@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-ns="calculadora">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculadora clínica · Espaço Prelúdio</title>
+  <title data-i18n="calculadora:title">Calculadora clínica · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-150">
+  <script src="./i18n/init.js?v=1-0" defer></script>
   <style>
     .ep-calc-block { background: var(--ep-surface); border: 1px solid var(--ep-line); border-radius: var(--ep-radius); padding: 0; margin-bottom: 12px; transition: box-shadow 120ms ease; }
     .ep-calc-block[open] { box-shadow: var(--ep-shadow-soft); }
@@ -40,32 +41,32 @@
     <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="common:brand.tail">Prelúdio</span>
       </span>
     </a>
-    <nav class="ep-nav" aria-label="Painel">
-      <a href="./painel.html">Consultas</a>
-      <a href="./agenda.html">Agenda</a>
-      <a href="./pacientes.html">Pacientes</a>
-      <a href="./financeiro.html">Financeiro</a>
-      <a href="./tiss.html" class="ep-text-sm" data-tiss-only style="display: none;">TISS</a>
-      <a href="./mensagens-pro.html">Colegas</a>
-      <a href="./marketing.html">Marketing</a>
-      
-      <a href="./relatorios.html">Relatórios</a>
-      <a href="./clinica.html">Clínica</a>
-      <a href="./inventario.html">Estoque</a>
-      <a href="./receita.html">Receitas</a>
-      <a href="./calculadora.html" class="is-active">Calculadora</a>
-      <a href="./documento.html?tipo=atestado">Atestado</a>
-      <a href="./whatsapp.html">WhatsApp</a>
+    <nav class="ep-nav" data-i18n-aria-label="calculadora:nav.ariaLabel" aria-label="Painel">
+      <a href="./painel.html" data-i18n="calculadora:nav.consultas">Consultas</a>
+      <a href="./agenda.html" data-i18n="calculadora:nav.agenda">Agenda</a>
+      <a href="./pacientes.html" data-i18n="calculadora:nav.pacientes">Pacientes</a>
+      <a href="./financeiro.html" data-i18n="calculadora:nav.financeiro">Financeiro</a>
+      <a href="./tiss.html" class="ep-text-sm" data-tiss-only style="display: none;" data-i18n="calculadora:nav.tiss">TISS</a>
+      <a href="./mensagens-pro.html" data-i18n="calculadora:nav.colegas">Colegas</a>
+      <a href="./marketing.html" data-i18n="calculadora:nav.marketing">Marketing</a>
+
+      <a href="./relatorios.html" data-i18n="calculadora:nav.relatorios">Relatórios</a>
+      <a href="./clinica.html" data-i18n="calculadora:nav.clinica">Clínica</a>
+      <a href="./inventario.html" data-i18n="calculadora:nav.estoque">Estoque</a>
+      <a href="./receita.html" data-i18n="calculadora:nav.receitas">Receitas</a>
+      <a href="./calculadora.html" class="is-active" data-i18n="calculadora:nav.calculadora">Calculadora</a>
+      <a href="./documento.html?tipo=atestado" data-i18n="calculadora:nav.atestado">Atestado</a>
+      <a href="./whatsapp.html" data-i18n="calculadora:nav.whatsapp">WhatsApp</a>
       <div class="ep-profile-group">
-        <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil">
+        <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" data-i18n-aria-label="calculadora:nav.perfilAria" aria-label="Abrir perfil">
         <span class="ep-nav-avatar" id="topUserAvatar">·</span>
-        <span class="ep-nav-profile__name" id="topUserName">Perfil</span>
+        <span class="ep-nav-profile__name" id="topUserName" data-i18n="calculadora:nav.perfil">Perfil</span>
       </a>
-        <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+        <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="calculadora:nav.sair">Sair</button>
       </div>
     </nav>
   </div>
@@ -73,13 +74,13 @@
 
 <main class="ep-container ep-mt-32 ep-mb-16" style="max-width: 880px;">
 
-  <div class="ep-eyebrow">Ferramenta clínica</div>
-  <h1 class="ep-h1 ep-mt-12">Calculadora clínica</h1>
-  <p class="ep-text-muted ep-mt-8">
+  <div class="ep-eyebrow" data-i18n="calculadora:header.eyebrow">Ferramenta clínica</div>
+  <h1 class="ep-h1 ep-mt-12" data-i18n="calculadora:header.h1">Calculadora clínica</h1>
+  <p class="ep-text-muted ep-mt-8" data-i18n="calculadora:header.lead">
     Cálculos assistidos pra dose, infusão e avaliação. Sete fórmulas essenciais do dia-a-dia.
   </p>
 
-  <div class="ep-calc-disclaimer ep-mt-16">
+  <div class="ep-calc-disclaimer ep-mt-16" data-i18n-html="calculadora:disclaimer.html">
     <strong>⚠ Calculadora assistiva — não prescritiva.</strong>
     Os resultados servem como apoio ao raciocínio clínico. A decisão final sobre dose,
     via e frequência é responsabilidade do profissional prescritor. Sempre confira a
@@ -91,29 +92,29 @@
     <!-- 1. Dosagem por peso -->
     <details class="ep-calc-block" open>
       <summary class="ep-calc-summary">
-        <span>Dosagem por peso (mg/kg)</span>
-        <span class="ep-calc-tag" style="background: var(--ep-accent-soft); color: var(--ep-accent);">Mais usada</span>
+        <span data-i18n="calculadora:peso.title">Dosagem por peso (mg/kg)</span>
+        <span class="ep-calc-tag" style="background: var(--ep-accent-soft); color: var(--ep-accent);" data-i18n="calculadora:tags.mostUsed">Mais usada</span>
       </summary>
       <div class="ep-calc-body">
-        <p class="ep-text-sm ep-text-muted ep-mt-0">
+        <p class="ep-text-sm ep-text-muted ep-mt-0" data-i18n="calculadora:peso.desc">
           Calcula a dose total por dia (e por administração) a partir da dose recomendada por kg.
         </p>
         <form class="ep-stack" data-calc="peso">
           <div class="ep-row">
             <div class="ep-field">
-              <label class="ep-label">Dose (mg/kg/dia)</label>
-              <input class="ep-input" type="number" step="0.01" min="0" data-input="dose" placeholder="Ex.: 10">
+              <label class="ep-label" data-i18n="calculadora:peso.doseLabel">Dose (mg/kg/dia)</label>
+              <input class="ep-input" type="number" step="0.01" min="0" data-input="dose" placeholder="Ex.: 10" data-i18n-placeholder="calculadora:peso.dosePh">
             </div>
             <div class="ep-field">
-              <label class="ep-label">Peso do paciente (kg)</label>
-              <input class="ep-input" type="number" step="0.01" min="0" data-input="peso" placeholder="Ex.: 70">
+              <label class="ep-label" data-i18n="calculadora:peso.weightLabel">Peso do paciente (kg)</label>
+              <input class="ep-input" type="number" step="0.01" min="0" data-input="peso" placeholder="Ex.: 70" data-i18n-placeholder="calculadora:peso.weightPh">
             </div>
           </div>
           <div class="ep-field">
-            <label class="ep-label">Frequência (vezes ao dia)</label>
+            <label class="ep-label" data-i18n="calculadora:peso.freqLabel">Frequência (vezes ao dia)</label>
             <input class="ep-input" type="number" step="1" min="1" max="12" value="1" data-input="freq">
           </div>
-          <button type="button" class="ep-btn ep-btn--primary" data-action="calc">Calcular</button>
+          <button type="button" class="ep-btn ep-btn--primary" data-action="calc" data-i18n="calculadora:calcBtn">Calcular</button>
           <div class="ep-calc-result" data-result style="display: none;">
             <div class="ep-calc-result__main" data-result-main>—</div>
             <div class="ep-calc-result__sub" data-result-sub>—</div>
@@ -126,29 +127,29 @@
     <!-- 2. Superfície corporal (BSA Mosteller) -->
     <details class="ep-calc-block">
       <summary class="ep-calc-summary">
-        <span>Superfície corporal (BSA Mosteller)</span>
-        <span class="ep-calc-tag" style="background: var(--ep-gold-soft); color: var(--ep-warn);">Oncologia · Pediatria</span>
+        <span data-i18n="calculadora:bsa.title">Superfície corporal (BSA Mosteller)</span>
+        <span class="ep-calc-tag" style="background: var(--ep-gold-soft); color: var(--ep-warn);" data-i18n="calculadora:tags.oncoPed">Oncologia · Pediatria</span>
       </summary>
       <div class="ep-calc-body">
-        <p class="ep-text-sm ep-text-muted ep-mt-0">
+        <p class="ep-text-sm ep-text-muted ep-mt-0" data-i18n="calculadora:bsa.desc">
           Fórmula de Mosteller para superfície corporal. Padrão em quimioterapia e doses pediátricas.
         </p>
         <form class="ep-stack" data-calc="bsa">
           <div class="ep-row">
             <div class="ep-field">
-              <label class="ep-label">Peso (kg)</label>
-              <input class="ep-input" type="number" step="0.01" min="0" data-input="peso" placeholder="Ex.: 70">
+              <label class="ep-label" data-i18n="calculadora:bsa.weightLabel">Peso (kg)</label>
+              <input class="ep-input" type="number" step="0.01" min="0" data-input="peso" placeholder="Ex.: 70" data-i18n-placeholder="calculadora:bsa.weightPh">
             </div>
             <div class="ep-field">
-              <label class="ep-label">Altura (cm)</label>
-              <input class="ep-input" type="number" step="0.1" min="0" data-input="altura" placeholder="Ex.: 170">
+              <label class="ep-label" data-i18n="calculadora:bsa.heightLabel">Altura (cm)</label>
+              <input class="ep-input" type="number" step="0.1" min="0" data-input="altura" placeholder="Ex.: 170" data-i18n-placeholder="calculadora:bsa.heightPh">
             </div>
           </div>
           <div class="ep-field">
-            <label class="ep-label">Dose (mg/m²) — opcional</label>
-            <input class="ep-input" type="number" step="0.01" min="0" data-input="dose" placeholder="Para calcular dose total">
+            <label class="ep-label" data-i18n="calculadora:bsa.doseLabel">Dose (mg/m²) — opcional</label>
+            <input class="ep-input" type="number" step="0.01" min="0" data-input="dose" placeholder="Para calcular dose total" data-i18n-placeholder="calculadora:bsa.dosePh">
           </div>
-          <button type="button" class="ep-btn ep-btn--primary" data-action="calc">Calcular</button>
+          <button type="button" class="ep-btn ep-btn--primary" data-action="calc" data-i18n="calculadora:calcBtn">Calcular</button>
           <div class="ep-calc-result" data-result style="display: none;">
             <div class="ep-calc-result__main" data-result-main>—</div>
             <div class="ep-calc-result__sub" data-result-sub>—</div>
@@ -161,53 +162,53 @@
     <!-- 3. Conversão de unidades -->
     <details class="ep-calc-block">
       <summary class="ep-calc-summary">
-        <span>Conversão de unidades</span>
-        <span class="ep-calc-tag" style="background: var(--ep-bg-2); color: var(--ep-ink-2);">Utilitário</span>
+        <span data-i18n="calculadora:conv.title">Conversão de unidades</span>
+        <span class="ep-calc-tag" style="background: var(--ep-bg-2); color: var(--ep-ink-2);" data-i18n="calculadora:tags.utility">Utilitário</span>
       </summary>
       <div class="ep-calc-body">
-        <p class="ep-text-sm ep-text-muted ep-mt-0">
+        <p class="ep-text-sm ep-text-muted ep-mt-0" data-i18n="calculadora:conv.desc">
           Massa (g/mg/mcg), volume (L/mL) e gotas (1 mL = 20 macrogotas = 60 microgotas).
         </p>
         <form class="ep-stack" data-calc="conv">
           <div class="ep-row">
             <div class="ep-field">
-              <label class="ep-label">Valor</label>
-              <input class="ep-input" type="number" step="any" min="0" data-input="valor" placeholder="Ex.: 500">
+              <label class="ep-label" data-i18n="calculadora:conv.valueLabel">Valor</label>
+              <input class="ep-input" type="number" step="any" min="0" data-input="valor" placeholder="Ex.: 500" data-i18n-placeholder="calculadora:conv.valuePh">
             </div>
             <div class="ep-field">
-              <label class="ep-label">De</label>
+              <label class="ep-label" data-i18n="calculadora:conv.fromLabel">De</label>
               <select class="ep-select" data-input="from">
-                <optgroup label="Massa">
-                  <option value="g">g (grama)</option>
-                  <option value="mg" selected>mg (miligrama)</option>
-                  <option value="mcg">mcg (micrograma)</option>
+                <optgroup label="Massa" data-i18n-label="calculadora:conv.massGroup">
+                  <option value="g" data-i18n="calculadora:conv.g">g (grama)</option>
+                  <option value="mg" selected data-i18n="calculadora:conv.mg">mg (miligrama)</option>
+                  <option value="mcg" data-i18n="calculadora:conv.mcg">mcg (micrograma)</option>
                 </optgroup>
-                <optgroup label="Volume">
-                  <option value="L">L (litro)</option>
-                  <option value="mL">mL (mililitro)</option>
-                  <option value="macrogota">macrogotas (20/mL)</option>
-                  <option value="microgota">microgotas (60/mL)</option>
+                <optgroup label="Volume" data-i18n-label="calculadora:conv.volumeGroup">
+                  <option value="L" data-i18n="calculadora:conv.L">L (litro)</option>
+                  <option value="mL" data-i18n="calculadora:conv.mL">mL (mililitro)</option>
+                  <option value="macrogota" data-i18n="calculadora:conv.macro">macrogotas (20/mL)</option>
+                  <option value="microgota" data-i18n="calculadora:conv.micro">microgotas (60/mL)</option>
                 </optgroup>
               </select>
             </div>
             <div class="ep-field">
-              <label class="ep-label">Para</label>
+              <label class="ep-label" data-i18n="calculadora:conv.toLabel">Para</label>
               <select class="ep-select" data-input="to">
-                <optgroup label="Massa">
-                  <option value="g">g</option>
-                  <option value="mg">mg</option>
-                  <option value="mcg" selected>mcg</option>
+                <optgroup label="Massa" data-i18n-label="calculadora:conv.massGroup">
+                  <option value="g" data-i18n="calculadora:conv.gShort">g</option>
+                  <option value="mg" data-i18n="calculadora:conv.mgShort">mg</option>
+                  <option value="mcg" selected data-i18n="calculadora:conv.mcgShort">mcg</option>
                 </optgroup>
-                <optgroup label="Volume">
-                  <option value="L">L</option>
-                  <option value="mL">mL</option>
-                  <option value="macrogota">macrogotas</option>
-                  <option value="microgota">microgotas</option>
+                <optgroup label="Volume" data-i18n-label="calculadora:conv.volumeGroup">
+                  <option value="L" data-i18n="calculadora:conv.Lshort">L</option>
+                  <option value="mL" data-i18n="calculadora:conv.mLshort">mL</option>
+                  <option value="macrogota" data-i18n="calculadora:conv.macroShort">macrogotas</option>
+                  <option value="microgota" data-i18n="calculadora:conv.microShort">microgotas</option>
                 </optgroup>
               </select>
             </div>
           </div>
-          <button type="button" class="ep-btn ep-btn--primary" data-action="calc">Converter</button>
+          <button type="button" class="ep-btn ep-btn--primary" data-action="calc" data-i18n="calculadora:convertBtn">Converter</button>
           <div class="ep-calc-result" data-result style="display: none;">
             <div class="ep-calc-result__main" data-result-main>—</div>
             <div class="ep-calc-result__sub" data-result-sub>—</div>
@@ -219,32 +220,32 @@
     <!-- 4. Taxa de infusão / Gotejamento -->
     <details class="ep-calc-block">
       <summary class="ep-calc-summary">
-        <span>Taxa de infusão / Gotejamento</span>
-        <span class="ep-calc-tag" style="background: var(--ep-gold-soft); color: var(--ep-warn);">Hospitalar</span>
+        <span data-i18n="calculadora:infusao.title">Taxa de infusão / Gotejamento</span>
+        <span class="ep-calc-tag" style="background: var(--ep-gold-soft); color: var(--ep-warn);" data-i18n="calculadora:tags.hospital">Hospitalar</span>
       </summary>
       <div class="ep-calc-body">
-        <p class="ep-text-sm ep-text-muted ep-mt-0">
+        <p class="ep-text-sm ep-text-muted ep-mt-0" data-i18n="calculadora:infusao.desc">
           Converte volume + tempo em mL/h e gotas/min (macro = 20 gotas/mL, micro = 60 gotas/mL).
         </p>
         <form class="ep-stack" data-calc="infusao">
           <div class="ep-row">
             <div class="ep-field">
-              <label class="ep-label">Volume total (mL)</label>
-              <input class="ep-input" type="number" step="0.1" min="0" data-input="volume" placeholder="Ex.: 500">
+              <label class="ep-label" data-i18n="calculadora:infusao.volumeLabel">Volume total (mL)</label>
+              <input class="ep-input" type="number" step="0.1" min="0" data-input="volume" placeholder="Ex.: 500" data-i18n-placeholder="calculadora:infusao.volumePh">
             </div>
             <div class="ep-field">
-              <label class="ep-label">Tempo (horas)</label>
-              <input class="ep-input" type="number" step="0.1" min="0" data-input="horas" placeholder="Ex.: 4">
+              <label class="ep-label" data-i18n="calculadora:infusao.hoursLabel">Tempo (horas)</label>
+              <input class="ep-input" type="number" step="0.1" min="0" data-input="horas" placeholder="Ex.: 4" data-i18n-placeholder="calculadora:infusao.hoursPh">
             </div>
           </div>
           <div class="ep-field">
-            <label class="ep-label">Equipo</label>
+            <label class="ep-label" data-i18n="calculadora:infusao.setLabel">Equipo</label>
             <select class="ep-select" data-input="equipo">
-              <option value="20">Macrogotas (20 gotas/mL)</option>
-              <option value="60">Microgotas (60 gotas/mL)</option>
+              <option value="20" data-i18n="calculadora:infusao.setMacro">Macrogotas (20 gotas/mL)</option>
+              <option value="60" data-i18n="calculadora:infusao.setMicro">Microgotas (60 gotas/mL)</option>
             </select>
           </div>
-          <button type="button" class="ep-btn ep-btn--primary" data-action="calc">Calcular</button>
+          <button type="button" class="ep-btn ep-btn--primary" data-action="calc" data-i18n="calculadora:calcBtn">Calcular</button>
           <div class="ep-calc-result" data-result style="display: none;">
             <div class="ep-calc-result__main" data-result-main>—</div>
             <div class="ep-calc-result__sub" data-result-sub>—</div>
@@ -257,39 +258,39 @@
     <!-- 5. Clearance de creatinina (Cockcroft-Gault) -->
     <details class="ep-calc-block">
       <summary class="ep-calc-summary">
-        <span>Clearance de creatinina (Cockcroft-Gault)</span>
-        <span class="ep-calc-tag" style="background: var(--ep-accent-soft); color: var(--ep-accent);">Função renal</span>
+        <span data-i18n="calculadora:clcr.title">Clearance de creatinina (Cockcroft-Gault)</span>
+        <span class="ep-calc-tag" style="background: var(--ep-accent-soft); color: var(--ep-accent);" data-i18n="calculadora:tags.renal">Função renal</span>
       </summary>
       <div class="ep-calc-body">
-        <p class="ep-text-sm ep-text-muted ep-mt-0">
+        <p class="ep-text-sm ep-text-muted ep-mt-0" data-i18n="calculadora:clcr.desc">
           Estima ClCr pra ajuste de dose em pacientes com função renal alterada. Use peso corporal real;
           em obesos considere peso ideal. Pode subestimar em idosos com pouca massa muscular.
         </p>
         <form class="ep-stack" data-calc="clcr">
           <div class="ep-row">
             <div class="ep-field">
-              <label class="ep-label">Idade (anos)</label>
-              <input class="ep-input" type="number" step="1" min="0" max="120" data-input="idade" placeholder="Ex.: 65">
+              <label class="ep-label" data-i18n="calculadora:clcr.ageLabel">Idade (anos)</label>
+              <input class="ep-input" type="number" step="1" min="0" max="120" data-input="idade" placeholder="Ex.: 65" data-i18n-placeholder="calculadora:clcr.agePh">
             </div>
             <div class="ep-field">
-              <label class="ep-label">Peso (kg)</label>
-              <input class="ep-input" type="number" step="0.1" min="0" data-input="peso" placeholder="Ex.: 70">
+              <label class="ep-label" data-i18n="calculadora:clcr.weightLabel">Peso (kg)</label>
+              <input class="ep-input" type="number" step="0.1" min="0" data-input="peso" placeholder="Ex.: 70" data-i18n-placeholder="calculadora:clcr.weightPh">
             </div>
           </div>
           <div class="ep-row">
             <div class="ep-field">
-              <label class="ep-label">Creatinina sérica (mg/dL)</label>
-              <input class="ep-input" type="number" step="0.01" min="0" data-input="creat" placeholder="Ex.: 1.2">
+              <label class="ep-label" data-i18n="calculadora:clcr.creatLabel">Creatinina sérica (mg/dL)</label>
+              <input class="ep-input" type="number" step="0.01" min="0" data-input="creat" placeholder="Ex.: 1.2" data-i18n-placeholder="calculadora:clcr.creatPh">
             </div>
             <div class="ep-field">
-              <label class="ep-label">Sexo biológico</label>
+              <label class="ep-label" data-i18n="calculadora:clcr.sexLabel">Sexo biológico</label>
               <select class="ep-select" data-input="sexo">
-                <option value="M">Masculino</option>
-                <option value="F">Feminino</option>
+                <option value="M" data-i18n="calculadora:clcr.sexM">Masculino</option>
+                <option value="F" data-i18n="calculadora:clcr.sexF">Feminino</option>
               </select>
             </div>
           </div>
-          <button type="button" class="ep-btn ep-btn--primary" data-action="calc">Calcular</button>
+          <button type="button" class="ep-btn ep-btn--primary" data-action="calc" data-i18n="calculadora:calcBtn">Calcular</button>
           <div class="ep-calc-result" data-result style="display: none;">
             <div class="ep-calc-result__main" data-result-main>—</div>
             <div class="ep-calc-result__sub" data-result-sub>—</div>
@@ -302,25 +303,25 @@
     <!-- 6. IMC -->
     <details class="ep-calc-block">
       <summary class="ep-calc-summary">
-        <span>IMC (Índice de Massa Corporal)</span>
-        <span class="ep-calc-tag" style="background: var(--ep-bg-2); color: var(--ep-ink-2);">Avaliação</span>
+        <span data-i18n="calculadora:imc.title">IMC (Índice de Massa Corporal)</span>
+        <span class="ep-calc-tag" style="background: var(--ep-bg-2); color: var(--ep-ink-2);" data-i18n="calculadora:tags.assessment">Avaliação</span>
       </summary>
       <div class="ep-calc-body">
-        <p class="ep-text-sm ep-text-muted ep-mt-0">
+        <p class="ep-text-sm ep-text-muted ep-mt-0" data-i18n="calculadora:imc.desc">
           Classificação OMS adulto. Não aplicável a gestantes, atletas com alta massa muscular ou idosos &gt;65a.
         </p>
         <form class="ep-stack" data-calc="imc">
           <div class="ep-row">
             <div class="ep-field">
-              <label class="ep-label">Peso (kg)</label>
-              <input class="ep-input" type="number" step="0.1" min="0" data-input="peso" placeholder="Ex.: 75">
+              <label class="ep-label" data-i18n="calculadora:imc.weightLabel">Peso (kg)</label>
+              <input class="ep-input" type="number" step="0.1" min="0" data-input="peso" placeholder="Ex.: 75" data-i18n-placeholder="calculadora:imc.weightPh">
             </div>
             <div class="ep-field">
-              <label class="ep-label">Altura (cm)</label>
-              <input class="ep-input" type="number" step="0.1" min="0" data-input="altura" placeholder="Ex.: 175">
+              <label class="ep-label" data-i18n="calculadora:imc.heightLabel">Altura (cm)</label>
+              <input class="ep-input" type="number" step="0.1" min="0" data-input="altura" placeholder="Ex.: 175" data-i18n-placeholder="calculadora:imc.heightPh">
             </div>
           </div>
-          <button type="button" class="ep-btn ep-btn--primary" data-action="calc">Calcular</button>
+          <button type="button" class="ep-btn ep-btn--primary" data-action="calc" data-i18n="calculadora:calcBtn">Calcular</button>
           <div class="ep-calc-result" data-result style="display: none;">
             <div class="ep-calc-result__main" data-result-main>—</div>
             <div class="ep-calc-result__sub" data-result-sub>—</div>
@@ -333,19 +334,19 @@
     <!-- 7. Idade pediátrica precisa -->
     <details class="ep-calc-block">
       <summary class="ep-calc-summary">
-        <span>Idade pediátrica precisa</span>
-        <span class="ep-calc-tag" style="background: var(--ep-bg-2); color: var(--ep-ink-2);">Pediatria</span>
+        <span data-i18n="calculadora:idade.title">Idade pediátrica precisa</span>
+        <span class="ep-calc-tag" style="background: var(--ep-bg-2); color: var(--ep-ink-2);" data-i18n="calculadora:tags.pediatrics">Pediatria</span>
       </summary>
       <div class="ep-calc-body">
-        <p class="ep-text-sm ep-text-muted ep-mt-0">
+        <p class="ep-text-sm ep-text-muted ep-mt-0" data-i18n="calculadora:idade.desc">
           Calcula anos, meses e dias exatos a partir da data de nascimento. Importante pra doses pediátricas e cobertura vacinal.
         </p>
         <form class="ep-stack" data-calc="idade">
           <div class="ep-field">
-            <label class="ep-label">Data de nascimento</label>
+            <label class="ep-label" data-i18n="calculadora:idade.dobLabel">Data de nascimento</label>
             <input class="ep-input" type="date" data-input="dn">
           </div>
-          <button type="button" class="ep-btn ep-btn--primary" data-action="calc">Calcular</button>
+          <button type="button" class="ep-btn ep-btn--primary" data-action="calc" data-i18n="calculadora:calcBtn">Calcular</button>
           <div class="ep-calc-result" data-result style="display: none;">
             <div class="ep-calc-result__main" data-result-main>—</div>
             <div class="ep-calc-result__sub" data-result-sub>—</div>
@@ -371,6 +372,18 @@
     await signOut(auth);
     window.location.href = "./login.html";
   });
+
+  // tr(): i18n helper com fallback PT-BR.
+  function tr(key, fallback, opts) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key, opts);
+      if (v && v !== key) return v;
+    }
+    if (opts && typeof fallback === "string") {
+      return fallback.replace(/\{\{(\w+)\}\}/g, (_, k) => (opts[k] != null ? String(opts[k]) : ""));
+    }
+    return fallback;
+  }
 
   // Calculadora não tem dado sensível e roda 100% client-side. Não envia
   // nada pro backend além do auth normal. Cap "calculadora-clinica" só
@@ -403,7 +416,7 @@
     result.style.display = "block";
     result.style.background = "rgba(160, 43, 31, 0.06)";
     result.style.borderColor = "rgba(160, 43, 31, 0.30)";
-    form.querySelector("[data-result-main]").textContent = "Verifique os campos";
+    form.querySelector("[data-result-main]").textContent = tr("calculadora:errors.checkFields", "Verifique os campos");
     form.querySelector("[data-result-sub]").textContent = msg;
     const fEl = form.querySelector("[data-result-formula]");
     if (fEl) fEl.textContent = "";
@@ -419,7 +432,7 @@
     peso(form) {
       const dose = num(form, "dose"), peso = num(form, "peso"), freq = num(form, "freq") || 1;
       if (dose === null || peso === null || dose <= 0 || peso <= 0) {
-        return setError(form, "Dose e peso devem ser maiores que zero.");
+        return setError(form, tr("calculadora:errors.dosePesoGtZero", "Dose e peso devem ser maiores que zero."));
       }
       const total = dose * peso;
       const porAdmin = total / freq;
@@ -432,7 +445,7 @@
     bsa(form) {
       const peso = num(form, "peso"), altura = num(form, "altura"), dose = num(form, "dose");
       if (peso === null || altura === null || peso <= 0 || altura <= 0) {
-        return setError(form, "Peso e altura devem ser maiores que zero.");
+        return setError(form, tr("calculadora:errors.weightHeightGtZero", "Peso e altura devem ser maiores que zero."));
       }
       const bsa = Math.sqrt((altura * peso) / 3600);
       if (dose !== null && dose > 0) {
@@ -453,7 +466,7 @@
     conv(form) {
       const valor = num(form, "valor");
       const from = txt(form, "from"), to = txt(form, "to");
-      if (valor === null || valor < 0) return setError(form, "Valor inválido.");
+      if (valor === null || valor < 0) return setError(form, tr("calculadora:errors.invalidValue", "Valor inválido."));
 
       // Conversão pra unidade base (mg pra massa, mL pra volume)
       const TO_BASE = {
@@ -464,7 +477,7 @@
       const isVol  = (u) => ["L","mL","macrogota","microgota"].includes(u);
 
       if ((isMass(from) && !isMass(to)) || (isVol(from) && !isVol(to))) {
-        return setError(form, "Não dá pra converter massa em volume (precisa de concentração).");
+        return setError(form, tr("calculadora:errors.massToVolume", "Não dá pra converter massa em volume (precisa de concentração)."));
       }
       const baseValue = valor * TO_BASE[from];
       const result = baseValue / TO_BASE[to];
@@ -476,7 +489,7 @@
     infusao(form) {
       const volume = num(form, "volume"), horas = num(form, "horas"), equipo = num(form, "equipo");
       if (volume === null || horas === null || volume <= 0 || horas <= 0) {
-        return setError(form, "Volume e tempo devem ser maiores que zero.");
+        return setError(form, tr("calculadora:errors.volumeTimeGtZero", "Volume e tempo devem ser maiores que zero."));
       }
       const mlPorHora = volume / horas;
       const gotasMin = (volume * equipo) / (horas * 60);
@@ -491,7 +504,7 @@
       const idade = num(form, "idade"), peso = num(form, "peso"), creat = num(form, "creat");
       const sexo = txt(form, "sexo");
       if (idade === null || peso === null || creat === null || idade < 0 || peso <= 0 || creat <= 0) {
-        return setError(form, "Preencha todos os campos com valores válidos.");
+        return setError(form, tr("calculadora:errors.allFieldsValid", "Preencha todos os campos com valores válidos."));
       }
       let clcr = ((140 - idade) * peso) / (72 * creat);
       if (sexo === "F") clcr *= 0.85;
@@ -511,7 +524,7 @@
     imc(form) {
       const peso = num(form, "peso"), altura = num(form, "altura");
       if (peso === null || altura === null || peso <= 0 || altura <= 0) {
-        return setError(form, "Peso e altura devem ser maiores que zero.");
+        return setError(form, tr("calculadora:errors.weightHeightGtZero", "Peso e altura devem ser maiores que zero."));
       }
       const alturaM = altura / 100;
       const imc = peso / (alturaM * alturaM);
@@ -530,10 +543,10 @@
     },
     idade(form) {
       const dnStr = txt(form, "dn");
-      if (!dnStr) return setError(form, "Selecione a data de nascimento.");
+      if (!dnStr) return setError(form, tr("calculadora:errors.selectDob", "Selecione a data de nascimento."));
       const dn = new Date(dnStr + "T12:00:00");
       const hoje = new Date();
-      if (isNaN(dn.getTime()) || dn > hoje) return setError(form, "Data inválida ou futura.");
+      if (isNaN(dn.getTime()) || dn > hoje) return setError(form, tr("calculadora:errors.invalidOrFutureDate", "Data inválida ou futura."));
       let anos  = hoje.getFullYear() - dn.getFullYear();
       let meses = hoje.getMonth()    - dn.getMonth();
       let dias  = hoje.getDate()     - dn.getDate();
@@ -573,6 +586,6 @@
   });
 </script>
 
-<a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" aria-label="Abrir suporte"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
+<a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" data-i18n-title="calculadora:help.title" aria-label="Abrir suporte" data-i18n-aria-label="calculadora:help.aria"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
 </body>
 </html>
