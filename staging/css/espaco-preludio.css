@@ -868,6 +868,13 @@ html:not(.ep-unregulated) #logoutBtn:not(.ep-logout-fab) {
   display: none !important;
 }
 
+/* Subtítulo do Perfil — dois variantes (regulada vs nao-regulada) lado
+   a lado no HTML, mostra so o que case com o estado do .ep-unregulated.
+   Default = regulada (esconde .ep-perfil-sub--unregulated). */
+.ep-perfil-sub--unregulated { display: none; }
+html.ep-unregulated .ep-perfil-sub--regulated { display: none; }
+html.ep-unregulated .ep-perfil-sub--unregulated { display: block; }
+
 /* Botão flutuante Sair — no fundo da stack (canto inferior direito).
    Cor vermelha discreta pra sinalizar acao destrutiva sem competir
    com os outros FABs. Ícone hardcoded pra evitar o bug recorrente de
