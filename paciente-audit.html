@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-ns="paciente-audit">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Histórico de atividade · Espaço Prelúdio</title>
+  <title data-i18n="paciente-audit:title">Histórico de atividade · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-149">
+  <script src="./i18n/init.js?v=1-0" defer></script>
 </head>
 <body>
 
@@ -18,35 +19,35 @@
     <a href="./paciente-painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="common:brand.tail">Prelúdio</span>
       </span>
     </a>
     <nav class="ep-nav">
-      <a href="./paciente-painel.html" class="ep-text-sm">Painel</a>
-      <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Sair</button>
+      <a href="./paciente-painel.html" class="ep-text-sm" data-i18n="paciente-audit:nav.panel">Painel</a>
+      <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button" data-i18n="paciente-audit:nav.logout">Sair</button>
     </nav>
   </header>
 
   <main class="ep-main" style="max-width: 760px;">
 
-    <a href="./paciente-painel.html" class="ep-text-sm ep-text-muted">← Voltar ao painel</a>
+    <a href="./paciente-painel.html" class="ep-text-sm ep-text-muted" data-i18n="paciente-audit:back">← Voltar ao painel</a>
 
-    <div class="ep-eyebrow ep-mt-12">LGPD · Art. 18, II</div>
-    <h1 class="ep-h1 ep-mt-12">Histórico da sua conta</h1>
-    <p class="ep-text-muted ep-mt-0">
+    <div class="ep-eyebrow ep-mt-12" data-i18n="paciente-audit:eyebrow">LGPD · Art. 18, II</div>
+    <h1 class="ep-h1 ep-mt-12" data-i18n="paciente-audit:h1">Histórico da sua conta</h1>
+    <p class="ep-text-muted ep-mt-0" data-i18n-html="paciente-audit:intro">
       Eventos da sua conta no Espaço Prelúdio. Para correção, exportação ou
       exclusão de dados, escreva para
       <a href="mailto:dpo@preludiojogos.com">dpo@preludiojogos.com</a>.
     </p>
 
-    <div id="loading" class="ep-skeleton ep-mt-16">Carregando…</div>
+    <div id="loading" class="ep-skeleton ep-mt-16" data-i18n="paciente-audit:loading">Carregando…</div>
     <div id="list" class="ep-stack ep-mt-16 ep-hide" style="gap: 8px;"></div>
     <div id="empty" class="ep-empty ep-mt-16 ep-hide">
-      <p class="ep-text-muted ep-mt-0">Nenhum evento registrado ainda.</p>
+      <p class="ep-text-muted ep-mt-0" data-i18n="paciente-audit:empty">Nenhum evento registrado ainda.</p>
     </div>
 
-    <p class="ep-text-xs ep-text-muted ep-mt-24" style="text-align: center;">
+    <p class="ep-text-xs ep-text-muted ep-mt-24" style="text-align: center;" data-i18n="paciente-audit:footer">
       Mostramos seus eventos recentes. Para histórico completo, solicite via
       e-mail ao Encarregado de Dados.
     </p>
@@ -59,6 +60,20 @@
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requirePatient } from "./js/patient-auth-guard.js?v=2";
   import { clearPatientDek } from "./js/patient-session.js";
+
+  function tr(key, fallback, opts) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key, opts);
+      if (v && v !== key) return v;
+    }
+    return fallback;
+  }
+  function currentLocale() {
+    if (window.EP_I18N && window.EP_I18N.locale) {
+      try { return window.EP_I18N.locale(); } catch (_) { /* empty */ }
+    }
+    return (document.documentElement.lang || "pt-BR");
+  }
 
   const ctx = await requirePatient({ requireDek: false });
   const { idToken } = ctx;
@@ -75,23 +90,24 @@
     }[c]));
   }
   function fmtAt(ms) {
-    if (!ms) return "—";
-    return new Date(ms).toLocaleString("pt-BR", {
+    if (!ms) return tr("paciente-audit:dash", "—");
+    return new Date(ms).toLocaleString(currentLocale(), {
       day: "2-digit", month: "short", year: "numeric",
       hour: "2-digit", minute: "2-digit"
     });
   }
   function fmtRelative(ms) {
-    if (!ms) return "—";
+    if (!ms) return tr("paciente-audit:dash", "—");
     const diff = Date.now() - ms;
     const m = Math.floor(diff / 60_000);
-    if (m < 1)  return "agora";
-    if (m < 60) return `há ${m} min`;
+    if (m < 1)  return tr("paciente-audit:relative.now", "agora");
+    if (m < 60) return tr("paciente-audit:relative.minutes", `há ${m} min`, { m });
     const h = Math.floor(m / 60);
-    if (h < 24) return `há ${h} h`;
+    if (h < 24) return tr("paciente-audit:relative.hours", `há ${h} h`, { h });
     const d = Math.floor(h / 24);
-    if (d < 30) return `há ${d} d`;
-    return `há ${Math.floor(d / 30)} meses`;
+    if (d < 30) return tr("paciente-audit:relative.days", `há ${d} d`, { d });
+    const n = Math.floor(d / 30);
+    return tr("paciente-audit:relative.months", `há ${n} meses`, { n });
   }
 
   (async () => {
@@ -112,12 +128,15 @@
         return;
       }
 
+      const sessionLabel = tr("paciente-audit:meta.sessionPrefix", "Sessão ");
+      const ipLabel = tr("paciente-audit:meta.ipPrefix", "IP: ");
+
       list.innerHTML = "";
       for (const ev of events) {
         const meta = ev.meta || {};
         const metaParts = [];
-        if (meta.sessionId) metaParts.push(`Sessão <code>${escapeHtml(meta.sessionId.slice(0, 12))}…</code>`);
-        if (meta.ip)        metaParts.push("IP: " + escapeHtml(meta.ip));
+        if (meta.sessionId) metaParts.push(`${escapeHtml(sessionLabel)}<code>${escapeHtml(meta.sessionId.slice(0, 12))}…</code>`);
+        if (meta.ip)        metaParts.push(escapeHtml(ipLabel) + escapeHtml(meta.ip));
 
         const row = document.createElement("article");
         row.className = "ep-audit-row";
@@ -129,14 +148,14 @@
             <div class="ep-audit-row__title">${escapeHtml(ev.description)}</div>
             <div class="ep-audit-row__meta">${metaParts.join(" · ") || "&nbsp;"}</div>
           </div>
-          <div class="ep-audit-row__time" title="${escapeHtml(fmtAt(ev.at))}">${fmtRelative(ev.at)}</div>
+          <div class="ep-audit-row__time" title="${escapeHtml(fmtAt(ev.at))}">${escapeHtml(fmtRelative(ev.at))}</div>
         `;
         list.appendChild(row);
       }
       list.classList.remove("ep-hide");
     } catch (e) {
       console.error("audit_load_error", e);
-      document.getElementById("loading").textContent = "Erro: " + e.message;
+      document.getElementById("loading").textContent = tr("paciente-audit:errorPrefix", "Erro: ") + e.message;
       document.getElementById("loading").classList.add("ep-error-state");
     }
   })();

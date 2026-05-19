@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-ns="nps">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Avaliar consulta · Espaço Prelúdio</title>
+  <title data-i18n="nps:title">Avaliar consulta · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-149">
+  <script src="./i18n/init.js?v=1-0" defer></script>
   <style>
     body { background: var(--ep-bg); min-height: 100vh; }
     .nps-shell {
@@ -85,49 +86,49 @@
 </head>
 <body>
 
-<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
-
 <div class="nps-shell">
   <div style="text-align: center; margin-bottom: 24px;">
-    <a href="/" style="text-decoration: none; color: var(--ep-ink); font-family: var(--ep-font-serif); font-weight: 600; font-size: 18px;">Espaço Prelúdio</a>
+    <a href="/" style="text-decoration: none; color: var(--ep-ink); font-family: var(--ep-font-serif); font-weight: 600; font-size: 18px;" data-i18n="nps:brand">Espaço Prelúdio</a>
   </div>
 
   <div class="nps-card" id="formCard">
-    <div class="ep-eyebrow" id="formEyebrow">Carregando…</div>
+    <div class="ep-eyebrow" id="formEyebrow" data-i18n="nps:loading">Carregando…</div>
     <h1 class="nps-title" id="formTitle">—</h1>
     <p class="ep-text-muted" id="formSub" style="margin: 0;">—</p>
 
     <div id="formContent" class="ep-hide" style="margin-top: 20px;">
       <p class="ep-text-sm" style="margin: 0 0 8px; color: var(--ep-ink-2);">
-        De 0 a 10, o quanto você indicaria <strong id="therapistNameSpan">—</strong> a um amigo ou familiar?
+        <span data-i18n="nps:questionPrefix">De 0 a 10, o quanto você indicaria </span><strong id="therapistNameSpan">—</strong><span data-i18n="nps:questionSuffix"> a um amigo ou familiar?</span>
       </p>
 
       <div class="nps-scale" id="scale">
         <!-- 11 buttons 0-10 inserted by JS -->
       </div>
       <div class="nps-scale-labels">
-        <span>Pouco provável</span>
-        <span>Muito provável</span>
+        <span data-i18n="nps:scaleLow">Pouco provável</span>
+        <span data-i18n="nps:scaleHigh">Muito provável</span>
       </div>
 
       <div class="ep-field">
-        <label class="ep-label" for="commentEl">Quer deixar um comentário? <span style="color: var(--ep-ink-2); font-weight: 400;">(opcional)</span></label>
-        <textarea id="commentEl" class="ep-input" rows="3" maxlength="500" placeholder="O que mais fez a diferença na sua consulta?"></textarea>
+        <label class="ep-label" for="commentEl"><span data-i18n="nps:labelComment">Quer deixar um comentário?</span> <span style="color: var(--ep-ink-2); font-weight: 400;" data-i18n="nps:labelOptional"> (opcional)</span></label>
+        <textarea id="commentEl" class="ep-input" rows="3" maxlength="500"
+          data-i18n-placeholder="nps:placeholderComment"
+          placeholder="O que mais fez a diferença na sua consulta?"></textarea>
       </div>
 
       <div class="ep-status" id="formStatus"></div>
 
-      <button id="submitBtn" type="button" class="ep-btn ep-btn--primary ep-btn--block ep-mt-16" disabled>Enviar avaliação</button>
+      <button id="submitBtn" type="button" class="ep-btn ep-btn--primary ep-btn--block ep-mt-16" disabled data-i18n="nps:btnSubmit">Enviar avaliação</button>
     </div>
 
     <div id="thanksContent" class="ep-hide nps-thanks">
       <div class="nps-thanks__icon">✓</div>
-      <h2 class="nps-title" style="margin-top: 0;">Obrigado!</h2>
-      <p class="ep-text-muted" style="margin: 0;">Sua avaliação foi recebida. Tenha um ótimo dia.</p>
+      <h2 class="nps-title" style="margin-top: 0;" data-i18n="nps:thanks.title">Obrigado!</h2>
+      <p class="ep-text-muted" style="margin: 0;" data-i18n="nps:thanks.desc">Sua avaliação foi recebida. Tenha um ótimo dia.</p>
     </div>
   </div>
 
-  <p class="ep-text-xs ep-text-muted ep-text-center ep-mt-16">
+  <p class="ep-text-xs ep-text-muted ep-text-center ep-mt-16" data-i18n="nps:footer">
     Espaço Prelúdio · plataforma de teleconsulta
   </p>
 </div>
@@ -135,15 +136,23 @@
 <script type="module">
   import { BACKEND_BASE_URL } from "./js/firebase-config.js";
 
+  function tr(key, fallback) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback;
+  }
+
   const params = new URLSearchParams(location.search);
   const token = params.get("t");
 
   const $ = id => document.getElementById(id);
 
   if (!token) {
-    $("formEyebrow").textContent = "Link inválido";
-    $("formTitle").textContent   = "Esse link não funciona";
-    $("formSub").textContent     = "Pode ser que tenha sido digitado errado. Volte ao e-mail e clique de novo.";
+    $("formEyebrow").textContent = tr("nps:invalid.eyebrow", "Link inválido");
+    $("formTitle").textContent   = tr("nps:invalid.title", "Esse link não funciona");
+    $("formSub").textContent     = tr("nps:invalid.sub", "Pode ser que tenha sido digitado errado. Volte ao e-mail e clique de novo.");
   } else {
     init();
   }
@@ -157,15 +166,15 @@
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
 
       if (data.alreadyAnswered) {
-        $("formEyebrow").textContent = "Pesquisa";
-        $("formTitle").textContent   = "Você já avaliou essa consulta";
-        $("formSub").textContent     = "Obrigado! Seu feedback foi recebido anteriormente.";
+        $("formEyebrow").textContent = tr("nps:already.eyebrow", "Pesquisa");
+        $("formTitle").textContent   = tr("nps:already.title", "Você já avaliou essa consulta");
+        $("formSub").textContent     = tr("nps:already.sub", "Obrigado! Seu feedback foi recebido anteriormente.");
         return;
       }
 
-      $("formEyebrow").textContent     = "Sua opinião conta";
-      $("formTitle").textContent       = `Como foi sua consulta com ${data.therapistName}?`;
-      $("formSub").textContent         = data.clinicName ? data.clinicName : "Leva menos de 30 segundos.";
+      $("formEyebrow").textContent     = tr("nps:load.eyebrow", "Sua opinião conta");
+      $("formTitle").textContent       = tr("nps:load.titleTemplate", "Como foi sua consulta com {therapist}?").replace("{therapist}", data.therapistName);
+      $("formSub").textContent         = data.clinicName ? data.clinicName : tr("nps:load.fallbackSub", "Leva menos de 30 segundos.");
       $("therapistNameSpan").textContent = data.therapistName;
 
       // Monta os 11 botões 0-10
@@ -187,9 +196,9 @@
 
       $("formContent").classList.remove("ep-hide");
     } catch (e) {
-      $("formEyebrow").textContent = "Erro";
-      $("formTitle").textContent   = "Não foi possível carregar";
-      $("formSub").textContent     = "Tente abrir o link novamente. Se não funcionar, é porque expirou.";
+      $("formEyebrow").textContent = tr("nps:loadError.eyebrow", "Erro");
+      $("formTitle").textContent   = tr("nps:loadError.title", "Não foi possível carregar");
+      $("formSub").textContent     = tr("nps:loadError.sub", "Tente abrir o link novamente. Se não funcionar, é porque expirou.");
     }
   }
 
@@ -199,7 +208,7 @@
     const status = $("formStatus");
     btn.disabled = true;
     status.className = "ep-status";
-    status.textContent = "Enviando…";
+    status.textContent = tr("nps:status.sending", "Enviando…");
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/nps/${encodeURIComponent(token)}`, {
         method: "POST",
@@ -217,7 +226,7 @@
       $("formSub").style.display     = "none";
       $("thanksContent").classList.remove("ep-hide");
     } catch (e) {
-      status.textContent = "Erro: " + (e?.message || "desconhecido");
+      status.textContent = tr("nps:status.errorPrefix", "Erro: ") + (e?.message || tr("nps:status.unknownError", "desconhecido"));
       status.classList.add("is-err");
       btn.disabled = false;
     }

@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-ns="receita-publica">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verificação de receita · Espaço Prelúdio</title>
+  <title data-i18n="receita-publica:title">Verificação de receita · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-149">
+  <script src="./i18n/init.js?v=1-0" defer></script>
 </head>
 <body>
 
@@ -18,18 +19,18 @@
     <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="common:brand.tail">Prelúdio</span>
       </span>
     </a>
     <nav class="ep-nav">
-      <span class="ep-text-sm ep-text-muted">Verificação de receita</span>
+      <span class="ep-text-sm ep-text-muted" data-i18n="receita-publica:nav">Verificação de receita</span>
     </nav>
   </header>
 
   <main class="ep-main" style="max-width: 920px; margin: 0 auto;">
 
-    <div id="loading" class="ep-skeleton ep-mt-32">Verificando autenticidade…</div>
+    <div id="loading" class="ep-skeleton ep-mt-32" data-i18n="receita-publica:loading">Verificando autenticidade…</div>
 
     <div id="errorBox" class="ep-hide ep-mt-32">
       <div class="ep-verify-hero ep-verify-hero--err">
@@ -37,8 +38,8 @@
           <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
         </div>
         <div>
-          <h1 class="ep-h2 ep-mt-0" id="errorTitle">Receita indisponível.</h1>
-          <p class="ep-text-muted ep-mt-0" id="errorMsg">O link está inválido, expirou ou a receita ainda não foi assinada.</p>
+          <h1 class="ep-h2 ep-mt-0" id="errorTitle" data-i18n="receita-publica:error.title">Receita indisponível.</h1>
+          <p class="ep-text-muted ep-mt-0" id="errorMsg" data-i18n="receita-publica:error.msg">O link está inválido, expirou ou a receita ainda não foi assinada.</p>
         </div>
       </div>
     </div>
@@ -50,9 +51,9 @@
           <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
         </div>
         <div class="ep-verify-hero__body">
-          <div class="ep-eyebrow" style="color: #1f6b3e;">Documento autenticado</div>
-          <h1 class="ep-h1 ep-mt-12">Receita digital autêntica</h1>
-          <p class="ep-text-muted ep-mt-0">
+          <div class="ep-eyebrow" style="color: #1f6b3e;" data-i18n="receita-publica:hero.eyebrow">Documento autenticado</div>
+          <h1 class="ep-h1 ep-mt-12" data-i18n="receita-publica:hero.title">Receita digital autêntica</h1>
+          <p class="ep-text-muted ep-mt-0" data-i18n="receita-publica:hero.sub">
             Esta receita foi emitida e assinada digitalmente. Os dados abaixo
             conferem com o registro no Espaço Prelúdio.
           </p>
@@ -62,18 +63,18 @@
       <!-- Cards lado a lado: paciente + médico + emissão -->
       <div class="ep-verify-grid">
         <div class="ep-verify-card">
-          <div class="ep-verify-card__label">Paciente</div>
+          <div class="ep-verify-card__label" data-i18n="receita-publica:cards.patient">Paciente</div>
           <div class="ep-verify-card__value" id="patientNameLbl">—</div>
         </div>
         <div class="ep-verify-card">
-          <div class="ep-verify-card__label">Profissional emissor</div>
+          <div class="ep-verify-card__label" data-i18n="receita-publica:cards.issuer">Profissional emissor</div>
           <div class="ep-verify-card__value" id="therapistNameLbl">—</div>
           <div class="ep-verify-card__sub" id="therapistIdsLbl">—</div>
           <div class="ep-verify-card__sub" id="therapistAddrLbl"></div>
           <div class="ep-verify-card__sub" id="therapistPhoneLbl"></div>
         </div>
         <div class="ep-verify-card">
-          <div class="ep-verify-card__label">Assinatura</div>
+          <div class="ep-verify-card__label" data-i18n="receita-publica:cards.signature">Assinatura</div>
           <div class="ep-verify-card__value" id="signMethodLbl">—</div>
           <div class="ep-verify-card__sub" id="signedAtLbl">—</div>
           <div class="ep-verify-card__sub" id="validUntilLbl"></div>
@@ -87,17 +88,17 @@
           <div class="ep-dispensacao__balance" id="dispensacaoBalance">—</div>
         </div>
         <div class="ep-dispensacao__history ep-hide" id="dispensacaoHistory">
-          <div class="ep-eyebrow ep-mt-12">Histórico de dispensações</div>
+          <div class="ep-eyebrow ep-mt-12" data-i18n="receita-publica:dispensacao.historyTitle">Histórico de dispensações</div>
           <ul class="ep-dispensacao__list" id="dispensacaoList"></ul>
         </div>
         <div class="ep-dispensacao__action ep-mt-12">
-          <button class="ep-btn ep-btn--primary" type="button" id="openDispensarBtn">
+          <button class="ep-btn ep-btn--primary" type="button" id="openDispensarBtn" data-i18n="receita-publica:dispensacao.openBtn">
             Sou farmacêutico — registrar dispensação
           </button>
         </div>
       </div>
 
-      <div class="ep-alert ep-alert--info ep-mt-16">
+      <div class="ep-alert ep-alert--info ep-mt-16" data-i18n-html="receita-publica:info">
         <strong>Para a farmácia:</strong> antes de aviar, registre a dispensação acima.
         O sistema controla o saldo restante entre todas as farmácias que aviarem esta receita.
         Valide também a assinatura digital do PDF no
@@ -107,12 +108,12 @@
       </div>
 
       <div class="ep-flex ep-mt-16 ep-gap-8 ep-flex--justify-end">
-        <button class="ep-btn ep-btn--primary" type="button" id="downloadBtn">Baixar PDF</button>
+        <button class="ep-btn ep-btn--primary" type="button" id="downloadBtn" data-i18n="receita-publica:download">Baixar PDF</button>
       </div>
 
-      <iframe id="pdfFrame" class="ep-receita-public-frame ep-mt-12" title="PDF da receita digital assinada"></iframe>
+      <iframe id="pdfFrame" class="ep-receita-public-frame ep-mt-12" data-i18n-title="receita-publica:iframeTitle" title="PDF da receita digital assinada"></iframe>
 
-      <p class="ep-text-xs ep-text-muted ep-mt-16 ep-text-center">
+      <p class="ep-text-xs ep-text-muted ep-mt-16 ep-text-center" data-i18n="receita-publica:footer">
         Esta página de verificação é gerada pelo Espaço Prelúdio em tempo real,
         consultando o registro original da receita. Em caso de dúvida sobre o
         conteúdo clínico, contate o(a) profissional emissor(a).
@@ -125,48 +126,65 @@
 <!-- Modal: registrar dispensação -->
 <div class="ep-modal" id="dispensarModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel ep-modal__panel--md">
-    <h3 class="ep-modal__title">Registrar dispensação</h3>
-    <p class="ep-modal__sub">
+    <h3 class="ep-modal__title" data-i18n="receita-publica:modal.title">Registrar dispensação</h3>
+    <p class="ep-modal__sub" data-i18n="receita-publica:modal.sub">
       Preencha os dados profissionais e a quantidade dispensada agora. O registro fica auditado e visível pra próxima farmácia que aviar esta receita.
     </p>
     <div class="ep-field">
-      <label class="ep-label" for="dCRF">CRF (com UF)</label>
-      <input id="dCRF" class="ep-input" type="text" maxlength="20" placeholder="Ex.: CRF-SC 12345" autocomplete="off">
+      <label class="ep-label" for="dCRF" data-i18n="receita-publica:modal.labelCRF">CRF (com UF)</label>
+      <input id="dCRF" class="ep-input" type="text" maxlength="20" data-i18n-placeholder="receita-publica:modal.placeholderCRF" placeholder="Ex.: CRF-SC 12345" autocomplete="off">
     </div>
     <div class="ep-field">
-      <label class="ep-label" for="dFarmaceutico">Nome do farmacêutico responsável</label>
+      <label class="ep-label" for="dFarmaceutico" data-i18n="receita-publica:modal.labelFarmaceutico">Nome do farmacêutico responsável</label>
       <input id="dFarmaceutico" class="ep-input" type="text" maxlength="80" autocomplete="off">
     </div>
     <div class="ep-field">
-      <label class="ep-label" for="dCnpj">CNPJ da farmácia</label>
+      <label class="ep-label" for="dCnpj" data-i18n="receita-publica:modal.labelCnpj">CNPJ da farmácia</label>
       <input id="dCnpj" class="ep-input" type="text" maxlength="18" placeholder="00.000.000/0000-00" autocomplete="off">
     </div>
     <div class="ep-field">
-      <label class="ep-label" for="dFarmaciaNome">Nome da farmácia</label>
+      <label class="ep-label" for="dFarmaciaNome" data-i18n="receita-publica:modal.labelFarmacia">Nome da farmácia</label>
       <input id="dFarmaciaNome" class="ep-input" type="text" maxlength="120" autocomplete="off">
     </div>
     <div class="ep-field">
-      <label class="ep-label" for="dQuantidade">Quantidade dispensada agora</label>
+      <label class="ep-label" for="dQuantidade" data-i18n="receita-publica:modal.labelQuantidade">Quantidade dispensada agora</label>
       <input id="dQuantidade" class="ep-input" type="number" min="1" max="24" step="1" value="1">
       <p class="ep-text-xs ep-text-muted ep-mt-0" id="dRestanteHint">—</p>
     </div>
     <label class="ep-radio">
       <input id="dSavePharmacy" type="checkbox">
-      <span>Salvar CRF, CNPJ e nome da farmácia neste navegador (próximas dispensações ficam mais rápidas)</span>
+      <span data-i18n="receita-publica:modal.savePharmacy">Salvar CRF, CNPJ e nome da farmácia neste navegador (próximas dispensações ficam mais rápidas)</span>
     </label>
     <p class="ep-text-xs ep-text-muted ep-mt-0 ep-hide" id="dClearSavedWrap">
-      <a href="#" id="dClearSavedBtn">Limpar dados salvos deste navegador</a>
+      <a href="#" id="dClearSavedBtn" data-i18n="receita-publica:modal.clearSaved">Limpar dados salvos deste navegador</a>
     </p>
     <div class="ep-status" id="dStatus"></div>
     <div class="ep-modal__actions">
-      <button type="button" class="ep-btn ep-btn--ghost" id="dCancelBtn">Voltar</button>
-      <button type="button" class="ep-btn ep-btn--primary" id="dConfirmBtn">Confirmar dispensação</button>
+      <button type="button" class="ep-btn ep-btn--ghost" id="dCancelBtn" data-i18n="receita-publica:modal.cancel">Voltar</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="dConfirmBtn" data-i18n="receita-publica:modal.confirm">Confirmar dispensação</button>
     </div>
   </div>
 </div>
 
 <script type="module">
   import { BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  // Tradução com fallback PT-BR — caso o i18n ainda não tenha carregado.
+  function tr(key, fallback) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback;
+  }
+  function trInterp(key, fallback, vars) {
+    let s = tr(key, fallback);
+    for (const k in vars) s = s.split(`{{${k}}}`).join(String(vars[k]));
+    return s;
+  }
+  function localeStr() {
+    return (window.EP_I18N && window.EP_I18N.locale && window.EP_I18N.locale()) || "pt-BR";
+  }
 
   const params = new URLSearchParams(location.search);
   const token = params.get("t");
@@ -182,7 +200,13 @@
     if (msg)   document.getElementById("errorMsg").textContent   = msg;
   }
 
-  if (!token) { showError("Link inválido.", "Faltam dados do link."); throw new Error("NO_TOKEN"); }
+  if (!token) {
+    showError(
+      tr("receita-publica:error.linkInvalidoTitle", "Link inválido."),
+      tr("receita-publica:error.linkInvalidoMsg", "Faltam dados do link.")
+    );
+    throw new Error("NO_TOKEN");
+  }
 
   function base64ToBytes(b64) {
     const bin = atob(b64);
@@ -193,20 +217,20 @@
 
   function fmtDateLong(ms) {
     if (!ms) return "—";
-    return new Date(ms).toLocaleString("pt-BR", {
+    return new Date(ms).toLocaleString(localeStr(), {
       day: "2-digit", month: "long", year: "numeric",
       hour: "2-digit", minute: "2-digit"
     });
   }
   function fmtDate(ms) {
     if (!ms) return "—";
-    return new Date(ms).toLocaleDateString("pt-BR", {
+    return new Date(ms).toLocaleDateString(localeStr(), {
       day: "2-digit", month: "long", year: "numeric"
     });
   }
   function methodLabel(m) {
-    if (m === "a1_inline")        return "ICP-Brasil A1 (in-loco)";
-    if (m === "external_upload")  return "ICP-Brasil (assinatura externa)";
+    if (m === "a1_inline")        return tr("receita-publica:signMethod.a1_inline", "ICP-Brasil A1 (in-loco)");
+    if (m === "external_upload")  return tr("receita-publica:signMethod.external_upload", "ICP-Brasil (assinatura externa)");
     return m || "—";
   }
 
@@ -217,21 +241,29 @@
       if (!res.ok || !j.ok) {
         const code = j?.error || "";
         if (code === "RECEITA_NAO_ASSINADA") {
-          showError("Receita ainda não foi assinada.",
-            "O(A) profissional gerou o link antes de assinar a receita. Peça pra reenviar depois da assinatura.");
+          showError(
+            tr("receita-publica:error.naoAssinadaTitle", "Receita ainda não foi assinada."),
+            tr("receita-publica:error.naoAssinadaMsg", "O(A) profissional gerou o link antes de assinar a receita. Peça pra reenviar depois da assinatura."));
         } else if (code === "TOKEN_REVOGADO") {
-          showError("Link substituído.",
-            "Esta receita foi reassinada e este link foi invalidado. Peça o link atualizado ao(à) profissional.");
+          showError(
+            tr("receita-publica:error.revogadoTitle", "Link substituído."),
+            tr("receita-publica:error.revogadoMsg", "Esta receita foi reassinada e este link foi invalidado. Peça o link atualizado ao(à) profissional."));
         } else if (code === "TOKEN_EXPIRADO") {
-          showError("Link expirado.",
-            "Este link tem validade de 90 dias e já expirou. Peça uma nova ao(à) profissional.");
+          showError(
+            tr("receita-publica:error.expiradoTitle", "Link expirado."),
+            tr("receita-publica:error.expiradoMsg", "Este link tem validade de 90 dias e já expirou. Peça uma nova ao(à) profissional."));
         } else if (code === "TOKEN_INVALIDO" || code === "TOKEN_NAO_AUTORIZADO" || code === "TOKEN_OBRIGATORIO") {
-          showError("Link inválido.",
-            "O link parece estar corrompido ou incompleto. Verifique se copiou inteiro.");
+          showError(
+            tr("receita-publica:error.tokenInvalidoTitle", "Link inválido."),
+            tr("receita-publica:error.tokenInvalidoMsg", "O link parece estar corrompido ou incompleto. Verifique se copiou inteiro."));
         } else if (res.status === 404) {
-          showError("Receita não encontrada.", "Verifique se o link está correto.");
+          showError(
+            tr("receita-publica:error.naoEncontradaTitle", "Receita não encontrada."),
+            tr("receita-publica:error.naoEncontradaMsg", "Verifique se o link está correto."));
         } else {
-          showError("Não foi possível verificar.", "Tente novamente em alguns minutos.");
+          showError(
+            tr("receita-publica:error.verificarTitle", "Não foi possível verificar."),
+            tr("receita-publica:error.verificarMsg", "Tente novamente em alguns minutos."));
         }
         return;
       }
@@ -241,7 +273,7 @@
       const c = issuer.consultorio || {};
 
       // Paciente
-      document.getElementById("patientNameLbl").textContent = r.patientNameSnapshot || "Paciente";
+      document.getElementById("patientNameLbl").textContent = r.patientNameSnapshot || tr("receita-publica:patientFallback", "Paciente");
 
       // Profissional
       document.getElementById("therapistNameLbl").textContent = issuer.displayName || "—";
@@ -271,9 +303,9 @@
 
       // Assinatura
       document.getElementById("signMethodLbl").textContent = methodLabel(r.signatureMethod);
-      document.getElementById("signedAtLbl").textContent = "Assinada em " + fmtDateLong(r.signedAt);
+      document.getElementById("signedAtLbl").textContent = tr("receita-publica:signedAt", "Assinada em ") + fmtDateLong(r.signedAt);
       if (r.deliveryTokenExp) {
-        document.getElementById("validUntilLbl").textContent = "Link válido até " + fmtDate(r.deliveryTokenExp);
+        document.getElementById("validUntilLbl").textContent = tr("receita-publica:validUntil", "Link válido até ") + fmtDate(r.deliveryTokenExp);
       }
 
       // PDF
@@ -297,7 +329,10 @@
       content.classList.remove("ep-hide");
     } catch (e) {
       console.error("receita_publica_error", e);
-      showError("Erro de conexão.", "Tente novamente mais tarde.");
+      showError(
+        tr("receita-publica:error.conexaoTitle", "Erro de conexão."),
+        tr("receita-publica:error.conexaoMsg", "Tente novamente mais tarde.")
+      );
     }
   })();
 
@@ -314,8 +349,8 @@
     if (!r.quantidadePrescrita) {
       // Receita antiga sem quantidade. Mostra aviso, esconde botão.
       block.classList.add("is-legacy");
-      statusEl.textContent = "Receita sem controle de saldo";
-      balanceEl.textContent = "Esta receita foi emitida antes do controle digital de dispensação. A farmácia decide com base no PDF.";
+      statusEl.textContent = tr("receita-publica:dispensacao.legacyStatus", "Receita sem controle de saldo");
+      balanceEl.textContent = tr("receita-publica:dispensacao.legacyBalance", "Esta receita foi emitida antes do controle digital de dispensação. A farmácia decide com base no PDF.");
       actionEl.classList.add("ep-hide");
       return;
     }
@@ -329,21 +364,29 @@
     block.classList.add(`is-${status}`);
 
     if (status === "expirada") {
-      statusEl.textContent = "RECEITA VENCIDA";
-      balanceEl.textContent = `Validade clínica de 30 dias expirou. ${usado} de ${total} unidades foram dispensadas.`;
+      statusEl.textContent = tr("receita-publica:dispensacao.expiradaStatus", "RECEITA VENCIDA");
+      balanceEl.textContent = trInterp("receita-publica:dispensacao.expiradaBalance",
+        "Validade clínica de 30 dias expirou. {{usado}} de {{total}} unidades foram dispensadas.",
+        { usado, total });
       openBtn.disabled = true;
-      openBtn.textContent = "Receita vencida — não é possível dispensar";
+      openBtn.textContent = tr("receita-publica:dispensacao.vencidaBtn", "Receita vencida — não é possível dispensar");
     } else if (status === "completa") {
-      statusEl.textContent = "TOTALMENTE DISPENSADA";
-      balanceEl.textContent = `${usado} de ${total} unidades dispensadas.`;
+      statusEl.textContent = tr("receita-publica:dispensacao.completaStatus", "TOTALMENTE DISPENSADA");
+      balanceEl.textContent = trInterp("receita-publica:dispensacao.completaBalance",
+        "{{usado}} de {{total}} unidades dispensadas.",
+        { usado, total });
       openBtn.disabled = true;
-      openBtn.textContent = "Saldo zerado";
+      openBtn.textContent = tr("receita-publica:dispensacao.completaBtn", "Saldo zerado");
     } else if (status === "parcial") {
-      statusEl.textContent = "PARCIALMENTE DISPENSADA";
-      balanceEl.textContent = `${restante} de ${total} unidades restantes.`;
+      statusEl.textContent = tr("receita-publica:dispensacao.parcialStatus", "PARCIALMENTE DISPENSADA");
+      balanceEl.textContent = trInterp("receita-publica:dispensacao.parcialBalance",
+        "{{restante}} de {{total}} unidades restantes.",
+        { restante, total });
     } else {
-      statusEl.textContent = "PENDENTE DE DISPENSAÇÃO";
-      balanceEl.textContent = `${total} ${total === 1 ? "unidade prescrita" : "unidades prescritas"}.`;
+      statusEl.textContent = tr("receita-publica:dispensacao.pendenteStatus", "PENDENTE DE DISPENSAÇÃO");
+      balanceEl.textContent = total === 1
+        ? trInterp("receita-publica:dispensacao.pendenteBalanceSingular", "{{total}} unidade prescrita.", { total })
+        : trInterp("receita-publica:dispensacao.pendenteBalancePlural", "{{total}} unidades prescritas.", { total });
     }
 
     // Histórico
@@ -374,7 +417,9 @@
 
     qtyEl.max = String(restante);
     qtyEl.value = "1";
-    hintEl.textContent = `${restante} ${restante === 1 ? "unidade restante" : "unidades restantes"} de ${total}.`;
+    hintEl.textContent = restante === 1
+      ? trInterp("receita-publica:dispensacao.restanteHintSingular", "{{restante}} unidade restante de {{total}}.", { restante, total })
+      : trInterp("receita-publica:dispensacao.restanteHintPlural", "{{restante}} unidades restantes de {{total}}.", { restante, total });
 
     openBtn.addEventListener("click", () => {
       statusModalEl.textContent = "";
@@ -410,19 +455,28 @@
       const qty  = Number(qtyEl.value);
 
       if (!/^[A-Z]{2,4}[\s\-/]*[A-Z]{2}[\s\-/]*\d{2,8}$/i.test(crf)) {
-        statusModalEl.textContent = "CRF em formato inválido. Ex.: CRF-SC 12345.";
+        statusModalEl.textContent = tr("receita-publica:modal.errCrfFormato", "CRF em formato inválido. Ex.: CRF-SC 12345.");
         statusModalEl.className = "ep-status is-err"; return;
       }
-      if (!farm) { statusModalEl.textContent = "Informe o nome do farmacêutico."; statusModalEl.className = "ep-status is-err"; return; }
-      if (!isValidCnpj(cnpj)) { statusModalEl.textContent = "CNPJ inválido."; statusModalEl.className = "ep-status is-err"; return; }
-      if (!farmNome) { statusModalEl.textContent = "Informe o nome da farmácia."; statusModalEl.className = "ep-status is-err"; return; }
+      if (!farm) {
+        statusModalEl.textContent = tr("receita-publica:modal.errFarmaceutico", "Informe o nome do farmacêutico.");
+        statusModalEl.className = "ep-status is-err"; return;
+      }
+      if (!isValidCnpj(cnpj)) {
+        statusModalEl.textContent = tr("receita-publica:modal.errCnpj", "CNPJ inválido.");
+        statusModalEl.className = "ep-status is-err"; return;
+      }
+      if (!farmNome) {
+        statusModalEl.textContent = tr("receita-publica:modal.errFarmacia", "Informe o nome da farmácia.");
+        statusModalEl.className = "ep-status is-err"; return;
+      }
       if (!Number.isInteger(qty) || qty < 1 || qty > restante) {
-        statusModalEl.textContent = `Quantidade entre 1 e ${restante}.`;
+        statusModalEl.textContent = trInterp("receita-publica:modal.errQuantidade", "Quantidade entre 1 e {{restante}}.", { restante });
         statusModalEl.className = "ep-status is-err"; return;
       }
 
       confirmBtn.disabled = true;
-      statusModalEl.textContent = "Registrando…";
+      statusModalEl.textContent = tr("receita-publica:modal.registrando", "Registrando…");
       statusModalEl.className = "ep-status";
       try {
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/receita/dispensar`, {
@@ -439,7 +493,7 @@
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) {
-          statusModalEl.textContent = "Erro: " + (data?.hint || data?.error || `HTTP ${res.status}`);
+          statusModalEl.textContent = tr("receita-publica:modal.erroPrefix", "Erro: ") + (data?.hint || data?.error || `HTTP ${res.status}`);
           statusModalEl.className = "ep-status is-err";
           confirmBtn.disabled = false;
           return;
@@ -456,7 +510,7 @@
         // Re-fetch pra atualizar saldo + histórico.
         location.reload();
       } catch (e) {
-        statusModalEl.textContent = "Erro de rede: " + (e?.message || "");
+        statusModalEl.textContent = tr("receita-publica:modal.erroRede", "Erro de rede: ") + (e?.message || "");
         statusModalEl.className = "ep-status is-err";
         confirmBtn.disabled = false;
       }

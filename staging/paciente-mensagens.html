@@ -1,58 +1,57 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-ns="paciente-mensagens">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mensagens · Espaço Prelúdio</title>
+  <title data-i18n="paciente-mensagens:title">Mensagens · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-149">
+  <script src="./i18n/init.js?v=1-0" defer></script>
 </head>
 <body>
-
-<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
 
 <div class="ep-shell">
   <header class="ep-topbar">
     <a href="./paciente-painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="common:brand.tail">Prelúdio</span>
       </span>
     </a>
     <nav class="ep-nav">
-      <a href="./paciente-painel.html" class="ep-text-sm">Histórico</a>
-      <a href="./paciente-audit.html" class="ep-text-sm">Auditoria</a>
-      <span id="navUser" class="ep-text-sm ep-text-muted">…</span>
-      <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="logoutBtn">Sair</button>
+      <a href="./paciente-painel.html" class="ep-text-sm" data-i18n="paciente-mensagens:nav.history">Histórico</a>
+      <a href="./paciente-audit.html" class="ep-text-sm" data-i18n="paciente-mensagens:nav.audit">Auditoria</a>
+      <span id="navUser" class="ep-text-sm ep-text-muted" data-i18n="paciente-mensagens:nav.userLoading">…</span>
+      <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="logoutBtn" data-i18n="paciente-mensagens:nav.logout">Sair</button>
     </nav>
   </header>
 
   <main class="ep-main">
-    <div class="ep-eyebrow">Conversas</div>
-    <h1 class="ep-h1 ep-mt-12">Mensagens</h1>
-    <p class="ep-text-muted ep-mt-8">
+    <div class="ep-eyebrow" data-i18n="paciente-mensagens:eyebrow">Conversas</div>
+    <h1 class="ep-h1 ep-mt-12" data-i18n="paciente-mensagens:h1">Mensagens</h1>
+    <p class="ep-text-muted ep-mt-8" data-i18n-html="paciente-mensagens:subtitle">
       Conversas com seu(sua) profissional. <strong>Cifradas ponta-a-ponta</strong> — só você e ele(a) leem.
     </p>
 
     <div id="mensagensLayout" class="ep-msg-layout ep-mt-24">
       <aside class="ep-msg-threads">
         <div class="ep-msg-threads__head">
-          <strong class="ep-text-sm">Profissionais</strong>
+          <strong class="ep-text-sm" data-i18n="paciente-mensagens:threadsHead">Profissionais</strong>
         </div>
         <div id="threadList" class="ep-msg-threads__list">
-          <div class="ep-text-xs ep-text-muted" style="padding: 12px;">Carregando…</div>
+          <div class="ep-text-xs ep-text-muted" style="padding: 12px;" data-i18n="paciente-mensagens:threads.loading">Carregando…</div>
         </div>
       </aside>
 
       <section class="ep-msg-main">
         <div id="msgEmpty" class="ep-msg-empty">
-          <h3 class="ep-h3">Selecione uma conversa</h3>
-          <p class="ep-text-muted ep-mt-8">
+          <h3 class="ep-h3" data-i18n="paciente-mensagens:emptyTitle">Selecione uma conversa</h3>
+          <p class="ep-text-muted ep-mt-8" data-i18n="paciente-mensagens:emptySub">
             Conversas aparecem aqui quando seu(sua) profissional iniciar.
           </p>
         </div>
@@ -61,15 +60,15 @@
           <header class="ep-msg-thread__head">
             <div>
               <div id="msgPeerName" class="ep-h3 ep-mt-0">—</div>
-              <div class="ep-text-xs ep-text-muted">cifrada ponta-a-ponta</div>
+              <div class="ep-text-xs ep-text-muted" data-i18n="paciente-mensagens:e2eeBadge">cifrada ponta-a-ponta</div>
             </div>
           </header>
           <div id="msgList" class="ep-msg-thread__list"></div>
           <form id="msgForm" class="ep-msg-thread__composer">
-            <textarea id="msgInput" placeholder="Digite uma mensagem… (Ctrl+Enter envia)" maxlength="3000" rows="2"></textarea>
+            <textarea id="msgInput" data-i18n-placeholder="paciente-mensagens:composer.placeholder" placeholder="Digite uma mensagem… (Ctrl+Enter envia)" maxlength="3000" rows="2"></textarea>
             <div class="ep-flex" style="justify-content: space-between; align-items: center; padding: 8px 12px; border-top: 1px solid var(--ep-line);">
               <span id="msgStatus" class="ep-text-xs ep-text-muted">&nbsp;</span>
-              <button id="msgSendBtn" type="submit" class="ep-btn ep-btn--primary ep-btn--sm">Enviar</button>
+              <button id="msgSendBtn" type="submit" class="ep-btn ep-btn--primary ep-btn--sm" data-i18n="paciente-mensagens:composer.send">Enviar</button>
             </div>
           </form>
         </div>
@@ -90,11 +89,27 @@
   } from "./js/crypto.js";
   import { clearPatientDek } from "./js/patient-session.js";
 
+  function tr(key, fallback, opts) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key, opts);
+      if (v && v !== key) return v;
+    }
+    return fallback;
+  }
+  function currentLocale() {
+    if (window.EP_I18N && window.EP_I18N.locale) {
+      try { return window.EP_I18N.locale(); } catch (_) { /* empty */ }
+    }
+    return (document.documentElement.lang || "pt-BR");
+  }
+
   const ctx = await requirePatient({ requireDek: true });
   const { idToken, account, dek } = ctx;
   const myUid = ctx.user.uid;
 
-  document.getElementById("navUser").textContent = account.displayName ? `Olá, ${account.displayName}` : "…";
+  document.getElementById("navUser").textContent = account.displayName
+    ? tr("paciente-mensagens:nav.greetingPrefix", "Olá, ") + account.displayName
+    : tr("paciente-mensagens:nav.userLoading", "…");
 
   // ─── ECDH lazy ──────────────────────────────────────────────────
   let myEcdhPrivBytes = null;
@@ -134,8 +149,16 @@
     ecdhReady = true;
   } catch (e) {
     console.error("ecdh_init_failed", e);
+    const errMsg = e?.message || tr("paciente-mensagens:ecdh.unknownError", "desconhecido");
+    const tpl = tr(
+      "paciente-mensagens:ecdh.initError",
+      "Não consegui inicializar a chave ECDH do chat. Detalhe: {{err}}<br><br>Recarregue a página em 30s.",
+      { err: escapeHtmlSafeFn(errMsg) }
+    );
+    // Se tr() devolveu a string já interpolada, usa direto; senão faz fallback manual.
+    const html = tpl.includes("{{err}}") ? tpl.replace("{{err}}", escapeHtmlSafeFn(errMsg)) : tpl;
     document.getElementById("threadList").innerHTML =
-      `<div class="ep-status is-err" style="margin:12px;font-size:12px;">Não consegui inicializar a chave ECDH do chat. Detalhe: ${escapeHtmlSafeFn(e?.message || "desconhecido")}<br><br>Recarregue a página em 30s.</div>`;
+      `<div class="ep-status is-err" style="margin:12px;font-size:12px;">${html}</div>`;
   }
   function escapeHtmlSafeFn(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
@@ -195,10 +218,11 @@
     if (!ms) return "";
     const d = new Date(ms);
     const today = new Date();
+    const loc = currentLocale();
     if (d.toDateString() === today.toDateString()) {
-      return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      return d.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" });
     }
-    return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleString(loc, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
   }
 
   const threadKeyCache = new Map();
@@ -219,16 +243,17 @@
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok || !d.ok) {
-      $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">Erro ao carregar.</div>`;
+      $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${escapeHtml(tr("paciente-mensagens:threads.loadError", "Erro ao carregar."))}</div>`;
       return;
     }
     const threads = d.threads || [];
     if (!threads.length) {
-      $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">Você ainda não tem conversas.<br>O(a) profissional inicia a partir do consultório.</div>`;
+      $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${tr("paciente-mensagens:threads.empty", "Você ainda não tem conversas.<br>O(a) profissional inicia a partir do consultório.")}</div>`;
       return;
     }
+    const peerFallback = tr("paciente-mensagens:peerFallback", "Profissional");
     $("threadList").innerHTML = threads.map(t => {
-      const peerName = t.therapistDisplayName || "Profissional";
+      const peerName = t.therapistDisplayName || peerFallback;
       const unreadDot = t.hasUnread ? `<span class="ep-msg-unread"></span>` : "";
       const lastTime = t.lastMessageAt ? fmtTime(t.lastMessageAt) : "";
       const cls = t.threadId === currentThreadId ? " is-active" : "";
@@ -253,7 +278,7 @@
     currentThreadId = threadId;
     $("msgEmpty").classList.add("ep-hide");
     $("msgThread").classList.remove("ep-hide");
-    $("msgList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">Carregando…</div>`;
+    $("msgList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${escapeHtml(tr("paciente-mensagens:messages.loading", "Carregando…"))}</div>`;
     $("msgStatus").textContent = "";
 
     const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(threadId)}`, {
@@ -261,11 +286,11 @@
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok || !d.ok) {
-      $("msgList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">Erro ao carregar conversa.</div>`;
+      $("msgList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${escapeHtml(tr("paciente-mensagens:messages.loadError", "Erro ao carregar conversa."))}</div>`;
       return;
     }
     currentThread = d.thread;
-    $("msgPeerName").textContent = currentThread.therapistDisplayName || "Profissional";
+    $("msgPeerName").textContent = currentThread.therapistDisplayName || tr("paciente-mensagens:peerFallback", "Profissional");
 
     let threadKeyBytes = threadKeyCache.get(threadId);
     if (!threadKeyBytes) {
@@ -300,13 +325,14 @@
     const d = await r.json().catch(() => ({}));
     if (!r.ok || !d.ok) return;
 
+    const corruptedLabel = tr("paciente-mensagens:messages.corrupted", "[mensagem corrompida]");
     const decrypted = [];
     for (const m of (d.messages || [])) {
       try {
         const plain = await decryptNote({ ciphertext: m.ciphertext, iv: m.iv }, threadKeyBytes);
         decrypted.push({ ...m, plain });
       } catch {
-        decrypted.push({ ...m, plain: "[mensagem corrompida]" });
+        decrypted.push({ ...m, plain: corruptedLabel });
       }
     }
 
@@ -314,6 +340,7 @@
     const grewSinceLast = newest > lastSeenMessageMs;
     lastSeenMessageMs = newest;
 
+    const emptyMsg = tr("paciente-mensagens:messages.empty", "Nenhuma mensagem ainda.");
     $("msgList").innerHTML = decrypted.map(m => {
       const mine = m.senderRole === "patient";
       return `
@@ -322,7 +349,7 @@
           <div class="ep-msg-bubble__time">${fmtTime(m.createdAt)}</div>
         </div>
       `;
-    }).join("") || `<div class="ep-text-xs ep-text-muted" style="padding:12px;">Nenhuma mensagem ainda.</div>`;
+    }).join("") || `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${escapeHtml(emptyMsg)}</div>`;
 
     if (grewSinceLast) {
       const list = $("msgList");
@@ -346,7 +373,7 @@
     if (!threadKeyBytes) return;
 
     $("msgSendBtn").disabled = true;
-    $("msgStatus").textContent = "cifrando…";
+    $("msgStatus").textContent = tr("paciente-mensagens:status.encrypting", "cifrando…");
     try {
       const enc = await encryptNote(text, threadKeyBytes);
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/messages`, {
@@ -361,7 +388,7 @@
       await refreshMessages(threadKeyBytes);
       loadThreads();
     } catch (e) {
-      $("msgStatus").textContent = "Erro: " + (e?.message || "");
+      $("msgStatus").textContent = tr("paciente-mensagens:status.errorPrefix", "Erro: ") + (e?.message || "");
     } finally {
       $("msgSendBtn").disabled = false;
     }

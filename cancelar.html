@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-ns="cancelar">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cancelar consulta · Espaço Prelúdio</title>
+  <title data-i18n="cancelar:title">Cancelar consulta · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-149">
+  <script src="./i18n/init.js?v=1-0" defer></script>
 </head>
 <body>
 
@@ -18,48 +19,49 @@
     <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="common:brand.tail">Prelúdio</span>
       </span>
     </a>
     <nav class="ep-nav">
-      <span class="ep-text-sm ep-text-muted">Cancelar consulta</span>
+      <span class="ep-text-sm ep-text-muted" data-i18n="cancelar:navLabel">Cancelar consulta</span>
     </nav>
   </header>
 
   <main class="ep-cancel-main">
 
     <div id="missingToken" class="ep-hide ep-mt-32">
-      <div class="ep-alert ep-alert--danger">
+      <div class="ep-alert ep-alert--danger" data-i18n="cancelar:missingToken">
         Link inválido. Use o link enviado no e-mail de confirmação ou de lembrete.
       </div>
     </div>
 
     <div id="confirmBox" class="ep-hide ep-mt-32">
-      <h1 class="ep-h2 ep-mt-0">Cancelar a consulta?</h1>
-      <p class="ep-text-muted ep-mt-0">
+      <h1 class="ep-h2 ep-mt-0" data-i18n="cancelar:confirm.h1">Cancelar a consulta?</h1>
+      <p class="ep-text-muted ep-mt-0" data-i18n="cancelar:confirm.desc">
         Ao confirmar, sua consulta será cancelada. Cancelamentos exigem antecedência mínima de 24 horas — abaixo disso, fale direto com o profissional.
       </p>
       <div class="ep-field ep-mt-16">
-        <label class="ep-label" for="reason">Motivo (opcional)</label>
+        <label class="ep-label" for="reason" data-i18n="cancelar:confirm.labelReason">Motivo (opcional)</label>
         <textarea id="reason" class="ep-textarea" rows="3" maxlength="500"
+          data-i18n-placeholder="cancelar:confirm.placeholderReason"
           placeholder="Algo que você queira que o profissional saiba"></textarea>
       </div>
       <div class="ep-modal__actions ep-mt-16">
-        <a href="./index.html" class="ep-btn ep-btn--ghost">Voltar</a>
-        <button type="button" class="ep-btn ep-btn--danger-solid" id="confirmBtn">Confirmar cancelamento</button>
+        <a href="./index.html" class="ep-btn ep-btn--ghost" data-i18n="cancelar:confirm.btnBack">Voltar</a>
+        <button type="button" class="ep-btn ep-btn--danger-solid" id="confirmBtn" data-i18n="cancelar:confirm.btnConfirm">Confirmar cancelamento</button>
       </div>
     </div>
 
     <div id="successBox" class="ep-hide ep-mt-32">
       <div class="ep-alert ep-alert--ok">
-        <strong>Consulta cancelada.</strong> Você pode fechar esta janela.
+        <strong data-i18n="cancelar:success">Consulta cancelada.</strong><span data-i18n="cancelar:successDesc"> Você pode fechar esta janela.</span>
       </div>
     </div>
 
     <div id="errorBox" class="ep-hide ep-mt-32">
       <div class="ep-alert ep-alert--danger">
-        <strong id="errorTitle">Não foi possível cancelar.</strong>
+        <strong id="errorTitle" data-i18n="cancelar:error.defaultTitle">Não foi possível cancelar.</strong>
         <p id="errorMsg" class="ep-mt-0"></p>
       </div>
     </div>
@@ -69,6 +71,14 @@
 
 <script type="module">
   import { BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  function tr(key, fallback) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback;
+  }
 
   const params = new URLSearchParams(location.search);
   const token = (params.get("t") || "").trim();
@@ -84,7 +94,7 @@
     confirmBtn.addEventListener("click", async () => {
       const reason = document.getElementById("reason").value.trim();
       confirmBtn.disabled = true;
-      confirmBtn.textContent = "Cancelando…";
+      confirmBtn.textContent = tr("cancelar:status.cancelling", "Cancelando…");
       try {
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/cancelar-publico`, {
           method: "POST",
@@ -100,28 +110,28 @@
           const errorMsg  = document.getElementById("errorMsg");
           const errorTitle = document.getElementById("errorTitle");
           if (data?.error === "PRAZO_CANCELAMENTO_EXPIRADO") {
-            errorTitle.textContent = "Fora da janela de cancelamento.";
-            errorMsg.textContent = data.hint || "Cancelamentos pelo paciente exigem antecedência mínima. Fale direto com o profissional.";
+            errorTitle.textContent = tr("cancelar:error.deadlineTitle", "Fora da janela de cancelamento.");
+            errorMsg.textContent = data.hint || tr("cancelar:error.deadlineMsg", "Cancelamentos pelo paciente exigem antecedência mínima. Fale direto com o profissional.");
           } else if (data?.error === "SESSAO_JA_ENCERRADA") {
-            errorTitle.textContent = "Consulta já encerrada.";
-            errorMsg.textContent = "Esta consulta já aconteceu — não há mais o que cancelar.";
+            errorTitle.textContent = tr("cancelar:error.alreadyEndedTitle", "Consulta já encerrada.");
+            errorMsg.textContent = tr("cancelar:error.alreadyEndedMsg", "Esta consulta já aconteceu — não há mais o que cancelar.");
           } else {
-            errorTitle.textContent = "Não foi possível cancelar.";
+            errorTitle.textContent = tr("cancelar:error.defaultTitle", "Não foi possível cancelar.");
             // Diferencia erro HTTP vs erro de aplicação. Antes mostrava "HTTP 200"
             // quando backend retornava {ok:false} sem campo `error` definido.
             errorMsg.textContent = data?.error
-              || (res.ok ? "Erro desconhecido. Tente novamente ou fale com o profissional." : `HTTP ${res.status}`);
+              || (res.ok ? tr("cancelar:error.unknownMsg", "Erro desconhecido. Tente novamente ou fale com o profissional.") : `HTTP ${res.status}`);
           }
           errorBox.classList.remove("ep-hide");
         }
       } catch (e) {
         document.getElementById("confirmBox").classList.add("ep-hide");
         const errorBox = document.getElementById("errorBox");
-        document.getElementById("errorMsg").textContent = e?.message || "Erro de rede.";
+        document.getElementById("errorMsg").textContent = e?.message || tr("cancelar:error.networkMsg", "Erro de rede.");
         errorBox.classList.remove("ep-hide");
       } finally {
         confirmBtn.disabled = false;
-        confirmBtn.textContent = "Confirmar cancelamento";
+        confirmBtn.textContent = tr("cancelar:confirm.btnConfirm", "Confirmar cancelamento");
       }
     });
   }

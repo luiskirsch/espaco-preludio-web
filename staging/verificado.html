@@ -1,42 +1,41 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-ns="verificado">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profissional verificado · Espaço Prelúdio</title>
-  <meta name="description" content="Profissional verificado pelo Espaço Prelúdio. Plataforma de telessaúde para profissionais regulamentados (CRP, CRM, CRESS, CREFITO, CRFa, CRN, CRO, CREF) com prescrição digital, sigilo LGPD e auditoria.">
+  <title data-i18n="verificado:title">Profissional verificado · Espaço Prelúdio</title>
+  <meta name="description" data-i18n-attr="content:verificado:metaDesc" content="Profissional verificado pelo Espaço Prelúdio. Plataforma de telessaúde para profissionais regulamentados (CRP, CRM, CRESS, CREFITO, CRFa, CRN, CRO, CREF) com prescrição digital, sigilo LGPD e auditoria.">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-149">
+  <script src="./i18n/init.js?v=1-0" defer></script>
 </head>
 <body>
-
-<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
 
 <div class="ep-shell">
   <header class="ep-topbar">
     <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="common:brand.tail">Prelúdio</span>
       </span>
     </a>
     <nav class="ep-nav">
-      <span class="ep-text-sm ep-text-muted">Verificação de profissional</span>
+      <span class="ep-text-sm ep-text-muted" data-i18n="verificado:navLabel">Verificação de profissional</span>
     </nav>
   </header>
 
   <main class="ep-cancel-main ep-mt-32">
 
-    <div id="loading" class="ep-skeleton ep-mt-32">Verificando profissional…</div>
+    <div id="loading" class="ep-skeleton ep-mt-32" data-i18n="verificado:loading">Verificando profissional…</div>
 
     <div id="errorBox" class="ep-hide ep-mt-32">
       <div class="ep-alert ep-alert--danger">
-        <strong id="errorTitle">Profissional não encontrado.</strong>
-        <p id="errorMsg" class="ep-mt-0">Verifique se o link está correto.</p>
+        <strong id="errorTitle" data-i18n="verificado:error.defaultTitle">Profissional não encontrado.</strong>
+        <p id="errorMsg" class="ep-mt-0" data-i18n="verificado:error.defaultMsg">Verifique se o link está correto.</p>
       </div>
     </div>
 
@@ -46,10 +45,10 @@
           <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
         </div>
         <div class="ep-verify-hero__body">
-          <div class="ep-eyebrow ep-text-success">Profissional verificado</div>
+          <div class="ep-eyebrow ep-text-success" data-i18n="verificado:hero.eyebrow">Profissional verificado</div>
           <h1 class="ep-h1 ep-mt-12" id="profName">—</h1>
           <p class="ep-text-muted ep-mt-0" id="profIds">—</p>
-          <p class="ep-text-muted ep-mt-0 ep-hide" id="profSemConselhoNote" style="font-style: italic; font-size: 14px;">
+          <p class="ep-text-muted ep-mt-0 ep-hide" id="profSemConselhoNote" style="font-style: italic; font-size: 14px;" data-i18n="verificado:hero.noCouncilNote">
             Profissional não regulamentado por conselho oficial.
           </p>
         </div>
@@ -57,33 +56,33 @@
 
       <div class="ep-verify-grid ep-mt-16">
         <div class="ep-verify-card">
-          <div class="ep-verify-card__label">Especialidade</div>
+          <div class="ep-verify-card__label" data-i18n="verificado:card.specialty">Especialidade</div>
           <div class="ep-verify-card__value" id="profEspecialidade">—</div>
         </div>
         <div class="ep-verify-card">
-          <div class="ep-verify-card__label">Consultório</div>
+          <div class="ep-verify-card__label" data-i18n="verificado:card.office">Consultório</div>
           <div class="ep-verify-card__value" id="profConsultorio">—</div>
           <div class="ep-verify-card__sub" id="profConsultorioCidade"></div>
           <div class="ep-verify-card__sub" id="profConsultorioTel"></div>
         </div>
         <div class="ep-verify-card">
-          <div class="ep-verify-card__label">Verificado em</div>
+          <div class="ep-verify-card__label" data-i18n="verificado:card.verifiedAt">Verificado em</div>
           <div class="ep-verify-card__value" id="profVerifiedAt">—</div>
-          <div class="ep-verify-card__sub">por Espaço Prelúdio</div>
+          <div class="ep-verify-card__sub" data-i18n="verificado:card.by">por Espaço Prelúdio</div>
         </div>
       </div>
 
       <div class="ep-bio ep-mt-16 ep-hide" id="profBioWrap">
-        <div class="ep-eyebrow">Sobre</div>
+        <div class="ep-eyebrow" data-i18n="verificado:bio">Sobre</div>
         <p class="ep-text-muted ep-mt-0" id="profBio"></p>
       </div>
 
       <div class="ep-alert ep-alert--info ep-mt-16">
-        <strong>O que significa verificado?</strong> A equipe do Espaço Prelúdio confirmou o registro profissional deste(a) profissional junto ao conselho de classe correspondente (CRP, CRM, CRESS, CREFITO, CRFa, CRN, CRO ou CREF). Isso não substitui sua diligência — para tratamento clínico, você pode confirmar diretamente no sistema de busca pública do conselho.
+        <strong data-i18n="verificado:info.verifiedTitle">O que significa verificado?</strong><span data-i18n="verificado:info.verifiedBody"> A equipe do Espaço Prelúdio confirmou o registro profissional deste(a) profissional junto ao conselho de classe correspondente (CRP, CRM, CRESS, CREFITO, CRFa, CRN, CRO ou CREF). Isso não substitui sua diligência — para tratamento clínico, você pode confirmar diretamente no sistema de busca pública do conselho.</span>
       </div>
 
       <div class="ep-alert ep-alert--info ep-mt-12">
-        <strong>Sobre o Espaço Prelúdio.</strong> Plataforma de telessaúde para profissionais regulamentados da área da saúde — psicólogos, médicos, assistentes sociais, terapeutas ocupacionais, fonoaudiólogos, nutricionistas, dentistas e profissionais de Educação Física. Prescrição digital, criptografia E2EE de notas clínicas, sigilo LGPD e auditoria de dispensação. <a href="./index.html">Saiba mais →</a>
+        <strong data-i18n="verificado:info.aboutTitle">Sobre o Espaço Prelúdio.</strong><span data-i18n="verificado:info.aboutBody"> Plataforma de telessaúde para profissionais regulamentados da área da saúde — psicólogos, médicos, assistentes sociais, terapeutas ocupacionais, fonoaudiólogos, nutricionistas, dentistas e profissionais de Educação Física. Prescrição digital, criptografia E2EE de notas clínicas, sigilo LGPD e auditoria de dispensação. </span><a href="./index.html" data-i18n="verificado:info.aboutLink">Saiba mais →</a>
       </div>
 
     </div>
@@ -93,6 +92,20 @@
 
 <script type="module">
   import { BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  function tr(key, fallback) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback;
+  }
+  function localeForDate() {
+    const lang = (window.EP_I18N && window.EP_I18N.lang) || document.documentElement.lang || "pt-BR";
+    if (lang.startsWith("en")) return "en-US";
+    if (lang.startsWith("es")) return "es-ES";
+    return "pt-BR";
+  }
 
   const params = new URLSearchParams(location.search);
   const uid = (params.get("u") || "").trim();
@@ -108,11 +121,11 @@
     if (msg)   document.getElementById("errorMsg").textContent   = msg;
   }
 
-  if (!uid) { showError("Link incompleto.", "Faltam os dados do profissional."); throw new Error("NO_UID"); }
+  if (!uid) { showError(tr("verificado:error.noUidTitle", "Link incompleto."), tr("verificado:error.noUidMsg", "Faltam os dados do profissional.")); throw new Error("NO_UID"); }
 
   function fmtDate(ms) {
     if (!ms) return "—";
-    return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+    return new Date(ms).toLocaleDateString(localeForDate(), { day: "2-digit", month: "long", year: "numeric" });
   }
 
   (async () => {
@@ -121,11 +134,11 @@
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.ok) {
         if (j?.error === "PROFISSIONAL_NAO_VERIFICADO") {
-          showError("Profissional ainda não verificado.", "Esta conta existe no Espaço Prelúdio mas não passou pelo processo de verificação. Apenas profissionais verificados são exibidos publicamente.");
+          showError(tr("verificado:error.notVerifiedTitle", "Profissional ainda não verificado."), tr("verificado:error.notVerifiedMsg", "Esta conta existe no Espaço Prelúdio mas não passou pelo processo de verificação. Apenas profissionais verificados são exibidos publicamente."));
         } else if (res.status === 404) {
-          showError("Profissional não encontrado.", "Verifique se o link está correto.");
+          showError(tr("verificado:error.defaultTitle", "Profissional não encontrado."), tr("verificado:error.defaultMsg", "Verifique se o link está correto."));
         } else {
-          showError("Erro ao carregar.", "Tente novamente em alguns minutos.");
+          showError(tr("verificado:error.loadTitle", "Erro ao carregar."), tr("verificado:error.loadMsg", "Tente novamente em alguns minutos."));
         }
         return;
       }
@@ -137,9 +150,9 @@
       // de número de registro (não tem) e revela a nota "não regulamentado".
       const ids = [];
       const PRACTICE_LABELS = {
-        "psicanalise":         "Psicanálise",
-        "terapia-integrativa": "Terapia integrativa",
-        "hipnoterapia":        "Hipnoterapia"
+        "psicanalise":         tr("verificado:practice.psicanalise", "Psicanálise"),
+        "terapia-integrativa": tr("verificado:practice.terapiaIntegrativa", "Terapia integrativa"),
+        "hipnoterapia":        tr("verificado:practice.hipnoterapia", "Hipnoterapia")
       };
       if (p.isRegulamentado === false) {
         if (p.tipoPratica) ids.push(PRACTICE_LABELS[p.tipoPratica] || p.tipoPratica);
@@ -159,7 +172,7 @@
       const cidade = [c.bairro, [c.cidade, c.uf].filter(Boolean).join("/")].filter(Boolean).join(" · ");
       document.getElementById("profConsultorio").textContent = consult;
       document.getElementById("profConsultorioCidade").textContent = cidade;
-      document.getElementById("profConsultorioTel").textContent = c.telefone ? "Tel.: " + c.telefone : "";
+      document.getElementById("profConsultorioTel").textContent = c.telefone ? tr("verificado:card.phonePrefix", "Tel.: ") + c.telefone : "";
 
       document.getElementById("profVerifiedAt").textContent = fmtDate(p.verifiedAt);
 
@@ -172,7 +185,7 @@
       content.classList.remove("ep-hide");
     } catch (e) {
       console.error("verificado_error", e);
-      showError("Erro de conexão.", "Tente novamente mais tarde.");
+      showError(tr("verificado:error.networkTitle", "Erro de conexão."), tr("verificado:error.networkMsg", "Tente novamente mais tarde."));
     }
   })();
 </script>

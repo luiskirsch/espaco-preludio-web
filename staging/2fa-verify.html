@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-ns="2fa-verify">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verificação 2FA · Espaço Prelúdio</title>
+  <title data-i18n="2fa-verify:title">Verificação 2FA · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-149">
+  <script src="./i18n/init.js?v=1-0" defer></script>
   <style>
     body { background: var(--ep-bg); min-height: 100vh; }
     .twofa-shell { max-width: 460px; margin: 0 auto; padding: 64px 24px; }
@@ -32,19 +33,17 @@
 </head>
 <body>
 
-<div class="ep-staging-banner">Ambiente de teste · Espaço Prelúdio · staging</div>
-
 <div class="twofa-shell">
   <div style="text-align: center; margin-bottom: 24px;">
-    <a href="./painel.html" style="text-decoration: none; color: var(--ep-ink); font-family: var(--ep-font-serif); font-weight: 600; font-size: 18px;">Espaço Prelúdio</a>
+    <a href="./painel.html" style="text-decoration: none; color: var(--ep-ink); font-family: var(--ep-font-serif); font-weight: 600; font-size: 18px;" data-i18n="2fa-verify:brand">Espaço Prelúdio</a>
   </div>
 
   <div class="twofa-card">
-    <div class="ep-eyebrow" style="color: var(--ep-accent);">Verificação em 2 etapas</div>
-    <h1 style="font-family: var(--ep-font-serif); font-size: 24px; font-weight: 600; margin: 12px 0 14px; letter-spacing: -0.01em;">
+    <div class="ep-eyebrow" style="color: var(--ep-accent);" data-i18n="2fa-verify:eyebrow">Verificação em 2 etapas</div>
+    <h1 style="font-family: var(--ep-font-serif); font-size: 24px; font-weight: 600; margin: 12px 0 14px; letter-spacing: -0.01em;" data-i18n="2fa-verify:h1">
       Digite seu código
     </h1>
-    <p class="ep-text-muted" style="margin: 0 0 24px; font-size: 14px;">
+    <p class="ep-text-muted" style="margin: 0 0 24px; font-size: 14px;" data-i18n="2fa-verify:sub">
       Abra seu app de autenticador (Google Authenticator, Authy, 1Password) e digite o código de 6 dígitos.
     </p>
 
@@ -53,15 +52,15 @@
 
     <div class="ep-status" id="status"></div>
 
-    <button id="verifyBtn" type="button" class="ep-btn ep-btn--primary ep-btn--block ep-mt-16" disabled>Verificar</button>
+    <button id="verifyBtn" type="button" class="ep-btn ep-btn--primary ep-btn--block ep-mt-16" disabled data-i18n="2fa-verify:btnVerify">Verificar</button>
 
     <p class="ep-text-xs ep-text-muted ep-mt-16 ep-text-center" style="margin-bottom: 0;">
-      Perdeu acesso ao app? <a href="mailto:contato@preludiojogos.com.br?subject=Recuperar%20acesso%202FA" style="color: var(--ep-accent);">Fale com o suporte</a>
+      <span data-i18n="2fa-verify:helpPrefix">Perdeu acesso ao app? </span><a href="mailto:contato@preludiojogos.com.br?subject=Recuperar%20acesso%202FA" style="color: var(--ep-accent);" data-i18n="2fa-verify:helpLink">Fale com o suporte</a>
     </p>
   </div>
 
   <div class="ep-text-xs ep-text-muted ep-text-center ep-mt-16">
-    <button type="button" id="logoutBtn" style="background: none; border: none; color: var(--ep-ink-2); font-size: 12px; cursor: pointer; text-decoration: underline;">
+    <button type="button" id="logoutBtn" style="background: none; border: none; color: var(--ep-ink-2); font-size: 12px; cursor: pointer; text-decoration: underline;" data-i18n="2fa-verify:btnLogout">
       Sair desta conta
     </button>
   </div>
@@ -72,6 +71,14 @@
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { authReady, save2faSession, clear2faSession } from "./js/auth-guard.js?v=3-22";
   import { clearDek } from "./js/crypto.js";
+
+  function tr(key, fallback) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback;
+  }
 
   const user = await authReady();
   if (!user) { window.location.href = "./login.html"; throw new Error("NOT_AUTH"); }
@@ -107,7 +114,7 @@
     if (!/^\d{6}$/.test(code)) return;
     btnEl.disabled = true;
     stEl.className = "ep-status";
-    stEl.textContent = "Verificando…";
+    stEl.textContent = tr("2fa-verify:status.verifying", "Verificando…");
 
     try {
       const idToken = await user.getIdToken();
@@ -122,8 +129,8 @@
       window.location.href = redirect;
     } catch (e) {
       stEl.textContent = e.message === "CODIGO_INCORRETO"
-        ? "Código incorreto. Tente o próximo (códigos mudam a cada 30s)."
-        : "Erro: " + (e?.message || "desconhecido");
+        ? tr("2fa-verify:status.wrongCode", "Código incorreto. Tente o próximo (códigos mudam a cada 30s).")
+        : tr("2fa-verify:status.errorPrefix", "Erro: ") + (e?.message || tr("2fa-verify:status.unknownError", "desconhecido"));
       stEl.classList.add("is-err");
       btnEl.disabled = false;
       codeEl.select();
