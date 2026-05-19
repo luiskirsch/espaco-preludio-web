@@ -84,6 +84,15 @@ export const authPatient      = getAuth(patientApp);
 export const dbProfessional   = getFirestore(professionalApp);
 export const dbPatient        = getFirestore(patientApp);
 
+// Expõe na window pra monitoring.js (carregado antes deste módulo como
+// <script defer>) saber o domínio do backend e o ambiente. Também
+// permite extensão futura (ex.: outras tools de observabilidade).
+if (typeof window !== "undefined") {
+  window.EP_BACKEND_BASE_URL = BACKEND_BASE_URL;
+  window.EP_IS_STAGING = IS_STAGING;
+  // window.EP_SENTRY_DSN = "https://...@sentry.io/..."  ← descomente e cole DSN do Sentry pra ativar
+}
+
 if (typeof console !== "undefined") {
   console.info(
     `[ep] ambiente: ${IS_STAGING ? "STAGING" : "PRODUCTION"} · ` +
