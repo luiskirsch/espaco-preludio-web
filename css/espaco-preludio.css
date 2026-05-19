@@ -828,6 +828,14 @@ body:not(:has(.ep-help-bubble)) .ep-msg-bubble-fab {
 }
 @media print { .ep-help-bubble { display: none !important; } }
 
+/* Esconde o #logoutBtn no estado inicial (pre-JS). O auth-guard adiciona
+   a classe .ep-logout-fab e move pro body — o seletor :not() abaixo
+   garante que o botao some no HTML estatico, evitando o flash de "Sair"
+   no nav durante o reload antes do JS rodar. */
+#logoutBtn:not(.ep-logout-fab) {
+  display: none !important;
+}
+
 /* Botão flutuante Sair — no fundo da stack (canto inferior direito).
    Cor vermelha discreta pra sinalizar acao destrutiva sem competir
    com os outros FABs. Ícone hardcoded pra evitar o bug recorrente de
