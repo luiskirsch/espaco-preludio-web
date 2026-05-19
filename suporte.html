@@ -132,6 +132,15 @@
 
     <div class="ep-stack ep-mt-16" style="gap: 12px;">
       <div class="ep-contact-card">
+        <div class="ep-contact-card__icon" style="background: rgba(45,74,62,0.10); color: #2d4a3e;">✦</div>
+        <div class="ep-contact-card__main">
+          <h3 data-i18n="suporte:contact.chatbot.title">Chat IA · 24/7</h3>
+          <p data-i18n="suporte:contact.chatbot.value">Resposta instantânea. Ideal pra dúvidas de uso e troubleshooting.</p>
+        </div>
+        <button type="button" id="openChatbotBtn" class="ep-btn ep-btn--primary ep-btn--sm" data-i18n="suporte:contact.chatbot.cta">Abrir chat agora</button>
+      </div>
+
+      <div class="ep-contact-card">
         <div class="ep-contact-card__icon">✉</div>
         <div class="ep-contact-card__main">
           <h3 data-i18n="suporte:contact.email.title">E-mail</h3>
@@ -293,6 +302,17 @@
 
   document.getElementById("restartTourBtn").addEventListener("click", () => {
     runOnboarding({ force: true });
+  });
+
+  // Abre o widget de chat IA (montado pelo auth-guard). Tenta achar a bubble
+  // até 2s — em alguns ciclos o auth-guard só monta após resolver o perfil.
+  document.getElementById("openChatbotBtn").addEventListener("click", () => {
+    const tryOpen = (tries) => {
+      const bubble = document.getElementById("epHelpBubble");
+      if (bubble) { bubble.click(); return; }
+      if (tries > 0) setTimeout(() => tryOpen(tries - 1), 100);
+    };
+    tryOpen(20);
   });
 </script>
 

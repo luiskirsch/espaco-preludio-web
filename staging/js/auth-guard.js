@@ -209,7 +209,7 @@ function applyCapabilityVisibility(capabilities) {
 function mountHelpBubble() {
   if (typeof document === "undefined") return;
   const path = location.pathname.toLowerCase();
-  if (path.endsWith("/suporte.html") || path.endsWith("/2fa-verify.html")) return;
+  if (path.endsWith("/2fa-verify.html")) return;
   if (document.getElementById("epHelpBubble")) return;
 
   // Bubble
