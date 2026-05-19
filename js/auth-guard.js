@@ -405,12 +405,20 @@ function prefetchNavLinks() {
 // elemento original — assim cada página que registrou seu próprio
 // onclick no #logoutBtn continua funcionando sem mudança.
 //
-// Idempotente — se já moveu, no-op. Páginas admin sem nav (só logoutBtn
-// standalone) também viram FAB.
+// Em contas NAO-regulamentadas (html.ep-unregulated, sem conselho), o
+// botao continua no nav agrupado com o perfil — apenas contas com
+// receita/atestado usam o FAB de sair.
+//
+// Idempotente — se já moveu, no-op.
 function mountLogoutFab() {
   const btn = document.getElementById("logoutBtn");
   if (!btn) return;
   if (btn.classList.contains("ep-logout-fab")) return;
+
+  if (document.documentElement.classList.contains("ep-unregulated")) {
+    groupProfileWithLogout();
+    return;
+  }
 
   btn.className = "ep-logout-fab";
   btn.setAttribute("aria-label", "Sair");
@@ -423,6 +431,24 @@ function mountLogoutFab() {
     </svg>
   `;
   document.body.appendChild(btn);
+}
+
+// Agrupa o link do perfil com o botão Sair num único wrapper, virando
+// uma "pill" composta na topbar. Usado apenas em contas nao-regulamentadas.
+function groupProfileWithLogout() {
+  const link = document.getElementById("topProfileLink");
+  const btn  = document.getElementById("logoutBtn");
+  if (!link || !btn) return;
+  const parent = link.parentElement;
+  if (!parent || btn.parentElement !== parent) return;
+  if (parent.classList.contains("ep-profile-group")) return;
+  if (link.parentElement?.classList?.contains("ep-profile-group")) return;
+
+  const wrap = document.createElement("div");
+  wrap.className = "ep-profile-group";
+  parent.insertBefore(wrap, link);
+  wrap.appendChild(link);
+  wrap.appendChild(btn);
 }
 
 // mountThemeToggle: extraido para ./theme-toggle.js (re-export pra

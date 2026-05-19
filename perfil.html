@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-148">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-149">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
   <script src="./js/pwa.js?v=1" defer></script>
@@ -729,7 +729,7 @@
 <script type="module">
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-21";
+  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-22";
 
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     await signOut(auth);
@@ -1746,7 +1746,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
       // Salva session 2FA token (evita redirect imediato após ativar).
-      const { save2faSession } = await import("./js/auth-guard.js?v=3-21");
+      const { save2faSession } = await import("./js/auth-guard.js?v=3-22");
       save2faSession(data.sessionToken);
       therapist.twoFactorEnabled = true;
       twofaModal.classList.remove("is-open");
@@ -1793,7 +1793,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
       therapist.twoFactorEnabled = false;
-      const { clear2faSession } = await import("./js/auth-guard.js?v=3-21");
+      const { clear2faSession } = await import("./js/auth-guard.js?v=3-22");
       clear2faSession();
       twofaDisableModal.classList.remove("is-open");
       renderTwoFactorStatus();
