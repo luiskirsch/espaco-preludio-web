@@ -217,8 +217,8 @@ function mountHelpBubble() {
   a.id = "epHelpBubble";
   a.type = "button";
   a.className = "ep-help-bubble";
-  a.title = "Suporte (chat IA 24/7)";
-  a.setAttribute("aria-label", "Abrir suporte");
+  a.title = "Aurora · suporte IA 24/7";
+  a.setAttribute("aria-label", "Abrir Aurora — assistente IA");
   a.innerHTML = `
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <circle cx="12" cy="12" r="10"></circle>
@@ -232,11 +232,18 @@ function mountHelpBubble() {
   const panel = document.createElement("div");
   panel.id = "epSupportPanel";
   panel.style.cssText = `position: fixed; bottom: 100px; right: 24px; width: 360px; max-height: 520px; background: var(--ep-bg, #fff); border: 1px solid var(--ep-line, #ddd); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); display: none; flex-direction: column; z-index: 9999; font-family: var(--ep-font-sans, system-ui);`;
+  // Avatar SVG inline da Aurora — monograma "A" em serif sobre verde-pinheiro
+  // com ponto dourado (alusão a aurora/amanhecer). Sem dependência externa.
+  const AURORA_AVATAR = `<svg viewBox="0 0 64 64" width="36" height="36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;border-radius:50%;background:#f6f5f1;border:1.5px solid rgba(255,255,255,0.25);"><circle cx="32" cy="32" r="32" fill="#2d4a3e"/><text x="32" y="44" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-size="34" font-weight="500" fill="#f6f5f1">A</text><circle cx="48" cy="18" r="3.5" fill="#c89b4a"/></svg>`;
+
   panel.innerHTML = `
-    <div style="padding: 12px 16px; border-bottom: 1px solid var(--ep-line, #eee); display: flex; justify-content: space-between; align-items: center; background: var(--ep-accent, #2d4a3e); color: #fff; border-radius: 12px 12px 0 0;">
-      <div>
-        <div style="font-weight: 600; font-size: 14px;">Suporte IA · 24/7</div>
-        <div style="font-size: 11px; opacity: 0.85;">Respondo dúvidas sobre a plataforma</div>
+    <div style="padding: 12px 16px; border-bottom: 1px solid var(--ep-line, #eee); display: flex; justify-content: space-between; align-items: center; background: var(--ep-accent, #2d4a3e); color: #fff; border-radius: 12px 12px 0 0; gap: 12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        ${AURORA_AVATAR}
+        <div>
+          <div style="font-weight: 600; font-size: 14px;">Aurora <span style="opacity:0.65;font-weight:500;font-size:11px;">· IA 24/7</span></div>
+          <div style="font-size: 11px; opacity: 0.85;">Assistente do Espaço Prelúdio</div>
+        </div>
       </div>
       <button type="button" id="epSupportClose" style="background: transparent; border: 0; color: #fff; font-size: 22px; cursor: pointer; line-height: 1; padding: 0 4px;" aria-label="Fechar">×</button>
     </div>
@@ -263,7 +270,7 @@ function mountHelpBubble() {
   function escSup(s) { return String(s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
   function renderHistory() {
     if (history.length === 0) {
-      msgsEl.innerHTML = `<div style="text-align: center; color: var(--ep-ink-3, #888); padding: 20px; font-size: 12px;">Oi! Me pergunte qualquer coisa sobre o Espaço Prelúdio — features, fluxos, troubleshooting. Respondo 24/7.</div>`;
+      msgsEl.innerHTML = `<div style="text-align: center; color: var(--ep-ink-3, #888); padding: 20px; font-size: 12px; line-height: 1.5;">Oi, sou a <strong style="color:var(--ep-accent,#2d4a3e);">Aurora</strong>.<br>Me pergunte sobre features, fluxos ou troubleshooting da plataforma.</div>`;
       return;
     }
     msgsEl.innerHTML = history.map(m => {
