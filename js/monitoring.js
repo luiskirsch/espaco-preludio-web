@@ -18,9 +18,18 @@
   if (window.EP_MONITORING_LOADED) return;
   window.EP_MONITORING_LOADED = true;
 
-  const FAIL_THRESHOLD = 3;
+  // Threshold separado por tipo de falha:
+  //   - Network error (fetch throw: CORS preflight, timeout, DNS, offline) =
+  //     sinal forte de outage de plataforma → mostra banner na 1a falha.
+  //   - HTTP 5xx (backend respondeu mas com erro) = pode ser bug de endpoint
+  //     isolado → exige 3 falhas pra evitar falso positivo.
+  const FAIL_THRESHOLD_NETWORK = 1;
+  const FAIL_THRESHOLD_HTTP = 3;
   const RECOVERY_POLL_MS = 30_000;
-  const STATUS_URL = 'https://status.espacopreludio.com.br'; // placeholder, ajustar quando Instatus rodar
+  // URL do status page público. Default = Railway (já que nosso backend tá lá).
+  // Quando criar Instatus em status.espacopreludio.com.br, sobrescreve isso
+  // setando window.EP_STATUS_URL no firebase-config.js ou inline.
+  const STATUS_URL = (typeof window !== 'undefined' && window.EP_STATUS_URL) || 'https://status.railway.com';
 
   // Backend matching: railway.app cobre staging + production do projeto.
   // Se algum dia migrar pra outro provider, atualizar este pattern.
@@ -74,7 +83,7 @@
 
     return origFetch(input, init).then(function (res) {
       // 2xx-4xx = backend respondeu (mesmo que com erro de aplicação, não é
-      // outage). 5xx = erro server, conta como falha.
+      // outage). 5xx = erro server, conta como falha HTTP.
       if (res.status < 500) {
         if (consecutiveFails > 0) {
           consecutiveFails = 0;
@@ -83,16 +92,17 @@
         }
       } else {
         consecutiveFails++;
-        if (consecutiveFails >= FAIL_THRESHOLD) {
+        if (consecutiveFails >= FAIL_THRESHOLD_HTTP) {
           showBanner();
           startRecoveryPoll();
         }
       }
       return res;
     }).catch(function (err) {
-      // Network error genuíno: CORS block (preflight), timeout, DNS, offline.
+      // Network error (CORS preflight, timeout, DNS, offline). Sinal forte
+      // de outage de plataforma — banner imediato (threshold = 1).
       consecutiveFails++;
-      if (consecutiveFails >= FAIL_THRESHOLD) {
+      if (consecutiveFails >= FAIL_THRESHOLD_NETWORK) {
         showBanner();
         startRecoveryPoll();
       }
