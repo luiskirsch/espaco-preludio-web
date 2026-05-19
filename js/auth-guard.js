@@ -202,6 +202,11 @@ function applyCapabilityVisibility(capabilities) {
   // capabilities diferentes do cache — se cache era stale, ajusta sem reload.
   const isRegulated = RULES.some(r => set.has(r.capability));
   document.documentElement.classList.toggle("ep-unregulated", !isRegulated);
+  // Re-aplica o estado do botão Sair com a regulação correta. Necessário
+  // quando o IIFE inicial rodou antes do cache estar disponível ou com
+  // cache stale — o botão fica no nav (estado grupo) e nunca vira FAB
+  // depois que o profile fresco confirma que é regulado.
+  mountLogoutFab();
 }
 
 // Botão flutuante de suporte — bubble vira chat ao vivo com Claude (Suporte 24/7).
