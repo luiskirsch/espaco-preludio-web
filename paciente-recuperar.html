@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-ns="paciente-recuperar">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recuperar acesso · Espaço Prelúdio</title>
+  <title data-i18n="paciente-recuperar:title">Recuperar acesso · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-149">
+  <script src="./i18n/init.js?v=1-0" defer></script>
 </head>
 <body>
 
@@ -18,19 +19,19 @@
     <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="common:brand.tail">Prelúdio</span>
       </span>
     </a>
 
-    <h2 class="ep-auth__title ep-mt-32">Recuperar suas anotações</h2>
-    <p class="ep-auth__sub">
+    <h2 class="ep-auth__title ep-mt-32" data-i18n="paciente-recuperar:h2">Recuperar suas anotações</h2>
+    <p class="ep-auth__sub" data-i18n-html="paciente-recuperar:sub">
       Esta tela é para pacientes que esqueceram a senha da conta pessoal.
       Tem dois passos: redefinir a senha pelo e-mail e depois reconectar
       suas anotações com a <strong>chave-semente</strong> que você guardou.
     </p>
 
-    <div class="ep-alert ep-alert--info ep-mt-12">
+    <div class="ep-alert ep-alert--info ep-mt-12" data-i18n-html="paciente-recuperar:alert">
       <strong>Sem a chave-semente, não dá para recuperar suas notas.</strong>
       Por desenho criptográfico, ninguém consegue decifrá-las sem ela.
       Se você não tiver guardado a chave, pode redefinir a senha e voltar a
@@ -39,18 +40,18 @@
 
     <!-- ─── Passo 1: enviar e-mail de redefinição ─────────────────────── -->
     <section class="ep-recover-step ep-mt-24">
-      <h3 class="ep-h3 ep-mt-0">Passo 1 — Redefinir sua senha</h3>
-      <p class="ep-text-sm ep-text-muted">
+      <h3 class="ep-h3 ep-mt-0" data-i18n="paciente-recuperar:step1.title">Passo 1 — Redefinir sua senha</h3>
+      <p class="ep-text-sm ep-text-muted" data-i18n="paciente-recuperar:step1.desc">
         Vamos enviar um link no seu e-mail. Cadastre uma nova senha por lá e
         depois volte aqui.
       </p>
       <form id="formReset" class="ep-stack ep-mt-12" novalidate>
         <div class="ep-field">
-          <label class="ep-label" for="emailReset">E-mail da conta</label>
+          <label class="ep-label" for="emailReset" data-i18n="paciente-recuperar:step1.labelEmail">E-mail da conta</label>
           <input id="emailReset" class="ep-input" type="email" autocomplete="email" maxlength="160" required>
         </div>
         <div class="ep-status" id="statusReset"></div>
-        <button class="ep-btn ep-btn--ghost ep-btn--block" type="submit" id="resetBtn">Enviar link de redefinição</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--block" type="submit" id="resetBtn" data-i18n="paciente-recuperar:step1.btn">Enviar link de redefinição</button>
       </form>
     </section>
 
@@ -58,37 +59,37 @@
 
     <!-- ─── Passo 2: recuperar com chave-semente ──────────────────────── -->
     <section class="ep-recover-step ep-mt-24">
-      <h3 class="ep-h3 ep-mt-0">Passo 2 — Recuperar suas anotações</h3>
-      <p class="ep-text-sm ep-text-muted">
+      <h3 class="ep-h3 ep-mt-0" data-i18n="paciente-recuperar:step2.title">Passo 2 — Recuperar suas anotações</h3>
+      <p class="ep-text-sm ep-text-muted" data-i18n="paciente-recuperar:step2.desc">
         Já redefiniu a senha? Cole sua chave-semente abaixo. Vamos reconstruir
         sua chave com a nova senha — nada sai do seu navegador.
       </p>
       <form id="formRecover" class="ep-stack ep-mt-12" novalidate>
         <div class="ep-field">
-          <label class="ep-label" for="emailRecover">E-mail</label>
+          <label class="ep-label" for="emailRecover" data-i18n="paciente-recuperar:step2.labelEmail">E-mail</label>
           <input id="emailRecover" class="ep-input" type="email" autocomplete="email" maxlength="160" required>
         </div>
         <div class="ep-field">
-          <label class="ep-label" for="passwordRecover">Nova senha (a que você acabou de cadastrar)</label>
+          <label class="ep-label" for="passwordRecover" data-i18n="paciente-recuperar:step2.labelPassword">Nova senha (a que você acabou de cadastrar)</label>
           <input id="passwordRecover" class="ep-input" type="password" autocomplete="current-password" minlength="10" required>
         </div>
         <div class="ep-field">
-          <label class="ep-label" for="recoveryPhrase">Chave-semente (13 grupos de 4 caracteres)</label>
+          <label class="ep-label" for="recoveryPhrase" data-i18n="paciente-recuperar:step2.labelPhrase">Chave-semente (13 grupos de 4 caracteres)</label>
           <textarea id="recoveryPhrase" class="ep-input" rows="3"
             style="font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0.04em; font-size: 14px;"
             placeholder="Ex.: ABCD EFGH JKMN PQRS TUVW XYZ2 3456 789A BCDE FGHJ KMNP QRST UVWX"
             required></textarea>
-          <p class="ep-text-xs ep-text-muted ep-mt-0">
+          <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="paciente-recuperar:step2.phraseHint">
             Maiúsculas/minúsculas e espaços são ignorados. Apenas letras e números.
           </p>
         </div>
         <div class="ep-status" id="statusRecover"></div>
-        <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="recoverBtn">Recuperar acesso</button>
+        <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="recoverBtn" data-i18n="paciente-recuperar:step2.btn">Recuperar acesso</button>
       </form>
     </section>
 
     <div class="ep-auth__bottom ep-mt-24">
-      <a href="./paciente-login.html">Voltar ao login</a>
+      <a href="./paciente-login.html" data-i18n="paciente-recuperar:back">Voltar ao login</a>
     </div>
   </div>
 </main>
@@ -102,6 +103,15 @@
   import { generateSalt, wrapDek, recoveryPhraseToDek } from "./js/crypto.js";
   import { rememberPatientDek, rememberPatientUser } from "./js/patient-session.js";
 
+  // Tradução com fallback PT-BR — caso o i18n ainda não tenha carregado.
+  function tr(key, fallback) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback;
+  }
+
   function setStatus(el, text, type = "") {
     el.textContent = text;
     el.className = "ep-status";
@@ -109,13 +119,13 @@
   }
   function humanizeAuth(err) {
     const code = err?.code || "";
-    if (code === "auth/user-not-found")     return "E-mail não cadastrado.";
-    if (code === "auth/invalid-email")      return "E-mail inválido.";
-    if (code === "auth/invalid-credential") return "E-mail ou senha incorretos.";
-    if (code === "auth/wrong-password")     return "Senha incorreta.";
-    if (code === "auth/too-many-requests")  return "Muitas tentativas. Tente em alguns minutos.";
-    if (code === "auth/network-request-failed") return "Erro de conexão.";
-    return err?.message || "Erro de autenticação.";
+    if (code === "auth/user-not-found")     return tr("paciente-recuperar:errors.userNotFound", "E-mail não cadastrado.");
+    if (code === "auth/invalid-email")      return tr("paciente-recuperar:errors.invalidEmail", "E-mail inválido.");
+    if (code === "auth/invalid-credential") return tr("paciente-recuperar:errors.invalidCredential", "E-mail ou senha incorretos.");
+    if (code === "auth/wrong-password")     return tr("paciente-recuperar:errors.wrongPassword", "Senha incorreta.");
+    if (code === "auth/too-many-requests")  return tr("paciente-recuperar:errors.tooManyRequests", "Muitas tentativas. Tente em alguns minutos.");
+    if (code === "auth/network-request-failed") return tr("paciente-recuperar:errors.networkError", "Erro de conexão.");
+    return err?.message || tr("paciente-recuperar:errors.generic", "Erro de autenticação.");
   }
 
   // ─── Passo 1 ────────────────────────────────────────────────────────
@@ -127,12 +137,12 @@
   formReset.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = emailReset.value.trim().toLowerCase();
-    if (!email) { setStatus(statusReset, "Informe seu e-mail.", "err"); return; }
+    if (!email) { setStatus(statusReset, tr("paciente-recuperar:msg.emptyEmail", "Informe seu e-mail."), "err"); return; }
     resetBtn.disabled = true;
-    setStatus(statusReset, "Enviando…");
+    setStatus(statusReset, tr("paciente-recuperar:msg.sending", "Enviando…"));
     try {
       await sendPasswordResetEmail(auth, email);
-      setStatus(statusReset, "Pronto. Se o e-mail está cadastrado, você receberá um link em instantes. Cheque também o spam.", "ok");
+      setStatus(statusReset, tr("paciente-recuperar:msg.resetOk", "Pronto. Se o e-mail está cadastrado, você receberá um link em instantes. Cheque também o spam."), "ok");
     } catch (err) {
       console.error("paciente_reset_email_error", err);
       setStatus(statusReset, humanizeAuth(err), "err");
@@ -157,12 +167,12 @@
     const phrase   = recoveryEl.value.trim();
 
     if (!email || !password || !phrase) {
-      setStatus(statusRecover, "Preencha todos os campos.", "err");
+      setStatus(statusRecover, tr("paciente-recuperar:msg.emptyFields", "Preencha todos os campos."), "err");
       recoverBtn.disabled = false;
       return;
     }
     if (password.length < 10) {
-      setStatus(statusRecover, "Senha precisa ter pelo menos 10 caracteres.", "err");
+      setStatus(statusRecover, tr("paciente-recuperar:msg.shortPassword", "Senha precisa ter pelo menos 10 caracteres."), "err");
       recoverBtn.disabled = false;
       return;
     }
@@ -171,25 +181,25 @@
     try {
       dekBytes = recoveryPhraseToDek(phrase);
     } catch (err) {
-      setStatus(statusRecover, "Chave-semente inválida ou incompleta. Confira se copiou todos os 13 grupos.", "err");
+      setStatus(statusRecover, tr("paciente-recuperar:msg.invalidPhrase", "Chave-semente inválida ou incompleta. Confira se copiou todos os 13 grupos."), "err");
       recoverBtn.disabled = false;
       return;
     }
 
-    setStatus(statusRecover, "Autenticando com sua nova senha…");
+    setStatus(statusRecover, tr("paciente-recuperar:msg.authenticating", "Autenticando com sua nova senha…"));
     let cred;
     try {
       cred = await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
       console.error("paciente_recover_signin_error", err);
-      setStatus(statusRecover, "Não consegui entrar com essa senha. Você redefiniu pelo e-mail antes? " + humanizeAuth(err), "err");
+      setStatus(statusRecover, tr("paciente-recuperar:msg.signinFailed", "Não consegui entrar com essa senha. Você redefiniu pelo e-mail antes? ") + humanizeAuth(err), "err");
       recoverBtn.disabled = false;
       return;
     }
 
     const idToken = await cred.user.getIdToken();
 
-    setStatus(statusRecover, "Re-cifrando sua chave com a nova senha…");
+    setStatus(statusRecover, tr("paciente-recuperar:msg.reEncrypting", "Re-cifrando sua chave com a nova senha…"));
     const salt = generateSalt();
     const { wrappedDEK, wrappedDEKIv } = await wrapDek(dekBytes, password, salt);
 
@@ -205,13 +215,13 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
         const code = data?.error || res.status;
-        setStatus(statusRecover, "Erro ao salvar a nova chave: " + code, "err");
+        setStatus(statusRecover, tr("paciente-recuperar:msg.saveError", "Erro ao salvar a nova chave: ") + code, "err");
         recoverBtn.disabled = false;
         return;
       }
     } catch (err) {
       console.error("paciente_recover_save_error", err);
-      setStatus(statusRecover, "Erro de rede ao salvar. Tente novamente.", "err");
+      setStatus(statusRecover, tr("paciente-recuperar:msg.networkSaveError", "Erro de rede ao salvar. Tente novamente."), "err");
       recoverBtn.disabled = false;
       return;
     }
@@ -219,7 +229,7 @@
     rememberPatientDek(dekBytes);
     rememberPatientUser({ uid: cred.user.uid, email, displayName: cred.user.displayName || "" });
 
-    setStatus(statusRecover, "Acesso recuperado. Indo para o seu painel…", "ok");
+    setStatus(statusRecover, tr("paciente-recuperar:msg.recovered", "Acesso recuperado. Indo para o seu painel…"), "ok");
     setTimeout(() => { window.location.href = "./paciente-painel.html"; }, 1200);
   });
 </script>
