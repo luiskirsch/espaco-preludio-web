@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="ep-consult-html">
+<html lang="pt-BR" class="ep-consult-html" data-i18n-ns="cadastro">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Criar conta · Espaço Prelúdio</title>
+  <title data-i18n="cadastro:title">Criar conta · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-149">
+  <script src="./i18n/init.js?v=1-0" defer></script>
 </head>
 <body>
 
@@ -20,27 +21,27 @@
       <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
         <span class="ep-brand__mark">EP</span>
         <span class="ep-brand__name">
-          <span class="ep-brand__lead">Espaço</span>
-          <span>Prelúdio</span>
+          <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+          <span data-i18n="common:brand.tail">Prelúdio</span>
         </span>
       </a>
 
-      <h1 class="ep-auth__title ep-mt-32">Crie seu consultório.</h1>
-      <p class="ep-auth__sub">
+      <h1 class="ep-auth__title ep-mt-32" data-i18n="cadastro:hero.title">Crie seu consultório.</h1>
+      <p class="ep-auth__sub" data-i18n="cadastro:hero.sub">
         Em menos de dois minutos você terá um ambiente clínico cifrado de ponta a ponta,
         com link único para enviar ao paciente.
       </p>
 
       <div class="ep-stack ep-mt-24">
         <div class="ep-alert ep-alert--info">
-          <strong>Por que pedimos seu registro profissional?</strong><br>
-          Aceitamos profissionais regulamentados em qualquer conselho de saúde
+          <strong data-i18n="cadastro:hero.alertTitle">Por que pedimos seu registro profissional?</strong><br>
+          <span data-i18n="cadastro:hero.alertBody">Aceitamos profissionais regulamentados em qualquer conselho de saúde
           (CRP, CRM, CRESS, CREFITO, CRFa, CRN, CRO, CREF). O número fica visível
-          na sua página pública para que o paciente confirme sua atuação.
+          na sua página pública para que o paciente confirme sua atuação.</span>
         </div>
         <div class="ep-lock">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-          Cifragem ativada antes do envio.
+          <span data-i18n="cadastro:hero.lock">Cifragem ativada antes do envio.</span>
         </div>
       </div>
     </aside>
@@ -48,109 +49,109 @@
     <section class="ep-auth__form">
       <!-- Etapa 1: dados profissionais -->
       <div id="stepData">
-        <h2 class="ep-auth__title ep-mt-0">Dados do profissional</h2>
-        <p class="ep-auth__sub">Use seu nome real e seus dados de conselho. Tudo é editável depois.</p>
+        <h2 class="ep-auth__title ep-mt-0" data-i18n="cadastro:step1.h2">Dados do profissional</h2>
+        <p class="ep-auth__sub" data-i18n="cadastro:step1.sub">Use seu nome real e seus dados de conselho. Tudo é editável depois.</p>
 
         <form id="formData" class="ep-stack" novalidate>
           <div class="ep-field">
-            <label class="ep-label" for="displayName">Nome completo</label>
-            <input id="displayName" class="ep-input" type="text" maxlength="80" autocomplete="name" placeholder="Ex.: Dra. Ana Souza" required>
+            <label class="ep-label" for="displayName" data-i18n="cadastro:step1.labelName">Nome completo</label>
+            <input id="displayName" class="ep-input" type="text" maxlength="80" autocomplete="name" placeholder="Ex.: Dra. Ana Souza" data-i18n-placeholder="cadastro:step1.placeholderName" required>
           </div>
 
           <div class="ep-row">
             <div class="ep-field">
-              <label class="ep-label" for="email">E-mail profissional</label>
-              <input id="email" class="ep-input" type="email" maxlength="160" autocomplete="email" placeholder="voce@exemplo.com" required>
+              <label class="ep-label" for="email" data-i18n="cadastro:step1.labelEmail">E-mail profissional</label>
+              <input id="email" class="ep-input" type="email" maxlength="160" autocomplete="email" placeholder="voce@exemplo.com" data-i18n-placeholder="cadastro:step1.placeholderEmail" required>
             </div>
             <div class="ep-field">
-              <label class="ep-label" for="tipoConselho">Conselho profissional</label>
+              <label class="ep-label" for="tipoConselho" data-i18n="cadastro:step1.labelConselho">Conselho profissional</label>
               <select id="tipoConselho" class="ep-select" required>
-                <option value="">Selecione…</option>
-                <option value="CRP">CRP — Psicologia</option>
-                <option value="CRM">CRM — Medicina / Psiquiatria</option>
-                <option value="CRESS">CRESS — Serviço Social</option>
-                <option value="CREFITO">CREFITO — Fisio / Terapia Ocupacional</option>
-                <option value="CRFA">CRFa — Fonoaudiologia</option>
-                <option value="CRN">CRN — Nutrição</option>
-                <option value="CRO">CRO — Odontologia</option>
-                <option value="CREF">CREF — Educação Física</option>
-                <option value="SEM_CONSELHO">Sem conselho regulamentado (Psicanálise, Terapia integrativa, Hipnoterapia)</option>
+                <option value="" data-i18n="cadastro:step1.selectPlaceholder">Selecione…</option>
+                <option value="CRP" data-i18n="cadastro:step1.conselho.crp">CRP — Psicologia</option>
+                <option value="CRM" data-i18n="cadastro:step1.conselho.crm">CRM — Medicina / Psiquiatria</option>
+                <option value="CRESS" data-i18n="cadastro:step1.conselho.cress">CRESS — Serviço Social</option>
+                <option value="CREFITO" data-i18n="cadastro:step1.conselho.crefito">CREFITO — Fisio / Terapia Ocupacional</option>
+                <option value="CRFA" data-i18n="cadastro:step1.conselho.crfa">CRFa — Fonoaudiologia</option>
+                <option value="CRN" data-i18n="cadastro:step1.conselho.crn">CRN — Nutrição</option>
+                <option value="CRO" data-i18n="cadastro:step1.conselho.cro">CRO — Odontologia</option>
+                <option value="CREF" data-i18n="cadastro:step1.conselho.cref">CREF — Educação Física</option>
+                <option value="SEM_CONSELHO" data-i18n="cadastro:step1.conselho.semConselho">Sem conselho regulamentado (Psicanálise, Terapia integrativa, Hipnoterapia)</option>
               </select>
             </div>
           </div>
 
           <div class="ep-row">
             <div class="ep-field">
-              <label class="ep-label" for="especialidade">Especialidade</label>
+              <label class="ep-label" for="especialidade" data-i18n="cadastro:step1.labelEspecialidade">Especialidade</label>
               <select id="especialidade" class="ep-select">
-                <option value="">Selecione…</option>
-                <optgroup label="Medicina">
-                  <option value="clinica-medica">Clínica médica (clínico geral)</option>
-                  <option value="psiquiatria">Psiquiatria</option>
-                  <option value="pediatria">Pediatria</option>
-                  <option value="geriatria">Geriatria</option>
-                  <option value="ginecologia-obstetricia">Ginecologia / Obstetrícia</option>
-                  <option value="endocrinologia">Endocrinologia</option>
-                  <option value="cardiologia">Cardiologia</option>
-                  <option value="dermatologia">Dermatologia</option>
-                  <option value="neurologia">Neurologia</option>
-                  <option value="medicina-familia">Medicina de família e comunidade</option>
-                  <option value="medicina-trabalho">Medicina do trabalho</option>
-                  <option value="acupuntura">Acupuntura</option>
+                <option value="" data-i18n="cadastro:step1.selectPlaceholder">Selecione…</option>
+                <optgroup label="Medicina" data-i18n-label="cadastro:step1.especialidadeGroups.medicina">
+                  <option value="clinica-medica" data-i18n="cadastro:step1.esp.clinicaMedica">Clínica médica (clínico geral)</option>
+                  <option value="psiquiatria" data-i18n="cadastro:step1.esp.psiquiatria">Psiquiatria</option>
+                  <option value="pediatria" data-i18n="cadastro:step1.esp.pediatria">Pediatria</option>
+                  <option value="geriatria" data-i18n="cadastro:step1.esp.geriatria">Geriatria</option>
+                  <option value="ginecologia-obstetricia" data-i18n="cadastro:step1.esp.ginecologia">Ginecologia / Obstetrícia</option>
+                  <option value="endocrinologia" data-i18n="cadastro:step1.esp.endocrinologia">Endocrinologia</option>
+                  <option value="cardiologia" data-i18n="cadastro:step1.esp.cardiologia">Cardiologia</option>
+                  <option value="dermatologia" data-i18n="cadastro:step1.esp.dermatologia">Dermatologia</option>
+                  <option value="neurologia" data-i18n="cadastro:step1.esp.neurologia">Neurologia</option>
+                  <option value="medicina-familia" data-i18n="cadastro:step1.esp.medicinaFamilia">Medicina de família e comunidade</option>
+                  <option value="medicina-trabalho" data-i18n="cadastro:step1.esp.medicinaTrabalho">Medicina do trabalho</option>
+                  <option value="acupuntura" data-i18n="cadastro:step1.esp.acupuntura">Acupuntura</option>
                 </optgroup>
-                <optgroup label="Psicologia / Psicoterapia">
-                  <option value="psicologia-clinica">Psicologia clínica</option>
-                  <option value="psicanalise">Psicanálise</option>
-                  <option value="terapia-cognitivo-comportamental">TCC (Terapia cognitivo-comportamental)</option>
-                  <option value="terapia-de-casal">Terapia de casal</option>
-                  <option value="terapia-familiar">Terapia familiar</option>
-                  <option value="neuropsicologia">Neuropsicologia</option>
-                  <option value="psicologia-infantojuvenil">Psicologia infantojuvenil</option>
-                  <option value="psicologia-hospitalar">Psicologia hospitalar</option>
-                  <option value="psicologia-organizacional">Psicologia organizacional</option>
-                  <option value="hipnoterapia">Hipnoterapia</option>
-                  <option value="terapia-integrativa">Terapia integrativa / holística</option>
+                <optgroup label="Psicologia / Psicoterapia" data-i18n-label="cadastro:step1.especialidadeGroups.psicologia">
+                  <option value="psicologia-clinica" data-i18n="cadastro:step1.esp.psicologiaClinica">Psicologia clínica</option>
+                  <option value="psicanalise" data-i18n="cadastro:step1.esp.psicanalise">Psicanálise</option>
+                  <option value="terapia-cognitivo-comportamental" data-i18n="cadastro:step1.esp.tcc">TCC (Terapia cognitivo-comportamental)</option>
+                  <option value="terapia-de-casal" data-i18n="cadastro:step1.esp.casal">Terapia de casal</option>
+                  <option value="terapia-familiar" data-i18n="cadastro:step1.esp.familiar">Terapia familiar</option>
+                  <option value="neuropsicologia" data-i18n="cadastro:step1.esp.neuropsicologia">Neuropsicologia</option>
+                  <option value="psicologia-infantojuvenil" data-i18n="cadastro:step1.esp.infantojuvenil">Psicologia infantojuvenil</option>
+                  <option value="psicologia-hospitalar" data-i18n="cadastro:step1.esp.hospitalar">Psicologia hospitalar</option>
+                  <option value="psicologia-organizacional" data-i18n="cadastro:step1.esp.organizacional">Psicologia organizacional</option>
+                  <option value="hipnoterapia" data-i18n="cadastro:step1.esp.hipnoterapia">Hipnoterapia</option>
+                  <option value="terapia-integrativa" data-i18n="cadastro:step1.esp.integrativa">Terapia integrativa / holística</option>
                 </optgroup>
-                <optgroup label="Reabilitação e movimento">
-                  <option value="terapia-ocupacional">Terapia ocupacional</option>
-                  <option value="fisioterapia-ortopedica">Fisioterapia ortopédica</option>
-                  <option value="fisioterapia-neurologica">Fisioterapia neurológica</option>
-                  <option value="fisioterapia-respiratoria">Fisioterapia respiratória</option>
-                  <option value="fisioterapia-pelvica">Fisioterapia pélvica</option>
-                  <option value="fisioterapia-dermatofuncional">Fisioterapia dermatofuncional</option>
-                  <option value="fonoaudiologia">Fonoaudiologia</option>
-                  <option value="educacao-fisica">Educação física / orientação corporal</option>
+                <optgroup label="Reabilitação e movimento" data-i18n-label="cadastro:step1.especialidadeGroups.reabilitacao">
+                  <option value="terapia-ocupacional" data-i18n="cadastro:step1.esp.to">Terapia ocupacional</option>
+                  <option value="fisioterapia-ortopedica" data-i18n="cadastro:step1.esp.fisioOrtopedica">Fisioterapia ortopédica</option>
+                  <option value="fisioterapia-neurologica" data-i18n="cadastro:step1.esp.fisioNeurologica">Fisioterapia neurológica</option>
+                  <option value="fisioterapia-respiratoria" data-i18n="cadastro:step1.esp.fisioRespiratoria">Fisioterapia respiratória</option>
+                  <option value="fisioterapia-pelvica" data-i18n="cadastro:step1.esp.fisioPelvica">Fisioterapia pélvica</option>
+                  <option value="fisioterapia-dermatofuncional" data-i18n="cadastro:step1.esp.fisioDermato">Fisioterapia dermatofuncional</option>
+                  <option value="fonoaudiologia" data-i18n="cadastro:step1.esp.fonoaudiologia">Fonoaudiologia</option>
+                  <option value="educacao-fisica" data-i18n="cadastro:step1.esp.educacaoFisica">Educação física / orientação corporal</option>
                 </optgroup>
-                <optgroup label="Nutrição">
-                  <option value="nutricao-clinica">Nutrição clínica</option>
-                  <option value="nutricao-comportamental">Nutrição comportamental</option>
-                  <option value="nutricao-esportiva">Nutrição esportiva</option>
+                <optgroup label="Nutrição" data-i18n-label="cadastro:step1.especialidadeGroups.nutricao">
+                  <option value="nutricao-clinica" data-i18n="cadastro:step1.esp.nutricaoClinica">Nutrição clínica</option>
+                  <option value="nutricao-comportamental" data-i18n="cadastro:step1.esp.nutricaoComportamental">Nutrição comportamental</option>
+                  <option value="nutricao-esportiva" data-i18n="cadastro:step1.esp.nutricaoEsportiva">Nutrição esportiva</option>
                 </optgroup>
-                <optgroup label="Outras áreas">
-                  <option value="servico-social">Serviço social clínico</option>
-                  <option value="odontologia-comportamental">Odontologia comportamental (DTM, ansiedade)</option>
-                  <option value="outra">Outra</option>
+                <optgroup label="Outras áreas" data-i18n-label="cadastro:step1.especialidadeGroups.outras">
+                  <option value="servico-social" data-i18n="cadastro:step1.esp.servicoSocial">Serviço social clínico</option>
+                  <option value="odontologia-comportamental" data-i18n="cadastro:step1.esp.odontologia">Odontologia comportamental (DTM, ansiedade)</option>
+                  <option value="outra" data-i18n="cadastro:step1.esp.outra">Outra</option>
                 </optgroup>
               </select>
             </div>
             <div class="ep-field" id="numeroConselhoField">
-              <label class="ep-label" for="numeroConselho">Número do registro</label>
-              <input id="numeroConselho" class="ep-input" type="text" maxlength="30" placeholder="Selecione o conselho primeiro" autocomplete="off">
+              <label class="ep-label" for="numeroConselho" data-i18n="cadastro:step1.labelNumero">Número do registro</label>
+              <input id="numeroConselho" class="ep-input" type="text" maxlength="30" placeholder="Selecione o conselho primeiro" data-i18n-placeholder="cadastro:step1.placeholderNumero" autocomplete="off">
             </div>
           </div>
-          <p class="ep-text-xs ep-text-muted ep-mt-0" id="numeroConselhoHint">Mostraremos esse registro no seu perfil público para o paciente confirmar.</p>
+          <p class="ep-text-xs ep-text-muted ep-mt-0" id="numeroConselhoHint" data-i18n="cadastro:step1.numeroHint">Mostraremos esse registro no seu perfil público para o paciente confirmar.</p>
 
           <!-- Sub-dropdown pra CREFITO: distingue fisio (que pode prescrever
                MIPs + injetáveis pelo Ac. COFFITO 735/2024) de TO (só MIPs).
                Backend exige subtipoConselho quando tipoConselho=CREFITO. -->
           <div class="ep-field ep-hide ep-mt-12" id="subtipoCrefitoField">
-            <label class="ep-label" for="subtipoConselho">Você é Fisioterapeuta ou Terapeuta Ocupacional?</label>
+            <label class="ep-label" for="subtipoConselho" data-i18n="cadastro:step1.subtipoLabel">Você é Fisioterapeuta ou Terapeuta Ocupacional?</label>
             <select id="subtipoConselho" class="ep-select">
-              <option value="">Selecione…</option>
-              <option value="fisio">Fisioterapeuta</option>
-              <option value="to">Terapeuta Ocupacional</option>
+              <option value="" data-i18n="cadastro:step1.selectPlaceholder">Selecione…</option>
+              <option value="fisio" data-i18n="cadastro:step1.subtipoFisio">Fisioterapeuta</option>
+              <option value="to" data-i18n="cadastro:step1.subtipoTo">Terapeuta Ocupacional</option>
             </select>
-            <p class="ep-text-xs ep-text-muted ep-mt-0" style="margin-top: 6px;">
+            <p class="ep-text-xs ep-text-muted ep-mt-0" style="margin-top: 6px;" data-i18n="cadastro:step1.subtipoHint">
               Define quais tipos de receita você pode emitir (fisio: MIPs + injetáveis estéticos; TO: MIPs).
             </p>
           </div>
@@ -160,7 +161,7 @@
                Substituem o "selo do conselho" como trust signal — todos
                obrigatórios, validados no backend. -->
           <div id="semConselhoFields" class="ep-stack ep-hide ep-mt-12" style="gap: 12px; padding: 16px; border: 1px solid var(--ep-border); border-radius: 8px; background: rgba(255, 244, 220, 0.4);">
-            <div class="ep-alert ep-alert--warning" style="margin: 0;">
+            <div class="ep-alert ep-alert--warning" style="margin: 0;" data-i18n-html="cadastro:step1.semConselhoWarning">
               <strong>Atenção: você se cadastrará como profissional não regulamentado.</strong><br>
               Sua conta passa por <strong>revisão manual obrigatória</strong> antes do perfil público
               ficar visível. Você não terá acesso a emissão de <strong>documentos clínicos formais</strong>
@@ -169,33 +170,33 @@
               gestão (Relatórios de carteira, Financeiro, Agenda) normalmente.
             </div>
             <div class="ep-field">
-              <label class="ep-label" for="tipoPratica">Tipo de prática</label>
+              <label class="ep-label" for="tipoPratica" data-i18n="cadastro:step1.tipoPraticaLabel">Tipo de prática</label>
               <select id="tipoPratica" class="ep-select">
-                <option value="">Selecione…</option>
-                <option value="psicanalise">Psicanálise (sem CRP)</option>
-                <option value="terapia-integrativa">Terapia integrativa / holística</option>
-                <option value="hipnoterapia">Hipnoterapia</option>
+                <option value="" data-i18n="cadastro:step1.selectPlaceholder">Selecione…</option>
+                <option value="psicanalise" data-i18n="cadastro:step1.tipoPratica.psicanalise">Psicanálise (sem CRP)</option>
+                <option value="terapia-integrativa" data-i18n="cadastro:step1.tipoPratica.integrativa">Terapia integrativa / holística</option>
+                <option value="hipnoterapia" data-i18n="cadastro:step1.tipoPratica.hipnoterapia">Hipnoterapia</option>
               </select>
             </div>
             <div class="ep-field">
-              <label class="ep-label" for="formacaoInstituicao">Instituição de formação</label>
-              <input id="formacaoInstituicao" class="ep-input" type="text" maxlength="200" placeholder="Ex.: Sociedade Brasileira de Psicanálise">
+              <label class="ep-label" for="formacaoInstituicao" data-i18n="cadastro:step1.formacaoInstituicaoLabel">Instituição de formação</label>
+              <input id="formacaoInstituicao" class="ep-input" type="text" maxlength="200" placeholder="Ex.: Sociedade Brasileira de Psicanálise" data-i18n-placeholder="cadastro:step1.formacaoInstituicaoPlaceholder">
             </div>
             <div class="ep-field">
-              <label class="ep-label" for="formacaoCurso">Curso / formação concluída</label>
-              <input id="formacaoCurso" class="ep-input" type="text" maxlength="200" placeholder="Ex.: Formação em Psicanálise Lacaniana (4 anos)">
+              <label class="ep-label" for="formacaoCurso" data-i18n="cadastro:step1.formacaoCursoLabel">Curso / formação concluída</label>
+              <input id="formacaoCurso" class="ep-input" type="text" maxlength="200" placeholder="Ex.: Formação em Psicanálise Lacaniana (4 anos)" data-i18n-placeholder="cadastro:step1.formacaoCursoPlaceholder">
             </div>
             <div class="ep-row">
               <div class="ep-field">
-                <label class="ep-label" for="formacaoAnoConclusao">Ano de conclusão</label>
-                <input id="formacaoAnoConclusao" class="ep-input" type="number" min="1950" max="2099" placeholder="Ex.: 2018">
+                <label class="ep-label" for="formacaoAnoConclusao" data-i18n="cadastro:step1.anoConclusaoLabel">Ano de conclusão</label>
+                <input id="formacaoAnoConclusao" class="ep-input" type="number" min="1950" max="2099" placeholder="Ex.: 2018" data-i18n-placeholder="cadastro:step1.anoConclusaoPlaceholder">
               </div>
               <div class="ep-field">
-                <label class="ep-label" for="anosExperiencia">Anos de prática</label>
-                <input id="anosExperiencia" class="ep-input" type="number" min="0" max="80" placeholder="Ex.: 6">
+                <label class="ep-label" for="anosExperiencia" data-i18n="cadastro:step1.anosExperienciaLabel">Anos de prática</label>
+                <input id="anosExperiencia" class="ep-input" type="number" min="0" max="80" placeholder="Ex.: 6" data-i18n-placeholder="cadastro:step1.anosExperienciaPlaceholder">
               </div>
             </div>
-            <p class="ep-text-xs ep-text-muted ep-mt-0">
+            <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n-html="cadastro:step1.diplomaHint">
               Após o cadastro, você precisará anexar <strong>uma cópia do diploma/certificado</strong>
               de formação. Sem essa etapa o perfil não fica público.
             </p>
@@ -203,21 +204,21 @@
 
           <div class="ep-row">
             <div class="ep-field">
-              <label class="ep-label" for="password">Senha</label>
-              <input id="password" class="ep-input" type="password" minlength="10" autocomplete="new-password" placeholder="Mín. 10 caracteres" required>
+              <label class="ep-label" for="password" data-i18n="cadastro:step1.labelPassword">Senha</label>
+              <input id="password" class="ep-input" type="password" minlength="10" autocomplete="new-password" placeholder="Mín. 10 caracteres" data-i18n-placeholder="cadastro:step1.placeholderPassword" required>
             </div>
             <div class="ep-field">
-              <label class="ep-label" for="passwordConfirm">Confirmar senha</label>
-              <input id="passwordConfirm" class="ep-input" type="password" minlength="10" autocomplete="new-password" placeholder="Repita a senha" required>
+              <label class="ep-label" for="passwordConfirm" data-i18n="cadastro:step1.labelPasswordConfirm">Confirmar senha</label>
+              <input id="passwordConfirm" class="ep-input" type="password" minlength="10" autocomplete="new-password" placeholder="Repita a senha" data-i18n-placeholder="cadastro:step1.placeholderPasswordConfirm" required>
             </div>
           </div>
-          <p class="ep-text-xs ep-text-muted ep-mt-0">
+          <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n-html="cadastro:step1.passwordHint">
             Sua senha deriva a chave que cifra suas anotações. <strong>Não há recuperação automática</strong> — guarde a chave-semente que mostraremos no próximo passo.
           </p>
 
           <label class="ep-checkbox ep-mt-12">
             <input type="checkbox" id="consentLgpd" required>
-            <span>
+            <span data-i18n-html="cadastro:step1.consent">
               Declaro ser profissional habilitado(a), aceito a <a href="./termos.html" target="_blank">Política de Uso</a>
               e o <a href="./politica.html" target="_blank">Tratamento de Dados (LGPD)</a> e me responsabilizo pelo
               prontuário dos meus pacientes conforme a Resolução CFP nº 11/2018.
@@ -227,16 +228,16 @@
           <div class="ep-status" id="statusData"></div>
 
           <div class="ep-stack ep-mt-12" style="gap: 8px;">
-            <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="submitData">Continuar</button>
-            <a href="./login.html" class="ep-btn ep-btn--ghost ep-btn--block">Já tenho conta</a>
+            <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="submitData" data-i18n="cadastro:step1.submit">Continuar</button>
+            <a href="./login.html" class="ep-btn ep-btn--ghost ep-btn--block" data-i18n="cadastro:step1.haveAccount">Já tenho conta</a>
           </div>
         </form>
       </div>
 
       <!-- Etapa 2: recovery phrase (única vez) -->
       <div id="stepRecovery" class="ep-hide">
-        <h2 class="ep-auth__title ep-mt-0">Sua chave-semente</h2>
-        <p class="ep-auth__sub">
+        <h2 class="ep-auth__title ep-mt-0" data-i18n="cadastro:step2.h2">Sua chave-semente</h2>
+        <p class="ep-auth__sub" data-i18n-html="cadastro:step2.sub">
           Esta é a única forma de recuperar suas anotações se você esquecer a senha.
           <strong>Imprima ou anote em local seguro.</strong> Nós não guardamos cópia.
         </p>
@@ -244,25 +245,25 @@
         <div class="ep-recovery" id="recoveryPhrase" aria-live="polite"></div>
 
         <div class="ep-stack ep-mt-16" style="gap: 10px;">
-          <button class="ep-btn ep-btn--ghost ep-btn--block" type="button" id="copyRecovery">Copiar chave-semente</button>
-          <button class="ep-btn ep-btn--ghost ep-btn--block" type="button" id="downloadRecovery">Baixar como arquivo .txt</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--block" type="button" id="copyRecovery" data-i18n="cadastro:step2.copy">Copiar chave-semente</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--block" type="button" id="downloadRecovery" data-i18n="cadastro:step2.download">Baixar como arquivo .txt</button>
         </div>
 
         <label class="ep-checkbox ep-mt-24">
           <input type="checkbox" id="confirmRecovery">
-          <span>Confirmo que copiei e guardei minha chave-semente em local seguro. Entendo que sem ela e sem minha senha, ninguém poderá decifrar minhas anotações.</span>
+          <span data-i18n="cadastro:step2.confirm">Confirmo que copiei e guardei minha chave-semente em local seguro. Entendo que sem ela e sem minha senha, ninguém poderá decifrar minhas anotações.</span>
         </label>
 
         <div class="ep-status ep-mt-12" id="statusRecovery"></div>
 
-        <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16" type="button" id="finishRegister" disabled>Finalizar cadastro</button>
+        <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16" type="button" id="finishRegister" data-i18n="cadastro:step2.finish" disabled>Finalizar cadastro</button>
       </div>
 
       <!-- Etapa 3: sucesso -->
       <div id="stepDone" class="ep-hide ep-text-center">
-        <div class="ep-eyebrow" style="justify-content: center; display: inline-flex;">Tudo pronto</div>
-        <h2 class="ep-auth__title ep-mt-12">Seu consultório está aberto.</h2>
-        <p class="ep-auth__sub">
+        <div class="ep-eyebrow" style="justify-content: center; display: inline-flex;" data-i18n="cadastro:step3.eyebrow">Tudo pronto</div>
+        <h2 class="ep-auth__title ep-mt-12" data-i18n="cadastro:step3.h2">Seu consultório está aberto.</h2>
+        <p class="ep-auth__sub" data-i18n="cadastro:step3.sub">
           Você está sendo levado(a) ao painel. Lá você cria seu primeiro link de consulta.
         </p>
       </div>
@@ -281,6 +282,19 @@
     generateSalt, generateDEK, wrapDek, dekToRecoveryPhrase,
     rememberDek, rememberUser
   } from "./js/crypto.js";
+
+  // Tradução com fallback PT-BR — caso o i18n ainda não tenha carregado.
+  function tr(key, fallback, opts) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key, opts);
+      if (v && v !== key) return v;
+    }
+    // Substitui interpolação manual no fallback se opts existir.
+    if (opts && typeof fallback === "string") {
+      return fallback.replace(/\{\{(\w+)\}\}/g, (m, k) => opts[k] != null ? opts[k] : m);
+    }
+    return fallback;
+  }
 
   // ─── DOM ────────────────────────────────────────────────────
   const stepData     = document.getElementById("stepData");
@@ -336,11 +350,11 @@
   }
   function humanizeAuthError(error) {
     const code = error?.code || "";
-    if (code === "auth/email-already-in-use") return "Este e-mail já está cadastrado. Use o login.";
-    if (code === "auth/invalid-email")        return "E-mail inválido.";
-    if (code === "auth/weak-password")        return "Senha fraca demais. Use ao menos 10 caracteres.";
-    if (code === "auth/network-request-failed")return "Erro de conexão. Tente novamente.";
-    return error?.message || "Erro ao criar conta.";
+    if (code === "auth/email-already-in-use") return tr("cadastro:status.emailAlreadyInUse", "Este e-mail já está cadastrado. Use o login.");
+    if (code === "auth/invalid-email")        return tr("cadastro:status.invalidEmail", "E-mail inválido.");
+    if (code === "auth/weak-password")        return tr("cadastro:status.weakPassword", "Senha fraca demais. Use ao menos 10 caracteres.");
+    if (code === "auth/network-request-failed")return tr("cadastro:status.networkError", "Erro de conexão. Tente novamente.");
+    return error?.message || tr("cadastro:status.genericError", "Erro ao criar conta.");
   }
 
   // ─── Etapa 1 → Etapa 2 ──────────────────────────────────────
@@ -357,9 +371,9 @@
     const passwordConfirm = passwordConfirmEl.value;
     const consentLgpd    = consentLgpdEl.checked;
 
-    if (!displayName) return setStatus(statusData, "Informe seu nome completo.", "err");
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setStatus(statusData, "E-mail inválido.", "err");
-    if (!tipoConselho) return setStatus(statusData, "Selecione o conselho profissional.", "err");
+    if (!displayName) return setStatus(statusData, tr("cadastro:status.informeName", "Informe seu nome completo."), "err");
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setStatus(statusData, tr("cadastro:status.invalidEmail", "E-mail inválido."), "err");
+    if (!tipoConselho) return setStatus(statusData, tr("cadastro:status.selectConselho", "Selecione o conselho profissional."), "err");
 
     // CREFITO exige subtipo (fisio vs TO) — define quais tipos de receita
     // o profissional pode emitir.
@@ -367,7 +381,7 @@
     if (tipoConselho === "CREFITO") {
       subtipoConselho = subtipoConselhoEl.value.trim().toLowerCase();
       if (!["fisio", "to"].includes(subtipoConselho)) {
-        return setStatus(statusData, "Indique se você é Fisioterapeuta ou Terapeuta Ocupacional.", "err");
+        return setStatus(statusData, tr("cadastro:status.selectSubtipoCrefito", "Indique se você é Fisioterapeuta ou Terapeuta Ocupacional."), "err");
       }
     }
 
@@ -380,47 +394,47 @@
       const formacaoAnoConclusao = parseInt(formacaoAnoConclusaoEl.value, 10);
       const anosExperiencia = parseInt(anosExperienciaEl.value, 10);
       const anoAtual = new Date().getFullYear();
-      if (!tipoPratica) return setStatus(statusData, "Selecione o tipo de prática.", "err");
-      if (!formacaoInstituicao) return setStatus(statusData, "Informe a instituição de formação.", "err");
-      if (!formacaoCurso) return setStatus(statusData, "Informe o curso/formação concluída.", "err");
+      if (!tipoPratica) return setStatus(statusData, tr("cadastro:status.selectTipoPratica", "Selecione o tipo de prática."), "err");
+      if (!formacaoInstituicao) return setStatus(statusData, tr("cadastro:status.informeInstituicao", "Informe a instituição de formação."), "err");
+      if (!formacaoCurso) return setStatus(statusData, tr("cadastro:status.informeCurso", "Informe o curso/formação concluída."), "err");
       if (!Number.isInteger(formacaoAnoConclusao) || formacaoAnoConclusao < 1950 || formacaoAnoConclusao > anoAtual) {
-        return setStatus(statusData, `Ano de conclusão inválido (entre 1950 e ${anoAtual}).`, "err");
+        return setStatus(statusData, tr("cadastro:status.anoConclusaoInvalido", `Ano de conclusão inválido (entre 1950 e ${anoAtual}).`, { ano: anoAtual }), "err");
       }
       if (!Number.isInteger(anosExperiencia) || anosExperiencia < 0 || anosExperiencia > 80) {
-        return setStatus(statusData, "Anos de prática inválidos (entre 0 e 80).", "err");
+        return setStatus(statusData, tr("cadastro:status.anosExperienciaInvalidos", "Anos de prática inválidos (entre 0 e 80)."), "err");
       }
       semConselhoExtras = { tipoPratica, formacaoInstituicao, formacaoCurso, formacaoAnoConclusao, anosExperiencia };
     } else if (!numeroConselho) {
-      return setStatus(statusData, "Informe o número de registro no conselho.", "err");
+      return setStatus(statusData, tr("cadastro:status.informeNumeroRegistro", "Informe o número de registro no conselho."), "err");
     }
     {
       const planoQS = new URLSearchParams(location.search).get("plano");
       const studentAllowed = new Set(["CRP", "CRM"]);
       if (planoQS === "estudante" && !studentAllowed.has(tipoConselho)) {
         return setStatus(statusData,
-          "Plano Estudante exige cadastro em Psicologia (CRP) ou Medicina (CRM). Volte na landing e escolha Recém-formado ou Profissional.",
+          tr("cadastro:status.estudanteOnlyCrpCrm", "Plano Estudante exige cadastro em Psicologia (CRP) ou Medicina (CRM). Volte na landing e escolha Recém-formado ou Profissional."),
           "err");
       }
       // Recém-formado e estudante exigem conselho regulamentado.
       if ((planoQS === "recem" || planoQS === "estudante") && tipoConselho === "SEM_CONSELHO") {
         return setStatus(statusData,
-          "Profissional não regulamentado só está disponível no plano Profissional (R$ 199/mês). Volte na landing e escolha Profissional.",
+          tr("cadastro:status.semConselhoOnlyProfissional", "Profissional não regulamentado só está disponível no plano Profissional (R$ 199/mês). Volte na landing e escolha Profissional."),
           "err");
       }
     }
-    if (password.length < 10) return setStatus(statusData, "Sua senha precisa de pelo menos 10 caracteres.", "err");
-    if (password !== passwordConfirm) return setStatus(statusData, "As senhas não conferem.", "err");
-    if (!consentLgpd) return setStatus(statusData, "Você precisa aceitar os termos e a política LGPD.", "err");
+    if (password.length < 10) return setStatus(statusData, tr("cadastro:status.passwordMin", "Sua senha precisa de pelo menos 10 caracteres."), "err");
+    if (password !== passwordConfirm) return setStatus(statusData, tr("cadastro:status.passwordMismatch", "As senhas não conferem."), "err");
+    if (!consentLgpd) return setStatus(statusData, tr("cadastro:status.consentRequired", "Você precisa aceitar os termos e a política LGPD."), "err");
 
     setBusy(true);
-    setStatus(statusData, "Criando sua conta…");
+    setStatus(statusData, tr("cadastro:status.creatingAccount", "Criando sua conta…"));
 
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName });
       const idToken = await cred.user.getIdToken();
 
-      setStatus(statusData, "Gerando sua chave de cifragem…");
+      setStatus(statusData, tr("cadastro:status.generatingKey", "Gerando sua chave de cifragem…"));
       const salt     = generateSalt();
       const dekBytes = generateDEK();
       const { wrappedDEK, wrappedDEKIv } = await wrapDek(dekBytes, password, salt);
@@ -453,20 +467,20 @@
   copyRecoveryBtn.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(pending?.recoveryPhrase || "");
-      setStatus(statusRecovery, "Chave copiada para a área de transferência.", "ok");
+      setStatus(statusRecovery, tr("cadastro:status.keyCopied", "Chave copiada para a área de transferência."), "ok");
     } catch {
-      setStatus(statusRecovery, "Não foi possível copiar — selecione manualmente.", "err");
+      setStatus(statusRecovery, tr("cadastro:status.keyCopyFailed", "Não foi possível copiar — selecione manualmente."), "err");
     }
   });
   downloadRecoveryBtn.addEventListener("click", () => {
     const blob = new Blob([
-      "ESPAÇO PRELÚDIO — CHAVE-SEMENTE\n\n",
-      "Esta é a única forma de recuperar suas anotações se você esquecer a senha.\n",
-      "Guarde em local seguro. Nunca compartilhe.\n\n",
-      "Profissional: " + (pending?.form?.displayName || "") + "\n",
-      "E-mail: " + (pending?.form?.email || "") + "\n",
-      "Gerada em: " + new Date().toISOString() + "\n\n",
-      "CHAVE:\n",
+      tr("cadastro:recoveryFile.title", "ESPAÇO PRELÚDIO — CHAVE-SEMENTE") + "\n\n",
+      tr("cadastro:recoveryFile.intro", "Esta é a única forma de recuperar suas anotações se você esquecer a senha.") + "\n",
+      tr("cadastro:recoveryFile.warning", "Guarde em local seguro. Nunca compartilhe.") + "\n\n",
+      tr("cadastro:recoveryFile.profissionalLabel", "Profissional: ") + (pending?.form?.displayName || "") + "\n",
+      tr("cadastro:recoveryFile.emailLabel", "E-mail: ") + (pending?.form?.email || "") + "\n",
+      tr("cadastro:recoveryFile.generatedLabel", "Gerada em: ") + new Date().toISOString() + "\n\n",
+      tr("cadastro:recoveryFile.keyLabel", "CHAVE:") + "\n",
       (pending?.recoveryPhrase || ""),
       "\n"
     ].join(""), { type: "text/plain;charset=utf-8" });
@@ -488,7 +502,7 @@
   finishRegister.addEventListener("click", async () => {
     if (!pending || finishRegister.disabled) return;
     finishRegister.disabled = true;
-    setStatus(statusRecovery, "Registrando profissional…");
+    setStatus(statusRecovery, tr("cadastro:status.registering", "Registrando profissional…"));
 
     // Tier intencionado define a duração do trial:
     //   estudante      → 0d (libera só após validar doc, gratuito permanente)
@@ -531,7 +545,7 @@
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
-        setStatus(statusRecovery, "Erro ao registrar: " + (data?.error || res.status), "err");
+        setStatus(statusRecovery, tr("cadastro:status.registerError", "Erro ao registrar: ") + (data?.error || res.status), "err");
         finishRegister.disabled = false;
         return;
       }
@@ -560,7 +574,7 @@
       setTimeout(() => { window.location.href = dest; }, 1200);
     } catch (error) {
       console.error("registrar_profissional_error", error);
-      setStatus(statusRecovery, "Erro de rede. Tente novamente.", "err");
+      setStatus(statusRecovery, tr("cadastro:status.networkRetry", "Erro de rede. Tente novamente."), "err");
       finishRegister.disabled = false;
     }
   });
@@ -604,11 +618,11 @@
     const planoQS = new URLSearchParams(location.search).get("plano");
     if (planoQS === "estudante" && sigla && !STUDENT_TIER_ALLOWED.has(sigla)) {
       setStatus(statusData,
-        "O plano Estudante (gratuito) só é elegível para Psicologia ou Medicina cursando clínica-escola/internato. Use Recém-formado ou Profissional.",
+        tr("cadastro:status.estudanteIneligible", "O plano Estudante (gratuito) só é elegível para Psicologia ou Medicina cursando clínica-escola/internato. Use Recém-formado ou Profissional."),
         "err");
     } else if ((planoQS === "recem" || planoQS === "estudante") && isSemConselho) {
       setStatus(statusData,
-        "Profissional não regulamentado só está disponível no plano Profissional (R$ 199/mês).",
+        tr("cadastro:status.semConselhoIneligible", "Profissional não regulamentado só está disponível no plano Profissional (R$ 199/mês)."),
         "err");
     } else {
       setStatus(statusData, "");
@@ -622,16 +636,16 @@
     const plano = params.get("plano");
     const config = {
       "estudante": {
-        title: "Plano Estudante (gratuito)",
-        sub: "Após cadastrar, você envia sua declaração de matrícula. A IA valida em segundos."
+        title: tr("cadastro:planBanner.estudanteTitle", "Plano Estudante (gratuito)"),
+        sub: tr("cadastro:planBanner.estudanteSub", "Após cadastrar, você envia sua declaração de matrícula. A IA valida em segundos.")
       },
       "recem": {
-        title: "Plano Recém-formado (R$ 99,50/mês)",
-        sub: "30 dias grátis. Após cadastrar, você envia o comprovante de inscrição CRP/CRM (<12 meses)."
+        title: tr("cadastro:planBanner.recemTitle", "Plano Recém-formado (R$ 99,50/mês)"),
+        sub: tr("cadastro:planBanner.recemSub", "30 dias grátis. Após cadastrar, você envia o comprovante de inscrição CRP/CRM (<12 meses).")
       },
       "profissional": {
-        title: "Plano Profissional (R$ 199,00/mês)",
-        sub: "30 dias grátis para experimentar. Você decide quando contratar — direto pelo perfil."
+        title: tr("cadastro:planBanner.profissionalTitle", "Plano Profissional (R$ 199,00/mês)"),
+        sub: tr("cadastro:planBanner.profissionalSub", "30 dias grátis para experimentar. Você decide quando contratar — direto pelo perfil.")
       }
     };
     const c = config[plano];

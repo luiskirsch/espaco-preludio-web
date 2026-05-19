@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-ns="paciente-painel">
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meu painel · Espaço Prelúdio</title>
+  <title data-i18n="paciente-painel:title">Meu painel · Espaço Prelúdio</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-149">
+  <script src="./i18n/init.js?v=1-0" defer></script>
 </head>
 <body>
 
@@ -18,15 +19,15 @@
     <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead">Espaço</span>
-        <span>Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="common:brand.tail">Prelúdio</span>
       </span>
     </a>
     <nav class="ep-nav">
-      <a href="./profissionais.html" class="ep-text-sm">Encontrar profissional</a>
-      <a href="./paciente-audit.html" class="ep-text-sm">Auditoria</a>
-      <span id="navUser" class="ep-text-sm ep-text-muted">…</span>
-      <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="logoutBtn">Sair</button>
+      <a href="./profissionais.html" class="ep-text-sm" data-i18n="paciente-painel:nav.find">Encontrar profissional</a>
+      <a href="./paciente-audit.html" class="ep-text-sm" data-i18n="paciente-painel:nav.audit">Auditoria</a>
+      <span id="navUser" class="ep-text-sm ep-text-muted" data-i18n="paciente-painel:nav.loading">…</span>
+      <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="logoutBtn" data-i18n="paciente-painel:nav.logout">Sair</button>
     </nav>
   </header>
 
@@ -34,8 +35,8 @@
     <section class="ep-prontuario__header">
       <div class="ep-prontuario__avatar" id="avatar" aria-hidden="true">P</div>
       <div class="ep-prontuario__title">
-        <div class="ep-eyebrow">Suas anotações</div>
-        <h1 class="ep-h1" id="patientName">…</h1>
+        <div class="ep-eyebrow" data-i18n="paciente-painel:header.eyebrow">Suas anotações</div>
+        <h1 class="ep-h1" id="patientName" data-i18n="paciente-painel:header.loadingName">…</h1>
         <div class="ep-pill-row" id="pillRow"></div>
       </div>
       <div class="ep-prontuario__actions"></div>
@@ -45,14 +46,14 @@
 
     <section class="ep-stack ep-mt-24">
       <div class="ep-row" style="align-items: center; justify-content: space-between;">
-        <h2 class="ep-h2 ep-mt-0">Histórico de consultas</h2>
+        <h2 class="ep-h2 ep-mt-0" data-i18n="paciente-painel:history.h2">Histórico de consultas</h2>
         <span class="ep-text-xs ep-text-muted ep-lock">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-          Cifradas com a sua chave — só você lê
+          <span data-i18n="paciente-painel:history.lock">Cifradas com a sua chave — só você lê</span>
         </span>
       </div>
       <div class="ep-timeline" id="timeline">
-        <div class="ep-skeleton">Carregando…</div>
+        <div class="ep-skeleton" data-i18n="paciente-painel:history.loading">Carregando…</div>
       </div>
     </section>
   </main>
@@ -65,6 +66,26 @@
   import { encryptNote, decryptNote } from "./js/crypto.js";
   import { clearPatientDek } from "./js/patient-session.js";
 
+  // tr(): mesma helper de paciente-login.html. Tenta EP_I18N.t(key); se nao
+  // existe (i18n ainda nao carregou) ou retorna a propria key, usa o fallback
+  // PT-BR pra nunca quebrar a UI.
+  function tr(key, fallback, opts) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key, opts);
+      if (v && v !== key) return v;
+    }
+    if (opts && typeof fallback === "string") {
+      return fallback.replace(/\{\{(\w+)\}\}/g, (_, k) => (opts[k] != null ? String(opts[k]) : ""));
+    }
+    return fallback;
+  }
+  function currentLocale() {
+    if (window.EP_I18N && window.EP_I18N.locale) {
+      try { return window.EP_I18N.locale(); } catch (_) { /* empty */ }
+    }
+    return (document.documentElement.lang || "pt-BR");
+  }
+
   const navUser     = document.getElementById("navUser");
   const avatar      = document.getElementById("avatar");
   const patientName = document.getElementById("patientName");
@@ -75,21 +96,21 @@
 
   function initials(name) {
     const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
-    if (!parts.length) return "P";
+    if (!parts.length) return tr("paciente-painel:initialDefault", "P");
     if (parts.length === 1) return parts[0][0].toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
   function fmtDate(ms) {
-    if (!ms) return "—";
-    return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+    if (!ms) return tr("paciente-painel:stats.dash", "—");
+    return new Date(ms).toLocaleDateString(currentLocale(), { day: "2-digit", month: "long", year: "numeric" });
   }
   function fmtTime(ms) {
     if (!ms) return "";
-    return new Date(ms).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    return new Date(ms).toLocaleTimeString(currentLocale(), { hour: "2-digit", minute: "2-digit" });
   }
   function fmtMonthYear(ms) {
-    if (!ms) return "—";
-    const s = new Date(ms).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+    if (!ms) return tr("paciente-painel:stats.dash", "—");
+    const s = new Date(ms).toLocaleDateString(currentLocale(), { month: "long", year: "numeric" });
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
   function monthKey(ms) {
@@ -98,15 +119,15 @@
     return `${d.getFullYear()}-${String(d.getMonth()).padStart(2, "0")}`;
   }
   function relative(ms) {
-    if (!ms) return "—";
+    if (!ms) return tr("paciente-painel:relative.dash", "—");
     const diff = Date.now() - ms;
     const d = Math.floor(diff / 86_400_000);
-    if (d === 0) return "hoje";
-    if (d === 1) return "ontem";
-    if (d < 7)  return `há ${d} dias`;
-    if (d < 30) return `há ${Math.floor(d/7)} semanas`;
-    if (d < 365) return `há ${Math.floor(d/30)} meses`;
-    return `há ${Math.floor(d/365)} anos`;
+    if (d === 0) return tr("paciente-painel:relative.today", "hoje");
+    if (d === 1) return tr("paciente-painel:relative.yesterday", "ontem");
+    if (d < 7)  return tr("paciente-painel:relative.daysAgo",   "há {{n}} dias",   { n: d });
+    if (d < 30) return tr("paciente-painel:relative.weeksAgo",  "há {{n}} semanas",{ n: Math.floor(d/7)  });
+    if (d < 365) return tr("paciente-painel:relative.monthsAgo","há {{n}} meses",  { n: Math.floor(d/30) });
+    return tr("paciente-painel:relative.yearsAgo", "há {{n}} anos", { n: Math.floor(d/365) });
   }
 
   let dek = null;
@@ -116,7 +137,7 @@
   const notesCache = new Map(); // sessionId → array de notas decifradas
 
   logoutBtn.addEventListener("click", async () => {
-    if (!confirm("Sair da sua conta?")) return;
+    if (!confirm(tr("paciente-painel:logout.confirm", "Sair da sua conta?"))) return;
     clearPatientDek();
     try { await signOut(auth); } catch {}
     window.location.href = "./paciente-login.html";
@@ -137,9 +158,11 @@
   }
 
   function renderHeader() {
-    patientName.textContent = account.displayName || "Você";
+    patientName.textContent = account.displayName || tr("paciente-painel:header.fallbackName", "Você");
     avatar.textContent = initials(account.displayName);
-    navUser.textContent = account.displayName ? `Olá, ${account.displayName}` : "…";
+    navUser.textContent = account.displayName
+      ? tr("paciente-painel:nav.greeting", "Olá, {{name}}", { name: account.displayName })
+      : tr("paciente-painel:nav.loading", "…");
 
     const since = account.createdAt?.toMillis
       ? account.createdAt.toMillis()
@@ -148,7 +171,7 @@
     if (since) {
       const p = document.createElement("span");
       p.className = "ep-pill";
-      p.textContent = "Cliente desde " + fmtMonthYear(since);
+      p.textContent = tr("paciente-painel:header.pillSince", "Cliente desde {{date}}", { date: fmtMonthYear(since) });
       pillRow.appendChild(p);
     }
   }
@@ -156,21 +179,29 @@
   function renderStats() {
     const total = allSessions.length;
     const last  = allSessions[0]?.createdAt || null;
+    const lblConsultas = tr("paciente-painel:stats.consultas", "Consultas");
+    const lblUltima    = tr("paciente-painel:stats.ultima",    "Última");
+    const lblNotas     = tr("paciente-painel:stats.anotacoes", "Anotações");
+    const subNotas     = tr("paciente-painel:stats.anotacoesSub", "cifradas só com sua chave");
+    const subUnit      = total === 1
+      ? tr("paciente-painel:stats.consultaUnit",  "encontro registrado")
+      : tr("paciente-painel:stats.consultasUnit", "encontros registrados");
+    const dash         = tr("paciente-painel:stats.dash", "—");
     statsStrip.innerHTML = `
       <div class="ep-stat">
-        <div class="ep-stat__label">Consultas</div>
+        <div class="ep-stat__label">${lblConsultas}</div>
         <div class="ep-stat__value">${total}</div>
-        <div class="ep-stat__sub">${total === 1 ? "encontro registrado" : "encontros registrados"}</div>
+        <div class="ep-stat__sub">${subUnit}</div>
       </div>
       <div class="ep-stat">
-        <div class="ep-stat__label">Última</div>
+        <div class="ep-stat__label">${lblUltima}</div>
         <div class="ep-stat__value">${relative(last)}</div>
-        <div class="ep-stat__sub">${last ? fmtDate(last) : "—"}</div>
+        <div class="ep-stat__sub">${last ? fmtDate(last) : dash}</div>
       </div>
       <div class="ep-stat">
-        <div class="ep-stat__label">Anotações</div>
-        <div class="ep-stat__value" id="totalNotesValue">—</div>
-        <div class="ep-stat__sub">cifradas só com sua chave</div>
+        <div class="ep-stat__label">${lblNotas}</div>
+        <div class="ep-stat__value" id="totalNotesValue">${dash}</div>
+        <div class="ep-stat__sub">${subNotas}</div>
       </div>
     `;
   }
@@ -198,13 +229,15 @@
   function renderTimeline() {
     timeline.innerHTML = "";
     if (allSessions.length === 0) {
+      const emptyTitle = tr("paciente-painel:empty.title", "Nenhuma consulta vinculada à sua conta ainda.");
+      const emptyBody  = tr(
+        "paciente-painel:empty.body",
+        "Da próxima vez que entrar pelo link do(a) profissional <strong>já logado(a)</strong>, a sessão aparecerá aqui e suas notas ficam salvas."
+      );
       timeline.innerHTML = `
         <div class="ep-empty">
-          <h3 class="ep-h3 ep-mt-0">Nenhuma consulta vinculada à sua conta ainda.</h3>
-          <p class="ep-text-sm ep-text-muted">
-            Da próxima vez que entrar pelo link do(a) profissional <strong>já logado(a)</strong>,
-            a sessão aparecerá aqui e suas notas ficam salvas.
-          </p>
+          <h3 class="ep-h3 ep-mt-0">${emptyTitle}</h3>
+          <p class="ep-text-sm ep-text-muted">${emptyBody}</p>
         </div>
       `;
       return;
@@ -234,19 +267,24 @@
     card.dataset.sessionId = session.sessionId;
 
     const dateLine = `${fmtDate(session.createdAt)} · ${fmtTime(session.createdAt)}`;
+    const therapistName = session.therapistDisplayName || tr("paciente-painel:history.therapistFallback", "Profissional");
+    const withLine      = tr("paciente-painel:history.withTherapist", "com {{name}}", { name: therapistName });
+    const dash          = tr("paciente-painel:stats.dash", "—");
+    const loadingNotes  = tr("paciente-painel:history.loadingNotes", "Carregando suas anotações…");
+
     card.innerHTML = `
       <button class="ep-session-card__head" type="button" aria-expanded="false">
         <div>
           <div class="ep-session-card__date">${dateLine}</div>
-          <div class="ep-session-card__therapist">com ${session.therapistDisplayName || "Profissional"}</div>
+          <div class="ep-session-card__therapist">${withLine}</div>
         </div>
         <div class="ep-session-card__meta">
-          <span class="ep-session-card__count" data-count>—</span>
+          <span class="ep-session-card__count" data-count>${dash}</span>
           <svg class="ep-session-card__chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
         </div>
       </button>
       <div class="ep-session-card__body" hidden>
-        <div class="ep-skeleton">Carregando suas anotações…</div>
+        <div class="ep-skeleton">${loadingNotes}</div>
       </div>
     `;
 
@@ -270,10 +308,13 @@
       card.classList.add("is-open");
       try {
         const notes = await loadSessionNotes(session.sessionId);
-        countEl.textContent = notes.length === 1 ? "1 nota" : `${notes.length} notas`;
+        countEl.textContent = notes.length === 1
+          ? tr("paciente-painel:history.countOne", "1 nota")
+          : tr("paciente-painel:history.countMany", "{{count}} notas", { count: notes.length });
         renderNotesIntoBody(body, session.sessionId, notes);
       } catch (e) {
-        body.innerHTML = `<div class="ep-error-state">Erro ao carregar suas anotações: ${e.message}</div>`;
+        const msg = tr("paciente-painel:history.loadNotesError", "Erro ao carregar suas anotações: {{message}}", { message: e.message });
+        body.innerHTML = `<div class="ep-error-state">${msg}</div>`;
       }
     });
 
@@ -286,7 +327,7 @@
       const empty = document.createElement("div");
       empty.className = "ep-text-sm ep-text-muted";
       empty.style.fontStyle = "italic";
-      empty.textContent = "Você não escreveu nada nessa sessão.";
+      empty.textContent = tr("paciente-painel:history.emptyNotes", "Você não escreveu nada nessa sessão.");
       body.appendChild(empty);
       return;
     }
@@ -296,19 +337,21 @@
   function renderNoteRow(sessionId, note) {
     const row = document.createElement("article");
     row.className = "ep-note ep-note--patient";
+    const lblEdit   = tr("paciente-painel:note.edit",   "Editar");
+    const lblDelete = tr("paciente-painel:note.delete", "Apagar");
     row.innerHTML = `
       <div class="ep-note__meta">${fmtDate(note.createdAt)} · ${fmtTime(note.createdAt)}</div>
       <div class="ep-note__text"></div>
       <div class="ep-note__actions">
-        <button type="button" class="ep-btn ep-btn--ghost ep-btn--xs" data-edit>Editar</button>
-        <button type="button" class="ep-btn ep-btn--ghost ep-btn--xs" data-delete>Apagar</button>
+        <button type="button" class="ep-btn ep-btn--ghost ep-btn--xs" data-edit>${lblEdit}</button>
+        <button type="button" class="ep-btn ep-btn--ghost ep-btn--xs" data-delete>${lblDelete}</button>
       </div>
     `;
     const textEl = row.querySelector(".ep-note__text");
     textEl.textContent = note.text;
 
     row.querySelector("[data-edit]").addEventListener("click", async () => {
-      const novoTexto = prompt("Editar nota:", note.text);
+      const novoTexto = prompt(tr("paciente-painel:note.editPrompt", "Editar nota:"), note.text);
       if (novoTexto == null) return;
       const trimmed = novoTexto.trim();
       if (!trimmed) return;
@@ -322,19 +365,19 @@
         textEl.textContent = trimmed;
         notesCache.set(sessionId, notesCache.get(sessionId)); // já mutado
       } catch (e) {
-        alert("Erro ao salvar edição: " + e.message);
+        alert(tr("paciente-painel:note.saveError", "Erro ao salvar edição: {{message}}", { message: e.message }));
       }
     });
 
     row.querySelector("[data-delete]").addEventListener("click", async () => {
-      if (!confirm("Apagar esta anotação? Não dá para desfazer.")) return;
+      if (!confirm(tr("paciente-painel:note.confirmDelete", "Apagar esta anotação? Não dá para desfazer."))) return;
       try {
         await api(`/therapy/paciente/notas/${encodeURIComponent(note.noteId)}`, { method: "DELETE" });
         const arr = notesCache.get(sessionId).filter(n => n.noteId !== note.noteId);
         notesCache.set(sessionId, arr);
         row.remove();
       } catch (e) {
-        alert("Erro ao apagar: " + e.message);
+        alert(tr("paciente-painel:note.deleteError", "Erro ao apagar: {{message}}", { message: e.message }));
       }
     });
 

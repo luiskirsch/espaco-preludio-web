@@ -83,7 +83,7 @@
       if (typeof value === 'string' && value !== key) el.innerHTML = value;
     });
 
-    const attrs = ['title', 'placeholder', 'alt', 'value', 'aria-label', 'content'];
+    const attrs = ['title', 'placeholder', 'alt', 'value', 'aria-label', 'content', 'label'];
     attrs.forEach(attr => {
       root.querySelectorAll(`[data-i18n-${attr}]`).forEach(el => {
         const key = el.getAttribute(`data-i18n-${attr}`);
