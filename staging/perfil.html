@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-151">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-152">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#2d4a3e">
@@ -64,8 +64,9 @@
       atualizado — o paciente e a farmácia veem essas informações.
     </p>
     <p class="ep-text-muted ep-mt-12 ep-perfil-sub--unregulated" data-i18n="perfil:header.subUnregulated">
-      Esses dados aparecem no seu perfil público e nos atestados de comparecimento.
-      Mantenha atualizado — seus pacientes veem essas informações.
+      Esses dados aparecem no seu perfil público e nas comunicações com pacientes
+      (emails, agendamentos, recibos). Mantenha atualizado — seus pacientes veem essas
+      informações.
     </p>
 
     <!-- Card de plano -->
@@ -735,7 +736,7 @@
 <script type="module">
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-23";
+  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-24";
 
   // ─── i18n helper ────────────────────────────────────────────
   function tr(key, fallback, opts) {
@@ -1775,7 +1776,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
       // Salva session 2FA token (evita redirect imediato após ativar).
-      const { save2faSession } = await import("./js/auth-guard.js?v=3-23");
+      const { save2faSession } = await import("./js/auth-guard.js?v=3-24");
       save2faSession(data.sessionToken);
       therapist.twoFactorEnabled = true;
       twofaModal.classList.remove("is-open");
@@ -1822,7 +1823,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
       therapist.twoFactorEnabled = false;
-      const { clear2faSession } = await import("./js/auth-guard.js?v=3-23");
+      const { clear2faSession } = await import("./js/auth-guard.js?v=3-24");
       clear2faSession();
       twofaDisableModal.classList.remove("is-open");
       renderTwoFactorStatus();

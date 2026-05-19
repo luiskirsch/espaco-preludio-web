@@ -860,11 +860,10 @@ html.ep-unregulated .ep-nav-profile.is-active .ep-nav-profile__name {
 /* Help bubble sobe +66 com sair-fab. */
 body:has(.ep-logout-fab) .ep-help-bubble { bottom: 90px; }
 
-/* Esconde o #logoutBtn no estado inicial (pre-JS) APENAS em contas
-   regulamentadas — o auth-guard vai mover esse btn pra um FAB no canto
-   inferior direito. Em contas nao-regulamentadas (html.ep-unregulated),
-   o "Sair" continua no nav como sempre. */
-html:not(.ep-unregulated) #logoutBtn:not(.ep-logout-fab) {
+/* Esconde o #logoutBtn no estado inicial (pre-JS) — o auth-guard vai
+   movê-lo pra FAB no canto inferior direito. Vale pra todas as contas
+   (regulamentadas e SEM_CONSELHO) — comportamento unificado. */
+#logoutBtn:not(.ep-logout-fab) {
   display: none !important;
 }
 

@@ -417,20 +417,16 @@ function prefetchNavLinks() {
 // elemento original — assim cada página que registrou seu próprio
 // onclick no #logoutBtn continua funcionando sem mudança.
 //
-// Em contas NAO-regulamentadas (html.ep-unregulated, sem conselho), o
-// botao continua no nav agrupado com o perfil — apenas contas com
-// receita/atestado usam o FAB de sair.
+// Comportamento unificado: SEMPRE vira FAB, independente da regulação
+// do conselho. Antes ficava no nav pra contas SEM_CONSELHO; mas o nav
+// continua apertado nesses casos (10+ links + perfil), então faz mais
+// sentido manter o padrão consistente.
 //
 // Idempotente — se já moveu, no-op.
 function mountLogoutFab() {
   const btn = document.getElementById("logoutBtn");
   if (!btn) return;
   if (btn.classList.contains("ep-logout-fab")) return;
-
-  if (document.documentElement.classList.contains("ep-unregulated")) {
-    groupProfileWithLogout();
-    return;
-  }
 
   btn.className = "ep-logout-fab";
   btn.setAttribute("aria-label", "Sair");
