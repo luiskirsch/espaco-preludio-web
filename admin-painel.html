@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-i18n-ns="admin-painel">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="admin-painel:title">Painel · Espaço Prelúdio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-153">
+  <script src="./i18n/init.js?v=1-0" defer></script>
+  <script src="./js/monitoring.js?v=2" defer></script>
+  <style>
+    /* Layout grid principal do painel */
+    .ap-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    @media (min-width: 900px) {
+      .ap-grid { grid-template-columns: 2fr 1fr; }
+    }
+
+    /* Header com status pill */
+    .ap-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+    .ap-status-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .ap-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: var(--ep-font-mono, monospace);
+    }
+    .ap-pill .ap-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .ap-pill--ok { background: rgba(80,160,100,0.12); color: #2d6a3e; }
+    .ap-pill--warn { background: rgba(200,155,74,0.15); color: #8a5b1a; }
+    .ap-pill--err { background: rgba(184,69,61,0.12); color: #b8453d; }
+    .ap-pill--muted { background: var(--ep-bg-2); color: var(--ep-ink-3); }
+
+    .ap-actions { display: flex; gap: 8px; }
+
+    /* Cards de métrica */
+    .ap-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .ap-card {
+      background: var(--ep-surface);
+      border: 1px solid var(--ep-line);
+      border-radius: var(--ep-radius);
+      padding: 16px 18px;
+      transition: border-color 120ms ease, transform 120ms ease;
+    }
+    .ap-card[data-clickable="true"] { cursor: pointer; }
+    .ap-card[data-clickable="true"]:hover {
+      border-color: var(--ep-accent);
+      transform: translateY(-1px);
+    }
+    .ap-card__label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ep-ink-3);
+    }
+    .ap-card__value {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 36px;
+      font-weight: 500;
+      line-height: 1.05;
+      color: var(--ep-ink);
+      margin: 8px 0 4px;
+    }
+    .ap-card__sub {
+      font-size: 12px;
+      color: var(--ep-ink-2);
+      line-height: 1.4;
+    }
+    .ap-card__sub .ap-delta--up { color: #2d6a3e; font-weight: 600; }
+    .ap-card__sub .ap-delta--zero { color: var(--ep-ink-3); }
+
+    /* Card de pendências com badge laranja */
+    .ap-card--warn { border-color: rgba(200,155,74,0.4); background: rgba(200,155,74,0.04); }
+    .ap-card--warn .ap-card__value { color: #8a5b1a; }
+    .ap-card--err { border-color: rgba(184,69,61,0.4); background: rgba(184,69,61,0.04); }
+    .ap-card--err .ap-card__value { color: #b8453d; }
+
+    /* Seções */
+    .ap-section { margin-top: 32px; }
+    .ap-section__title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 22px;
+      font-weight: 500;
+      margin: 0 0 4px;
+      color: var(--ep-ink);
+    }
+    .ap-section__sub {
+      font-size: 13px;
+      color: var(--ep-ink-2);
+      margin: 0 0 16px;
+    }
+
+    /* Tiers breakdown */
+    .ap-tiers {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 8px;
+    }
+    .ap-tier {
+      padding: 10px 12px;
+      background: var(--ep-bg-2);
+      border-radius: 8px;
+      border: 1px solid var(--ep-line);
+    }
+    .ap-tier__label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--ep-ink-3);
+    }
+    .ap-tier__value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--ep-ink);
+      margin-top: 2px;
+    }
+
+    /* Sistema health */
+    .ap-health-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: var(--ep-surface);
+      border: 1px solid var(--ep-line);
+      border-radius: var(--ep-radius);
+      padding: 14px 16px;
+    }
+    .ap-health-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      padding: 4px 0;
+    }
+    .ap-health-row__name { color: var(--ep-ink-2); }
+    .ap-health-row__status {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .ap-status-ok   { color: #2d6a3e; }
+    .ap-status-warn { color: #8a5b1a; }
+    .ap-status-err  { color: #b8453d; }
+
+    /* Eventos */
+    .ap-events {
+      background: var(--ep-surface);
+      border: 1px solid var(--ep-line);
+      border-radius: var(--ep-radius);
+      padding: 8px 0;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+    .ap-event {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 12px;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--ep-line);
+      font-size: 12px;
+    }
+    .ap-event:last-child { border-bottom: 0; }
+    .ap-event__time {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--ep-ink-3);
+      font-size: 11px;
+    }
+    .ap-event__type {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--ep-accent);
+      font-weight: 500;
+    }
+    .ap-event__detail {
+      color: var(--ep-ink-2);
+      font-size: 11px;
+      margin-top: 2px;
+      word-break: break-all;
+    }
+
+    /* Quick links */
+    .ap-quicklinks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .ap-quicklinks a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--ep-bg-2);
+      border: 1px solid var(--ep-line);
+      border-radius: 999px;
+      text-decoration: none;
+      color: var(--ep-ink);
+      font-size: 12.5px;
+      font-weight: 500;
+      transition: border-color 100ms, background 100ms;
+    }
+    .ap-quicklinks a:hover {
+      border-color: var(--ep-accent);
+      background: var(--ep-surface);
+    }
+    .ap-quicklinks .ap-badge {
+      background: #b8453d;
+      color: #fff;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    /* Loading state */
+    .ap-loading { opacity: 0.45; pointer-events: none; }
+    .ap-spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(45,74,62,0.2);
+      border-top-color: var(--ep-accent);
+      border-radius: 50%;
+      animation: ap-spin 700ms linear infinite;
+    }
+    @keyframes ap-spin { to { transform: rotate(360deg); } }
+
+    /* Login / forbidden panels */
+    .ap-empty { text-align: center; padding: 60px 20px; color: var(--ep-ink-3); font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="admin-painel:brand.tail">Prelúdio · Admin</span>
+      </span>
+    </a>
+    <nav class="ep-nav">
+      <a href="./admin-painel.html" class="ep-text-sm is-active" data-i18n="admin-painel:nav.painel">Painel</a>
+      <a href="./admin-verificacoes.html" class="ep-text-sm"><span data-i18n="admin-painel:nav.crpcrm">CRP/CRM</span><span id="navBadgeCrpCrm" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-comprovantes.html" class="ep-text-sm"><span data-i18n="admin-painel:nav.estudante">Estudante</span><span id="navBadgeEstudante" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm"><span data-i18n="admin-painel:nav.recemFormado">Recém-formado</span><span id="navBadgeRecemFormado" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-comprovantes-formacao.html" class="ep-text-sm"><span data-i18n="admin-painel:nav.semConselho">Sem conselho</span><span id="navBadgeSemConselho" class="ep-nav-badge ep-hide">0</span></a>
+      <span id="adminEmail" class="ep-text-sm ep-text-muted">…</span>
+      <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button" data-i18n="admin-painel:nav.logout">Sair</button>
+    </nav>
+  </header>
+
+  <main class="ep-main">
+
+    <!-- LOGIN PANEL -->
+    <section id="loginPanel" class="ep-hide" style="max-width: 400px; margin: 40px auto;">
+      <div class="ep-auth__panel">
+        <h2 class="ep-auth__title" data-i18n="admin-painel:login.h2">Acesso Admin</h2>
+        <form id="loginForm" class="ep-stack ep-mt-16" novalidate>
+          <div class="ep-field">
+            <label class="ep-label" for="email" data-i18n="admin-painel:login.email">E-mail</label>
+            <input id="email" class="ep-input" type="email" autocomplete="email" required>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="password" data-i18n="admin-painel:login.password">Senha</label>
+            <input id="password" class="ep-input" type="password" autocomplete="current-password" required>
+          </div>
+          <div class="ep-status" id="loginStatus"></div>
+          <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="loginBtn" data-i18n="admin-painel:login.submit">Entrar</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- FORBIDDEN PANEL -->
+    <section id="forbiddenPanel" class="ep-hide" style="max-width: 460px; margin: 60px auto; text-align: center;">
+      <div class="ep-auth__panel">
+        <h2 class="ep-auth__title" data-i18n="admin-painel:forbidden.h2">Acesso negado.</h2>
+        <p class="ep-auth__sub" data-i18n="admin-painel:forbidden.sub">Sua conta não está na allowlist de admin.</p>
+        <button class="ep-btn ep-btn--ghost ep-btn--block ep-mt-16" type="button" id="forbiddenLogout" data-i18n="admin-painel:forbidden.logout">Sair</button>
+      </div>
+    </section>
+
+    <!-- DASHBOARD PANEL -->
+    <section id="dashboardPanel" class="ep-hide">
+
+      <!-- Header com status, last-updated, refresh controls -->
+      <div class="ap-header">
+        <div>
+          <div class="ep-eyebrow" data-i18n="admin-painel:hero.eyebrow">Painel administrativo</div>
+          <h1 class="ep-h1 ep-mt-12" data-i18n="admin-painel:hero.h1">Painel de controle</h1>
+          <p class="ep-text-muted ep-mt-12" data-i18n="admin-painel:hero.sub">Visão consolidada das métricas, sistema e atividade ao vivo do Espaço Prelúdio.</p>
+        </div>
+        <div class="ap-actions">
+          <button id="refreshBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button" data-i18n="admin-painel:actions.refresh">Atualizar agora</button>
+          <button id="autoRefreshBtn" class="ep-btn ep-btn--primary ep-btn--sm" type="button" aria-pressed="true">
+            <span data-i18n="admin-painel:actions.autoRefresh">Auto refresh</span>: <span id="autoRefreshState" data-i18n="admin-painel:actions.autoOn">ON</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="ap-status-row ep-mt-16">
+        <span id="serverPill" class="ap-pill ap-pill--muted">
+          <span class="ap-dot"></span>
+          <span data-i18n="admin-painel:status.serverLabel">Servidor</span>:&nbsp;<span id="serverStatusText">—</span>
+        </span>
+        <span class="ap-pill ap-pill--muted">
+          <span data-i18n="admin-painel:status.uptimeLabel">Uptime</span>:&nbsp;<span id="uptimeText">—</span>
+        </span>
+        <span class="ap-pill ap-pill--muted">
+          <span data-i18n="admin-painel:status.envLabel">Ambiente</span>:&nbsp;<span id="envText">—</span>
+        </span>
+        <span class="ap-pill ap-pill--muted">
+          <span data-i18n="admin-painel:status.lastUpdate">Última atualização</span>:&nbsp;<span id="lastUpdateText">—</span>
+        </span>
+      </div>
+
+      <!-- Pendências (alta prioridade — se houver, mostra primeiro) -->
+      <div class="ap-section">
+        <h2 class="ap-section__title" data-i18n="admin-painel:pend.title">Pendências da fila de revisão</h2>
+        <p class="ap-section__sub" data-i18n="admin-painel:pend.sub">Cadastros aguardando aprovação manual. Clique para revisar.</p>
+        <div class="ap-quicklinks" id="quicklinksPend">
+          <a href="./admin-verificacoes.html"><span data-i18n="admin-painel:nav.crpcrm">CRP/CRM</span><span class="ap-badge ep-hide" id="badgeCrpCrm">0</span></a>
+          <a href="./admin-comprovantes.html"><span data-i18n="admin-painel:nav.estudante">Estudante</span><span class="ap-badge ep-hide" id="badgeEstudante">0</span></a>
+          <a href="./admin-comprovantes-recem-formado.html"><span data-i18n="admin-painel:nav.recemFormado">Recém-formado</span><span class="ap-badge ep-hide" id="badgeRecemFormado">0</span></a>
+          <a href="./admin-comprovantes-formacao.html"><span data-i18n="admin-painel:nav.semConselho">Sem conselho</span><span class="ap-badge ep-hide" id="badgeSemConselho">0</span></a>
+        </div>
+      </div>
+
+      <!-- Grid principal: métricas + sistema lado a lado -->
+      <div class="ap-grid ep-mt-24">
+
+        <!-- Coluna esquerda: métricas -->
+        <div>
+
+          <div class="ap-section" style="margin-top: 0;">
+            <h2 class="ap-section__title" data-i18n="admin-painel:metrics.title">Métricas ao vivo</h2>
+
+            <div class="ap-metrics ep-mt-16">
+              <div class="ap-card" data-clickable="true" onclick="location.href='./admin-verificacoes.html'">
+                <div class="ap-card__label" data-i18n="admin-painel:metrics.profissionais">Profissionais</div>
+                <div class="ap-card__value" id="metricProfTotal">—</div>
+                <div class="ap-card__sub">
+                  <span data-i18n="admin-painel:metrics.activeSuffix7d">ativos em 7d:</span>
+                  <span id="metricProfAtivos7d">—</span>
+                </div>
+              </div>
+
+              <div class="ap-card">
+                <div class="ap-card__label" data-i18n="admin-painel:metrics.pacientes">Pacientes</div>
+                <div class="ap-card__value" id="metricPatTotal">—</div>
+                <div class="ap-card__sub">
+                  <span data-i18n="admin-painel:metrics.newToday">novos hoje:</span>
+                  <span id="metricPatNovosHoje" class="ap-delta--zero">—</span>
+                </div>
+              </div>
+
+              <div class="ap-card">
+                <div class="ap-card__label" data-i18n="admin-painel:metrics.sessoesHoje">Sessões hoje</div>
+                <div class="ap-card__value" id="metricSesHoje">—</div>
+                <div class="ap-card__sub">
+                  <span data-i18n="admin-painel:metrics.sessoesAtivas">ao vivo agora:</span>
+                  <span id="metricSesAtivas">—</span>
+                </div>
+              </div>
+
+              <div class="ap-card">
+                <div class="ap-card__label" data-i18n="admin-painel:metrics.prox24h">Próximas 24h</div>
+                <div class="ap-card__value" id="metricProx24h">—</div>
+                <div class="ap-card__sub">
+                  <span data-i18n="admin-painel:metrics.prox7d">próximos 7d:</span>
+                  <span id="metricProx7d">—</span>
+                </div>
+              </div>
+
+              <div class="ap-card">
+                <div class="ap-card__label" data-i18n="admin-painel:metrics.mrr">MRR estimado</div>
+                <div class="ap-card__value">R$&nbsp;<span id="metricMrr">—</span></div>
+                <div class="ap-card__sub">
+                  <span data-i18n="admin-painel:metrics.newPlanToday">novos planos hoje:</span>
+                  <span id="metricNovosPlanosHoje">—</span>
+                </div>
+              </div>
+
+              <div class="ap-card" id="metricPendCard">
+                <div class="ap-card__label" data-i18n="admin-painel:metrics.pendencias">Pendências fila</div>
+                <div class="ap-card__value" id="metricPendTotal">—</div>
+                <div class="ap-card__sub">
+                  <span data-i18n="admin-painel:metrics.totalRevisao">total aguardando revisão</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tier breakdown -->
+          <div class="ap-section">
+            <h2 class="ap-section__title" data-i18n="admin-painel:tiers.title">Distribuição por tier</h2>
+            <p class="ap-section__sub" data-i18n="admin-painel:tiers.sub">Quantos profissionais em cada plano.</p>
+            <div class="ap-tiers" id="tiersGrid">
+              <div class="ap-tier"><div class="ap-tier__label" data-i18n="admin-painel:tiers.pro">Pro pago</div><div class="ap-tier__value" id="tierPro">—</div></div>
+              <div class="ap-tier"><div class="ap-tier__label" data-i18n="admin-painel:tiers.trial">Trial</div><div class="ap-tier__value" id="tierTrial">—</div></div>
+              <div class="ap-tier"><div class="ap-tier__label" data-i18n="admin-painel:tiers.student">Estudante</div><div class="ap-tier__value" id="tierStudent">—</div></div>
+              <div class="ap-tier"><div class="ap-tier__label" data-i18n="admin-painel:tiers.recemFormado">Recém-formado</div><div class="ap-tier__value" id="tierRecemFormado">—</div></div>
+              <div class="ap-tier"><div class="ap-tier__label" data-i18n="admin-painel:tiers.expired">Expirados</div><div class="ap-tier__value" id="tierExpired">—</div></div>
+              <div class="ap-tier"><div class="ap-tier__label" data-i18n="admin-painel:tiers.canceled">Cancelados</div><div class="ap-tier__value" id="tierCanceled">—</div></div>
+            </div>
+          </div>
+
+          <!-- Sistema (memory, uptime, etc) -->
+          <div class="ap-section">
+            <h2 class="ap-section__title" data-i18n="admin-painel:sistema.title">Sistema</h2>
+            <p class="ap-section__sub" data-i18n="admin-painel:sistema.sub">Estado do runtime e integrações configuradas.</p>
+            <div class="ap-tiers">
+              <div class="ap-tier"><div class="ap-tier__label" data-i18n="admin-painel:sistema.memory">Memória</div><div class="ap-tier__value"><span id="sysMemory">—</span><span style="font-size:12px;color:var(--ep-ink-3);font-weight:400">&nbsp;MB</span></div></div>
+              <div class="ap-tier"><div class="ap-tier__label" data-i18n="admin-painel:sistema.node">Node.js</div><div class="ap-tier__value" style="font-size:14px;line-height:1.6" id="sysNode">—</div></div>
+              <div class="ap-tier"><div class="ap-tier__label" data-i18n="admin-painel:sistema.streams">Streams ativos</div><div class="ap-tier__value" id="sysStreams">—</div></div>
+              <div class="ap-tier"><div class="ap-tier__label" data-i18n="admin-painel:sistema.recordings">Gravações</div><div class="ap-tier__value" id="sysRecordings">—</div></div>
+            </div>
+
+            <div class="ep-mt-16">
+              <div class="ap-health-list" id="healthList">
+                <!-- Populado via JS -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Coluna direita: eventos ao vivo -->
+        <div>
+          <div class="ap-section" style="margin-top: 0;">
+            <h2 class="ap-section__title" data-i18n="admin-painel:eventos.title">Eventos recentes</h2>
+            <p class="ap-section__sub" data-i18n="admin-painel:eventos.sub">Últimas 20 ações de audit.</p>
+            <div class="ap-events" id="eventsList">
+              <div class="ap-empty" data-i18n="admin-painel:eventos.empty">Sem eventos.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script type="module">
+  import {
+    onAuthStateChanged, signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  function tr(key, fallback) {
+    if (window.EP_I18N && window.EP_I18N.t) {
+      const v = window.EP_I18N.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback;
+  }
+  function currentLocale() {
+    if (window.EP_I18N && window.EP_I18N.locale) {
+      try { return window.EP_I18N.locale(); } catch (_) { /* empty */ }
+    }
+    return (document.documentElement.lang || "pt-BR");
+  }
+
+  const loginPanel     = document.getElementById("loginPanel");
+  const dashboardPanel = document.getElementById("dashboardPanel");
+  const forbiddenPanel = document.getElementById("forbiddenPanel");
+  const adminEmail     = document.getElementById("adminEmail");
+  const logoutBtn      = document.getElementById("logoutBtn");
+  const refreshBtn     = document.getElementById("refreshBtn");
+  const autoBtn        = document.getElementById("autoRefreshBtn");
+  const autoState      = document.getElementById("autoRefreshState");
+
+  function showLogin()    { loginPanel.classList.remove("ep-hide"); dashboardPanel.classList.add("ep-hide"); forbiddenPanel.classList.add("ep-hide"); }
+  function showDashboard(){ loginPanel.classList.add("ep-hide"); dashboardPanel.classList.remove("ep-hide"); forbiddenPanel.classList.add("ep-hide"); }
+  function showForbidden(){ loginPanel.classList.add("ep-hide"); dashboardPanel.classList.add("ep-hide"); forbiddenPanel.classList.remove("ep-hide"); }
+
+  // ─── Login ──────────────────────────────────────────────────────────
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const statusEl = document.getElementById("loginStatus");
+    statusEl.textContent = tr("admin-painel:login.signing", "Entrando…");
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      statusEl.textContent = "";
+    } catch (err) {
+      statusEl.textContent = tr("admin-painel:login.error", "E-mail ou senha inválidos.");
+    }
+  });
+
+  logoutBtn.addEventListener("click", () => signOut(auth));
+  document.getElementById("forbiddenLogout").addEventListener("click", () => signOut(auth));
+
+  // ─── Auth state ─────────────────────────────────────────────────────
+  let idTokenCache = null;
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      idTokenCache = null;
+      adminEmail.textContent = "…";
+      showLogin();
+      stopAutoRefresh();
+      return;
+    }
+    idTokenCache = await user.getIdToken();
+    adminEmail.textContent = user.email || "?";
+    showDashboard();
+    fetchDashboard();
+    startAutoRefresh();
+  });
+
+  // ─── Fetch dashboard ────────────────────────────────────────────────
+  async function fetchDashboard() {
+    if (!idTokenCache) return;
+    dashboardPanel.classList.add("ap-loading");
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/dashboard`, {
+        headers: { "Authorization": `Bearer ${idTokenCache}` }
+      });
+      if (r.status === 403) {
+        showForbidden();
+        return;
+      }
+      const d = await r.json();
+      if (!d.ok) {
+        document.getElementById("serverStatusText").textContent = tr("admin-painel:status.offline", "OFFLINE");
+        setServerPill("err");
+        return;
+      }
+      render(d);
+    } catch (err) {
+      document.getElementById("serverStatusText").textContent = tr("admin-painel:status.offline", "OFFLINE");
+      setServerPill("err");
+    } finally {
+      dashboardPanel.classList.remove("ap-loading");
+    }
+  }
+
+  refreshBtn.addEventListener("click", fetchDashboard);
+
+  // ─── Auto-refresh ───────────────────────────────────────────────────
+  const AUTO_REFRESH_MS = 30_000;
+  let autoEnabled = true;
+  let autoTimer = null;
+  function startAutoRefresh() {
+    if (autoTimer || !autoEnabled) return;
+    autoTimer = setInterval(fetchDashboard, AUTO_REFRESH_MS);
+  }
+  function stopAutoRefresh() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+  }
+  autoBtn.addEventListener("click", () => {
+    autoEnabled = !autoEnabled;
+    autoBtn.setAttribute("aria-pressed", autoEnabled ? "true" : "false");
+    autoState.textContent = autoEnabled ? tr("admin-painel:actions.autoOn", "ON") : tr("admin-painel:actions.autoOff", "OFF");
+    if (autoEnabled) startAutoRefresh();
+    else stopAutoRefresh();
+  });
+
+  // ─── Render ─────────────────────────────────────────────────────────
+  function fmtNumber(n) { return new Intl.NumberFormat(currentLocale()).format(n || 0); }
+  function fmtBrl(reais) {
+    return new Intl.NumberFormat(currentLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(reais) || 0);
+  }
+  function fmtUptime(sec) {
+    if (!sec) return "—";
+    const d = Math.floor(sec / 86400);
+    const h = Math.floor((sec % 86400) / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    if (d > 0) return `${d}d ${h}h ${m}m`;
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+  }
+  function fmtTime(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleTimeString(currentLocale(), { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  }
+  function setServerPill(kind) {
+    const el = document.getElementById("serverPill");
+    el.classList.remove("ap-pill--ok", "ap-pill--warn", "ap-pill--err", "ap-pill--muted");
+    el.classList.add("ap-pill--" + kind);
+  }
+
+  function render(d) {
+    // Header status
+    setServerPill("ok");
+    document.getElementById("serverStatusText").textContent = tr("admin-painel:status.online", "ONLINE");
+    document.getElementById("uptimeText").textContent = fmtUptime(d.sistema?.uptimeSec || 0);
+    document.getElementById("envText").textContent = d.sistema?.appEnv || "?";
+    document.getElementById("lastUpdateText").textContent = fmtTime(Date.now());
+
+    // Métricas
+    document.getElementById("metricProfTotal").textContent = fmtNumber(d.profissionais.total);
+    document.getElementById("metricProfAtivos7d").textContent = fmtNumber(d.profissionais.ativos7d);
+    document.getElementById("metricPatTotal").textContent = fmtNumber(d.pacientes.total);
+    document.getElementById("metricPatNovosHoje").textContent = fmtNumber(d.pacientes.novosHoje);
+    document.getElementById("metricPatNovosHoje").className = d.pacientes.novosHoje > 0 ? "ap-delta--up" : "ap-delta--zero";
+    document.getElementById("metricSesHoje").textContent = fmtNumber(d.sessoes.hoje);
+    document.getElementById("metricSesAtivas").textContent = fmtNumber(d.sessoes.ativas);
+    document.getElementById("metricProx24h").textContent = fmtNumber(d.sessoes.prox24h);
+    document.getElementById("metricProx7d").textContent = fmtNumber(d.sessoes.prox7d);
+    document.getElementById("metricMrr").textContent = fmtBrl(d.financeiro.mrrBrl);
+    document.getElementById("metricNovosPlanosHoje").textContent = fmtNumber(d.financeiro.novosPlanosHoje);
+
+    // Pendências
+    const pendTotal = d.pendencias.total;
+    const pendCard = document.getElementById("metricPendCard");
+    pendCard.classList.remove("ap-card--warn", "ap-card--err");
+    if (pendTotal > 0)   pendCard.classList.add("ap-card--warn");
+    if (pendTotal > 10)  pendCard.classList.add("ap-card--err");
+    document.getElementById("metricPendTotal").textContent = fmtNumber(pendTotal);
+
+    setBadge("badgeCrpCrm", d.pendencias.crpCrm);
+    setBadge("badgeEstudante", d.pendencias.estudante);
+    setBadge("badgeRecemFormado", d.pendencias.recemFormado);
+    setBadge("badgeSemConselho", d.pendencias.semConselho);
+
+    // Nav badges (top)
+    setNavBadge("navBadgeCrpCrm", d.pendencias.crpCrm);
+    setNavBadge("navBadgeEstudante", d.pendencias.estudante);
+    setNavBadge("navBadgeRecemFormado", d.pendencias.recemFormado);
+    setNavBadge("navBadgeSemConselho", d.pendencias.semConselho);
+
+    // Tiers
+    document.getElementById("tierPro").textContent = fmtNumber(d.profissionais.byTier.pro);
+    document.getElementById("tierTrial").textContent = fmtNumber(d.profissionais.trialAtivos);
+    document.getElementById("tierStudent").textContent = fmtNumber(d.profissionais.byTier["student-active"]);
+    document.getElementById("tierRecemFormado").textContent = fmtNumber(d.profissionais.byTier["recem-formado-eligible"]);
+    document.getElementById("tierExpired").textContent = fmtNumber(d.profissionais.byTier.expired);
+    document.getElementById("tierCanceled").textContent = fmtNumber(d.profissionais.byTier.canceled);
+
+    // Sistema
+    document.getElementById("sysMemory").textContent = fmtNumber(d.sistema.memoryMb);
+    document.getElementById("sysNode").textContent = d.sistema.nodeVersion || "?";
+    document.getElementById("sysStreams").textContent = fmtNumber(d.sistema.activeStreams);
+    document.getElementById("sysRecordings").textContent = fmtNumber(d.sistema.activeRecordings);
+
+    // Health
+    renderHealth(d.sistema.integrations);
+
+    // Eventos
+    renderEvents(d.eventos);
+  }
+
+  function setBadge(id, n) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (n > 0) { el.textContent = n; el.classList.remove("ep-hide"); }
+    else el.classList.add("ep-hide");
+  }
+  function setNavBadge(id, n) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (n > 0) { el.textContent = n > 99 ? "99+" : String(n); el.classList.remove("ep-hide"); }
+    else el.classList.add("ep-hide");
+  }
+
+  function renderHealth(integrations) {
+    const list = document.getElementById("healthList");
+    list.innerHTML = "";
+    const order = ["firebase", "livekit", "mp_therapy", "mp_jogo", "anthropic", "resend", "zapi", "twilio", "asaas", "nfeio", "sentry"];
+    for (const key of order) {
+      const i = integrations[key];
+      if (!i) continue;
+      const row = document.createElement("div");
+      row.className = "ap-health-row";
+      const status = i.ok ? "OK" : "OFF";
+      const cls = i.ok ? "ap-status-ok" : "ap-status-warn";
+      row.innerHTML = `
+        <span class="ap-health-row__name">${escapeHtml(i.label)}</span>
+        <span class="ap-health-row__status ${cls}">${status}</span>
+      `;
+      list.appendChild(row);
+    }
+  }
+
+  function renderEvents(eventos) {
+    const list = document.getElementById("eventsList");
+    if (!eventos || !eventos.length) {
+      list.innerHTML = `<div class="ap-empty">${tr("admin-painel:eventos.empty", "Sem eventos.")}</div>`;
+      return;
+    }
+    list.innerHTML = eventos.map(e => `
+      <div class="ap-event">
+        <div class="ap-event__time">${fmtTime(e.at)}</div>
+        <div>
+          <div class="ap-event__type">${escapeHtml(e.type || "?")}</div>
+          ${e.therapistUid ? `<div class="ap-event__detail">uid: ${escapeHtml(String(e.therapistUid).substring(0,12))}…</div>` : ""}
+          ${e.detail ? `<div class="ap-event__detail">${escapeHtml(String(e.detail).substring(0,80))}</div>` : ""}
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+    }[c]));
+  }
+</script>
+
+</body>
+</html>
