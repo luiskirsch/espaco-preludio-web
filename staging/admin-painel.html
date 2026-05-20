@@ -239,6 +239,140 @@
       font-weight: 700;
     }
 
+    /* Sparkline */
+    .ap-sparkline {
+      width: 100%;
+      height: 48px;
+      margin-top: 10px;
+      display: block;
+    }
+    .ap-sparkline path.ap-spark-area { fill: rgba(45,74,62,0.10); }
+    .ap-sparkline path.ap-spark-line { fill: none; stroke: var(--ep-accent); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+    .ap-sparkline circle.ap-spark-last { fill: var(--ep-accent); }
+    .ap-sparkline text.ap-spark-min,
+    .ap-sparkline text.ap-spark-max {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      fill: var(--ep-ink-3);
+    }
+    /* Sparkline gold variant pra MRR */
+    .ap-card--mrr .ap-sparkline path.ap-spark-area { fill: rgba(200,155,74,0.12); }
+    .ap-card--mrr .ap-sparkline path.ap-spark-line { stroke: var(--ep-gold); }
+    .ap-card--mrr .ap-sparkline circle.ap-spark-last { fill: var(--ep-gold); }
+
+    /* Card amplo pra acomodar sparkline (col-span-2) */
+    .ap-card--wide { grid-column: span 2; }
+    @media (max-width: 640px) {
+      .ap-card--wide { grid-column: span 1; }
+    }
+
+    /* Período toggle (segmented control) */
+    .ap-period-toggle {
+      display: inline-flex;
+      border: 1px solid var(--ep-line);
+      border-radius: 999px;
+      background: var(--ep-bg-2);
+      padding: 3px;
+      gap: 2px;
+    }
+    .ap-period-toggle button {
+      all: unset;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ep-ink-2);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 100ms, color 100ms;
+    }
+    .ap-period-toggle button:hover { color: var(--ep-ink); }
+    .ap-period-toggle button[aria-pressed="true"] {
+      background: var(--ep-accent);
+      color: #fff;
+    }
+
+    /* Tabela de novos profissionais */
+    .ap-novos-table {
+      background: var(--ep-surface);
+      border: 1px solid var(--ep-line);
+      border-radius: var(--ep-radius);
+      overflow: hidden;
+    }
+    .ap-novos-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 12px;
+      padding: 10px 14px;
+      align-items: center;
+      border-bottom: 1px solid var(--ep-line);
+      font-size: 13px;
+    }
+    .ap-novos-row:last-child { border-bottom: 0; }
+    .ap-novos-row:hover { background: var(--ep-bg-2); }
+    .ap-novos-name { font-weight: 500; color: var(--ep-ink); }
+    .ap-novos-email { font-size: 11px; color: var(--ep-ink-3); font-family: 'JetBrains Mono', monospace; }
+    .ap-novos-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--ep-ink-3);
+    }
+    .ap-novos-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--ep-bg-2);
+      color: var(--ep-ink-2);
+      border: 1px solid var(--ep-line);
+      letter-spacing: 0.04em;
+    }
+    .ap-novos-tag--pro { background: rgba(45,74,62,0.10); color: #2d6a3e; border-color: rgba(45,74,62,0.25); }
+    .ap-novos-tag--trial { background: rgba(200,155,74,0.12); color: #8a5b1a; border-color: rgba(200,155,74,0.30); }
+    .ap-novos-verif {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.04em;
+    }
+    .ap-novos-verif--verified { color: #2d6a3e; }
+    .ap-novos-verif--pending  { color: #8a5b1a; }
+    .ap-novos-verif--rejected { color: #b8453d; }
+
+    /* Banner alerta crítico (no topo do dashboard quando integração essencial OFF) */
+    .ap-critical-alert {
+      background: rgba(184,69,61,0.08);
+      border: 1px solid rgba(184,69,61,0.40);
+      border-radius: var(--ep-radius);
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      align-items: start;
+    }
+    .ap-critical-alert__icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #b8453d;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .ap-critical-alert__body { flex: 1; }
+    .ap-critical-alert__title {
+      font-weight: 600;
+      color: #b8453d;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .ap-critical-alert__items {
+      font-size: 13px;
+      color: var(--ep-ink-2);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
     /* Loading state */
     .ap-loading { opacity: 0.45; pointer-events: none; }
     .ap-spinner {
@@ -342,6 +476,16 @@
         </span>
       </div>
 
+      <!-- ALERTA CRÍTICO — só aparece se alguma integração essencial estiver OFF -->
+      <div id="criticalAlert" class="ap-critical-alert ep-hide">
+        <div class="ap-critical-alert__icon">!</div>
+        <div class="ap-critical-alert__body">
+          <div class="ap-critical-alert__title" data-i18n="admin-painel:critical.title">Integrações críticas desligadas</div>
+          <p class="ep-text-xs ep-text-muted" style="margin: 0 0 6px;" data-i18n="admin-painel:critical.sub">Estas integrações precisam estar ativas pra plataforma operar. Sem elas, fluxos principais quebram silenciosamente.</p>
+          <div class="ap-critical-alert__items" id="criticalAlertItems">—</div>
+        </div>
+      </div>
+
       <!-- Pendências (alta prioridade — se houver, mostra primeiro) -->
       <div class="ap-section">
         <h2 class="ap-section__title" data-i18n="admin-painel:pend.title">Pendências da fila de revisão</h2>
@@ -361,9 +505,48 @@
         <div>
 
           <div class="ap-section" style="margin-top: 0;">
-            <h2 class="ap-section__title" data-i18n="admin-painel:metrics.title">Métricas ao vivo</h2>
+            <div style="display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 12px;">
+              <div>
+                <h2 class="ap-section__title" data-i18n="admin-painel:metrics.title">Métricas ao vivo</h2>
+                <p class="ap-section__sub" data-i18n="admin-painel:metrics.sub">Período afeta cards de pacientes e sessões.</p>
+              </div>
+              <div class="ap-period-toggle" role="group" aria-label="Período">
+                <button type="button" data-period="24h" aria-pressed="false" data-i18n="admin-painel:period.h24">24h</button>
+                <button type="button" data-period="7d"  aria-pressed="true"  data-i18n="admin-painel:period.d7">7 dias</button>
+                <button type="button" data-period="30d" aria-pressed="false" data-i18n="admin-painel:period.d30">30 dias</button>
+              </div>
+            </div>
 
             <div class="ap-metrics ep-mt-16">
+              <div class="ap-card ap-card--wide" data-clickable="true" onclick="location.href='./admin-verificacoes.html'">
+                <div class="ap-card__label">
+                  <span data-i18n="admin-painel:metrics.sessoes">Sessões</span>
+                  <span class="ep-text-muted" id="metricSesPeriodLabel" style="text-transform: lowercase; font-weight: 400;">(período)</span>
+                </div>
+                <div class="ap-card__value" id="metricSesPeriod">—</div>
+                <div class="ap-card__sub">
+                  <span data-i18n="admin-painel:metrics.sessoesAtivas">ao vivo agora:</span>
+                  <span id="metricSesAtivas">—</span>
+                  &nbsp;·&nbsp;
+                  <span data-i18n="admin-painel:metrics.total30d">total 30d:</span>
+                  <span id="metricSesTotal30d">—</span>
+                </div>
+                <svg class="ap-sparkline" viewBox="0 0 300 48" preserveAspectRatio="none" id="sparkSessions" aria-hidden="true"></svg>
+              </div>
+
+              <div class="ap-card ap-card--wide ap-card--mrr">
+                <div class="ap-card__label" data-i18n="admin-painel:metrics.mrr">MRR estimado</div>
+                <div class="ap-card__value">R$&nbsp;<span id="metricMrr">—</span></div>
+                <div class="ap-card__sub">
+                  <span data-i18n="admin-painel:metrics.newPlanToday">novos planos hoje:</span>
+                  <span id="metricNovosPlanosHoje">—</span>
+                  &nbsp;·&nbsp;
+                  <span data-i18n="admin-painel:metrics.curve30d">curva 30d:</span>
+                  <span id="metricMrrTrend" class="ap-delta--zero">—</span>
+                </div>
+                <svg class="ap-sparkline" viewBox="0 0 300 48" preserveAspectRatio="none" id="sparkMrr" aria-hidden="true"></svg>
+              </div>
+
               <div class="ap-card" data-clickable="true" onclick="location.href='./admin-verificacoes.html'">
                 <div class="ap-card__label" data-i18n="admin-painel:metrics.profissionais">Profissionais</div>
                 <div class="ap-card__value" id="metricProfTotal">—</div>
@@ -374,20 +557,13 @@
               </div>
 
               <div class="ap-card">
-                <div class="ap-card__label" data-i18n="admin-painel:metrics.pacientes">Pacientes</div>
+                <div class="ap-card__label">
+                  <span data-i18n="admin-painel:metrics.pacientes">Pacientes</span>
+                </div>
                 <div class="ap-card__value" id="metricPatTotal">—</div>
                 <div class="ap-card__sub">
-                  <span data-i18n="admin-painel:metrics.newToday">novos hoje:</span>
-                  <span id="metricPatNovosHoje" class="ap-delta--zero">—</span>
-                </div>
-              </div>
-
-              <div class="ap-card">
-                <div class="ap-card__label" data-i18n="admin-painel:metrics.sessoesHoje">Sessões hoje</div>
-                <div class="ap-card__value" id="metricSesHoje">—</div>
-                <div class="ap-card__sub">
-                  <span data-i18n="admin-painel:metrics.sessoesAtivas">ao vivo agora:</span>
-                  <span id="metricSesAtivas">—</span>
+                  <span id="metricPatPeriodLabel">novos hoje:</span>
+                  <span id="metricPatPeriod" class="ap-delta--zero">—</span>
                 </div>
               </div>
 
@@ -400,15 +576,6 @@
                 </div>
               </div>
 
-              <div class="ap-card">
-                <div class="ap-card__label" data-i18n="admin-painel:metrics.mrr">MRR estimado</div>
-                <div class="ap-card__value">R$&nbsp;<span id="metricMrr">—</span></div>
-                <div class="ap-card__sub">
-                  <span data-i18n="admin-painel:metrics.newPlanToday">novos planos hoje:</span>
-                  <span id="metricNovosPlanosHoje">—</span>
-                </div>
-              </div>
-
               <div class="ap-card" id="metricPendCard">
                 <div class="ap-card__label" data-i18n="admin-painel:metrics.pendencias">Pendências fila</div>
                 <div class="ap-card__value" id="metricPendTotal">—</div>
@@ -416,6 +583,15 @@
                   <span data-i18n="admin-painel:metrics.totalRevisao">total aguardando revisão</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Novos profissionais (últimas 24h) -->
+          <div class="ap-section">
+            <h2 class="ap-section__title" data-i18n="admin-painel:novos.title">Novos profissionais (24h)</h2>
+            <p class="ap-section__sub" data-i18n="admin-painel:novos.sub">Cadastros das últimas 24 horas. Clique para abrir a verificação.</p>
+            <div class="ap-novos-table" id="novosTable">
+              <div class="ap-empty" data-i18n="admin-painel:novos.empty">Nenhum cadastro nas últimas 24h.</div>
             </div>
           </div>
 
@@ -610,7 +786,47 @@
     el.classList.add("ap-pill--" + kind);
   }
 
+  // ─── Período selecionado (afeta cards de sessões + pacientes) ─────────
+  let currentPeriod = "7d";
+  let lastDashboardData = null;
+  document.querySelectorAll(".ap-period-toggle button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentPeriod = btn.getAttribute("data-period");
+      document.querySelectorAll(".ap-period-toggle button").forEach(b => {
+        b.setAttribute("aria-pressed", b.getAttribute("data-period") === currentPeriod ? "true" : "false");
+      });
+      if (lastDashboardData) applyPeriod(lastDashboardData);
+    });
+  });
+
+  function applyPeriod(d) {
+    let sesValue, sesLabel, patValue, patLabel;
+    if (currentPeriod === "24h") {
+      sesValue = d.sessoes.hoje;
+      sesLabel = tr("admin-painel:period.last24h", "(últimas 24h)");
+      patValue = d.pacientes.novosHoje;
+      patLabel = tr("admin-painel:metrics.newToday", "novos hoje:");
+    } else if (currentPeriod === "30d") {
+      sesValue = d.sessoes.total30d;
+      sesLabel = tr("admin-painel:period.last30d", "(últimos 30d)");
+      patValue = d.pacientes.total;
+      patLabel = tr("admin-painel:metrics.totalPat", "total cadastrados:");
+    } else { // 7d
+      sesValue = d.sessoes.ultimos7d;
+      sesLabel = tr("admin-painel:period.last7d", "(últimos 7d)");
+      patValue = d.pacientes.novosSemana;
+      patLabel = tr("admin-painel:metrics.newWeek", "novos em 7d:");
+    }
+    document.getElementById("metricSesPeriod").textContent = fmtNumber(sesValue);
+    document.getElementById("metricSesPeriodLabel").textContent = sesLabel;
+    document.getElementById("metricPatPeriod").textContent = fmtNumber(patValue);
+    document.getElementById("metricPatPeriod").className = patValue > 0 ? "ap-delta--up" : "ap-delta--zero";
+    document.getElementById("metricPatPeriodLabel").textContent = patLabel;
+  }
+
   function render(d) {
+    lastDashboardData = d;
+
     // Header status
     setServerPill("ok");
     document.getElementById("serverStatusText").textContent = tr("admin-painel:status.online", "ONLINE");
@@ -618,18 +834,41 @@
     document.getElementById("envText").textContent = d.sistema?.appEnv || "?";
     document.getElementById("lastUpdateText").textContent = fmtTime(Date.now());
 
-    // Métricas
+    // Métricas (cards independentes de período)
     document.getElementById("metricProfTotal").textContent = fmtNumber(d.profissionais.total);
     document.getElementById("metricProfAtivos7d").textContent = fmtNumber(d.profissionais.ativos7d);
     document.getElementById("metricPatTotal").textContent = fmtNumber(d.pacientes.total);
-    document.getElementById("metricPatNovosHoje").textContent = fmtNumber(d.pacientes.novosHoje);
-    document.getElementById("metricPatNovosHoje").className = d.pacientes.novosHoje > 0 ? "ap-delta--up" : "ap-delta--zero";
-    document.getElementById("metricSesHoje").textContent = fmtNumber(d.sessoes.hoje);
     document.getElementById("metricSesAtivas").textContent = fmtNumber(d.sessoes.ativas);
+    document.getElementById("metricSesTotal30d").textContent = fmtNumber(d.sessoes.total30d);
     document.getElementById("metricProx24h").textContent = fmtNumber(d.sessoes.prox24h);
     document.getElementById("metricProx7d").textContent = fmtNumber(d.sessoes.prox7d);
     document.getElementById("metricMrr").textContent = fmtBrl(d.financeiro.mrrBrl);
     document.getElementById("metricNovosPlanosHoje").textContent = fmtNumber(d.financeiro.novosPlanosHoje);
+
+    // Trend label do MRR (compara dia 0 vs dia 29)
+    const mrrArr = d.financeiro.mrrByDay30 || [];
+    if (mrrArr.length >= 2) {
+      const first = mrrArr[0], last = mrrArr[mrrArr.length - 1];
+      const trendEl = document.getElementById("metricMrrTrend");
+      if (last > first) {
+        const delta = ((last - first) / 100);
+        trendEl.textContent = `+R$ ${fmtBrl(delta)}`;
+        trendEl.className = "ap-delta--up";
+      } else if (last === first) {
+        trendEl.textContent = tr("admin-painel:period.stable", "estável");
+        trendEl.className = "ap-delta--zero";
+      } else {
+        trendEl.textContent = `−R$ ${fmtBrl((first - last) / 100)}`;
+        trendEl.className = "ap-delta--zero";
+      }
+    }
+
+    // Aplica período selecionado
+    applyPeriod(d);
+
+    // Sparklines
+    renderSparkline("sparkSessions", d.sessoes.byDay30 || []);
+    renderSparkline("sparkMrr", (d.financeiro.mrrByDay30 || []).map(c => c / 100));
 
     // Pendências
     const pendTotal = d.pendencias.total;
@@ -644,7 +883,6 @@
     setBadge("badgeRecemFormado", d.pendencias.recemFormado);
     setBadge("badgeSemConselho", d.pendencias.semConselho);
 
-    // Nav badges (top)
     setNavBadge("navBadgeCrpCrm", d.pendencias.crpCrm);
     setNavBadge("navBadgeEstudante", d.pendencias.estudante);
     setNavBadge("navBadgeRecemFormado", d.pendencias.recemFormado);
@@ -664,11 +902,101 @@
     document.getElementById("sysStreams").textContent = fmtNumber(d.sistema.activeStreams);
     document.getElementById("sysRecordings").textContent = fmtNumber(d.sistema.activeRecordings);
 
-    // Health
+    // Health + alerta crítico
     renderHealth(d.sistema.integrations);
+    renderCriticalAlert(d.sistema.integrations);
+
+    // Novos profissionais (24h)
+    renderNovos(d.profissionais.novos24h || []);
 
     // Eventos
     renderEvents(d.eventos);
+  }
+
+  // ─── Sparkline SVG ─────────────────────────────────────────────────
+  // Renderiza um sparkline simples: área + linha + ponto final.
+  // Sem libs externas — apenas SVG + path d="M..L..".
+  function renderSparkline(svgId, values) {
+    const svg = document.getElementById(svgId);
+    if (!svg) return;
+    svg.innerHTML = "";
+    if (!values || values.length < 2) return;
+    const W = 300, H = 48, PAD_X = 4, PAD_Y = 6;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min || 1;
+    const stepX = (W - PAD_X * 2) / (values.length - 1);
+    const points = values.map((v, i) => {
+      const x = PAD_X + i * stepX;
+      const y = PAD_Y + (H - PAD_Y * 2) * (1 - (v - min) / range);
+      return [x, y];
+    });
+    const linePath = "M " + points.map(p => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" L ");
+    const areaPath = linePath + ` L ${points[points.length - 1][0].toFixed(1)} ${H} L ${points[0][0].toFixed(1)} ${H} Z`;
+    const last = points[points.length - 1];
+
+    svg.innerHTML = `
+      <path class="ap-spark-area" d="${areaPath}"/>
+      <path class="ap-spark-line" d="${linePath}"/>
+      <circle class="ap-spark-last" cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.5"/>
+    `;
+  }
+
+  // ─── Alerta crítico ────────────────────────────────────────────────
+  // Integrações consideradas críticas (sem elas, plataforma quebra):
+  const CRITICAL_INTEGRATIONS = ["firebase", "livekit", "mp_therapy", "anthropic"];
+
+  function renderCriticalAlert(integrations) {
+    const alertEl = document.getElementById("criticalAlert");
+    const itemsEl = document.getElementById("criticalAlertItems");
+    if (!integrations) { alertEl.classList.add("ep-hide"); return; }
+    const off = CRITICAL_INTEGRATIONS
+      .filter(key => integrations[key] && !integrations[key].ok)
+      .map(key => integrations[key].label || key);
+    if (off.length === 0) {
+      alertEl.classList.add("ep-hide");
+    } else {
+      itemsEl.textContent = off.join("  ·  ");
+      alertEl.classList.remove("ep-hide");
+    }
+  }
+
+  // ─── Novos profissionais ───────────────────────────────────────────
+  function renderNovos(novos) {
+    const t = document.getElementById("novosTable");
+    if (!novos || !novos.length) {
+      t.innerHTML = `<div class="ap-empty">${tr("admin-painel:novos.empty", "Nenhum cadastro nas últimas 24h.")}</div>`;
+      return;
+    }
+    t.innerHTML = novos.map(n => {
+      const planoCls = n.plano === "pro" ? " ap-novos-tag--pro" : (n.plano === "trial" ? " ap-novos-tag--trial" : "");
+      const verifStatus = (n.verificationStatus || "").toLowerCase();
+      const verifCls = verifStatus === "verified" ? "ap-novos-verif--verified" :
+                       verifStatus === "rejected" ? "ap-novos-verif--rejected" : "ap-novos-verif--pending";
+      const verifLabel = verifStatus === "verified" ? "✓" : (verifStatus === "rejected" ? "✗" : "…");
+      const ago = fmtAgo(n.createdAt);
+      return `
+        <div class="ap-novos-row" onclick="location.href='./admin-verificacoes.html'" style="cursor:pointer;">
+          <div>
+            <div class="ap-novos-name">${escapeHtml(n.displayName)}</div>
+            <div class="ap-novos-email">${escapeHtml(n.email || "—")}</div>
+          </div>
+          <div class="ap-novos-tag${planoCls}">${escapeHtml(n.plano || "—")}</div>
+          <div class="ap-novos-verif ${verifCls}" title="${verifStatus || 'sem verificação'}">${verifLabel} ${escapeHtml(n.tipoConselho || "")}</div>
+          <div class="ap-novos-time">${ago}</div>
+        </div>
+      `;
+    }).join("");
+  }
+  function fmtAgo(ms) {
+    if (!ms) return "—";
+    const diff = Date.now() - ms;
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return tr("admin-painel:ago.now", "agora");
+    if (m < 60) return `${m}m`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h`;
+    return `${Math.floor(h / 24)}d`;
   }
 
   function setBadge(id, n) {
