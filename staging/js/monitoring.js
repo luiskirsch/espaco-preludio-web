@@ -31,11 +31,22 @@
   // setando window.EP_STATUS_URL no firebase-config.js ou inline.
   const STATUS_URL = (typeof window !== 'undefined' && window.EP_STATUS_URL) || 'https://status.railway.com';
 
-  // Backend matching: railway.app cobre staging + production do projeto.
-  // Se algum dia migrar pra outro provider, atualizar este pattern.
+  // Backend matching: usa window.EP_BACKEND_BASE_URL (setado pelo
+  // firebase-config.js) pra detectar requests. Fallback: pattern railway.app
+  // se firebase-config ainda não carregou (race). Suporta override pra
+  // localhost / cloudflared / etc — toggle via ?backend= ou localStorage.
   function isBackendUrl(url) {
     if (!url) return false;
-    return /\.railway\.app(\/|$)/.test(String(url));
+    const s = String(url);
+    const beUrl = (typeof window !== "undefined" && window.EP_BACKEND_BASE_URL) || "";
+    if (beUrl) {
+      try {
+        const beOrigin = new URL(beUrl).origin;
+        if (s.startsWith(beOrigin)) return true;
+      } catch (_) { /* malformed url */ }
+    }
+    // Fallback pra Railway enquanto window.EP_BACKEND_BASE_URL não setou
+    return /\.railway\.app(\/|$)/.test(s);
   }
 
   // ─── Banner ──────────────────────────────────────────────────────────

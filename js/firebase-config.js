@@ -49,9 +49,31 @@ const PRODUCTION_FIREBASE = {
 
 export const firebaseConfig = IS_STAGING ? STAGING_FIREBASE : PRODUCTION_FIREBASE;
 
-export const BACKEND_BASE_URL = IS_STAGING
+// Backend URL — default = Railway (staging ou prod). Override via:
+//   1. ?backend=URL na querystring (precedência máxima, salva em localStorage)
+//   2. localStorage 'ep_backend_url_override' (persiste entre navegações)
+//   3. window.EP_BACKEND_BASE_URL_OVERRIDE (setado inline antes do módulo)
+// Útil pra apontar pra backend local (notebook) ou tunnel cloudflared sem
+// precisar editar este arquivo.
+function _detectBackendOverride() {
+  if (typeof window === "undefined") return null;
+  try {
+    const qs = new URLSearchParams(location.search).get("backend");
+    if (qs) {
+      // Salva pra persistir entre navegações dentro do site
+      try { localStorage.setItem("ep_backend_url_override", qs); } catch (_) {}
+      return qs;
+    }
+    const ls = localStorage.getItem("ep_backend_url_override");
+    if (ls) return ls;
+  } catch (_) { /* localStorage indisponivel */ }
+  if (window.EP_BACKEND_BASE_URL_OVERRIDE) return window.EP_BACKEND_BASE_URL_OVERRIDE;
+  return null;
+}
+const _override = _detectBackendOverride();
+export const BACKEND_BASE_URL = _override || (IS_STAGING
   ? "https://osl-video-server-staging.up.railway.app"
-  : "https://osl-video-server-production.up.railway.app";
+  : "https://osl-video-server-production.up.railway.app");
 
 // ─── 2 apps Firebase (default + patient) ─────────────────────────────────
 // getApps() retorna lista de TODOS apps inicializados — preciso checar
