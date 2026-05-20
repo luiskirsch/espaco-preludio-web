@@ -568,6 +568,20 @@
               </div>
 
               <div class="ap-card">
+                <div class="ap-card__label">
+                  <span data-i18n="admin-painel:metrics.contasPaciente">Contas paciente</span>
+                </div>
+                <div class="ap-card__value" id="metricPatAccountsTotal">—</div>
+                <div class="ap-card__sub">
+                  <span data-i18n="admin-painel:metrics.newToday">novos hoje:</span>
+                  <span id="metricPatAccountsNovosHoje" class="ap-delta--zero">—</span>
+                  &nbsp;·&nbsp;
+                  <span data-i18n="admin-painel:metrics.newWeek">novos em 7d:</span>
+                  <span id="metricPatAccountsNovosSemana">—</span>
+                </div>
+              </div>
+
+              <div class="ap-card">
                 <div class="ap-card__label" data-i18n="admin-painel:metrics.prox24h">Próximas 24h</div>
                 <div class="ap-card__value" id="metricProx24h">—</div>
                 <div class="ap-card__sub">
@@ -592,6 +606,15 @@
             <p class="ap-section__sub" data-i18n="admin-painel:novos.sub">Cadastros das últimas 24 horas. Clique para abrir a verificação.</p>
             <div class="ap-novos-table" id="novosTable">
               <div class="ap-empty" data-i18n="admin-painel:novos.empty">Nenhum cadastro nas últimas 24h.</div>
+            </div>
+          </div>
+
+          <!-- Novas contas de paciente (últimas 24h) -->
+          <div class="ap-section">
+            <h2 class="ap-section__title" data-i18n="admin-painel:novosPac.title">Novas contas de paciente (24h)</h2>
+            <p class="ap-section__sub" data-i18n="admin-painel:novosPac.sub">Pacientes que criaram conta no Espaço Prelúdio nas últimas 24 horas.</p>
+            <div class="ap-novos-table" id="novosPatTable">
+              <div class="ap-empty" data-i18n="admin-painel:novosPac.empty">Nenhuma conta de paciente nas últimas 24h.</div>
             </div>
           </div>
 
@@ -906,11 +929,40 @@
     renderHealth(d.sistema.integrations);
     renderCriticalAlert(d.sistema.integrations);
 
+    // Contas de paciente (signups próprios)
+    if (d.pacientesContas) {
+      document.getElementById("metricPatAccountsTotal").textContent = fmtNumber(d.pacientesContas.total);
+      const novosH = d.pacientesContas.novosHoje;
+      document.getElementById("metricPatAccountsNovosHoje").textContent = fmtNumber(novosH);
+      document.getElementById("metricPatAccountsNovosHoje").className = novosH > 0 ? "ap-delta--up" : "ap-delta--zero";
+      document.getElementById("metricPatAccountsNovosSemana").textContent = fmtNumber(d.pacientesContas.novosSemana);
+      renderNovosPat(d.pacientesContas.novos24h || []);
+    }
+
     // Novos profissionais (24h)
     renderNovos(d.profissionais.novos24h || []);
 
     // Eventos
     renderEvents(d.eventos);
+  }
+
+  // ─── Lista de novos pacientes (contas próprias) ─────────────────────
+  function renderNovosPat(novos) {
+    const t = document.getElementById("novosPatTable");
+    if (!t) return;
+    if (!novos || !novos.length) {
+      t.innerHTML = `<div class="ap-empty">${tr("admin-painel:novosPac.empty", "Nenhuma conta de paciente nas últimas 24h.")}</div>`;
+      return;
+    }
+    t.innerHTML = novos.map(n => `
+      <div class="ap-novos-row" style="grid-template-columns: 1fr auto;">
+        <div>
+          <div class="ap-novos-name">${escapeHtml(n.displayName)}</div>
+          <div class="ap-novos-email">uid: ${escapeHtml(String(n.uid || "").substring(0, 12))}…</div>
+        </div>
+        <div class="ap-novos-time">${fmtAgo(n.createdAt)}</div>
+      </div>
+    `).join("");
   }
 
   // ─── Sparkline SVG ─────────────────────────────────────────────────
