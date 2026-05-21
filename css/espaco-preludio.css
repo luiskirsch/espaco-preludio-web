@@ -1889,6 +1889,42 @@ html[data-theme="dark"] .ep-badge--muted { background: rgba(232,230,223,0.08); c
 /* Quando o modal tem só título + actions (sem corpo), tira border-top. */
 .ep-modal__panel > .ep-modal__sub + .ep-modal__actions { border-top: none; padding-top: 4px; }
 
+/* Variante dourada do painel — usada em modais "celebração" (link gerado,
+   sucesso de cadastro, etc.). Mesma vibe do tile gilded do consultório. */
+.ep-modal__panel--gilded {
+  border-color: var(--ep-gold-line);
+  box-shadow:
+    var(--ep-shadow-modal),
+    0 0 0 1px rgba(200,155,74,0.10),
+    0 0 40px -10px rgba(200,155,74,0.18);
+}
+.ep-modal__panel--gilded .ep-modal__actions {
+  border-top-color: var(--ep-gold-line);
+}
+
+/* Caixa de link (URL pública pro paciente) — borda dourada tracejada, texto
+   monoespaçado centralizado. Single-line típico (~50 chars com short code),
+   mas fallback pra links longos quebra com word-break.
+   IMPORTANTE: padding usa unidades iguais top/bottom + line-height controlada
+   pra evitar o efeito "texto colado embaixo" do .ep-recovery padrão. */
+.ep-link-box {
+  background: var(--ep-gold-soft);
+  border: 1px dashed var(--ep-gold-line);
+  border-radius: var(--ep-radius);
+  padding: 20px 24px;
+  font-family: "JetBrains Mono", "SF Mono", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ep-ink);
+  letter-spacing: 0.02em;
+  text-align: center;
+  word-break: break-all;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+}
+
 /* ─── Consultório (sala de vídeo) ───────────────────────── */
 
 /* Travamento do viewport pra paginas de sessao (consultorio + entrar).
