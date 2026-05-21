@@ -1864,8 +1864,11 @@ html[data-theme="dark"] .ep-badge--muted { background: rgba(232,230,223,0.08); c
 }
 .ep-modal__title { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; margin: 0; padding: 24px 28px 0; flex-shrink: 0; }
 .ep-modal__sub { color: var(--ep-ink-2); font-size: 13.5px; line-height: 1.5; margin: 6px 0 0; padding: 0 28px; flex-shrink: 0; }
-/* Conteúdo entre título e actions: scrollável quando excede a viewport. */
-.ep-modal__panel > *:not(.ep-modal__title):not(.ep-modal__sub):not(.ep-modal__actions) {
+/* Conteúdo entre título e actions: scrollável quando excede a viewport.
+   Exceção: .ep-link-box é caixa de altura fixa (URL única do paciente) —
+   sem ela na regra, herdaria flex:1 1 auto + overflow:auto e esticava pra
+   ocupar a viewport inteira (texto colava na base, scrollbar interna). */
+.ep-modal__panel > *:not(.ep-modal__title):not(.ep-modal__sub):not(.ep-modal__actions):not(.ep-link-box) {
   overflow-y: auto;
   padding: 18px 28px 0;
   flex: 1 1 auto;
@@ -1912,6 +1915,10 @@ html[data-theme="dark"] .ep-badge--muted { background: rgba(232,230,223,0.08); c
   background: var(--ep-bg);
   border: 1px solid var(--ep-gold-line);
   border-radius: var(--ep-radius);
+  /* Margin (não padding no painel) — painel tem padding:0 e usa margins
+     dos próprios filhos pra criar o "gutter" lateral de 28px coerente com
+     título/sub/actions. */
+  margin: 18px 28px 0;
   padding: 22px 24px;
   font-family: "JetBrains Mono", "SF Mono", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
   font-size: 13px;
