@@ -5005,3 +5005,169 @@ html.ep-degraded body { padding-top: 38px; }
 @media print {
   #ep-status-banner { display: none !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MOBILE FIRST PASS — auditoria 2026-05-20
+
+   Origem: feedback de profissional ("não tenho ninguém usando computador,
+   é tudo celular"). Público real é 100% mobile.
+
+   Problemas resolvidos neste bloco:
+   1. Topbar nav (14+ links) gerava scroll horizontal em toda a app
+   2. Paddings desktop-first (28-36px) comiam 15-20% do viewport mobile
+   3. .ep-grid-2col não empilhava — campos cramped em 360px
+   4. .ep-btn--sm 36px abaixo do touch target Apple HIG (44px)
+   5. Tables sem strategy responsiva — overflow horizontal da página
+   6. Touch targets de delete buttons (×) muito pequenos
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Tela mobile pequena (<=480px = iPhone SE, Pixel SE, maioria dos Android). */
+@media (max-width: 480px) {
+  /* Topbar: reduz padding lateral (era 0 56px 0 32px = 88px lost) */
+  .ep-topbar > .ep-container,
+  .ep-topbar:not(:has(.ep-container)) {
+    padding: 0 12px;
+    height: 56px;
+  }
+  /* Main: reduz padding lateral (era 0 28px = 56px lost) */
+  .ep-main { padding: 16px 14px; }
+
+  /* Modal: zera padding outer e reduz padding interno */
+  .ep-modal { padding: 0 !important; }
+  .ep-modal__panel {
+    margin: 8px;
+    max-height: calc(100vh - 16px);
+    border-radius: 12px;
+  }
+  .ep-modal__title { padding: 18px 18px 0 !important; }
+  .ep-modal__sub   { padding: 0 18px !important; }
+  .ep-modal__actions {
+    padding: 14px 16px 18px !important;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .ep-modal__actions .ep-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  /* Auth panel (login/cadastro): reduz padding (era 36px = 72px lost) */
+  .ep-auth__panel { padding: 24px 18px !important; }
+
+  /* Hero h1: tipografia mais conservadora */
+  .ep-h1 { font-size: clamp(22px, 6vw, 32px); }
+
+  /* Section padding */
+  .ep-section { padding: 16px 12px; }
+}
+
+/* Nav horizontal scroll abaixo de 760px — fix surgical sem precisar de
+   hamburger drawer. Nav vira "carousel" horizontal, todos os links acessíveis.
+   Visual: scroll suave, sem barra visível, item ativo destacado.
+   Tradeoff: usuário precisa fazer swipe pra ver itens à direita, mas é
+   melhor que scroll horizontal da página inteira (que era o estado anterior). */
+@media (max-width: 760px) {
+  .ep-topbar .ep-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    max-width: 100%;
+    padding-bottom: 2px;
+  }
+  .ep-topbar .ep-nav::-webkit-scrollbar { display: none; }
+  .ep-topbar .ep-nav > a,
+  .ep-topbar .ep-nav > .ep-profile-group {
+    flex-shrink: 0;
+  }
+}
+
+/* Grid 2-col empilha em mobile (era cramped em 360px porque não tinha MQ).
+   Usado em painel, pacientes, perfil, TISS, clínica. */
+@media (max-width: 640px) {
+  .ep-grid-2col {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Botões pequenos sobem pra 44px touch target em mobile (Apple HIG).
+   .ep-btn--sm era 36px desktop, OK; em mobile mata acessibilidade. */
+@media (max-width: 640px) {
+  .ep-btn--sm { min-height: 44px; }
+}
+
+/* Tables responsivas — wrapper com overflow-x:auto. Aplica em qualquer
+   <table> dentro de .ep-table-wrap (utility class) ou diretamente em
+   tables que não tenham contêiner próprio. */
+.ep-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+.ep-table-wrap table { min-width: 560px; }
+
+/* Consultório (sessão ao vivo) — controles devem ser usáveis no celular.
+   Era 36×36px, agora 44×44px (Apple HIG min) em mobile. Crítico: usuário
+   ativando mic/cam/encerrar durante consulta real.
+
+   #cidMenu (busca CID-10) tinha min-width:360px e position:absolute right:0
+   — overflowava viewport mobile. Constrange a viewport com max-width. */
+@media (max-width: 640px) {
+  .ep-controls-bar--topbar .ep-ctrl {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  #cidMenu, #templateMenu {
+    left: 8px !important;
+    right: 8px !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+  /* Ambient panel: garante que não vaza do viewport */
+  .ep-ambient__panel {
+    max-width: calc(100vw - 16px);
+    right: 8px;
+    left: auto;
+  }
+  /* Botão "Painel" no topbar do consultório esconde em mobile — economiza
+     espaço pro endessão (botão crítico vermelho) ficar visível. */
+  .ep-consult__topbar a[href*="painel.html"] { display: none; }
+}
+
+/* Cards de métrica desktop usam repeat(3, 1fr) inline em painel.html e
+   financeiro.html — crusha em 360px. Regra utility pra forçar auto-fit. */
+.ep-cards-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+@media (max-width: 640px) {
+  .ep-cards-3 {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+}
+
+/* Mensagens layout — em mobile, sidebar de threads e painel de chat
+   devem alternar (não empilhar verticalmente forçando scroll infinito). */
+@media (max-width: 720px) {
+  .ep-msg-layout {
+    height: auto !important;
+    min-height: auto !important;
+    grid-template-columns: 1fr !important;
+  }
+  .ep-msg-thread__list { max-height: 50vh; }
+  /* Hardcoded sidebar grid em mensagens-pro.html */
+  #threadPanel {
+    min-height: auto !important;
+  }
+}
+
+/* Tap targets pequenos genéricos (botões × delete em listas).
+   Garante mínimo de 32x32 pra dedo grosso. */
+@media (max-width: 640px) {
+  .ep-btn[style*="padding:2px"],
+  .ep-btn[style*="padding: 2px"] {
+    min-width: 32px;
+    min-height: 32px;
+  }
+}
