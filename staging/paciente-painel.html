@@ -45,6 +45,19 @@
 
     <section class="ep-stats-strip" id="statsStrip"></section>
 
+    <section class="ep-card ep-mt-24" id="prefsCard">
+      <div class="ep-eyebrow" data-i18n="paciente-painel:prefs.eyebrow">Suas preferências</div>
+      <div class="ep-text-sm ep-mt-8" style="font-weight: 600;" data-i18n="paciente-painel:prefs.aiSummary.title">Resumo IA das sessões</div>
+      <p class="ep-text-xs ep-text-muted ep-mt-4" data-i18n="paciente-painel:prefs.aiSummary.description">Quando ligado, o(a) profissional pode gerar um resumo automático após cada consulta para revisar antes da próxima — só ele(a) tem acesso. O áudio é deletado do servidor logo após o processamento.</p>
+      <div class="ep-flex ep-gap-8 ep-mt-12" style="align-items: center;">
+        <label class="ep-flex ep-gap-8" style="align-items: center; cursor: pointer;">
+          <input type="checkbox" id="consentAiSummaryToggle">
+          <span data-i18n="paciente-painel:prefs.aiSummary.enable">Aceito a transcrição e o resumo IA das minhas sessões</span>
+        </label>
+      </div>
+      <div id="prefsStatus" class="ep-text-xs ep-text-muted ep-mt-8">&nbsp;</div>
+    </section>
+
     <section class="ep-stack ep-mt-24">
       <div class="ep-row" style="align-items: center; justify-content: space-between;">
         <h2 class="ep-h2 ep-mt-0" data-i18n="paciente-painel:history.h2">Histórico de consultas</h2>
@@ -385,6 +398,37 @@
     return row;
   }
 
+  // ─── Preferências: toggle consentAiSummary ─────────────────────────────
+  // Paciente pode mudar de ideia depois do cadastro. Backend valida e
+  // a próxima sessão respeita o novo estado (livekit-token recomputa o flag).
+  function bindPrefsToggle() {
+    const toggle = document.getElementById("consentAiSummaryToggle");
+    const status = document.getElementById("prefsStatus");
+    if (!toggle) return;
+    toggle.checked = !!account?.consentAiSummary;
+    toggle.addEventListener("change", async () => {
+      const desired = toggle.checked;
+      toggle.disabled = true;
+      status.textContent = tr("paciente-painel:prefs.saving", "Salvando…");
+      try {
+        const data = await api("/therapy/paciente/perfil", {
+          method: "PATCH",
+          body: JSON.stringify({ consentAiSummary: desired })
+        });
+        account = data.account || account;
+        status.textContent = desired
+          ? tr("paciente-painel:prefs.savedOn",  "Salvo — agora você aceita o resumo IA.")
+          : tr("paciente-painel:prefs.savedOff", "Salvo — resumo IA desativado.");
+        setTimeout(() => { status.textContent = " "; }, 4000);
+      } catch (e) {
+        toggle.checked = !desired;
+        status.textContent = tr("paciente-painel:prefs.error", "Erro ao salvar: {{message}}", { message: e.message });
+      } finally {
+        toggle.disabled = false;
+      }
+    });
+  }
+
   // ─── Boot ──────────────────────────────────────────────────────────────
   (async () => {
     try {
@@ -400,6 +444,7 @@
       renderStats();
       renderTimeline();
       refreshTotalNotes();
+      bindPrefsToggle();
     } catch (e) {
       console.error("paciente_painel_boot_error", e);
     }
