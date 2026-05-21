@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-154">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-155">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
@@ -85,6 +85,17 @@
               Aceito a <a href="./termos.html" target="_blank">Política de Uso</a> e o
               <a href="./politica.html" target="_blank">Tratamento de Dados (LGPD, Art. 11)</a>.
               Entendo que minhas anotações são pessoais e ficam cifradas com chave que só eu controlo.
+            </span>
+          </label>
+
+          <label class="ep-checkbox ep-mt-12">
+            <input type="checkbox" id="consentAiSummary">
+            <span data-i18n-html="paciente-cadastro:stepData.consentAiSummary">
+              <strong>Opcional — Resumo IA:</strong> aceito que minhas sessões com profissionais que
+              usem essa funcionalidade podem ser gravadas (áudio), transcritas e resumidas por
+              inteligência artificial para uso <strong>exclusivo do profissional</strong> que me atende
+              (revisão antes da próxima consulta). O áudio é processado no servidor do Espaço Prelúdio,
+              não é compartilhado com terceiros, e posso revogar este consentimento a qualquer momento.
             </span>
           </label>
 
@@ -218,6 +229,7 @@
     const password    = passwordEl.value;
     const passwordConfirm = passwordConfirmEl.value;
     const consentLgpd = consentLgpdEl.checked;
+    const consentAiSummary = document.getElementById("consentAiSummary")?.checked || false;
 
     if (!displayName) return setStatus(statusData, tr("paciente-cadastro:status.needDisplayName", "Informe como deseja ser chamado(a)."), "err");
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setStatus(statusData, tr("paciente-cadastro:status.invalidEmail", "E-mail inválido."), "err");
@@ -248,7 +260,7 @@
         wrappedDEK,
         wrappedDEKIv,
         recoveryPhrase: recovery,
-        form: { displayName, email }
+        form: { displayName, email, consentAiSummary }
       };
 
       recoveryEl.textContent = recovery;
@@ -313,7 +325,8 @@
           e2eeSalt:     pending.salt,
           wrappedDEK:   pending.wrappedDEK,
           wrappedDEKIv: pending.wrappedDEKIv,
-          consentLgpd:  true
+          consentLgpd:  true,
+          consentAiSummary: pending.form.consentAiSummary || false
         })
       });
 

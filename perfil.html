@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-154">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-155">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
@@ -656,6 +656,30 @@
         </p>
       </section>
 
+      <!-- Resumo IA das sessões -->
+      <section class="ep-receita-form">
+        <h2 class="ep-h3 ep-mt-0" data-i18n="perfil:aiSummary.h2">Resumo IA das sessões</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="perfil:aiSummary.sub">
+          Ao habilitar, suas sessões são gravadas (áudio do profissional + paciente),
+          transcritas localmente no nosso servidor e resumidas por IA — pra você ler
+          ANTES da próxima sessão e recuperar contexto (tópicos discutidos, compromissos
+          assumidos por cada um, temas a retomar).
+        </p>
+        <p class="ep-text-xs ep-text-muted ep-mt-8" data-i18n-html="perfil:aiSummary.privacy">
+          <strong>Privacidade:</strong> áudio nunca sai do nosso servidor (transcrição
+          roda local com modelo open-source). Resumo final fica no prontuário do paciente,
+          visível só pra você. <strong>O paciente precisa consentir separadamente</strong> —
+          se ele não tiver aceitado no cadastro, a gravação não acontece nessa sessão.
+        </p>
+        <div class="ep-flex ep-gap-8 ep-mt-12" style="align-items: center;">
+          <label class="ep-flex ep-gap-8" style="align-items: center; cursor: pointer;">
+            <input type="checkbox" id="aiSummaryEnabledToggle">
+            <span data-i18n="perfil:aiSummary.enable">Habilitar transcrição + resumo IA</span>
+          </label>
+        </div>
+        <div id="aiSummaryStatus" class="ep-status ep-mt-12"></div>
+      </section>
+
       <!-- 2FA -->
       <section class="ep-receita-form">
         <h2 class="ep-h3 ep-mt-0" data-i18n="perfil:twofa.h2">Verificação em 2 etapas (2FA)</h2>
@@ -903,6 +927,10 @@
     // Foto de perfil — mesma lógica da logo.
     renderPhotoPreview(t.photoBase64 || "", t.photoMime || "", t.displayName || "");
     if (t.photoBase64) pendingPhoto = { base64: t.photoBase64, mime: t.photoMime, dirty: false };
+
+    // Resumo IA das sessões (opt-in).
+    const aiTog = $("aiSummaryEnabledToggle");
+    if (aiTog) aiTog.checked = !!t.aiSummaryEnabled;
 
     // Agendamento público.
     $("schedSlug").value        = t.publicSchedulingSlug || "";
@@ -1982,6 +2010,7 @@ Direito de portabilidade — LGPD Art. 18, V.
         cep:         $("cep").value.trim(),
         telefone:    $("telefone").value.trim()
       },
+      aiSummaryEnabled:                $("aiSummaryEnabledToggle")?.checked || false,
       publicSchedulingSlug:            $("schedSlug").value.trim().toLowerCase(),
       publicSchedulingEnabled:         $("schedEnabled").checked,
       publicSchedulingMinNoticeHours:  $("schedMinNotice").value === "" ? undefined : Number($("schedMinNotice").value),

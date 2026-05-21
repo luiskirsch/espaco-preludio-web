@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-154">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-155">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
@@ -442,7 +442,10 @@
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </span>
       </button>
-      <div class="ep-session-card__body" data-notes></div>
+      <div class="ep-session-card__body">
+        <div data-ai-summary></div>
+        <div data-notes></div>
+      </div>
     `;
 
     const body = card.querySelector("[data-notes]");
@@ -463,12 +466,94 @@
       });
     }
 
+    // Resumo IA: só busca quando o card abre pela primeira vez. Sessões
+    // sem resumo retornam 404 — UI fica vazia (não mostra mensagem).
+    let aiSummaryLoaded = false;
+    const aiBox = card.querySelector("[data-ai-summary]");
+    async function loadAiSummary() {
+      if (aiSummaryLoaded) return;
+      aiSummaryLoaded = true;
+      try {
+        const res = await fetch(
+          `${BACKEND_BASE_URL}/therapy/session/${encodeURIComponent(s.sessionId)}/ai-summary`,
+          { headers: { "Authorization": `Bearer ${idToken}` } }
+        );
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        if (!data.ok) return;
+        renderAiSummary(aiBox, data);
+      } catch (err) {
+        console.warn("ai_summary_load_error", err);
+      }
+    }
+
     card.querySelector(".ep-session-card__head").addEventListener("click", () => {
       const open = card.classList.toggle("is-open");
       card.querySelector(".ep-session-card__head").setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) loadAiSummary();
     });
 
     return card;
+  }
+
+  function renderAiSummary(box, data) {
+    const status = data.status || "completed";
+    if (status === "processing") {
+      box.innerHTML = `
+        <div class="ep-ai-summary ep-ai-summary--processing">
+          <div class="ep-ai-summary__head">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            <span>${escapeHtml(tr("prontuario:aiSummary.processing", "Resumo IA sendo gerado…"))}</span>
+          </div>
+          <div class="ep-text-xs ep-text-muted">${escapeHtml(tr("prontuario:aiSummary.processingHint", "Volte em alguns minutos."))}</div>
+        </div>`;
+      return;
+    }
+    if (status === "failed") {
+      box.innerHTML = `
+        <div class="ep-ai-summary ep-ai-summary--failed">
+          <div class="ep-ai-summary__head">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>${escapeHtml(tr("prontuario:aiSummary.failed", "Falha ao gerar resumo IA."))}</span>
+          </div>
+          ${data.error ? `<div class="ep-text-xs ep-text-muted">${escapeHtml(data.error)}</div>` : ""}
+        </div>`;
+      return;
+    }
+    const summary = data.summary || {};
+    const topics = Array.isArray(summary.topics) ? summary.topics : [];
+    const commitments = Array.isArray(summary.commitments) ? summary.commitments : [];
+    const followups = Array.isArray(summary.followups) ? summary.followups : [];
+
+    const topicsHtml = topics.length ? `
+      <div class="ep-ai-summary__block">
+        <div class="ep-ai-summary__label">${escapeHtml(tr("prontuario:aiSummary.topics", "Tópicos"))}</div>
+        <ul>${topics.map(t => `<li><strong>${escapeHtml(t.title || "—")}</strong> — ${escapeHtml(t.summary || "")}</li>`).join("")}</ul>
+      </div>` : "";
+    const commitmentsHtml = commitments.length ? `
+      <div class="ep-ai-summary__block">
+        <div class="ep-ai-summary__label">${escapeHtml(tr("prontuario:aiSummary.commitments", "Compromissos"))}</div>
+        <ul>${commitments.map(c => `<li><strong>${escapeHtml(c.who || "—")}:</strong> ${escapeHtml(c.what || "")}</li>`).join("")}</ul>
+      </div>` : "";
+    const followupsHtml = followups.length ? `
+      <div class="ep-ai-summary__block">
+        <div class="ep-ai-summary__label">${escapeHtml(tr("prontuario:aiSummary.followups", "Retomar"))}</div>
+        <ul>${followups.map(f => `<li>${escapeHtml(f)}</li>`).join("")}</ul>
+      </div>` : "";
+
+    box.innerHTML = `
+      <div class="ep-ai-summary ep-ai-summary--ok">
+        <div class="ep-ai-summary__head">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <span>${escapeHtml(tr("prontuario:aiSummary.title", "Resumo IA"))}</span>
+        </div>
+        ${summary.summary ? `<p class="ep-ai-summary__lead">${escapeHtml(summary.summary)}</p>` : ""}
+        ${topicsHtml}
+        ${commitmentsHtml}
+        ${followupsHtml}
+        <div class="ep-text-xs ep-text-muted ep-ai-summary__foot">${escapeHtml(tr("prontuario:aiSummary.foot", "Gerado automaticamente. Sempre confira contra suas anotações."))}</div>
+      </div>
+    `;
   }
 
   function showError(message) {

@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-154">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-155">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
@@ -32,6 +32,7 @@
     <div class="ep-flex ep-flex--center ep-gap-14 ep-w-full">
       <span id="connectionStatus" class="ep-consult__status" data-i18n="consultorio:status.connecting">conectando…</span>
       <span id="e2eeBadge" class="ep-badge ep-badge--ok ep-hide" data-i18n-title="consultorio:e2ee.title" title="End-to-end encrypted" data-i18n="consultorio:e2ee.badge">E2EE ativo</span>
+      <span id="aiCaptureBadge" class="ep-badge ep-badge--ok ep-hide" data-i18n-title="consultorio:aiCapture.title" title="Áudio sendo capturado para resumo IA pós-sessão" data-i18n="consultorio:aiCapture.badge">Áudio → IA</span>
       <span class="ep-text-xs ep-text-muted" id="infoDuration">0min 00s</span>
 
       <!-- Controles centrais (mic / cam / rec / hangup) na topbar -->
@@ -420,6 +421,7 @@
 
   let room = null;
   let e2eeWorker = null;
+  let aiCapture = null;
 
   try {
     setStatus(tr("consultorio:status.preparingE2ee", "preparando E2EE…"));
@@ -558,6 +560,36 @@
     }
 
     setStatus(tr("consultorio:status.inSession", "em sessão"));
+
+    // ─── Captura de áudio pra resumo IA ──────────────────────────
+    // Só inicia se: profissional opted-in (aiSummaryEnabled) + paciente
+    // consentiu (consentAiSummary). Backend já validou ambos e devolveu
+    // aiSummaryReady no token. Captura roda em paralelo ao session-record
+    // (que é a gravação cifrada local pro arquivo do terapeuta) — aqui é
+    // só áudio mixado pro Whisper. Web Audio API consome ~1-2% CPU.
+    if (tokenData.aiSummaryReady) {
+      try {
+        const { SessionAiCapture } = await import("./js/session-ai-capture.js?v=1");
+        const aiCaptureBadge = document.getElementById("aiCaptureBadge");
+        aiCapture = new SessionAiCapture({
+          room,
+          sessionId,
+          backendBaseUrl: BACKEND_BASE_URL,
+          // Sessão pode durar 50+ min — pega token fresco no upload (Firebase
+          // auto-renova internamente). O idToken inicial pode ter expirado.
+          idTokenGetter: () => sess.user.getIdToken(),
+          onStateChange: (s) => {
+            if (s === "recording") aiCaptureBadge.classList.remove("ep-hide");
+            else aiCaptureBadge.classList.add("ep-hide");
+          }
+        });
+        await aiCapture.start();
+        console.info("[ai-capture] started");
+      } catch (err) {
+        console.warn("[ai-capture] falha ao iniciar — segue sessão normal", err);
+        aiCapture = null;
+      }
+    }
   } catch (err) {
     console.error("connect_error", err);
     setStatus(tr("consultorio:status.connectError", "erro ao conectar"));
@@ -596,12 +628,23 @@
   });
   ctrlLeave.addEventListener("click", async () => {
     if (!confirm(tr("consultorio:alerts.leaveConfirm", "Sair da consulta? A sessão continua aberta para o paciente até você encerrá-la."))) return;
+    // Sair != encerrar: descarta o áudio capturado (sessão ainda continua,
+    // outro lado pode entrar; resumo só faz sentido quando encerra de fato).
+    try { await aiCapture?.cancel(); } catch {}
     try { await room?.disconnect(); } catch {}
     window.location.href = "./painel.html";
   });
 
   endSessionBtn.addEventListener("click", async () => {
     if (!confirm(tr("consultorio:alerts.endConfirm", "Encerrar definitivamente esta consulta? O paciente será desconectado."))) return;
+    // Ordem importa: stopAndUpload precisa rodar ANTES de room.disconnect
+    // porque o MediaRecorder lê as tracks de áudio do LiveKit. Depois do
+    // disconnect, as tracks são destruídas e o último chunk fica vazio.
+    let aiResult = null;
+    if (aiCapture && aiCapture.state() === "recording") {
+      setStatus(tr("consultorio:status.uploadingAi", "salvando áudio pra resumo IA…"));
+      try { aiResult = await aiCapture.stopAndUpload(); } catch (err) { console.error("[ai-capture] upload error", err); }
+    }
     try {
       await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/encerrar`, {
         method: "POST",
@@ -610,6 +653,12 @@
     } catch {}
     try { recorder?.stop(); } catch {}
     try { await room?.disconnect(); } catch {}
+    if (aiResult?.ok) {
+      // Confirmação leve — não bloqueia. Backend processa async.
+      try {
+        alert(tr("consultorio:alerts.aiQueued", "Sessão encerrada. O resumo IA será gerado em alguns minutos e ficará disponível no prontuário do paciente."));
+      } catch {}
+    }
     window.location.href = "./painel.html";
   });
 
@@ -899,6 +948,7 @@
 
   // beforeunload: leave gracefully
   window.addEventListener("beforeunload", () => {
+    try { aiCapture?.cancel(); } catch {}
     try { room?.disconnect(); } catch {}
   });
 </script>
