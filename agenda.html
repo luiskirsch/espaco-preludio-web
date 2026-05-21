@@ -756,7 +756,11 @@
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok || !data.joinToken) throw new Error(data?.error || `HTTP ${res.status}`);
-      const link = `${location.origin}/entrar.html?t=${encodeURIComponent(data.joinToken)}`;
+      // Backend devolve joinCode (~8 chars) + joinToken (~500 chars JWT).
+      // Usa code quando disponível pro link bonito; cai no token se faltar.
+      const codeOrToken = data.joinCode || data.joinToken;
+      const paramName = codeOrToken.length <= 16 ? "c" : "t";
+      const link = `${location.origin}/entrar.html?${paramName}=${encodeURIComponent(codeOrToken)}`;
       box.textContent = link;
       box.classList.remove("ep-hide");
       try { await navigator.clipboard.writeText(link); btn.textContent = tr("agenda:js.copied", "Copiado!"); }

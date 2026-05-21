@@ -167,6 +167,9 @@
   }
 
   const params = new URLSearchParams(location.search);
+  // `c` é o short code (~8 chars, link bonito). `t` é o joinToken JWT legado
+  // (~500 chars), mantido pra retro-compat com links já enviados pré-mudança.
+  const joinCode  = params.get("c");
   const joinToken = params.get("t");
 
   const prejoin     = document.getElementById("prejoin");
@@ -182,7 +185,7 @@
     if (text) errorMsg.textContent = text;
   }
 
-  if (!joinToken) {
+  if (!joinToken && !joinCode) {
     showError(tr("entrar:error.missingToken", "O link da consulta está faltando. Peça um novo ao(à) profissional."));
     throw new Error("NO_TOKEN");
   }
@@ -298,10 +301,12 @@
     let joinRes;
     try {
       const body = {
-        joinToken,
         patientName: nameEl.value.trim().slice(0, 80) || tr("entrar:defaults.patient", "Paciente"),
         consentLgpd: true
       };
+      // Manda whichever param veio na URL — backend aceita os 2.
+      if (joinCode) body.joinCode = joinCode;
+      else body.joinToken = joinToken;
       if (authMode === "logged" && patientIdToken) {
         body.patientIdToken = patientIdToken;
       }

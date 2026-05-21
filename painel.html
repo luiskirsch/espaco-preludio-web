@@ -819,8 +819,12 @@
     if (status === "canceled")    return `<span class="ep-badge ep-badge--done">${tr("painel:badge.canceled","Cancelada")}</span>`;
     return `<span class="ep-badge ep-badge--warn">${tr("painel:badge.scheduled","Agendada")}</span>`;
   }
-  function buildPatientLink(joinToken) {
-    return `${location.origin}/entrar.html?t=${encodeURIComponent(joinToken)}`;
+  // Aceita short code (~8 chars) OU joinToken JWT legado. Heurística pelo
+  // tamanho: códigos curtos ficam <= 16 chars; JWTs sempre passam disso.
+  function buildPatientLink(codeOrToken) {
+    const s = String(codeOrToken || "");
+    const paramName = s.length <= 16 ? "c" : "t";
+    return `${location.origin}/entrar.html?${paramName}=${encodeURIComponent(s)}`;
   }
 
   // ─── Listar sessões ─────────────────────────────────────────
@@ -1590,7 +1594,7 @@
         }).catch(() => { /* best-effort */ });
       }
 
-      const link = buildPatientLink(data.session.joinToken);
+      const link = buildPatientLink(data.session.joinCode || data.session.joinToken);
       document.getElementById("linkValue").textContent = link;
       // Indica série criada — link mostrado é da PRIMEIRA ocorrência. Demais
       // têm joinToken on-demand (ver popover de cada uma na agenda).
