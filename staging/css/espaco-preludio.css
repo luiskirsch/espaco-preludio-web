@@ -1915,11 +1915,12 @@ html[data-theme="dark"] .ep-badge--muted { background: rgba(232,230,223,0.08); c
   background: var(--ep-bg);
   border: 1px solid var(--ep-gold-line);
   border-radius: var(--ep-radius);
-  /* Margin (não padding no painel) — painel tem padding:0 e usa margins
-     dos próprios filhos pra criar o "gutter" lateral de 28px coerente com
-     título/sub/actions. */
-  margin: 18px 28px 0;
-  padding: 22px 24px;
+  /* Margin lateral 28px alinha borda da caixa com gutter de título/sub/actions.
+     Padding horizontal 14px (não 24px) — URL do paciente com joinCode ainda
+     leva ~52 chars em monospace 13px; sobra de width tem que caber a URL
+     inteira em uma linha (sem word-break feio do "?c=...9" sobrando). */
+  margin: 14px 28px 0;
+  padding: 18px 14px;
   font-family: "JetBrains Mono", "SF Mono", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
   font-size: 13px;
   line-height: 1;
@@ -1930,6 +1931,11 @@ html[data-theme="dark"] .ep-badge--muted { background: rgba(232,230,223,0.08); c
   display: grid;
   place-items: center;
 }
+
+/* Subtitle do modal de link só aparece quando há texto (séries de consultas).
+   Vazio (caso comum), some — senão herda padding:18px do bloco genérico de
+   conteúdo do modal e fica como um gap morto entre sub e a caixa do link. */
+#linkSubtitle:empty { display: none; }
 
 /* ─── Consultório (sala de vídeo) ───────────────────────── */
 
