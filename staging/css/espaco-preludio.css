@@ -796,10 +796,14 @@ html.ep-unregulated .ep-nav-profile.is-active .ep-nav-profile__name {
 }
 .ep-nav-profile__name {
   white-space: nowrap;
-  max-width: 180px;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
+/* Permite ao link inteiro (avatar + nome) ser compressível pelo flexbox da
+   nav quando o nome é longo. Sem isso, min-width: auto manteria o nome
+   sempre no tamanho total e empurraria outros itens da nav. */
+.ep-nav-profile { min-width: 0; }
 
 /* View Transitions API — mantém o topbar "fixo" visualmente ao navegar entre
    páginas. Browser captura snapshot do topbar antes do unload, mantém durante
