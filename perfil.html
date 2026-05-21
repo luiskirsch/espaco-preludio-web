@@ -458,7 +458,7 @@
         </p>
       </section>
 
-      <!-- Clínica multidisciplinar -->
+      <!-- Clínica multidisciplinar — versão compacta: criação aqui, gestão em clinica.html -->
       <section class="ep-receita-form" id="clinicSection">
         <h2 class="ep-h3 ep-mt-0" data-i18n="perfil:clinic.h2">Clínica multidisciplinar</h2>
         <p class="ep-text-sm ep-text-muted ep-mt-8" data-i18n="perfil:clinic.sub">
@@ -467,52 +467,22 @@
           divisão da receita das consultas marcadas como "via clínica".
         </p>
 
+        <!-- Você É dono de clínica: resumo + link pra gerenciar -->
         <div id="clinicOwnerBlock" class="ep-hide ep-mt-16" style="border: 1px solid var(--ep-line); border-radius: 10px; padding: 14px 16px;">
-          <div class="ep-flex" style="justify-content: space-between; align-items: start; gap: 10px;">
-            <div>
+          <div class="ep-flex" style="justify-content: space-between; align-items: center; gap: 10px;">
+            <div style="min-width: 0;">
               <div class="ep-eyebrow" data-i18n="perfil:clinic.yourClinic">Sua clínica</div>
               <div style="font-size: 16px; font-weight: 600;" id="clinicOwnerName">—</div>
-              <div class="ep-text-xs ep-text-muted" id="clinicOwnerCnpj"></div>
+              <div class="ep-text-xs ep-text-muted ep-mt-4" id="clinicOwnerSummary"></div>
             </div>
-            <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="clinicEditBtn" data-i18n="perfil:clinic.edit">Editar</button>
-          </div>
-          <div class="ep-mt-12">
-            <h4 class="ep-text-sm" style="font-weight: 600; margin: 0 0 8px;" data-i18n="perfil:clinic.members">Membros</h4>
-            <div id="clinicMembersList" class="ep-stack" style="gap: 6px;"></div>
-            <details class="ep-mt-12">
-              <summary style="cursor: pointer; color: var(--ep-accent); font-size: 13px;" data-i18n="perfil:clinic.invitePro">+ Convidar profissional</summary>
-              <div class="ep-stack ep-mt-8" style="gap: 8px;">
-                <div class="ep-field">
-                  <label class="ep-label ep-text-sm" for="clinicInviteEmail" data-i18n="perfil:clinic.inviteEmail">Email do profissional *</label>
-                  <input id="clinicInviteEmail" class="ep-input" type="email" maxlength="120" placeholder="convidado@ex.com" data-i18n-placeholder="perfil:clinic.inviteEmailPlaceholder">
-                </div>
-                <div class="ep-grid-2col">
-                  <div class="ep-field">
-                    <label class="ep-label ep-text-sm" for="clinicInviteRepasseType" data-i18n="perfil:clinic.rule">Regra de repasse</label>
-                    <select id="clinicInviteRepasseType" class="ep-select">
-                      <option value="percentual" data-i18n="perfil:clinic.rulePerc">% sobre receita</option>
-                      <option value="valor-fixo" data-i18n="perfil:clinic.ruleFixed">Valor fixo por consulta</option>
-                    </select>
-                  </div>
-                  <div class="ep-field">
-                    <label class="ep-label ep-text-sm" for="clinicInviteRepasseValue" data-i18n="perfil:clinic.value">Valor *</label>
-                    <input id="clinicInviteRepasseValue" class="ep-input" type="number" step="0.01" min="0" placeholder="ex: 70 (%) ou 150.00 (R$)" data-i18n-placeholder="perfil:clinic.valuePlaceholder">
-                  </div>
-                </div>
-                <div class="ep-flex ep-gap-8">
-                  <button type="button" class="ep-btn ep-btn--primary ep-btn--sm" id="clinicInviteBtn" data-i18n="perfil:clinic.sendInvite">Enviar convite</button>
-                </div>
-                <div id="clinicInviteStatus" class="ep-status"></div>
-              </div>
-            </details>
-            <p class="ep-text-xs ep-text-muted ep-mt-12">
-              <a href="./clinica.html" data-i18n="perfil:clinic.memberPayoutLink">Ver repasse mensal por membro →</a>
-            </p>
+            <a href="./clinica.html" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="perfil:clinic.manage">Gerenciar →</a>
           </div>
         </div>
 
+        <!-- Você É membro de outra clínica -->
         <div id="clinicMembershipsBlock" class="ep-hide ep-mt-16"></div>
 
+        <!-- Você ainda NÃO tem clínica: form pra criar -->
         <div id="clinicCreateBlock" class="ep-mt-16">
           <details>
             <summary class="ep-btn ep-btn--ghost ep-btn--sm" style="display: inline-block; cursor: pointer;" data-i18n="perfil:clinic.createMy">+ Criar minha clínica</summary>
@@ -2207,7 +2177,10 @@ Direito de portabilidade — LGPD Art. 18, V.
 
   renderTissConvenios();
 
-  // ─── Clínica multidisciplinar ──────────────────────────────────────
+  // ─── Clínica multidisciplinar (versão compacta) ────────────────────
+  // Toda gestão de membros, convites e repasse mensal vive em clinica.html.
+  // Aqui só mostramos: criação (onboarding) ou resumo "Sua clínica · N membros"
+  // com link "Gerenciar →".
   const clinicApi = tissApi; // mesma fn
 
   function escClinic(s) { return String(s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
@@ -2218,19 +2191,32 @@ Direito de portabilidade — LGPD Art. 18, V.
       const owned = d.ownedClinic;
       const memberships = d.memberships || [];
 
-      // Owner
       if (owned) {
         $("clinicOwnerBlock").classList.remove("ep-hide");
         $("clinicCreateBlock").classList.add("ep-hide");
         $("clinicOwnerName").textContent = owned.name || "—";
-        $("clinicOwnerCnpj").textContent = owned.cnpj ? `CNPJ: ${owned.cnpj}` : "";
-        await loadClinicMembers(owned.clinicId);
+
+        // Conta membros pra mostrar resumo "N membros · CNPJ XXX". Só 1 fetch
+        // — sem listagem nem botões aqui.
+        const summaryParts = [];
+        try {
+          const m = await clinicApi(`/therapy/clinicas/${encodeURIComponent(owned.clinicId)}/membros`);
+          const active = (m.members || []).filter(x => x.status === "active").length;
+          const pending = (m.members || []).filter(x => x.status === "pending").length;
+          if (active || pending) {
+            summaryParts.push(`${active} ativo${active === 1 ? "" : "s"}` + (pending ? ` · ${pending} pendente${pending === 1 ? "" : "s"}` : ""));
+          } else {
+            summaryParts.push("nenhum membro ainda");
+          }
+        } catch { /* falha silenciosa — resumo só */ }
+        if (owned.cnpj) summaryParts.push(`CNPJ ${owned.cnpj}`);
+        $("clinicOwnerSummary").textContent = summaryParts.join(" · ");
       } else {
         $("clinicOwnerBlock").classList.add("ep-hide");
         $("clinicCreateBlock").classList.remove("ep-hide");
       }
 
-      // Memberships (sou membro de outra clinica)
+      // Você é membro de outra clínica — mostra resumo (sem gestão)
       if (memberships.length > 0) {
         const block = $("clinicMembershipsBlock");
         block.classList.remove("ep-hide");
@@ -2252,50 +2238,6 @@ Direito de portabilidade — LGPD Art. 18, V.
     }
   }
 
-  async function loadClinicMembers(clinicId) {
-    const listEl = $("clinicMembersList");
-    listEl.innerHTML = `<p class="ep-text-xs ep-text-muted">Carregando…</p>`;
-    try {
-      const d = await clinicApi(`/therapy/clinicas/${encodeURIComponent(clinicId)}/membros`);
-      const members = d.members || [];
-      if (members.length === 0) {
-        listEl.innerHTML = `<p class="ep-text-xs ep-text-muted">Nenhum membro cadastrado ainda.</p>`;
-        return;
-      }
-      listEl.innerHTML = members.map(m => {
-        const rule = m.repasseRule;
-        const repasseDesc = rule?.type === "percentual" ? `${rule.value}%` :
-                          rule?.type === "valor-fixo" ? `R$ ${(rule.value/100).toFixed(2).replace(".", ",")}` : "—";
-        const statusLabel = m.status === "active" ? "Ativo" : m.status === "pending" ? "Convite pendente" : "Removido";
-        const statusCls = m.status === "active" ? "ep-badge ep-badge--ok" : m.status === "pending" ? "ep-badge ep-badge--warn" : "ep-badge ep-badge--muted";
-        return `
-          <div class="ep-flex" style="justify-content: space-between; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--ep-line); border-radius: 6px; font-size: 13px;">
-            <div style="min-width: 0; flex: 1;">
-              <div>${escClinic(m.invitedEmail)}</div>
-              <div class="ep-text-xs ep-text-muted">${repasseDesc} ${rule?.type === "percentual" ? "" : "por consulta"}</div>
-            </div>
-            <div class="ep-flex ep-gap-8" style="align-items: center;">
-              <span class="${statusCls}">${statusLabel}</span>
-              ${m.status !== "removed" ? `<button type="button" data-mbr-del="${escClinic(m.memberId)}" class="ep-btn ep-btn--ghost ep-btn--sm" style="color: #b8453d; padding: 2px 8px;">×</button>` : ""}
-            </div>
-          </div>
-        `;
-      }).join("");
-      listEl.querySelectorAll("[data-mbr-del]").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          if (!confirm("Remover este membro da clínica?")) return;
-          const memberId = btn.getAttribute("data-mbr-del");
-          try {
-            await clinicApi(`/therapy/clinicas/${encodeURIComponent(clinicId)}/membros/${encodeURIComponent(memberId)}`, { method: "DELETE" });
-            await loadClinicMembers(clinicId);
-          } catch (e) { alert("Erro: " + e.message); }
-        });
-      });
-    } catch (e) {
-      listEl.innerHTML = `<p class="ep-text-xs" style="color: #b8453d;">Erro: ${escClinic(e.message)}</p>`;
-    }
-  }
-
   if ($("clinicCreateBtn")) {
     $("clinicCreateBtn").addEventListener("click", async () => {
       const name = $("clinicNewName").value.trim();
@@ -2306,48 +2248,6 @@ Direito de portabilidade — LGPD Art. 18, V.
       try {
         await clinicApi("/therapy/clinicas", { method: "POST", body: JSON.stringify({ name, cnpj: cnpj || undefined }) });
         await loadClinic();
-      } catch (e) {
-        statusEl.textContent = "Erro: " + e.message;
-        statusEl.classList.add("is-err");
-      }
-    });
-  }
-
-  if ($("clinicInviteBtn")) {
-    $("clinicInviteBtn").addEventListener("click", async () => {
-      const email = $("clinicInviteEmail").value.trim().toLowerCase();
-      const type  = $("clinicInviteRepasseType").value;
-      const rawV  = $("clinicInviteRepasseValue").value.trim();
-      const statusEl = $("clinicInviteStatus");
-      statusEl.textContent = ""; statusEl.className = "ep-status";
-
-      if (!email || !rawV) {
-        statusEl.textContent = "Preencha email e valor.";
-        statusEl.classList.add("is-err");
-        return;
-      }
-      const numV = Number(rawV);
-      if (!Number.isFinite(numV) || numV <= 0) {
-        statusEl.textContent = "Valor inválido.";
-        statusEl.classList.add("is-err");
-        return;
-      }
-      // valor-fixo: converte R$ pra centavos
-      const value = type === "valor-fixo" ? Math.round(numV * 100) : numV;
-      const repasseRule = { type, value };
-
-      try {
-        const d = await clinicApi("/therapy/clinicas/me");
-        if (!d.ownedClinic) throw new Error("CLINICA_NAO_ENCONTRADA");
-        await clinicApi(`/therapy/clinicas/${encodeURIComponent(d.ownedClinic.clinicId)}/membros`, {
-          method: "POST",
-          body: JSON.stringify({ email, repasseRule })
-        });
-        $("clinicInviteEmail").value = "";
-        $("clinicInviteRepasseValue").value = "";
-        statusEl.textContent = "Convite enviado por email.";
-        statusEl.classList.add("is-ok");
-        await loadClinicMembers(d.ownedClinic.clinicId);
       } catch (e) {
         statusEl.textContent = "Erro: " + e.message;
         statusEl.classList.add("is-err");
