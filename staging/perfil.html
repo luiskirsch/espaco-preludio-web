@@ -458,51 +458,6 @@
         </p>
       </section>
 
-      <!-- Clínica multidisciplinar — versão compacta: criação aqui, gestão em clinica.html -->
-      <section class="ep-receita-form" id="clinicSection">
-        <h2 class="ep-h3 ep-mt-0" data-i18n="perfil:clinic.h2">Clínica multidisciplinar</h2>
-        <p class="ep-text-sm ep-text-muted ep-mt-8" data-i18n="perfil:clinic.sub">
-          Convide outros profissionais pra atender pela sua clínica com regra de repasse automática.
-          Cada membro mantém conta individual no Espaço Prelúdio (R$ 199/mês cada) — repasse é só
-          divisão da receita das consultas marcadas como "via clínica".
-        </p>
-
-        <!-- Você É dono de clínica: resumo + link pra gerenciar -->
-        <div id="clinicOwnerBlock" class="ep-hide ep-mt-16" style="border: 1px solid var(--ep-line); border-radius: 10px; padding: 14px 16px;">
-          <div class="ep-flex" style="justify-content: space-between; align-items: center; gap: 10px;">
-            <div style="min-width: 0;">
-              <div class="ep-eyebrow" data-i18n="perfil:clinic.yourClinic">Sua clínica</div>
-              <div style="font-size: 16px; font-weight: 600;" id="clinicOwnerName">—</div>
-              <div class="ep-text-xs ep-text-muted ep-mt-4" id="clinicOwnerSummary"></div>
-            </div>
-            <a href="./clinica.html" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="perfil:clinic.manage">Gerenciar →</a>
-          </div>
-        </div>
-
-        <!-- Você É membro de outra clínica -->
-        <div id="clinicMembershipsBlock" class="ep-hide ep-mt-16"></div>
-
-        <!-- Você ainda NÃO tem clínica: form pra criar -->
-        <div id="clinicCreateBlock" class="ep-mt-16">
-          <details>
-            <summary class="ep-btn ep-btn--ghost ep-btn--sm" style="display: inline-block; cursor: pointer;" data-i18n="perfil:clinic.createMy">+ Criar minha clínica</summary>
-            <div class="ep-stack ep-mt-12" style="gap: 10px;">
-              <div class="ep-field">
-                <label class="ep-label ep-text-sm" for="clinicNewName" data-i18n="perfil:clinic.name">Nome da clínica *</label>
-                <input id="clinicNewName" class="ep-input" type="text" maxlength="100" placeholder="ex: Clínica Maria Silva" data-i18n-placeholder="perfil:clinic.namePlaceholder">
-              </div>
-              <div class="ep-field">
-                <label class="ep-label ep-text-sm" for="clinicNewCnpj" data-i18n="perfil:clinic.cnpj">CNPJ (opcional)</label>
-                <input id="clinicNewCnpj" class="ep-input" type="text" maxlength="18" placeholder="00.000.000/0001-00">
-              </div>
-              <div class="ep-flex ep-gap-8">
-                <button type="button" class="ep-btn ep-btn--primary ep-btn--sm" id="clinicCreateBtn" data-i18n="perfil:clinic.create">Criar clínica</button>
-              </div>
-              <div id="clinicCreateStatus" class="ep-status"></div>
-            </div>
-          </details>
-        </div>
-      </section>
 
       <!-- SMS (Twilio) -->
       <section class="ep-receita-form" id="smsSection">
@@ -2177,85 +2132,8 @@ Direito de portabilidade — LGPD Art. 18, V.
 
   renderTissConvenios();
 
-  // ─── Clínica multidisciplinar (versão compacta) ────────────────────
-  // Toda gestão de membros, convites e repasse mensal vive em clinica.html.
-  // Aqui só mostramos: criação (onboarding) ou resumo "Sua clínica · N membros"
-  // com link "Gerenciar →".
-  const clinicApi = tissApi; // mesma fn
-
-  function escClinic(s) { return String(s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
-
-  async function loadClinic() {
-    try {
-      const d = await clinicApi("/therapy/clinicas/me");
-      const owned = d.ownedClinic;
-      const memberships = d.memberships || [];
-
-      if (owned) {
-        $("clinicOwnerBlock").classList.remove("ep-hide");
-        $("clinicCreateBlock").classList.add("ep-hide");
-        $("clinicOwnerName").textContent = owned.name || "—";
-
-        // Conta membros pra mostrar resumo "N membros · CNPJ XXX". Só 1 fetch
-        // — sem listagem nem botões aqui.
-        const summaryParts = [];
-        try {
-          const m = await clinicApi(`/therapy/clinicas/${encodeURIComponent(owned.clinicId)}/membros`);
-          const active = (m.members || []).filter(x => x.status === "active").length;
-          const pending = (m.members || []).filter(x => x.status === "pending").length;
-          if (active || pending) {
-            summaryParts.push(`${active} ativo${active === 1 ? "" : "s"}` + (pending ? ` · ${pending} pendente${pending === 1 ? "" : "s"}` : ""));
-          } else {
-            summaryParts.push("nenhum membro ainda");
-          }
-        } catch { /* falha silenciosa — resumo só */ }
-        if (owned.cnpj) summaryParts.push(`CNPJ ${owned.cnpj}`);
-        $("clinicOwnerSummary").textContent = summaryParts.join(" · ");
-      } else {
-        $("clinicOwnerBlock").classList.add("ep-hide");
-        $("clinicCreateBlock").classList.remove("ep-hide");
-      }
-
-      // Você é membro de outra clínica — mostra resumo (sem gestão)
-      if (memberships.length > 0) {
-        const block = $("clinicMembershipsBlock");
-        block.classList.remove("ep-hide");
-        block.innerHTML = `
-          <div class="ep-eyebrow" style="margin-bottom: 8px;">Você é membro de:</div>
-          ${memberships.map(m => `
-            <div style="border: 1px solid var(--ep-line); border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; font-size: 13px;">
-              <strong>${escClinic(m.clinicName)}</strong>
-              ${m.repasseRule?.type === "percentual" ? ` · ${m.repasseRule.value}% sobre receita` :
-                m.repasseRule?.type === "valor-fixo" ? ` · R$ ${(m.repasseRule.value/100).toFixed(2).replace(".", ",")} fixo por consulta` : ""}
-            </div>
-          `).join("")}
-        `;
-      } else {
-        $("clinicMembershipsBlock").classList.add("ep-hide");
-      }
-    } catch (e) {
-      console.error("clinic_load_failed", e);
-    }
-  }
-
-  if ($("clinicCreateBtn")) {
-    $("clinicCreateBtn").addEventListener("click", async () => {
-      const name = $("clinicNewName").value.trim();
-      const cnpj = $("clinicNewCnpj").value.trim();
-      const statusEl = $("clinicCreateStatus");
-      statusEl.textContent = ""; statusEl.className = "ep-status";
-      if (!name) { statusEl.textContent = "Informe o nome."; statusEl.classList.add("is-err"); return; }
-      try {
-        await clinicApi("/therapy/clinicas", { method: "POST", body: JSON.stringify({ name, cnpj: cnpj || undefined }) });
-        await loadClinic();
-      } catch (e) {
-        statusEl.textContent = "Erro: " + e.message;
-        statusEl.classList.add("is-err");
-      }
-    });
-  }
-
-  loadClinic();
+  // Clínica multidisciplinar: removido do perfil. Gestão completa
+  // (criar, convidar, repasse) vive em clinica.html no menu.
 
   // ─── SMS (Twilio) ─────────────────────────────────────────────────
   // Carrega config existente de therapist.smsConfig (token vem mascarado)
