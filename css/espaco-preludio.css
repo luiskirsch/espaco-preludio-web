@@ -2653,14 +2653,19 @@ body.ep-consult .ep-theme-toggle {
   will-change: transform;
 }
 
-/* Vídeo remoto com fonte portrait (paciente no celular) em tile landscape
-   (consultório desktop): cover cortava o frame vertical e o rosto ficava
-   fora — só sobrava a testa ou só o queixo dependendo de onde estava na
-   captura. contain preserva o frame inteiro com letterbox preto nas
-   laterais — padrão Zoom/Meet/FaceTime quando orientation difere.
-   Classe aplicada via JS em consultorio.html ao detectar videoHeight >
-   videoWidth do MediaStream do paciente. */
-.ep-tile--portrait-source video {
+/* Tile remoto do consultório (profissional vê o paciente) sempre usa
+   object-fit:contain. Paciente no celular envia portrait, no desktop envia
+   landscape — em ambos os casos contain garante que o rosto inteiro
+   apareça (com letterbox quando orientation difere). Tentei antes detectar
+   portrait via JS (videoWidth/Height + resize event) mas race condition
+   entre track.attach, ep-hide remove e loadedmetadata em iOS Safari era
+   pouco confiável: às vezes a metadata vinha como 1280x720 mesmo com o
+   celular em portrait (iOS swap). Trade-off: paciente desktop landscape
+   ganha ~6% de letterbox top/bottom (16:9 em tile 16:11). Quase invisível.
+
+   Scopado via html[data-i18n-ns="consultorio"] pra NÃO afetar entrar.html
+   (paciente mobile vê terapeuta em cover, faz mais sentido lá). */
+html[data-i18n-ns="consultorio"] #tileRemote video {
   object-fit: contain;
   background: #0a0805;
 }

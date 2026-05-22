@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-169">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-170">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
@@ -271,22 +271,6 @@
   const tileRemote        = document.getElementById("tileRemote");
   const remotePlaceholder = document.getElementById("remotePlaceholder");
   const remoteName        = document.getElementById("remoteName");
-
-  // ─── Aspect ratio do remoto (paciente) ────────────────────────────
-  // Paciente no celular envia vídeo portrait (720×1280). Tile do consultório
-  // é wide (16:11). Com object-fit:cover default, o vídeo é esticado pra
-  // cobrir a largura e cortado vertical → só sobra a faixa do meio (que
-  // pode ser só a testa do paciente). Detecta portrait via videoWidth/Height
-  // e troca pra object-fit:contain (preserva frame inteiro com letterbox).
-  // resize event captura rotação do celular durante a sessão também.
-  const updateRemoteAspect = () => {
-    if (!videoRemote.videoWidth || !videoRemote.videoHeight) return;
-    const isPortrait = videoRemote.videoHeight > videoRemote.videoWidth;
-    tileRemote.classList.toggle("ep-tile--portrait-source", isPortrait);
-  };
-  videoRemote.addEventListener("loadedmetadata", updateRemoteAspect);
-  videoRemote.addEventListener("resize", updateRemoteAspect);
-
   const ctrlMic           = document.getElementById("ctrlMic");
   const ctrlCam           = document.getElementById("ctrlCam");
   const ctrlLeave         = document.getElementById("ctrlLeave");
