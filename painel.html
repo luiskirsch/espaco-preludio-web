@@ -410,6 +410,21 @@
     return (document.documentElement.lang || "pt-BR");
   }
 
+  // ─── confirmOnce: first-time confirmation pattern ───────────
+  // Mostra confirm() só na primeira vez. Profissional aprende a ação,
+  // próximas vezes vai direto sem fricção. Flag persiste no localStorage
+  // por chave (cada ação tem sua flag — encerrar é diferente de ocultar).
+  // Pra resetar: localStorage.removeItem('ep_confirmed_<key>').
+  function confirmOnce(key, message) {
+    const storageKey = `ep_confirmed_${key}`;
+    try {
+      if (localStorage.getItem(storageKey) === "1") return true;
+    } catch (_) { /* localStorage indisponível — sempre confirma */ }
+    if (!confirm(message)) return false;
+    try { localStorage.setItem(storageKey, "1"); } catch (_) { /* empty */ }
+    return true;
+  }
+
   // ─── Boot ───────────────────────────────────────────────────
   const session = await requireTherapist({ requireDek: true });
   const { user, idToken, therapist, dek } = session;
@@ -939,7 +954,7 @@
     if (action === "enter") {
       window.location.href = `./consultorio.html?session=${encodeURIComponent(id)}`;
     } else if (action === "encerrar") {
-      if (!confirm(tr("painel:list.confirmEncerrar","Encerrar esta consulta? Ela ficará marcada como concluída."))) return;
+      if (!confirmOnce("encerrar_consulta", tr("painel:list.confirmEncerrar","Encerrar esta consulta? Ela ficará marcada como concluída."))) return;
       btn.disabled = true;
       try {
         await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/encerrar`, {
@@ -953,7 +968,7 @@
         alert(tr("painel:list.encerrarErr","Erro ao encerrar."));
       }
     } else if (action === "ocultar") {
-      if (!confirm(tr("painel:list.confirmOcultar","Remover esta consulta da lista? O registro permanece no prontuário do paciente — só some daqui."))) return;
+      if (!confirmOnce("ocultar_consulta", tr("painel:list.confirmOcultar","Remover esta consulta da lista? O registro permanece no prontuário do paciente — só some daqui."))) return;
       btn.disabled = true;
       try {
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/ocultar`, {
