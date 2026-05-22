@@ -89,7 +89,13 @@
     </section>
 
     <!-- Grid -->
-    <div id="loadingBox" class="ep-skeleton ep-mt-24" data-i18n="profissionais:loading">Carregando profissionais…</div>
+    <div id="hintBox" class="ep-mt-24">
+      <div class="ep-empty">
+        <h3 class="ep-h3" data-i18n="profissionais:hint.title">Informe sua UF pra ver os profissionais.</h3>
+        <p class="ep-text-muted ep-mt-8" data-i18n="profissionais:hint.sub">A lista filtra por estado pra você encontrar quem atende perto.</p>
+      </div>
+    </div>
+    <div id="loadingBox" class="ep-skeleton ep-hide ep-mt-24" data-i18n="profissionais:loading">Carregando profissionais…</div>
     <div id="emptyBox" class="ep-hide ep-mt-24">
       <div class="ep-empty">
         <h3 class="ep-h3" data-i18n="profissionais:empty.title">Nenhum profissional encontrado.</h3>
@@ -192,14 +198,26 @@
     const cidade        = $("filterCidade").value.trim();
     const uf            = $("filterUf").value.trim().toUpperCase();
 
+    // UF é gate obrigatório — sem UF, mostra só o hint, não chama backend.
+    // Evita usuário ver TODOS os profissionais do BR de cara (ruim pra
+    // descoberta local + carga gratuita no backend).
+    if (uf.length < 2) {
+      $("hintBox").classList.remove("ep-hide");
+      $("loadingBox").classList.add("ep-hide");
+      $("emptyBox").classList.add("ep-hide");
+      $("grid").classList.add("ep-hide");
+      return;
+    }
+
     const params = new URLSearchParams();
     if (especialidade) params.set("especialidade", especialidade);
     if (cidade) params.set("cidade", cidade);
-    if (uf) params.set("uf", uf);
+    params.set("uf", uf);
 
     const reqId = ++lastReq || 1;
     lastReq = reqId;
 
+    $("hintBox").classList.add("ep-hide");
     $("loadingBox").classList.remove("ep-hide");
     $("emptyBox").classList.add("ep-hide");
     $("grid").classList.add("ep-hide");
@@ -236,7 +254,10 @@
     if (!$("grid").classList.contains("ep-hide")) loadList();
   });
 
-  loadList();
+  // Estado inicial = hint visível. Não chama loadList no boot — sem UF
+  // não faz sentido carregar nada. Lista só aparece quando usuário digitar
+  // UF (loadList rodando via debounce do input listener).
+  $("hintBox").classList.remove("ep-hide");
 </script>
 
 </body>
