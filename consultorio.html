@@ -272,36 +272,37 @@
   const remotePlaceholder = document.getElementById("remotePlaceholder");
   const remoteName        = document.getElementById("remoteName");
 
-  // Iteração 6: pillarbox premium — tile landscape mantém o tamanho do grid
-  // cell (igual ao tile esquerdo do profissional), video portrait dentro
-  // centralizado, área ao redor mostra o gradient dark do .ep-tile como
-  // pillarbox. Padrão FaceTime/Zoom clássico.
-  //
-  // Mecânica: video element fica em width:auto + max-w/h:100% — assim ele
-  // se dimensiona pela aspect ratio nativa do source (portrait quando
-  // paciente celular). .ep-tile { display:grid; place-items:center }
-  // centraliza automaticamente. As "bordas pretas" são o background gradient
-  // do tile aparecendo nos lados onde o video portrait não preenche o tile
-  // landscape.
+  // Iteração 7 (final): volta pro iter5 (tile match aspect do source —
+  // portrait quando paciente celular, landscape quando desktop) + força
+  // BLACK no background do container do grid (.ep-consult__video) pra
+  // área que sobra ao redor do tile portrait ficar preta sólida (sem o
+  // dark navy do mode-foco aparecendo).
   const setRemoteVideoFit = () => {
-    // Limpa overrides de tile shape da iteração 5 (caso ainda tenham sido
-    // aplicados antes deste setup).
-    tileRemote.style.removeProperty("aspect-ratio");
-    tileRemote.style.removeProperty("width");
-    tileRemote.style.removeProperty("height");
-    tileRemote.style.removeProperty("max-width");
-    tileRemote.style.removeProperty("max-height");
-    tileRemote.style.removeProperty("justify-self");
+    // Background do video area = preto sólido. Área ao redor do tile
+    // portrait fica preta, sem mostrar gradient/cor do .ep-consult__video.
+    const videoArea = document.getElementById("videoArea");
+    if (videoArea) {
+      videoArea.style.setProperty("background", "#000", "important");
+    }
 
     if (!videoRemote.videoWidth || !videoRemote.videoHeight) return;
 
-    // Video element ganha sizing natural pela aspect ratio do source.
-    // !important pra vencer o .ep-tile video { width:100% height:100% } base.
-    videoRemote.style.setProperty("width", "auto", "important");
-    videoRemote.style.setProperty("height", "auto", "important");
-    videoRemote.style.setProperty("max-width", "100%", "important");
-    videoRemote.style.setProperty("max-height", "100%", "important");
-    videoRemote.style.setProperty("object-fit", "contain", "important");
+    const w = videoRemote.videoWidth;
+    const h = videoRemote.videoHeight;
+    // Tile assume aspect-ratio do source. Portrait quando celular, landscape
+    // quando desktop. height:100% + width:auto preenche a altura do grid cell
+    // e a largura ajusta proporcionalmente.
+    tileRemote.style.setProperty("aspect-ratio", `${w} / ${h}`, "important");
+    tileRemote.style.setProperty("width", "auto", "important");
+    tileRemote.style.setProperty("height", "100%", "important");
+    tileRemote.style.setProperty("max-width", "100%", "important");
+    tileRemote.style.setProperty("max-height", "100%", "important");
+    tileRemote.style.setProperty("justify-self", "center", "important");
+    // Video preenche o tile (aspects match após o ajuste acima, cover não
+    // corta nada).
+    videoRemote.style.setProperty("width", "100%", "important");
+    videoRemote.style.setProperty("height", "100%", "important");
+    videoRemote.style.setProperty("object-fit", "cover", "important");
   };
   videoRemote.addEventListener("loadedmetadata", setRemoteVideoFit);
   videoRemote.addEventListener("resize", setRemoteVideoFit);
