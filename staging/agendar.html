@@ -289,7 +289,12 @@
   const dayList = [];
   let cursor = new Date(earliest);
   cursor.setHours(0, 0, 0, 0);
-  while (dayList.length < 14 && cursor.getTime() <= latest) {
+  // Cap só pelo maxAdvanceDays do profissional (rules.maxAdvanceDays).
+  // Antes tinha hard-cap em 14 weekdays que cortava ~3 semanas — usuário
+  // configurava 60 dias no perfil mas a UI só mostrava até ~dia 14
+  // independente da config. Scroll horizontal do .ep-day-picker absorve
+  // 40+ chips sem problema.
+  while (cursor.getTime() <= latest) {
     const dow = cursor.getDay();
     if (dow !== 0 && dow !== 6) {
       dayList.push(dayStartMs(cursor.getTime()));
