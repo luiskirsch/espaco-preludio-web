@@ -1938,15 +1938,17 @@ Direito de portabilidade — LGPD Art. 18, V.
       aiSummaryEnabled:                $("aiSummaryEnabledToggle")?.checked || false,
       publicSchedulingSlug:            $("schedSlug").value.trim().toLowerCase(),
       publicSchedulingEnabled:         $("schedEnabled").checked,
-      publicSchedulingMinNoticeHours:  $("schedMinNotice").value === "" ? undefined : Number($("schedMinNotice").value),
-      publicSchedulingMaxAdvanceDays:  $("schedMaxAdvance").value === "" ? undefined : Number($("schedMaxAdvance").value),
+      // Campo vazio = usuário quer voltar pro DEFAULT (24h / 60d) — envia
+      // explicitamente. Antes mandava undefined + deletava do body, o que
+      // fazia o backend manter o valor antigo no DB (limpar o input não
+      // tinha efeito nenhum). Bug reportado quando user limpou 96h/60d
+      // e o /agendar continuou usando os valores antigos.
+      publicSchedulingMinNoticeHours:  $("schedMinNotice").value.trim() === "" ? 24 : Number($("schedMinNotice").value),
+      publicSchedulingMaxAdvanceDays:  $("schedMaxAdvance").value.trim() === "" ? 60 : Number($("schedMaxAdvance").value),
       listPublicly:                    $("listPublicly").checked,
       asaasEnv:                        $("asaasEnv").value,
       asaasEnabled:                    $("asaasEnabled").checked
     };
-    // Remove campos undefined pra não sobrescrever default no backend.
-    if (body.publicSchedulingMinNoticeHours === undefined) delete body.publicSchedulingMinNoticeHours;
-    if (body.publicSchedulingMaxAdvanceDays === undefined) delete body.publicSchedulingMaxAdvanceDays;
     // asaasApiKey só é enviado se o user digitou alguma coisa (campo vazio mantém a key salva).
     const asaasKeyTyped = $("asaasApiKey").value;
     if (asaasKeyTyped) body.asaasApiKey = asaasKeyTyped;
