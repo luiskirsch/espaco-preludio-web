@@ -2888,6 +2888,15 @@ html[data-i18n-ns="consultorio"] #tileRemote video {
 .ep-ctrl--leave { background: rgba(160,43,31,0.85); }
 .ep-ctrl--leave:hover { background: rgba(160,43,31,1); }
 
+/* Consultório desktop: esconde o botão vermelho de telefone no topbar.
+   Ja tem o botão "Encerrar" em texto no canto direito da topbar (faz a
+   mesma coisa via endSessionFlow unificado). Dois botões redundantes
+   no desktop confundiam. Mobile mantém visível — lá o controls bar
+   é a UI principal de controle. */
+@media (min-width: 641px) {
+  html[data-i18n-ns="consultorio"] #ctrlLeave { display: none; }
+}
+
 /* ─── Billing switch (Mês / Ano) ───────────────────────── */
 
 .ep-planos__header {
