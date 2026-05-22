@@ -272,16 +272,40 @@
   const remotePlaceholder = document.getElementById("remotePlaceholder");
   const remoteName        = document.getElementById("remoteName");
 
-  // Força object-fit:contain no video do paciente. Iteração 3:
-  // setProperty(..., "important") aplica inline com !important — specificity
-  // absoluta, vence QUALQUER regra CSS (até !important com ID em outro
-  // seletor). Re-aplicada após track.attach() em onTrackSubscribed por
-  // garantia, caso LiveKit ou alguma outra lib resete style attribute.
-  const enforceRemoteContain = () => {
-    videoRemote.style.setProperty("object-fit", "contain", "important");
-    videoRemote.style.setProperty("background-color", "#0a0805", "important");
+  // Iteração 5 (definitiva): MATCH a aspect-ratio do tile ao source.
+  //
+  // Lógica do usuário (correta): se o paciente vê ele mesmo no PiP dele
+  // perfeitamente enquadrado, a mesma imagem deve chegar pro profissional —
+  // só que maior. O PiP do paciente é portrait (3:4), source é portrait
+  // (720x1280), cover funciona perfeito (aspects compatíveis).
+  //
+  // No consultório, o tile era landscape (16:11 default) e o source vinha
+  // portrait — qualquer object-fit (cover ou contain) ia distorcer/cortar.
+  //
+  // Solução: ler videoWidth/Height assim que o stream tem metadata, e
+  // ajustar o aspect-ratio do PRÓPRIO TILE pra match. Tile vira portrait
+  // quando paciente está no celular, landscape quando desktop. O video
+  // dentro fica em cover, aspects match, zero crop.
+  //
+  // Padrão exato do Zoom/FaceTime/Meet com video portrait de mobile.
+  const matchTileToSourceAspect = () => {
+    if (!videoRemote.videoWidth || !videoRemote.videoHeight) return;
+    const w = videoRemote.videoWidth;
+    const h = videoRemote.videoHeight;
+    tileRemote.style.setProperty("aspect-ratio", `${w} / ${h}`, "important");
+    tileRemote.style.setProperty("width", "auto", "important");
+    tileRemote.style.setProperty("height", "100%", "important");
+    tileRemote.style.setProperty("max-width", "100%", "important");
+    tileRemote.style.setProperty("max-height", "100%", "important");
+    tileRemote.style.setProperty("justify-self", "center", "important");
+    videoRemote.style.setProperty("width", "100%", "important");
+    videoRemote.style.setProperty("height", "100%", "important");
+    videoRemote.style.setProperty("object-fit", "cover", "important");
   };
-  enforceRemoteContain();
+  videoRemote.addEventListener("loadedmetadata", matchTileToSourceAspect);
+  videoRemote.addEventListener("resize", matchTileToSourceAspect);
+  // Alias com nome antigo pro código de onTrackSubscribed continuar válido.
+  const enforceRemoteContain = matchTileToSourceAspect;
 
   const ctrlMic           = document.getElementById("ctrlMic");
   const ctrlCam           = document.getElementById("ctrlCam");
