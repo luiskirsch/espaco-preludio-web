@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-161">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-174">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
@@ -64,16 +64,16 @@
     <!-- Conteúdo principal -->
     <div id="content" class="ep-hide">
 
-      <!-- Hero: foto + nome + conselho + especialidade -->
-      <section class="ep-stack ep-mt-32" style="display: flex; align-items: center; gap: 20px;">
+      <!-- Hero: card com foto + nome + conselho + especialidade -->
+      <section class="ep-agendar-hero ep-mt-32">
         <div class="ep-avatar-wrap">
-          <div id="therapistAvatar" class="ep-nav-avatar" style="width: 80px; height: 80px; font-size: 26px;">·</div>
+          <div id="therapistAvatar" class="ep-nav-avatar ep-agendar-hero__avatar">·</div>
           <span class="ep-verified-badge ep-verified-badge--xl" data-i18n-title="agendar:verifiedTitle" title="Profissional verificado · inscrição no conselho confirmada"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         </div>
-        <div style="flex: 1;">
-          <div class="ep-eyebrow" data-i18n="agendar:hero.eyebrow">Agendar consulta com</div>
-          <h1 class="ep-h1 ep-mt-12" id="therapistName" style="margin-bottom: 6px;">—</h1>
-          <p class="ep-text-muted ep-mt-0" id="therapistMeta">—</p>
+        <div class="ep-agendar-hero__body">
+          <div class="ep-agendar-hero__eyebrow" data-i18n="agendar:hero.eyebrow">Agendar consulta com</div>
+          <h1 class="ep-agendar-hero__name" id="therapistName">—</h1>
+          <p class="ep-agendar-hero__meta" id="therapistMeta">—</p>
         </div>
       </section>
 
@@ -83,7 +83,7 @@
       <section class="ep-mt-32">
         <h2 class="ep-h3 ep-mt-0" data-i18n="agendar:steps.day">1. Escolha o dia</h2>
         <p class="ep-text-muted ep-text-sm ep-mt-0" id="schedulingRulesHint">—</p>
-        <div id="dayPicker" class="ep-mt-16" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px;"></div>
+        <div id="dayPicker" class="ep-day-picker ep-mt-16"></div>
       </section>
 
       <!-- Passo 2: escolher horário -->
@@ -302,20 +302,21 @@
     dayList.forEach(dayMs => {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "ep-btn ep-btn--ghost ep-btn--sm";
-      btn.style.flexShrink = "0";
-      btn.style.minWidth = "100px";
-      btn.style.flexDirection = "column";
-      btn.style.alignItems = "stretch";
-      btn.style.padding = "10px 12px";
-      btn.style.lineHeight = "1.2";
+      btn.className = "ep-day-chip";
       btn.dataset.day = String(dayMs);
-      const parts = fmtDayLabel(dayMs).replace(",", "").split(" ");
-      btn.innerHTML = `<span style="font-size: 11px; color: var(--ep-ink-2); text-transform: uppercase; letter-spacing: 0.05em;">${parts[0]}</span><span style="font-size: 15px; font-weight: 600;">${parts[1]} ${parts[2] || ""}</span>`;
-      if (selectedDay === dayMs) {
-        btn.classList.remove("ep-btn--ghost");
-        btn.classList.add("ep-btn--primary");
-      }
+      // fmtDayLabel pt-BR retorna "seg., 25 de mai." → splita em weekday/dia/mês.
+      // Estrutura: 3 linhas (weekday uppercase pequeno / dia em serif grande /
+      // mês minúsculo pequeno) — padrão premium booking apps.
+      const raw = fmtDayLabel(dayMs).replace(/,/g, "");
+      const parts = raw.split(/\s+/);
+      const weekday = (parts[0] || "").replace(/\.$/, "");
+      const dayNum  = parts[1] || "";
+      const month   = (parts.slice(2).join(" ") || "").replace(/\.$/, "");
+      btn.innerHTML =
+        `<span class="ep-day-chip__weekday">${weekday}</span>` +
+        `<span class="ep-day-chip__day">${dayNum}</span>` +
+        `<span class="ep-day-chip__month">${month}</span>`;
+      if (selectedDay === dayMs) btn.classList.add("is-selected");
       btn.addEventListener("click", () => selectDay(dayMs, btn));
       dayPickerEl.appendChild(btn);
     });
@@ -337,12 +338,8 @@
   async function selectDay(dayMs, btnEl) {
     selectedDay = dayMs;
     selectedSlot = null;
-    document.querySelectorAll("#dayPicker .ep-btn").forEach(b => b.classList.remove("ep-btn--primary"));
-    document.querySelectorAll("#dayPicker .ep-btn").forEach(b => b.classList.add("ep-btn--ghost"));
-    if (btnEl) {
-      btnEl.classList.remove("ep-btn--ghost");
-      btnEl.classList.add("ep-btn--primary");
-    }
+    document.querySelectorAll("#dayPicker .ep-day-chip").forEach(b => b.classList.remove("is-selected"));
+    if (btnEl) btnEl.classList.add("is-selected");
     $("slotSection").classList.remove("ep-hide");
     $("formSection").classList.add("ep-hide");
     $("slotsLoading").classList.remove("ep-hide");
@@ -371,7 +368,7 @@
       avail.forEach(slot => {
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "ep-btn ep-btn--ghost ep-btn--sm";
+        btn.className = "ep-slot-chip";
         btn.textContent = fmtTimeLabel(slot.start);
         btn.addEventListener("click", () => selectSlot(slot));
         picker.appendChild(btn);
@@ -389,17 +386,11 @@
     $("formSection").classList.remove("ep-hide");
     $("formStatus").textContent = "";
     $("formStatus").className = "ep-status";
-    document.querySelectorAll("#slotPicker .ep-btn").forEach(b => {
-      b.classList.remove("ep-btn--primary");
-      b.classList.add("ep-btn--ghost");
-    });
+    document.querySelectorAll("#slotPicker .ep-slot-chip").forEach(b => b.classList.remove("is-selected"));
     // Marca o slot selecionado (procura por label igual)
     const lbl = fmtTimeLabel(slot.start);
-    document.querySelectorAll("#slotPicker .ep-btn").forEach(b => {
-      if (b.textContent === lbl) {
-        b.classList.remove("ep-btn--ghost");
-        b.classList.add("ep-btn--primary");
-      }
+    document.querySelectorAll("#slotPicker .ep-slot-chip").forEach(b => {
+      if (b.textContent === lbl) b.classList.add("is-selected");
     });
     $("formSection").scrollIntoView({ behavior: "smooth", block: "start" });
   }

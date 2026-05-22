@@ -5624,3 +5624,176 @@ html.ep-degraded body { padding-top: 38px; }
     min-height: 32px;
   }
 }
+
+/* ─── /agendar.html — Pagina publica de booking ──────────────────────
+   Upgrade premium 2026-05-22. Hero antigo era flex solto sem chrome com
+   h1 gigante (clamp 36-60px) quebrando em 2 linhas, day picker era
+   ep-btn--ghost cru. Now: card-style hero, name em serif proporcionado,
+   day/slot chips com hover gold + selected accent verde. */
+
+.ep-agendar-hero {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 22px 24px;
+  background: var(--ep-surface);
+  border: 1px solid var(--ep-line);
+  border-radius: 16px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 12px 28px -20px rgba(0,0,0,0.12);
+}
+.ep-agendar-hero .ep-avatar-wrap { flex-shrink: 0; }
+.ep-agendar-hero__avatar {
+  width: 96px;
+  height: 96px;
+  font-size: 30px;
+  border: 1px solid var(--ep-gold-line);
+}
+.ep-agendar-hero__body {
+  flex: 1;
+  min-width: 0;
+}
+.ep-agendar-hero__eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ep-gold-soft, #c89b4a);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ep-agendar-hero__eyebrow::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+}
+.ep-agendar-hero__name {
+  font-family: var(--ep-font-serif);
+  font-size: clamp(22px, 2.6vw, 32px);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+  color: var(--ep-ink);
+  margin: 8px 0 6px;
+}
+.ep-agendar-hero__meta {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ep-ink-2);
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .ep-agendar-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px;
+  }
+  .ep-agendar-hero__avatar { width: 72px; height: 72px; font-size: 22px; }
+  .ep-agendar-hero__name { font-size: 22px; }
+}
+
+/* Day chip (passo 1: escolha o dia) */
+.ep-day-picker {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 2px 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ep-gold-line) transparent;
+}
+.ep-day-picker::-webkit-scrollbar { height: 6px; }
+.ep-day-picker::-webkit-scrollbar-thumb {
+  background: var(--ep-gold-line);
+  border-radius: 999px;
+}
+.ep-day-chip {
+  flex-shrink: 0;
+  min-width: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px 10px;
+  background: var(--ep-surface);
+  border: 1px solid var(--ep-line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, transform 100ms ease, box-shadow 140ms ease;
+  font-family: inherit;
+  color: var(--ep-ink);
+  -webkit-tap-highlight-color: transparent;
+}
+.ep-day-chip:hover {
+  border-color: var(--ep-gold-line);
+  background: var(--ep-bg-2);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -10px rgba(200,155,74,0.35);
+}
+.ep-day-chip:active { transform: translateY(0); }
+.ep-day-chip__weekday {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ep-ink-3);
+  font-weight: 500;
+}
+.ep-day-chip__day {
+  font-family: var(--ep-font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ep-ink);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.ep-day-chip__month {
+  font-size: 10.5px;
+  color: var(--ep-ink-2);
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+}
+.ep-day-chip.is-selected {
+  background: var(--ep-accent);
+  border-color: var(--ep-accent);
+  box-shadow: 0 8px 20px -8px rgba(45,74,62,0.45);
+}
+.ep-day-chip.is-selected .ep-day-chip__weekday,
+.ep-day-chip.is-selected .ep-day-chip__day,
+.ep-day-chip.is-selected .ep-day-chip__month {
+  color: #fff;
+}
+
+/* Slot chip (passo 2: escolha o horario) */
+.ep-slot-chip {
+  padding: 13px 12px;
+  background: var(--ep-surface);
+  border: 1px solid var(--ep-line);
+  border-radius: 10px;
+  font-family: "JetBrains Mono", "SF Mono", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+  font-size: 14.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--ep-ink);
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, transform 100ms ease;
+  text-align: center;
+  letter-spacing: 0.02em;
+  -webkit-tap-highlight-color: transparent;
+}
+.ep-slot-chip:hover {
+  border-color: var(--ep-gold-line);
+  background: var(--ep-bg-2);
+  transform: translateY(-1px);
+}
+.ep-slot-chip:active { transform: translateY(0); }
+.ep-slot-chip.is-selected {
+  background: var(--ep-accent);
+  border-color: var(--ep-accent);
+  color: #fff;
+  box-shadow: 0 6px 16px -6px rgba(45,74,62,0.45);
+}
