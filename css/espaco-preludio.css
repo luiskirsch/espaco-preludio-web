@@ -5475,29 +5475,6 @@ html.ep-degraded body { padding-top: 38px; }
     display: none !important;
   }
 
-  /* Botão de tela cheia no topbar — escapa o chrome do Safari iOS */
-  .ep-fullscreen-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    padding: 0;
-    background: rgba(20,17,13,0.55);
-    border: 1px solid rgba(215,176,107,0.30);
-    border-radius: 999px;
-    color: rgba(255,251,240,0.92);
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    flex: 0 0 auto;
-    transition: background 100ms ease, transform 80ms ease;
-  }
-  .ep-fullscreen-btn:active { transform: scale(0.94); }
-  .ep-fullscreen-btn__exit { display: none; }
-  body.ep-is-fullscreen .ep-fullscreen-btn__enter { display: none; }
-  body.ep-is-fullscreen .ep-fullscreen-btn__exit { display: block; }
-
   /* Anotações: collapsed por padrão (só head visível). Tap pra expandir. */
   #inSession .ep-patient-notes--inline {
     max-height: 44px;       /* só altura do head — fica como pill no fundo */
@@ -5543,13 +5520,6 @@ html.ep-degraded body { padding-top: 38px; }
   }
 }
 
-/* Fullscreen button — esconde em desktop (botão só faz sentido no mobile
-   onde o chrome do Safari rouba espaço). Regra fora do media query pra
-   funcionar como default em todas as larguras. */
-.ep-fullscreen-btn { display: none; }
-@media (max-width: 640px) {
-  #inSession .ep-fullscreen-btn { display: inline-flex; }
-}
 
 /* Cards de métrica desktop usam repeat(3, 1fr) inline em painel.html e
    financeiro.html — crusha em 360px. Regra utility pra forçar auto-fit. */
