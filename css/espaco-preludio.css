@@ -105,6 +105,24 @@ html[data-theme="dark"] {
    Wrapper deve ter position:relative. Posicionamento absoluto no canto
    inferior direito. SVG embutido (sem fetch). */
 .ep-avatar-wrap { position: relative; display: inline-block; flex-shrink: 0; line-height: 0; }
+/* Topbar de /agendar.html — centra "Agendamento online" no meio real da
+   topbar (não no centro do espaço restante após brand, que ficaria offset
+   pra direita por causa do tamanho do brand). Absolute positioning relativo
+   ao topbar (que já é position:sticky, então funciona como ancoragem).
+   Mobile: volta pro fluxo natural pra não sobrepor o brand. */
+.ep-topbar #agendarNav > span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+@media (max-width: 640px) {
+  .ep-topbar #agendarNav > span {
+    position: static;
+    transform: none;
+  }
+}
+
 /* Posicionamento genérico do badge: centro do badge SEMPRE cai no
    perímetro do avatar a 45° (bottom-right), funcionando pra QUALQUER
    tamanho de avatar (36/56/64/96px) sem ajustar offsets por tamanho.
