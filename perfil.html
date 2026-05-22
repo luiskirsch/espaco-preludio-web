@@ -300,14 +300,14 @@
 
         <div class="ep-row ep-mt-16">
           <div class="ep-field">
-            <label class="ep-label" for="schedMinNotice" data-i18n="perfil:sched.minNotice">Antecedência mínima (horas)</label>
-            <input id="schedMinNotice" class="ep-input" type="number" min="0" max="720" step="1" placeholder="24">
-            <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="perfil:sched.minNoticeHint">Quanto tempo antes o paciente precisa marcar. Default 24h.</p>
+            <label class="ep-label" for="schedMinNotice"><span data-i18n="perfil:sched.minNotice">Antecedência mínima (horas)</span> <span class="ep-text-xs" style="color: var(--ep-danger, #c2410c);" aria-hidden="true">*</span></label>
+            <input id="schedMinNotice" class="ep-input" type="number" min="0" max="720" step="1" placeholder="ex: 24">
+            <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="perfil:sched.minNoticeHint">Quanto tempo antes o paciente precisa marcar. Obrigatório se aceitar agendamento online.</p>
           </div>
           <div class="ep-field">
-            <label class="ep-label" for="schedMaxAdvance" data-i18n="perfil:sched.maxAdvance">Janela máxima (dias à frente)</label>
-            <input id="schedMaxAdvance" class="ep-input" type="number" min="1" max="180" step="1" placeholder="60">
-            <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="perfil:sched.maxAdvanceHint">Até quantos dias à frente aceita pedidos. Default 60.</p>
+            <label class="ep-label" for="schedMaxAdvance"><span data-i18n="perfil:sched.maxAdvance">Janela máxima (dias à frente)</span> <span class="ep-text-xs" style="color: var(--ep-danger, #c2410c);" aria-hidden="true">*</span></label>
+            <input id="schedMaxAdvance" class="ep-input" type="number" min="1" max="180" step="1" placeholder="ex: 60">
+            <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="perfil:sched.maxAdvanceHint">Até quantos dias à frente aceita pedidos. Obrigatório se aceitar agendamento online.</p>
           </div>
         </div>
 
@@ -1914,6 +1914,25 @@ Direito de portabilidade — LGPD Art. 18, V.
   // ─── Submit ──────────────────────────────────────────────────────────
   $("perfilForm").addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    // Validação: se "agendamento online" tá ligado, antecedência mínima e
+    // janela máxima são OBRIGATÓRIOS. Antes deixar vazio aplicava defaults
+    // (24h/60d) silenciosamente — usuário não sabia que tava recebendo
+    // valores não-escolhidos. Agora força decisão consciente.
+    if ($("schedEnabled").checked) {
+      const minNoticeRaw = $("schedMinNotice").value.trim();
+      const maxAdvRaw    = $("schedMaxAdvance").value.trim();
+      if (minNoticeRaw === "" || maxAdvRaw === "") {
+        const missing = minNoticeRaw === "" ? "schedMinNotice" : "schedMaxAdvance";
+        $("saveBtn").disabled = false;
+        setStatus(tr("perfil:save.schedRequired", "Pra aceitar agendamento online, preencha antecedência mínima E janela máxima."), "err");
+        const el = $(missing);
+        el.focus();
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+    }
+
     $("saveBtn").disabled = true;
     setStatus(tr("perfil:save.saving","Salvando…"));
 
@@ -1938,13 +1957,13 @@ Direito de portabilidade — LGPD Art. 18, V.
       aiSummaryEnabled:                $("aiSummaryEnabledToggle")?.checked || false,
       publicSchedulingSlug:            $("schedSlug").value.trim().toLowerCase(),
       publicSchedulingEnabled:         $("schedEnabled").checked,
-      // Campo vazio = usuário quer voltar pro DEFAULT (24h / 60d) — envia
-      // explicitamente. Antes mandava undefined + deletava do body, o que
-      // fazia o backend manter o valor antigo no DB (limpar o input não
-      // tinha efeito nenhum). Bug reportado quando user limpou 96h/60d
-      // e o /agendar continuou usando os valores antigos.
-      publicSchedulingMinNoticeHours:  $("schedMinNotice").value.trim() === "" ? 24 : Number($("schedMinNotice").value),
-      publicSchedulingMaxAdvanceDays:  $("schedMaxAdvance").value.trim() === "" ? 60 : Number($("schedMaxAdvance").value),
+      // Campos obrigatórios quando publicSchedulingEnabled=true (validado
+      // antes deste body montar — se enabled+vazio, save é bloqueado).
+      // Se enabled=false, vazio é permitido e backend pode ignorar o campo.
+      // Number("") = 0, então mando 0 explicitamente quando vazio + disabled
+      // pra backend tratar como "não configurado".
+      publicSchedulingMinNoticeHours:  Number($("schedMinNotice").value) || 0,
+      publicSchedulingMaxAdvanceDays:  Number($("schedMaxAdvance").value) || 0,
       listPublicly:                    $("listPublicly").checked,
       asaasEnv:                        $("asaasEnv").value,
       asaasEnabled:                    $("asaasEnabled").checked
