@@ -272,15 +272,16 @@
   const remotePlaceholder = document.getElementById("remotePlaceholder");
   const remoteName        = document.getElementById("remoteName");
 
-  // Força object-fit:contain no video do paciente via inline style — paciente
-  // no celular envia portrait (720×1280 em iOS Safari moderno OU 1280×720
-  // landscape com content rotacionado em algumas versões). Em ambos os casos
-  // contain preserva o frame inteiro com letterbox quando a orientação do
-  // source diverge do tile (16:11). Inline tem specificity máxima — vence
-  // qualquer regra CSS sem precisar de !important e elimina dependência de
-  // cache de CSS pra fix urgente.
-  videoRemote.style.objectFit = "contain";
-  videoRemote.style.backgroundColor = "#0a0805";
+  // Força object-fit:contain no video do paciente. Iteração 3:
+  // setProperty(..., "important") aplica inline com !important — specificity
+  // absoluta, vence QUALQUER regra CSS (até !important com ID em outro
+  // seletor). Re-aplicada após track.attach() em onTrackSubscribed por
+  // garantia, caso LiveKit ou alguma outra lib resete style attribute.
+  const enforceRemoteContain = () => {
+    videoRemote.style.setProperty("object-fit", "contain", "important");
+    videoRemote.style.setProperty("background-color", "#0a0805", "important");
+  };
+  enforceRemoteContain();
 
   const ctrlMic           = document.getElementById("ctrlMic");
   const ctrlCam           = document.getElementById("ctrlCam");
@@ -516,6 +517,22 @@
       // pausa a animação do ::before do tile (fica coberta pelo video, mas
       // continua consumindo GPU se nao for parada explicitamente)
       tileRemote.classList.add("ep-tile--has-video");
+      // Re-aplica object-fit:contain após attach — LiveKit pode ter
+      // resetado o style attribute ao setar srcObject em alguns paths.
+      enforceRemoteContain();
+      // Log de diagnóstico — confirma dimensões reais do stream + computed
+      // object-fit final. Se reportar landscape (videoWidth > videoHeight)
+      // mesmo com paciente em celular portrait, é problema de orientation
+      // do iOS Safari e o fix CSS não basta — precisamos de outra abordagem.
+      videoRemote.addEventListener("loadedmetadata", () => {
+        console.info("[debug] remote video", {
+          videoWidth: videoRemote.videoWidth,
+          videoHeight: videoRemote.videoHeight,
+          aspect: (videoRemote.videoWidth / videoRemote.videoHeight).toFixed(3),
+          computedObjectFit: getComputedStyle(videoRemote).objectFit,
+          inlineObjectFit: videoRemote.style.objectFit
+        });
+      }, { once: true });
     } else if (track.kind === Track.Kind.Audio) {
       const audioEl = track.attach();
       audioEl.style.display = "none";
