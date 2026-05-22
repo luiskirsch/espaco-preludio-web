@@ -2652,6 +2652,18 @@ body.ep-consult .ep-theme-toggle {
   transform: translateZ(0);
   will-change: transform;
 }
+
+/* Vídeo remoto com fonte portrait (paciente no celular) em tile landscape
+   (consultório desktop): cover cortava o frame vertical e o rosto ficava
+   fora — só sobrava a testa ou só o queixo dependendo de onde estava na
+   captura. contain preserva o frame inteiro com letterbox preto nas
+   laterais — padrão Zoom/Meet/FaceTime quando orientation difere.
+   Classe aplicada via JS em consultorio.html ao detectar videoHeight >
+   videoWidth do MediaStream do paciente. */
+.ep-tile--portrait-source video {
+  object-fit: contain;
+  background: #0a0805;
+}
 .ep-tile__name {
   position: absolute;
   left: 14px; bottom: 14px;
