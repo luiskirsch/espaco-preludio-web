@@ -271,6 +271,17 @@
   const tileRemote        = document.getElementById("tileRemote");
   const remotePlaceholder = document.getElementById("remotePlaceholder");
   const remoteName        = document.getElementById("remoteName");
+
+  // Força object-fit:contain no video do paciente via inline style — paciente
+  // no celular envia portrait (720×1280 em iOS Safari moderno OU 1280×720
+  // landscape com content rotacionado em algumas versões). Em ambos os casos
+  // contain preserva o frame inteiro com letterbox quando a orientação do
+  // source diverge do tile (16:11). Inline tem specificity máxima — vence
+  // qualquer regra CSS sem precisar de !important e elimina dependência de
+  // cache de CSS pra fix urgente.
+  videoRemote.style.objectFit = "contain";
+  videoRemote.style.backgroundColor = "#0a0805";
+
   const ctrlMic           = document.getElementById("ctrlMic");
   const ctrlCam           = document.getElementById("ctrlCam");
   const ctrlLeave         = document.getElementById("ctrlLeave");
