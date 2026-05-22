@@ -228,6 +228,30 @@
     return (document.documentElement.lang || "pt-BR");
   }
 
+  // ─── Lang switcher relocate ──────────────────────────────────────
+  // Move o #ep-lang-switcher (criado por i18n/init.js com position:fixed
+  // bottom-left default) pra dentro da action row das anotações inline.
+  // Default ficava perdido no canto inferior esquerdo do consultório
+  // dark — pouco contraste, dava sensação de "deslocado". Agora alinha
+  // ao lado de "Ctrl + Enter pra salvar", grupo visual coerente.
+  function moveLangSwitcher() {
+    const switcher = document.getElementById("ep-lang-switcher");
+    const actions = document.querySelector(".ep-inline-notes__actions");
+    if (!switcher || !actions) return false;
+    if (switcher.parentNode === actions) return true; // já movido
+    actions.insertBefore(switcher, actions.firstChild);
+    // Sobrescreve inline styles + CSS do init.js que mantinham fixed.
+    switcher.style.setProperty("position", "static", "important");
+    switcher.style.setProperty("bottom", "auto", "important");
+    switcher.style.setProperty("left", "auto", "important");
+    switcher.style.setProperty("right", "auto", "important");
+    switcher.style.setProperty("z-index", "auto", "important");
+    return true;
+  }
+  if (!moveLangSwitcher()) {
+    document.addEventListener("ep:i18n-ready", moveLangSwitcher, { once: true });
+  }
+
   // Inicializa clima + som ambiente + painel "Ajustar ambiente".
   // Todo o estado fica em localStorage; nada disso vai pro servidor.
   await initAtmosphere({ buttonId: "ambientBtn", panelId: "ambientPanel" });
