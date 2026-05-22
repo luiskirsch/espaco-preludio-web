@@ -1457,7 +1457,14 @@ h3.ep-h3 {
 
 /* ─── Forms ─────────────────────────────────────────────── */
 
-.ep-field { display: grid; gap: 6px; }
+/* align-self:start — sem isso, quando .ep-field é grid item de .ep-row e o
+   irmão tem mais conteúdo (ex.: hint paragraph extra), o field estica pra
+   match. Combinado com align-content:normal (≈ stretch pra implicit rows),
+   isso espalhava label+control verticalmente, fazendo o input/select
+   parecer "fora do layout" (gap grande entre label e control). Bug real
+   no formulário Asaas no perfil.html: Ambiente (label+select) ao lado de
+   Chave de API (label+input+hint long). */
+.ep-field { display: grid; gap: 6px; align-self: start; }
 
 .ep-label {
   font-size: 12.5px;
