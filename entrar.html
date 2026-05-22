@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-168">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-169">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
@@ -421,7 +421,13 @@
     const noteStatus    = document.getElementById("patientNotesStatus");
     const notesScopeLbl = document.getElementById("notesScopeLabel");
 
-    notesScopeLbl.textContent = tr("entrar:session.notesScopeLong", "Suas anotações · só você vê · ficam salvas na sua conta");
+    // Mobile: texto curto pra caber em 1 linha no drawer collapsed (44px
+    // só comporta a primeira linha). Desktop: texto longo c/ reassurance
+    // completo de privacidade + persistência.
+    const isMobileViewport = window.matchMedia('(max-width: 640px)').matches;
+    notesScopeLbl.textContent = isMobileViewport
+      ? tr("entrar:session.notesScopeShort", "Suas anotações · só você vê")
+      : tr("entrar:session.notesScopeLong", "Suas anotações · só você vê · ficam salvas na sua conta");
 
     let notes = []; // [{ noteId?, text, createdAt }]
 

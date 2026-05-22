@@ -5425,6 +5425,23 @@ html.ep-degraded body { padding-top: 38px; }
     width: 12px;
     height: 12px;
   }
+  /* Label do scope precisa caber em 1 linha — sem isso, texto longo
+     ("Suas anotações · só você vê · ficam salvas na sua conta") quebra
+     em 2 linhas e o max-height: 44px do drawer collapsed corta a 2ª.
+     .ep-lock vira flex item que cresce + permite encolher (min-width:0
+     destrava o overflow), e o span do label trunca com ellipsis. */
+  #inSession .ep-patient-notes__head .ep-lock {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+  }
+  #inSession .ep-patient-notes__head #notesScopeLabel {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    min-width: 0;
+  }
   #inSession .ep-patient-notes__list {
     max-height: 12vh;
     overflow-y: auto;
