@@ -2379,6 +2379,25 @@ body.ep-consult .ep-theme-toggle {
       "notes"
       "topics";
   }
+  /* Patient view (entrar.html) tem grid-template-areas próprio com 2 colunas
+     fora de media query — maior specificity vence essa regra acima e o tile
+     local ficava imprensado lateral ao do terapeuta no mobile. Override
+     explícito: terapeuta primeiro (foco), self-view depois, anotações por
+     último. */
+  .ep-consult__video--inline.ep-consult__video--patient {
+    grid-template-areas:
+      "patient"
+      "local"
+      "notes";
+  }
+  .ep-consult__video--inline.ep-consult__video--patient #tileRemote {
+    min-height: 50vh;        /* terapeuta dominante */
+    aspect-ratio: auto;
+  }
+  .ep-consult__video--inline.ep-consult__video--patient #tileLocal {
+    min-height: 22vh;        /* self-view secundário, ainda visível */
+    aspect-ratio: auto;
+  }
 }
 
 /* Painel de anotações inline (substitui a sidebar direita) ─────────── */
@@ -5243,6 +5262,85 @@ html.ep-degraded body { padding-top: 38px; }
   /* Botão "Painel" no topbar do consultório esconde em mobile — economiza
      espaço pro endessão (botão crítico vermelho) ficar visível. */
   .ep-consult__topbar a[href*="painel.html"] { display: none; }
+
+  /* ─── entrar.html (paciente) — fix urgente da topbar mobile ──────────
+     Bug: brand "Em consulta com [Nome Completo]" quebrava em 4 linhas
+     (serif 17px), controls bar absoluta no centro sobrepunha o nome E
+     o status pill "em sessão", timer "0m 30s" cortado na borda direita.
+
+     Solução: scopa só ao #inSession (paciente). Topbar vira 2 linhas via
+     flex-wrap. Brand 1ª linha trunca nome com ellipsis. Controls bar sai
+     do absoluto, vira 2ª linha centralizada. Status pill + E2EE badge
+     escondidos no mobile (redundantes com cronômetro rodando). */
+  #inSession .ep-consult__topbar {
+    padding: 10px 12px;
+    padding-top: max(10px, env(safe-area-inset-top));
+    flex-wrap: wrap;
+    gap: 8px;
+    row-gap: 8px;
+  }
+  #inSession .ep-consult__topbar .ep-brand {
+    font-size: 14px;
+    gap: 8px;
+    min-width: 0;        /* permite encolher pra caber timer ao lado */
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+  #inSession .ep-consult__topbar .ep-brand__mark {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+  }
+  #inSession .ep-consult__topbar .ep-brand__name {
+    min-width: 0;
+    overflow: hidden;
+  }
+  #inSession .ep-consult__topbar .ep-brand__name > span:not(.ep-brand__lead) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;       /* trunca em 1 linha (flex column do parent não bastava) */
+    max-width: 100%;
+  }
+  /* Status pill e E2EE badge somem no mobile — cronômetro já indica que
+     a sessão está rodando, pill ocupa espaço e sobrepunha botões. */
+  #inSession .ep-consult__topbar #connectionStatus,
+  #inSession .ep-consult__topbar #e2eeBadge {
+    display: none;
+  }
+  /* Grupo flex do meio (que tem só o timer agora) vira inline auto-size. */
+  #inSession .ep-consult__topbar .ep-flex--center.ep-w-full {
+    flex: 0 0 auto;
+    width: auto;
+    gap: 0;
+  }
+  /* Controls bar: padrão mobile de app de vídeo — pílula flutuante fixa
+     no rodapé. Sai do `position: absolute` da topbar (que sobrepunha brand
+     E status pill na mesma horizontal). Estilo Zoom/Meet/WhatsApp Calls:
+     usuário sabe onde encontrar mic/cam/desligar sem competir com header. */
+  #inSession .ep-controls-bar--topbar {
+    position: fixed;
+    left: 50%;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    top: auto;
+    transform: translateX(-50%);
+    width: auto;
+    padding: 8px 12px;
+    gap: 10px;
+    background: rgba(20,17,13,0.92);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(215,176,107,0.22);
+    border-radius: 999px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+    z-index: 100;
+  }
+  /* Espaço no fundo da área de conteúdo pro controls bar fixed não cobrir
+     o composer de anotações (textarea + botão Salvar). 64px = altura do
+     pill ~52px + 12px de respiro. */
+  #inSession .ep-consult__main {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
 }
 
 /* Cards de métrica desktop usam repeat(3, 1fr) inline em painel.html e
