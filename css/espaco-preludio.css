@@ -105,10 +105,17 @@ html[data-theme="dark"] {
    Wrapper deve ter position:relative. Posicionamento absoluto no canto
    inferior direito. SVG embutido (sem fetch). */
 .ep-avatar-wrap { position: relative; display: inline-block; flex-shrink: 0; line-height: 0; }
+/* Posicionamento genérico do badge: centro do badge SEMPRE cai no
+   perímetro do avatar a 45° (bottom-right), funcionando pra QUALQUER
+   tamanho de avatar (36/56/64/96px) sem ajustar offsets por tamanho.
+   Math: pra círculo inscrito em box AxA, perímetro a 45° = (0.854A, 0.854A).
+   Then transform: translate(-50%, -50%) centra o badge nesse ponto.
+   Resultado: metade dentro / metade fora visualmente, sempre. */
 .ep-verified-badge {
   position: absolute;
-  bottom: -2px;
-  right: -2px;
+  top: 85.355%;
+  left: 85.355%;
+  transform: translate(-50%, -50%);
   width: 18px;
   height: 18px;
   background: var(--ep-verified-blue);
@@ -129,12 +136,9 @@ html[data-theme="dark"] {
   stroke-width: 3.2;
   fill: none;
 }
-.ep-verified-badge--lg { width: 22px; height: 22px; bottom: -3px; right: -3px; }
+.ep-verified-badge--lg { width: 22px; height: 22px; }
 .ep-verified-badge--lg svg { width: 14px; height: 14px; }
-/* xl 28px num avatar 96px: bottom/right 0 deixa o centro do badge
-   exatamente no perímetro da foto a 45° (metade dentro, metade fora).
-   Antes era -4/-4 que jogava todo o badge pra fora. */
-.ep-verified-badge--xl { width: 28px; height: 28px; bottom: 0; right: 0; }
+.ep-verified-badge--xl { width: 28px; height: 28px; }
 .ep-verified-badge--xl svg { width: 18px; height: 18px; }
 
 /* Variant inline — usado na pagina publica /profissionais.html ao lado
@@ -142,8 +146,9 @@ html[data-theme="dark"] {
    e o tamanho fica padrao 18px alinhado ao texto. */
 .ep-verified-badge--inline {
   position: relative;
-  bottom: auto;
-  right: auto;
+  top: auto;
+  left: auto;
+  transform: none;
   width: 18px;
   height: 18px;
   vertical-align: middle;
