@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-174">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-175">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
@@ -237,8 +237,16 @@
 
   // Renderiza hero do profissional
   $("therapistName").textContent = profile.displayName || tr("agendar:hero.fallbackName", "Profissional");
+  // Slug do backend (ex: "terapia-de-casal") → label legível ("Terapia de
+  // casal"). Sentence case (só a 1ª letra maiúscula) — "casal" não vira
+  // "Casal" porque profissões em português usam minúscula no meio.
+  function prettyEspecialidade(slug) {
+    if (!slug) return "";
+    const s = String(slug).replace(/-+/g, " ").trim().toLowerCase();
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
   const metaParts = [];
-  if (profile.especialidade) metaParts.push(profile.especialidade);
+  if (profile.especialidade) metaParts.push(prettyEspecialidade(profile.especialidade));
   if (profile.numeroConselho && profile.conselhoLabel) {
     metaParts.push(`${profile.conselhoLabel} ${profile.numeroConselho}`);
   } else if (profile.numeroConselho) {
