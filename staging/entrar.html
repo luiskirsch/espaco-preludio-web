@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-166">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-167">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
@@ -650,37 +650,78 @@
     });
 
     // ─── Fullscreen toggle (mobile) ───────────────────────────────────
-    // iOS 16.4+ suporta requestFullscreen em qualquer elemento (não só
-    // <video>). Em versões antigas, fallback é instrução pra PWA install
-    // via "Adicionar à tela de início" (que abre em modo standalone via
-    // apple-mobile-web-app-capable meta tag).
+    // Estratégia em camadas:
+    //  1. Se ja em modo standalone (PWA instalado), botao some — nao tem
+    //     chrome pra esconder.
+    //  2. Tenta Fullscreen API (Element.requestFullscreen ou webkit). Em
+    //     iOS 16.4+ funciona em qualquer elemento. Em desktop / Android
+    //     funciona perfeito.
+    //  3. Verifica 250ms depois se realmente entrou em fullscreen. iOS
+    //     Safari as vezes aceita o call mas nao esconde o chrome do
+    //     browser (especialmente versoes anteriores a 17). Se nao entrou,
+    //     mostra modal com instrucao de "Adicionar a tela inicial" — que
+    //     com as meta tags PWA abre standalone de verdade, sem chrome.
     const ctrlFullscreen = document.getElementById("ctrlFullscreen");
+    const isStandalone = () =>
+      window.navigator.standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches;
+
     if (ctrlFullscreen) {
+      if (isStandalone()) ctrlFullscreen.style.display = "none";
+
       ctrlFullscreen.addEventListener("click", async () => {
-        try {
-          const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
-          if (isFs) {
+        const inFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+        if (inFs) {
+          try {
             if (document.exitFullscreen) await document.exitFullscreen();
             else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-          } else {
-            const el = document.documentElement;
-            if (el.requestFullscreen) await el.requestFullscreen();
-            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-            else {
-              alert(tr("entrar:session.fullscreenFallback",
-                "Pra tela cheia: toque em compartilhar (□↑) no Safari → 'Adicionar à Tela de Início'. Depois abra pelo ícone."));
-            }
+          } catch (e) { console.warn("exit_fs_failed", e); }
+          return;
+        }
+        const el = document.documentElement;
+        try {
+          if (el.requestFullscreen) {
+            await el.requestFullscreen({ navigationUI: 'hide' });
+          } else if (el.webkitRequestFullscreen) {
+            el.webkitRequestFullscreen();
           }
         } catch (e) {
-          console.warn("fullscreen_failed", e);
+          console.warn("request_fs_failed", e);
         }
+        setTimeout(() => {
+          const actuallyFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+          if (!actuallyFs) {
+            showInstallPrompt();
+          }
+        }, 250);
       });
+
       const syncFsClass = () => {
         const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
         document.body.classList.toggle("ep-is-fullscreen", isFs);
       };
       document.addEventListener("fullscreenchange", syncFsClass);
       document.addEventListener("webkitfullscreenchange", syncFsClass);
+    }
+
+    function showInstallPrompt() {
+      const isIOS = /iP(ad|hone|od)/.test(navigator.platform || navigator.userAgent || "");
+      const isAndroid = /Android/i.test(navigator.userAgent || "");
+      let msg;
+      if (isIOS) {
+        msg = "Pra tela cheia no iPhone:\n\n" +
+              "1. Toque no botao Compartilhar (quadrado com seta pra cima) no rodape do Safari\n" +
+              "2. Role e selecione 'Adicionar a Tela de Inicio'\n" +
+              "3. Toque em 'Adicionar'\n" +
+              "4. Abra a consulta pelo icone na sua tela inicial\n\n" +
+              "Vai abrir sem o navegador, em tela cheia.";
+      } else if (isAndroid) {
+        msg = "Pra tela cheia: no menu do Chrome (3 pontinhos), selecione 'Adicionar a tela inicial'. Depois abra pelo icone.";
+      } else {
+        msg = "Seu navegador nao permitiu tela cheia. Tente outro navegador ou acesse pelo celular.";
+      }
+      alert(msg);
     }
 
     // ─── Anotações collapse/expand (mobile) ───────────────────────────

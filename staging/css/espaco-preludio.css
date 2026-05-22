@@ -5243,9 +5243,16 @@ html.ep-degraded body { padding-top: 38px; }
    #cidMenu (busca CID-10) tinha min-width:360px e position:absolute right:0
    — overflowava viewport mobile. Constrange a viewport com max-width. */
 @media (max-width: 640px) {
+  /* Controles centrais 40px (era 44px Apple HIG min) — feedback do usuário
+     "diminua os botões pra dar mais espaço". 40px ainda é tap-friendly em
+     polegares adultos, libera ~12px no pill total. */
   .ep-controls-bar--topbar .ep-ctrl {
-    width: 44px !important;
-    height: 44px !important;
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .ep-controls-bar--topbar .ep-ctrl svg {
+    width: 16px;
+    height: 16px;
   }
   #cidMenu, #templateMenu {
     left: 8px !important;
@@ -5439,7 +5446,8 @@ html.ep-degraded body { padding-top: 38px; }
     padding: 8px 14px;
   }
 
-  /* Controls bar: pílula flutuante fixed no rodapé (padrão de video call) */
+  /* Controls bar: pílula flutuante fixed no rodapé (padrão de video call).
+     Padding e gap reduzidos pra acompanhar buttons menores (40px). */
   #inSession .ep-controls-bar--topbar {
     position: fixed;
     left: 50%;
@@ -5447,8 +5455,8 @@ html.ep-degraded body { padding-top: 38px; }
     top: auto;
     transform: translateX(-50%);
     width: auto;
-    padding: 8px 12px;
-    gap: 10px;
+    padding: 6px 10px;
+    gap: 8px;
     background: rgba(20,17,13,0.92);
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
