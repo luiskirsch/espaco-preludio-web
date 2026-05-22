@@ -681,16 +681,17 @@
       console.error("cam_toggle_error", err);
     }
   });
-  ctrlLeave.addEventListener("click", async () => {
-    if (!confirm(tr("consultorio:alerts.leaveConfirm", "Sair da consulta? A sessão continua aberta para o paciente até você encerrá-la."))) return;
-    // Sair != encerrar: descarta o áudio capturado (sessão ainda continua,
-    // outro lado pode entrar; resumo só faz sentido quando encerra de fato).
-    try { await aiCapture?.cancel(); } catch {}
-    try { await room?.disconnect(); } catch {}
-    window.location.href = "./painel.html";
-  });
-
-  endSessionBtn.addEventListener("click", async () => {
+  // Handler unificado de encerrar — TANTO o botão vermelho de telefone
+  // (ctrlLeave, no controls bar) QUANTO o botão "Encerrar" do topbar
+  // (endSessionBtn) executam o mesmo fluxo: sobe o áudio pro resumo IA,
+  // chama o endpoint /encerrar no backend, desconecta do LiveKit.
+  //
+  // Antes: ctrlLeave era "Sair" (descartava áudio) e endSessionBtn era
+  // "Encerrar" (subia áudio). Bug grave de UX porque o botão vermelho de
+  // telefone é universal pra "encerrar chamada" (Zoom/Meet/FaceTime), e
+  // o usuário clicava nele descartando o áudio sem perceber — resumo IA
+  // nunca era gerado.
+  async function endSessionFlow() {
     if (!confirm(tr("consultorio:alerts.endConfirm", "Encerrar definitivamente esta consulta? O paciente será desconectado."))) return;
     // Ordem importa: stopAndUpload precisa rodar ANTES de room.disconnect
     // porque o MediaRecorder lê as tracks de áudio do LiveKit. Depois do
@@ -715,7 +716,9 @@
       } catch {}
     }
     window.location.href = "./painel.html";
-  });
+  }
+  ctrlLeave.addEventListener("click", endSessionFlow);
+  endSessionBtn.addEventListener("click", endSessionFlow);
 
   // ─── Gravação local cifrada ──────────────────────────────────
   const { SessionRecorder, downloadRecording } = await import("./js/session-record.js");
