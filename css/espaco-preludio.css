@@ -305,6 +305,138 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
 .ep-stack--lg { gap: 28px; }
 .ep-stack--xl { gap: 40px; }
 
+/* ─── Sidebar (premium SaaS shell) ───────────────────────
+   Aparece em desktop (>=900px) substituindo o topbar. Body precisa de
+   class .ep-has-sidebar pra ativar. Mobile: sidebar escondida, topbar
+   continua funcionando como antes. Estrutura: brand → nav agrupada por
+   contexto → footer com profile+logout. Fixed positioning, scroll interno.
+   Layout shift do conteúdo via body padding-left = sidebar width. */
+.ep-sidebar { display: none; }
+
+@media (min-width: 900px) {
+  body.ep-has-sidebar .ep-sidebar {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 240px;
+    background: var(--ep-surface);
+    border-right: 1px solid var(--ep-gold-line);
+    padding: 22px 14px;
+    gap: 22px;
+    z-index: 50;
+    overflow-y: auto;
+  }
+  body.ep-has-sidebar > .ep-topbar { display: none; }
+  body.ep-has-sidebar { padding-left: 240px; }
+}
+
+.ep-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--ep-ink);
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+.ep-sidebar__brand .ep-brand__mark { width: 36px; height: 36px; }
+.ep-sidebar__brand .ep-brand__name {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+  font-family: var(--ep-font-serif);
+  font-weight: 600;
+  font-size: 16px;
+}
+.ep-sidebar__brand .ep-brand__lead {
+  color: var(--ep-ink-2);
+  font-family: var(--ep-font-sans);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ep-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+  min-height: 0;
+}
+.ep-sidebar__group { display: flex; flex-direction: column; gap: 2px; }
+.ep-sidebar__group-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ep-gold-ink);
+  padding: 0 12px;
+  margin-bottom: 6px;
+}
+.ep-sidebar__nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ep-ink-2);
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.ep-sidebar__nav a svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.ep-sidebar__nav a:hover {
+  background: var(--ep-accent-soft);
+  color: var(--ep-ink);
+}
+.ep-sidebar__nav a.is-active {
+  background: var(--ep-accent-soft);
+  color: var(--ep-gold-ink);
+  font-weight: 600;
+}
+
+.ep-sidebar__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ep-line);
+  flex-shrink: 0;
+}
+.ep-sidebar__profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--ep-ink);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color 0.15s ease;
+}
+.ep-sidebar__profile:hover { background: var(--ep-accent-soft); }
+.ep-sidebar__profile-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ep-sidebar__profile .ep-nav-avatar {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
 /* ─── Topbar ────────────────────────────────────────────── */
 
 .ep-topbar {
