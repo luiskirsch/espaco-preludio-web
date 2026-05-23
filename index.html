@@ -74,6 +74,98 @@
   }
   </script>
 
+  <!-- Schema.org FAQPage como JSON-LD (alem do microdata inline na secao FAQ).
+       Google prefere JSON-LD pra rich results. Duplica intencionalmente os
+       FAQs aqui pra detector pegar mesmo se o crawler nao processar microdata. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "E se eu perder a chave-semente que protege meu prontuário?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A chave-semente é gerada no seu dispositivo no primeiro acesso e protege todas as anotações cifradas (E2EE). Recomendamos exportar o backup cifrado (.epbk) assim que criar a conta — é um arquivo que você guarda offline e contém a chave + dados em formato cifrado. Se perder o dispositivo principal, importa o .epbk no novo. Sem o backup, prontuários cifrados ficam inacessíveis (essa é a contrapartida de E2EE real: nem nós conseguimos abrir)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Como funciona a validação automática do meu conselho?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No cadastro, você informa o número da sua inscrição em um dos 8 conselhos aceitos (CRP, CRM, CRESS, CREFITO, CRFa, CRN, CRO, CREF). Consultamos a base pública do conselho em tempo real pra confirmar que a inscrição existe, está ativa e bate com seu nome. Aprovação geralmente em segundos. Caso o sistema do conselho esteja fora do ar, fazemos validação manual em até 24h. Estudantes enviam declaração de matrícula (validada por IA)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "A receita digital com ICP-Brasil é aceita em farmácias?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sim. Usamos certificado ICP-Brasil válido juridicamente (MP 2.200-2/2001), o mesmo padrão que farmácias, órgãos públicos e Receita Federal reconhecem. A receita gerada no Espaço Prelúdio contém QR code para validação online e tem mesma validade legal de receita em papel. Disponível para CRM e CREFITO no plano Recém-formado em diante."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "O paciente precisa instalar algum aplicativo?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Não. O paciente entra pelo navegador (Chrome, Safari, Firefox, Edge) clicando no link único que você envia. Funciona em desktop, celular e tablet. Não há cadastro obrigatório — o paciente pode entrar como convidado ou criar conta opcional pra histórico próprio. Zero atrito."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Posso migrar prontuários de outra plataforma?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Em modo manual no momento — você copia e cola o conteúdo de cada paciente no formato livre das anotações. Importação em massa via CSV ou exportação de outras plataformas está em roadmap (sob demanda; entre em contato pelo suporte se for um volume grande)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Como funciona o reembolso de convênio?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Os recibos gerados pela plataforma já vêm com codificação TUSS (Tabela Unificada de Saúde Suplementar) — o padrão que Unimed, Bradesco Saúde, SulAmérica e demais operadoras exigem pra reembolso. Paciente recebe recibo pronto pra anexar no app do convênio dele. Disponível no plano Recém-formado em diante."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Por que vocês não cobram comissão por sessão?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Porque achamos que cobrar percentual sobre o trabalho clínico é estrutura de marketplace, não de software. Marketplace ganha por escala de transação; software ganha por valor entregue por mês. A gente é software. Você define seu valor, recebe direto do paciente (Pix, cartão, transferência), e nada passa pelo nosso servidor — somos só a ferramenta."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Onde meus dados ficam armazenados?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Servidores em território brasileiro (AWS São Paulo), conforme exigência da LGPD Art. 33 pra dados de saúde. Anotações clínicas e prontuários são cifrados no seu dispositivo antes de subir — chegam no nosso banco já como blob criptografado que nem nós conseguimos ler. Vídeo das sessões passa por servidor de mídia (LiveKit) mas com cifragem ponta-a-ponta WebRTC; o conteúdo trafega cifrado mesmo internamente."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Posso testar antes de pagar?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sim. 30 dias grátis sem precisar cadastrar cartão. Você usa o plano Recém-formado ou Profissional completos no período, com todos os recursos liberados. Se cancelar antes do fim do trial, não gera cobrança nenhuma. Se decidir continuar, aí sim configura forma de pagamento."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Como funciona o atendimento de menores de idade?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Você cadastra o paciente menor normalmente, com nome, idade e dados clínicos. O responsável legal recebe o link de cada sessão por e-mail (configurável no perfil do paciente) e deve estar presente na primeira consulta para autorizar. Termo de consentimento digital é gerado e armazenado cifrado no prontuário, conforme Resolução CFP 01/2009 (Art. 12) e Estatuto da Criança e Adolescente."
+        }
+      }
+    ]
+  }
+  </script>
+
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
