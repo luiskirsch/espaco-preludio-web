@@ -170,7 +170,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-196">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-197">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
@@ -198,68 +198,20 @@
 <main>
 
   <section class="ep-hero">
-    <!-- Constelação interativa: 4 estados (default → medicina → psiquiatria → psicologia)
-         cyclados a cada mouseenter. SVG inline pra ter controle de hover.
-         pointer-events: none no <svg>, apenas o <rect.ep-constellation__hit>
-         captura hover — assim não bloqueia cliques no h1/CTAs abaixo. -->
+    <!-- Constelação interativa: shell SVG vazio (defs + hit rect). Stars e
+         linhas são criados/animados via JS abaixo, com morphing real entre
+         estados (default → medicina → psiquiatria → psicologia). Cada hover
+         interpola posições dos 9 nós usando easing cubic, com twinkle ambient
+         contínuo. pointer-events: none no SVG; só o hit rect capta mouseenter. -->
     <svg class="ep-constellation" viewBox="0 0 800 500" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
       <defs>
         <radialGradient id="ep-cs-glow" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stop-color="#fff8e0" stop-opacity="1"/>
-          <stop offset="40%" stop-color="#e2b76a" stop-opacity="0.6"/>
+          <stop offset="40%" stop-color="#e2b76a" stop-opacity="0.55"/>
           <stop offset="100%" stop-color="#e2b76a" stop-opacity="0"/>
         </radialGradient>
       </defs>
-      <rect class="ep-constellation__hit" x="100" y="40" width="700" height="430" fill="transparent" pointer-events="all"/>
-      <!-- State 0: constelação solta default -->
-      <g class="ep-constellation__state is-active" data-state="0">
-        <path d="M384 144 L528 278 L656 180" stroke="#d4a553" stroke-width="0.8" fill="none" opacity="0.5"/>
-        <path d="M528 278 L272 378" stroke="#d4a553" stroke-width="0.8" fill="none" opacity="0.45"/>
-        <path d="M656 180 L720 324" stroke="#d4a553" stroke-width="0.8" fill="none" opacity="0.45"/>
-        <circle cx="384" cy="144" r="12" fill="url(#ep-cs-glow)"/><circle cx="384" cy="144" r="2.2" fill="#fff8e0"/>
-        <circle cx="528" cy="278" r="10" fill="url(#ep-cs-glow)"/><circle cx="528" cy="278" r="1.8" fill="#fff8e0"/>
-        <circle cx="656" cy="180" r="8" fill="url(#ep-cs-glow)"/><circle cx="656" cy="180" r="1.5" fill="#fff8e0"/>
-        <circle cx="272" cy="378" r="7" fill="url(#ep-cs-glow)"/><circle cx="272" cy="378" r="1.3" fill="#fff8e0"/>
-        <circle cx="720" cy="324" r="6" fill="url(#ep-cs-glow)"/><circle cx="720" cy="324" r="1.2" fill="#fff8e0"/>
-      </g>
-      <!-- State 1: Medicina (Bastão de Asclépio — haste + serpente) -->
-      <g class="ep-constellation__state" data-state="1">
-        <path d="M400 60 L400 440" stroke="#d4a553" stroke-width="0.8" fill="none" opacity="0.5"/>
-        <path d="M340 130 Q400 165 460 200 Q400 250 340 300 Q400 335 460 370" stroke="#d4a553" stroke-width="0.8" fill="none" opacity="0.45"/>
-        <circle cx="400" cy="60" r="10" fill="url(#ep-cs-glow)"/><circle cx="400" cy="60" r="1.8" fill="#fff8e0"/>
-        <circle cx="400" cy="250" r="12" fill="url(#ep-cs-glow)"/><circle cx="400" cy="250" r="2.2" fill="#fff8e0"/>
-        <circle cx="400" cy="440" r="10" fill="url(#ep-cs-glow)"/><circle cx="400" cy="440" r="1.8" fill="#fff8e0"/>
-        <circle cx="340" cy="130" r="7" fill="url(#ep-cs-glow)"/><circle cx="340" cy="130" r="1.3" fill="#fff8e0"/>
-        <circle cx="460" cy="200" r="7" fill="url(#ep-cs-glow)"/><circle cx="460" cy="200" r="1.3" fill="#fff8e0"/>
-        <circle cx="340" cy="300" r="7" fill="url(#ep-cs-glow)"/><circle cx="340" cy="300" r="1.3" fill="#fff8e0"/>
-        <circle cx="460" cy="370" r="7" fill="url(#ep-cs-glow)"/><circle cx="460" cy="370" r="1.3" fill="#fff8e0"/>
-      </g>
-      <!-- State 2: Psiquiatria (silhueta do cérebro — oval + fissura) -->
-      <g class="ep-constellation__state" data-state="2">
-        <path d="M220 250 Q280 100 400 80 Q520 100 580 250 Q520 400 400 420 Q280 400 220 250 Z" stroke="#d4a553" stroke-width="0.8" fill="none" opacity="0.5"/>
-        <path d="M280 230 Q340 200 400 240 Q460 280 520 230" stroke="#d4a553" stroke-width="0.5" fill="none" opacity="0.35"/>
-        <circle cx="220" cy="250" r="10" fill="url(#ep-cs-glow)"/><circle cx="220" cy="250" r="1.8" fill="#fff8e0"/>
-        <circle cx="300" cy="110" r="8" fill="url(#ep-cs-glow)"/><circle cx="300" cy="110" r="1.5" fill="#fff8e0"/>
-        <circle cx="400" cy="80" r="12" fill="url(#ep-cs-glow)"/><circle cx="400" cy="80" r="2.2" fill="#fff8e0"/>
-        <circle cx="500" cy="110" r="8" fill="url(#ep-cs-glow)"/><circle cx="500" cy="110" r="1.5" fill="#fff8e0"/>
-        <circle cx="580" cy="250" r="10" fill="url(#ep-cs-glow)"/><circle cx="580" cy="250" r="1.8" fill="#fff8e0"/>
-        <circle cx="500" cy="390" r="8" fill="url(#ep-cs-glow)"/><circle cx="500" cy="390" r="1.5" fill="#fff8e0"/>
-        <circle cx="400" cy="420" r="10" fill="url(#ep-cs-glow)"/><circle cx="400" cy="420" r="1.8" fill="#fff8e0"/>
-        <circle cx="300" cy="390" r="8" fill="url(#ep-cs-glow)"/><circle cx="300" cy="390" r="1.5" fill="#fff8e0"/>
-      </g>
-      <!-- State 3: Psicologia (letra grega Ψ) -->
-      <g class="ep-constellation__state" data-state="3">
-        <path d="M400 60 L400 450" stroke="#d4a553" stroke-width="0.8" fill="none" opacity="0.5"/>
-        <path d="M260 110 L400 280" stroke="#d4a553" stroke-width="0.8" fill="none" opacity="0.45"/>
-        <path d="M540 110 L400 280" stroke="#d4a553" stroke-width="0.8" fill="none" opacity="0.45"/>
-        <path d="M340 450 L460 450" stroke="#d4a553" stroke-width="0.8" fill="none" opacity="0.45"/>
-        <circle cx="400" cy="60" r="10" fill="url(#ep-cs-glow)"/><circle cx="400" cy="60" r="1.8" fill="#fff8e0"/>
-        <circle cx="260" cy="110" r="10" fill="url(#ep-cs-glow)"/><circle cx="260" cy="110" r="1.8" fill="#fff8e0"/>
-        <circle cx="540" cy="110" r="10" fill="url(#ep-cs-glow)"/><circle cx="540" cy="110" r="1.8" fill="#fff8e0"/>
-        <circle cx="400" cy="280" r="12" fill="url(#ep-cs-glow)"/><circle cx="400" cy="280" r="2.2" fill="#fff8e0"/>
-        <circle cx="340" cy="450" r="8" fill="url(#ep-cs-glow)"/><circle cx="340" cy="450" r="1.5" fill="#fff8e0"/>
-        <circle cx="460" cy="450" r="8" fill="url(#ep-cs-glow)"/><circle cx="460" cy="450" r="1.5" fill="#fff8e0"/>
-      </g>
+      <rect class="ep-constellation__hit" x="0" y="0" width="800" height="500" fill="transparent" pointer-events="all"/>
     </svg>
     <div class="ep-container">
       <div class="ep-eyebrow" data-i18n="index:hero.eyebrow">Consultório virtual · Para profissionais da área da saúde</div>
@@ -635,19 +587,172 @@
 </script>
 
 <script>
-  // Constelação interativa: a cada mouseenter no hit area, avança 1 estado.
-  // Cycle: default → medicina → psiquiatria → psicologia → default.
+  // Constelação interativa premium: 9 nós persistentes que MORPHAM posição
+  // entre 4 estados (default → medicina → psiquiatria → psicologia → ...).
+  // Cada hover dispara animação de ~1.2s com cubic ease + stagger leve por
+  // índice (rola fluida em vez de teleporte). Lines fade in/out via opacity
+  // mas endpoints seguem as stars em tempo real → linhas se "redobram" pra
+  // formar o novo símbolo. Twinkle ambient (sine wave por nó) roda contínuo.
   (function () {
-    const cs = document.querySelector('.ep-constellation');
-    if (!cs) return;
-    const hit = cs.querySelector('.ep-constellation__hit');
-    const states = cs.querySelectorAll('.ep-constellation__state');
-    if (!hit || states.length === 0) return;
-    let idx = 0;
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const svg = document.querySelector('.ep-constellation');
+    if (!svg) return;
+    const hit = svg.querySelector('.ep-constellation__hit');
+    if (!hit) return;
+
+    // 9 nós por estado — morphing 1-pra-1 entre índices.
+    const STATES = [
+      { // 0: constelação solta default
+        stars: [
+          {x:200,y:120,r:2.8},{x:340,y:260,r:2.4},{x:500,y:150,r:2.0},
+          {x:160,y:360,r:1.6},{x:600,y:290,r:1.4},{x:260,y:200,r:1.2},
+          {x:440,y:330,r:1.2},{x:380,y:90,r:1.4},{x:180,y:280,r:1.2}
+        ],
+        lines: [[0,1],[1,2],[3,1],[2,4]]
+      },
+      { // 1: Bastão de Asclépio (medicina) — haste vertical + serpente zigzag
+        stars: [
+          {x:400,y:50,r:2.6},{x:400,y:200,r:2.8},{x:400,y:350,r:2.6},{x:400,y:470,r:2.4},
+          {x:340,y:110,r:1.8},{x:460,y:170,r:1.8},{x:340,y:270,r:1.8},{x:460,y:320,r:1.8},
+          {x:340,y:380,r:1.6}
+        ],
+        lines: [[0,1],[1,2],[2,3],[4,5],[5,6],[6,7],[7,8]]
+      },
+      { // 2: Cérebro (psiquiatria) — oval fechado
+        stars: [
+          {x:170,y:240,r:2.0},{x:230,y:110,r:1.8},{x:340,y:80,r:2.4},
+          {x:460,y:80,r:2.4},{x:570,y:110,r:1.8},{x:630,y:240,r:2.0},
+          {x:560,y:380,r:1.8},{x:380,y:420,r:2.2},{x:230,y:380,r:1.8}
+        ],
+        lines: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,0]]
+      },
+      { // 3: Ψ (psicologia) — 3 hastes convergindo + stem vertical
+        stars: [
+          {x:400,y:50,r:2.4},{x:240,y:110,r:2.0},{x:560,y:110,r:2.0},
+          {x:320,y:200,r:1.6},{x:480,y:200,r:1.6},{x:400,y:280,r:2.8},
+          {x:400,y:360,r:2.0},{x:400,y:440,r:2.2},{x:400,y:140,r:1.6}
+        ],
+        lines: [[0,8],[8,5],[5,6],[6,7],[1,3],[3,5],[2,4],[4,5]]
+      }
+    ];
+
+    const N = 9;
+    const ANIM_MS = 1100;
+    // Cubic ease-in-out: começa devagar, acelera no meio, desacelera no fim.
+    const ease = (t) => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3) / 2;
+
+    // Cria grupos pra controlar z-order (linhas atrás, stars na frente).
+    const linesGroup = document.createElementNS(SVG_NS, 'g');
+    const starsGroup = document.createElementNS(SVG_NS, 'g');
+    svg.insertBefore(linesGroup, hit);
+    svg.insertBefore(starsGroup, hit);
+
+    // Cria 9 stars (cada uma = glow halo + core branco).
+    const stars = [];
+    const init = STATES[0].stars;
+    for (let i = 0; i < N; i++) {
+      const glow = document.createElementNS(SVG_NS, 'circle');
+      glow.setAttribute('fill', 'url(#ep-cs-glow)');
+      glow.setAttribute('cx', init[i].x);
+      glow.setAttribute('cy', init[i].y);
+      glow.setAttribute('r', init[i].r * 4);
+      const core = document.createElementNS(SVG_NS, 'circle');
+      core.setAttribute('fill', '#fff8e0');
+      core.setAttribute('cx', init[i].x);
+      core.setAttribute('cy', init[i].y);
+      core.setAttribute('r', init[i].r * 0.7);
+      starsGroup.appendChild(glow);
+      starsGroup.appendChild(core);
+      stars.push({ glow, core, phase: Math.random() * Math.PI * 2 });
+    }
+
+    // União de TODAS as conexões possíveis (chave canônica menor-maior).
+    // Cada linha existe como <line> SVG persistente; opacidade controla
+    // se "aparece" em cada estado. Endpoints atualizados continuamente.
+    const allKeys = new Set();
+    STATES.forEach(s => s.lines.forEach(([a,b]) =>
+      allKeys.add(a < b ? `${a}-${b}` : `${b}-${a}`)));
+    const lineMap = {};
+    allKeys.forEach(key => {
+      const [a, b] = key.split('-').map(Number);
+      const el = document.createElementNS(SVG_NS, 'line');
+      el.setAttribute('stroke', '#d4a553');
+      el.setAttribute('stroke-width', '0.7');
+      el.setAttribute('stroke-linecap', 'round');
+      el.setAttribute('opacity', '0');
+      el.style.transition = 'opacity 0.55s ease';
+      linesGroup.appendChild(el);
+      lineMap[key] = { el, a, b };
+    });
+
+    function applyLineState(stateIdx) {
+      const active = new Set(STATES[stateIdx].lines.map(([a,b]) =>
+        a < b ? `${a}-${b}` : `${b}-${a}`));
+      Object.entries(lineMap).forEach(([key, { el }]) => {
+        el.setAttribute('opacity', active.has(key) ? '0.55' : '0');
+      });
+    }
+
+    // Posições "atuais" que mutam frame-a-frame durante morph.
+    let pos = init.map(s => ({ x: s.x, y: s.y, r: s.r }));
+
+    function syncLines() {
+      Object.values(lineMap).forEach(({ el, a, b }) => {
+        el.setAttribute('x1', pos[a].x);
+        el.setAttribute('y1', pos[a].y);
+        el.setAttribute('x2', pos[b].x);
+        el.setAttribute('y2', pos[b].y);
+      });
+    }
+    syncLines();
+    applyLineState(0);
+
+    let stateIdx = 0;
+    let raf = null;
+    function morphTo(targetIdx) {
+      if (raf) cancelAnimationFrame(raf);
+      const from = pos.map(p => ({ ...p }));
+      const to = STATES[targetIdx].stars;
+      const t0 = performance.now();
+      applyLineState(targetIdx);
+      function tick(now) {
+        const t = Math.min(1, (now - t0) / ANIM_MS);
+        const e = ease(t);
+        for (let i = 0; i < N; i++) {
+          // Stagger: cada nó atrasa 30ms — efeito fluido em vez de bloco rígido.
+          const ti = Math.max(0, Math.min(1, t - i * 0.03));
+          const ei = ease(ti);
+          pos[i].x = from[i].x + (to[i].x - from[i].x) * ei;
+          pos[i].y = from[i].y + (to[i].y - from[i].y) * ei;
+          pos[i].r = from[i].r + (to[i].r - from[i].r) * ei;
+          stars[i].glow.setAttribute('cx', pos[i].x);
+          stars[i].glow.setAttribute('cy', pos[i].y);
+          stars[i].glow.setAttribute('r', pos[i].r * 4);
+          stars[i].core.setAttribute('cx', pos[i].x);
+          stars[i].core.setAttribute('cy', pos[i].y);
+          stars[i].core.setAttribute('r', pos[i].r * 0.7);
+        }
+        syncLines();
+        if (t < 1) raf = requestAnimationFrame(tick);
+        else raf = null;
+      }
+      raf = requestAnimationFrame(tick);
+    }
+
+    // Twinkle ambient: cada star tem opacidade do glow modulada por sine
+    // com fase aleatória — efeito "respiração" sutil contínuo.
+    (function twinkle() {
+      const now = performance.now() / 1000;
+      for (let i = 0; i < N; i++) {
+        const v = 0.82 + Math.sin(now * 0.9 + stars[i].phase) * 0.18;
+        stars[i].glow.style.opacity = v;
+      }
+      requestAnimationFrame(twinkle);
+    })();
+
     hit.addEventListener('mouseenter', () => {
-      states[idx].classList.remove('is-active');
-      idx = (idx + 1) % states.length;
-      states[idx].classList.add('is-active');
+      stateIdx = (stateIdx + 1) % STATES.length;
+      morphTo(stateIdx);
     });
   })();
 </script>
