@@ -340,18 +340,18 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
 .ep-brand__mark {
   width: 38px;
   height: 38px;
-  border-radius: 50%;
-  background-color: rgba(200,155,74,0.12);
-  border: 1px solid var(--ep-gold-line);
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='24' height='24' fill='white'/%3E%3Ccircle cx='14.5' cy='9' r='4.2' fill='black'/%3E%3C/mask%3E%3C/defs%3E%3Ccircle cx='11.5' cy='13' r='4.4' fill='%23c89b4a' mask='url(%23m)'/%3E%3Ccircle cx='16' cy='8' r='0.55' fill='%23e3c489'/%3E%3C/svg%3E");
-  background-size: 100%;
+  /* Unificação de marca: logo oficial SextoLugar/Prelúdio (triangulo + estrela
+     em circulo prateado). A imagem ja traz seu proprio anel e fundo preto,
+     entao removemos border/background-color/box-shadow do wrapper pra nao
+     duplicar tratamento. */
+  background-image: url("logo_oficial_fundo_transparente.png");
+  background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
   display: inline-block;
-  font-size: 0; /* esconde o texto "EP" se ainda estiver no HTML */
+  font-size: 0;
   color: transparent;
   flex: 0 0 auto;
-  box-shadow: 0 0 16px rgba(200,155,74,0.28), inset 0 1px 0 rgba(255,255,255,0.4);
 }
 
 .ep-brand__name { display: flex; flex-direction: column; line-height: 1.05; font-family: var(--ep-font-serif); }
