@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-208">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-209">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
@@ -1768,24 +1768,33 @@
 <script>
   // Sync de avatar/nome/TISS do topbar (que tem a logica Firebase) pra
   // sidebar. MutationObserver garante atualização quando o topbar muda.
-  // Logout: encaminha o click pro botão original do topbar (mesma logica).
+  // Avatar: replica foto (backgroundImage) + selo (innerHTML) + iniciais
+  // (textContent) — auth-guard.js seta tudo isso no topbar.
   (function () {
-    const pairs = [
-      ['topUserName', 'sidebarUserName'],
-      ['topUserAvatar', 'sidebarUserAvatar']
-    ];
-    function syncText() {
-      pairs.forEach(([fromId, toId]) => {
-        const a = document.getElementById(fromId);
-        const b = document.getElementById(toId);
-        if (a && b) b.textContent = a.textContent;
-      });
+    const topName = document.getElementById('topUserName');
+    const sideName = document.getElementById('sidebarUserName');
+    const topAvatar = document.getElementById('topUserAvatar');
+    const sideAvatar = document.getElementById('sidebarUserAvatar');
+
+    function syncName() {
+      if (topName && sideName) sideName.textContent = topName.textContent;
     }
-    pairs.forEach(([fromId]) => {
-      const el = document.getElementById(fromId);
-      if (el) new MutationObserver(syncText).observe(el, { childList: true, characterData: true, subtree: true });
+    function syncAvatar() {
+      if (!topAvatar || !sideAvatar) return;
+      sideAvatar.style.backgroundImage = topAvatar.style.backgroundImage;
+      sideAvatar.style.backgroundSize = topAvatar.style.backgroundSize || 'cover';
+      sideAvatar.style.backgroundPosition = topAvatar.style.backgroundPosition || 'center';
+      sideAvatar.innerHTML = topAvatar.innerHTML;
+      if (topAvatar.classList.contains('ep-avatar-wrap')) sideAvatar.classList.add('ep-avatar-wrap');
+    }
+
+    if (topName) new MutationObserver(syncName).observe(topName, { childList: true, characterData: true, subtree: true });
+    if (topAvatar) new MutationObserver(syncAvatar).observe(topAvatar, {
+      childList: true, characterData: true, subtree: true,
+      attributes: true, attributeFilter: ['style', 'class']
     });
-    syncText();
+    syncName();
+    syncAvatar();
 
     // TISS link: replica display do topbar (data-tiss-only é mostrado por código existente)
     const topTiss = document.querySelector('header.ep-topbar [data-tiss-only]');
