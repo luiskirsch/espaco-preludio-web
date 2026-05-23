@@ -85,13 +85,13 @@
    variáveis com os mesmos nomes, só inverte. Cores quentes (gold) ficam
    um tom mais frio pra equilibrar contraste em fundo escuro. */
 html[data-theme="dark"] {
-  /* Dark mode = espelho do SextoLugar/Prelúdio Jogos. Near-black quente
-     + cream sobre dark + gold como accent principal (ao invés de só
-     decoração, vira ação primária). */
-  --ep-bg:           #0a0807;
-  --ep-bg-warm:      #110d0a;
-  --ep-bg-2:         #15110d;
-  --ep-surface:      #1c1814;
+  /* Dark mode = espelho do SextoLugar/Prelúdio Jogos. Premium near-black
+     #0D0D0D + cream sobre dark + gold como accent principal (ao invés de
+     só decoração, vira ação primária). */
+  --ep-bg:           #0d0d0d;
+  --ep-bg-warm:      #131210;
+  --ep-bg-2:         #17150f;
+  --ep-surface:      #1c1914;
   --ep-ink:          #ebe0c8;
   --ep-ink-2:        #a89878;
   --ep-ink-3:        #6e6450;
@@ -1067,12 +1067,41 @@ html.ep-unregulated .ep-perfil-sub--unregulated { display: block; }
 
 .ep-hero {
   padding: 80px 0 56px;
+  position: relative;
+  overflow: hidden;
   /* Glow dourado sutil no canto superior direito — adiciona profundidade
      premium ao hero sem mudar a paleta. Inspirado no fade gold do
-     SextoLugar. Não visível em mobile (background pode ficar pesado). */
+     SextoLugar. Light mode: muito sutil. Dark mode: glow mais intenso
+     + constelações dourados via ::before. */
   background:
     radial-gradient(800px 500px at 85% -10%, rgba(212,165,83,0.08), transparent 60%),
     radial-gradient(600px 400px at 5% 100%, rgba(212,165,83,0.04), transparent 55%);
+}
+
+/* ─── Dark mode hero — constelações Prelúdio ─────────────────────────
+   Pequenas estrelas dispersas + linhas finas conectando pontos chave,
+   posicionadas nos cantos pra não competir com texto. SVG inline (zero
+   request HTTP) com mix de circles (estrelas) e paths (constelações). */
+html[data-theme="dark"] .ep-hero {
+  background:
+    radial-gradient(900px 600px at 88% -8%, rgba(212,165,83,0.14), transparent 60%),
+    radial-gradient(700px 500px at 5% 105%, rgba(212,165,83,0.08), transparent 55%),
+    var(--ep-bg);
+}
+html[data-theme="dark"] .ep-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 700' fill='none'><g opacity='0.55'><circle cx='960' cy='110' r='1.8' fill='%23e2b76a'/><circle cx='1020' cy='180' r='1.2' fill='%23e2b76a'/><circle cx='1100' cy='90' r='2.2' fill='%23e2b76a'/><circle cx='1150' cy='220' r='1.5' fill='%23e2b76a'/><circle cx='880' cy='240' r='1' fill='%23e2b76a'/><circle cx='1050' cy='320' r='1.4' fill='%23e2b76a'/><circle cx='1140' cy='400' r='1.8' fill='%23e2b76a'/><path d='M960 110 L1020 180 L1100 90' stroke='%23d4a553' stroke-width='0.6' opacity='0.4'/><path d='M1020 180 L1150 220' stroke='%23d4a553' stroke-width='0.5' opacity='0.35'/><path d='M1050 320 L1140 400' stroke='%23d4a553' stroke-width='0.5' opacity='0.3'/></g><g opacity='0.45'><circle cx='80' cy='560' r='1.8' fill='%23e2b76a'/><circle cx='40' cy='620' r='1.2' fill='%23e2b76a'/><circle cx='160' cy='600' r='1.4' fill='%23e2b76a'/><circle cx='200' cy='540' r='1' fill='%23e2b76a'/><circle cx='110' cy='670' r='1.6' fill='%23e2b76a'/><path d='M80 560 L160 600 L110 670' stroke='%23d4a553' stroke-width='0.6' opacity='0.35'/><path d='M40 620 L80 560' stroke='%23d4a553' stroke-width='0.4' opacity='0.3'/></g></svg>");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position: center;
+  z-index: 0;
+}
+html[data-theme="dark"] .ep-hero > * {
+  position: relative;
+  z-index: 1;
 }
 /* Destaque do trio ICP (medicos, psiquiatras, psicologos) na hero. Tamanho
    intermediario entre h1 e lead, cor GOLD-INK pra puxar olho — primeiro
@@ -1449,6 +1478,31 @@ h3.ep-h3 {
   box-shadow: 0 1px 0 rgba(28,31,29,0.08), 0 4px 12px -4px rgba(45,74,62,0.30);
 }
 .ep-btn--primary:hover { background: var(--ep-accent-hover); border-color: var(--ep-accent-hover); }
+
+/* Dark mode: botão primário vira GOLD GRADIENT com texto dark — padrão
+   Prelúdio luxury (Hermès gold-on-dark). Glow dourado sutil no shadow. */
+html[data-theme="dark"] .ep-btn--primary,
+html[data-theme="dark"] .ep-btn--primary:hover,
+html[data-theme="dark"] .ep-btn--primary:focus,
+html[data-theme="dark"] .ep-btn--primary:visited {
+  color: #1a130a;
+}
+html[data-theme="dark"] .ep-btn--primary {
+  background: linear-gradient(135deg, #e2b76a 0%, #d4a553 50%, #c19340 100%);
+  border-color: #d4a553;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.12) inset,
+    0 4px 14px -4px rgba(212,165,83,0.45),
+    0 0 24px -8px rgba(226,183,106,0.35);
+}
+html[data-theme="dark"] .ep-btn--primary:hover {
+  background: linear-gradient(135deg, #ebc476 0%, #dfb159 50%, #cda04a 100%);
+  border-color: #e2b76a;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.18) inset,
+    0 6px 18px -4px rgba(212,165,83,0.55),
+    0 0 32px -8px rgba(226,183,106,0.50);
+}
 
 .ep-btn--ghost,
 .ep-btn--ghost:hover,
