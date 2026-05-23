@@ -313,6 +313,9 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
    Layout shift do conteúdo via body padding-left = sidebar width. */
 .ep-sidebar { display: none; }
 
+/* Sidebar SEMPRE em dark premium independente do tema da página principal
+   (oposição cromática com o conteúdo cream cria sensação de "chrome" do app,
+   tipo Notion/Linear). Cores hardcoded — não usa vars que mudam com tema. */
 @media (min-width: 900px) {
   body.ep-has-sidebar .ep-sidebar {
     display: flex;
@@ -322,8 +325,8 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     left: 0;
     bottom: 0;
     width: 240px;
-    background: var(--ep-surface);
-    border-right: 1px solid var(--ep-gold-line);
+    background: #0d0d0d;
+    border-right: 1px solid rgba(226,183,106,0.18);
     padding: 22px 14px;
     gap: 22px;
     z-index: 50;
@@ -338,7 +341,7 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   align-items: center;
   gap: 12px;
   text-decoration: none;
-  color: var(--ep-ink);
+  color: #ffffff;
   padding: 0 10px;
   flex-shrink: 0;
 }
@@ -350,9 +353,10 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   font-family: var(--ep-font-serif);
   font-weight: 600;
   font-size: 16px;
+  color: #ebe0c8;
 }
 .ep-sidebar__brand .ep-brand__lead {
-  color: var(--ep-ink-2);
+  color: #a89878;
   font-family: var(--ep-font-sans);
   font-size: 10px;
   font-weight: 500;
@@ -373,9 +377,10 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ep-gold-ink);
+  color: #e2b76a;
   padding: 0 12px;
   margin-bottom: 6px;
+  opacity: 0.85;
 }
 .ep-sidebar__nav a {
   display: flex;
@@ -385,7 +390,7 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: var(--ep-ink-2);
+  color: #a89878;
   text-decoration: none;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
@@ -395,12 +400,12 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   flex-shrink: 0;
 }
 .ep-sidebar__nav a:hover {
-  background: var(--ep-accent-soft);
-  color: var(--ep-ink);
+  background: rgba(226,183,106,0.08);
+  color: #ffffff;
 }
 .ep-sidebar__nav a.is-active {
-  background: var(--ep-accent-soft);
-  color: var(--ep-gold-ink);
+  background: rgba(226,183,106,0.14);
+  color: #e2b76a;
   font-weight: 600;
 }
 
@@ -409,7 +414,7 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   flex-direction: column;
   gap: 6px;
   padding-top: 14px;
-  border-top: 1px solid var(--ep-line);
+  border-top: 1px solid rgba(235,224,200,0.10);
   flex-shrink: 0;
 }
 .ep-sidebar__profile {
@@ -419,12 +424,12 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   padding: 8px 10px;
   border-radius: 8px;
   text-decoration: none;
-  color: var(--ep-ink);
+  color: #ebe0c8;
   font-size: 13px;
   font-weight: 500;
   transition: background-color 0.15s ease;
 }
-.ep-sidebar__profile:hover { background: var(--ep-accent-soft); }
+.ep-sidebar__profile:hover { background: rgba(226,183,106,0.08); }
 .ep-sidebar__profile-name {
   flex: 1;
   white-space: nowrap;
@@ -435,6 +440,17 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   width: 28px;
   height: 28px;
   flex-shrink: 0;
+}
+/* Botão Sair no footer: ghost com texto claro pra contrastar com bg preto */
+.ep-sidebar__footer .ep-btn {
+  color: #a89878;
+  border-color: rgba(235,224,200,0.18);
+  background: transparent;
+}
+.ep-sidebar__footer .ep-btn:hover {
+  color: #ffffff;
+  border-color: rgba(226,183,106,0.45);
+  background: rgba(226,183,106,0.08);
 }
 
 /* ─── Topbar ────────────────────────────────────────────── */
