@@ -5823,3 +5823,66 @@ html.ep-degraded body { padding-top: 38px; }
   color: #fff;
   box-shadow: 0 6px 16px -6px rgba(45,74,62,0.45);
 }
+
+/* ─── FAQ (landing page) ─────────────────────────────────────────────
+   Accordion via <details>/<summary> nativo (sem JS). Cada item é uma
+   <details> com summary clicável + body que expande. Schema.org FAQPage
+   no markup pra rich results no Google. */
+.ep-faq {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ep-faq__item {
+  background: var(--ep-surface);
+  border: 1px solid var(--ep-line);
+  border-radius: 14px;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+.ep-faq__item:hover { border-color: var(--ep-gold-line); }
+.ep-faq__item[open] {
+  border-color: var(--ep-gold-line);
+  box-shadow: 0 6px 18px -10px rgba(200,155,74,0.25);
+}
+.ep-faq__q {
+  list-style: none;
+  cursor: pointer;
+  padding: 18px 22px;
+  font-family: var(--ep-font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--ep-ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  user-select: none;
+}
+.ep-faq__q::-webkit-details-marker { display: none; }
+.ep-faq__q::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-right: 1.5px solid var(--ep-gold);
+  border-bottom: 1.5px solid var(--ep-gold);
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform 180ms ease;
+  flex-shrink: 0;
+}
+.ep-faq__item[open] .ep-faq__q::after {
+  transform: rotate(-135deg) translate(-2px, -2px);
+}
+.ep-faq__a {
+  padding: 0 22px 20px;
+  color: var(--ep-ink-2);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.ep-faq__a > div { max-width: 68ch; }
+.ep-faq__a strong { color: var(--ep-ink); font-weight: 600; }
+
+@media (max-width: 640px) {
+  .ep-faq__q { font-size: 15.5px; padding: 16px 18px; }
+  .ep-faq__a { padding: 0 18px 18px; font-size: 14.5px; }
+}
