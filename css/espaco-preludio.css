@@ -1106,23 +1106,6 @@ html[data-theme="dark"] .ep-hero::before {
   background-position: center;
   z-index: 0;
 }
-/* Camada 2: sparkle diamante 4-pontas com glow no canto inferior direito.
-   Elemento decorativo de fechamento — espelha a luz das estrelas em escala
-   maior. SVG inline com radial gradient pro halo. */
-html[data-theme="dark"] .ep-hero::after {
-  content: "";
-  position: absolute;
-  right: clamp(20px, 4vw, 60px);
-  bottom: clamp(20px, 4vw, 60px);
-  width: clamp(48px, 6vw, 72px);
-  height: clamp(48px, 6vw, 72px);
-  pointer-events: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'><defs><radialGradient id='h' cx='50%25' cy='50%25' r='50%25'><stop offset='0%25' stop-color='%23fff8e0' stop-opacity='0.55'/><stop offset='35%25' stop-color='%23e2b76a' stop-opacity='0.25'/><stop offset='100%25' stop-color='%23e2b76a' stop-opacity='0'/></radialGradient></defs><circle cx='50' cy='50' r='48' fill='url(%23h)'/><path d='M50 12 L54 46 L88 50 L54 54 L50 88 L46 54 L12 50 L46 46 Z' fill='%23e2b76a'/><path d='M50 22 L52 48 L78 50 L52 52 L50 78 L48 52 L22 50 L48 48 Z' fill='%23fff8e0' opacity='0.9'/></svg>");
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center;
-  z-index: 0;
-}
 html[data-theme="dark"] .ep-hero > * {
   position: relative;
   z-index: 1;
@@ -1138,6 +1121,17 @@ html[data-theme="dark"] .ep-hero__focus {
   color: #ffffff;
 }
 html[data-theme="dark"] .ep-hero__focus strong {
+  color: var(--ep-gold);
+}
+/* Topbar premium no dark: preto absoluto + texto do menu em branco puro
+   (era surface #1c1914 + ink-2 #a89878, ambos lavados pra leitura premium). */
+html[data-theme="dark"] .ep-topbar {
+  background: #000;
+}
+html[data-theme="dark"] .ep-topbar .ep-nav a:not(.ep-btn) {
+  color: #ffffff;
+}
+html[data-theme="dark"] .ep-topbar .ep-nav a:not(.ep-btn):hover {
   color: var(--ep-gold);
 }
 /* Destaque do trio ICP (medicos, psiquiatras, psicologos) na hero. Tamanho
