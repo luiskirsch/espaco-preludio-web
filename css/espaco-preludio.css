@@ -1141,16 +1141,19 @@ html[data-theme="dark"] .ep-topbar .ep-nav a:not(.ep-btn):hover {
    <rect.ep-constellation__hit> interno captura mouseenter. */
 .ep-constellation {
   display: none;
+}
+/* Specificity nota: html[data-theme="dark"] .ep-hero > * (linha ~1109) força
+   position:relative em TODOS filhos. Pra constelação flutuar no canto certo
+   precisamos vencer essa regra — daí o selector mais específico abaixo. */
+html[data-theme="dark"] .ep-hero > .ep-constellation {
+  display: block;
   position: absolute;
   top: 64px;
   right: 0;
-  width: clamp(400px, 50vw, 800px);
+  width: clamp(360px, 42vw, 720px);
   height: auto;
   pointer-events: none;
   z-index: 0;
-}
-html[data-theme="dark"] .ep-constellation {
-  display: block;
 }
 .ep-constellation__state {
   opacity: 0;
