@@ -1155,6 +1155,17 @@ html[data-theme="dark"] .ep-hero > .ep-constellation {
   pointer-events: none;
   z-index: 0;
 }
+/* Texto do hero (h1, lead, eyebrow, paras) está em z-index:1 (via regra
+   .ep-hero > *) e cobre parte da constelação à esquerda/embaixo, bloqueando
+   o mouseenter do hit rect. pointer-events:none deixa eventos atravessarem
+   até o SVG abaixo. .ep-stack (com botões/links) mantém auto — interativos
+   precisam captar clique. */
+html[data-theme="dark"] .ep-hero > .ep-container > .ep-eyebrow,
+html[data-theme="dark"] .ep-hero > .ep-container > h1,
+html[data-theme="dark"] .ep-hero > .ep-container > p,
+html[data-theme="dark"] .ep-hero > .ep-container .ep-stack > p {
+  pointer-events: none;
+}
 .ep-constellation__state {
   opacity: 0;
   transition: opacity 0.7s ease;
