@@ -387,8 +387,8 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=3-24";
-  import { cachedGet, invalidate as invalidateApi } from "./js/api-cache.js?v=2-82";
+  import { requireTherapist, refreshIdToken } from "./js/auth-guard.js?v=3-24";
+  import { cachedGet, invalidate as invalidateApi } from "./js/api-cache.js?v=2-83";
   import { clearDek, recallUser, decryptNote } from "./js/crypto.js";
   import { runOnboarding } from "./js/onboarding.js?v=3-12";
 
@@ -427,7 +427,14 @@
 
   // ─── Boot ───────────────────────────────────────────────────
   const session = await requireTherapist({ requireDek: true });
-  const { user, idToken, therapist, dek } = session;
+  const { user, therapist, dek } = session;
+  // idToken pode expirar (TTL 1h do Firebase). Mantemos `let` pra atualizar
+  // via refreshIdToken() em visibilitychange e no auto-retry de cachedGet.
+  let idToken = session.idToken;
+  async function getFreshToken() {
+    idToken = await refreshIdToken();
+    return idToken;
+  }
   const uid = user.uid;
 
   document.getElementById("topUserName").textContent = therapist.displayName || "";
@@ -709,12 +716,20 @@
 
   // ─── Dashboard "Hoje" ────────────────────────────────────────
   // Carrega agregação leve + renderiza hero. Falha silenciosa.
+  // Auto-retry com token renovado se Firebase ID expirou (TTL 1h).
   async function loadHero() {
-    try {
+    async function doFetch(token) {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/painel/hoje`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
+        headers: { "Authorization": `Bearer ${token}` }
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      return { res, data };
+    }
+    try {
+      let { res, data } = await doFetch(idToken);
+      if (res.status === 401 || data?.error === "TOKEN_INVALIDO") {
+        ({ res, data } = await doFetch(await getFreshToken()));
+      }
       if (!res.ok || !data.ok) return;
       renderHero(data);
     } catch { /* silencioso */ }
@@ -872,7 +887,7 @@
     try {
       await cachedGet({
         url: `${BACKEND_BASE_URL}/therapy/sessoes`,
-        idToken, uid, key: "sessoes", ttl: 30_000,
+        idToken, uid, key: "sessoes", ttl: 30_000, getFreshToken,
         onData: (data) => renderSessionsFromData(data)
       });
     } catch (error) {
@@ -1658,11 +1673,13 @@
   // Recarrega a lista quando a aba volta a ficar visível. Usa caso comum:
   // profissional encerra sessão em consultorio.html, volta pra cá — sem isso,
   // o card permanece "Agendada" até refresh manual. SWR já evita flash.
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-      invalidateApi("sessoes", uid);
-      loadSessions();
-    }
+  // Renova o ID token proativamente: se a aba ficou ociosa >1h, o token
+  // antigo expirou e qualquer fetch falharia com TOKEN_INVALIDO.
+  document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState !== "visible") return;
+    try { await getFreshToken(); } catch { /* cachedGet faz retry de fallback */ }
+    invalidateApi("sessoes", uid);
+    loadSessions();
   });
 
   // Auto-abrir modal se vier de prontuario.html?newWith=ID&name=... ou de

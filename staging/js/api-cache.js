@@ -58,10 +58,12 @@ export function invalidate(scope, uid) {
 //   - Se há cache válido: onData("stale") chamado síncrono na próxima tick,
 //     depois onData("fresh") quando o refetch terminar (se mudou).
 //   - Em erro de rede, o cache stale é mantido — UX continua funcional.
+//   - Se `getFreshToken` for fornecido e o backend devolver TOKEN_INVALIDO/401
+//     (Firebase ID token expirou — TTL 1h), faz 1 retry com token renovado.
 //
 // Retorna Promise que resolve quando o fetch fresh termina (use se quiser
 // await pra encadear ações; pra render normal use só o onData).
-export function cachedGet({ url, idToken, uid, key, ttl, onData }) {
+export function cachedGet({ url, idToken, uid, key, ttl, onData, getFreshToken }) {
   const cached = readCache(key, uid);
   if (cached) {
     // Dispara onData("stale") em microtask pra preservar a semântica
@@ -69,20 +71,29 @@ export function cachedGet({ url, idToken, uid, key, ttl, onData }) {
     queueMicrotask(() => onData?.(cached, "stale"));
   }
 
-  return fetch(url, { headers: { "Authorization": `Bearer ${idToken}` } })
-    .then(async (res) => {
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data?.ok === false) {
-        // Mantém cache stale na UI; reporta erro estruturado pro caller.
-        const err = new Error(data?.error || ("HTTP_" + res.status));
-        err.code = data?.error || ("HTTP_" + res.status);
-        throw err;
-      }
-      writeCache(key, uid, data, ttl);
-      // Só re-renderiza se há diferença real (evita flicker desnecessário).
-      if (!cached || JSON.stringify(cached) !== JSON.stringify(data)) {
-        onData?.(data, "fresh");
-      }
-      return data;
-    });
+  async function doFetch(token) {
+    const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
+    const data = await res.json().catch(() => ({}));
+    return { res, data };
+  }
+
+  return (async () => {
+    let { res, data } = await doFetch(idToken);
+    // Token expirado → tenta refresh + retry uma única vez.
+    const tokenInvalid = res.status === 401 || data?.error === "TOKEN_INVALIDO";
+    if (tokenInvalid && getFreshToken) {
+      const fresh = await getFreshToken();
+      if (fresh) ({ res, data } = await doFetch(fresh));
+    }
+    if (!res.ok || data?.ok === false) {
+      const err = new Error(data?.error || ("HTTP_" + res.status));
+      err.code = data?.error || ("HTTP_" + res.status);
+      throw err;
+    }
+    writeCache(key, uid, data, ttl);
+    if (!cached || JSON.stringify(cached) !== JSON.stringify(data)) {
+      onData?.(data, "fresh");
+    }
+    return data;
+  })();
 }
