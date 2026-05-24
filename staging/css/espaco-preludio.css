@@ -335,24 +335,25 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     overflow-y: auto;
   }
   body.ep-has-sidebar > .ep-topbar { display: none; }
-  /* Band direito = 100px. FAB (52px) centralizado nele → 24px de gap em
-     CADA lado do FAB (conteúdo↔FAB = FAB↔borda viewport). Essa é a
-     simetria que o usuário pediu — entre as bordas brancas/cream. */
-  body.ep-has-sidebar { padding-left: 200px; padding-right: 100px; }
+  /* Padding simétrico real: cards extendem do limite esquerdo (sidebar end)
+     ao limite direito (FAB band start). Container max-width removido pra
+     cards ocuparem todo body content area — assim a borda visual do card
+     fica no body padding-right boundary, e o FAB tem gap simétrico real. */
+  body.ep-has-sidebar { padding-left: 200px; padding-right: 90px; }
   body.ep-has-sidebar #ep-lang-switcher { left: 214px; }
+  /* Remove max-width:1320 do container só em sidebar pages — cards ocupam
+     toda a largura disponível, e o FAB gap de 19px cada lado fica equal. */
+  body.ep-has-sidebar > main.ep-container { max-width: none; }
 
-  /* FABs centralizados verticalmente E horizontalmente entre a BORDA DO
-     CARD (lado direito do .ep-container max-width:1320) e a borda viewport.
-     !important pra vencer as regras :has() posteriores que setam right/bottom.
-     Math: container right offset (de viewport right) = 100 + (vw-1620)/2.
-     FAB centralizado nesse espaço → right = 24 + (vw-1620)/4. */
+  /* FAB band right = 90px. FAB 52px → right: 19 = (90-52)/2.
+     Gap card↔FAB = gap FAB↔viewport = 19px. */
   body.ep-has-sidebar .ep-logout-fab,
   body.ep-has-sidebar .ep-theme-toggle,
   body.ep-has-sidebar .ep-msg-bubble-fab,
   body.ep-has-sidebar .ep-help-bubble {
     bottom: auto !important;
     top: 50% !important;
-    right: max(24px, calc(24px + (100vw - 1620px) / 4)) !important;
+    right: 19px !important;
   }
   body.ep-has-sidebar .ep-theme-toggle   { margin-top: -125px !important; }
   body.ep-has-sidebar .ep-msg-bubble-fab { margin-top: -59px !important; }
