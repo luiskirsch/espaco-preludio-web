@@ -1349,6 +1349,14 @@ html[data-theme="dark"] .ep-hero > .ep-constellation {
   pointer-events: none;
   z-index: 0;
 }
+/* Hit rect precisa CSS pra override — atributo SVG pointer-events="all"
+   perde pra pointer-events:none herdado do SVG pai (CSS inherited > SVG
+   presentation attribute). Por isso o hover só pegava nas bordas (onde
+   outras coisas captavam) e não na área da constelação. */
+.ep-constellation__hit { pointer-events: all; }
+/* Stars + lines: explicitamente none pra não interceptarem o evento antes
+   do hit rect (que vem por último no DOM = topmost). */
+.ep-cs-stars circle, .ep-cs-lines line { pointer-events: none; }
 /* Texto do hero (h1, lead, eyebrow, paras) está em z-index:1 (via regra
    .ep-hero > *) e cobre parte da constelação à esquerda/embaixo, bloqueando
    o mouseenter do hit rect. pointer-events:none deixa eventos atravessarem
