@@ -343,23 +343,21 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
 
   /* FABs centralizados verticalmente E horizontalmente entre a BORDA DO
      CARD (lado direito do .ep-container max-width:1320) e a borda viewport.
-     Como o container é centralizado com auto-margin, em viewports largos
-     sobra espaço extra à direita — o FAB precisa adaptar.
+     !important pra vencer as regras :has() posteriores que setam right/bottom.
      Math: container right offset (de viewport right) = 100 + (vw-1620)/2.
-     FAB centralizado nesse espaço → right = 24 + (vw-1620)/4.
-     max(24px, ...) garante mínimo de 24px em viewports estreitos. */
+     FAB centralizado nesse espaço → right = 24 + (vw-1620)/4. */
   body.ep-has-sidebar .ep-logout-fab,
   body.ep-has-sidebar .ep-theme-toggle,
   body.ep-has-sidebar .ep-msg-bubble-fab,
   body.ep-has-sidebar .ep-help-bubble {
-    bottom: auto;
-    top: 50%;
-    right: max(24px, calc(24px + (100vw - 1620px) / 4));
+    bottom: auto !important;
+    top: 50% !important;
+    right: max(24px, calc(24px + (100vw - 1620px) / 4)) !important;
   }
-  body.ep-has-sidebar .ep-theme-toggle   { margin-top: -125px; }
-  body.ep-has-sidebar .ep-msg-bubble-fab { margin-top: -59px; }
-  body.ep-has-sidebar .ep-help-bubble    { margin-top: 7px; }
-  body.ep-has-sidebar .ep-logout-fab     { margin-top: 73px; }
+  body.ep-has-sidebar .ep-theme-toggle   { margin-top: -125px !important; }
+  body.ep-has-sidebar .ep-msg-bubble-fab { margin-top: -59px !important; }
+  body.ep-has-sidebar .ep-help-bubble    { margin-top: 7px !important; }
+  body.ep-has-sidebar .ep-logout-fab     { margin-top: 73px !important; }
 }
 
 .ep-sidebar__brand {
