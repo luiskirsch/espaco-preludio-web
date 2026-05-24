@@ -335,25 +335,23 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     overflow-y: auto;
   }
   body.ep-has-sidebar > .ep-topbar { display: none; }
-  /* Right band slim (90px): só o necessário pros FABs respirarem, não
-     espelho do sidebar inteiro. Sidebar tem conteúdo (200px = nav),
-     FAB column é só ícones (52px) — assimetria visualmente justificada. */
-  body.ep-has-sidebar { padding-left: 200px; padding-right: 90px; }
-  /* Cápsula de idioma é position:fixed bottom-left por padrão (i18n/init.js
-     linha ~123), bate no rodapé da sidebar. Empurra pra fora da sidebar. */
+  /* Padding simétrico real: 200px em ambos lados, conteúdo centralizado.
+     Sidebar ocupa toda a esquerda. FABs ficam encostados no canto direito
+     do band (não centralizados), mais próximos da borda — mantém percepção
+     de "chrome lateral" sem desperdiçar espaço útil. */
+  body.ep-has-sidebar { padding-left: 200px; padding-right: 200px; }
   body.ep-has-sidebar #ep-lang-switcher { left: 214px; }
 
-  /* FABs centralizados verticalmente no band direito de 90px. FAB 52px
-     → right: 19px = (90-52)/2. Stack vertical 66px de spacing
-     (52px FAB + 14px gap), centro em 50%. Ordem (top→bottom):
-     theme, msg, help, logout. */
+  /* FABs centralizados verticalmente, encostados no canto direito do band.
+     right: 24px → FAB próximo da borda viewport, gap maior pro conteúdo
+     (preserva o sentido de "chrome" sem brigar com cards). */
   body.ep-has-sidebar .ep-logout-fab,
   body.ep-has-sidebar .ep-theme-toggle,
   body.ep-has-sidebar .ep-msg-bubble-fab,
   body.ep-has-sidebar .ep-help-bubble {
     bottom: auto;
     top: 50%;
-    right: 19px;
+    right: 24px;
   }
   body.ep-has-sidebar .ep-theme-toggle   { margin-top: -125px; }
   body.ep-has-sidebar .ep-msg-bubble-fab { margin-top: -59px; }
