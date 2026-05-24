@@ -335,27 +335,29 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     overflow-y: auto;
   }
   body.ep-has-sidebar > .ep-topbar { display: none; }
-  body.ep-has-sidebar { padding-left: 200px; padding-right: 84px; }
+  /* Padding simétrico: 200px de cada lado (esquerda = sidebar, direita =
+     band reservado pros FABs centralizados). Conteúdo respira no meio. */
+  body.ep-has-sidebar { padding-left: 200px; padding-right: 200px; }
   /* Cápsula de idioma é position:fixed bottom-left por padrão (i18n/init.js
      linha ~123), bate no rodapé da sidebar. Empurra pra fora da sidebar. */
   body.ep-has-sidebar #ep-lang-switcher { left: 214px; }
 
-  /* FABs (logout/theme/msg/help) centralizados verticalmente na lateral
-     direita em vez de empilhados embaixo. Stack de 4 botões (52px cada
-     + 14px gap = 66px de spacing), simétrico ao centro do viewport.
-     Cada offset margin-top calculado pra que o centro do stack caia em 50%. */
+  /* FABs (theme/msg/help/logout) centralizados verticalmente, no meio do
+     band direito de 200px (FAB 52px → right: 74px = (200-52)/2). Stack
+     vertical com 66px de spacing (52px FAB + 14px gap), centro em 50%.
+     Ordem (top→bottom): theme, msg, help, logout — igual ao original. */
   body.ep-has-sidebar .ep-logout-fab,
   body.ep-has-sidebar .ep-theme-toggle,
   body.ep-has-sidebar .ep-msg-bubble-fab,
   body.ep-has-sidebar .ep-help-bubble {
     bottom: auto;
     top: 50%;
-    right: 16px;
+    right: 74px;
   }
-  body.ep-has-sidebar .ep-logout-fab     { margin-top: -125px; }
-  body.ep-has-sidebar .ep-theme-toggle   { margin-top: -59px; }
-  body.ep-has-sidebar .ep-msg-bubble-fab { margin-top: 7px; }
-  body.ep-has-sidebar .ep-help-bubble    { margin-top: 73px; }
+  body.ep-has-sidebar .ep-theme-toggle   { margin-top: -125px; }
+  body.ep-has-sidebar .ep-msg-bubble-fab { margin-top: -59px; }
+  body.ep-has-sidebar .ep-help-bubble    { margin-top: 7px; }
+  body.ep-has-sidebar .ep-logout-fab     { margin-top: 73px; }
 }
 
 .ep-sidebar__brand {
