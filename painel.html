@@ -769,26 +769,26 @@
 
     // KPIs do mês
     const tm = data.thisMonth || {};
-    let todayBadge;
-    if (data.todayCount > 0) {
-      const main = data.todayCount > 1
-        ? tr("painel:hero.todayMany","{{n}} consultas hoje",{n:data.todayCount})
-        : tr("painel:hero.todaySingle","{{n}} consulta hoje",{n:data.todayCount});
-      let conf = "";
-      if (data.todayConfirmedCount > 0) {
-        conf = data.todayConfirmedCount > 1
-          ? tr("painel:hero.todayConfMany"," · {{n}} confirmadas",{n:data.todayConfirmedCount})
-          : tr("painel:hero.todayConfSingle"," · {{n}} confirmada",{n:data.todayConfirmedCount});
-      }
-      todayBadge = main + conf;
+
+    // Card "Próxima sessão" — nome do paciente + horário relativo. Quando
+    // não há próxima sessão, vira CTA sutil ("Crie em + Nova consulta"). O
+    // bloco gradient #heroNextSession acima já tem o botão "Entrar"; aqui
+    // só reforçamos a info de relance.
+    let nextKpiValue;
+    let nextKpiHint;
+    if (data.nextSession) {
+      nextKpiValue = data.nextSession.patientName || tr("painel:hero.patientFallback","Paciente");
+      nextKpiHint  = fmtSessionWhen(data.nextSession.scheduledAt);
     } else {
-      todayBadge = tr("painel:hero.todayNone","Sem consultas agendadas hoje");
+      nextKpiValue = "—";
+      nextKpiHint  = tr("painel:hero.kpiNextEmpty","Crie em + Nova consulta");
     }
     const kpis = [
       {
-        eyebrow: tr("painel:hero.kpiToday","Hoje"),
-        value: data.todayCount || 0,
-        hint: todayBadge
+        eyebrow: tr("painel:hero.kpiNext","Próxima sessão"),
+        value: nextKpiValue,
+        hint: nextKpiHint,
+        valueSize: data.nextSession ? 16 : 22
       },
       {
         eyebrow: tr("painel:hero.kpiDone","Realizadas no mês"),
@@ -812,7 +812,7 @@
     kpisBlock.innerHTML = kpis.map(k => `
       <div class="ep-card" style="padding: 12px 14px;">
         <div class="ep-eyebrow" style="font-size: 10.5px;">${escapeHtml(k.eyebrow)}</div>
-        <div style="font-size: 22px; font-weight: 700; margin-top: 4px; color: ${k.valueColor || "var(--ep-ink)"};">${escapeHtml(k.value)}</div>
+        <div style="font-size: ${k.valueSize || 22}px; font-weight: 700; margin-top: 4px; color: ${k.valueColor || "var(--ep-ink)"}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(k.value)}">${escapeHtml(k.value)}</div>
         <div class="ep-text-xs ep-text-muted" style="margin-top: 2px;">${escapeHtml(k.hint)}</div>
       </div>
     `).join("");
