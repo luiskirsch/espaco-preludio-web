@@ -335,16 +335,14 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     overflow-y: auto;
   }
   body.ep-has-sidebar > .ep-topbar { display: none; }
-  /* Padding simétrico real: 200px em ambos lados, conteúdo centralizado.
-     Sidebar ocupa toda a esquerda. FABs ficam encostados no canto direito
-     do band (não centralizados), mais próximos da borda — mantém percepção
-     de "chrome lateral" sem desperdiçar espaço útil. */
-  body.ep-has-sidebar { padding-left: 200px; padding-right: 200px; }
+  /* Band direito = 100px. FAB (52px) centralizado nele → 24px de gap em
+     CADA lado do FAB (conteúdo↔FAB = FAB↔borda viewport). Essa é a
+     simetria que o usuário pediu — entre as bordas brancas/cream. */
+  body.ep-has-sidebar { padding-left: 200px; padding-right: 100px; }
   body.ep-has-sidebar #ep-lang-switcher { left: 214px; }
 
-  /* FABs centralizados verticalmente, encostados no canto direito do band.
-     right: 24px → FAB próximo da borda viewport, gap maior pro conteúdo
-     (preserva o sentido de "chrome" sem brigar com cards). */
+  /* FABs centralizados verticalmente, right: 24 → gap simétrico de 24px
+     em cada lado do FAB dentro do band de 100px. */
   body.ep-has-sidebar .ep-logout-fab,
   body.ep-has-sidebar .ep-theme-toggle,
   body.ep-has-sidebar .ep-msg-bubble-fab,
