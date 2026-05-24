@@ -341,15 +341,20 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   body.ep-has-sidebar { padding-left: 200px; padding-right: 100px; }
   body.ep-has-sidebar #ep-lang-switcher { left: 214px; }
 
-  /* FABs centralizados verticalmente, right: 24 → gap simétrico de 24px
-     em cada lado do FAB dentro do band de 100px. */
+  /* FABs centralizados verticalmente E horizontalmente entre a BORDA DO
+     CARD (lado direito do .ep-container max-width:1320) e a borda viewport.
+     Como o container é centralizado com auto-margin, em viewports largos
+     sobra espaço extra à direita — o FAB precisa adaptar.
+     Math: container right offset (de viewport right) = 100 + (vw-1620)/2.
+     FAB centralizado nesse espaço → right = 24 + (vw-1620)/4.
+     max(24px, ...) garante mínimo de 24px em viewports estreitos. */
   body.ep-has-sidebar .ep-logout-fab,
   body.ep-has-sidebar .ep-theme-toggle,
   body.ep-has-sidebar .ep-msg-bubble-fab,
   body.ep-has-sidebar .ep-help-bubble {
     bottom: auto;
     top: 50%;
-    right: 24px;
+    right: max(24px, calc(24px + (100vw - 1620px) / 4));
   }
   body.ep-has-sidebar .ep-theme-toggle   { margin-top: -125px; }
   body.ep-has-sidebar .ep-msg-bubble-fab { margin-top: -59px; }
