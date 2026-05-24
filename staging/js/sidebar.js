@@ -29,29 +29,32 @@
     return '<a href="./' + href + '" ' + (extra || '') + '>' + svg(icon) + '<span data-i18n="' + i18n + '">' + label + '</span></a>';
   }
 
+  // i18n keys vivem em common.json (sempre carregado) — namespace `painel`
+  // só existe em painel.html, então usá-lo aqui quebra o menu em todas as
+  // outras páginas (i18next devolve key parcial e o init substitui textContent).
   const NAV = [
-    { label: 'Clínico', items: [
-      ['painel.html', 'video', 'Consultas', 'painel:nav.consultas'],
-      ['agenda.html', 'calendar', 'Agenda', 'painel:nav.agenda'],
-      ['pacientes.html', 'users', 'Pacientes', 'painel:nav.pacientes'],
-      ['tiss.html', 'fileText', 'TISS', 'painel:nav.tiss', 'id="sidebarTissLink" data-tiss-only style="display:none;"']
+    { labelKey: 'common:sidebar.groupClinico', label: 'Clínico', items: [
+      ['painel.html', 'video', 'Consultas', 'common:sidebar.consultas'],
+      ['agenda.html', 'calendar', 'Agenda', 'common:sidebar.agenda'],
+      ['pacientes.html', 'users', 'Pacientes', 'common:sidebar.pacientes'],
+      ['tiss.html', 'fileText', 'TISS', 'common:sidebar.tiss', 'id="sidebarTissLink" data-tiss-only style="display:none;"']
     ]},
-    { label: 'Gestão', items: [
-      ['financeiro.html', 'dollar', 'Financeiro', 'painel:nav.financeiro'],
-      ['relatorios.html', 'barChart', 'Relatórios', 'painel:nav.relatorios'],
-      ['clinica.html', 'building', 'Clínica', 'painel:nav.clinica'],
-      ['inventario.html', 'package', 'Estoque', 'painel:nav.estoque']
+    { labelKey: 'common:sidebar.groupGestao', label: 'Gestão', items: [
+      ['financeiro.html', 'dollar', 'Financeiro', 'common:sidebar.financeiro'],
+      ['relatorios.html', 'barChart', 'Relatórios', 'common:sidebar.relatorios'],
+      ['clinica.html', 'building', 'Clínica', 'common:sidebar.clinica'],
+      ['inventario.html', 'package', 'Estoque', 'common:sidebar.estoque']
     ]},
-    { label: 'Engajamento', items: [
-      ['mensagens-pro.html', 'msg', 'Colegas', 'painel:nav.colegas'],
-      ['marketing.html', 'megaphone', 'Marketing', 'painel:nav.marketing'],
-      ['whatsapp.html', 'chat', 'WhatsApp', 'painel:nav.whatsapp']
+    { labelKey: 'common:sidebar.groupEngajamento', label: 'Engajamento', items: [
+      ['mensagens-pro.html', 'msg', 'Colegas', 'common:sidebar.colegas'],
+      ['marketing.html', 'megaphone', 'Marketing', 'common:sidebar.marketing'],
+      ['whatsapp.html', 'chat', 'WhatsApp', 'common:sidebar.whatsapp']
     ]}
   ];
 
   const navHTML = NAV.map(function (g) {
     return '<div class="ep-sidebar__group">' +
-      '<div class="ep-sidebar__group-label">' + g.label + '</div>' +
+      '<div class="ep-sidebar__group-label" data-i18n="' + g.labelKey + '">' + g.label + '</div>' +
       g.items.map(function (i) { return item(i[0], i[1], i[2], i[3], i[4]); }).join('') +
       '</div>';
   }).join('');
@@ -71,7 +74,7 @@
           '<span class="ep-nav-avatar" id="sidebarUserAvatar">·</span>' +
           '<span class="ep-sidebar__profile-name" id="sidebarUserName"></span>' +
         '</a>' +
-        '<button id="sidebarLogout" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="painel:nav.logout">Sair</button>' +
+        '<button id="sidebarLogout" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="common:sidebar.logout">Sair</button>' +
       '</div>' +
     '</aside>';
 
@@ -134,4 +137,15 @@
   if (sideLogout && topLogout) {
     sideLogout.addEventListener('click', function () { topLogout.click(); });
   }
+
+  // Re-aplica traduções no sidebar: como i18next boota async (CDN),
+  // ele pode ter rodado applyTranslations antes do aside existir. Ouvimos
+  // `ep:i18n-ready` (disparado uma vez no boot) e também tentamos imediato
+  // caso já esteja pronto.
+  const sideEl = document.querySelector('.ep-sidebar');
+  function applyToSidebar() {
+    if (window.EP_I18N && window.EP_I18N.apply && sideEl) window.EP_I18N.apply(sideEl);
+  }
+  if (window.EP_I18N) applyToSidebar();
+  document.addEventListener('ep:i18n-ready', applyToSidebar);
 })();
