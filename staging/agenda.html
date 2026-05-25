@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-231">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-232">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
@@ -57,24 +57,34 @@
 
 <main class="ep-container ep-mt-32 ep-mb-16">
 
-  <div class="ep-flex ep-flex--end-wrap" style="justify-content: space-between; align-items: end; gap: 12px; margin-bottom: 16px;">
+  <div class="ep-agenda-toolbar-row">
     <div>
       <div class="ep-eyebrow" data-i18n="agenda:header.eyebrow">Agenda</div>
       <h1 class="ep-h1 ep-mt-12" data-i18n="agenda:header.h1">Sua semana</h1>
       <p class="ep-text-muted ep-mt-0" data-i18n="agenda:header.lead">Visualize, navegue e crie consultas direto no horário desejado.</p>
     </div>
-    <div class="ep-flex ep-flex--wrap ep-gap-8 ep-no-print">
-      <button type="button" class="ep-btn ep-btn--ghost" id="openSyncBtn" data-i18n="agenda:header.syncBtn">Sincronizar agenda</button>
-      <button type="button" class="ep-btn ep-btn--ghost" id="openBlackoutBtn" data-i18n="agenda:header.blackoutBtn">Bloquear horário</button>
-      <button type="button" class="ep-btn ep-btn--ghost" id="openWaitlistBtn" data-i18n="agenda:header.waitlistBtn">Lista de espera</button>
-      <button type="button" class="ep-btn ep-btn--ghost" id="openAgendaConfigBtn" data-i18n="agenda:header.configBtn">Configurações</button>
-      <button type="button" class="ep-btn ep-btn--ghost" id="printAgendaBtn" title="Imprimir agenda" data-i18n="agenda:header.printBtn" data-i18n-title="agenda:header.printTitle">Imprimir</button>
+    <div class="ep-flex ep-flex--wrap ep-gap-8 ep-no-print" style="align-items: center;">
+      <!-- Ações secundárias colapsadas num menu pra não competir com a ação primária.
+           IDs originais preservados (JS abre os modais via getElementById). -->
+      <div class="ep-toolbar-more" id="agendaToolbarMore">
+        <button type="button" class="ep-btn ep-btn--ghost" id="toolbarMoreBtn"
+                aria-haspopup="true" aria-expanded="false"
+                aria-label="Mais ações" data-i18n-aria-label="agenda:header.moreAria"
+                data-i18n="agenda:header.moreBtn">⋯ Mais</button>
+        <div class="ep-toolbar-more__menu" id="toolbarMoreMenu" role="menu" hidden>
+          <button type="button" class="ep-toolbar-more__item" id="openSyncBtn" role="menuitem" data-i18n="agenda:header.syncBtn">Sincronizar agenda</button>
+          <button type="button" class="ep-toolbar-more__item" id="openBlackoutBtn" role="menuitem" data-i18n="agenda:header.blackoutBtn">Bloquear horário</button>
+          <button type="button" class="ep-toolbar-more__item" id="openWaitlistBtn" role="menuitem" data-i18n="agenda:header.waitlistBtn">Lista de espera</button>
+          <button type="button" class="ep-toolbar-more__item" id="openAgendaConfigBtn" role="menuitem" data-i18n="agenda:header.configBtn">Configurações</button>
+          <button type="button" class="ep-toolbar-more__item" id="printAgendaBtn" role="menuitem" title="Imprimir agenda" data-i18n="agenda:header.printBtn" data-i18n-title="agenda:header.printTitle">Imprimir</button>
+        </div>
+      </div>
       <a href="./painel.html" class="ep-btn ep-btn--primary" data-i18n="agenda:header.newSessionBtn">+ Nova consulta</a>
     </div>
   </div>
 
   <!-- Busca por paciente + Navegação semanal + legenda -->
-  <div class="ep-flex ep-flex--end-wrap ep-no-print" style="gap: 10px; align-items: center; margin-bottom: 8px;">
+  <div class="ep-agenda-search-row ep-flex ep-flex--end-wrap ep-no-print" style="gap: 10px; align-items: center;">
     <div class="ep-field" style="flex: 1; max-width: 360px; margin: 0;">
       <input id="patientSearch" class="ep-input" type="search" placeholder="🔍 Buscar consulta por paciente…" aria-label="Buscar paciente" data-i18n-placeholder="agenda:search.placeholder" data-i18n-aria-label="agenda:search.aria">
     </div>
@@ -928,6 +938,28 @@
   function buildFeedUrl(token) {
     return `${BACKEND_BASE_URL}/therapy/agenda/feed.ics?token=${encodeURIComponent(token)}`;
   }
+
+  // Dropdown "⋯ Mais" da toolbar — esconde 5 ações secundárias num overflow
+  // pra reduzir poluição visual (anti-padrão: 6 botões competindo). Click fora
+  // ou Esc fecha. Click em qualquer item fecha (eles próprios abrem modals).
+  (function setupToolbarMore() {
+    const btn = document.getElementById("toolbarMoreBtn");
+    const menu = document.getElementById("toolbarMoreMenu");
+    if (!btn || !menu) return;
+    function close() { menu.hidden = true; btn.setAttribute("aria-expanded", "false"); }
+    function open() { menu.hidden = false; btn.setAttribute("aria-expanded", "true"); }
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      menu.hidden ? open() : close();
+    });
+    menu.addEventListener("click", () => close());
+    document.addEventListener("click", (e) => {
+      if (!menu.hidden && !menu.contains(e.target) && e.target !== btn) close();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !menu.hidden) close();
+    });
+  })();
 
   document.getElementById("openSyncBtn").addEventListener("click", async () => {
     syncUrlBox.textContent = tr("agenda:sync.generating", "Gerando link…");

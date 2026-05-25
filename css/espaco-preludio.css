@@ -4914,6 +4914,71 @@ html[data-theme="dark"] .ep-status-card--err .ep-status-card__icon {
   margin-top: 8px;
   margin-bottom: 12px;
 }
+
+/* Toolbar row da agenda — substitui flex inline pra permitir media queries
+   no espaçamento vertical (não dá pra fazer com style inline). */
+.ep-agenda-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.ep-agenda-search-row {
+  margin-bottom: 8px;
+}
+
+/* Desktop breathing — em mobile o espaço fica apertado e empurra calendário
+   pra fora do viewport. Só relaxa em ≥768px. */
+@media (min-width: 768px) {
+  .ep-agenda-toolbar-row { margin-bottom: 28px; }
+  .ep-agenda-search-row  { margin-bottom: 16px; }
+  .ep-agenda-nav         { margin-top: 12px; margin-bottom: 18px; }
+}
+
+/* Overflow menu da toolbar (⋯ Mais) — esconde 5 ações secundárias num
+   dropdown. Visual segue padrão do switcher de idioma. */
+.ep-toolbar-more {
+  position: relative;
+}
+.ep-toolbar-more__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 100;
+  min-width: 220px;
+  background: var(--ep-surface);
+  border: 1px solid var(--ep-line);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: var(--ep-shadow-lift);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ep-toolbar-more__menu[hidden] {
+  display: none;
+}
+.ep-toolbar-more__item {
+  all: unset;
+  cursor: pointer;
+  padding: 9px 12px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ep-ink);
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+.ep-toolbar-more__item:hover,
+.ep-toolbar-more__item:focus-visible {
+  background: rgba(28,31,29,0.05);
+}
+html[data-theme="dark"] .ep-toolbar-more__item:hover,
+html[data-theme="dark"] .ep-toolbar-more__item:focus-visible {
+  background: rgba(255,255,255,0.06);
+}
 .ep-agenda-nav__label {
   font-weight: 500;
   font-size: 14px;
@@ -4923,20 +4988,22 @@ html[data-theme="dark"] .ep-status-card--err .ep-status-card__icon {
 
 .ep-agenda-legend {
   display: flex;
-  gap: 16px;
-  font-size: 11.5px;
+  gap: 14px;
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
   flex-wrap: wrap;
 }
 .ep-agenda-legend__item {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  color: rgba(28,31,29,0.65);
+  gap: 5px;
+  color: rgba(28,31,29,0.48);
 }
 .ep-agenda-legend__dot {
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
+  opacity: 0.85;
 }
 .ep-agenda-legend__item.is-scheduled .ep-agenda-legend__dot { background: #2d8a52; }
 .ep-agenda-legend__item.is-progress .ep-agenda-legend__dot { background: var(--ep-gold); }
@@ -4949,9 +5016,10 @@ html[data-theme="dark"] .ep-status-card--err .ep-status-card__icon {
   grid-template-columns: 64px repeat(7, minmax(0, 1fr));
   grid-template-rows: 56px auto;
   background: #fff;
-  border: 1px solid rgba(28,31,29,0.10);
+  border: 1px solid rgba(28,31,29,0.06);
   border-radius: 12px;
   overflow: hidden;
+  box-shadow: var(--ep-shadow-soft);
 }
 .ep-agenda-grid__corner {
   background: rgba(28,31,29,0.02);
