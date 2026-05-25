@@ -360,7 +360,10 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   body.ep-has-sidebar .ep-theme-toggle   { margin-top: -125px !important; }
   body.ep-has-sidebar .ep-msg-bubble-fab { margin-top: -59px !important; }
   body.ep-has-sidebar .ep-help-bubble    { margin-top: 7px !important; }
-  body.ep-has-sidebar .ep-logout-fab     { margin-top: 73px !important; }
+  /* Logout FAB redundante com a sidebar (que tem botão Sair no rodapé).
+     Esconde visualmente — #logoutBtn fica no DOM pra sidebarLogout.click()
+     continuar disparando o handler de signOut. */
+  body.ep-has-sidebar .ep-logout-fab     { display: none !important; }
 }
 
 .ep-sidebar__brand {
