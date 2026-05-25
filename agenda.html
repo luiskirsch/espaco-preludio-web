@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-238">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-239">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
@@ -533,11 +533,33 @@
     for (let h = START_HOUR; h < END_HOUR; h++) {
       const lbl = document.createElement("div");
       lbl.className = "ep-agenda-grid__hour-label";
+      lbl.dataset.hour = String(h);
       lbl.textContent = pad2(h) + tr("agenda:js.hourSuffix", "h");
       col.appendChild(lbl);
     }
   }
   buildHourLabels();
+
+  // Hover horizontal: passar o mouse num hour-label realça todos os slots
+  // dessa hora ao longo da semana. Delegation no hourCol (evita 14 listeners).
+  // CSS gateia via @media (hover:hover) — touch não dispara.
+  (function setupHourHover() {
+    const hourCol = document.getElementById("hourCol");
+    if (!hourCol) return;
+    function highlight(hour) {
+      document.querySelectorAll(".ep-agenda-grid__slot.is-hour-hover")
+        .forEach(el => el.classList.remove("is-hour-hover"));
+      if (hour == null) return;
+      document.querySelectorAll(`.ep-agenda-grid__slot[data-hour="${hour}"]`)
+        .forEach(el => el.classList.add("is-hour-hover"));
+    }
+    hourCol.addEventListener("mouseover", (e) => {
+      const lbl = e.target.closest(".ep-agenda-grid__hour-label");
+      if (!lbl) return;
+      highlight(lbl.dataset.hour);
+    });
+    hourCol.addEventListener("mouseleave", () => highlight(null));
+  })();
 
   function renderWeek() {
     document.getElementById("weekLabel").textContent = fmtWeekLabel();
