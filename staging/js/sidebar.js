@@ -155,4 +155,25 @@
   }
   if (window.EP_I18N) applyToSidebar();
   document.addEventListener('ep:i18n-ready', applyToSidebar);
+
+  // FAB stack — container flex que agrupa todos os botões flutuantes
+  // (theme/msg/help/logout) e centraliza verticalmente como BLOCO. Resolve
+  // o caos das regras body:has(...) que mudavam bottom conforme quais
+  // FABs existiam. Auth-guard monta os FABs async, então usamos
+  // MutationObserver pra mover qualquer FAB novo pra cá. Em mobile
+  // (sem sidebar), o stack vira display:contents e FABs voltam ao fluxo.
+  (function setupFabStack() {
+    if (document.querySelector('.ep-fab-stack')) return;
+    const stack = document.createElement('div');
+    stack.className = 'ep-fab-stack';
+    document.body.appendChild(stack);
+    const SELECTORS = '.ep-theme-toggle, .ep-msg-bubble-fab, .ep-help-bubble, .ep-logout-fab';
+    function collect() {
+      document.querySelectorAll(SELECTORS).forEach(el => {
+        if (el.parentNode !== stack) stack.appendChild(el);
+      });
+    }
+    collect();
+    new MutationObserver(collect).observe(document.body, { childList: true });
+  })();
 })();

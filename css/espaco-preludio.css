@@ -347,26 +347,43 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
      toda a largura disponível, e o FAB gap de 19px cada lado fica equal. */
   body.ep-has-sidebar > main.ep-container { max-width: none; }
 
-  /* FAB band right = 90px. FAB 52px → right: 19 = (90-52)/2.
-     Gap card↔FAB = gap FAB↔viewport = 19px. */
-  body.ep-has-sidebar .ep-logout-fab,
-  body.ep-has-sidebar .ep-theme-toggle,
-  body.ep-has-sidebar .ep-msg-bubble-fab,
-  body.ep-has-sidebar .ep-help-bubble {
-    bottom: auto !important;
-    top: 50% !important;
-    right: 19px !important;
+  /* FAB stack — container que agrupa todos os botões flutuantes e centraliza
+     verticalmente como BLOCO. Sidebar.js move os FABs pra cá via JS +
+     MutationObserver. Independente de quais FABs existem na página, o stack
+     fica no centro vertical do viewport.
+     FAB band right = 90px. FAB 52px → right: 19 = (90-52)/2. Gap entre
+     FABs = 14px (mais respirado que os 66px do esquema antigo). */
+  body.ep-has-sidebar .ep-fab-stack {
+    position: fixed;
+    top: 50%;
+    right: 19px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 180;
   }
-  /* 3 FABs centralizados verticalmente: theme acima, msg no meio, help
-     abaixo. Espaçamento 66px entre centros (mesmo gap usado antes com 4
-     botões). Centro visual do bloco = 50% do viewport. */
-  body.ep-has-sidebar .ep-theme-toggle   { margin-top: -66px !important; }
-  body.ep-has-sidebar .ep-msg-bubble-fab { margin-top: 0 !important; }
-  body.ep-has-sidebar .ep-help-bubble    { margin-top: 66px !important; }
-  /* Logout FAB redundante com a sidebar (que tem botão Sair no rodapé).
-     Esconde visualmente — #logoutBtn fica no DOM pra sidebarLogout.click()
-     continuar disparando o handler de signOut. */
-  body.ep-has-sidebar .ep-logout-fab     { display: none !important; }
+  /* FABs dentro do stack ficam em fluxo normal — sobrescreve position:fixed
+     individual e zera offsets/margins que vinham das regras body:has(...). */
+  body.ep-has-sidebar .ep-fab-stack > .ep-theme-toggle,
+  body.ep-has-sidebar .ep-fab-stack > .ep-msg-bubble-fab,
+  body.ep-has-sidebar .ep-fab-stack > .ep-help-bubble,
+  body.ep-has-sidebar .ep-fab-stack > .ep-logout-fab {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+  }
+  /* Logout redundante com botão Sair da sidebar. Continua no stack pra
+     manter o #logoutBtn no DOM (sidebar.js dispara click), só não aparece. */
+  body.ep-has-sidebar .ep-fab-stack > .ep-logout-fab { display: none !important; }
+}
+
+/* Mobile (< 900px): sem sidebar, stack vira contents — FABs voltam ao
+   fluxo normal e as regras originais (bottom: X) aplicam. */
+@media (max-width: 899px) {
+  .ep-fab-stack { display: contents; }
 }
 
 .ep-sidebar__brand {
