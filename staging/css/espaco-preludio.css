@@ -2254,14 +2254,93 @@ html[data-theme="dark"] .ep-badge--muted { background: rgba(232,230,223,0.08); c
   box-shadow: -1px 0 0 rgba(184,69,61,0.14), var(--ep-shadow-soft);
 }
 /* Cards de paciente — mesma marca dourada das consultas ativas. Indica que
-   é uma entidade "viva" no sistema, paralelo visual ao card de consulta. */
+   é uma entidade "viva" no sistema, paralelo visual ao card de consulta.
+   Grid de 3 colunas (avatar | conteúdo | ações) — override do default
+   .ep-session que é 2 colunas. Sombra ambient + glow dourado discreto no
+   hover. Tipografia do nome ligeiramente maior — foco emocional é a pessoa. */
 .ep-session--patient {
   border-left: 3px solid var(--ep-gold);
   padding-left: 17px;
-  box-shadow: -1px 0 0 var(--ep-gold-soft), 0 1px 0 rgba(28,31,29,0.02);
+  grid-template-columns: auto 1fr auto;
+  box-shadow: -1px 0 0 var(--ep-gold-soft), 0 2px 8px -2px rgba(28,31,29,0.05);
 }
 .ep-session--patient:hover {
-  box-shadow: -1px 0 0 var(--ep-gold-soft), var(--ep-shadow-soft);
+  box-shadow:
+    -1px 0 0 var(--ep-gold-soft),
+    0 6px 20px -6px rgba(28,31,29,0.10),
+    0 0 0 1px rgba(226,183,106,0.18);
+}
+.ep-session--patient .ep-session__name {
+  font-size: 16.5px;
+  margin-bottom: 4px;
+  letter-spacing: -0.005em;
+}
+
+/* Avatar do paciente — iniciais coloridas (cor por hash do nome, gerada no
+   JS). Tamanho confortável em desktop, reduz um pouco em mobile pra cards
+   não ficarem altos demais. */
+.ep-patient-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  user-select: none;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18), 0 1px 2px rgba(28,31,29,0.10);
+}
+@media (max-width: 640px) {
+  .ep-patient-avatar { width: 38px; height: 38px; font-size: 13.5px; }
+}
+
+/* Tags do card de paciente (Ansiedade, Depressão, etc.) — refino discreto
+   sobre o .ep-tag base: padding ligeiramente maior, peso menos forte. */
+.ep-session--patient .ep-tag {
+  padding: 4px 10px;
+  font-weight: 500;
+  letter-spacing: 0.015em;
+}
+
+/* Filtro chips no topo (pills da bar de filtros) — refino premium: hover
+   suave (apenas borda + cor, sem mudar fundo), ativo com glow dourado em
+   vez de fundo sólido. Menos "botão", mais "etiqueta selecionável". */
+.ep-tag-filter {
+  padding: 6px 12px;
+  font-size: 12px;
+  letter-spacing: 0.015em;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.ep-tag-filter:hover {
+  background: transparent;
+  color: var(--ep-accent);
+  border-color: color-mix(in srgb, var(--ep-accent) 38%, transparent);
+}
+.ep-tag-filter.is-active {
+  background: color-mix(in srgb, var(--ep-accent) 12%, transparent);
+  color: var(--ep-accent);
+  border-color: color-mix(in srgb, var(--ep-accent) 48%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ep-accent) 10%, transparent);
+}
+
+/* Busca de paciente — em desktop ganha mais altura/padding pra refletir
+   que é a ação principal da tela. Em mobile mantém compacto (touch já
+   tem 36px ok, mais que isso comeria viewport). */
+@media (min-width: 768px) {
+  #patientSearchInput {
+    height: 44px !important;
+    font-size: 14.5px !important;
+    padding: 0 14px !important;
+    max-width: 380px !important;
+  }
+  #patientFilters {
+    padding: 14px 18px !important;
+    gap: 14px !important;
+  }
 }
 
 .ep-session__name { font-weight: 600; color: var(--ep-ink); font-size: 14.5px; }

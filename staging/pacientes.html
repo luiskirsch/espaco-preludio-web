@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-233">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-234">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
@@ -519,9 +519,29 @@
     }
   }
 
+  // Avatar do paciente — iniciais + cor consistente por hash do nome.
+  // Sem foto real, dá identidade visual rápida. Mesmo nome → sempre mesma cor.
+  function patientInitials(name) {
+    const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "·";
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+  function patientColor(name) {
+    // Hash simples (DJB2-like) → hue 0-360. Saturação/luminosidade fixas
+    // pra todas as cores ficarem dentro da mesma paleta tonal (suave).
+    const s = String(name || "—");
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+    const hue = h % 360;
+    return { bg: `hsl(${hue}, 42%, 62%)`, ring: `hsl(${hue}, 42%, 52%)` };
+  }
+
   function renderPatient(p) {
     const div = document.createElement("article");
     div.className = "ep-session ep-session--patient";
+    const avatarColor = patientColor(p.name);
+    const avatarInitials = patientInitials(p.name);
     const anam = anamneseByPatient[p.patientId];
     let anamBadge = "";
     let anamBtnLabel = tr("pacientes:js.btnAnamnese", "Anamnese");
@@ -541,6 +561,7 @@
       ? `<div class="ep-tag-row">${tags.map(t => `<span class="ep-tag">${escapeHtml(t)}</span>`).join("")}</div>`
       : "";
     div.innerHTML = `
+      <span class="ep-patient-avatar" aria-hidden="true" style="background:${avatarColor.bg};">${escapeHtml(avatarInitials)}</span>
       <div>
         <div class="ep-session__name">${escapeHtml(p.name || "—")}</div>
         <div class="ep-session__meta">
