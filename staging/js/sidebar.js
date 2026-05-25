@@ -37,7 +37,7 @@
       ['painel.html', 'video', 'Consultas', 'common:sidebar.consultas'],
       ['agenda.html', 'calendar', 'Agenda', 'common:sidebar.agenda'],
       ['pacientes.html', 'users', 'Pacientes', 'common:sidebar.pacientes'],
-      ['tiss.html', 'fileText', 'TISS', 'common:sidebar.tiss', 'id="sidebarTissLink" data-tiss-only style="display:none;"']
+      ['tiss.html', 'fileText', 'TISS', 'common:sidebar.tiss', 'id="sidebarTissLink" class="ep-sidebar__tiss is-hidden"']
     ]},
     { labelKey: 'common:sidebar.groupGestao', label: 'Gestão', items: [
       ['financeiro.html', 'dollar', 'Financeiro', 'common:sidebar.financeiro'],
@@ -122,15 +122,17 @@
   syncName();
   syncAvatar();
 
-  // TISS link visibility (auth-guard.js mostra/esconde via display style).
-  // NÃO copiar o display literal do topbar — esse anchor da sidebar precisa
-  // ser display:flex (regra .ep-sidebar__nav a) pra o gap:12px funcionar e
-  // o texto não colar no ícone. Só decidimos visível vs oculto.
+  // TISS link visibility (auth-guard.js mostra/esconde via display style
+  // INLINE no topbar). NÃO usamos data-tiss-only no sidebarTissLink pra
+  // evitar que auth-guard sobrescreva o display do anchor — isso quebra o
+  // gap:12px do .ep-sidebar__nav a. Em vez disso, observamos o topbar e
+  // togglamos a classe is-hidden (CSS controla via display:none).
   const topTiss = document.querySelector('header.ep-topbar [data-tiss-only]');
   const sideTiss = document.getElementById('sidebarTissLink');
   if (topTiss && sideTiss) {
     const syncTiss = function () {
-      sideTiss.style.display = (topTiss.style.display === 'none') ? 'none' : 'flex';
+      const hidden = topTiss.style.display === 'none';
+      sideTiss.classList.toggle('is-hidden', hidden);
     };
     new MutationObserver(syncTiss).observe(topTiss, { attributes: true, attributeFilter: ['style'] });
     syncTiss();
