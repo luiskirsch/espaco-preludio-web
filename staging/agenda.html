@@ -87,7 +87,7 @@
           <button type="button" class="ep-toolbar-more__item" id="printAgendaBtn" role="menuitem" title="Imprimir agenda" data-i18n="agenda:header.printBtn" data-i18n-title="agenda:header.printTitle">Imprimir</button>
         </div>
       </div>
-      <a href="./painel.html" class="ep-btn ep-btn--primary" data-i18n="agenda:header.newSessionBtn">+ Nova consulta</a>
+      <button type="button" id="agendaNewSessionBtn" class="ep-btn ep-btn--primary" data-i18n="agenda:header.newSessionBtn">+ Nova consulta</button>
     </div>
   </div>
 
@@ -323,9 +323,10 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist, invalidateProfileCache } from "./js/auth-guard.js?v=3-24";
+  import { requireTherapist, refreshIdToken, invalidateProfileCache } from "./js/auth-guard.js?v=3-24";
   import { cachedGet, invalidate as invalidateApi } from "./js/api-cache.js?v=2-82";
   import { clearDek } from "./js/crypto.js";
+  import { createNewSessionModal } from "./js/new-session-modal.js?v=1";
 
   // tr(): helper i18n com fallback PT.
   function tr(key, fallback, opts) {
@@ -346,7 +347,14 @@
   }
 
   const ctx = await requireTherapist({ requireDek: true });
-  const { user, idToken, therapist } = ctx;
+  const { user, therapist, dek } = ctx;
+  // idToken pode expirar (Firebase TTL 1h). let + getFreshToken() pra usar
+  // sempre token válido — padrão estabelecido em painel.html.
+  let idToken = ctx.idToken;
+  async function getFreshToken() {
+    idToken = await refreshIdToken();
+    return idToken;
+  }
   const uid = user.uid;
 
   document.getElementById("topUserName").textContent = therapist.displayName || "";
@@ -387,6 +395,30 @@
   let allSessions  = []; // todas, do backend (limit 200)
   let allBlackouts = []; // bloqueios do terapeuta
   let allNotes     = []; // observações em slots vazios
+
+  // Builder de link de paciente — copiado do painel pra manter mesma assinatura.
+  // Short code (~8 chars) vai como ?c=; joinToken JWT legado vai como ?t=.
+  function buildPatientLink(codeOrToken) {
+    const s = String(codeOrToken || "");
+    const paramName = s.length <= 16 ? "c" : "t";
+    return `${location.origin}/entrar.html?${paramName}=${encodeURIComponent(s)}`;
+  }
+
+  // Modal "Nova consulta" — compartilhado com painel.html via módulo.
+  // Após criar, re-fetch das sessões pra mostrar na grade imediatamente.
+  const newSessionModalApi = createNewSessionModal({
+    getToken: getFreshToken,
+    uid, dek, therapist,
+    BACKEND_BASE_URL,
+    tr,
+    currentLocaleSafe: currentLocale,
+    getAllSessions: () => allSessions,
+    buildPatientLink,
+    onCreated: async () => {
+      invalidateApi("sessoes", uid);
+      await loadSessions();
+    }
+  });
 
   function getMondayOf(date) {
     const d = new Date(date);
@@ -463,17 +495,17 @@
       await Promise.all([
         cachedGet({
           url: `${BACKEND_BASE_URL}/therapy/sessoes`,
-          idToken, uid, key: "sessoes", ttl: 30_000,
+          idToken, uid, key: "sessoes", ttl: 30_000, getFreshToken,
           onData: (data) => { allSessions = data.sessions || []; showAgenda(); }
         }),
         cachedGet({
           url: `${BACKEND_BASE_URL}/therapy/agenda/blackouts`,
-          idToken, uid, key: "blackouts", ttl: 60_000,
+          idToken, uid, key: "blackouts", ttl: 60_000, getFreshToken,
           onData: (data) => { allBlackouts = Array.isArray(data.blackouts) ? data.blackouts : []; showAgenda(); }
         }).catch(() => { /* blackouts opcional */ }),
         cachedGet({
           url: `${BACKEND_BASE_URL}/therapy/agenda/notes`,
-          idToken, uid, key: "agendaNotes", ttl: 60_000,
+          idToken, uid, key: "agendaNotes", ttl: 60_000, getFreshToken,
           onData: (data) => { allNotes = Array.isArray(data.notes) ? data.notes : []; showAgenda(); }
         }).catch(() => { /* notas opcional */ })
       ]);
@@ -1060,7 +1092,15 @@
 
   document.getElementById("slotCreateSessionBtn").addEventListener("click", () => {
     if (!pendingSlotDate) return;
-    window.location.href = `./painel.html?newAt=${encodeURIComponent(toISOLocal(pendingSlotDate))}`;
+    // Antes redirecionava pro painel; agora abre o modal direto na agenda.
+    document.getElementById("slotActionModal").classList.remove("is-open");
+    newSessionModalApi.open({ scheduledAt: toISOLocal(pendingSlotDate) });
+  });
+
+  // "+ Nova consulta" da toolbar — antes era <a href="painel.html">,
+  // agora abre o modal direto.
+  document.getElementById("agendaNewSessionBtn").addEventListener("click", () => {
+    newSessionModalApi.open();
   });
   document.getElementById("slotActionCancelBtn").addEventListener("click", () => {
     document.getElementById("slotActionModal").classList.remove("is-open");
