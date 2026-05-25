@@ -449,7 +449,10 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     view-transition-name: ep-fab-stack;
   }
   /* FABs dentro do stack ficam em fluxo normal — sobrescreve position:fixed
-     individual e zera offsets/margins que vinham das regras body:has(...). */
+     individual e zera offsets/margins que vinham das regras body:has(...).
+     Ordem visual (topo → base): tema, mensagens, ajuda. Tema fica longe
+     (menos urgente), mensagens no meio (uso frequente), ajuda na base
+     (convenção SOS canto inferior direito). flex order > ordem de mount. */
   body.ep-has-sidebar .ep-fab-stack > .ep-theme-toggle,
   body.ep-has-sidebar .ep-fab-stack > .ep-msg-bubble-fab,
   body.ep-has-sidebar .ep-fab-stack > .ep-help-bubble,
@@ -460,6 +463,9 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     bottom: auto !important;
     margin: 0 !important;
   }
+  body.ep-has-sidebar .ep-fab-stack > .ep-theme-toggle   { order: 1; }
+  body.ep-has-sidebar .ep-fab-stack > .ep-msg-bubble-fab { order: 2; }
+  body.ep-has-sidebar .ep-fab-stack > .ep-help-bubble    { order: 3; }
   /* Logout redundante com botão Sair da sidebar. Continua no stack pra
      manter o #logoutBtn no DOM (sidebar.js dispara click), só não aparece. */
   body.ep-has-sidebar .ep-fab-stack > .ep-logout-fab { display: none !important; }
