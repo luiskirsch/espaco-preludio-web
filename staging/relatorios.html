@@ -258,6 +258,25 @@
   const GOLD_SOFT  = "rgba(200,155,74,0.25)";
   const GREEN      = "#2d8a52";
   const GREEN_SOFT = "rgba(45,138,82,0.25)";
+
+  // Gradient vertical pra barras — topo mais saturado, base mais clara.
+  // Sem isso, o fill com fundo cremoso da página tinha contraste muito
+  // baixo no topo (feedback Gemini): pico do gráfico se mistura com o
+  // card. Chart.js aceita callback no backgroundColor com acesso ao
+  // canvas context, pra construir um CanvasGradient real.
+  function verticalGradient(rTop, gTop, bTop, alphaTop, alphaBottom) {
+    return (context) => {
+      const chart = context.chart;
+      const { ctx, chartArea } = chart;
+      if (!chartArea) return null; // 1º layout — Chart.js re-chama depois
+      const grad = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+      grad.addColorStop(0, `rgba(${rTop},${gTop},${bTop},${alphaTop})`);
+      grad.addColorStop(1, `rgba(${rTop},${gTop},${bTop},${alphaBottom})`);
+      return grad;
+    };
+  }
+  const GOLD_BAR_FILL  = verticalGradient(200, 155, 74, 0.55, 0.12);
+  const GREEN_BAR_FILL = verticalGradient(45, 138, 82, 0.55, 0.12);
   const TERRA      = "#b8453d";
   const TERRA_SOFT = "rgba(184,69,61,0.25)";
 
@@ -326,22 +345,23 @@
       $("statPatients").textContent    = data.patients.distinct;
       $("statPatientsSub").textContent = tr("relatorios:js.patientsSub", "{{n}} novos · {{r}} retorno", { n: data.patients.new, r: data.patients.returning });
 
-      // Charts
+      // Charts — borderWidth 2 + gradient vertical no fill pra dar contraste
+      // no topo (pico do gráfico se misturava com o fundo cremoso do card).
       makeOrUpdate("chartMonth", "bar", {
         labels: data.byMonth.map(m => fmtMonth(m.month)),
-        datasets: [{ data: data.byMonth.map(m => m.count), backgroundColor: GOLD_SOFT, borderColor: GOLD, borderWidth: 1, borderRadius: 4 }]
+        datasets: [{ data: data.byMonth.map(m => m.count), backgroundColor: GOLD_BAR_FILL, borderColor: GOLD, borderWidth: 2, borderRadius: 4 }]
       }, baseOpts());
 
       const dlabels = dayLabels();
       makeOrUpdate("chartDay", "bar", {
         labels: data.byDayOfWeek.map(d => dlabels[d.day]),
-        datasets: [{ data: data.byDayOfWeek.map(d => d.count), backgroundColor: GREEN_SOFT, borderColor: GREEN, borderWidth: 1, borderRadius: 4 }]
+        datasets: [{ data: data.byDayOfWeek.map(d => d.count), backgroundColor: GREEN_BAR_FILL, borderColor: GREEN, borderWidth: 2, borderRadius: 4 }]
       }, baseOpts());
 
       const hourSuffix = tr("relatorios:js.hourSuffix", "h");
       makeOrUpdate("chartHour", "bar", {
         labels: data.byHour.map(h => String(h.hour).padStart(2,"0") + hourSuffix),
-        datasets: [{ data: data.byHour.map(h => h.count), backgroundColor: GOLD_SOFT, borderColor: GOLD, borderWidth: 1, borderRadius: 4 }]
+        datasets: [{ data: data.byHour.map(h => h.count), backgroundColor: GOLD_BAR_FILL, borderColor: GOLD, borderWidth: 2, borderRadius: 4 }]
       }, baseOpts());
 
       makeOrUpdate("chartNewVsRet", "doughnut", {
