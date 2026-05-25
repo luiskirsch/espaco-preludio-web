@@ -92,6 +92,8 @@
         <div id="threadActive" class="ep-hide" style="display: flex; flex-direction: column; flex: 1;">
           <div id="threadHeader" style="padding: 12px 16px; border-bottom: 1px solid var(--ep-line); font-weight: 600;"></div>
           <div id="messageList" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px;"></div>
+          <!-- Indicador "digitando…" — peer só vê quando peerTypingAt < 6s. -->
+          <div id="typingIndicator" style="padding: 0 16px 6px; font-size: 12px; color: var(--ep-ink-3); font-style: italic; min-height: 18px;"></div>
           <div style="padding: 12px 16px; border-top: 1px solid var(--ep-line); display: flex; gap: 8px;">
             <input id="msgInput" type="text" class="ep-input" data-i18n-placeholder="mensagens-pro:input.placeholder" placeholder="Digite a mensagem…" style="flex: 1;">
             <button type="button" id="msgSendBtn" class="ep-btn ep-btn--primary" data-i18n="mensagens-pro:input.send">Enviar</button>
@@ -282,6 +284,11 @@
   // ─── Thread ativa + mensagens ────────────────────────────────────
   async function openThread(threadId) {
     try {
+      // Reset cache se trocando de thread.
+      if (activeThread?.threadId !== threadId) {
+        messageCache.clear();
+        lastRenderedThreadId = null;
+      }
       const d = await api(`/therapy/pro-chat/threads/${encodeURIComponent(threadId)}`);
       activeThread = d.thread;
 
@@ -310,28 +317,73 @@
     } catch (e) { alert(tr("mensagens-pro:js.alertOpen", "Erro abrindo conversa: {{message}}", { message: e.message })); }
   }
 
-  async function loadMessages() {
-    if (!activeThread) return;
+  // Cache local das mensagens — render incremental (não re-cria DOM toda
+  // hora). Permite otimismo: bolha aparece local antes do POST voltar.
+  // Map messageId → { messageId, senderUid, text, createdAt, status }
+  // status: "sent" (confirmada pelo servidor) | "sending" (otimista) | "error"
+  const messageCache = new Map();
+  let lastRenderedThreadId = null;
+
+  function renderMessages(opts = {}) {
     const list = document.getElementById("messageList");
-    list.innerHTML = `<div style="text-align: center; color: var(--ep-ink-3); padding: 20px;">${esc(tr("mensagens-pro:js.loading", "Carregando…"))}</div>`;
+    if (!activeThread) return;
+    // Reset se mudou de thread
+    if (lastRenderedThreadId !== activeThread.threadId) {
+      list.innerHTML = "";
+      lastRenderedThreadId = activeThread.threadId;
+    }
+    const sorted = [...messageCache.values()].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    // Re-build (simples e correto — tipicamente <100 msgs por thread).
+    list.innerHTML = "";
+    const lastReadByPeer = activeThread.lastReadByPeer || 0;
+    for (const m of sorted) {
+      const mine = m.senderUid === myUid;
+      const div = document.createElement("div");
+      div.dataset.msgId = m.messageId;
+      div.style.cssText = `align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 70%; padding: 8px 12px; border-radius: 12px; background: ${mine ? "var(--ep-accent)" : "var(--ep-bg-2)"}; color: ${mine ? "#fff" : "var(--ep-ink)"}; font-size: 14px; opacity: ${m.status === "sending" ? "0.6" : "1"}; transition: opacity 0.18s ease;`;
+      // Ticks: ✓ (sending), ✓ (sent), ✓✓ (read) — só pras minhas.
+      let tick = "";
+      if (mine) {
+        if (m.status === "sending") tick = ' <span style="opacity: 0.7;">✓</span>';
+        else if (m.status === "error") tick = ' <span style="color: #ffb4b4;" title="Erro — clique pra reenviar">!</span>';
+        else if ((m.createdAt || 0) <= lastReadByPeer) tick = ' <span style="color: #7fc99f;">✓✓</span>';
+        else tick = ' <span style="opacity: 0.7;">✓</span>';
+      }
+      div.innerHTML = `<div>${esc(m.text)}</div><div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">${fmtTime(m.createdAt)}${tick}</div>`;
+      list.appendChild(div);
+    }
+    if (opts.scroll !== false) list.scrollTop = list.scrollHeight;
+  }
+
+  async function loadMessages(opts = {}) {
+    if (!activeThread || !activeThreadKeyBytes) return;
+    const isFirstLoad = lastRenderedThreadId !== activeThread.threadId;
+    if (isFirstLoad) {
+      document.getElementById("messageList").innerHTML = `<div style="text-align: center; color: var(--ep-ink-3); padding: 20px;">${esc(tr("mensagens-pro:js.loading", "Carregando…"))}</div>`;
+    }
     try {
       const d = await api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}/messages?limit=100`);
       const msgs = d.messages || [];
-      list.innerHTML = "";
+      // Mescla — preserva entradas otimistas que ainda não voltaram do servidor
+      // (status "sending"); remove dups (servidor já confirmou).
       for (const m of msgs) {
         let text = "";
         try {
           text = await decryptNote({ ciphertext: m.ciphertext, iv: m.iv }, activeThreadKeyBytes);
         } catch { text = tr("mensagens-pro:js.corruptedMsg", "[mensagem corrompida]"); }
-        const mine = m.senderUid === myUid;
-        const div = document.createElement("div");
-        div.style.cssText = `align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 70%; padding: 8px 12px; border-radius: 12px; background: ${mine ? "var(--ep-accent)" : "var(--ep-bg-2)"}; color: ${mine ? "#fff" : "var(--ep-ink)"}; font-size: 14px;`;
-        div.innerHTML = `<div>${esc(text)}</div><div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">${fmtTime(m.createdAt)}</div>`;
-        list.appendChild(div);
+        messageCache.set(m.messageId, {
+          messageId: m.messageId,
+          senderUid: m.senderUid,
+          text,
+          createdAt: m.createdAt,
+          status: "sent"
+        });
       }
-      list.scrollTop = list.scrollHeight;
+      renderMessages({ scroll: isFirstLoad || opts.scroll });
     } catch (e) {
-      list.innerHTML = `<div class="ep-status is-err">${esc(tr("mensagens-pro:js.loadError", "Erro: {{message}}", { message: e.message }))}</div>`;
+      if (isFirstLoad) {
+        document.getElementById("messageList").innerHTML = `<div class="ep-status is-err">${esc(tr("mensagens-pro:js.loadError", "Erro: {{message}}", { message: e.message }))}</div>`;
+      }
     }
   }
 
@@ -343,15 +395,74 @@
     const text = input.value.trim();
     if (!text || !activeThread || !activeThreadKeyBytes) return;
     input.value = "";
+
+    // Otimismo: bolha aparece IMEDIATAMENTE com tempId.
+    const tempId = "tmp-" + Math.random().toString(36).slice(2);
+    const tempMsg = {
+      messageId: tempId,
+      senderUid: myUid,
+      text,
+      createdAt: Date.now(),
+      status: "sending"
+    };
+    messageCache.set(tempId, tempMsg);
+    renderMessages();
+
     try {
       const enc = await encryptNote(text, activeThreadKeyBytes);
-      await api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}/messages`, {
+      const result = await api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}/messages`, {
         method: "POST",
         body: JSON.stringify({ ciphertext: enc.ciphertext, iv: enc.iv })
       });
-      await loadMessages();
-      await loadThreads();
-    } catch (e) { alert(tr("mensagens-pro:js.alertSend", "Erro enviando: {{message}}", { message: e.message })); }
+      // Troca o tempId pelo real messageId que o servidor retornou.
+      messageCache.delete(tempId);
+      messageCache.set(result.messageId, {
+        messageId: result.messageId,
+        senderUid: myUid,
+        text,
+        createdAt: result.createdAt || tempMsg.createdAt,
+        status: "sent"
+      });
+      renderMessages({ scroll: false });
+      // Refresh threads (lastMessageAt mudou).
+      loadThreads();
+    } catch (e) {
+      // Marca a bolha como erro — user pode tentar de novo.
+      const m = messageCache.get(tempId);
+      if (m) { m.status = "error"; renderMessages({ scroll: false }); }
+      console.error("send_failed", e);
+    }
+  }
+
+  // Indicador "digitando..." — POSTa typing debounced enquanto user digita.
+  // Backend grava timestamp; peer detecta via peerTypingAt no GET thread.
+  let lastTypingPost = 0;
+  document.getElementById("msgInput").addEventListener("input", () => {
+    if (!activeThread) return;
+    const now = Date.now();
+    if (now - lastTypingPost < 3000) return; // debounce 3s
+    lastTypingPost = now;
+    api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}/typing`, {
+      method: "POST"
+    }).catch(() => { /* silencioso */ });
+  });
+
+  // Refresh do thread aberto a cada 3s — pega mensagens novas + lastReadByPeer
+  // + peerTypingAt. Combina render incremental → sensação de tempo real.
+  async function refreshActiveThread() {
+    if (!activeThread) return;
+    try {
+      const d = await api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}`);
+      // Atualiza meta da thread (lastReadByPeer pros ticks).
+      activeThread.lastReadByPeer = d.thread.lastReadByPeer || 0;
+      activeThread.peerTypingAt   = d.thread.peerTypingAt || 0;
+      // "Digitando..." se peer typed nos últimos 6s e não sou eu.
+      const typing = (Date.now() - (activeThread.peerTypingAt || 0)) < 6000;
+      document.getElementById("typingIndicator").textContent = typing
+        ? tr("mensagens-pro:js.typing", "{{name}} está digitando…", { name: activeThread.peerName })
+        : "";
+      await loadMessages({ scroll: false });
+    } catch { /* silencioso */ }
   }
 
   document.getElementById("logoutBtn").addEventListener("click", async () => {
@@ -359,11 +470,9 @@
     window.location.href = "./login.html";
   });
 
-  // Polling pra novas mensagens enquanto thread aberta
-  setInterval(() => {
-    if (activeThread) { loadMessages(); }
-    loadThreads();
-  }, 15_000);
+  // Polling: thread ativa a cada 3s (real-time feel), lista a cada 15s.
+  setInterval(() => { if (activeThread) refreshActiveThread(); }, 3_000);
+  setInterval(() => { loadThreads(); }, 15_000);
 
   loadThreads();
 </script>
