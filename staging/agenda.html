@@ -63,9 +63,17 @@
       <h1 class="ep-h1 ep-mt-12" data-i18n="agenda:header.h1">Sua semana</h1>
       <p class="ep-text-muted ep-mt-0" data-i18n="agenda:header.lead">Visualize, navegue e crie consultas direto no horário desejado.</p>
     </div>
-    <div class="ep-flex ep-flex--wrap ep-gap-8 ep-no-print" style="align-items: center;">
-      <!-- Ações secundárias colapsadas num menu pra não competir com a ação primária.
-           IDs originais preservados (JS abre os modais via getElementById). -->
+  </div>
+
+  <!-- Busca + ações (⋯ Mais, + Nova consulta) na mesma linha. Busca à esquerda,
+       ações empurradas pra direita via margin-left:auto. IDs originais
+       preservados — JS dos modais continua usando getElementById. -->
+  <div class="ep-agenda-search-row ep-flex ep-flex--end-wrap ep-no-print" style="gap: 10px; align-items: center;">
+    <div class="ep-field" style="flex: 1; max-width: 360px; margin: 0;">
+      <input id="patientSearch" class="ep-input" type="search" placeholder="🔍 Buscar consulta por paciente…" aria-label="Buscar paciente" data-i18n-placeholder="agenda:search.placeholder" data-i18n-aria-label="agenda:search.aria">
+    </div>
+    <span id="searchHint" class="ep-text-xs ep-text-muted ep-hide"></span>
+    <div class="ep-flex ep-flex--wrap ep-gap-8" style="align-items: center; margin-left: auto;">
       <div class="ep-toolbar-more" id="agendaToolbarMore">
         <button type="button" class="ep-btn ep-btn--ghost" id="toolbarMoreBtn"
                 aria-haspopup="true" aria-expanded="false"
@@ -81,14 +89,6 @@
       </div>
       <a href="./painel.html" class="ep-btn ep-btn--primary" data-i18n="agenda:header.newSessionBtn">+ Nova consulta</a>
     </div>
-  </div>
-
-  <!-- Busca por paciente + Navegação semanal + legenda -->
-  <div class="ep-agenda-search-row ep-flex ep-flex--end-wrap ep-no-print" style="gap: 10px; align-items: center;">
-    <div class="ep-field" style="flex: 1; max-width: 360px; margin: 0;">
-      <input id="patientSearch" class="ep-input" type="search" placeholder="🔍 Buscar consulta por paciente…" aria-label="Buscar paciente" data-i18n-placeholder="agenda:search.placeholder" data-i18n-aria-label="agenda:search.aria">
-    </div>
-    <span id="searchHint" class="ep-text-xs ep-text-muted ep-hide"></span>
   </div>
 
   <!-- Navegação semanal + legenda -->
