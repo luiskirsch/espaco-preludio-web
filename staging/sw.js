@@ -1,14 +1,17 @@
 // Service Worker do Espaço Prelúdio
 // Estratégia:
-//   - HTML: network-first com fallback pra cache (offline-tolerant; sempre
-//     prefere versão fresca quando online porque o cache-buster fica em CSS/JS).
+//   - HTML: STALE-WHILE-REVALIDATE — serve cache imediatamente (paint
+//     instantâneo), revalida em background. Próxima nav já vem fresh.
+//     Trade-off vs network-first: pode mostrar HTML levemente stale por
+//     um ciclo, mas cache-busters em CSS/JS garantem que assets atualizam
+//     normalmente e o ganho de velocidade percebida é enorme.
 //   - CSS/JS/SVG/font (estáticos): cache-first com revalidação background.
 //   - APIs (backend Railway): NUNCA cacheia — passa direto pelo fetch.
 //   - Push: handler de notificação + click pra abrir o painel.
 //
 // Bump SW_VERSION pra forçar refresh do cache em todas as instalações.
 
-const SW_VERSION = "ep-sw-v1-2026-05-16-preflight";
+const SW_VERSION = "ep-sw-v2-2026-05-25-swr";
 const PRECACHE   = `precache-${SW_VERSION}`;
 const RUNTIME    = `runtime-${SW_VERSION}`;
 
@@ -19,8 +22,9 @@ const PRECACHE_URLS = [
   "/perfil.html",
   "/financeiro.html",
   "/relatorios.html",
-  "/favicon.svg",
-  "/manifest.webmanifest"
+  "/tiss.html",
+  "/manifest.webmanifest",
+  "/logo_oficial_fundo_transparente.png?v=2"
 ];
 
 self.addEventListener("install", (event) => {
@@ -65,23 +69,30 @@ self.addEventListener("fetch", (event) => {
   // API: passa direto, sem tocar no cache.
   if (isApiRequest(url)) return;
 
-  // HTML / navegação: network-first com fallback de cache.
+  // HTML / navegação: STALE-WHILE-REVALIDATE — serve cache imediato,
+  // revalida em background. Combina com View Transitions API e
+  // Speculation Rules pra dar sensação de "instantâneo" entre páginas.
   if (req.mode === "navigate" || req.destination === "document") {
     event.respondWith((async () => {
-      try {
-        const fresh = await fetch(req);
-        // Atualiza cache em background pro próximo offline.
-        const cache = await caches.open(RUNTIME);
-        cache.put(req, fresh.clone()).catch(() => {});
+      const cache = await caches.open(RUNTIME);
+      const cached = await cache.match(req);
+      const networkPromise = fetch(req).then(fresh => {
+        if (fresh && fresh.ok) cache.put(req, fresh.clone()).catch(() => {});
         return fresh;
-      } catch (e) {
-        const cached = await caches.match(req);
-        if (cached) return cached;
-        // Fallback final: painel cacheado no precache (online estará indo).
-        const fallback = await caches.match("/painel.html");
-        if (fallback) return fallback;
-        throw e;
+      }).catch(() => null);
+
+      // Se há cache: serve imediato + revalida em background (não bloqueia).
+      if (cached) {
+        networkPromise.catch(() => {});
+        return cached;
       }
+      // Sem cache (1ª visita): espera rede.
+      const fresh = await networkPromise;
+      if (fresh) return fresh;
+      // Offline + sem cache: fallback pro painel precacheado.
+      const fallback = await caches.match("/painel.html");
+      if (fallback) return fallback;
+      return new Response("Offline", { status: 503 });
     })());
     return;
   }
@@ -120,8 +131,8 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body: payload.body,
-    icon: "/favicon.svg",
-    badge: "/favicon.svg",
+    icon: "/logo_oficial_fundo_transparente.png",
+    badge: "/logo_oficial_fundo_transparente.png",
     tag: payload.tag || "ep-default",
     data: { url: payload.url || "/painel.html" },
     requireInteraction: false,
