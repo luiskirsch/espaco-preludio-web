@@ -122,11 +122,16 @@
   syncName();
   syncAvatar();
 
-  // TISS link visibility (auth-guard.js mostra/esconde via display style)
+  // TISS link visibility (auth-guard.js mostra/esconde via display style).
+  // NÃO copiar o display literal do topbar — esse anchor da sidebar precisa
+  // ser display:flex (regra .ep-sidebar__nav a) pra o gap:12px funcionar e
+  // o texto não colar no ícone. Só decidimos visível vs oculto.
   const topTiss = document.querySelector('header.ep-topbar [data-tiss-only]');
   const sideTiss = document.getElementById('sidebarTissLink');
   if (topTiss && sideTiss) {
-    const syncTiss = function () { sideTiss.style.display = topTiss.style.display; };
+    const syncTiss = function () {
+      sideTiss.style.display = (topTiss.style.display === 'none') ? 'none' : 'flex';
+    };
     new MutationObserver(syncTiss).observe(topTiss, { attributes: true, attributeFilter: ['style'] });
     syncTiss();
   }
