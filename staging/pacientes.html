@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-242">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-243">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
@@ -79,7 +79,13 @@
       </div>
     </div>
 
-    <div id="loadingBanner" class="ep-alert ep-mt-16" data-i18n="pacientes:loading">Carregando pacientes…</div>
+    <!-- Skeleton estrutural: 3 patient rows. JS oculta quando dados chegam. -->
+    <div id="loadingBanner" class="ep-mt-16" aria-live="polite" aria-busy="true">
+      <span class="ep-hide" data-i18n="pacientes:loading">Carregando pacientes…</span>
+      <div class="ep-skel ep-skel--row"></div>
+      <div class="ep-skel ep-skel--row"></div>
+      <div class="ep-skel ep-skel--row"></div>
+    </div>
     <div id="patientFilters" class="ep-mt-16 ep-hide" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 16px;background:var(--ep-bg-2);border-radius:10px;">
       <span class="ep-text-xs ep-text-muted" style="font-weight:600;letter-spacing:0.06em;text-transform:uppercase;" data-i18n="pacientes:filters.label">Filtrar:</span>
       <input id="patientSearchInput" class="ep-input" type="text" placeholder="🔍 Nome ou contato…" style="flex:1;min-width:200px;max-width:320px;height:36px;font-size:13px;" data-i18n-placeholder="pacientes:filters.searchPlaceholder">
@@ -363,7 +369,7 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=3-24";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-25";
   import { cachedGet, invalidate as invalidateApi } from "./js/api-cache.js?v=2-82";
   import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
 

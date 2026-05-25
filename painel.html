@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-242">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-243">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
@@ -112,7 +112,14 @@
       <div id="schedRequestsList" class="ep-session-list ep-mt-12"></div>
     </section>
 
-    <div id="loadingBanner" class="ep-alert ep-mt-16" data-i18n="painel:list.loading">Carregando suas consultas…</div>
+    <!-- Skeleton estrutural (3 linhas que prefiguram session cards) — substitui
+         o "Carregando…" genérico. JS esconde quando dados chegam. -->
+    <div id="loadingBanner" class="ep-mt-16" aria-live="polite" aria-busy="true">
+      <span class="ep-hide" data-i18n="painel:list.loading">Carregando suas consultas…</span>
+      <div class="ep-skel ep-skel--row"></div>
+      <div class="ep-skel ep-skel--row"></div>
+      <div class="ep-skel ep-skel--row"></div>
+    </div>
 
     <div id="sessionList" class="ep-session-list ep-mt-16 ep-hide"></div>
 
@@ -284,7 +291,7 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist, refreshIdToken } from "./js/auth-guard.js?v=3-24";
+  import { requireTherapist, refreshIdToken } from "./js/auth-guard.js?v=3-25";
   import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=2-84";
   import { clearDek, recallUser, decryptNote } from "./js/crypto.js";
   import { createNewSessionModal } from "./js/new-session-modal.js?v=1";

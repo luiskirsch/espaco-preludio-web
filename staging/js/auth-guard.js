@@ -412,6 +412,88 @@ function prefetchNavLinks() {
   else window.addEventListener("load", () => setTimeout(run, 50), { once: true });
 }
 
+// Hover-prefetch de DADOS — vai além do prefetch de HTML. Quando o usuário
+// passa o mouse sobre um link da sidebar/nav e fica >120ms (debounce evita
+// disparar pra todos os links no swipe), faz fetch das APIs principais da
+// página destino e grava no MESMO sessionStorage cache (api-cache.js).
+// Quando a página alvo abre e chama cachedGet(), pega o cache fresco —
+// pula o "Carregando…" inteiramente, render direto com dados.
+//
+// Mapping é estático (rota → endpoints+keys). Falha silenciosa.
+const NAV_DATA_PREFETCH = {
+  "painel.html": [
+    { url: "/therapy/sessoes",        key: "sessoes" },
+  ],
+  "agenda.html": [
+    { url: "/therapy/sessoes?includeHidden=true", key: "sessoes:all" },
+    { url: "/therapy/agenda/blackouts",  key: "blackouts" },
+    { url: "/therapy/agenda/notes",      key: "agendaNotes" },
+  ],
+  "pacientes.html": [
+    { url: "/therapy/pacientes",      key: "pacientes" },
+  ],
+};
+const NS_API_CACHE = "ep:api:v1:";
+function setupHoverDataPrefetch(uid) {
+  if (!uid) return;
+  const seenSessionPrefetches = new Set();
+  let hoverTimer = null;
+
+  function prefetchRoute(href) {
+    // basename da href: "./pacientes.html" → "pacientes.html"
+    const name = (href || "").replace(/^\.?\//, "").split("?")[0].toLowerCase();
+    const targets = NAV_DATA_PREFETCH[name];
+    if (!targets) return;
+    if (seenSessionPrefetches.has(name)) return; // já feito nesta sessão de hover
+
+    targets.forEach(async ({ url, key }) => {
+      const cacheKey = NS_API_CACHE + key + ":" + uid;
+      // Pula se já tem cache fresco (api-cache.js gerencia TTL).
+      try {
+        const raw = sessionStorage.getItem(cacheKey);
+        if (raw) {
+          const entry = JSON.parse(raw);
+          const ttl = entry.ttl || 30_000;
+          if (Date.now() - entry.t < ttl) return; // ainda válido
+        }
+      } catch {}
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+        const token = await user.getIdToken();
+        const res = await fetch(BACKEND_BASE_URL + url, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data?.ok) return;
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          t: Date.now(), ttl: 30_000, data
+        }));
+      } catch { /* silencioso */ }
+    });
+    seenSessionPrefetches.add(name);
+  }
+
+  function onHoverStart(e) {
+    const a = e.target.closest('a[href$=".html"]');
+    if (!a) return;
+    const href = a.getAttribute("href");
+    if (!href || href.startsWith("http")) return;
+    clearTimeout(hoverTimer);
+    hoverTimer = setTimeout(() => prefetchRoute(href), 120);
+  }
+  function onHoverEnd() { clearTimeout(hoverTimer); }
+
+  document.addEventListener("mouseover", onHoverStart, { passive: true });
+  document.addEventListener("mouseout",  onHoverEnd,   { passive: true });
+  // Touch — dispara imediato no touchstart (usuário já decidiu).
+  document.addEventListener("touchstart", (e) => {
+    const a = e.target.closest('a[href$=".html"]');
+    if (a) prefetchRoute(a.getAttribute("href"));
+  }, { passive: true });
+}
+
 // Move o #logoutBtn pra fora do nav e transforma em FAB (botão flutuante
 // no canto inferior direito, abaixo de help/msg/theme). Preserva o
 // elemento original — assim cada página que registrou seu próprio
@@ -573,6 +655,11 @@ export async function requireTherapist({ requireDek = true } = {}) {
 
   // Prefetch da nav pra navegação subsequente parecer instantânea.
   prefetchNavLinks();
+  // Hover-prefetch de dados — quando o user passa o mouse num link da
+  // sidebar por >120ms, dispara as APIs da página destino em background.
+  // Resultado: ao clicar, a página alvo já vê o cache fresco e pula o
+  // "Carregando…" inteiramente.
+  setupHoverDataPrefetch(user.uid);
 
   // Preenche o slot de perfil no topbar (avatar + nome → link pra perfil.html).
   applyTopUserSlot(profile.therapist);

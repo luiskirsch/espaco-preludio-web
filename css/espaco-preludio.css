@@ -1,3 +1,37 @@
+/* Skeleton screens — preservam o layout final enquanto o JS hidrata dados.
+   Substituem o "Carregando…" genérico, eliminando o salto visual (CLS).
+   Cor base alinha com o creme do background; o shimmer é uma faixa diagonal
+   que percorre 1.4s. Em dark, troca pra tons escuros equivalentes. */
+.ep-skel {
+  background: linear-gradient(90deg,
+    rgba(28,31,29,0.04) 0%,
+    rgba(28,31,29,0.08) 50%,
+    rgba(28,31,29,0.04) 100%);
+  background-size: 200% 100%;
+  animation: ep-shimmer 1.4s linear infinite;
+  border-radius: 8px;
+  color: transparent !important;
+  user-select: none;
+  pointer-events: none;
+}
+html[data-theme="dark"] .ep-skel {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.04) 100%);
+  background-size: 200% 100%;
+}
+@keyframes ep-shimmer { to { background-position: -200% 0; } }
+
+/* Variações de altura comuns. */
+.ep-skel--line   { height: 14px; margin: 6px 0; }
+.ep-skel--title  { height: 24px; margin: 8px 0; max-width: 280px; }
+.ep-skel--card   { height: 92px; margin: 12px 0; border-radius: 12px; }
+.ep-skel--row    { height: 68px; margin: 10px 0; border-radius: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  .ep-skel { animation: none; }
+}
+
 /* View Transitions API — crossfade nativo entre navegações same-origin.
    Chave: nomear elementos persistentes (sidebar, FAB stack) pra que sejam
    IDENTIFICADOS como contínuos entre páginas e NÃO animados. Só o conteúdo
@@ -5,17 +39,19 @@
 @view-transition {
   navigation: auto;
 }
-/* Root (todo o resto além dos nomeados) — fade rápido sem flash branco
-   entre swaps. Background opaco no html (regra abaixo) garante que não
-   "vaza" cor default do browser por baixo do snapshot. */
+/* Root (todo o resto além dos nomeados) — fade + translate sutil com
+   curva Apple (cubic-bezier(0.32, 0.72, 0, 1)). Combina opacidade com
+   4-6px de movimento Y pra dar sensação de "página deslizando" em vez
+   de "corte". Durações 180/260ms ficam no sweet spot entre snap e
+   premium feel. Background opaco no html (regra abaixo) evita flash. */
 ::view-transition-old(root) {
-  animation: 120ms cubic-bezier(0.4, 0, 0.2, 1) both ep-vt-fade-out;
+  animation: 180ms cubic-bezier(0.32, 0.72, 0, 1) both ep-vt-fade-out;
 }
 ::view-transition-new(root) {
-  animation: 160ms cubic-bezier(0.4, 0, 0.2, 1) 30ms both ep-vt-fade-in;
+  animation: 260ms cubic-bezier(0.32, 0.72, 0, 1) 40ms both ep-vt-fade-in;
 }
-@keyframes ep-vt-fade-out { to { opacity: 0; } }
-@keyframes ep-vt-fade-in  { from { opacity: 0; } }
+@keyframes ep-vt-fade-out { to { opacity: 0; transform: translateY(-4px); } }
+@keyframes ep-vt-fade-in  { from { opacity: 0; transform: translateY(6px); } }
 
 /* Sidebar e FAB stack: mesma identidade entre páginas → browser NÃO anima,
    eles ficam fisicamente persistentes durante a transição. Fim do "menu

@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-242">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-243">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
@@ -115,7 +115,13 @@
   </div>
 
   <!-- Grid semanal -->
-  <div id="loadingBanner" class="ep-alert ep-mt-16" data-i18n="agenda:loading">Carregando agenda…</div>
+  <!-- Skeleton estrutural — bloco com altura do grid pra evitar CLS quando
+       o agendaGrid real assume. JS esconde via classList.add("ep-hide"). -->
+  <div id="loadingBanner" class="ep-mt-16" aria-live="polite" aria-busy="true">
+    <span class="ep-hide" data-i18n="agenda:loading">Carregando agenda…</span>
+    <div class="ep-skel" style="height: 56px; border-radius: 12px 12px 0 0; margin-bottom: 1px;"></div>
+    <div class="ep-skel" style="height: 480px; border-radius: 0 0 12px 12px;"></div>
+  </div>
 
   <div id="agendaGrid" class="ep-agenda-grid ep-hide" aria-label="Grade semanal" data-i18n-aria-label="agenda:gridAria">
     <!-- Header row (corner + 7 days) -->
@@ -329,7 +335,7 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist, refreshIdToken, invalidateProfileCache } from "./js/auth-guard.js?v=3-24";
+  import { requireTherapist, refreshIdToken, invalidateProfileCache } from "./js/auth-guard.js?v=3-25";
   import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=2-84";
   import { clearDek } from "./js/crypto.js";
   import { createNewSessionModal } from "./js/new-session-modal.js?v=1";
