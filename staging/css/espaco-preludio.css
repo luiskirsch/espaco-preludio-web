@@ -357,9 +357,12 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     top: 50% !important;
     right: 19px !important;
   }
-  body.ep-has-sidebar .ep-theme-toggle   { margin-top: -125px !important; }
-  body.ep-has-sidebar .ep-msg-bubble-fab { margin-top: -59px !important; }
-  body.ep-has-sidebar .ep-help-bubble    { margin-top: 7px !important; }
+  /* 3 FABs centralizados verticalmente: theme acima, msg no meio, help
+     abaixo. Espaçamento 66px entre centros (mesmo gap usado antes com 4
+     botões). Centro visual do bloco = 50% do viewport. */
+  body.ep-has-sidebar .ep-theme-toggle   { margin-top: -66px !important; }
+  body.ep-has-sidebar .ep-msg-bubble-fab { margin-top: 0 !important; }
+  body.ep-has-sidebar .ep-help-bubble    { margin-top: 66px !important; }
   /* Logout FAB redundante com a sidebar (que tem botão Sair no rodapé).
      Esconde visualmente — #logoutBtn fica no DOM pra sidebarLogout.click()
      continuar disparando o handler de signOut. */
