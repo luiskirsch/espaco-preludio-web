@@ -609,6 +609,10 @@
   // ─── Dashboard "Hoje" ────────────────────────────────────────
   // Carrega agregação leve + renderiza hero. Falha silenciosa.
   // Auto-retry com token renovado se Firebase ID expirou (TTL 1h).
+  // Guarda última resposta — o card "Esta semana" depende de allSessions
+  // (carregado em paralelo), então renderHero é re-chamado quando sessões
+  // chegam pra atualizar a contagem semanal.
+  let lastHeroData = null;
   async function loadHero() {
     async function doFetch(token) {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/painel/hoje`, {
@@ -623,6 +627,7 @@
         ({ res, data } = await doFetch(await getFreshToken()));
       }
       if (!res.ok || !data.ok) return;
+      lastHeroData = data;
       renderHero(data);
     } catch { /* silencioso */ }
   }
@@ -677,25 +682,44 @@
     // KPIs do mês
     const tm = data.thisMonth || {};
 
-    // Card "Próxima sessão" — nome do paciente + horário relativo. Quando
-    // não há próxima sessão, vira CTA sutil ("Crie em + Nova consulta"). O
-    // bloco gradient #heroNextSession acima já tem o botão "Entrar"; aqui
-    // só reforçamos a info de relance.
-    let nextKpiValue;
-    let nextKpiHint;
-    if (data.nextSession) {
-      nextKpiValue = data.nextSession.patientName || tr("painel:hero.patientFallback","Paciente");
-      nextKpiHint  = fmtSessionWhen(data.nextSession.scheduledAt);
+    // Card "Esta semana" — calcula client-side a partir de allSessions
+    // (que pode estar vazio na 1ª passada antes de loadSessions terminar;
+    // renderSessionsFromData re-chama renderHero pra atualizar quando
+    // sessões chegam). Semana = segunda 00h até domingo 23:59:59.
+    const weekStartMs = (() => {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      const dayOfWeek = d.getDay(); // 0=Dom, 1=Seg, ..., 6=Sáb
+      const offsetToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      d.setDate(d.getDate() + offsetToMonday);
+      return d.getTime();
+    })();
+    const weekEndMs = weekStartMs + 7 * 86400000;
+    const weekSessions = allSessions.filter(s =>
+      s.scheduledAt && s.scheduledAt >= weekStartMs && s.scheduledAt < weekEndMs && s.status !== "canceled"
+    );
+    const weekCount     = weekSessions.length;
+    const weekConfirmed = weekSessions.filter(s => s.confirmedAt).length;
+    let weekKpiValue, weekKpiHint;
+    if (weekCount === 0) {
+      weekKpiValue = "—";
+      weekKpiHint  = tr("painel:hero.kpiWeekEmpty", "Semana livre");
     } else {
-      nextKpiValue = "—";
-      nextKpiHint  = tr("painel:hero.kpiNextEmpty","Crie em + Nova consulta");
+      weekKpiValue = weekCount === 1
+        ? tr("painel:hero.kpiWeekSingle", "{{n}} consulta", { n: weekCount })
+        : tr("painel:hero.kpiWeekMany",   "{{n}} consultas", { n: weekCount });
+      weekKpiHint = weekConfirmed > 0
+        ? (weekConfirmed === 1
+            ? tr("painel:hero.kpiWeekConfSingle", "{{n}} confirmada", { n: weekConfirmed })
+            : tr("painel:hero.kpiWeekConfMany",   "{{n}} confirmadas", { n: weekConfirmed }))
+        : tr("painel:hero.kpiWeekHintNone", "nenhuma confirmada ainda");
     }
     const kpis = [
       {
-        eyebrow: tr("painel:hero.kpiNext","Próxima sessão"),
-        value: nextKpiValue,
-        hint: nextKpiHint,
-        valueSize: data.nextSession ? 16 : 22
+        eyebrow: tr("painel:hero.kpiWeek", "Esta semana"),
+        value: weekKpiValue,
+        hint: weekKpiHint,
+        valueSize: weekCount === 0 ? 22 : 18
       },
       {
         eyebrow: tr("painel:hero.kpiDone","Realizadas no mês"),
@@ -761,6 +785,8 @@
   function renderSessionsFromData(data) {
     loadingBanner.classList.add("ep-hide");
     allSessions = data.sessions || [];
+    // Re-renderiza o hero — card "Esta semana" precisa de allSessions atualizado.
+    if (lastHeroData) renderHero(lastHeroData);
     if (allSessions.length === 0) {
       sessionList.classList.add("ep-hide");
       emptyState.classList.remove("ep-hide");
