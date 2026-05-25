@@ -78,8 +78,15 @@
 
 <main class="ep-container ep-mt-32 ep-mb-16">
 
-  <!-- Bootstrap state: 3 caminhos -->
-  <div id="bootLoading" class="ep-alert" data-i18n="clinica:boot.loading">Carregando…</div>
+  <!-- Bootstrap state: 3 caminhos. Skeleton prefigura o card (title + 2 linhas
+       + bloco). JS oculta via classList.add("ep-hide") quando dados chegam. -->
+  <div id="bootLoading" aria-live="polite" aria-busy="true">
+    <span class="ep-hide" data-i18n="clinica:boot.loading">Carregando…</span>
+    <div class="ep-skel ep-skel--title"></div>
+    <div class="ep-skel ep-skel--line"></div>
+    <div class="ep-skel ep-skel--line" style="max-width: 75%;"></div>
+    <div class="ep-skel ep-skel--card ep-mt-16"></div>
+  </div>
 
   <!-- Estado A: user não tem clínica nem é membro de nenhuma -->
   <section id="emptyState" class="ep-hide ep-stack">
@@ -242,7 +249,8 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=3-25";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-26";
+  import { cachedGet, invalidatePrefix } from "./js/api-cache.js?v=2-84";
   import { clearDek } from "./js/crypto.js";
 
   const session = await requireTherapist({ requireDek: false });
@@ -301,16 +309,33 @@
   let pendingInvites = [];
 
   async function bootstrap() {
+    // Usa cachedGet em vez de api() pras 2 chamadas iniciais. Isso permite:
+    // 1. Cache stale-while-revalidate (paint instantâneo se cache existe)
+    // 2. Hover-prefetch do auth-guard.js grava no mesmo namespace — quando
+    //    o user clica no link Clínica vindo doutra página, o cache já está
+    //    quente e o skeleton some imediato.
     try {
-      const [me, invites] = await Promise.all([
-        api("/therapy/clinicas/me"),
-        api("/therapy/clinicas/convites-pendentes")
+      let meData = null, invitesData = null;
+      function tryRender() {
+        if (!meData || !invitesData) return;
+        myClinic = meData.ownedClinic;
+        memberships = meData.memberships || [];
+        pendingInvites = invitesData.invites || [];
+        document.getElementById("bootLoading").classList.add("ep-hide");
+        renderRoot();
+      }
+      await Promise.all([
+        cachedGet({
+          url: `${BACKEND_BASE_URL}/therapy/clinicas/me`,
+          idToken, uid, key: "clinicas:me", ttl: 30_000,
+          onData: (d) => { meData = d; tryRender(); }
+        }),
+        cachedGet({
+          url: `${BACKEND_BASE_URL}/therapy/clinicas/convites-pendentes`,
+          idToken, uid, key: "clinicas:invites", ttl: 30_000,
+          onData: (d) => { invitesData = d; tryRender(); }
+        })
       ]);
-      myClinic = me.ownedClinic;
-      memberships = me.memberships || [];
-      pendingInvites = invites.invites || [];
-      document.getElementById("bootLoading").classList.add("ep-hide");
-      renderRoot();
     } catch (e) {
       document.getElementById("bootLoading").textContent = tr("clinica:errors.prefix", "Erro: ") + e.message;
       document.getElementById("bootLoading").className = "ep-alert ep-alert--danger";

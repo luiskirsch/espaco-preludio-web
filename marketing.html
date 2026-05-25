@@ -71,17 +71,26 @@
       </p>
     </div>
 
-    <!-- Step 1: audience -->
+    <!-- Step 1: audience. Skeleton inicial (3 rows) é substituído pelo
+         innerHTML quando loadOptions() termina. -->
     <div class="ep-card ep-mt-16" style="padding: 18px 20px;">
       <h3 class="ep-h3 ep-mt-0" data-i18n="marketing:step1.title">1. Quem vai receber</h3>
-      <div id="audienceList" class="ep-stack ep-mt-12" style="gap: 8px;"></div>
+      <div id="audienceList" class="ep-stack ep-mt-12" style="gap: 8px;">
+        <div class="ep-skel ep-skel--row" style="height: 58px;"></div>
+        <div class="ep-skel ep-skel--row" style="height: 58px;"></div>
+        <div class="ep-skel ep-skel--row" style="height: 58px;"></div>
+      </div>
       <p class="ep-text-xs ep-text-muted ep-mt-8" id="audienceCount" data-i18n="marketing:step1.countDash">—</p>
     </div>
 
-    <!-- Step 2: template -->
+    <!-- Step 2: template. Mesma estratégia. -->
     <div class="ep-card ep-mt-16" style="padding: 18px 20px;">
       <h3 class="ep-h3 ep-mt-0" data-i18n="marketing:step2.title">2. Mensagem</h3>
-      <div id="templateList" class="ep-stack ep-mt-12" style="gap: 8px;"></div>
+      <div id="templateList" class="ep-stack ep-mt-12" style="gap: 8px;">
+        <div class="ep-skel ep-skel--row" style="height: 58px;"></div>
+        <div class="ep-skel ep-skel--row" style="height: 58px;"></div>
+        <div class="ep-skel ep-skel--row" style="height: 58px;"></div>
+      </div>
       <div class="ep-stack ep-mt-12" style="gap: 10px;">
         <div class="ep-field">
           <label class="ep-label ep-text-sm" for="campSubject" data-i18n="marketing:step2.subjectLabel">Assunto</label>
@@ -112,7 +121,8 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=3-25";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-26";
+  import { cachedGet } from "./js/api-cache.js?v=2-84";
   import { decryptNote } from "./js/crypto.js";
 
   function tr(key, fallback, opts) {
@@ -127,7 +137,8 @@
   }
 
   const ctx = await requireTherapist({ requireDek: true });
-  const { idToken, therapist, dek } = ctx;
+  const { user, idToken, therapist, dek } = ctx;
+  const uid = user.uid;
 
   let audiences = {};
   let templates = {};
@@ -149,11 +160,19 @@
   }
 
   async function loadOptions() {
-    const d = await api("/therapy/marketing/audiences");
-    audiences = d.audiences;
-    templates = d.templates;
-    renderAudiences();
-    renderTemplates();
+    // SWR: serve cache imediato (skeleton some na hora) + revalida em
+    // background. Hover-prefetch do auth-guard preenche o cache antes
+    // do user clicar — abre instantâneo.
+    await cachedGet({
+      url: `${BACKEND_BASE_URL}/therapy/marketing/audiences`,
+      idToken, uid, key: "marketing:audiences", ttl: 5 * 60_000,
+      onData: (d) => {
+        audiences = d.audiences;
+        templates = d.templates;
+        renderAudiences();
+        renderTemplates();
+      }
+    });
   }
 
   function renderAudiences() {

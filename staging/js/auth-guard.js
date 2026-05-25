@@ -432,6 +432,13 @@ const NAV_DATA_PREFETCH = {
   "pacientes.html": [
     { url: "/therapy/pacientes",      key: "pacientes" },
   ],
+  "clinica.html": [
+    { url: "/therapy/clinicas/me",                key: "clinicas:me",      ttl: 30_000 },
+    { url: "/therapy/clinicas/convites-pendentes", key: "clinicas:invites", ttl: 30_000 },
+  ],
+  "marketing.html": [
+    { url: "/therapy/marketing/audiences", key: "marketing:audiences", ttl: 5 * 60_000 },
+  ],
 };
 const NS_API_CACHE = "ep:api:v1:";
 function setupHoverDataPrefetch(uid) {
@@ -446,15 +453,15 @@ function setupHoverDataPrefetch(uid) {
     if (!targets) return;
     if (seenSessionPrefetches.has(name)) return; // já feito nesta sessão de hover
 
-    targets.forEach(async ({ url, key }) => {
+    targets.forEach(async ({ url, key, ttl }) => {
+      const cacheTtl = ttl || 30_000;
       const cacheKey = NS_API_CACHE + key + ":" + uid;
       // Pula se já tem cache fresco (api-cache.js gerencia TTL).
       try {
         const raw = sessionStorage.getItem(cacheKey);
         if (raw) {
           const entry = JSON.parse(raw);
-          const ttl = entry.ttl || 30_000;
-          if (Date.now() - entry.t < ttl) return; // ainda válido
+          if (Date.now() - entry.t < (entry.ttl || cacheTtl)) return; // ainda válido
         }
       } catch {}
       try {
@@ -468,7 +475,7 @@ function setupHoverDataPrefetch(uid) {
         const data = await res.json();
         if (!data?.ok) return;
         sessionStorage.setItem(cacheKey, JSON.stringify({
-          t: Date.now(), ttl: 30_000, data
+          t: Date.now(), ttl: cacheTtl, data
         }));
       } catch { /* silencioso */ }
     });
