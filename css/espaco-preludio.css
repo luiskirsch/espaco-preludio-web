@@ -1,24 +1,33 @@
-/* View Transitions API — crossfade nativo do browser entre navegações
-   same-origin. Suportado em Chrome/Edge/Safari; Firefox cai pra
-   navegação normal sem perda. Resolve a sensação de "página antiga
-   some lentamente até a nova aparecer" — agora tem 140ms de fade
-   sobreposto controlado pelo browser. */
+/* View Transitions API — crossfade nativo entre navegações same-origin.
+   Chave: nomear elementos persistentes (sidebar, FAB stack) pra que sejam
+   IDENTIFICADOS como contínuos entre páginas e NÃO animados. Só o conteúdo
+   muda; o chrome (sidebar/FABs) fica visualmente estático sem flash. */
 @view-transition {
   navigation: auto;
 }
+/* Root (todo o resto além dos nomeados) — fade rápido sem flash branco
+   entre swaps. Background opaco no html (regra abaixo) garante que não
+   "vaza" cor default do browser por baixo do snapshot. */
 ::view-transition-old(root) {
-  animation: 140ms cubic-bezier(0.4, 0, 0.2, 1) both ep-vt-fade-out;
+  animation: 120ms cubic-bezier(0.4, 0, 0.2, 1) both ep-vt-fade-out;
 }
 ::view-transition-new(root) {
-  animation: 180ms cubic-bezier(0.4, 0, 0.2, 1) 40ms both ep-vt-fade-in;
+  animation: 160ms cubic-bezier(0.4, 0, 0.2, 1) 30ms both ep-vt-fade-in;
 }
-@keyframes ep-vt-fade-out {
-  to { opacity: 0; }
+@keyframes ep-vt-fade-out { to { opacity: 0; } }
+@keyframes ep-vt-fade-in  { from { opacity: 0; } }
+
+/* Sidebar e FAB stack: mesma identidade entre páginas → browser NÃO anima,
+   eles ficam fisicamente persistentes durante a transição. Fim do "menu
+   pisca junto com o conteúdo". */
+::view-transition-old(ep-sidebar),
+::view-transition-new(ep-sidebar),
+::view-transition-old(ep-fab-stack),
+::view-transition-new(ep-fab-stack) {
+  animation: none !important;
 }
-@keyframes ep-vt-fade-in {
-  from { opacity: 0; }
-}
-/* Quem prefere menos movimento desativa — respeita system preference. */
+
+/* Reduce-motion: desliga tudo. */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
   ::view-transition-new(root) {
@@ -232,6 +241,13 @@ html {
   scrollbar-gutter: stable;
   /* Sem overflow-x aqui — deixa o html ser o scroll container do documento.
      Clip horizontal cai no body abaixo. */
+  /* Background sólido fallback — durante view transitions, o snapshot pode
+     deixar um gap visual sem cor; cor opaca no html garante que nunca
+     aparece branco (default do browser) entre páginas. */
+  background-color: var(--ep-bg);
+}
+html[data-theme="dark"] {
+  background-color: #0d0d0d;
 }
 
 html, body {
@@ -363,6 +379,9 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     gap: 22px;
     z-index: 50;
     overflow-y: auto;
+    /* Identidade contínua entre páginas — view transition NÃO anima.
+       Sidebar fica fisicamente persistente durante swap. */
+    view-transition-name: ep-sidebar;
   }
   body.ep-has-sidebar > .ep-topbar { display: none; }
   /* Padding simétrico real: cards extendem do limite esquerdo (sidebar end)
@@ -390,6 +409,8 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     flex-direction: column;
     gap: 14px;
     z-index: 180;
+    /* Identidade contínua entre páginas (igual sidebar). */
+    view-transition-name: ep-fab-stack;
   }
   /* FABs dentro do stack ficam em fluxo normal — sobrescreve position:fixed
      individual e zera offsets/margins que vinham das regras body:has(...). */
