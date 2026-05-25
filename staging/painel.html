@@ -279,7 +279,7 @@
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist, refreshIdToken } from "./js/auth-guard.js?v=3-24";
-  import { cachedGet, invalidate as invalidateApi } from "./js/api-cache.js?v=2-83";
+  import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=2-84";
   import { clearDek, recallUser, decryptNote } from "./js/crypto.js";
   import { createNewSessionModal } from "./js/new-session-modal.js?v=1";
   import { runOnboarding } from "./js/onboarding.js?v=3-12";
@@ -574,7 +574,7 @@
           btn.disabled = false;
           return;
         }
-        invalidateApi("sessoes", uid);
+        invalidatePrefix("sessoes", uid);
         await Promise.all([loadSchedulingRequests(), loadSessions()]);
       } catch (e) {
         alert(tr("painel:sched.netErr","Erro de rede."));
@@ -868,7 +868,7 @@
           method: "POST",
           headers: { "Authorization": `Bearer ${idToken}` }
         });
-        invalidateApi("sessoes", uid);
+        invalidatePrefix("sessoes", uid);
         await loadSessions();
       } catch {
         btn.disabled = false;
@@ -884,7 +884,7 @@
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
-        invalidateApi("sessoes", uid);
+        invalidatePrefix("sessoes", uid);
         await loadSessions();
       } catch (err) {
         btn.disabled = false;
@@ -1244,7 +1244,7 @@
   document.addEventListener("visibilitychange", async () => {
     if (document.visibilityState !== "visible") return;
     try { await getFreshToken(); } catch { /* cachedGet faz retry de fallback */ }
-    invalidateApi("sessoes", uid);
+    invalidatePrefix("sessoes", uid);
     loadSessions();
   });
 

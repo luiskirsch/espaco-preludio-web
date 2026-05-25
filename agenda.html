@@ -324,7 +324,7 @@
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist, refreshIdToken, invalidateProfileCache } from "./js/auth-guard.js?v=3-24";
-  import { cachedGet, invalidate as invalidateApi } from "./js/api-cache.js?v=2-82";
+  import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=2-84";
   import { clearDek } from "./js/crypto.js";
   import { createNewSessionModal } from "./js/new-session-modal.js?v=1";
 
@@ -415,7 +415,9 @@
     getAllSessions: () => allSessions,
     buildPatientLink,
     onCreated: async () => {
-      invalidateApi("sessoes", uid);
+      // Invalida todas as variantes — sessão recém-criada deve aparecer no
+      // painel (cache "sessoes") E na agenda (cache "sessoes:all").
+      invalidatePrefix("sessoes", uid);
       await loadSessions();
     }
   });
@@ -494,8 +496,11 @@
     try {
       await Promise.all([
         cachedGet({
-          url: `${BACKEND_BASE_URL}/therapy/sessoes`,
-          idToken, uid, key: "sessoes", ttl: 30_000, getFreshToken,
+          // includeHidden=true: agenda é histórico — mostra também sessões
+          // "removidas da lista" no painel (hiddenFromPainel). Cache key
+          // diferente do painel pra não conflitar dados entre as 2 views.
+          url: `${BACKEND_BASE_URL}/therapy/sessoes?includeHidden=true`,
+          idToken, uid, key: "sessoes:all", ttl: 30_000, getFreshToken,
           onData: (data) => { allSessions = data.sessions || []; showAgenda(); }
         }),
         cachedGet({
@@ -865,6 +870,7 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
       cancelModal.classList.remove("is-open");
+      invalidatePrefix("sessoes", uid);
       await loadSessions();
     } catch (e) {
       console.error("cancel_failed", e);
@@ -1275,6 +1281,16 @@
 
   // ─── Boot ───────────────────────────────────────────────────────────
   await loadAgenda();
+
+  // Aba voltou a ficar visível: alguém pode ter cancelado/encerrado/criado
+  // consulta no painel em outra aba, ou o token expirou (>1h). Refresh
+  // proativo + reload pra agenda mostrar versão atual.
+  document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState !== "visible") return;
+    try { await getFreshToken(); } catch { /* cachedGet faz retry */ }
+    invalidatePrefix("sessoes", uid);
+    loadAgenda();
+  });
 </script>
 
 <a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" aria-label="Abrir suporte" data-i18n-title="agenda:help.title" data-i18n-aria-label="agenda:help.aria"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>

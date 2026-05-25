@@ -50,6 +50,24 @@ export function invalidate(scope, uid) {
   try { sessionStorage.removeItem(makeKey(scope, uid)); } catch {}
 }
 
+// Invalida TODAS as keys com o prefixo (ex: "sessoes" também limpa
+// "sessoes:all"). Útil quando uma mutação afeta múltiplas views da mesma
+// entidade — painel usa "sessoes" (filtra ocultas), agenda usa "sessoes:all"
+// (inclui ocultas); um encerrar/cancelar precisa invalidar ambas.
+export function invalidatePrefix(prefix, uid) {
+  try {
+    const root = makeKey(prefix, uid);
+    const variant = root + ":";
+    // sessionStorage não tem `keys()` nativo — itera por índice.
+    const toRemove = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i);
+      if (k === root || (k && k.startsWith(variant))) toRemove.push(k);
+    }
+    toRemove.forEach(k => sessionStorage.removeItem(k));
+  } catch {}
+}
+
 // Faz GET cacheado. Chama onData(parsedJson, source) onde source = "stale"
 // (do cache, instantâneo) e/ou "fresh" (do backend, depois do roundtrip).
 //
