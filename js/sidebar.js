@@ -138,19 +138,24 @@
   syncName();
   syncAvatar();
 
-  // TISS link visibility (auth-guard.js mostra/esconde via display style
-  // INLINE no topbar). NÃO usamos data-tiss-only no sidebarTissLink pra
-  // evitar que auth-guard sobrescreva o display do anchor — isso quebra o
-  // gap:12px do .ep-sidebar__nav a. Em vez disso, observamos o topbar e
-  // togglamos a classe is-hidden (CSS controla via display:none).
+  // TISS link visibility — fonte da verdade é o COMPUTED style do topbar
+  // (não o inline). HTML estático tem `style="display:none"` inline em
+  // [data-tiss-only]; capability-preflight aplica CSS `display:inline-block
+  // !important` quando tissEnabled, que sobrescreve VISUALMENTE mas deixa
+  // o inline intacto. Checar `.style.display` direto retornaria "none"
+  // (errado) e esconderia o sidebar TISS por ~100-500ms até auth-guard
+  // async sobrescrever o inline → flicker "TISS some/volta" a cada nav.
+  // getComputedStyle considera tanto inline quanto CSS com !important.
   const topTiss = document.querySelector('header.ep-topbar [data-tiss-only]');
   const sideTiss = document.getElementById('sidebarTissLink');
   if (topTiss && sideTiss) {
     const syncTiss = function () {
-      const hidden = topTiss.style.display === 'none';
+      const hidden = window.getComputedStyle(topTiss).display === 'none';
       sideTiss.classList.toggle('is-hidden', hidden);
     };
-    new MutationObserver(syncTiss).observe(topTiss, { attributes: true, attributeFilter: ['style'] });
+    // Observa style inline (auth-guard mexe lá) E também atributos style/class
+    // do html (caso preflight troque <style> tag).
+    new MutationObserver(syncTiss).observe(topTiss, { attributes: true, attributeFilter: ['style', 'class'] });
     syncTiss();
   }
 
