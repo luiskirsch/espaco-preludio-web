@@ -104,6 +104,19 @@
         <a href="./painel.html" class="ep-btn ep-btn--primary ep-btn--lg ep-mt-16" data-i18n="comprovante-formacao:review.goPanel">Ir para o painel</a>
       </div>
 
+      <div id="verifiedCard" class="ep-card ep-mt-32 ep-hide">
+        <div class="ep-eyebrow" style="color: var(--ep-ok);" data-i18n="comprovante-formacao:verified.eyebrow">✓ Verificado</div>
+        <h2 class="ep-h2 ep-mt-12" data-i18n="comprovante-formacao:verified.h2">Profissional verificado.</h2>
+        <p class="ep-lead ep-mt-12" data-i18n-html="comprovante-formacao:verified.leadHtml">
+          Seu comprovante foi aprovado pela equipe. O selo <strong>"Verificado pela equipe"</strong>
+          aparece no seu perfil público.
+        </p>
+        <p class="ep-text-sm ep-text-muted ep-mt-12" data-i18n="comprovante-formacao:verified.note">
+          Precisa atualizar seu comprovante? Fale com a equipe pelo botão de suporte.
+        </p>
+        <a href="./painel.html" class="ep-btn ep-btn--primary ep-btn--lg ep-mt-16" data-i18n="comprovante-formacao:verified.goPanel">Ir para o painel</a>
+      </div>
+
       <p class="ep-text-xs ep-text-muted ep-mt-32" data-i18n-html="comprovante-formacao:privacyHtml">
         <strong>Privacidade:</strong> seu diploma é armazenado cifrado, acessível apenas
         pela equipe de verificação. Descartado automaticamente 90 dias após a aprovação/rejeição.
@@ -174,6 +187,7 @@
   const uploadCard   = document.getElementById("uploadCard");
   const loadingCard  = document.getElementById("loadingCard");
   const reviewCard   = document.getElementById("reviewCard");
+  const verifiedCard = document.getElementById("verifiedCard");
 
   const MAX_BYTES = 5 * 1024 * 1024;
   const ACCEPTED_MIMES = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
@@ -187,7 +201,7 @@
   }
 
   function showOnly(card) {
-    [uploadCard, loadingCard, reviewCard].forEach(c => c.classList.add("ep-hide"));
+    [uploadCard, loadingCard, reviewCard, verifiedCard].forEach(c => c.classList.add("ep-hide"));
     card.classList.remove("ep-hide");
   }
 
@@ -255,17 +269,21 @@
     }
   });
 
-  // Se já tem doc enviado, vai direto pro card de revisão (não permite re-upload
-  // enquanto pendente — admin precisa decidir antes).
+  // Se já tem doc enviado, vai direto pro card correto:
+  //   - pending-review → reviewCard (em análise, sem re-upload até admin decidir)
+  //   - approved       → verifiedCard (tela de "tá tudo certo", evita confusão
+  //                      do usuário verificado clicar no badge e cair no upload)
+  //   - rejected ou sem doc → uploadCard (default)
   (async () => {
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/comprovante-formacao/status`, {
         headers: { "Authorization": `Bearer ${idToken}` }
       });
       const data = await res.json().catch(() => ({}));
-      if (data?.ok && data.formacaoDoc?.decision === "pending-review") {
-        showOnly(reviewCard);
-      }
+      if (!data?.ok) return;
+      const decision = data.formacaoDoc?.decision;
+      if (decision === "pending-review") showOnly(reviewCard);
+      else if (decision === "approved") showOnly(verifiedCard);
     } catch { /* ignora — usuário pode tentar enviar */ }
   })();
 </script>
