@@ -1,3 +1,31 @@
+/* View Transitions API — crossfade nativo do browser entre navegações
+   same-origin. Suportado em Chrome/Edge/Safari; Firefox cai pra
+   navegação normal sem perda. Resolve a sensação de "página antiga
+   some lentamente até a nova aparecer" — agora tem 140ms de fade
+   sobreposto controlado pelo browser. */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root) {
+  animation: 140ms cubic-bezier(0.4, 0, 0.2, 1) both ep-vt-fade-out;
+}
+::view-transition-new(root) {
+  animation: 180ms cubic-bezier(0.4, 0, 0.2, 1) 40ms both ep-vt-fade-in;
+}
+@keyframes ep-vt-fade-out {
+  to { opacity: 0; }
+}
+@keyframes ep-vt-fade-in {
+  from { opacity: 0; }
+}
+/* Quem prefere menos movimento desativa — respeita system preference. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}
+
 /* ============================================================
    ESPAÇO PRELÚDIO — Sistema visual clínico-editorial premium
    Aplicado ao SaaS de telessaúde para psicólogos/terapeutas/psiquiatras.
