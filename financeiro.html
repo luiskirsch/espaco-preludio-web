@@ -735,7 +735,36 @@
     } catch {}
   })();
 
+  // Enriquece o datalist de convênios com os convênios TISS configurados
+  // pelo profissional. Os hardcoded (Particular, Unimed, etc.) servem como
+  // fallback genérico; os do TISS adicionam consistência com o que ele já
+  // usa pra faturamento. Lazy: 1 fetch na primeira abertura do modal,
+  // cached em memória. Best-effort — falha silenciosa.
+  let convenioDatalistEnriched = false;
+  async function enrichConvenioDatalist() {
+    if (convenioDatalistEnriched) return;
+    convenioDatalistEnriched = true;
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/tiss/convenios`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!d?.ok || !Array.isArray(d.convenios) || d.convenios.length === 0) return;
+      const dl = document.getElementById("convenioOptions");
+      if (!dl) return;
+      const existing = new Set([...dl.options].map(o => o.value.toLowerCase()));
+      d.convenios.forEach(c => {
+        const name = c.nome || c.name;
+        if (!name || existing.has(name.toLowerCase())) return;
+        const opt = document.createElement("option");
+        opt.value = name;
+        dl.appendChild(opt);
+      });
+    } catch { /* silencioso — datalist hardcoded basta */ }
+  }
+
   function openModal(tx) {
+    enrichConvenioDatalist();
     editingTxId = tx?.txId || null;
     modalTitleEl.textContent = editingTxId
       ? tr("financeiro:tx.modalTitleEdit", "Editar transação")
