@@ -29,6 +29,22 @@
     return '<a href="./' + href + '" ' + (extra || '') + '>' + svg(icon) + '<span data-i18n="' + i18n + '">' + label + '</span></a>';
   }
 
+  // Preflight do TISS: lê cache do profile (capability-preflight grava
+  // sessionStorage["ep:profile:v2"]). Se tissEnabled, sidebar já nasce
+  // com TISS VISÍVEL pre-paint — sem o "is-hidden" inicial. Elimina o
+  // flicker de "TISS some/aparece" a cada navegação entre páginas.
+  // Sem cache (1ª visita), começa hidden e syncTiss revela quando o
+  // auth-guard async termina.
+  var tissCachedEnabled = false;
+  try {
+    var profileRaw = sessionStorage.getItem('ep:profile:v2');
+    if (profileRaw) {
+      var profileEntry = JSON.parse(profileRaw);
+      tissCachedEnabled = !!(profileEntry && profileEntry.profile && profileEntry.profile.therapist && profileEntry.profile.therapist.tissEnabled);
+    }
+  } catch (e) { /* sem cache, mantém hidden */ }
+  var tissExtra = 'id="sidebarTissLink" class="ep-sidebar__tiss' + (tissCachedEnabled ? '' : ' is-hidden') + '"';
+
   // i18n keys vivem em common.json (sempre carregado) — namespace `painel`
   // só existe em painel.html, então usá-lo aqui quebra o menu em todas as
   // outras páginas (i18next devolve key parcial e o init substitui textContent).
@@ -37,7 +53,7 @@
       ['painel.html', 'video', 'Consultas', 'common:sidebar.consultas'],
       ['agenda.html', 'calendar', 'Agenda', 'common:sidebar.agenda'],
       ['pacientes.html', 'users', 'Pacientes', 'common:sidebar.pacientes'],
-      ['tiss.html', 'fileText', 'TISS', 'common:sidebar.tiss', 'id="sidebarTissLink" class="ep-sidebar__tiss is-hidden"']
+      ['tiss.html', 'fileText', 'TISS', 'common:sidebar.tiss', tissExtra]
     ]},
     { labelKey: 'common:sidebar.groupGestao', label: 'Gestão', items: [
       ['financeiro.html', 'dollar', 'Financeiro', 'common:sidebar.financeiro'],
