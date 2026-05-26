@@ -377,11 +377,11 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     width: 200px;
     background: #0d0d0d;
     border-right: 1px solid rgba(226,183,106,0.18);
-    padding: 14px 14px;
-    gap: 14px;
+    padding: 18px 14px;
+    gap: 18px;
     z-index: 50;
-    /* Sem scroll — espaçamento abaixo é apertado pra caber tudo em
-       qualquer viewport (notebook + taskbar = ~640px). */
+    /* Sem scroll — espaçamentos calibrados pra ocupar viewport ~720-900px
+       sem clipping nem vazio excessivo. */
     overflow: hidden;
   }
   /* Topbar oculta com sidebar ativa. Combinador descendente (não `>`) pra
@@ -478,27 +478,27 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
 .ep-sidebar__nav {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 18px;
   /* SEM scroll — flex 0 0 auto pra ocupar tamanho natural, footer cola
-     logo após o último item. Espaçamentos apertados garantem fit. */
+     logo após o último item. */
   flex: 0 0 auto;
 }
-.ep-sidebar__group { display: flex; flex-direction: column; gap: 1px; }
+.ep-sidebar__group { display: flex; flex-direction: column; gap: 2px; }
 .ep-sidebar__group-label {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: #e2b76a;
-  padding: 0 12px 3px 12px;
-  margin-bottom: 2px;
+  padding: 0 12px 6px 12px;
+  margin-bottom: 6px;
   border-bottom: 1px solid rgba(226,183,106,0.18);
 }
 .ep-sidebar__nav a {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 6px 12px;
+  padding: 9px 12px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
@@ -540,8 +540,8 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
 .ep-sidebar__footer {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding-top: 8px;
+  gap: 6px;
+  padding-top: 12px;
   border-top: 1px solid rgba(235,224,200,0.10);
   flex-shrink: 0;
   /* Footer cola logo após o nav (linha divisória perto do WhatsApp). */
@@ -551,7 +551,7 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 10px;
+  padding: 8px 10px;
   border-radius: 8px;
   text-decoration: none;
   color: #ebe0c8;
@@ -576,8 +576,8 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   text-overflow: ellipsis;
 }
 .ep-sidebar__profile .ep-nav-avatar {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
 }
 /* Selo verificado dentro da sidebar (avatar 40px): badge proporcionalmente
