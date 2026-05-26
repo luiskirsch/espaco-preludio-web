@@ -32,28 +32,10 @@ html[data-theme="dark"] .ep-skel {
   .ep-skel { animation: none; }
 }
 
-/* View Transitions DESLIGADAS — navegação MPA direta entre páginas,
-   sem fade/morph/translate. Snapshot 0ms = corte instantâneo.
-   Chrome (sidebar/FAB) já é cacheado pelo SW + theme-init inline cobre
-   o flash dark. Background sólido no html + cache do SW garante que a
-   troca pareça redraw imediato, sem brancos. */
-@view-transition {
-  navigation: none;
-}
-/* Garantia extra: se algum browser cair pra default, mata qualquer
-   animação dos snapshots root/main/title/sidebar/fab. */
-::view-transition-old(root),
-::view-transition-new(root),
-::view-transition-old(ep-page-main),
-::view-transition-new(ep-page-main),
-::view-transition-old(ep-page-title),
-::view-transition-new(ep-page-title),
-::view-transition-old(ep-sidebar),
-::view-transition-new(ep-sidebar),
-::view-transition-old(ep-fab-stack),
-::view-transition-new(ep-fab-stack) {
-  animation: none !important;
-}
+/* View Transitions completamente removidas. Navegação MPA pura entre
+   páginas — troca instantânea, sem snapshot, sem fade, sem morph.
+   SW serve HTML em <50ms + theme-init inline + background sólido no
+   html cobrem qualquer gap visual entre swap. */
 
 /* ============================================================
    ESPAÇO PRELÚDIO — Sistema visual clínico-editorial premium
@@ -399,9 +381,6 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     gap: 22px;
     z-index: 50;
     overflow-y: auto;
-    /* Identidade contínua entre páginas — view transition NÃO anima.
-       Sidebar fica fisicamente persistente durante swap. */
-    view-transition-name: ep-sidebar;
   }
   /* Topbar oculta com sidebar ativa. Combinador descendente (não `>`) pra
      cobrir páginas que envolvem o header num wrapper (.ep-shell em
@@ -432,8 +411,6 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     flex-direction: column;
     gap: 14px;
     z-index: 180;
-    /* Identidade contínua entre páginas (igual sidebar). */
-    view-transition-name: ep-fab-stack;
   }
   /* FABs dentro do stack ficam em fluxo normal — sobrescreve position:fixed
      individual e zera offsets/margins que vinham das regras body:has(...).
@@ -1199,22 +1176,10 @@ html.ep-unregulated .ep-nav-profile.is-active .ep-nav-profile__name {
    a navegação, e morfa pro novo (mesmo nome = match estável). Conteúdo
    principal faz crossfade default. Suporte: Chrome 126+, Edge, Safari 18+;
    sem suporte = navegação normal (no-op gracioso). */
-@view-transition { navigation: auto; }
-.ep-topbar { view-transition-name: ep-topbar; }
-.ep-help-bubble { view-transition-name: ep-help-bubble; }
-.ep-staging-banner { view-transition-name: ep-staging-banner; }
-
-/* Garante que o snapshot do topbar não anime — fica realmente fixo (em vez de
-   crossfade default entre old/new). */
-::view-transition-old(ep-topbar),
-::view-transition-new(ep-topbar),
-::view-transition-old(ep-help-bubble),
-::view-transition-new(ep-help-bubble),
-::view-transition-old(ep-staging-banner),
-::view-transition-new(ep-staging-banner) {
-  animation: none;
-  mix-blend-mode: normal;
-}
+/* View transitions removidas — user pediu corte direto entre páginas.
+   Bloco antigo (@view-transition + names em topbar/help-bubble/staging
+   + ::view-transition-old/new) deletado por completo pra evitar conflitos
+   com outras declarações no topo do arquivo. */
 
 /* Botão flutuante de suporte — em baixo da stack (caso original).
    Em contas regulamentadas, body:has(.ep-logout-fab) eleva pra 90. */
@@ -1618,15 +1583,8 @@ h1.ep-h1 {
   font-feature-settings: "ss01";
 }
 
-/* Morph cross-document do título — browser identifica como "mesmo
-   elemento" entre páginas e anima a mudança (tipo "Suas consultas" →
-   "Sua semana"). Aplicado SÓ no h1 principal de cada rota via classe
-   explícita pra evitar duplicação (clinica.html tem 3 h1 alternados
-   via ep-hide; setar view-transition-name no .ep-h1 global quebraria
-   toda a transição). */
-.ep-page-title {
-  view-transition-name: ep-page-title;
-}
+/* .ep-page-title e .ep-page-main ficam como classes inertes (HTMLs
+   continuam aplicando). View transitions removidas — sem morph. */
 
 p.ep-lead {
   margin: 18px 0 0;
