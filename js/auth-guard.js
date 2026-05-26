@@ -433,8 +433,7 @@ const NAV_DATA_PREFETCH = {
     { url: "/therapy/pacientes",      key: "pacientes" },
   ],
   "clinica.html": [
-    { url: "/therapy/clinicas/me",                key: "clinicas:me",      ttl: 30_000 },
-    { url: "/therapy/clinicas/convites-pendentes", key: "clinicas:invites", ttl: 30_000 },
+    { url: "/therapy/clinicas/state", key: "clinicas:state", ttl: 30_000 },
   ],
   "marketing.html": [
     { url: "/therapy/marketing/audiences", key: "marketing:audiences", ttl: 5 * 60_000 },

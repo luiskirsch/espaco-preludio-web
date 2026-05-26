@@ -136,7 +136,14 @@
         </select>
       </div>
 
-      <div id="loadingBanner" class="ep-alert ep-mt-16" data-i18n="financeiro:list.loading">Carregando transações…</div>
+      <!-- Skeleton: 4 ep-skel--row prefigurando transactions. -->
+      <div id="loadingBanner" class="ep-mt-16" aria-live="polite" aria-busy="true">
+        <span class="ep-hide" data-i18n="financeiro:list.loading">Carregando transações…</span>
+        <div class="ep-skel ep-skel--row"></div>
+        <div class="ep-skel ep-skel--row"></div>
+        <div class="ep-skel ep-skel--row"></div>
+        <div class="ep-skel ep-skel--row"></div>
+      </div>
       <div id="txList" class="ep-session-list ep-mt-16 ep-hide"></div>
       <div id="emptyState" class="ep-empty ep-mt-16 ep-hide">
         <h3 class="ep-h3" data-i18n="financeiro:list.emptyTitle">Nenhuma transação no mês selecionado.</h3>
@@ -345,7 +352,7 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=3-26";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-27";
   import { cachedGet, invalidate as invalidateApi } from "./js/api-cache.js?v=2-82";
   import { decryptNote, clearDek } from "./js/crypto.js";
 

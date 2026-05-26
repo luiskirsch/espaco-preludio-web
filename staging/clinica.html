@@ -249,7 +249,7 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=3-26";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-27";
   import { cachedGet, invalidatePrefix } from "./js/api-cache.js?v=2-84";
   import { clearDek } from "./js/crypto.js";
 
@@ -309,33 +309,22 @@
   let pendingInvites = [];
 
   async function bootstrap() {
-    // Usa cachedGet em vez de api() pras 2 chamadas iniciais. Isso permite:
-    // 1. Cache stale-while-revalidate (paint instantâneo se cache existe)
-    // 2. Hover-prefetch do auth-guard.js grava no mesmo namespace — quando
-    //    o user clica no link Clínica vindo doutra página, o cache já está
-    //    quente e o skeleton some imediato.
+    // 1 fetch consolidado em vez de 2 paralelos (/clinicas/me +
+    // /convites-pendentes). Backend faz tudo em paralelo internamente
+    // com 1 só Firebase Auth verify — reduz latência ~150-300ms na 1ª
+    // visita. cachedGet preserva SWR + hover-prefetch.
     try {
-      let meData = null, invitesData = null;
-      function tryRender() {
-        if (!meData || !invitesData) return;
-        myClinic = meData.ownedClinic;
-        memberships = meData.memberships || [];
-        pendingInvites = invitesData.invites || [];
-        document.getElementById("bootLoading").classList.add("ep-hide");
-        renderRoot();
-      }
-      await Promise.all([
-        cachedGet({
-          url: `${BACKEND_BASE_URL}/therapy/clinicas/me`,
-          idToken, uid, key: "clinicas:me", ttl: 30_000,
-          onData: (d) => { meData = d; tryRender(); }
-        }),
-        cachedGet({
-          url: `${BACKEND_BASE_URL}/therapy/clinicas/convites-pendentes`,
-          idToken, uid, key: "clinicas:invites", ttl: 30_000,
-          onData: (d) => { invitesData = d; tryRender(); }
-        })
-      ]);
+      await cachedGet({
+        url: `${BACKEND_BASE_URL}/therapy/clinicas/state`,
+        idToken, uid, key: "clinicas:state", ttl: 30_000,
+        onData: (d) => {
+          myClinic = d.ownedClinic;
+          memberships = d.memberships || [];
+          pendingInvites = d.invites || [];
+          document.getElementById("bootLoading").classList.add("ep-hide");
+          renderRoot();
+        }
+      });
     } catch (e) {
       document.getElementById("bootLoading").textContent = tr("clinica:errors.prefix", "Erro: ") + e.message;
       document.getElementById("bootLoading").className = "ep-alert ep-alert--danger";
