@@ -377,11 +377,12 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     width: 200px;
     background: #0d0d0d;
     border-right: 1px solid rgba(226,183,106,0.18);
-    padding: 14px 14px 15px;
-    gap: 16px;
+    /* Padding-top + gap escalam com vh — em viewport pequeno (~640px com
+       taskbar) ficam apertados, em viewport grande (~1000px+) crescem.
+       Padding-bottom fica curto pra Sair nunca clipar. */
+    padding: clamp(14px, 2vh, 24px) 14px 15px;
+    gap: clamp(16px, 2.2vh, 24px);
     z-index: 50;
-    /* Sem scroll — espaçamentos calibrados pra ocupar viewport ~720-900px
-       sem clipping nem vazio excessivo. */
     overflow: hidden;
   }
   /* Topbar oculta com sidebar ativa. Combinador descendente (não `>`) pra
@@ -478,7 +479,8 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
 .ep-sidebar__nav {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  /* Gap entre grupos escala com vh — tela maior = mais respiro. */
+  gap: clamp(14px, 2.4vh, 24px);
   /* SEM scroll — flex 0 0 auto pra ocupar tamanho natural, footer cola
      logo após o último item. */
   flex: 0 0 auto;
@@ -491,14 +493,16 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   text-transform: uppercase;
   color: #e2b76a;
   padding: 0 12px 6px 12px;
-  margin-bottom: 6px;
+  /* Margin escala com vh. */
+  margin-bottom: clamp(4px, 0.8vh, 10px);
   border-bottom: 1px solid rgba(226,183,106,0.18);
 }
 .ep-sidebar__nav a {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 9px 12px;
+  /* Item padding escala — telão grande = botões mais altos, mais clicáveis. */
+  padding: clamp(8px, 1.2vh, 14px) 12px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
