@@ -11,7 +11,7 @@
 //
 // Bump SW_VERSION pra forçar refresh do cache em todas as instalações.
 
-const SW_VERSION = "ep-sw-v6-2026-05-26-sidebar-adapt";
+const SW_VERSION = "ep-sw-v7-2026-05-26-sidebar-spacing";
 const PRECACHE   = `precache-${SW_VERSION}`;
 const RUNTIME    = `runtime-${SW_VERSION}`;
 
