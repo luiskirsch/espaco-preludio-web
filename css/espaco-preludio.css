@@ -377,12 +377,11 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     width: 200px;
     background: #0d0d0d;
     border-right: 1px solid rgba(226,183,106,0.18);
-    padding: 22px 14px;
-    gap: 22px;
+    padding: 14px 14px;
+    gap: 14px;
     z-index: 50;
-    /* Sidebar NÃO scrolla — o nav scrolla internamente (linhas 476+). Assim
-       footer (perfil+Sair) fica SEMPRE visível mesmo em viewport curta
-       (notebook+taskbar). */
+    /* Sem scroll — espaçamento abaixo é apertado pra caber tudo em
+       qualquer viewport (notebook + taskbar = ~640px). */
     overflow: hidden;
   }
   /* Topbar oculta com sidebar ativa. Combinador descendente (não `>`) pra
@@ -479,44 +478,27 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
 .ep-sidebar__nav {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  /* flex: 0 1 auto + min-height: 0 + overflow-y: auto — comportamento dual:
-     - Se cabe na viewport: nav fica no tamanho natural, footer cola logo
-       após WhatsApp (vazio sobra embaixo do Sair).
-     - Se não cabe (notebook + taskbar): nav encolhe + scrolla internamente,
-       footer fica pinned na base e SEMPRE visível (Sair nunca cortado). */
-  flex: 0 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  /* Scrollbar discreto — só aparece quando precisa. */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(226,183,106,0.25) transparent;
+  gap: 12px;
+  /* SEM scroll — flex 0 0 auto pra ocupar tamanho natural, footer cola
+     logo após o último item. Espaçamentos apertados garantem fit. */
+  flex: 0 0 auto;
 }
-.ep-sidebar__nav::-webkit-scrollbar { width: 6px; }
-.ep-sidebar__nav::-webkit-scrollbar-track { background: transparent; }
-.ep-sidebar__nav::-webkit-scrollbar-thumb {
-  background: rgba(226,183,106,0.25);
-  border-radius: 3px;
-}
-.ep-sidebar__nav::-webkit-scrollbar-thumb:hover {
-  background: rgba(226,183,106,0.45);
-}
-.ep-sidebar__group { display: flex; flex-direction: column; gap: 2px; }
+.ep-sidebar__group { display: flex; flex-direction: column; gap: 1px; }
 .ep-sidebar__group-label {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: #e2b76a;
-  padding: 0 12px 6px 12px;
-  margin-bottom: 4px;
+  padding: 0 12px 3px 12px;
+  margin-bottom: 2px;
   border-bottom: 1px solid rgba(226,183,106,0.18);
 }
 .ep-sidebar__nav a {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 9px 12px;
+  padding: 6px 12px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
@@ -558,8 +540,8 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
 .ep-sidebar__footer {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-top: 14px;
+  gap: 4px;
+  padding-top: 8px;
   border-top: 1px solid rgba(235,224,200,0.10);
   flex-shrink: 0;
   /* Footer cola logo após o nav (linha divisória perto do WhatsApp). */
@@ -569,7 +551,7 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
+  padding: 6px 10px;
   border-radius: 8px;
   text-decoration: none;
   color: #ebe0c8;
@@ -594,8 +576,8 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   text-overflow: ellipsis;
 }
 .ep-sidebar__profile .ep-nav-avatar {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
 }
 /* Selo verificado dentro da sidebar (avatar 40px): badge proporcionalmente
@@ -621,16 +603,8 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   background: rgba(226,183,106,0.08);
 }
 
-/* Adaptação por altura — clamp(vh) escala paddings/gaps em viewport
-   curto. SEM !important pra não conflitar com regras inline forçadas
-   pelo sidebar.js. */
-body.ep-has-sidebar .ep-sidebar {
-  padding: clamp(10px, 2.75vh, 22px) 14px;
-  gap: clamp(14px, 2.5vh, 22px);
-}
-body.ep-has-sidebar .ep-sidebar__footer {
-  padding-top: 10px;
-}
+/* (Adaptação vh-based removida — espaçamentos finais já apertados o
+   suficiente pra caber em qualquer viewport sem scroll.) */
 
 /* Divisor de seções: linha fina em gradiente (transparent → ouro → transparent).
    Premium minimal — sinaliza transição sem peso visual de border-top sólido. */
