@@ -600,41 +600,15 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   background: rgba(226,183,106,0.08);
 }
 
-/* Adaptação CONTÍNUA por altura — clamp() com vh escala suavemente,
-   sem breakpoints rígidos que podem não disparar exato. Calibrado pra
-   que viewport ~800px+ (notebook fullscreen) renderize idêntico ao
-   antigo padding 22; viewports menores comprimem progressivamente até
-   o mínimo. min-width:900 mantém comportamento mobile intacto.
-   2.75vh em 800px = 22 (max); em 720 = 19.8; em 640 = 17.6; em 560 = 15.4. */
-/* Adaptação contínua. Sem @media wrapper — sidebar só existe em
-   ≥900px de qualquer jeito (display:none default). !important pra
-   contornar specificity de regras anteriores no arquivo. */
+/* Adaptação por altura — clamp(vh) escala paddings/gaps em viewport
+   curto. SEM !important pra não conflitar com regras inline forçadas
+   pelo sidebar.js. */
 body.ep-has-sidebar .ep-sidebar {
-  padding: clamp(10px, 2.75vh, 22px) 14px !important;
-  gap: clamp(20px, 3.5vh, 30px) !important;
-}
-body.ep-has-sidebar .ep-sidebar__nav { gap: clamp(8px, 2.2vh, 18px) !important; }
-body.ep-has-sidebar .ep-sidebar__nav a {
-  padding: clamp(5px, 1.15vh, 9px) 12px !important;
-  font-size: clamp(13px, 1.75vh, 14px) !important;
-}
-body.ep-has-sidebar .ep-sidebar__group { gap: clamp(0px, 0.25vh, 2px) !important; }
-body.ep-has-sidebar .ep-sidebar__group-label {
-  padding: 0 12px clamp(2px, 0.75vh, 6px) 12px !important;
-  margin-bottom: clamp(1px, 0.5vh, 4px) !important;
-  font-size: clamp(10px, 1.4vh, 11px) !important;
-}
-body.ep-has-sidebar .ep-sidebar__brand .ep-brand__mark {
-  width: clamp(28px, 4.5vh, 36px) !important;
-  height: clamp(28px, 4.5vh, 36px) !important;
+  padding: clamp(10px, 2.75vh, 22px) 14px;
+  gap: clamp(14px, 2.5vh, 22px);
 }
 body.ep-has-sidebar .ep-sidebar__footer {
-  padding-top: clamp(16px, 2.8vh, 24px) !important;
-  gap: clamp(6px, 1vh, 10px) !important;
-}
-body.ep-has-sidebar .ep-sidebar__profile {
-  padding: clamp(5px, 1vh, 8px) 10px !important;
-  font-size: clamp(12px, 1.65vh, 13px) !important;
+  padding-top: 10px;
 }
 
 /* Divisor de seções: linha fina em gradiente (transparent → ouro → transparent).

@@ -111,7 +111,7 @@
     navEl.style.removeProperty('justify-content');
   }
   if (footerEl) {
-    footerEl.style.removeProperty('margin-top');
+    footerEl.style.setProperty('margin-top', '0', 'important');
     footerEl.style.paddingTop = '10px';
   }
 
