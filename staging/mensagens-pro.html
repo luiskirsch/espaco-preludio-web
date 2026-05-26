@@ -22,6 +22,10 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=1" defer></script>
+  <!-- Página não rola (main overflow:hidden + altura fixa). Desliga o
+       scrollbar-gutter:stable global pra eliminar a faixa branca lateral
+       que era reservada pro scroll que nunca aparece. -->
+  <style>html { scrollbar-gutter: auto; }</style>
 </head>
 <body class="ep-has-sidebar">
 
@@ -72,9 +76,8 @@
     </div>
 
     <div class="ep-grid" style="grid-template-columns: 320px 1fr; gap: 16px; height: calc(100dvh - 280px); min-height: 420px; margin-top: 16px;">
-      <!-- Sidebar threads — sem fundo cheio (era ep-card cremoso). Só
-           borda sutil + radius pra dar estrutura, fundo herda do body. -->
-      <aside style="padding: 0; overflow: hidden; display: flex; flex-direction: column; background: transparent; border: 1px solid var(--ep-line); border-radius: var(--ep-radius-lg);">
+      <!-- Sidebar threads -->
+      <aside class="ep-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
         <div style="padding: 12px 14px; border-bottom: 1px solid var(--ep-line);">
           <div class="ep-flex ep-gap-8" style="margin-bottom: 8px;">
             <input id="searchInput" type="text" class="ep-input ep-input--sm" data-i18n-placeholder="mensagens-pro:sidebar.searchPlaceholder" placeholder="🔍 Buscar colega (3+ letras)…" style="flex: 1;">
