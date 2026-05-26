@@ -445,6 +445,11 @@
       idToken = session.idToken;
       account = session.account;
       dek     = session.dek;
+      // Auto-link retroativo: vincula sessões antigas criadas com este
+      // email mas sem patientAccountUid (paciente entrou como convidado ou
+      // conta criada depois). Idempotente, falha silenciosa. Roda em
+      // paralelo — não bloqueia o load principal.
+      api("/therapy/paciente/auto-link", { method: "POST" }).catch(() => {});
       renderHeader();
       await loadSessions();
       renderStats();
