@@ -380,7 +380,10 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     padding: 22px 14px;
     gap: 22px;
     z-index: 50;
-    overflow-y: auto;
+    /* Sidebar NÃO scrolla — o nav scrolla internamente (linhas 476+). Assim
+       footer (perfil+Sair) fica SEMPRE visível mesmo em viewport curta
+       (notebook+taskbar). */
+    overflow: hidden;
   }
   /* Topbar oculta com sidebar ativa. Combinador descendente (não `>`) pra
      cobrir páginas que envolvem o header num wrapper (.ep-shell em
@@ -477,8 +480,26 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  /* Altura natural — items empilhados em cima, footer cola logo abaixo. */
-  flex: 0 0 auto;
+  /* flex: 0 1 auto + min-height: 0 + overflow-y: auto — comportamento dual:
+     - Se cabe na viewport: nav fica no tamanho natural, footer cola logo
+       após WhatsApp (vazio sobra embaixo do Sair).
+     - Se não cabe (notebook + taskbar): nav encolhe + scrolla internamente,
+       footer fica pinned na base e SEMPRE visível (Sair nunca cortado). */
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* Scrollbar discreto — só aparece quando precisa. */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(226,183,106,0.25) transparent;
+}
+.ep-sidebar__nav::-webkit-scrollbar { width: 6px; }
+.ep-sidebar__nav::-webkit-scrollbar-track { background: transparent; }
+.ep-sidebar__nav::-webkit-scrollbar-thumb {
+  background: rgba(226,183,106,0.25);
+  border-radius: 3px;
+}
+.ep-sidebar__nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(226,183,106,0.45);
 }
 .ep-sidebar__group { display: flex; flex-direction: column; gap: 2px; }
 .ep-sidebar__group-label {

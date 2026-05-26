@@ -97,21 +97,7 @@
   document.body.classList.add('ep-has-sidebar');
   document.body.insertAdjacentHTML('afterbegin', html);
 
-  // INLINE-STYLE FORCE — vence cache de CSS. Tamanhos confortáveis pros
-  // items (padding/gap natural). Trick: nav é flex:0 0 auto pra NÃO esticar
-  // e empurrar o footer pro fim. Footer com margin-top:0 cola logo após
-  // o último item, deixando o vazio embaixo (não no meio).
   var sideEl = document.querySelector('.ep-sidebar');
-  var navEl = document.querySelector('.ep-sidebar__nav');
-  var footerEl = document.querySelector('.ep-sidebar__footer');
-  if (navEl) {
-    navEl.style.setProperty('flex', '0 0 auto', 'important');
-    navEl.style.setProperty('min-height', 'auto', 'important');
-    navEl.style.removeProperty('justify-content');
-  }
-  if (footerEl) {
-    footerEl.style.setProperty('margin-top', '0', 'important');
-  }
 
   // Marca link ativo pelo pathname (basename do URL).
   const path = (window.location.pathname.split('/').pop() || 'painel.html').toLowerCase();
