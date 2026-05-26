@@ -97,6 +97,19 @@
   document.body.classList.add('ep-has-sidebar');
   document.body.insertAdjacentHTML('afterbegin', html);
 
+  // INLINE-STYLE FORCE — aplica via JS pra vencer cache de CSS antigo
+  // que pode estar servindo regras com flex:1 no nav (esticava e colava
+  // o footer). Inline-style vence qualquer regra CSS sem !important.
+  var navEl = document.querySelector('.ep-sidebar__nav');
+  var footerEl = document.querySelector('.ep-sidebar__footer');
+  if (navEl) {
+    navEl.style.flex = '0 0 auto';
+    navEl.style.minHeight = 'auto';
+  }
+  if (footerEl) {
+    footerEl.style.marginTop = 'auto';
+  }
+
   // Marca link ativo pelo pathname (basename do URL).
   const path = (window.location.pathname.split('/').pop() || 'painel.html').toLowerCase();
   document.querySelectorAll('.ep-sidebar__nav a').forEach(function (a) {
