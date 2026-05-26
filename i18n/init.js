@@ -104,18 +104,27 @@
   function createSwitcher() {
     if (document.getElementById('ep-lang-switcher')) return;
     const cur = window.i18next.language;
-    const FLAGS = { 'pt-BR': '🇧🇷 PT', 'en-US': '🇺🇸 EN', 'es-ES': '🇪🇸 ES' };
-    const LABELS = { 'pt-BR': '🇧🇷 Português', 'en-US': '🇺🇸 English', 'es-ES': '🇪🇸 Español' };
-    const flag = FLAGS[cur] || FLAGS[DEFAULT_LOCALE];
+    // SVG inline em vez de emoji 🇧🇷/🇺🇸/🇪🇸 — Windows nao renderiza emoji
+    // regional flag, mostra os 2 letras do codigo (BR/US/ES). SVG inline
+    // funciona em qualquer SO + nao depende de fonte de emoji.
+    const FLAG_SVG = {
+      'pt-BR': '<svg viewBox="0 0 14 10" width="18" height="13" style="vertical-align:middle;border-radius:2px"><rect width="14" height="10" fill="#009c3b"/><polygon points="7,1 13,5 7,9 1,5" fill="#ffdf00"/><circle cx="7" cy="5" r="1.9" fill="#002776"/></svg>',
+      'en-US': '<svg viewBox="0 0 19 10" width="18" height="13" style="vertical-align:middle;border-radius:2px"><rect width="19" height="10" fill="#fff"/><rect width="19" height="0.77" y="0" fill="#b22234"/><rect width="19" height="0.77" y="1.54" fill="#b22234"/><rect width="19" height="0.77" y="3.08" fill="#b22234"/><rect width="19" height="0.77" y="4.62" fill="#b22234"/><rect width="19" height="0.77" y="6.15" fill="#b22234"/><rect width="19" height="0.77" y="7.69" fill="#b22234"/><rect width="19" height="0.77" y="9.23" fill="#b22234"/><rect width="7.6" height="5.38" fill="#3c3b6e"/></svg>',
+      'es-ES': '<svg viewBox="0 0 6 4" width="18" height="13" style="vertical-align:middle;border-radius:2px"><rect width="6" height="4" fill="#aa151b"/><rect y="1" width="6" height="2" fill="#f1bf00"/></svg>'
+    };
+    const CODES = { 'pt-BR': 'PT', 'en-US': 'EN', 'es-ES': 'ES' };
+    const LABELS = { 'pt-BR': 'Português', 'en-US': 'English', 'es-ES': 'Español' };
+    const flagSvg = FLAG_SVG[cur] || FLAG_SVG[DEFAULT_LOCALE];
+    const code = CODES[cur] || CODES[DEFAULT_LOCALE];
 
     const wrap = document.createElement('div');
     wrap.id = 'ep-lang-switcher';
     wrap.innerHTML =
       '<button type="button" id="ep-lang-btn" aria-label="Idioma / Language / Idioma">' +
-      flag +
+      flagSvg + ' ' + code +
       '</button>' +
       '<div id="ep-lang-menu" hidden>' +
-      SUPPORTED.map(l => `<button type="button" data-lang="${l}">${LABELS[l]}</button>`).join('') +
+      SUPPORTED.map(l => `<button type="button" data-lang="${l}">${FLAG_SVG[l]} ${LABELS[l]}</button>`).join('') +
       '</div>';
 
     const style = document.createElement('style');
@@ -124,6 +133,7 @@
       'font-family:system-ui,-apple-system,Segoe UI,sans-serif}' +
       '#ep-lang-btn{all:unset;cursor:pointer;background:rgba(28,31,29,.78);color:#fff;' +
       'padding:6px 11px;border-radius:999px;font-size:12px;font-weight:600;' +
+      'display:inline-flex;align-items:center;gap:6px;' +
       'backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);' +
       'border:1px solid rgba(255,255,255,.14);box-shadow:0 4px 14px rgba(0,0,0,.32)}' +
       '#ep-lang-btn:hover{background:rgba(28,31,29,.92)}' +
@@ -133,7 +143,7 @@
       'display:flex;flex-direction:column;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,.45);min-width:150px}' +
       '#ep-lang-menu[hidden]{display:none}' +
       '#ep-lang-menu button{all:unset;cursor:pointer;padding:8px 10px;color:#fff;' +
-      'font-size:13px;border-radius:6px}' +
+      'font-size:13px;border-radius:6px;display:flex;align-items:center;gap:8px}' +
       '#ep-lang-menu button:hover{background:rgba(255,255,255,.08)}' +
       '@media print{#ep-lang-switcher{display:none !important}}';
 
