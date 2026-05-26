@@ -576,6 +576,14 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     inset 0 0 0 1px rgba(226,183,106,0.18),
     0 0 16px -4px rgba(226,183,106,0.28);
 }
+/* Click feedback — pulse rápido no :active confirma que o clique foi
+   recebido ANTES da view transition disparar (~200ms). Em conexões
+   lentas, evita a sensação de "será que cliquei certo?". */
+.ep-sidebar__nav a:active {
+  transform: scale(0.97);
+  background: rgba(226,183,106,0.22);
+  transition: transform 80ms ease, background-color 80ms ease;
+}
 /* Visibilidade do TISS na sidebar — togglado via JS (syncTiss). Classe
    em vez de style inline pra não competir com display:flex do anchor. */
 .ep-sidebar__nav a.ep-sidebar__tiss.is-hidden {
@@ -1641,6 +1649,16 @@ h1.ep-h1 {
   font-weight: 500;
   color: var(--ep-ink);
   font-feature-settings: "ss01";
+}
+
+/* Morph cross-document do título — browser identifica como "mesmo
+   elemento" entre páginas e anima a mudança (tipo "Suas consultas" →
+   "Sua semana"). Aplicado SÓ no h1 principal de cada rota via classe
+   explícita pra evitar duplicação (clinica.html tem 3 h1 alternados
+   via ep-hide; setar view-transition-name no .ep-h1 global quebraria
+   toda a transição). */
+.ep-page-title {
+  view-transition-name: ep-page-title;
 }
 
 p.ep-lead {

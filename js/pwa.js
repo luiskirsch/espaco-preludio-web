@@ -18,7 +18,14 @@
   // ─── Registro ────────────────────────────────────────────────────────
   window.addEventListener("load", async () => {
     try {
-      const reg = await navigator.serviceWorker.register(swPath, { scope: swScope });
+      // updateViaCache:"none" — força o browser checar o próprio sw.js a
+      // CADA navegação (default é "imports", que cacheia até 24h). Combina
+      // com reg.update() periódico/no visibilitychange pra que mudanças
+      // cheguem ao user sem precisar fechar todas as abas.
+      const reg = await navigator.serviceWorker.register(swPath, {
+        scope: swScope,
+        updateViaCache: "none"
+      });
 
       // Detect update
       reg.addEventListener("updatefound", () => {
@@ -41,6 +48,13 @@
         refreshing = true;
         window.location.reload();
       });
+
+      // Update check ativo: ao voltar pra aba + a cada 1h. Sem isso, user
+      // que deixa aba aberta por dias nunca pega a nova versão.
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") reg.update().catch(() => {});
+      });
+      setInterval(() => reg.update().catch(() => {}), 60 * 60 * 1000);
     } catch (err) {
       console.warn("[PWA] SW register failed:", err);
     }
