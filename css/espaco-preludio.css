@@ -477,8 +477,10 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  flex: 1;
-  min-height: 0;
+  /* Altura natural (não estica) — footer vai pro fundo via margin-top:auto.
+     Espaço vazio entre o último item do nav (WhatsApp) e o footer fica
+     maximizado, sidebar fica visualmente "respirada". */
+  flex: 0 0 auto;
 }
 .ep-sidebar__group { display: flex; flex-direction: column; gap: 2px; }
 .ep-sidebar__group-label {
@@ -541,6 +543,11 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   padding-top: 14px;
   border-top: 1px solid rgba(235,224,200,0.10);
   flex-shrink: 0;
+  /* Empurra footer pro fundo da sidebar — espaço VAZIO máximo entre o
+     último item do nav e o perfil/Sair. Quando viewport é pequeno, o
+     espaço encolhe naturalmente até zero (e o nav então scrolla via
+     overflow-y:auto da sidebar como fallback). */
+  margin-top: auto;
 }
 .ep-sidebar__profile {
   display: flex;
