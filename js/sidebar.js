@@ -199,7 +199,6 @@
   // ele pode ter rodado applyTranslations antes do aside existir. Ouvimos
   // `ep:i18n-ready` (disparado uma vez no boot) e também tentamos imediato
   // caso já esteja pronto.
-  const sideEl = document.querySelector('.ep-sidebar');
   function applyToSidebar() {
     if (window.EP_I18N && window.EP_I18N.apply && sideEl) window.EP_I18N.apply(sideEl);
   }
