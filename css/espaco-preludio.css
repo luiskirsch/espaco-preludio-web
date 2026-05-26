@@ -477,11 +477,8 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  /* SEM flex:1+min-height:0 — em viewport curto, fazia o nav encolher
-     e os items vazavam por cima do footer (.ep-sidebar tem overflow-y
-     mas nav comprimia primeiro). Altura natural + sidebar scrolla
-     quando soma de tudo > viewport. */
-  flex: 0 0 auto;
+  flex: 1;
+  min-height: 0;
 }
 .ep-sidebar__group { display: flex; flex-direction: column; gap: 2px; }
 .ep-sidebar__group-label {
@@ -544,9 +541,6 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   padding-top: 14px;
   border-top: 1px solid rgba(235,224,200,0.10);
   flex-shrink: 0;
-  /* margin-top:auto empurra footer pro fim quando há sobra de espaço;
-     quando não há, footer vem logo após o nav (sidebar scrolla). */
-  margin-top: auto;
 }
 .ep-sidebar__profile {
   display: flex;
@@ -602,6 +596,36 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   color: #ffffff;
   border-color: rgba(226,183,106,0.45);
   background: rgba(226,183,106,0.08);
+}
+
+/* Adaptação por altura de viewport — em telas com altura curta (desktop
+   ultrawide, monitor horizontal estreito, splitview) os 11 items + brand
+   + footer não cabem com o padding/gap padrão e o footer sobrepunha o
+   nav. Em vez de criar scroll interno (notebook do user fica perfeito
+   sem scroll, não queremos), comprimimos proporcionalmente paddings,
+   gaps, item heights — tudo cabe sem scroll.
+   Thresholds: 780px e 680px de altura. Notebook típico (768-900px+)
+   passa do primeiro e fica intacto. */
+@media (min-width: 900px) and (max-height: 780px) {
+  body.ep-has-sidebar .ep-sidebar {
+    padding: 14px 12px;
+    gap: 14px;
+  }
+  .ep-sidebar__nav { gap: 12px; }
+  .ep-sidebar__nav a { padding: 7px 10px; font-size: 13.5px; }
+  .ep-sidebar__group-label { padding: 0 10px 4px; margin-bottom: 2px; }
+}
+@media (min-width: 900px) and (max-height: 680px) {
+  body.ep-has-sidebar .ep-sidebar {
+    padding: 10px 10px;
+    gap: 10px;
+  }
+  .ep-sidebar__nav { gap: 8px; }
+  .ep-sidebar__nav a { padding: 6px 10px; font-size: 13px; }
+  .ep-sidebar__group { gap: 1px; }
+  .ep-sidebar__brand .ep-brand__mark { width: 30px; height: 30px; }
+  .ep-sidebar__footer { padding-top: 8px; gap: 4px; }
+  .ep-sidebar__profile { padding: 6px 8px; font-size: 12.5px; }
 }
 
 /* Divisor de seções: linha fina em gradiente (transparent → ouro → transparent).
