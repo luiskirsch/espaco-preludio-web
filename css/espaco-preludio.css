@@ -436,7 +436,10 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
        Sidebar fica fisicamente persistente durante swap. */
     view-transition-name: ep-sidebar;
   }
-  body.ep-has-sidebar > .ep-topbar { display: none; }
+  /* Topbar oculta com sidebar ativa. Combinador descendente (não `>`) pra
+     cobrir páginas que envolvem o header num wrapper (.ep-shell em
+     perfil.html, etc.). Só existe 1 .ep-topbar por página. */
+  body.ep-has-sidebar .ep-topbar { display: none; }
   /* Padding simétrico real: cards extendem do limite esquerdo (sidebar end)
      ao limite direito (FAB band start). Container max-width removido pra
      cards ocuparem todo body content area — assim a borda visual do card
