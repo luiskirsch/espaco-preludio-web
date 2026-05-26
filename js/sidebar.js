@@ -97,20 +97,22 @@
   document.body.classList.add('ep-has-sidebar');
   document.body.insertAdjacentHTML('afterbegin', html);
 
-  // INLINE-STYLE FORCE — vence cache de CSS. Estratégia:
-  // - nav flex:1 (estica pra preencher espaço), items distribuídos com
-  //   space-around (grupos ficam respirados, sem vazio gigante no fim)
-  // - footer com margin-top:auto pra grudar no fundo se sobrar espaço
-  // - padding-bottom no nav garante respiro pro footer
+  // INLINE-STYLE FORCE — vence cache de CSS. Estratégia atual:
+  // - nav altura natural (flex:0 0 auto), items empilhados em cima
+  // - footer SEM margin-top:auto → cola logo abaixo do nav
+  // - padding-top pequeno no footer → linha (border-top) fica perto
+  //   do WhatsApp (último item do nav)
+  // - Espaço vazio fica no fundo da sidebar (depois do botão Sair).
   var navEl = document.querySelector('.ep-sidebar__nav');
   var footerEl = document.querySelector('.ep-sidebar__footer');
   if (navEl) {
-    navEl.style.flex = '1 1 auto';
-    navEl.style.minHeight = '0';
-    navEl.style.justifyContent = 'space-around';
+    navEl.style.flex = '0 0 auto';
+    navEl.style.minHeight = 'auto';
+    navEl.style.removeProperty('justify-content');
   }
   if (footerEl) {
-    footerEl.style.marginTop = 'auto';
+    footerEl.style.removeProperty('margin-top');
+    footerEl.style.paddingTop = '10px';
   }
 
   // Marca link ativo pelo pathname (basename do URL).
