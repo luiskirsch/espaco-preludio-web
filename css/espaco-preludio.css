@@ -394,6 +394,22 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
      cards ocuparem todo body content area — assim a borda visual do card
      fica no body padding-right boundary, e o FAB tem gap simétrico real. */
   body.ep-has-sidebar { padding-left: 200px; padding-right: 90px; }
+  /* GHOST SIDEBAR — pinta o stripe dark de 200px ANTES do JS injetar o <aside>.
+     Sem isso, em navegação entre páginas o body fica visível (cream) na faixa
+     da sidebar por ~1 frame até sidebar.js executar, gerando "flicker" de
+     reload. Com isso, o usuário vê continuidade visual: dark já está lá. */
+  body.ep-has-sidebar::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 200px;
+    background: #0d0d0d;
+    border-right: 1px solid rgba(226,183,106,0.18);
+    z-index: 49;
+    pointer-events: none;
+  }
   body.ep-has-sidebar #ep-lang-switcher { left: 214px; }
   /* Remove max-width:1320 do container só em sidebar pages — cards ocupam
      toda a largura disponível, e o FAB gap de 19px cada lado fica equal. */
