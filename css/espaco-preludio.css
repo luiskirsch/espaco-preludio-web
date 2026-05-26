@@ -477,8 +477,11 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  flex: 1;
-  min-height: 0;
+  /* SEM flex:1+min-height:0 — em viewport curto, fazia o nav encolher
+     e os items vazavam por cima do footer (.ep-sidebar tem overflow-y
+     mas nav comprimia primeiro). Altura natural + sidebar scrolla
+     quando soma de tudo > viewport. */
+  flex: 0 0 auto;
 }
 .ep-sidebar__group { display: flex; flex-direction: column; gap: 2px; }
 .ep-sidebar__group-label {
@@ -541,6 +544,9 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   padding-top: 14px;
   border-top: 1px solid rgba(235,224,200,0.10);
   flex-shrink: 0;
+  /* margin-top:auto empurra footer pro fim quando há sobra de espaço;
+     quando não há, footer vem logo após o nav (sidebar scrolla). */
+  margin-top: auto;
 }
 .ep-sidebar__profile {
   display: flex;
