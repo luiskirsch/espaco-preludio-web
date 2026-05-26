@@ -32,70 +32,27 @@ html[data-theme="dark"] .ep-skel {
   .ep-skel { animation: none; }
 }
 
-/* View Transitions API — crossfade nativo entre navegações same-origin.
-   Chave: nomear elementos persistentes (sidebar, FAB stack) pra que sejam
-   IDENTIFICADOS como contínuos entre páginas e NÃO animados. Só o conteúdo
-   muda; o chrome (sidebar/FABs) fica visualmente estático sem flash. */
+/* View Transitions DESLIGADAS — navegação MPA direta entre páginas,
+   sem fade/morph/translate. Snapshot 0ms = corte instantâneo.
+   Chrome (sidebar/FAB) já é cacheado pelo SW + theme-init inline cobre
+   o flash dark. Background sólido no html + cache do SW garante que a
+   troca pareça redraw imediato, sem brancos. */
 @view-transition {
-  navigation: auto;
+  navigation: none;
 }
-
-/* CRÍTICO: pintar todos os níveis do pseudo-tree com cor do tema.
-   Sem isso, durante fade-out + translateY do snapshot velho, aparece o
-   branco default do compositor por baixo — o "flash branco" que o user
-   reportou. ::view-transition é o wrapper raiz; group/image-pair são
-   os contêineres dos snapshots. Cobrimos todos pra não escapar. */
-::view-transition,
-::view-transition-group(root),
-::view-transition-image-pair(root) {
-  background-color: var(--ep-bg);
-}
-html[data-theme="dark"] ::view-transition,
-html[data-theme="dark"] ::view-transition-group(root),
-html[data-theme="dark"] ::view-transition-image-pair(root) {
-  background-color: #0d0d0d;
-}
-
-/* Estratégia premium (state-of-the-art em cross-document view transitions):
-   anima SÓ o <main> (via classe .ep-page-main → view-transition-name
-   ep-page-main). Root, sidebar, FAB stack, page-title têm seus próprios
-   nomes sem animação — ficam pinned. Resultado: só o conteúdo central
-   faz crossfade, todo o resto persiste.
-
-   Asymmetric timing (Apple-fluid): saída 180ms accelerate
-   (cubic-bezier(0.4, 0, 1, 1) — não chama atenção) + entrada 320ms
-   decelerate (cubic-bezier(0, 0, 0.2, 1) — gentil/premium). Translate Y
-   de 6-8px é SAFE aqui porque só o main mexe — o root estático cobre o
-   gap, sem flash branco como tivemos antes ao animar root inteiro. */
+/* Garantia extra: se algum browser cair pra default, mata qualquer
+   animação dos snapshots root/main/title/sidebar/fab. */
 ::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-}
-::view-transition-old(ep-page-main) {
-  animation: 180ms cubic-bezier(0.4, 0, 1, 1) both ep-vt-out;
-}
-::view-transition-new(ep-page-main) {
-  animation: 320ms cubic-bezier(0, 0, 0.2, 1) both ep-vt-in;
-}
-@keyframes ep-vt-out { to   { opacity: 0; transform: translateY(-6px); } }
-@keyframes ep-vt-in  { from { opacity: 0; transform: translateY(8px);  } }
-
-/* Sidebar e FAB stack: mesma identidade entre páginas → browser NÃO anima,
-   eles ficam fisicamente persistentes durante a transição. Fim do "menu
-   pisca junto com o conteúdo". */
+::view-transition-new(root),
+::view-transition-old(ep-page-main),
+::view-transition-new(ep-page-main),
+::view-transition-old(ep-page-title),
+::view-transition-new(ep-page-title),
 ::view-transition-old(ep-sidebar),
 ::view-transition-new(ep-sidebar),
 ::view-transition-old(ep-fab-stack),
 ::view-transition-new(ep-fab-stack) {
   animation: none !important;
-}
-
-/* Reduce-motion: desliga tudo. */
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
-    animation: none !important;
-  }
 }
 
 /* ============================================================
