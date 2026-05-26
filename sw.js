@@ -11,7 +11,7 @@
 //
 // Bump SW_VERSION pra forçar refresh do cache em todas as instalações.
 
-const SW_VERSION = "ep-sw-v8-2026-05-26-footer-bottom";
+const SW_VERSION = "ep-sw-v9-2026-05-26-force-update";
 const PRECACHE   = `precache-${SW_VERSION}`;
 const RUNTIME    = `runtime-${SW_VERSION}`;
 
@@ -32,20 +32,18 @@ self.addEventListener("install", (event) => {
     const cache = await caches.open(PRECACHE);
     // Best-effort: falhas individuais (404, network) não derrubam o install.
     await Promise.allSettled(PRECACHE_URLS.map(u => cache.add(u)));
-    // skipWaiting CONDICIONAL: só se não há controller (1ª instalação,
-    // user nunca viu o app). Quando há controller ativo, NÃO faz skip
-    // automático — fica em waiting até user clicar no toast "Atualizar"
-    // (que dispara message SKIP_WAITING). Caso contrário, controllerchange
-    // dispara reload e o toast some antes do user interagir.
-    if (!self.registration.active) {
-      self.skipWaiting();
-    }
+    // skipWaiting INCONDICIONAL — usuário tava preso em versão antiga
+    // mesmo com toast de update aparecendo. Prefere reload involuntário
+    // ao "preso pra sempre". Quando o SW novo ativar, pwa.js detecta
+    // controllerchange e recarrega — pega tudo novo da rede.
+    self.skipWaiting();
   })());
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
-    // Limpa caches de versões antigas.
+    // Limpa TODOS os caches de versões antigas — runtime caches de HTML/
+    // CSS/JS velhos que estavam servindo a versão presa do user.
     const keys = await caches.keys();
     await Promise.all(keys
       .filter(k => k !== PRECACHE && k !== RUNTIME)
