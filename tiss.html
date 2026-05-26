@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-247">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-248">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
@@ -179,7 +179,12 @@
     </div>
 
     <!-- Empty / loading / lista -->
-    <div id="tissLoading" class="ep-skeleton ep-mt-16" data-i18n="tiss:list.loading">Carregando…</div>
+    <div id="tissLoading" class="ep-mt-16" aria-live="polite" aria-busy="true">
+      <span class="ep-hide" data-i18n="tiss:list.loading">Carregando…</span>
+      <div class="ep-skel ep-skel--row"></div>
+      <div class="ep-skel ep-skel--row"></div>
+      <div class="ep-skel ep-skel--row"></div>
+    </div>
     <div id="tissEmpty" class="ep-empty ep-mt-16 ep-hide">
       <p class="ep-text-muted ep-mt-0" data-i18n="tiss:list.empty">Nenhuma guia TISS encontrada.</p>
       <p class="ep-text-xs ep-text-muted ep-mt-8" data-i18n="tiss:list.emptyHint">

@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-247">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-248">
   <script src="./i18n/init.js?v=1-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <style>
@@ -122,7 +122,20 @@
     </div>
   </div>
 
-  <div id="loadingBanner" class="ep-alert ep-mt-16" data-i18n="relatorios:loading">Carregando…</div>
+  <!-- Skeleton: 4 KPI cards + 2 chart blocks pra prefigurar o layout. -->
+  <div id="loadingBanner" class="ep-mt-16" aria-live="polite" aria-busy="true">
+    <span class="ep-hide" data-i18n="relatorios:loading">Carregando…</span>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+      <div class="ep-skel" style="height: 92px; border-radius: 12px;"></div>
+      <div class="ep-skel" style="height: 92px; border-radius: 12px;"></div>
+      <div class="ep-skel" style="height: 92px; border-radius: 12px;"></div>
+      <div class="ep-skel" style="height: 92px; border-radius: 12px;"></div>
+    </div>
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-top: 16px;">
+      <div class="ep-skel" style="height: 280px; border-radius: 12px;"></div>
+      <div class="ep-skel" style="height: 280px; border-radius: 12px;"></div>
+    </div>
+  </div>
 
   <div id="content" class="ep-hide">
     <!-- Cards de números -->
