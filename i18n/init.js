@@ -120,14 +120,14 @@
 
     const style = document.createElement('style');
     style.textContent =
-      '#ep-lang-switcher{position:fixed;bottom:14px;left:14px;z-index:2147483646;' +
+      '#ep-lang-switcher{position:fixed;bottom:14px;right:14px;z-index:2147483646;' +
       'font-family:system-ui,-apple-system,Segoe UI,sans-serif}' +
       '#ep-lang-btn{all:unset;cursor:pointer;background:rgba(28,31,29,.78);color:#fff;' +
       'padding:6px 11px;border-radius:999px;font-size:12px;font-weight:600;' +
       'backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);' +
       'border:1px solid rgba(255,255,255,.14);box-shadow:0 4px 14px rgba(0,0,0,.32)}' +
       '#ep-lang-btn:hover{background:rgba(28,31,29,.92)}' +
-      '#ep-lang-menu{position:absolute;bottom:calc(100% + 6px);left:0;' +
+      '#ep-lang-menu{position:absolute;bottom:calc(100% + 6px);right:0;' +
       'background:rgba(15,18,28,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);' +
       'border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:6px;' +
       'display:flex;flex-direction:column;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,.45);min-width:150px}' +
