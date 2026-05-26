@@ -94,108 +94,106 @@
       '</div>' +
     '</aside>';
 
+  // ─── PARTE IMEDIATA — roda no momento que o script executa ───────────
+  // Script eh sync (sem defer) no inicio do body, entao body existe mas o
+  // resto do body ainda nao foi parsed. Injetamos o aside agora pra que ele
+  // apareca com o PRIMEIRO PAINT da pagina (sem flicker entre navegacoes).
   document.body.classList.add('ep-has-sidebar');
   document.body.insertAdjacentHTML('afterbegin', html);
 
   var sideEl = document.querySelector('.ep-sidebar');
 
-  // Marca link ativo pelo pathname (basename do URL).
+  // Marca link ativo pelo pathname (basename do URL). Roda imediato.
   const path = (window.location.pathname.split('/').pop() || 'painel.html').toLowerCase();
   document.querySelectorAll('.ep-sidebar__nav a').forEach(function (a) {
     const href = (a.getAttribute('href') || '').replace(/^\.?\//, '').toLowerCase();
     if (href === path) a.classList.add('is-active');
   });
 
-  // Sync avatar/nome/TISS do topbar — auth-guard.js seta foto base64,
-  // selo verificado (innerHTML) e iniciais (textContent). Replicamos tudo
-  // via MutationObserver pra reatividade quando Firebase emite mudança.
-  const topName = document.getElementById('topUserName');
-  const sideName = document.getElementById('sidebarUserName');
-  const topAvatar = document.getElementById('topUserAvatar');
-  const sideAvatar = document.getElementById('sidebarUserAvatar');
-
-  function syncName() {
-    if (!topName || !sideName) return;
-    const parts = (topName.textContent || '').trim().split(/\s+/).filter(Boolean);
-    const first = parts[0] || 'Perfil';
-    const last = parts.length > 1 ? parts[parts.length - 1] : '';
-    sideName.innerHTML = last
-      ? '<span>' + first + '</span><span>' + last + '</span>'
-      : '<span>' + first + '</span>';
-  }
-  function syncAvatar() {
-    if (!topAvatar || !sideAvatar) return;
-    sideAvatar.style.backgroundImage = topAvatar.style.backgroundImage;
-    sideAvatar.style.backgroundSize = topAvatar.style.backgroundSize || 'cover';
-    sideAvatar.style.backgroundPosition = topAvatar.style.backgroundPosition || 'center';
-    sideAvatar.innerHTML = topAvatar.innerHTML;
-    if (topAvatar.classList.contains('ep-avatar-wrap')) sideAvatar.classList.add('ep-avatar-wrap');
-  }
-
-  if (topName) new MutationObserver(syncName).observe(topName, { childList: true, characterData: true, subtree: true });
-  if (topAvatar) new MutationObserver(syncAvatar).observe(topAvatar, {
-    childList: true, characterData: true, subtree: true,
-    attributes: true, attributeFilter: ['style', 'class']
-  });
-  syncName();
-  syncAvatar();
-
-  // TISS link visibility — fonte da verdade é o COMPUTED style do topbar
-  // (não o inline). HTML estático tem `style="display:none"` inline em
-  // [data-tiss-only]; capability-preflight aplica CSS `display:inline-block
-  // !important` quando tissEnabled, que sobrescreve VISUALMENTE mas deixa
-  // o inline intacto. Checar `.style.display` direto retornaria "none"
-  // (errado) e esconderia o sidebar TISS por ~100-500ms até auth-guard
-  // async sobrescrever o inline → flicker "TISS some/volta" a cada nav.
-  // getComputedStyle considera tanto inline quanto CSS com !important.
-  const topTiss = document.querySelector('header.ep-topbar [data-tiss-only]');
-  const sideTiss = document.getElementById('sidebarTissLink');
-  if (topTiss && sideTiss) {
-    const syncTiss = function () {
-      const hidden = window.getComputedStyle(topTiss).display === 'none';
-      sideTiss.classList.toggle('is-hidden', hidden);
-    };
-    // Observa style inline (auth-guard mexe lá) E também atributos style/class
-    // do html (caso preflight troque <style> tag).
-    new MutationObserver(syncTiss).observe(topTiss, { attributes: true, attributeFilter: ['style', 'class'] });
-    syncTiss();
-  }
-
-  // Logout encaminha pro handler original (Firebase signOut em auth-guard)
-  const sideLogout = document.getElementById('sidebarLogout');
-  const topLogout = document.getElementById('logoutBtn');
-  if (sideLogout && topLogout) {
-    sideLogout.addEventListener('click', function () { topLogout.click(); });
-  }
-
-  // Re-aplica traduções no sidebar: como i18next boota async (CDN),
-  // ele pode ter rodado applyTranslations antes do aside existir. Ouvimos
-  // `ep:i18n-ready` (disparado uma vez no boot) e também tentamos imediato
-  // caso já esteja pronto.
+  // i18n re-apply (sidebar pode aparecer antes do i18next botar) — roda imediato.
   function applyToSidebar() {
     if (window.EP_I18N && window.EP_I18N.apply && sideEl) window.EP_I18N.apply(sideEl);
   }
   if (window.EP_I18N) applyToSidebar();
   document.addEventListener('ep:i18n-ready', applyToSidebar);
 
-  // FAB stack — container flex que agrupa todos os botões flutuantes
-  // (theme/msg/help/logout) e centraliza verticalmente como BLOCO. Resolve
-  // o caos das regras body:has(...) que mudavam bottom conforme quais
-  // FABs existiam. Auth-guard monta os FABs async, então usamos
-  // MutationObserver pra mover qualquer FAB novo pra cá. Em mobile
-  // (sem sidebar), o stack vira display:contents e FABs voltam ao fluxo.
-  (function setupFabStack() {
-    if (document.querySelector('.ep-fab-stack')) return;
-    const stack = document.createElement('div');
-    stack.className = 'ep-fab-stack';
-    document.body.appendChild(stack);
-    const SELECTORS = '.ep-theme-toggle, .ep-msg-bubble-fab, .ep-help-bubble, .ep-logout-fab';
-    function collect() {
-      document.querySelectorAll(SELECTORS).forEach(el => {
-        if (el.parentNode !== stack) stack.appendChild(el);
-      });
+  // ─── PARTE DEFERIDA — espera o resto do body (topbar) ser parsed ────
+  // Topbar elements (topUserName, topUserAvatar, [data-tiss-only], logoutBtn)
+  // vem DEPOIS no HTML. Esperamos DOMContentLoaded pra configurar mirror.
+  function setupDeferred() {
+    // Sync avatar/nome/TISS do topbar — auth-guard.js seta foto base64,
+    // selo verificado (innerHTML) e iniciais (textContent). Replicamos tudo
+    // via MutationObserver pra reatividade quando Firebase emite mudança.
+    const topName = document.getElementById('topUserName');
+    const sideName = document.getElementById('sidebarUserName');
+    const topAvatar = document.getElementById('topUserAvatar');
+    const sideAvatar = document.getElementById('sidebarUserAvatar');
+
+    function syncName() {
+      if (!topName || !sideName) return;
+      const parts = (topName.textContent || '').trim().split(/\s+/).filter(Boolean);
+      const first = parts[0] || 'Perfil';
+      const last = parts.length > 1 ? parts[parts.length - 1] : '';
+      sideName.innerHTML = last
+        ? '<span>' + first + '</span><span>' + last + '</span>'
+        : '<span>' + first + '</span>';
     }
-    collect();
-    new MutationObserver(collect).observe(document.body, { childList: true });
-  })();
+    function syncAvatar() {
+      if (!topAvatar || !sideAvatar) return;
+      sideAvatar.style.backgroundImage = topAvatar.style.backgroundImage;
+      sideAvatar.style.backgroundSize = topAvatar.style.backgroundSize || 'cover';
+      sideAvatar.style.backgroundPosition = topAvatar.style.backgroundPosition || 'center';
+      sideAvatar.innerHTML = topAvatar.innerHTML;
+      if (topAvatar.classList.contains('ep-avatar-wrap')) sideAvatar.classList.add('ep-avatar-wrap');
+    }
+
+    if (topName) new MutationObserver(syncName).observe(topName, { childList: true, characterData: true, subtree: true });
+    if (topAvatar) new MutationObserver(syncAvatar).observe(topAvatar, {
+      childList: true, characterData: true, subtree: true,
+      attributes: true, attributeFilter: ['style', 'class']
+    });
+    syncName();
+    syncAvatar();
+
+    // TISS link visibility — getComputedStyle considera inline + CSS !important.
+    const topTiss = document.querySelector('header.ep-topbar [data-tiss-only]');
+    const sideTiss = document.getElementById('sidebarTissLink');
+    if (topTiss && sideTiss) {
+      const syncTiss = function () {
+        const hidden = window.getComputedStyle(topTiss).display === 'none';
+        sideTiss.classList.toggle('is-hidden', hidden);
+      };
+      new MutationObserver(syncTiss).observe(topTiss, { attributes: true, attributeFilter: ['style', 'class'] });
+      syncTiss();
+    }
+
+    // Logout encaminha pro handler original (Firebase signOut em auth-guard)
+    const sideLogout = document.getElementById('sidebarLogout');
+    const topLogout = document.getElementById('logoutBtn');
+    if (sideLogout && topLogout) {
+      sideLogout.addEventListener('click', function () { topLogout.click(); });
+    }
+
+    // FAB stack — container flex que agrupa todos os botões flutuantes
+    // (theme/msg/help/logout) e centraliza verticalmente como BLOCO.
+    if (!document.querySelector('.ep-fab-stack')) {
+      const stack = document.createElement('div');
+      stack.className = 'ep-fab-stack';
+      document.body.appendChild(stack);
+      const SELECTORS = '.ep-theme-toggle, .ep-msg-bubble-fab, .ep-help-bubble, .ep-logout-fab';
+      function collect() {
+        document.querySelectorAll(SELECTORS).forEach(el => {
+          if (el.parentNode !== stack) stack.appendChild(el);
+        });
+      }
+      collect();
+      new MutationObserver(collect).observe(document.body, { childList: true });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupDeferred);
+  } else {
+    setupDeferred();
+  }
 })();
