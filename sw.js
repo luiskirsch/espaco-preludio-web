@@ -11,7 +11,7 @@
 //
 // Bump SW_VERSION pra forçar refresh do cache em todas as instalações.
 
-const SW_VERSION = "ep-sw-v9-2026-05-26-force-update";
+const SW_VERSION = "ep-sw-v10-2026-05-26-network-first";
 const PRECACHE   = `precache-${SW_VERSION}`;
 const RUNTIME    = `runtime-${SW_VERSION}`;
 
@@ -74,30 +74,28 @@ self.addEventListener("fetch", (event) => {
   // API: passa direto, sem tocar no cache.
   if (isApiRequest(url)) return;
 
-  // HTML / navegação: STALE-WHILE-REVALIDATE — serve cache imediato,
-  // revalida em background. Combina com View Transitions API e
-  // Speculation Rules pra dar sensação de "instantâneo" entre páginas.
+  // HTML / navegação: NETWORK-FIRST — busca da rede primeiro, cache só
+  // como fallback offline. Trade-off vs SWR: load levemente mais lento
+  // em conexão boa, mas GARANTE que usuário nunca fica preso em versão
+  // antiga (SWR estava deixando usuários presos por dias quando o
+  // background revalidation falhava ou não chegava a executar).
   if (req.mode === "navigate" || req.destination === "document") {
     event.respondWith((async () => {
-      const cache = await caches.open(RUNTIME);
-      const cached = await cache.match(req);
-      const networkPromise = fetch(req).then(fresh => {
-        if (fresh && fresh.ok) cache.put(req, fresh.clone()).catch(() => {});
+      try {
+        const fresh = await fetch(req);
+        if (fresh && fresh.ok) {
+          const cache = await caches.open(RUNTIME);
+          cache.put(req, fresh.clone()).catch(() => {});
+        }
         return fresh;
-      }).catch(() => null);
-
-      // Se há cache: serve imediato + revalida em background (não bloqueia).
-      if (cached) {
-        networkPromise.catch(() => {});
-        return cached;
+      } catch (e) {
+        // Offline: tenta cache, senão painel precacheado, senão erro.
+        const cached = await caches.match(req);
+        if (cached) return cached;
+        const fallback = await caches.match("/painel.html");
+        if (fallback) return fallback;
+        return new Response("Offline", { status: 503 });
       }
-      // Sem cache (1ª visita): espera rede.
-      const fresh = await networkPromise;
-      if (fresh) return fresh;
-      // Offline + sem cache: fallback pro painel precacheado.
-      const fallback = await caches.match("/painel.html");
-      if (fallback) return fallback;
-      return new Response("Offline", { status: 503 });
     })());
     return;
   }
