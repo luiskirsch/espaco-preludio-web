@@ -56,9 +56,9 @@ const MODAL_HTML = `
         <span class="ep-text-xs ep-text-muted" data-i18n="painel:modalNew.patientPhoneHint">Recebe confirmação e lembrete via WhatsApp. Ative no Perfil → WhatsApp.</span>
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="scheduledAt" data-i18n="painel:modalNew.scheduledAt">Horário (opcional)</label>
-        <input id="scheduledAt" class="ep-input" type="datetime-local">
-        <span class="ep-text-xs ep-text-muted" data-i18n="painel:modalNew.scheduledAtHint">Use para agendar futura — você pode entrar antes.</span>
+        <label class="ep-label" for="scheduledAt" data-i18n="painel:modalNew.scheduledAt">Horário *</label>
+        <input id="scheduledAt" class="ep-input" type="datetime-local" required>
+        <span class="ep-text-xs ep-text-muted" data-i18n="painel:modalNew.scheduledAtHint">Obrigatório — a consulta precisa aparecer na agenda. Você pode entrar antes do horário marcado.</span>
       </div>
       <div class="ep-field">
         <label class="ep-label" for="recurrenceWeeks" data-i18n="painel:modalNew.recurrence">Repetir semanalmente</label>
@@ -364,9 +364,10 @@ export function createNewSessionModal({
       statusEl.className = "ep-status is-err";
       return;
     }
-    if (recurrenceWeeks > 1 && !scheduledAtRaw) {
-      statusEl.textContent = tr("painel:modalNew.errRecurrenceTime", "Defina um horário para repetir semanalmente.");
+    if (!scheduledAtRaw) {
+      statusEl.textContent = tr("painel:modalNew.errMissingTime", "Defina o horário da consulta — sem isso ela não aparece na agenda.");
       statusEl.className = "ep-status is-err";
+      document.getElementById("scheduledAt").focus();
       return;
     }
     statusEl.textContent = tr("painel:modalNew.creating", "Criando…");
