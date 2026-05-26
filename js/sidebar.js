@@ -97,33 +97,20 @@
   document.body.classList.add('ep-has-sidebar');
   document.body.insertAdjacentHTML('afterbegin', html);
 
-  // INLINE-STYLE FORCE — vence cache de CSS. Comprime nav agressivamente
-  // pra que tudo (brand + 11 items + footer) caiba na viewport sem
-  // empurrar o "Sair" pra fora da tela.
+  // INLINE-STYLE FORCE — vence cache de CSS. Tamanhos confortáveis pros
+  // items (padding/gap natural). Trick: nav é flex:0 0 auto pra NÃO esticar
+  // e empurrar o footer pro fim. Footer com margin-top:0 cola logo após
+  // o último item, deixando o vazio embaixo (não no meio).
   var sideEl = document.querySelector('.ep-sidebar');
   var navEl = document.querySelector('.ep-sidebar__nav');
   var footerEl = document.querySelector('.ep-sidebar__footer');
-  if (sideEl) {
-    sideEl.style.setProperty('gap', '14px', 'important');
-    sideEl.style.setProperty('padding', '14px 12px', 'important');
-  }
   if (navEl) {
     navEl.style.setProperty('flex', '0 0 auto', 'important');
     navEl.style.setProperty('min-height', 'auto', 'important');
-    navEl.style.setProperty('gap', '12px', 'important');
     navEl.style.removeProperty('justify-content');
   }
-  // Items + group labels mais compactos.
-  document.querySelectorAll('.ep-sidebar__nav a').forEach(function (a) {
-    a.style.setProperty('padding', '6px 12px', 'important');
-  });
-  document.querySelectorAll('.ep-sidebar__group-label').forEach(function (l) {
-    l.style.setProperty('padding-bottom', '3px', 'important');
-    l.style.setProperty('margin-bottom', '2px', 'important');
-  });
   if (footerEl) {
     footerEl.style.setProperty('margin-top', '0', 'important');
-    footerEl.style.setProperty('padding-top', '8px', 'important');
   }
 
   // Marca link ativo pelo pathname (basename do URL).
