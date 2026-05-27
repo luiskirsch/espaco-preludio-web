@@ -660,6 +660,7 @@
     if (pinned.length === 0) {
       banner.classList.add("ep-hide");
       banner.innerHTML = "";
+      banner.onclick = null;
       return;
     }
     // Mostra a mais recente (ultima do array sorted asc).
@@ -668,19 +669,47 @@
     banner.classList.remove("ep-hide");
     banner.innerHTML = `
       <span style="font-size: 14px;">📌</span>
-      <div style="flex: 1; min-width: 0;">
+      <div data-pinned-action="jump" style="flex: 1; min-width: 0; cursor: pointer;">
         <div style="font-weight: 600; font-size: 11px; color: var(--ep-accent); margin-bottom: 1px;">${escapeHtml(tr("mensagens:js.pinnedLabel", "Mensagem fixada"))}${moreCount > 0 ? ` (+${moreCount})` : ""}</div>
         <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ep-ink-2);">${escapeHtml(last.plain.slice(0, 100))}</div>
       </div>
+      <button type="button" data-pinned-action="unpin" data-msg-id="${escapeHtml(last.messageId)}" title="${escapeHtml(tr("mensagens:js.unpin", "Desafixar"))}" aria-label="${escapeHtml(tr("mensagens:js.unpin", "Desafixar"))}" style="border: 0; background: transparent; cursor: pointer; color: var(--ep-ink-3); padding: 6px; line-height: 0; border-radius: 6px; flex-shrink: 0;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
     `;
-    banner.onclick = () => {
-      const target = $("msgList").querySelector(`[data-msg-id="${CSS.escape(last.messageId)}"]`);
-      if (target) {
-        target.scrollIntoView({ behavior: "smooth", block: "center" });
-        const orig = target.style.background;
-        target.style.transition = "background-color 0.3s";
-        target.style.background = "var(--ep-accent-soft)";
-        setTimeout(() => { target.style.background = orig; }, 700);
+    // Click handler: jump na content area, unpin no X. Reuso de uma func soh.
+    banner.onclick = async (e) => {
+      const action = e.target.closest("[data-pinned-action]")?.dataset.pinnedAction;
+      if (action === "jump") {
+        const target = $("msgList").querySelector(`[data-msg-id="${CSS.escape(last.messageId)}"]`);
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+          const orig = target.style.background;
+          target.style.transition = "background-color 0.3s";
+          target.style.background = "var(--ep-accent-soft)";
+          setTimeout(() => { target.style.background = orig; }, 700);
+        }
+      } else if (action === "unpin") {
+        const msgId = last.messageId;
+        const m = messageCache.get(msgId);
+        if (!m) return;
+        // Otimista: desfixa local + re-render. PATCH em background.
+        m.pinned = false;
+        renderMessages({ scroll: false });
+        try {
+          const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/messages/${encodeURIComponent(msgId)}`, {
+            method: "PATCH",
+            headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ pinned: false })
+          });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+          showToast(tr("mensagens:js.toastUnpinned", "Mensagem desafixada."));
+        } catch (err) {
+          m.pinned = true; // reverte
+          renderMessages({ scroll: false });
+          showToast(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }), "err");
+        }
       }
     };
   }
