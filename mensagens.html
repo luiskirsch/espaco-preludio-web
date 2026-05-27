@@ -1341,8 +1341,12 @@
       const d = await r.json().catch(() => ({}));
       if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
 
-      // Cache local da threadKey pra abrir já decifrada
-      threadKeyCache.set(d.threadId, threadKeyBytes);
+      // Cache local da threadKey SO se thread foi realmente criada.
+      // Se ja existia (existed=true), a key gerada eh DIFERENTE da original
+      // — nao cachear, deixar openThread buscar e unwrap a correta.
+      if (!d.existed) {
+        threadKeyCache.set(d.threadId, threadKeyBytes);
+      }
 
       $("newThreadModal").classList.remove("is-open");
       await loadThreads();
