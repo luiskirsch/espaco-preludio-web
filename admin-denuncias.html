@@ -194,7 +194,7 @@
 
               <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; line-height: 1.6;">
                 <strong>Quem denunciou:</strong>
-                <span>${esc(reporterName)} <span style="color: var(--ep-ink-3);">(${esc(rep.reporterRole)})</span></span>
+                <span>${esc(reporterName)} <span style="color: var(--ep-ink-3);">(${esc(rep.reporterRole)})</span>${rep.reporterEmail ? ` <a href="mailto:${esc(rep.reporterEmail)}" style="color: var(--ep-accent); font-size: 12px; margin-left: 4px;">${esc(rep.reporterEmail)}</a>` : ""}</span>
                 <strong>Denunciado:</strong>
                 <span>${esc(reportedName)} <span style="color: var(--ep-ink-3);">(${esc(rep.reportedSenderRole)})</span></span>
                 <strong>Motivo:</strong>
@@ -208,6 +208,7 @@
 
             <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
               ${isOpen ? `<button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="close" data-id="${esc(rep.reportId)}">Fechar</button>` : `<button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="reopen" data-id="${esc(rep.reportId)}">Reabrir</button>`}
+              ${rep.reporterEmail ? `<a href="mailto:${esc(rep.reporterEmail)}?subject=${encodeURIComponent("Re: Denúncia de mensagem — Espaço Prelúdio")}" class="ep-btn ep-btn--ghost ep-btn--sm" style="text-align: center;">Contatar</a>` : ""}
             </div>
           </div>
         </article>`;
