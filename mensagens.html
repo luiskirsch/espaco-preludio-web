@@ -93,6 +93,7 @@
         </div>
         <div id="msgThread" class="ep-hide" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
           <div id="msgPeerName" style="padding: 12px 16px; border-bottom: 1px solid var(--ep-line); font-weight: 600;">—</div>
+          <div id="pinnedBanner" class="ep-hide" style="padding: 8px 12px; background: rgba(226,183,106,0.10); border-bottom: 1px solid var(--ep-line); font-size: 12.5px; cursor: pointer; display: flex; gap: 8px; align-items: center;"></div>
           <div id="msgList" style="flex: 1; overflow-y: auto; min-height: 0; padding: 16px; display: flex; flex-direction: column; gap: 8px;"></div>
           <div style="padding: 12px 16px; border-top: 1px solid var(--ep-line); display: flex; gap: 8px; align-items: center;">
             <input id="msgInput" type="text" class="ep-input" data-i18n-placeholder="mensagens:composer.placeholder" placeholder="Digite uma mensagem…" maxlength="3000" style="flex: 1;">
@@ -125,6 +126,32 @@
     <div class="ep-modal__actions">
       <button type="button" class="ep-btn ep-btn--ghost" id="newThreadCancel" data-i18n="mensagens:modal.cancel">Cancelar</button>
       <button type="button" class="ep-btn ep-btn--primary" id="newThreadCreate" disabled data-i18n="mensagens:modal.create">Criar conversa</button>
+    </div>
+  </div>
+</div>
+
+<!-- Emoji picker (singleton, repositioned) -->
+<div id="emojiPicker" role="dialog" style="position: fixed; z-index: 1001; display: none; background: #fff; border: 1px solid var(--ep-line); border-radius: 999px; box-shadow: 0 4px 16px rgba(0,0,0,0.18); padding: 6px 10px; gap: 4px;">
+  <button data-emoji="👍" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 8px;">👍</button>
+  <button data-emoji="❤️" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 8px;">❤️</button>
+  <button data-emoji="😂" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 8px;">😂</button>
+  <button data-emoji="😮" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 8px;">😮</button>
+  <button data-emoji="😢" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 8px;">😢</button>
+  <button data-emoji="🙏" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 8px;">🙏</button>
+</div>
+
+<!-- Modal: encaminhar para outra conversa -->
+<div class="ep-modal" id="forwardModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 480px;">
+    <h3 class="ep-modal__title">Encaminhar mensagem</h3>
+    <p class="ep-modal__sub">Selecione a conversa de destino.</p>
+    <div style="padding: 0 28px;">
+      <div id="forwardPreview" style="padding: 10px 12px; background: var(--ep-bg-2); border-radius: 8px; margin-bottom: 12px; font-size: 13px; color: var(--ep-ink-2); border-left: 3px solid var(--ep-accent);">—</div>
+      <div id="forwardThreadList" style="display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto;"></div>
+      <div class="ep-status" id="forwardStatus"></div>
+    </div>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="forwardCancelBtn">Cancelar</button>
     </div>
   </div>
 </div>
@@ -439,6 +466,7 @@
       return;
     }
     list.innerHTML = "";
+    renderPinnedBanner(sorted);
     for (const m of sorted) {
       const mine = m.senderRole === "therapist";
       const div = document.createElement("div");
@@ -474,15 +502,31 @@
         else tick = ' <span style="opacity: 0.7;">✓</span>';
       }
 
-      // Indicador favoritado (estrela amarela)
+      // Icones inline (favoritada / fixada)
       const favIcon = m.favoritedByMe
         ? ` <span title="${escapeHtml(tr("mensagens:js.favorited", "Favoritada"))}" style="color: #f0c850;">★</span>`
         : "";
+      const pinIcon = m.pinned
+        ? ` <span title="${escapeHtml(tr("mensagens:js.pinned", "Fixada"))}" style="opacity: 0.8;">📌</span>`
+        : "";
+
+      // Etiqueta "Encaminhada" no topo se forwardedFromMessageId.
+      const forwardedTag = m.forwardedFromMessageId
+        ? `<div style="font-size: 11px; opacity: 0.7; font-style: italic; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 14 20 9 15 4"></polyline><path d="M4 20v-7a4 4 0 0 1 4-4h12"></path></svg> ${escapeHtml(tr("mensagens:js.forwardedLabel", "Encaminhada"))}</div>`
+        : "";
+
+      // Reactions row (chips com emoji + count, destacado se mine)
+      let reactionsRow = "";
+      if (Array.isArray(m.reactions) && m.reactions.length > 0) {
+        reactionsRow = `<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px;">` +
+          m.reactions.map(r => `<button data-react-emoji="${escapeHtml(r.emoji)}" data-react-msg="${escapeHtml(m.messageId)}" style="background: ${r.mine ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.06)"}; border: 1px solid ${r.mine ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.1)"}; border-radius: 999px; padding: 2px 8px; font-size: 12px; cursor: pointer; display: inline-flex; gap: 3px; align-items: center; color: inherit;"><span>${r.emoji}</span><span style="font-weight: 600;">${r.count}</span></button>`).join("") +
+          `</div>`;
+      }
 
       // Chevron (so visivel no hover via CSS)
       const chevron = `<button class="ep-chat-bubble__chevron" data-action="open-menu" aria-label="Opções" style="position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border: 0; background: transparent; color: ${mine ? "rgba(255,255,255,0.85)" : "var(--ep-ink-3)"}; cursor: pointer; opacity: 0; transition: opacity 0.15s; border-radius: 4px; display: flex; align-items: center; justify-content: center; padding: 0;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>`;
 
-      div.innerHTML = `${chevron}${replyBlock}<div>${escapeHtml(m.plain)}</div><div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">${fmtTime(m.createdAt)}${favIcon}${tick}</div>`;
+      div.innerHTML = `${chevron}${forwardedTag}${replyBlock}<div>${escapeHtml(m.plain)}</div>${reactionsRow}<div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">${fmtTime(m.createdAt)}${pinIcon}${favIcon}${tick}</div>`;
       list.appendChild(div);
     }
     if (opts.scroll !== false) list.scrollTop = list.scrollHeight;
@@ -537,6 +581,39 @@
     lastSeenMessageMs = newest;
 
     renderMessages({ scroll: isFirstLoad || grewSinceLast });
+  }
+
+  // ─── Banner de mensagens fixadas (estilo WhatsApp) ────────────────
+  function renderPinnedBanner(sorted) {
+    const banner = document.getElementById("pinnedBanner");
+    if (!banner) return;
+    const pinned = sorted.filter(m => m.pinned && !m.deleted);
+    if (pinned.length === 0) {
+      banner.classList.add("ep-hide");
+      banner.innerHTML = "";
+      return;
+    }
+    // Mostra a mais recente (ultima do array sorted asc).
+    const last = pinned[pinned.length - 1];
+    const moreCount = pinned.length - 1;
+    banner.classList.remove("ep-hide");
+    banner.innerHTML = `
+      <span style="font-size: 14px;">📌</span>
+      <div style="flex: 1; min-width: 0;">
+        <div style="font-weight: 600; font-size: 11px; color: var(--ep-accent); margin-bottom: 1px;">${escapeHtml(tr("mensagens:js.pinnedLabel", "Mensagem fixada"))}${moreCount > 0 ? ` (+${moreCount})` : ""}</div>
+        <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ep-ink-2);">${escapeHtml(last.plain.slice(0, 100))}</div>
+      </div>
+    `;
+    banner.onclick = () => {
+      const target = $("msgList").querySelector(`[data-msg-id="${CSS.escape(last.messageId)}"]`);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        const orig = target.style.background;
+        target.style.transition = "background-color 0.3s";
+        target.style.background = "var(--ep-accent-soft)";
+        setTimeout(() => { target.style.background = orig; }, 700);
+      }
+    };
   }
 
   // ─── Menu de contexto da mensagem (chevron + dropdown) ───────────
@@ -682,12 +759,198 @@
         renderMessages({ scroll: false });
         showToast(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }), "err");
       }
-    } else if (action === "reagir" || action === "encaminhar" || action === "fixar" || action === "denunciar") {
-      // Stubs — features substanciais (emoji picker, thread picker, banner de
-      // fixadas, fluxo de denuncia). Toast informando que vem em proxima iter.
-      showToast(tr("mensagens:js.toastSoon", "Em breve — feature em desenvolvimento."));
+    } else if (action === "reagir") {
+      // Abre emoji picker proximo da bolha. Defer com setTimeout pra evitar
+      // que o handler global de "fechar picker no click fora" feche logo.
+      const bubble = $("msgList").querySelector(`[data-msg-id="${CSS.escape(msgId)}"]`);
+      if (bubble) setTimeout(() => openEmojiPicker(msgId, bubble), 0);
+    } else if (action === "encaminhar") {
+      openForwardModal(msgId);
+    } else if (action === "fixar") {
+      const desired = !m.pinned;
+      m.pinned = desired;
+      renderMessages({ scroll: false });
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/messages/${encodeURIComponent(msgId)}`, {
+          method: "PATCH",
+          headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ pinned: desired })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+        showToast(desired
+          ? tr("mensagens:js.toastPinned", "Mensagem fixada.")
+          : tr("mensagens:js.toastUnpinned", "Mensagem desafixada."));
+      } catch (err) {
+        m.pinned = !desired;
+        renderMessages({ scroll: false });
+        showToast(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }), "err");
+      }
+    } else if (action === "denunciar") {
+      const reason = window.prompt(tr("mensagens:js.reportPrompt", "Por que está denunciando essa mensagem? (descreva brevemente)"));
+      if (reason == null || !reason.trim()) return;
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/messages/${encodeURIComponent(msgId)}/report`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ reason: reason.trim() })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+        showToast(tr("mensagens:js.toastReported", "Denúncia enviada. Vamos revisar."));
+      } catch (err) {
+        showToast(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }), "err");
+      }
     }
   });
+
+  // ─── Emoji picker (reagir) ────────────────────────────────────────
+  const emojiPicker = document.getElementById("emojiPicker");
+  let emojiPickerMsgId = null;
+  function openEmojiPicker(messageId, anchorEl) {
+    emojiPickerMsgId = messageId;
+    emojiPicker.style.display = "flex";
+    const rect = anchorEl.getBoundingClientRect();
+    const pickerW = emojiPicker.offsetWidth;
+    let left = Math.max(8, Math.min(window.innerWidth - pickerW - 8, rect.left + rect.width / 2 - pickerW / 2));
+    let top = rect.top - emojiPicker.offsetHeight - 8;
+    if (top < 8) top = rect.bottom + 8;
+    emojiPicker.style.left = left + "px";
+    emojiPicker.style.top  = top  + "px";
+  }
+  function closeEmojiPicker() { emojiPicker.style.display = "none"; emojiPickerMsgId = null; }
+  emojiPicker.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-emoji]");
+    if (!btn || !emojiPickerMsgId) return;
+    const emoji = btn.dataset.emoji;
+    const msgId = emojiPickerMsgId;
+    closeEmojiPicker();
+    await toggleReaction(msgId, emoji);
+  });
+  document.addEventListener("click", (e) => {
+    if (emojiPicker.style.display !== "none" && !emojiPicker.contains(e.target)) {
+      // Nao fecha se for click no chevron/menu que abriu o picker.
+      if (!e.target.closest("[data-ctx]")) closeEmojiPicker();
+    }
+  });
+
+  // Click direto numa reaction chip = toggle (sem precisar abrir picker).
+  $("msgList").addEventListener("click", async (e) => {
+    const chip = e.target.closest("[data-react-emoji]");
+    if (chip) {
+      e.stopPropagation();
+      await toggleReaction(chip.dataset.reactMsg, chip.dataset.reactEmoji);
+    }
+  });
+
+  async function toggleReaction(msgId, emoji) {
+    const m = messageCache.get(msgId);
+    if (!m) return;
+    // Otimismo: atualiza local. reactions: array de {emoji,count,mine}.
+    const rx = Array.isArray(m.reactions) ? [...m.reactions] : [];
+    const idx = rx.findIndex(r => r.emoji === emoji);
+    if (idx >= 0) {
+      if (rx[idx].mine) {
+        rx[idx] = { ...rx[idx], count: rx[idx].count - 1, mine: false };
+        if (rx[idx].count <= 0) rx.splice(idx, 1);
+      } else {
+        rx[idx] = { ...rx[idx], count: rx[idx].count + 1, mine: true };
+      }
+    } else {
+      rx.push({ emoji, count: 1, mine: true });
+    }
+    m.reactions = rx;
+    renderMessages({ scroll: false });
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/messages/${encodeURIComponent(msgId)}/react`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ emoji })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+    } catch (err) {
+      showToast(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }), "err");
+      // Re-fetch pra recuperar estado correto
+      const threadKey = threadKeyCache.get(currentThreadId);
+      if (threadKey) refreshMessages(threadKey);
+    }
+  }
+
+  // ─── Modal de encaminhar ──────────────────────────────────────────
+  const forwardModal = document.getElementById("forwardModal");
+  let forwardSourceMsgId = null;
+  document.getElementById("forwardCancelBtn").addEventListener("click", () => forwardModal.classList.remove("is-open"));
+  forwardModal.addEventListener("click", (e) => { if (e.target === forwardModal) forwardModal.classList.remove("is-open"); });
+
+  async function openForwardModal(messageId) {
+    const m = messageCache.get(messageId);
+    if (!m || m.deleted) return;
+    forwardSourceMsgId = messageId;
+    document.getElementById("forwardPreview").textContent = m.plain.slice(0, 200);
+    document.getElementById("forwardStatus").textContent = "";
+    // Lista todas as threads do user (exceto a atual).
+    const list = document.getElementById("forwardThreadList");
+    list.innerHTML = `<div class="ep-text-xs ep-text-muted">${escapeHtml(tr("mensagens:js.loading", "Carregando…"))}</div>`;
+    forwardModal.classList.add("is-open");
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) throw new Error(d?.error || "ERRO");
+      const threads = (d.threads || []).filter(t => t.threadId !== currentThreadId);
+      if (threads.length === 0) {
+        list.innerHTML = `<div class="ep-text-xs ep-text-muted">${escapeHtml(tr("mensagens:js.noOtherThreads", "Você não tem outras conversas pra encaminhar."))}</div>`;
+        return;
+      }
+      list.innerHTML = threads.map(t => `
+        <button type="button" data-target-thread="${escapeHtml(t.threadId)}" style="text-align: left; padding: 10px 12px; border: 1px solid var(--ep-line); border-radius: 8px; background: var(--ep-bg-2); cursor: pointer; font-size: 14px;">${escapeHtml(t.patientDisplayName || tr("mensagens:js.peerFallback", "Paciente"))}</button>
+      `).join("");
+      list.querySelectorAll("[data-target-thread]").forEach(btn => {
+        btn.addEventListener("click", () => forwardToThread(btn.dataset.targetThread, m.plain));
+      });
+    } catch (err) {
+      list.innerHTML = `<div class="ep-status is-err">${escapeHtml(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }))}</div>`;
+    }
+  }
+
+  async function forwardToThread(targetThreadId, plainText) {
+    const statusEl = document.getElementById("forwardStatus");
+    statusEl.textContent = tr("mensagens:js.forwarding", "Encaminhando…");
+    statusEl.className = "ep-status";
+    try {
+      // 1. Carrega target thread pra obter o threadKey wrapper
+      let targetKey = threadKeyCache.get(targetThreadId);
+      if (!targetKey) {
+        const r1 = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(targetThreadId)}`, {
+          headers: { "Authorization": `Bearer ${idToken}` }
+        });
+        const d1 = await r1.json();
+        if (!r1.ok || !d1.ok) throw new Error(d1?.error || "ERRO_THREAD");
+        const tt = d1.thread;
+        targetKey = tt.myThreadKeyWrappedVia === "own-dek"
+          ? await unwrapKey(tt.myThreadKeyWrapper, dek)
+          : await unwrapThreadKeyFromPeer(tt.myThreadKeyWrapper, myEcdhPrivBytes, tt.peerEcdhPublicJwk);
+        threadKeyCache.set(targetThreadId, targetKey);
+      }
+      // 2. Cifra texto com a key do destino
+      const enc = await encryptNote(plainText, targetKey);
+      // 3. POST no thread destino marcando como forwarded
+      const r2 = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(targetThreadId)}/messages`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ ...enc, forwardedFromMessageId: forwardSourceMsgId })
+      });
+      const d2 = await r2.json();
+      if (!r2.ok || !d2.ok) throw new Error(d2?.error || "ERRO_POST");
+      forwardModal.classList.remove("is-open");
+      showToast(tr("mensagens:js.toastForwarded", "Mensagem encaminhada."));
+    } catch (err) {
+      statusEl.textContent = tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" });
+      statusEl.className = "ep-status is-err";
+    }
+  }
 
   // ─── Estado de reply em curso (mensagem sendo respondida) ────────
   let replyingTo = null; // { messageId, plain, senderRole }
