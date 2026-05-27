@@ -243,7 +243,7 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
-  .ep-chat-bubble .ep-wb-text { display: inline; }
+  .ep-chat-bubble .ep-wb-text { display: inline; white-space: pre-wrap; word-break: break-word; }
   .ep-chat-bubble .ep-wb-meta {
     float: right;
     font-size: 10.5px;
@@ -1287,8 +1287,7 @@
     if (p.conselho)      lines.push(`📋 ${p.conselho}`);
     if (p.cidade || p.uf) lines.push(`📍 ${[p.cidade, p.uf].filter(Boolean).join("/")}`);
     if (p.telefone)      lines.push(`📞 ${p.telefone}`);
-    insertAtCursor($("msgInput"), lines.join("\n"));
-    $("msgInput").focus();
+    sendText(lines.join("\n"));
   });
 
   function insertAtCursor(input, text) {
@@ -1505,22 +1504,15 @@
     if (e.key === "Escape" && replyingTo) { e.preventDefault(); cancelReply(); }
   });
 
-  async function sendCurrentMessage() {
-    if (!currentThreadId) return;
-    const text = $("msgInput").value.trim();
-    if (!text) return;
+  // Envia qualquer texto diretamente (sem passar pelo input). Usado tanto
+  // pelo composer normal quanto pelo contact picker.
+  async function sendText(text, replyToMessageId = null) {
+    if (!currentThreadId || !text) return;
     const threadKeyBytes = threadKeyCache.get(currentThreadId);
     if (!threadKeyBytes) return;
 
-    // Captura replyTo antes de limpar o estado.
-    const replyToMessageId = replyingTo?.messageId || null;
-
-    // Limpa input + reply state + status IMEDIATAMENTE — UX otimista.
-    $("msgInput").value = "";
     $("msgStatus").textContent = "";
-    if (replyingTo) cancelReply();
 
-    // Bolha aparece instantaneamente com tempId + status "sending".
     const tempId = "tmp-" + Math.random().toString(36).slice(2);
     messageCache.set(tempId, {
       messageId: tempId,
@@ -1531,7 +1523,7 @@
       replyToMessageId
     });
     saveLastMsgPreview(currentThreadId, text, "therapist");
-    renderMessages();
+    renderMessages({ scroll: true });
 
     try {
       const enc = await encryptNote(text, threadKeyBytes);
@@ -1542,7 +1534,6 @@
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
-      // Substitui tempId pelo messageId real do servidor.
       messageCache.delete(tempId);
       const realId = d.messageId || ("real-" + tempId);
       messageCache.set(realId, {
@@ -1554,13 +1545,25 @@
         replyToMessageId
       });
       renderMessages({ scroll: false });
-      // Atualiza lista lateral (lastMessageAt mudou).
       loadThreads();
     } catch (e) {
       const m = messageCache.get(tempId);
       if (m) { m.status = "error"; renderMessages({ scroll: false }); }
       $("msgStatus").textContent = tr("mensagens:js.sendError", "Erro: {{message}}", { message: e?.message || "" });
     }
+  }
+
+  async function sendCurrentMessage() {
+    if (!currentThreadId) return;
+    const text = $("msgInput").value.trim();
+    if (!text) return;
+    const threadKeyBytes = threadKeyCache.get(currentThreadId);
+    if (!threadKeyBytes) return;
+
+    const replyToMessageId = replyingTo?.messageId || null;
+    $("msgInput").value = "";
+    if (replyingTo) cancelReply();
+    await sendText(text, replyToMessageId);
   }
 
   // ─── Nova thread ─────────────────────────────────────────────────
