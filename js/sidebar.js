@@ -8,6 +8,38 @@
 (function () {
   if (document.querySelector('.ep-sidebar')) return;
 
+  // Estilos do sino flutuante — injetados inline pra não exigir bump de versão do CSS.
+  if (!document.getElementById('ep-notif-fab-style')) {
+    var styleEl = document.createElement('style');
+    styleEl.id = 'ep-notif-fab-style';
+    styleEl.textContent = [
+      '.ep-notif-fab{position:fixed;right:16px;bottom:222px;width:52px;height:52px;border-radius:50%;border:none;background:#2a3d5c;color:#ffffff;display:grid;place-items:center;cursor:pointer;text-decoration:none;box-shadow:0 4px 14px rgba(42,61,92,.30),0 1px 3px rgba(28,31,29,.10);transition:transform 160ms ease,box-shadow 160ms ease,background 160ms ease;z-index:180;}',
+      '.ep-notif-fab:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 8px 22px rgba(42,61,92,.40),0 2px 4px rgba(28,31,29,.14);background:#1f2f47;color:#ffffff;}',
+      '.ep-notif-fab svg{width:22px;height:22px;display:block;}',
+      '.ep-notif-fab:active{transform:translateY(0) scale(1);}',
+      '.ep-notif-fab:focus-visible{outline:2px solid #c89b4a;outline-offset:2px;}',
+      '.ep-notif-fab__badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#c0392b;color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center;border:2px solid #f5f0e8;box-shadow:0 2px 6px rgba(28,31,29,.20);}',
+      'body:has(.ep-logout-fab) .ep-notif-fab{bottom:288px;}',
+      'body.ep-has-sidebar .ep-fab-stack>.ep-notif-fab{position:relative!important;top:auto!important;right:auto!important;bottom:auto!important;margin:0!important;order:4;}',
+      '@media print{.ep-notif-fab{display:none!important;}}'
+    ].join('');
+    document.head.appendChild(styleEl);
+  }
+
+  // API pública para atualizar badge do sino a partir de qualquer página.
+  window.EP_NOTIF = {
+    setBadge: function (count) {
+      var badge = document.getElementById('sidebarNotifBadge');
+      if (!badge) return;
+      if (count > 0) {
+        badge.textContent = count > 99 ? '99+' : String(count);
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  };
+
   const ICONS = {
     video: '<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>',
     calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
@@ -175,12 +207,12 @@
     }
 
     // FAB stack — container flex que agrupa todos os botões flutuantes
-    // (theme/msg/help/logout) e centraliza verticalmente como BLOCO.
+    // (theme/msg/help/logout/notif) e centraliza verticalmente como BLOCO.
     if (!document.querySelector('.ep-fab-stack')) {
       const stack = document.createElement('div');
       stack.className = 'ep-fab-stack';
       document.body.appendChild(stack);
-      const SELECTORS = '.ep-theme-toggle, .ep-msg-bubble-fab, .ep-help-bubble, .ep-logout-fab';
+      const SELECTORS = '.ep-theme-toggle, .ep-msg-bubble-fab, .ep-help-bubble, .ep-logout-fab, .ep-notif-fab';
       function collect() {
         document.querySelectorAll(SELECTORS).forEach(el => {
           if (el.parentNode !== stack) stack.appendChild(el);
@@ -188,6 +220,19 @@
       }
       collect();
       new MutationObserver(collect).observe(document.body, { childList: true });
+
+      // Sino de notificações — injetado pelo sidebar pra aparecer em todas as páginas.
+      const notifFab = document.createElement('a');
+      notifFab.href = './notificacoes.html';
+      notifFab.className = 'ep-notif-fab';
+      notifFab.setAttribute('aria-label', 'Notificações');
+      notifFab.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;display:block;">' +
+          '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>' +
+          '<path d="M13.73 21a2 2 0 0 1-3.46 0"/>' +
+        '</svg>' +
+        '<span class="ep-notif-fab__badge" id="sidebarNotifBadge" style="display:none;">0</span>';
+      document.body.appendChild(notifFab);
     }
   }
 

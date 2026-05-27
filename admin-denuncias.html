@@ -95,6 +95,45 @@
   </main>
 </div>
 
+<!-- Modal: enviar notificação -->
+<div id="notifOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9000; align-items:center; justify-content:center;">
+  <div style="background:var(--ep-surface); border-radius:12px; padding:28px 32px; width:min(520px,90vw); box-shadow:0 12px 40px rgba(0,0,0,0.25); display:flex; flex-direction:column; gap:16px;">
+    <h2 style="font-size:18px; font-weight:700; margin:0;">Enviar notificação</h2>
+
+    <div>
+      <div style="font-size:12px; font-weight:600; color:var(--ep-ink-3); margin-bottom:8px; text-transform:uppercase; letter-spacing:.05em;">Destinatário</div>
+      <div id="notifRecipientOptions" style="display:flex; flex-direction:column; gap:6px; font-size:13px;"></div>
+    </div>
+
+    <div>
+      <label style="font-size:12px; font-weight:600; color:var(--ep-ink-3); text-transform:uppercase; letter-spacing:.05em; display:block; margin-bottom:6px;">Tipo</label>
+      <select id="notifType" class="ep-input" style="font-size:13px;">
+        <option value="warning">Aviso de conduta</option>
+        <option value="resolved_no_action">Denúncia revisada — sem ação</option>
+        <option value="resolved_action">Denúncia revisada — providências tomadas</option>
+        <option value="admin_message">Mensagem administrativa</option>
+      </select>
+    </div>
+
+    <div>
+      <label style="font-size:12px; font-weight:600; color:var(--ep-ink-3); text-transform:uppercase; letter-spacing:.05em; display:block; margin-bottom:6px;">Título</label>
+      <input id="notifTitle" class="ep-input" type="text" maxlength="200" style="font-size:13px;">
+    </div>
+
+    <div>
+      <label style="font-size:12px; font-weight:600; color:var(--ep-ink-3); text-transform:uppercase; letter-spacing:.05em; display:block; margin-bottom:6px;">Mensagem</label>
+      <textarea id="notifBody" class="ep-input" rows="5" maxlength="2000" style="font-size:13px; resize:vertical;"></textarea>
+    </div>
+
+    <div id="notifStatus" class="ep-status" style="display:none;"></div>
+
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button id="notifCancelBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Cancelar</button>
+      <button id="notifSendBtn" class="ep-btn ep-btn--primary ep-btn--sm" type="button">Enviar notificação</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import {
     onAuthStateChanged, signInWithEmailAndPassword, signOut
@@ -194,7 +233,7 @@
 
               <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; line-height: 1.6;">
                 <strong>Quem denunciou:</strong>
-                <span>${esc(reporterName)} <span style="color: var(--ep-ink-3);">(${esc(rep.reporterRole)})</span>${rep.reporterEmail ? ` <a href="mailto:${esc(rep.reporterEmail)}" style="color: var(--ep-accent); font-size: 12px; margin-left: 4px;">${esc(rep.reporterEmail)}</a>` : ""}</span>
+                <span>${esc(reporterName)} <span style="color: var(--ep-ink-3);">(${esc(rep.reporterRole)})</span></span>
                 <strong>Denunciado:</strong>
                 <span>${esc(reportedName)} <span style="color: var(--ep-ink-3);">(${esc(rep.reportedSenderRole)})</span></span>
                 <strong>Motivo:</strong>
@@ -208,7 +247,15 @@
 
             <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
               ${isOpen ? `<button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="close" data-id="${esc(rep.reportId)}">Fechar</button>` : `<button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="reopen" data-id="${esc(rep.reportId)}">Reabrir</button>`}
-              ${rep.reporterEmail ? `<a href="mailto:${esc(rep.reporterEmail)}?subject=${encodeURIComponent("Re: Denúncia de mensagem — Espaço Prelúdio")}" class="ep-btn ep-btn--ghost ep-btn--sm" style="text-align: center;">Contatar</a>` : ""}
+              <button class="ep-btn ep-btn--ghost ep-btn--sm"
+                data-action="notify"
+                data-report-id="${esc(rep.reportId)}"
+                data-reporter-uid="${esc(rep.reporterUid)}"
+                data-reporter-name="${esc(reporterName)}"
+                data-reporter-role="${esc(rep.reporterRole)}"
+                data-reported-uid="${esc(rep.reportedSenderUid)}"
+                data-reported-name="${esc(reportedName)}"
+                data-reported-role="${esc(rep.reportedSenderRole)}">Notificar</button>
             </div>
           </div>
         </article>`;
@@ -237,6 +284,105 @@
       listEl.innerHTML = `<div class="ep-status is-err">Erro: ${esc(err.message)}</div>`;
     }
   }
+
+  // ─── MODAL DE NOTIFICAÇÃO ────────────────────────────────────────────────
+  const NOTIF_TEMPLATES = {
+    warning:            { title: "Aviso sobre sua conduta",              body: "Recebemos uma denúncia relacionada a uma mensagem sua e, após análise, identificamos uma possível violação das nossas diretrizes de uso. Pedimos atenção às nossas políticas de conduta para que possamos manter um ambiente seguro para todos os usuários da plataforma." },
+    resolved_no_action: { title: "Sua denúncia foi revisada",            body: "Analisamos a denúncia que você registrou e não encontramos evidências suficientes de violação das nossas diretrizes. O caso foi encerrado. Agradecemos por nos ajudar a manter a plataforma segura." },
+    resolved_action:    { title: "Providências tomadas",                 body: "Analisamos a denúncia que você registrou e tomamos as providências cabíveis de acordo com nossas diretrizes. O caso foi encerrado. Agradecemos por contribuir para a segurança da plataforma." },
+    admin_message:      { title: "Mensagem da equipe Espaço Prelúdio",   body: "" }
+  };
+
+  let notifReportId = null;
+  let notifReporterUid = null, notifReporterName = null, notifReporterRole = null;
+  let notifReportedUid = null, notifReportedName = null, notifReportedRole = null;
+
+  const notifOverlay    = document.getElementById("notifOverlay");
+  const notifType       = document.getElementById("notifType");
+  const notifTitle      = document.getElementById("notifTitle");
+  const notifBody       = document.getElementById("notifBody");
+  const notifStatus     = document.getElementById("notifStatus");
+  const notifSendBtn    = document.getElementById("notifSendBtn");
+  const notifCancelBtn  = document.getElementById("notifCancelBtn");
+  const notifRecipOpts  = document.getElementById("notifRecipientOptions");
+
+  function openNotifModal(btn) {
+    notifReportId    = btn.dataset.reportId;
+    notifReporterUid  = btn.dataset.reporterUid;
+    notifReporterName = btn.dataset.reporterName;
+    notifReporterRole = btn.dataset.reporterRole;
+    notifReportedUid  = btn.dataset.reportedUid;
+    notifReportedName = btn.dataset.reportedName;
+    notifReportedRole = btn.dataset.reportedRole;
+
+    // Monta radio buttons de destinatário
+    notifRecipOpts.innerHTML = [
+      `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="radio" name="notifRecip" value="reported" checked>
+        <span><strong>${esc(notifReportedName)}</strong> <span style="color:var(--ep-ink-3);">(${esc(notifReportedRole)} — denunciado)</span></span>
+       </label>`,
+      `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="radio" name="notifRecip" value="reporter">
+        <span><strong>${esc(notifReporterName)}</strong> <span style="color:var(--ep-ink-3);">(${esc(notifReporterRole)} — denunciante)</span></span>
+       </label>`
+    ].join("");
+
+    applyTemplate();
+    notifStatus.style.display = "none";
+    notifSendBtn.disabled = false;
+    notifOverlay.style.display = "flex";
+    notifTitle.focus();
+  }
+
+  function applyTemplate() {
+    const t = NOTIF_TEMPLATES[notifType.value] || NOTIF_TEMPLATES.admin_message;
+    notifTitle.value = t.title;
+    notifBody.value  = t.body;
+  }
+
+  notifType.addEventListener("change", applyTemplate);
+
+  notifCancelBtn.addEventListener("click", () => { notifOverlay.style.display = "none"; });
+  notifOverlay.addEventListener("click", (e) => { if (e.target === notifOverlay) notifOverlay.style.display = "none"; });
+
+  notifSendBtn.addEventListener("click", async () => {
+    const recipValue = notifRecipOpts.querySelector("input[name=notifRecip]:checked")?.value;
+    const recipientUid = recipValue === "reporter" ? notifReporterUid : notifReportedUid;
+    const title = notifTitle.value.trim();
+    const body  = notifBody.value.trim();
+
+    if (!title || !body) {
+      notifStatus.textContent = "Preencha título e mensagem.";
+      notifStatus.className = "ep-status is-err";
+      notifStatus.style.display = "block";
+      return;
+    }
+
+    notifSendBtn.disabled = true;
+    notifStatus.textContent = "Enviando…";
+    notifStatus.className = "ep-status";
+    notifStatus.style.display = "block";
+
+    try {
+      await api("/therapy/admin/notificacoes", {
+        method: "POST",
+        body: JSON.stringify({ recipientUid, title, body, type: notifType.value, reportId: notifReportId })
+      });
+      notifStatus.textContent = "Notificação enviada com sucesso.";
+      notifStatus.className = "ep-status is-ok";
+      setTimeout(() => { notifOverlay.style.display = "none"; }, 1200);
+    } catch (err) {
+      notifStatus.textContent = "Erro: " + (err?.message || "desconhecido");
+      notifStatus.className = "ep-status is-err";
+      notifSendBtn.disabled = false;
+    }
+  });
+
+  // Delegar clique em botões "notify" da lista
+  listEl.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-action='notify']");
+    if (btn) openNotifModal(btn);
+  });
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) { show(loginPanel); return; }
