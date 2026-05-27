@@ -62,50 +62,50 @@
   </div>
 </header>
 
-<main class="ep-container ep-mt-32 ep-mb-16 ep-page-main" style="max-width: 1100px;">
-  <div class="ep-eyebrow" data-i18n="mensagens:hero.eyebrow">Conversas</div>
-  <h1 class="ep-h1 ep-mt-12 ep-page-title" data-i18n="mensagens:hero.h1">Mensagens</h1>
-  <p class="ep-text-muted ep-mt-16" data-i18n-html="mensagens:hero.intro">
-    Conversas com seus pacientes. <strong>Cifradas de ponta-a-ponta</strong>. Cada conversa é registro clínico (CFP Res. 1/2009) — guarde junto com o prontuário.
-  </p>
+<main class="ep-container ep-mt-32 ep-mb-16 ep-page-main" style="overflow: hidden;">
+  <section class="ep-stack">
+    <div>
+      <div class="ep-eyebrow" data-i18n="mensagens:hero.eyebrow">Conversas</div>
+      <h1 class="ep-h1 ep-mt-12 ep-page-title" data-i18n="mensagens:hero.h1">Mensagens</h1>
+      <p class="ep-text-muted ep-mt-8" data-i18n-html="mensagens:hero.intro">
+        Conversas com seus pacientes. <strong>Cifradas de ponta-a-ponta</strong>. Cada conversa é registro clínico (CFP Res. 1/2009) — guarde junto com o prontuário.
+      </p>
+    </div>
 
-  <div id="mensagensLayout" class="ep-msg-layout ep-mt-24">
-    <!-- Lista de threads -->
-    <aside class="ep-msg-threads">
-      <div class="ep-msg-threads__head">
-        <strong class="ep-text-sm" data-i18n="mensagens:threads.header">Conversas</strong>
-        <button id="newThreadBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="mensagens:threads.newBtn">+ Nova</button>
-      </div>
-      <div id="threadList" class="ep-msg-threads__list">
-        <div class="ep-text-xs ep-text-muted" style="padding: 12px;" data-i18n="mensagens:threads.loading">Carregando…</div>
-      </div>
-    </aside>
+    <div class="ep-grid" style="grid-template-columns: 320px 1fr; gap: 16px; height: calc(100dvh - 280px); min-height: 420px; margin-top: 16px;">
+      <!-- Sidebar threads -->
+      <aside class="ep-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+        <div class="ep-flex" style="padding: 12px 14px; border-bottom: 1px solid var(--ep-line); justify-content: space-between; align-items: center;">
+          <strong class="ep-text-sm" data-i18n="mensagens:threads.header">Conversas</strong>
+          <button id="newThreadBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="mensagens:threads.newBtn">+ Nova</button>
+        </div>
+        <div id="threadList" class="ep-stack" style="gap: 0; flex: 1; overflow: auto;">
+          <div class="ep-text-xs ep-text-muted" style="padding: 12px;" data-i18n="mensagens:threads.loading">Carregando…</div>
+        </div>
+      </aside>
 
-    <!-- Painel principal -->
-    <section class="ep-msg-main">
-      <div id="msgEmpty" class="ep-msg-empty">
-        <h3 class="ep-h3" data-i18n="mensagens:empty.h3">Selecione uma conversa</h3>
-        <p class="ep-text-muted ep-mt-8" data-i18n-html="mensagens:empty.body">Ou clique em <strong>+ Nova</strong> para começar uma com um paciente que já atendeu.</p>
-      </div>
-
-      <div id="msgThread" class="ep-msg-thread ep-hide">
-        <header class="ep-msg-thread__head">
-          <div>
-            <div id="msgPeerName" class="ep-h3 ep-mt-0">—</div>
-            <div class="ep-text-xs ep-text-muted" id="msgThreadMeta" data-i18n="mensagens:thread.metaE2ee">cifrada ponta-a-ponta</div>
+      <!-- Painel da thread ativa -->
+      <section id="threadPanel" class="ep-card" style="display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden;">
+        <div id="msgEmpty" style="margin: auto; text-align: center; padding: 40px; color: var(--ep-ink-3);">
+          <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
+          <h3 class="ep-h3 ep-mt-0" data-i18n="mensagens:empty.h3">Selecione uma conversa</h3>
+          <p class="ep-text-muted ep-mt-8" data-i18n-html="mensagens:empty.body">Ou clique em <strong>+ Nova</strong> para começar uma com um paciente que já atendeu.</p>
+        </div>
+        <div id="msgThread" class="ep-hide" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
+          <div style="padding: 12px 16px; border-bottom: 1px solid var(--ep-line);">
+            <div id="msgPeerName" style="font-weight: 600;">—</div>
+            <div id="msgThreadMeta" class="ep-text-xs ep-text-muted" data-i18n="mensagens:thread.metaE2ee">cifrada ponta-a-ponta</div>
           </div>
-        </header>
-        <div id="msgList" class="ep-msg-thread__list"></div>
-        <form id="msgForm" class="ep-msg-thread__composer">
-          <textarea id="msgInput" data-i18n-placeholder="mensagens:composer.placeholder" placeholder="Digite uma mensagem… (Ctrl+Enter envia)" maxlength="3000" rows="2"></textarea>
-          <div class="ep-flex" style="justify-content: space-between; align-items: center; padding: 8px 12px; border-top: 1px solid var(--ep-line);">
-            <span id="msgStatus" class="ep-text-xs ep-text-muted">&nbsp;</span>
-            <button id="msgSendBtn" type="submit" class="ep-btn ep-btn--primary ep-btn--sm" data-i18n="mensagens:composer.send">Enviar</button>
+          <div id="msgList" style="flex: 1; overflow-y: auto; min-height: 0; padding: 16px; display: flex; flex-direction: column; gap: 8px;"></div>
+          <div style="padding: 12px 16px; border-top: 1px solid var(--ep-line); display: flex; gap: 8px; align-items: center;">
+            <input id="msgInput" type="text" class="ep-input" data-i18n-placeholder="mensagens:composer.placeholder" placeholder="Digite uma mensagem…" maxlength="3000" style="flex: 1;">
+            <button id="msgSendBtn" type="button" class="ep-btn ep-btn--primary" data-i18n="mensagens:composer.send">Enviar</button>
           </div>
-        </form>
-      </div>
-    </section>
-  </div>
+          <span id="msgStatus" class="ep-text-xs ep-text-muted" style="padding: 0 16px 8px; min-height: 16px;"></span>
+        </div>
+      </section>
+    </div>
+  </section>
 </main>
 
 <!-- Modal: Nova conversa -->
@@ -384,12 +384,10 @@
   }
 
   // ─── Enviar mensagem ─────────────────────────────────────────────
-  $("msgForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    await sendCurrentMessage();
-  });
+  // Agora input single-line — Enter envia (igual mensagens-pro). Sem Ctrl+Enter.
+  $("msgSendBtn").addEventListener("click", () => sendCurrentMessage());
   $("msgInput").addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendCurrentMessage(); }
+    if (e.key === "Enter") { e.preventDefault(); sendCurrentMessage(); }
   });
 
   async function sendCurrentMessage() {
