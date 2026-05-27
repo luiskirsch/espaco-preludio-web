@@ -581,6 +581,22 @@
     lastSeenMessageMs = newest;
 
     renderMessages({ scroll: isFirstLoad || grewSinceLast });
+
+    // Se chegou msg nova, re-renderiza o sidebar (preview + time + unread).
+    // Se a msg nova eh do peer (nao minha), marca como lida tambem — user
+    // esta com a thread aberta lendo em tempo real.
+    if (grewSinceLast) {
+      loadThreads();
+      const sortedAll = [...messageCache.values()].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+      const newestMsg = sortedAll[sortedAll.length - 1];
+      if (newestMsg && newestMsg.senderRole !== "therapist") {
+        fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/read`, {
+          method: "PATCH",
+          headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ until: Date.now() })
+        }).catch(() => {});
+      }
+    }
   }
 
   // ─── Banner de mensagens fixadas (estilo WhatsApp) ────────────────
