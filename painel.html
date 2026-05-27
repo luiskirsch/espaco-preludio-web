@@ -303,7 +303,7 @@
   import { requireTherapist, refreshIdToken } from "./js/auth-guard.js?v=3-27";
   import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=2-84";
   import { clearDek, recallUser, decryptNote } from "./js/crypto.js";
-  import { createNewSessionModal } from "./js/new-session-modal.js?v=2";
+  import { createNewSessionModal } from "./js/new-session-modal.js?v=3";
   import { runOnboarding } from "./js/onboarding.js?v=3-12";
 
   // ─── i18n helper ────────────────────────────────────────────
@@ -884,6 +884,9 @@
         ${s.status !== "canceled" ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="recibo" data-id="${s.sessionId}" title="${tr("painel:list.reciboTitle","Enviar recibo ao paciente")}">${tr("painel:list.recibo","Recibo")}</button>
         ` : ""}
+        ${!s.patientAccountUid ? `
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="vincular" data-id="${s.sessionId}" title="${tr("painel:list.vincularTitle","Vincular conta de paciente pra abrir chat E2EE")}">${tr("painel:list.vincular","Vincular conta")}</button>
+        ` : ""}
         ${(s.status === "completed" || s.status === "canceled") ? `
           <button class="ep-btn-icon" data-action="ocultar" data-id="${s.sessionId}" aria-label="${tr("painel:list.ocultar","Remover da lista")}" title="${tr("painel:list.ocultarTitle","Remover da lista (mantém no prontuário)")}">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -942,8 +945,50 @@
       openReciboModal(allSessions.find(x => x.sessionId === id));
     } else if (action === "prenote") {
       openPreNoteModal(id);
+    } else if (action === "vincular") {
+      await openVincularPrompt(id);
     }
   });
+
+  // ─── Vincular conta de paciente a sessão sem patientAccountUid ───
+  // Usado pra sessões antigas criadas sem patientEmail. Backend roda autoLink
+  // retroativo após salvar — vincula ESTA sessão e outras do mesmo email.
+  async function openVincularPrompt(sessionId) {
+    const sess = allSessions.find(x => x.sessionId === sessionId);
+    const currentEmail = sess?.patientEmail || "";
+    const promptMsg = tr("painel:list.vincularPrompt", "E-mail da conta do paciente (mesmo usado pra fazer login):");
+    const email = window.prompt(promptMsg, currentEmail);
+    if (email == null) return; // user cancelou
+    const trimmed = String(email).trim().toLowerCase();
+    if (!trimmed) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      alert(tr("painel:list.vincularEmailInvalid", "E-mail inválido."));
+      return;
+    }
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/paciente`, {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${idToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ patientEmail: trimmed })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
+      const linked = data.patientAccountUid;
+      const more = data.autoLinkedCount || 0;
+      if (linked) {
+        alert(tr("painel:list.vincularOk", "Conta vinculada. {{more}} sessões antigas também foram vinculadas.", { more }));
+      } else {
+        alert(tr("painel:list.vincularSavedNoAccount", "E-mail salvo. Ainda não existe conta de paciente com esse email — quando o paciente criar conta, a vinculação acontece automaticamente."));
+      }
+      invalidatePrefix("sessoes", uid);
+      await loadSessions();
+    } catch (err) {
+      alert(tr("painel:list.vincularErr", "Erro ao vincular: ") + (err?.message || tr("painel:list.unknown", "desconhecido")));
+    }
+  }
 
   // ─── Notas pré-sessão (local-only, localStorage) ───────────
   function preNoteKey(sid) { return `ep:prenote:${sid}`; }
