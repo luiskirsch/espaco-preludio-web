@@ -243,6 +243,28 @@
     window.location.href = "./login.html";
   });
 
+  // ─── Preview da ultima msg (localStorage) ────────────────────────
+  // Server nao consegue ler plaintext E2EE — entao guardamos local apos
+  // cada decrypt. Limit 200 chars pra nao explodir o storage.
+  function lastMsgKey(threadId) { return `ep:lastMsg:${threadId}`; }
+  function saveLastMsgPreview(threadId, text, senderRole) {
+    if (!threadId || !text) return;
+    try {
+      localStorage.setItem(lastMsgKey(threadId), JSON.stringify({
+        text: String(text).slice(0, 200),
+        senderRole: senderRole || null,
+        at: Date.now()
+      }));
+    } catch (_) { /* quota cheio, ignora */ }
+  }
+  function getLastMsgPreview(threadId) {
+    try {
+      const raw = localStorage.getItem(lastMsgKey(threadId));
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (_) { return null; }
+  }
+
   // ─── Listar threads ──────────────────────────────────────────────
   async function loadThreads() {
     try {
@@ -267,27 +289,43 @@
     }
   }
   function renderThreads(threads) {
-    // Card-style: cada thread eh um card visualmente separado com avatar
-    // circular (iniciais), nome + tempo na linha, badge "novo" se unread.
+    // Card horizontal estilo WhatsApp: avatar circular + nome/tempo na linha 1
+    // + preview da ultima msg + badge "novo" na linha 2. Truncate ellipsis no
+    // nome e na preview pra nao quebrar layout em conversas longas.
     $("threadList").innerHTML = threads.map(t => {
       const peerName = t.patientDisplayName || tr("mensagens:js.peerFallback", "Paciente");
-      const lastTime = t.lastMessageAt ? fmtTime(t.lastMessageAt) : tr("mensagens:js.threadNoMessages", "Sem mensagens");
+      const lastTime = t.lastMessageAt ? fmtTime(t.lastMessageAt) : "";
       const isActive = t.threadId === currentThreadId;
       const bg = isActive ? "var(--ep-accent-soft)" : "var(--ep-bg-2)";
       const borderColor = isActive ? "var(--ep-accent)" : "var(--ep-line)";
       const initials = peerName.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "?";
-      const badge = t.hasUnread
-        ? `<span class="ep-badge ep-badge--ok" style="font-size: 10px; padding: 2px 8px;">${escapeHtml(tr("mensagens:js.threadBadgeNew", "novo"))}</span>`
+      const badgeNew = t.hasUnread
+        ? `<span class="ep-badge ep-badge--ok" style="font-size: 10px; padding: 2px 8px; flex-shrink: 0;">${escapeHtml(tr("mensagens:js.threadBadgeNew", "novo"))}</span>`
         : "";
+
+      // Preview da ultima msg (localStorage). Prefixo "Você:" se foi o terapeuta.
+      const preview = getLastMsgPreview(t.threadId);
+      let previewLine;
+      if (preview && preview.text) {
+        const meSent = preview.senderRole === "therapist";
+        const prefix = meSent ? '<span style="color: var(--ep-ink-3);">Você: </span>' : "";
+        previewLine = `${prefix}${escapeHtml(preview.text)}`;
+      } else {
+        previewLine = `<span style="color: var(--ep-ink-3); font-style: italic;">${escapeHtml(tr("mensagens:js.threadNoMessages", "Sem mensagens"))}</span>`;
+      }
+
       return `
         <button type="button" data-thread-id="${escapeHtml(t.threadId)}" style="text-align: left; padding: 10px 12px; margin: 6px 8px; border: 1px solid ${borderColor}; border-radius: 12px; background: ${bg}; cursor: pointer; display: flex; gap: 10px; align-items: center; width: calc(100% - 16px); transition: background-color 0.15s ease, border-color 0.15s ease;">
-          <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--ep-accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; flex-shrink: 0;">${escapeHtml(initials)}</div>
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--ep-accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; flex-shrink: 0;">${escapeHtml(initials)}</div>
           <div style="flex: 1; min-width: 0;">
             <div class="ep-flex" style="justify-content: space-between; align-items: center; gap: 6px;">
               <span style="font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(peerName)}</span>
               <span style="font-size: 11px; color: var(--ep-ink-3); flex-shrink: 0;">${escapeHtml(lastTime)}</span>
             </div>
-            ${badge ? `<div style="margin-top: 4px;">${badge}</div>` : ""}
+            <div class="ep-flex" style="gap: 6px; align-items: center; margin-top: 2px;">
+              <span style="font-size: 12.5px; color: var(--ep-ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;">${previewLine}</span>
+              ${badgeNew}
+            </div>
           </div>
         </button>
       `;
@@ -422,6 +460,15 @@
       });
     }
 
+    // Cacheia ultima msg em localStorage pra preview na lista de threads.
+    // (Server nao consegue ler plaintext E2EE, entao precisamos guardar
+    // local apos decrypt.)
+    const sorted = [...messageCache.values()].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    if (sorted.length > 0) {
+      const last = sorted[sorted.length - 1];
+      saveLastMsgPreview(currentThreadId, last.plain, last.senderRole);
+    }
+
     const newest = Math.max(0, ...[...messageCache.values()].map(m => m.createdAt || 0));
     const grewSinceLast = newest > lastSeenMessageMs;
     lastSeenMessageMs = newest;
@@ -456,6 +503,7 @@
       createdAt: Date.now(),
       status: "sending"
     });
+    saveLastMsgPreview(currentThreadId, text, "therapist");
     renderMessages();
 
     try {
