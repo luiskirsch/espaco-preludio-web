@@ -410,6 +410,7 @@
     <nav class="ep-nav">
       <a href="./admin-painel.html" class="ep-text-sm is-active" data-i18n="admin-painel:nav.painel">Painel</a>
       <a href="./admin-profissionais.html" class="ep-text-sm">Profissionais</a>
+      <a href="./admin-denuncias.html" class="ep-text-sm">Denúncias</a>
       <a href="./admin-verificacoes.html" class="ep-text-sm"><span data-i18n="admin-painel:nav.crpcrm">CRP/CRM</span><span id="navBadgeCrpCrm" class="ep-nav-badge ep-hide">0</span></a>
       <a href="./admin-comprovantes.html" class="ep-text-sm"><span data-i18n="admin-painel:nav.estudante">Estudante</span><span id="navBadgeEstudante" class="ep-nav-badge ep-hide">0</span></a>
       <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm"><span data-i18n="admin-painel:nav.recemFormado">Recém-formado</span><span id="navBadgeRecemFormado" class="ep-nav-badge ep-hide">0</span></a>
@@ -659,17 +660,9 @@
 
         </div>
 
-        <!-- Coluna direita: denúncias + eventos -->
+        <!-- Coluna direita: eventos ao vivo -->
         <div>
           <div class="ap-section" style="margin-top: 0;">
-            <h2 class="ap-section__title">⚠ Denúncias de mensagens</h2>
-            <p class="ap-section__sub">Clique para fechar/resolver.</p>
-            <div id="reportsList" class="ap-events">
-              <div class="ap-empty">Carregando…</div>
-            </div>
-          </div>
-
-          <div class="ap-section">
             <h2 class="ap-section__title" data-i18n="admin-painel:eventos.title">Eventos recentes</h2>
             <p class="ap-section__sub" data-i18n="admin-painel:eventos.sub">Últimas 20 ações de audit.</p>
             <div class="ap-events" id="eventsList">
@@ -749,7 +742,6 @@
     adminEmail.textContent = user.email || "?";
     showDashboard();
     fetchDashboard();
-    fetchReports();
     startAutoRefresh();
   });
 
@@ -780,61 +772,7 @@
     }
   }
 
-  refreshBtn.addEventListener("click", () => { fetchDashboard(); fetchReports(); });
-
-  // ─── Denúncias de mensagens ─────────────────────────────────────────
-  async function fetchReports() {
-    if (!idTokenCache) return;
-    const el = document.getElementById("reportsList");
-    try {
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/denuncias?status=all`, {
-        headers: { "Authorization": `Bearer ${idTokenCache}` }
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok || !d.ok) { el.innerHTML = `<div class="ap-empty">Erro ao carregar.</div>`; return; }
-      const items = d.items || [];
-      if (items.length === 0) {
-        el.innerHTML = `<div class="ap-empty" style="color: #2d6a4f;">✓ Nenhuma denúncia registrada.</div>`;
-        return;
-      }
-      el.innerHTML = items.map(rep => {
-        const isOpen = rep.status === "open";
-        const ts = rep.createdAt ? new Date(rep.createdAt).toLocaleString(currentLocale(), { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
-        const reporterName = rep.reporterName || rep.reporterUid?.slice(0, 8) || "?";
-        const reportedName = rep.reportedSenderName || rep.reportedSenderUid?.slice(0, 8) || "?";
-        const snapshotBlock = rep.messageSnapshot
-          ? `<div style="margin-top: 6px; padding: 8px 10px; background: var(--ep-bg-2); border-left: 3px solid var(--ep-accent); border-radius: 4px; font-size: 13px; color: var(--ep-ink-2); max-height: 80px; overflow: auto;">💬 "${esc(rep.messageSnapshot.slice(0, 500))}"</div>`
-          : "";
-        return `<div class="ap-event" style="padding: 12px; border: 1px solid var(--ep-line); border-radius: 8px; margin-bottom: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-            <div style="flex: 1; min-width: 0;">
-              <div style="font-weight: 600; font-size: 13px;">${isOpen ? "🔴 Aberta" : "✅ Resolvida"}</div>
-              <div style="font-size: 12px; margin-top: 4px;"><strong>Quem denunciou:</strong> ${esc(reporterName)} (${esc(rep.reporterRole)})</div>
-              <div style="font-size: 12px;"><strong>Denunciado:</strong> ${esc(reportedName)} (${esc(rep.reportedSenderRole)})</div>
-              <div style="font-size: 12px; margin-top: 4px;"><strong>Motivo:</strong> ${esc(rep.reason || "Sem motivo")}</div>
-              ${snapshotBlock}
-              <div style="font-size: 11px; color: var(--ep-ink-3); margin-top: 6px;">${ts}${rep.reviewedBy ? ` · Revisada por ${esc(rep.reviewedBy)}` : ""}</div>
-            </div>
-            ${isOpen ? `<button class="ep-btn ep-btn--ghost ep-btn--sm" style="flex-shrink: 0;" data-close-report="${esc(rep.reportId)}">Fechar</button>` : ""}
-          </div>
-        </div>`;
-      }).join("");
-      el.querySelectorAll("[data-close-report]").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          btn.disabled = true;
-          try {
-            await fetch(`${BACKEND_BASE_URL}/therapy/admin/denuncias/${encodeURIComponent(btn.dataset.closeReport)}`, {
-              method: "PATCH",
-              headers: { "Authorization": `Bearer ${idTokenCache}`, "Content-Type": "application/json" },
-              body: JSON.stringify({ status: "closed" })
-            });
-            fetchReports();
-          } catch { btn.disabled = false; }
-        });
-      });
-    } catch { el.innerHTML = `<div class="ap-empty">Erro de conexão.</div>`; }
-  }
-  function esc(s) { return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+  refreshBtn.addEventListener("click", fetchDashboard);
 
   // ─── Auto-refresh ───────────────────────────────────────────────────
   const AUTO_REFRESH_MS = 30_000;
@@ -842,7 +780,7 @@
   let autoTimer = null;
   function startAutoRefresh() {
     if (autoTimer || !autoEnabled) return;
-    autoTimer = setInterval(() => { fetchDashboard(); fetchReports(); }, AUTO_REFRESH_MS);
+    autoTimer = setInterval(fetchDashboard, AUTO_REFRESH_MS);
   }
   function stopAutoRefresh() {
     if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
