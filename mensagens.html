@@ -317,6 +317,37 @@
     } catch (_) { return null; }
   }
 
+  // Decifra last message de threads pra popular preview na sidebar SEM
+  // precisar abrir cada thread. Cache hit: pula se preview local eh mais
+  // recente que lastMessageAt do servidor.
+  async function decryptThreadPreviews(threads) {
+    let changed = false;
+    for (const t of threads) {
+      if (!t.lastMessageCiphertext || !t.lastMessageIv || !t.lastMessageAt) continue;
+      const cached = getLastMsgPreview(t.threadId);
+      // Skip se preview local foi salvo APOS o lastMessageAt do servidor.
+      if (cached && (cached.at || 0) >= t.lastMessageAt) continue;
+      try {
+        let key = threadKeyCache.get(t.threadId);
+        if (!key && t.myThreadKeyWrapper) {
+          key = t.myThreadKeyWrappedVia === "own-dek"
+            ? await unwrapKey(t.myThreadKeyWrapper, dek)
+            : await unwrapThreadKeyFromPeer(t.myThreadKeyWrapper, myEcdhPrivBytes, t.peerEcdhPublicJwk);
+          threadKeyCache.set(t.threadId, key);
+        }
+        if (!key) continue;
+        const plain = await decryptNote({ ciphertext: t.lastMessageCiphertext, iv: t.lastMessageIv }, key);
+        saveLastMsgPreview(t.threadId, plain, t.lastMessageSenderRole);
+        changed = true;
+      } catch (e) {
+        // Decrypt falhou (msg corrompida ou key invalida) — ignora,
+        // preview antigo mantido.
+      }
+    }
+    // Re-render se algum preview novo foi cacheado.
+    if (changed) renderThreads(threads);
+  }
+
   // ─── Listar threads ──────────────────────────────────────────────
   async function loadThreads() {
     try {
@@ -333,7 +364,12 @@
         $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${tr("mensagens:js.noThreads", "Nenhuma conversa ainda.<br>Clique em <strong>+ Nova</strong>.")}</div>`;
         return;
       }
+      // Render imediato (preview vem do localStorage se ja decifrado antes).
       renderThreads(threads);
+      // Decifra last message de cada thread em background pra popular previews
+      // de threads que ainda nao foram abertas. Pula se ja temos preview
+      // mais recente que lastMessageAt (cache hit).
+      decryptThreadPreviews(threads).catch(err => console.error("preview_decrypt", err));
       return;
     } catch (e) {
       console.error("loadThreads_failed", e);
