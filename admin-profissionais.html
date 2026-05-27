@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+  <link rel="preconnect" href="https://firestore.googleapis.com">
+  <link rel="dns-prefetch" href="https://www.gstatic.com">
+  <link rel="dns-prefetch" href="https://osl-video-server-staging.up.railway.app">
+  <script type="speculationrules">{"prerender":[{"where":{"selector_matches":"a[href$='.html']:not([href^='http'])"},"eagerness":"moderate"}]}</script>
+  <title>Admin · Profissionais · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-274">
+  <script src="./i18n/init.js?v=1-2" defer></script>
+  <script src="./js/monitoring.js?v=3" defer></script>
+</head>
+<body>
+
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio · Admin</span>
+      </span>
+    </a>
+    <nav class="ep-nav">
+      <a href="./admin-painel.html" class="ep-text-sm">Painel</a>
+      <a href="./admin-profissionais.html" class="ep-text-sm is-active">Profissionais</a>
+      <a href="./admin-verificacoes.html" class="ep-text-sm">CRP/CRM</a>
+      <a href="./admin-comprovantes.html" class="ep-text-sm">Estudante</a>
+      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm">Recém-formado</a>
+      <a href="./admin-comprovantes-formacao.html" class="ep-text-sm">Sem conselho</a>
+      <span id="adminEmail" class="ep-text-sm ep-text-muted">…</span>
+      <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Sair</button>
+    </nav>
+  </header>
+
+  <main class="ep-main">
+
+    <section id="loginPanel" class="ep-hide" style="max-width: 400px; margin: 40px auto;">
+      <div class="ep-auth__panel">
+        <h2 class="ep-auth__title">Acesso Admin</h2>
+        <p class="ep-auth__sub">Login restrito a e-mails na allowlist do servidor.</p>
+        <form id="loginForm" class="ep-stack ep-mt-16" novalidate>
+          <div class="ep-field">
+            <label class="ep-label" for="email">E-mail</label>
+            <input id="email" class="ep-input" type="email" autocomplete="email" required>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="password">Senha</label>
+            <input id="password" class="ep-input" type="password" autocomplete="current-password" required>
+          </div>
+          <div class="ep-status" id="loginStatus"></div>
+          <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="loginBtn">Entrar</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="dashboardPanel" class="ep-hide">
+      <div class="ep-flex ep-flex--end-wrap" style="justify-content: space-between; align-items: end; margin-bottom: 16px; gap: 16px;">
+        <div>
+          <div class="ep-eyebrow">Painel administrativo</div>
+          <h1 class="ep-h1 ep-mt-12">Profissionais cadastrados</h1>
+          <p class="ep-text-muted ep-mt-8">Lista completa de terapeutas (verificados ou não). Edite plano, conceda cortesias, force verificação.</p>
+        </div>
+      </div>
+
+      <div class="ep-flex ep-flex--end-wrap" style="gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+        <input id="searchBox" class="ep-input" type="search" placeholder="Buscar por nome, e-mail ou conselho…" style="flex: 1; min-width: 240px;">
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="all">Todos</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="verified">Verificados</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="pending">Pendentes</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="rejected">Recusados</button>
+      </div>
+
+      <div id="countLine" class="ep-text-sm ep-text-muted" style="margin-bottom: 12px;">—</div>
+
+      <div id="list" class="ep-stack" style="gap: 10px;">
+        <div class="ep-skeleton">Carregando…</div>
+      </div>
+    </section>
+
+    <section id="forbiddenPanel" class="ep-hide" style="max-width: 460px; margin: 60px auto; text-align: center;">
+      <div class="ep-auth__panel">
+        <h2 class="ep-auth__title">Acesso negado.</h2>
+        <p class="ep-auth__sub">Sua conta não está na allowlist de admin.</p>
+        <button class="ep-btn ep-btn--ghost ep-btn--block ep-mt-16" type="button" id="forbiddenLogout">Sair</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Modal de edição -->
+<div class="ep-modal" id="editModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 640px;">
+    <h3 class="ep-modal__title" id="modalTitle">Ajustar profissional</h3>
+    <div id="modalBody" class="ep-stack" style="gap: 16px;"></div>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="closeModal">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import {
+    onAuthStateChanged, signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  const loginPanel     = document.getElementById("loginPanel");
+  const dashboardPanel = document.getElementById("dashboardPanel");
+  const forbiddenPanel = document.getElementById("forbiddenPanel");
+  const adminEmailEl   = document.getElementById("adminEmail");
+  const listEl         = document.getElementById("list");
+  const countEl        = document.getElementById("countLine");
+  const searchBox      = document.getElementById("searchBox");
+
+  let idToken = null;
+  let currentFilter = "all";
+  let allItems = []; // último resultado, pra filtrar client-side sem refetch
+
+  function show(panel) {
+    [loginPanel, dashboardPanel, forbiddenPanel].forEach(p => p.classList.add("ep-hide"));
+    panel.classList.remove("ep-hide");
+  }
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
+  }
+  function fmtDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+  function fmtDateOnly(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleDateString("pt-BR");
+  }
+  function planoLabel(p) {
+    const map = {
+      "trial": "Trial",
+      "pro": "Pro (pago)",
+      "student-pending-review": "Estudante (pendente)",
+      "student-active": "Estudante",
+      "recem-formado-eligible": "Recém-formado (elegível)",
+      "recem-formado-active": "Recém-formado",
+      "canceled": "Cancelado"
+    };
+    return map[p] || (p || "—");
+  }
+
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email    = document.getElementById("email").value.trim().toLowerCase();
+    const password = document.getElementById("password").value;
+    const statusEl = document.getElementById("loginStatus");
+    const loginBtn = document.getElementById("loginBtn");
+    loginBtn.disabled = true;
+    statusEl.textContent = "Autenticando…";
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      statusEl.textContent = err?.message || "Erro de autenticação.";
+      statusEl.className = "ep-status is-err";
+      loginBtn.disabled = false;
+    }
+  });
+  document.getElementById("logoutBtn").addEventListener("click", async () => { await signOut(auth); window.location.reload(); });
+  document.getElementById("forbiddenLogout").addEventListener("click", async () => { await signOut(auth); window.location.reload(); });
+
+  document.querySelectorAll("[data-filter]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentFilter = btn.dataset.filter;
+      document.querySelectorAll("[data-filter]").forEach(b => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      loadList();
+    });
+  });
+
+  // Search é local — filtra o último resultado.
+  let searchTimer = null;
+  searchBox.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => renderList(filterLocal(allItems, searchBox.value)), 150);
+  });
+  function filterLocal(items, q) {
+    const s = (q || "").trim().toLowerCase();
+    if (!s) return items;
+    return items.filter(i =>
+      (i.displayName || "").toLowerCase().includes(s) ||
+      (i.email || "").toLowerCase().includes(s) ||
+      (i.numeroConselho || "").toLowerCase().includes(s)
+    );
+  }
+
+  async function api(path, opts = {}) {
+    const headers = { ...(opts.headers || {}), "Authorization": `Bearer ${idToken}` };
+    if (opts.body) headers["Content-Type"] = "application/json";
+    const res = await fetch(BACKEND_BASE_URL + path, { ...opts, headers });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw Object.assign(new Error(data?.error || ("HTTP_" + res.status)), { status: res.status });
+    return data;
+  }
+
+  async function loadList() {
+    listEl.innerHTML = `<div class="ep-skeleton">Carregando…</div>`;
+    try {
+      const data = await api(`/therapy/admin/profissionais?status=${currentFilter}`);
+      allItems = data.items || [];
+      renderList(filterLocal(allItems, searchBox.value));
+    } catch (err) {
+      if (err.status === 403) { show(forbiddenPanel); return; }
+      listEl.innerHTML = `<div class="ep-error-state">Erro: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  function statusPill(item) {
+    const now = Date.now();
+    if (item.verificado) return `<span class="ep-badge ep-badge--ok">Verificado</span>`;
+    if (item.verificationStatus === "rejected") return `<span class="ep-badge ep-badge--done">Recusado</span>`;
+    return `<span class="ep-badge ep-badge--warn">Pendente</span>`;
+  }
+  function accessPill(item) {
+    const now = Date.now();
+    if (item.adminGrantActive) return `<span class="ep-badge ep-badge--ok" title="Cortesia admin até ${fmtDate(item.adminGrantedUntil)}">Cortesia até ${fmtDateOnly(item.adminGrantedUntil)}</span>`;
+    if (item.plano === "pro" && item.mpPreapprovalId) return `<span class="ep-badge ep-badge--ok">Pro (MP)</span>`;
+    if (item.plano === "student-active" || item.plano === "recem-formado-active") return `<span class="ep-badge ep-badge--ok">${planoLabel(item.plano)}</span>`;
+    if (item.trialActive) return `<span class="ep-badge ep-badge--warn">Trial até ${fmtDateOnly(item.trialUntil)}</span>`;
+    return `<span class="ep-badge ep-badge--done">${planoLabel(item.plano)}</span>`;
+  }
+
+  function renderList(items) {
+    countEl.textContent = `${items.length} profissional${items.length === 1 ? "" : "is"} listado${items.length === 1 ? "" : "s"}`;
+    if (items.length === 0) {
+      listEl.innerHTML = `<div class="ep-empty"><p class="ep-text-muted ep-mt-8">Nenhum profissional encontrado.</p></div>`;
+      return;
+    }
+    listEl.innerHTML = "";
+    for (const it of items) {
+      const card = document.createElement("article");
+      card.className = "ep-admin-card";
+      const conselho = it.tipoConselho && it.numeroConselho ? `${it.tipoConselho} ${it.numeroConselho}` : (it.numeroConselho || "Sem conselho");
+      card.innerHTML = `
+        <div class="ep-flex" style="justify-content: space-between; align-items: flex-start; gap: 12px;">
+          <div style="min-width: 0; flex: 1;">
+            <div class="ep-flex" style="gap: 8px; align-items: center; flex-wrap: wrap;">
+              <strong>${escapeHtml(it.displayName || "(sem nome)")}</strong>
+              ${statusPill(it)}
+              ${accessPill(it)}
+            </div>
+            <div class="ep-text-sm ep-text-muted ep-mt-4">
+              ${escapeHtml(it.email || "—")} · ${escapeHtml(conselho)}${it.especialidade ? " · " + escapeHtml(it.especialidade) : ""}
+            </div>
+            <div class="ep-text-sm ep-text-muted ep-mt-4">
+              Cadastro: ${fmtDate(it.createdAt)}${it.adminNote ? " · Nota: " + escapeHtml(it.adminNote) : ""}
+            </div>
+          </div>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-uid="${escapeHtml(it.uid)}">Editar</button>
+        </div>
+      `;
+      card.querySelector("button").addEventListener("click", () => openEdit(it.uid));
+      listEl.appendChild(card);
+    }
+  }
+
+  // ─── Modal de edição ─────────────────────────────────────────────────
+  const editModal = document.getElementById("editModal");
+  const modalBody = document.getElementById("modalBody");
+  const modalTitle = document.getElementById("modalTitle");
+  document.getElementById("closeModal").addEventListener("click", () => editModal.classList.remove("is-open"));
+  editModal.addEventListener("click", (e) => { if (e.target === editModal) editModal.classList.remove("is-open"); });
+
+  function openEdit(uid) {
+    const it = allItems.find(x => x.uid === uid);
+    if (!it) return;
+    modalTitle.textContent = it.displayName || "(sem nome)";
+    modalBody.innerHTML = `
+      <div class="ep-text-sm ep-text-muted">
+        ${escapeHtml(it.email || "—")} · UID: <code style="font-size:11px">${escapeHtml(it.uid)}</code>
+      </div>
+      <div class="ep-text-sm">
+        <strong>Plano atual:</strong> ${escapeHtml(planoLabel(it.plano))}<br>
+        <strong>Trial até:</strong> ${fmtDate(it.trialUntil)}${it.trialActive ? " <span class='ep-badge ep-badge--ok'>ativo</span>" : ""}<br>
+        <strong>Cortesia admin até:</strong> ${fmtDate(it.adminGrantedUntil)}${it.adminGrantActive ? " <span class='ep-badge ep-badge--ok'>ativa</span>" : ""}<br>
+        <strong>Verificado:</strong> ${it.verificado ? "✓ sim" : "✗ não"} ${it.verifiedAt ? "(" + fmtDate(it.verifiedAt) + ")" : ""}
+      </div>
+
+      <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
+        <div class="ep-eyebrow">Conceder cortesia</div>
+        <div class="ep-flex" style="gap: 8px; align-items: end;">
+          <div class="ep-field" style="flex: 1;">
+            <label class="ep-label" for="grantMonths">Meses grátis</label>
+            <input id="grantMonths" class="ep-input" type="number" min="1" max="120" placeholder="ex.: 3">
+          </div>
+          <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="grant">Conceder</button>
+        </div>
+        <div class="ep-text-sm ep-text-muted">Estende <code>adminGrantedUntil</code>. Se já tem cortesia ativa, soma os meses no fim.</div>
+      </div>
+
+      <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
+        <div class="ep-eyebrow">Estender trial</div>
+        <div class="ep-flex" style="gap: 8px; align-items: end;">
+          <div class="ep-field" style="flex: 1;">
+            <label class="ep-label" for="trialDays">Dias adicionais</label>
+            <input id="trialDays" class="ep-input" type="number" min="1" max="3650" placeholder="ex.: 30">
+          </div>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="trial">Estender</button>
+        </div>
+      </div>
+
+      <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
+        <div class="ep-eyebrow">Mudar plano</div>
+        <div class="ep-flex" style="gap: 8px; align-items: end;">
+          <div class="ep-field" style="flex: 1;">
+            <label class="ep-label" for="newPlano">Novo plano</label>
+            <select id="newPlano" class="ep-input">
+              <option value="">—</option>
+              <option value="trial">Trial</option>
+              <option value="pro">Pro</option>
+              <option value="student-pending-review">Estudante (pendente)</option>
+              <option value="student-active">Estudante</option>
+              <option value="recem-formado-eligible">Recém-formado (elegível)</option>
+              <option value="recem-formado-active">Recém-formado</option>
+              <option value="canceled">Cancelado</option>
+            </select>
+          </div>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="plano">Aplicar</button>
+        </div>
+      </div>
+
+      <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
+        <div class="ep-eyebrow">Verificação manual</div>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="toggleVerif">${it.verificado ? "Desmarcar verificado" : "Marcar verificado"}</button>
+      </div>
+
+      <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
+        <div class="ep-eyebrow">Nota administrativa</div>
+        <textarea id="adminNote" class="ep-input" rows="2" placeholder="ex.: Cortesia 3 meses por indicação" style="font-family: inherit;">${escapeHtml(it.adminNote || "")}</textarea>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="note" style="align-self: flex-start;">Salvar nota</button>
+      </div>
+
+      <div id="modalStatus" class="ep-status"></div>
+    `;
+    modalBody.querySelectorAll("[data-action]").forEach(btn => {
+      btn.addEventListener("click", () => runAction(uid, btn.dataset.action));
+    });
+    editModal.classList.add("is-open");
+  }
+
+  async function runAction(uid, action) {
+    const statusEl = document.getElementById("modalStatus");
+    statusEl.className = "ep-status";
+    statusEl.textContent = "Processando…";
+    const body = {};
+    if (action === "grant") {
+      const v = parseInt(document.getElementById("grantMonths").value, 10);
+      if (!v || v <= 0) { statusEl.className = "ep-status is-err"; statusEl.textContent = "Informe um número de meses."; return; }
+      body.grantFreeMonths = v;
+    } else if (action === "trial") {
+      const v = parseInt(document.getElementById("trialDays").value, 10);
+      if (!v || v <= 0) { statusEl.className = "ep-status is-err"; statusEl.textContent = "Informe um número de dias."; return; }
+      body.extendTrialDays = v;
+    } else if (action === "plano") {
+      const v = document.getElementById("newPlano").value;
+      if (!v) { statusEl.className = "ep-status is-err"; statusEl.textContent = "Escolha um plano."; return; }
+      body.setPlano = v;
+    } else if (action === "toggleVerif") {
+      const it = allItems.find(x => x.uid === uid);
+      body.toggleVerificado = !it?.verificado;
+    } else if (action === "note") {
+      body.setAdminNote = document.getElementById("adminNote").value || "";
+    }
+    try {
+      const data = await api(`/therapy/admin/profissionais/${encodeURIComponent(uid)}`, {
+        method: "PATCH",
+        body: JSON.stringify(body)
+      });
+      statusEl.className = "ep-status is-ok";
+      statusEl.textContent = "Atualizado.";
+      // Merge changes back into allItems pra refletir na lista sem refetch.
+      const idx = allItems.findIndex(x => x.uid === uid);
+      if (idx >= 0 && data.profissional) {
+        const now = Date.now();
+        const updated = {
+          ...allItems[idx],
+          ...data.profissional,
+          trialActive: !!(data.profissional.trialUntil && data.profissional.trialUntil > now),
+          adminGrantActive: !!(data.profissional.adminGrantedUntil && data.profissional.adminGrantedUntil > now)
+        };
+        allItems[idx] = updated;
+        renderList(filterLocal(allItems, searchBox.value));
+        // Reabre o modal com dados frescos
+        openEdit(uid);
+        const st = document.getElementById("modalStatus");
+        st.className = "ep-status is-ok";
+        st.textContent = "Atualizado.";
+      }
+    } catch (err) {
+      statusEl.className = "ep-status is-err";
+      statusEl.textContent = "Erro: " + (err.message || "desconhecido");
+    }
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { show(loginPanel); return; }
+    try {
+      idToken = await user.getIdToken();
+      adminEmailEl.textContent = user.email || "";
+      show(dashboardPanel);
+      document.querySelector("[data-filter='all']").classList.add("is-active");
+      await loadList();
+    } catch (err) {
+      if (err.status === 403 || err.status === 503) show(forbiddenPanel);
+      else show(loginPanel);
+    }
+  });
+</script>
+
+</body>
+</html>
