@@ -100,6 +100,9 @@
           <div id="msgList" class="ep-chat-area" style="flex: 1; overflow-y: auto; min-height: 0; padding: 12px 14px; display: flex; flex-direction: column; gap: 3px;"></div>
           <div style="background: var(--ep-bg-2); border-top: 1px solid var(--ep-line); position: relative;">
             <div style="padding: 10px 12px; display: flex; gap: 8px; align-items: center;">
+              <button id="attachToggleBtn" type="button" aria-label="Anexar" title="Anexar" style="border: 0; background: transparent; cursor: pointer; padding: 4px; line-height: 1; border-radius: 8px; flex-shrink: 0; color: var(--ep-ink-3); display: flex; align-items: center;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
               <button id="emojiToggleBtn" type="button" aria-label="Inserir emoji" title="Inserir emoji" style="border: 0; background: transparent; cursor: pointer; padding: 4px; line-height: 1; border-radius: 8px; flex-shrink: 0; color: var(--ep-ink-3); display: flex; align-items: center;">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
               </button>
@@ -137,6 +140,23 @@
     </div>
   </div>
 </div>
+
+<!-- Menu de anexo (+ button) -->
+<div id="attachMenu" role="menu" style="position: fixed; z-index: 1002; display: none; background: #fff; border-radius: 14px; box-shadow: 0 6px 28px rgba(0,0,0,0.20); padding: 6px 0; min-width: 210px;">
+  <button data-attach="documento" style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 11px 18px; border: 0; background: transparent; cursor: pointer; font-size: 14px; color: #111; text-align: left;">
+    <span style="width: 36px; height: 36px; border-radius: 50%; background: #6c5ce7; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    </span>
+    Documento
+  </button>
+  <button data-attach="contato" style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 11px 18px; border: 0; background: transparent; cursor: pointer; font-size: 14px; color: #111; text-align: left;">
+    <span style="width: 36px; height: 36px; border-radius: 50%; background: #0984e3; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </span>
+    Contato
+  </button>
+</div>
+<input type="file" id="attachFileInput" accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.csv,.zip" style="display:none;">
 
 <!-- Emoji picker do composer (singleton, repositioned). Grid 10x6 = 60 emojis. -->
 <div id="composerEmojiPicker" role="dialog" style="position: fixed; z-index: 1001; display: none; background: #fff; border: 1px solid var(--ep-line); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); padding: 8px; gap: 2px; grid-template-columns: repeat(10, 36px); width: max-content;">
@@ -1134,6 +1154,53 @@
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && composerPicker.style.display !== "none") closeComposerPicker();
   });
+
+  // ─── Attach menu (+ button) ──────────────────────────────────────
+  const attachMenu = document.getElementById("attachMenu");
+  const attachFileInput = document.getElementById("attachFileInput");
+  const attachToggleBtn = document.getElementById("attachToggleBtn");
+
+  function closeAttachMenu() { attachMenu.style.display = "none"; }
+  function openAttachMenu() {
+    closeComposerPicker();
+    attachMenu.style.display = "block";
+    const rect = attachToggleBtn.getBoundingClientRect();
+    const w = attachMenu.offsetWidth;
+    let left = Math.max(8, rect.left);
+    if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+    const top = rect.top - attachMenu.offsetHeight - 8;
+    attachMenu.style.left = left + "px";
+    attachMenu.style.top  = top  + "px";
+  }
+
+  attachToggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (attachMenu.style.display !== "none") { closeAttachMenu(); return; }
+    openAttachMenu();
+  });
+  attachMenu.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-attach]");
+    if (!btn) return;
+    closeAttachMenu();
+    if (btn.dataset.attach === "documento") attachFileInput.click();
+    if (btn.dataset.attach === "contato") $("msgStatus").textContent = "Em breve: compartilhamento de contato.";
+  });
+  attachFileInput.addEventListener("change", () => {
+    const file = attachFileInput.files?.[0];
+    if (!file) return;
+    // Insere o nome do arquivo no campo como texto por enquanto (upload E2EE a implementar)
+    insertAtCursor($("msgInput"), `[Arquivo: ${file.name}]`);
+    attachFileInput.value = "";
+  });
+  document.addEventListener("click", (e) => {
+    if (attachMenu.style.display !== "none" && !attachMenu.contains(e.target) && e.target !== attachToggleBtn) closeAttachMenu();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeAttachMenu();
+  });
+
+  // Fecha attach ao abrir emoji e vice-versa (já coberto acima, mas garante)
+  emojiToggleBtn.addEventListener("click", () => closeAttachMenu(), true);
 
   function insertAtCursor(input, text) {
     const start = input.selectionStart ?? input.value.length;
