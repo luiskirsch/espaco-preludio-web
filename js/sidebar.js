@@ -20,7 +20,7 @@
       '.ep-notif-fab:focus-visible{outline:2px solid #c89b4a;outline-offset:2px;}',
       '.ep-notif-fab__badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#c0392b;color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center;border:2px solid #f5f0e8;box-shadow:0 2px 6px rgba(28,31,29,.20);}',
       'body:has(.ep-logout-fab) .ep-notif-fab{bottom:288px;}',
-      'body.ep-has-sidebar .ep-fab-stack>.ep-notif-fab{position:relative!important;top:auto!important;right:auto!important;bottom:auto!important;margin:0!important;order:3;}',
+      'body.ep-has-sidebar .ep-fab-stack>.ep-notif-fab{position:relative!important;top:auto!important;right:auto!important;bottom:auto!important;margin:0!important;}',
       '@media print{.ep-notif-fab{display:none!important;}}'
     ].join('');
     document.head.appendChild(styleEl);
