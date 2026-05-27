@@ -158,6 +158,22 @@
 </div>
 <input type="file" id="attachFileInput" accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.csv,.zip" style="display:none;">
 
+<!-- Modal: compartilhar contato de profissional -->
+<div class="ep-modal" id="contactPickerModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 520px;">
+    <h3 class="ep-modal__title">Compartilhar profissional</h3>
+    <div style="padding: 0 28px 16px;">
+      <input id="contactSearchInput" type="search" class="ep-input" placeholder="Buscar por nome ou especialidade…" style="width: 100%; margin-bottom: 12px;">
+      <div id="contactPickerList" style="max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;">
+        <div class="ep-text-xs ep-text-muted" style="padding: 8px;">Carregando…</div>
+      </div>
+    </div>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="contactPickerCancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Emoji picker do composer (singleton, repositioned). Grid 10x6 = 60 emojis. -->
 <div id="composerEmojiPicker" role="dialog" style="position: fixed; z-index: 1001; display: none; background: #fff; border: 1px solid var(--ep-line); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); padding: 8px; gap: 2px; grid-template-columns: repeat(10, 36px); width: max-content;">
   <!-- Grid populado abaixo (escolhi 60 emojis comuns) -->
@@ -1183,7 +1199,7 @@
     if (!btn) return;
     closeAttachMenu();
     if (btn.dataset.attach === "documento") attachFileInput.click();
-    if (btn.dataset.attach === "contato") $("msgStatus").textContent = "Em breve: compartilhamento de contato.";
+    if (btn.dataset.attach === "contato") openContactPicker();
   });
   attachFileInput.addEventListener("change", () => {
     const file = attachFileInput.files?.[0];
@@ -1201,6 +1217,79 @@
 
   // Fecha attach ao abrir emoji e vice-versa (já coberto acima, mas garante)
   emojiToggleBtn.addEventListener("click", () => closeAttachMenu(), true);
+
+  // ─── Contact picker (Contato) ─────────────────────────────────────
+  let allProfissionais = [];
+
+  async function loadProfissionais() {
+    if (allProfissionais.length) return; // cache
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/profissionais`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      allProfissionais = d.profissionais || [];
+    } catch { allProfissionais = []; }
+  }
+
+  function renderContactList(filter = "") {
+    const q = filter.toLowerCase().trim();
+    const list = q
+      ? allProfissionais.filter(p =>
+          p.displayName.toLowerCase().includes(q) ||
+          (p.especialidade || "").toLowerCase().includes(q)
+        )
+      : allProfissionais;
+
+    const el = $("contactPickerList");
+    if (!list.length) {
+      el.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:8px;">Nenhum profissional encontrado.</div>`;
+      return;
+    }
+    el.innerHTML = list.map(p => {
+      const sub = [p.especialidade, p.conselho, p.cidade && p.uf ? `${p.cidade}/${p.uf}` : (p.cidade || p.uf)].filter(Boolean).join(" · ");
+      return `
+        <button type="button" data-contact-uid="${escapeHtml(p.uid)}" style="display:flex; align-items:center; gap:12px; width:100%; padding:10px 12px; border:0; background:transparent; cursor:pointer; border-radius:8px; text-align:left; transition: background 0.1s;" onmouseover="this.style.background='var(--ep-bg-2)'" onmouseout="this.style.background='transparent'">
+          <span style="width:38px; height:38px; border-radius:50%; background:#2a3d5c; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; flex-shrink:0;">${escapeHtml(p.displayName.charAt(0).toUpperCase())}</span>
+          <span style="display:flex; flex-direction:column; gap:2px; overflow:hidden;">
+            <span style="font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(p.displayName)}</span>
+            <span class="ep-text-xs ep-text-muted" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(sub)}</span>
+          </span>
+        </button>
+      `;
+    }).join("");
+  }
+
+  async function openContactPicker() {
+    $("contactPickerModal").classList.add("is-open");
+    $("contactSearchInput").value = "";
+    $("contactPickerList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:8px;">Carregando…</div>`;
+    await loadProfissionais();
+    renderContactList();
+    $("contactSearchInput").focus();
+  }
+
+  $("contactPickerCancel").addEventListener("click", () => {
+    $("contactPickerModal").classList.remove("is-open");
+  });
+  $("contactSearchInput").addEventListener("input", (e) => {
+    renderContactList(e.target.value);
+  });
+  $("contactPickerList").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-contact-uid]");
+    if (!btn) return;
+    const uid = btn.dataset.contactUid;
+    const p = allProfissionais.find(x => x.uid === uid);
+    if (!p) return;
+    $("contactPickerModal").classList.remove("is-open");
+    const lines = [`👤 ${p.displayName}`];
+    if (p.especialidade) lines.push(`🏥 ${p.especialidade}`);
+    if (p.conselho)      lines.push(`📋 ${p.conselho}`);
+    if (p.cidade || p.uf) lines.push(`📍 ${[p.cidade, p.uf].filter(Boolean).join("/")}`);
+    if (p.telefone)      lines.push(`📞 ${p.telefone}`);
+    insertAtCursor($("msgInput"), lines.join("\n"));
+    $("msgInput").focus();
+  });
 
   function insertAtCursor(input, text) {
     const start = input.selectionStart ?? input.value.length;
