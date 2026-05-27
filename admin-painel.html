@@ -659,9 +659,17 @@
 
         </div>
 
-        <!-- Coluna direita: eventos ao vivo -->
+        <!-- Coluna direita: denúncias + eventos -->
         <div>
           <div class="ap-section" style="margin-top: 0;">
+            <h2 class="ap-section__title">⚠ Denúncias de mensagens</h2>
+            <p class="ap-section__sub">Clique para fechar/resolver.</p>
+            <div id="reportsList" class="ap-events">
+              <div class="ap-empty">Carregando…</div>
+            </div>
+          </div>
+
+          <div class="ap-section">
             <h2 class="ap-section__title" data-i18n="admin-painel:eventos.title">Eventos recentes</h2>
             <p class="ap-section__sub" data-i18n="admin-painel:eventos.sub">Últimas 20 ações de audit.</p>
             <div class="ap-events" id="eventsList">
@@ -741,6 +749,7 @@
     adminEmail.textContent = user.email || "?";
     showDashboard();
     fetchDashboard();
+    fetchReports();
     startAutoRefresh();
   });
 
@@ -771,7 +780,50 @@
     }
   }
 
-  refreshBtn.addEventListener("click", fetchDashboard);
+  refreshBtn.addEventListener("click", () => { fetchDashboard(); fetchReports(); });
+
+  // ─── Denúncias de mensagens ─────────────────────────────────────────
+  async function fetchReports() {
+    if (!idTokenCache) return;
+    const el = document.getElementById("reportsList");
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/denuncias?status=all`, {
+        headers: { "Authorization": `Bearer ${idTokenCache}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) { el.innerHTML = `<div class="ap-empty">Erro ao carregar.</div>`; return; }
+      const items = d.items || [];
+      if (items.length === 0) {
+        el.innerHTML = `<div class="ap-empty" style="color: #2d6a4f;">✓ Nenhuma denúncia registrada.</div>`;
+        return;
+      }
+      el.innerHTML = items.map(rep => {
+        const isOpen = rep.status === "open";
+        const ts = rep.createdAt ? new Date(rep.createdAt).toLocaleString(currentLocale(), { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
+        return `<div class="ap-event" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600; font-size: 13px;">${isOpen ? "🔴" : "✅"} ${esc(rep.reason?.slice(0, 120) || "Sem motivo")}</div>
+            <div style="font-size: 11px; color: var(--ep-ink-3); margin-top: 2px;">${ts} · Reporter: ${esc(rep.reporterRole)} · Sender: ${esc(rep.reportedSenderRole)}</div>
+          </div>
+          ${isOpen ? `<button class="ep-btn ep-btn--ghost ep-btn--sm" style="flex-shrink: 0;" data-close-report="${esc(rep.reportId)}">Fechar</button>` : `<span style="font-size: 11px; color: var(--ep-ink-3);">Resolvida</span>`}
+        </div>`;
+      }).join("");
+      el.querySelectorAll("[data-close-report]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          try {
+            await fetch(`${BACKEND_BASE_URL}/therapy/admin/denuncias/${encodeURIComponent(btn.dataset.closeReport)}`, {
+              method: "PATCH",
+              headers: { "Authorization": `Bearer ${idTokenCache}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ status: "closed" })
+            });
+            fetchReports();
+          } catch { btn.disabled = false; }
+        });
+      });
+    } catch { el.innerHTML = `<div class="ap-empty">Erro de conexão.</div>`; }
+  }
+  function esc(s) { return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
 
   // ─── Auto-refresh ───────────────────────────────────────────────────
   const AUTO_REFRESH_MS = 30_000;
@@ -779,7 +831,7 @@
   let autoTimer = null;
   function startAutoRefresh() {
     if (autoTimer || !autoEnabled) return;
-    autoTimer = setInterval(fetchDashboard, AUTO_REFRESH_MS);
+    autoTimer = setInterval(() => { fetchDashboard(); fetchReports(); }, AUTO_REFRESH_MS);
   }
   function stopAutoRefresh() {
     if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
