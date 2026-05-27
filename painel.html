@@ -635,6 +635,24 @@
   // (carregado em paralelo), então renderHero é re-chamado quando sessões
   // chegam pra atualizar a contagem semanal.
   let lastHeroData = null;
+  let nextSessionScheduledAt = null;
+  let countdownInterval = null;
+  function tickCountdown() {
+    const el = document.getElementById("heroCountdownBadge");
+    if (!el || !nextSessionScheduledAt) { clearInterval(countdownInterval); countdownInterval = null; return; }
+    const diffMin = (nextSessionScheduledAt - Date.now()) / 60000;
+    if (diffMin <= 0) {
+      el.textContent = tr("painel:hero.alreadyNow", "Já no horário");
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    } else if (diffMin < 60) {
+      el.textContent = tr("painel:hero.inMin", "Em {{min}}min", { min: Math.round(diffMin) });
+    } else {
+      el.remove();
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+  }
   async function loadHero() {
     async function doFetch(token) {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/painel/hoje`, {
@@ -684,8 +702,15 @@
       if (s.confirmedAt) badges.push(`<span class="ep-badge ep-badge--ok">${tr("painel:hero.confirmed","✓ Confirmada")}</span>`);
       const diffMin = (s.scheduledAt - Date.now()) / 60000;
       if (diffMin <= 0) badges.push(`<span class="ep-badge ep-badge--warn">${tr("painel:hero.alreadyNow","Já no horário")}</span>`);
-      else if (diffMin < 60) badges.push(`<span class="ep-badge ep-badge--warn">${tr("painel:hero.inMin","Em {{min}}min",{min:Math.round(diffMin)})}</span>`);
+      else if (diffMin < 60) badges.push(`<span id="heroCountdownBadge" class="ep-badge ep-badge--warn">${tr("painel:hero.inMin","Em {{min}}min",{min:Math.round(diffMin)})}</span>`);
       document.getElementById("heroNextBadges").innerHTML = badges.join(" ");
+      // Real-time countdown — atualiza a cada 10s sem recarregar a página
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+      if (diffMin > 0 && diffMin < 60) {
+        nextSessionScheduledAt = s.scheduledAt;
+        countdownInterval = setInterval(tickCountdown, 10000);
+      }
       const btn = document.getElementById("heroEnterBtn");
       btn.dataset.sessionId = s.sessionId;
       // Reaproveita o handler de "Entrar" da lista — dispara o mesmo data-action="enter" virtualmente
