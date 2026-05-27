@@ -92,7 +92,10 @@
           <p class="ep-text-muted ep-mt-8" data-i18n-html="mensagens:empty.body">Ou clique em <strong>+ Nova</strong> para começar uma com um paciente que já atendeu.</p>
         </div>
         <div id="msgThread" class="ep-hide" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
-          <div id="msgPeerName" style="padding: 10px 16px; background: var(--ep-bg-2); border-bottom: 1px solid var(--ep-line); font-weight: 600; font-size: 15px;">—</div>
+          <div id="msgPeerName" style="padding: 8px 16px; background: var(--ep-bg-2); border-bottom: 1px solid var(--ep-line); display: flex; flex-direction: column; gap: 1px;">
+            <span id="msgPeerNameText" style="font-weight: 600; font-size: 15px; line-height: 1.3;">—</span>
+            <span id="msgPeerPresence" style="font-size: 11px; font-weight: 400; line-height: 1.3; min-height: 14px;"></span>
+          </div>
           <div id="pinnedBanner" class="ep-hide" style="padding: 8px 12px; background: rgba(226,183,106,0.10); border-bottom: 1px solid var(--ep-line); font-size: 12.5px; cursor: pointer; display: flex; gap: 8px; align-items: center;"></div>
           <div id="msgList" class="ep-chat-area" style="flex: 1; overflow-y: auto; min-height: 0; padding: 12px 14px; display: flex; flex-direction: column; gap: 3px;"></div>
           <div style="padding: 8px 12px; background: var(--ep-bg-2); border-top: 1px solid var(--ep-line); display: flex; gap: 8px; align-items: center;">
@@ -423,6 +426,28 @@
     return d.toLocaleString(loc, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
   }
 
+  // Exibe status de presença do paciente abaixo do nome. Só visível pro profissional.
+  // Mostra "● Online agora" se lastSeenByPatient < 5min, senão "Visto às HH:MM".
+  function renderPresence(lastSeenMs) {
+    const el = $("msgPeerPresence");
+    if (!el) return;
+    if (!lastSeenMs) { el.textContent = ""; el.style.color = ""; return; }
+    const diffMs = Date.now() - lastSeenMs;
+    if (diffMs < 5 * 60 * 1000) {
+      el.textContent = "● Online agora";
+      el.style.color = "#25d366";
+    } else {
+      const d = new Date(lastSeenMs);
+      const loc = currentLocale();
+      const isToday = d.toDateString() === new Date().toDateString();
+      const when = isToday
+        ? d.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" })
+        : d.toLocaleString(loc, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+      el.textContent = "Visto às " + when;
+      el.style.color = "var(--ep-ink-3)";
+    }
+  }
+
   // Cache de threadKeys decifradas (por threadId).
   const threadKeyCache = new Map();
   let currentThreadId = null;
@@ -585,6 +610,8 @@
     $("msgThread").classList.remove("ep-hide");
     $("msgList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${escapeHtml(tr("mensagens:js.loading", "Carregando…"))}</div>`;
     $("msgStatus").textContent = "";
+    $("msgPeerNameText").textContent = "—";
+    renderPresence(null);
 
     // Busca thread doc
     const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(threadId)}`, {
@@ -596,7 +623,8 @@
       return;
     }
     currentThread = d.thread;
-    $("msgPeerName").textContent = currentThread.patientDisplayName || tr("mensagens:js.peerFallback", "Paciente");
+    $("msgPeerNameText").textContent = currentThread.patientDisplayName || tr("mensagens:js.peerFallback", "Paciente");
+    renderPresence(currentThread.lastSeenByPatient || null);
 
     // Decifra threadKey (cache)
     let threadKeyBytes = threadKeyCache.get(threadId);
@@ -782,6 +810,7 @@
     lastSeenMessageMs = newest;
 
     renderMessages({ scroll: isFirstLoad || grewSinceLast });
+    if (d.lastSeenByPatient) renderPresence(d.lastSeenByPatient);
 
     // Se chegou msg nova, re-renderiza o sidebar (preview + time + unread).
     // Se a msg nova eh do peer (nao minha), marca como lida tambem — user

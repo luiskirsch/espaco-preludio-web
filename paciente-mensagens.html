@@ -236,7 +236,18 @@
   let currentThreadId = null;
   let currentThread = null;
   let pollTimer = null;
+  let presenceTimer = null;
   let lastSeenMessageMs = 0;
+
+  function pingPresence(threadId) {
+    fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(threadId)}/patient-presence`, {
+      method: "PATCH",
+      headers: { "Authorization": `Bearer ${idToken}` }
+    }).catch(() => {});
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && currentThreadId) pingPresence(currentThreadId);
+  });
 
   $("logoutBtn").addEventListener("click", async () => {
     clearPatientDek();
@@ -282,6 +293,7 @@
 
   async function openThread(threadId) {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    if (presenceTimer) { clearInterval(presenceTimer); presenceTimer = null; }
     currentThreadId = threadId;
     $("msgEmpty").classList.add("ep-hide");
     $("msgThread").classList.remove("ep-hide");
@@ -322,6 +334,12 @@
     }).catch(() => {});
 
     pollTimer = setInterval(() => refreshMessages(threadKeyBytes), 8000);
+
+    // Presença: ping imediato + heartbeat a cada 60s enquanto thread aberta
+    pingPresence(threadId);
+    if (presenceTimer) clearInterval(presenceTimer);
+    presenceTimer = setInterval(() => pingPresence(currentThreadId), 60000);
+
     loadThreads();
   }
 
