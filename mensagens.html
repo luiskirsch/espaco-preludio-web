@@ -180,17 +180,25 @@
   .ep-chat-bubble__chevron:hover { background: rgba(0,0,0,0.08) !important; }
   #msgCtxMenu button:hover { background: var(--ep-bg-2); }
 
-  /* Estabilidade visual: bolhas de mensagem, cards de thread no sidebar
-     e botoes dentro do chat NAO se mexem no hover (overrides do .ep-btn
-     padrao que sobe 1px). Hover/active mudam so cor — sem shift de layout
-     que fica esquisito em chat. */
+  /* Estabilidade visual: bolhas de mensagem, cards de thread no sidebar,
+     botoes do header/composer (+ Nova, Enviar) e botoes dentro do chat
+     NAO se mexem no hover. Override do .ep-btn:hover { translateY(-1px) }
+     padrao que causava jitter visual nos cards. */
   #threadList button:hover,
   #threadList button:active,
+  .ep-thread-card:hover,
+  .ep-thread-card:active,
   .ep-chat-bubble:hover,
   .ep-chat-bubble:active,
   .ep-chat-bubble button:hover,
   .ep-chat-bubble button:active,
   #pinnedBanner:hover,
+  #newThreadBtn:hover,
+  #newThreadBtn:active,
+  #msgSendBtn:hover,
+  #msgSendBtn:active,
+  #emojiToggleBtn:hover,
+  #emojiToggleBtn:active,
   #msgCtxMenu button:hover,
   #msgCtxMenu button:active,
   #emojiPicker button:hover,
@@ -200,8 +208,19 @@
     transform: none !important;
   }
   #emojiPicker button:hover,
-  #composerEmojiPicker button:hover {
+  #composerEmojiPicker button:hover,
+  #emojiToggleBtn:hover {
     background: var(--ep-bg-2);
+  }
+
+  /* Hover nos thread cards (sidebar) — feedback visual sutil. Cards ativos
+     mantem o estilo accent-soft existente (selector :not(.is-active)). */
+  .ep-thread-card:not(.is-active):hover {
+    background: rgba(226, 183, 106, 0.10) !important;
+    border-color: rgba(226, 183, 106, 0.35) !important;
+  }
+  .ep-thread-card.is-active:hover {
+    background: rgba(226, 183, 106, 0.20) !important;
   }
 </style>
 
@@ -410,6 +429,7 @@
       const isActive = t.threadId === currentThreadId;
       const bg = isActive ? "var(--ep-accent-soft)" : "var(--ep-bg-2)";
       const borderColor = isActive ? "var(--ep-accent)" : "var(--ep-line)";
+      const activeClass = isActive ? " is-active" : "";
       const initials = peerName.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "?";
       // Bolinha verde com contador estilo WhatsApp. So mostra se tiver msg
       // nao lida (unreadCount > 0). 99+ pra contadores grandes nao quebrarem.
@@ -430,7 +450,7 @@
       }
 
       return `
-        <button type="button" data-thread-id="${escapeHtml(t.threadId)}" style="text-align: left; padding: 10px 12px; margin: 6px 8px; border: 1px solid ${borderColor}; border-radius: 12px; background: ${bg}; cursor: pointer; display: flex; gap: 10px; align-items: center; width: calc(100% - 16px); transition: background-color 0.15s ease, border-color 0.15s ease;">
+        <button type="button" class="ep-thread-card${activeClass}" data-thread-id="${escapeHtml(t.threadId)}" style="text-align: left; padding: 10px 12px; margin: 6px 8px; border: 1px solid ${borderColor}; border-radius: 12px; background: ${bg}; cursor: pointer; display: flex; gap: 10px; align-items: center; width: calc(100% - 16px); transition: background-color 0.15s ease, border-color 0.15s ease;">
           <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--ep-accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; flex-shrink: 0;">${escapeHtml(initials)}</div>
           <div style="flex: 1; min-width: 0;">
             <div class="ep-flex" style="justify-content: space-between; align-items: center; gap: 6px;">
@@ -1064,13 +1084,16 @@
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+      // Mantem o flag por +5s apos resolve. Cobre janela de propagacao do
+      // Firestore — polling concorrente nesse intervalo nao sobrescreve a
+      // reacao otimista. 5s eh conservador (propagacao real eh ~100ms).
+      setTimeout(() => pendingReactions.delete(msgId), 5000);
     } catch (err) {
       showToast(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }), "err");
+      pendingReactions.delete(msgId);
       // Re-fetch pra recuperar estado correto
       const threadKey = threadKeyCache.get(currentThreadId);
       if (threadKey) refreshMessages(threadKey);
-    } finally {
-      pendingReactions.delete(msgId);
     }
   }
 
