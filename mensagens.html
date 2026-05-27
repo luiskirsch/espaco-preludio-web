@@ -558,15 +558,15 @@
         ? `<div style="font-size: 11px; opacity: 0.7; font-style: italic; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 14 20 9 15 4"></polyline><path d="M4 20v-7a4 4 0 0 1 4-4h12"></path></svg> ${escapeHtml(tr("mensagens:js.forwardedLabel", "Encaminhada"))}</div>`
         : "";
 
-      // Reactions overlay estilo WhatsApp: pill flutuante no canto inferior
-      // direito da bolha, overlapping pra baixo. Sombra + bg branco + count
+      // Reactions overlay estilo WhatsApp: pill flutuante BRANCA no canto
+      // inferior direito da bolha, overlapping pra baixo. Sombra + count
       // so se > 1. Bolha ganha margin-bottom extra quando tem reactions
       // pra nao colidir com a proxima.
       let reactionsOverlay = "";
       const hasReactions = Array.isArray(m.reactions) && m.reactions.length > 0;
       if (hasReactions) {
         reactionsOverlay = `<div style="position: absolute; bottom: -12px; right: 10px; display: flex; gap: 2px; z-index: 1; flex-direction: row-reverse;">` +
-          m.reactions.map(r => `<button data-react-emoji="${escapeHtml(r.emoji)}" data-react-msg="${escapeHtml(m.messageId)}" title="${r.mine ? escapeHtml(tr("mensagens:js.removeReaction", "Remover sua reação")) : escapeHtml(tr("mensagens:js.addReaction", "Reagir"))}" style="background: ${r.mine ? "var(--ep-accent-soft)" : "#fff"}; border: 1px solid ${r.mine ? "var(--ep-accent)" : "var(--ep-line)"}; border-radius: 999px; padding: 2px 7px; font-size: 13px; cursor: pointer; display: inline-flex; gap: 3px; align-items: center; line-height: 1; box-shadow: 0 2px 6px rgba(0,0,0,0.15); color: var(--ep-ink);"><span style="font-size: 14px;">${r.emoji}</span>${r.count > 1 ? `<span style="font-size: 11px; font-weight: 600;">${r.count}</span>` : ""}</button>`).join("") +
+          m.reactions.map(r => `<button data-react-emoji="${escapeHtml(r.emoji)}" data-react-msg="${escapeHtml(m.messageId)}" title="${r.mine ? escapeHtml(tr("mensagens:js.removeReaction", "Remover sua reação")) : escapeHtml(tr("mensagens:js.addReaction", "Reagir"))}" style="background: #fff; border: 1px solid var(--ep-line); border-radius: 999px; padding: 2px 7px; font-size: 13px; cursor: pointer; display: inline-flex; gap: 3px; align-items: center; line-height: 1; box-shadow: 0 2px 6px rgba(0,0,0,0.18); color: var(--ep-ink);"><span style="font-size: 14px;">${r.emoji}</span>${r.count > 1 ? `<span style="font-size: 11px; font-weight: 600;">${r.count}</span>` : ""}</button>`).join("") +
           `</div>`;
       }
 
@@ -602,6 +602,11 @@
       } else {
         plain = "";
       }
+      // Se ha um toggleReaction em voo pra essa msg, PRESERVA reactions
+      // local (otimista) — server pode devolver dado antigo enquanto write
+      // ainda nao propagou. Senao, usa o que veio do server.
+      const isReactPending = pendingReactions.has(m.messageId);
+      const existing = messageCache.get(m.messageId);
       messageCache.set(m.messageId, {
         messageId: m.messageId,
         senderRole: m.senderRole,
@@ -614,9 +619,9 @@
         favoritedByMe: !!m.favoritedByMe,
         pinned: !!m.pinned,
         pinnedAt: m.pinnedAt || null,
-        // Reactions: backend agrega como [{emoji, count, mine}]. Sem isso,
-        // o polling sobrescrevia o cache e os chips sumiam.
-        reactions: Array.isArray(m.reactions) ? m.reactions : []
+        reactions: isReactPending
+          ? (existing?.reactions || [])
+          : (Array.isArray(m.reactions) ? m.reactions : [])
       });
     }
 
@@ -1002,6 +1007,12 @@
     }
   });
 
+  // Set de msgs com reaction otimista em voo (POST /react). Polling do
+  // refreshMessages que rodar nesse intervalo NAO sobrescreve o campo
+  // reactions pra evitar race (servidor pode devolver dado antigo enquanto
+  // o write ainda nao propagou).
+  const pendingReactions = new Set();
+
   async function toggleReaction(msgId, emoji) {
     const m = messageCache.get(msgId);
     if (!m) return;
@@ -1020,6 +1031,7 @@
     }
     m.reactions = rx;
     renderMessages({ scroll: false });
+    pendingReactions.add(msgId);
     try {
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/messages/${encodeURIComponent(msgId)}/react`, {
         method: "POST",
@@ -1033,6 +1045,8 @@
       // Re-fetch pra recuperar estado correto
       const threadKey = threadKeyCache.get(currentThreadId);
       if (threadKey) refreshMessages(threadKey);
+    } finally {
+      pendingReactions.delete(msgId);
     }
   }
 
