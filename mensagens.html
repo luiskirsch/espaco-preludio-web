@@ -232,6 +232,49 @@
     border-bottom: 0 solid transparent;
   }
 
+  /* Dark mode: enviadas = verde WhatsApp, recebidas = branco com texto preto */
+  html[data-theme="dark"] .ep-chat-bubble--mine {
+    background: #005c4b !important;
+    color: #e9edef !important;
+  }
+  html[data-theme="dark"] .ep-chat-bubble--mine::after {
+    border-left-color: #005c4b !important;
+  }
+  html[data-theme="dark"] .ep-chat-bubble--theirs {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  html[data-theme="dark"] .ep-chat-bubble--theirs::after {
+    border-right-color: #fff !important;
+  }
+  html[data-theme="dark"] .ep-chat-bubble--theirs .ep-wb-meta {
+    color: #667781 !important;
+    opacity: 1 !important;
+  }
+  html[data-theme="dark"] .ep-chat-bubble--mine .ep-wb-meta {
+    color: rgba(255,255,255,0.7) !important;
+    opacity: 1 !important;
+  }
+  html[data-theme="dark"] .ep-chat-bubble--theirs .ep-chat-bubble__chevron {
+    color: #667781 !important;
+  }
+  /* Sidebar + header + composer dark */
+  html[data-theme="dark"] .ep-chat-shell {
+    border-color: #2a2a2a !important;
+  }
+  html[data-theme="dark"] .ep-chat-shell aside {
+    background: #111b21 !important;
+  }
+  html[data-theme="dark"] #msgPeerName {
+    background: #1f2c33 !important;
+    color: #e9edef !important;
+  }
+  /* Reply quote ajusta no dark pra theirs (texto preto precisa borda visivel) */
+  html[data-theme="dark"] .ep-chat-bubble--theirs [data-jump] {
+    border-left-color: #005c4b !important;
+    background: rgba(0,0,0,0.06) !important;
+  }
+
   .ep-chat-bubble:hover .ep-chat-bubble__chevron { opacity: 1 !important; }
   .ep-chat-bubble__chevron:hover { background: rgba(0,0,0,0.08) !important; }
   #msgCtxMenu button:hover { background: var(--ep-bg-2); }
