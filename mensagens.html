@@ -1036,10 +1036,12 @@
       const reason = window.prompt(tr("mensagens:js.reportPrompt", "Por que está denunciando essa mensagem? (descreva brevemente)"));
       if (reason == null || !reason.trim()) return;
       try {
+        // Envia snapshot do plaintext junto — admin precisa ler o conteudo
+        // reportado sem ter a key E2EE da thread.
         const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/messages/${encodeURIComponent(msgId)}/report`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ reason: reason.trim() })
+          body: JSON.stringify({ reason: reason.trim(), messageSnapshot: m.plain || "" })
         });
         const d = await r.json().catch(() => ({}));
         if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);

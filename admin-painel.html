@@ -800,12 +800,23 @@
       el.innerHTML = items.map(rep => {
         const isOpen = rep.status === "open";
         const ts = rep.createdAt ? new Date(rep.createdAt).toLocaleString(currentLocale(), { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
-        return `<div class="ap-event" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-          <div style="flex: 1; min-width: 0;">
-            <div style="font-weight: 600; font-size: 13px;">${isOpen ? "🔴" : "✅"} ${esc(rep.reason?.slice(0, 120) || "Sem motivo")}</div>
-            <div style="font-size: 11px; color: var(--ep-ink-3); margin-top: 2px;">${ts} · Reporter: ${esc(rep.reporterRole)} · Sender: ${esc(rep.reportedSenderRole)}</div>
+        const reporterName = rep.reporterName || rep.reporterUid?.slice(0, 8) || "?";
+        const reportedName = rep.reportedSenderName || rep.reportedSenderUid?.slice(0, 8) || "?";
+        const snapshotBlock = rep.messageSnapshot
+          ? `<div style="margin-top: 6px; padding: 8px 10px; background: var(--ep-bg-2); border-left: 3px solid var(--ep-accent); border-radius: 4px; font-size: 13px; color: var(--ep-ink-2); max-height: 80px; overflow: auto;">💬 "${esc(rep.messageSnapshot.slice(0, 500))}"</div>`
+          : "";
+        return `<div class="ap-event" style="padding: 12px; border: 1px solid var(--ep-line); border-radius: 8px; margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-weight: 600; font-size: 13px;">${isOpen ? "🔴 Aberta" : "✅ Resolvida"}</div>
+              <div style="font-size: 12px; margin-top: 4px;"><strong>Quem denunciou:</strong> ${esc(reporterName)} (${esc(rep.reporterRole)})</div>
+              <div style="font-size: 12px;"><strong>Denunciado:</strong> ${esc(reportedName)} (${esc(rep.reportedSenderRole)})</div>
+              <div style="font-size: 12px; margin-top: 4px;"><strong>Motivo:</strong> ${esc(rep.reason || "Sem motivo")}</div>
+              ${snapshotBlock}
+              <div style="font-size: 11px; color: var(--ep-ink-3); margin-top: 6px;">${ts}${rep.reviewedBy ? ` · Revisada por ${esc(rep.reviewedBy)}` : ""}</div>
+            </div>
+            ${isOpen ? `<button class="ep-btn ep-btn--ghost ep-btn--sm" style="flex-shrink: 0;" data-close-report="${esc(rep.reportId)}">Fechar</button>` : ""}
           </div>
-          ${isOpen ? `<button class="ep-btn ep-btn--ghost ep-btn--sm" style="flex-shrink: 0;" data-close-report="${esc(rep.reportId)}">Fechar</button>` : `<span style="font-size: 11px; color: var(--ep-ink-3);">Resolvida</span>`}
         </div>`;
       }).join("");
       el.querySelectorAll("[data-close-report]").forEach(btn => {
