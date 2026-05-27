@@ -96,6 +96,7 @@
           <div id="pinnedBanner" class="ep-hide" style="padding: 8px 12px; background: rgba(226,183,106,0.10); border-bottom: 1px solid var(--ep-line); font-size: 12.5px; cursor: pointer; display: flex; gap: 8px; align-items: center;"></div>
           <div id="msgList" style="flex: 1; overflow-y: auto; min-height: 0; padding: 16px; display: flex; flex-direction: column; gap: 8px;"></div>
           <div style="padding: 12px 16px; border-top: 1px solid var(--ep-line); display: flex; gap: 8px; align-items: center;">
+            <button id="emojiToggleBtn" type="button" aria-label="Inserir emoji" title="Inserir emoji" style="border: 0; background: transparent; cursor: pointer; padding: 6px; font-size: 22px; line-height: 1; border-radius: 8px;">😀</button>
             <input id="msgInput" type="text" class="ep-input" data-i18n-placeholder="mensagens:composer.placeholder" placeholder="Digite uma mensagem…" maxlength="3000" style="flex: 1;">
             <button id="msgSendBtn" type="button" class="ep-btn ep-btn--primary" data-i18n="mensagens:composer.send">Enviar</button>
           </div>
@@ -130,7 +131,12 @@
   </div>
 </div>
 
-<!-- Emoji picker (singleton, repositioned) -->
+<!-- Emoji picker do composer (singleton, repositioned). Grid 10x6 = 60 emojis. -->
+<div id="composerEmojiPicker" role="dialog" style="position: fixed; z-index: 1001; display: none; background: #fff; border: 1px solid var(--ep-line); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); padding: 8px; gap: 2px; grid-template-columns: repeat(10, 1fr); max-width: 360px;">
+  <!-- Grid populado abaixo (escolhi 60 emojis comuns) -->
+</div>
+
+<!-- Emoji picker (reactions — 6 emojis fixos, anchorado na bolha) -->
 <div id="emojiPicker" role="dialog" style="position: fixed; z-index: 1001; display: none; background: #fff; border: 1px solid var(--ep-line); border-radius: 999px; box-shadow: 0 4px 16px rgba(0,0,0,0.18); padding: 6px 10px; gap: 4px;">
   <button data-emoji="👍" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 8px;">👍</button>
   <button data-emoji="❤️" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 8px;">❤️</button>
@@ -563,7 +569,13 @@
         status: "sent",
         deleted: !!m.deleted,
         replyToMessageId: m.replyToMessageId || null,
-        favoritedByMe: !!m.favoritedByMe
+        forwardedFromMessageId: m.forwardedFromMessageId || null,
+        favoritedByMe: !!m.favoritedByMe,
+        pinned: !!m.pinned,
+        pinnedAt: m.pinnedAt || null,
+        // Reactions: backend agrega como [{emoji, count, mine}]. Sem isso,
+        // o polling sobrescrevia o cache e os chips sumiam.
+        reactions: Array.isArray(m.reactions) ? m.reactions : []
       });
     }
 
@@ -819,6 +831,67 @@
       }
     }
   });
+
+  // ─── Emoji picker do composer (60 emojis comuns) ─────────────────
+  const COMPOSER_EMOJIS = [
+    "😀","😃","😄","😁","😆","😅","😂","🤣","😊","🙂",
+    "😉","😍","🥰","😘","😋","😎","🤩","🥳","😏","😞",
+    "😢","😭","😤","😠","🤬","🤯","😱","😨","🥺","🙄",
+    "😴","🤐","🤔","🤫","🤥","😷","🤒","🤕","❤️","🧡",
+    "💛","💚","💙","💜","🖤","💔","💯","👍","👎","👌",
+    "✌️","🤞","🤝","🙏","👏","🙌","💪","👋","🎉","🔥"
+  ];
+  const composerPicker = document.getElementById("composerEmojiPicker");
+  composerPicker.innerHTML = COMPOSER_EMOJIS.map(e =>
+    `<button type="button" data-insert-emoji="${e}" style="font-size: 20px; background: transparent; border: 0; cursor: pointer; padding: 4px; border-radius: 6px; line-height: 1;">${e}</button>`
+  ).join("");
+
+  const emojiToggleBtn = document.getElementById("emojiToggleBtn");
+  function toggleComposerPicker() {
+    if (composerPicker.style.display !== "none") { closeComposerPicker(); return; }
+    composerPicker.style.display = "grid";
+    const rect = emojiToggleBtn.getBoundingClientRect();
+    // Posiciona acima do botao, alinhado a esquerda. Clamp na viewport.
+    const w = composerPicker.offsetWidth;
+    let left = Math.max(8, rect.left);
+    if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+    let top = rect.top - composerPicker.offsetHeight - 8;
+    if (top < 8) top = rect.bottom + 8;
+    composerPicker.style.left = left + "px";
+    composerPicker.style.top  = top  + "px";
+  }
+  function closeComposerPicker() { composerPicker.style.display = "none"; }
+
+  emojiToggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleComposerPicker();
+  });
+  composerPicker.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-insert-emoji]");
+    if (!btn) return;
+    const emoji = btn.dataset.insertEmoji;
+    insertAtCursor($("msgInput"), emoji);
+    // Mantem picker aberto pra inserir varios. Esc/click fora fecha.
+  });
+  document.addEventListener("click", (e) => {
+    if (composerPicker.style.display !== "none" && !composerPicker.contains(e.target) && e.target !== emojiToggleBtn) {
+      closeComposerPicker();
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && composerPicker.style.display !== "none") closeComposerPicker();
+  });
+
+  function insertAtCursor(input, text) {
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+    const before = input.value.slice(0, start);
+    const after  = input.value.slice(end);
+    input.value = before + text + after;
+    input.focus();
+    const newPos = start + text.length;
+    input.setSelectionRange(newPos, newPos);
+  }
 
   // ─── Emoji picker (reagir) ────────────────────────────────────────
   const emojiPicker = document.getElementById("emojiPicker");
