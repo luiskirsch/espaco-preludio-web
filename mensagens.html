@@ -179,6 +179,30 @@
   .ep-chat-bubble:hover .ep-chat-bubble__chevron { opacity: 1 !important; }
   .ep-chat-bubble__chevron:hover { background: rgba(0,0,0,0.08) !important; }
   #msgCtxMenu button:hover { background: var(--ep-bg-2); }
+
+  /* Estabilidade visual: bolhas de mensagem, cards de thread no sidebar
+     e botoes dentro do chat NAO se mexem no hover (overrides do .ep-btn
+     padrao que sobe 1px). Hover/active mudam so cor — sem shift de layout
+     que fica esquisito em chat. */
+  #threadList button:hover,
+  #threadList button:active,
+  .ep-chat-bubble:hover,
+  .ep-chat-bubble:active,
+  .ep-chat-bubble button:hover,
+  .ep-chat-bubble button:active,
+  #pinnedBanner:hover,
+  #msgCtxMenu button:hover,
+  #msgCtxMenu button:active,
+  #emojiPicker button:hover,
+  #emojiPicker button:active,
+  #composerEmojiPicker button:hover,
+  #composerEmojiPicker button:active {
+    transform: none !important;
+  }
+  #emojiPicker button:hover,
+  #composerEmojiPicker button:hover {
+    background: var(--ep-bg-2);
+  }
 </style>
 
 <script type="module">
