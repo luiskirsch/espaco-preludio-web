@@ -129,6 +129,25 @@
   </div>
 </div>
 
+<!-- Menu de contexto da mensagem (singleton, repositioned no click) -->
+<div id="msgCtxMenu" role="menu" style="position: fixed; z-index: 1000; display: none; background: #fff; border: 1px solid var(--ep-line); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); min-width: 200px; padding: 6px 0; font-size: 14px;">
+  <button data-ctx="responder"  style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: var(--ep-ink);"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg> Responder</button>
+  <button data-ctx="copiar"     style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: var(--ep-ink);"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copiar</button>
+  <button data-ctx="reagir"     style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: var(--ep-ink);"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg> Reagir</button>
+  <button data-ctx="encaminhar" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: var(--ep-ink);"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 14 20 9 15 4"></polyline><path d="M4 20v-7a4 4 0 0 1 4-4h12"></path></svg> Encaminhar</button>
+  <button data-ctx="fixar"      style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: var(--ep-ink);"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14l-1.5-7H6.5L5 17z"></path><path d="M8 10V6a4 4 0 0 1 8 0v4"></path></svg> Fixar</button>
+  <button data-ctx="favoritar"  style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: var(--ep-ink);"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> <span data-favorite-label>Favoritar</span></button>
+  <hr style="border: 0; border-top: 1px solid var(--ep-line); margin: 4px 0;">
+  <button data-ctx="denunciar"  style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: var(--ep-ink);"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 15v-3M22 12l-2 8H4l-2-8 5 4 5-8 5 8 5-4z"></path></svg> Denunciar</button>
+  <button data-ctx="apagar" data-only-mine="1" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: #b8453d;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg> Apagar</button>
+</div>
+
+<style>
+  .ep-chat-bubble:hover .ep-chat-bubble__chevron { opacity: 1 !important; }
+  .ep-chat-bubble__chevron:hover { background: rgba(0,0,0,0.08) !important; }
+  #msgCtxMenu button:hover { background: var(--ep-bg-2); }
+</style>
+
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
@@ -424,14 +443,46 @@
       const mine = m.senderRole === "therapist";
       const div = document.createElement("div");
       div.dataset.msgId = m.messageId;
-      div.style.cssText = `align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 70%; padding: 8px 12px; border-radius: 12px; background: ${mine ? "var(--ep-accent)" : "var(--ep-bg-2)"}; color: ${mine ? "#fff" : "var(--ep-ink)"}; font-size: 14px; opacity: ${m.status === "sending" ? "0.6" : "1"}; transition: opacity 0.18s ease;`;
+      div.className = "ep-chat-bubble";
+      div.style.cssText = `position: relative; align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 70%; padding: 8px 12px 8px 12px; padding-right: ${mine ? 28 : 12}px; border-radius: 12px; background: ${mine ? "var(--ep-accent)" : "var(--ep-bg-2)"}; color: ${mine ? "#fff" : "var(--ep-ink)"}; font-size: 14px; opacity: ${m.status === "sending" ? "0.6" : "1"}; transition: opacity 0.18s ease;`;
+
+      // Msg apagada: mostra placeholder italic muted, sem chevron.
+      if (m.deleted) {
+        div.innerHTML = `<div style="font-style: italic; opacity: 0.7;">${escapeHtml(tr("mensagens:js.deletedMsg", "Mensagem apagada"))}</div><div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">${fmtTime(m.createdAt)}</div>`;
+        list.appendChild(div);
+        continue;
+      }
+
+      // Reply quote (se a msg foi resposta a outra)
+      let replyBlock = "";
+      if (m.replyToMessageId) {
+        const orig = messageCache.get(m.replyToMessageId);
+        const origText = orig?.plain || tr("mensagens:js.replyOrigUnavailable", "Mensagem original");
+        const origSenderLabel = orig?.senderRole === "therapist"
+          ? tr("mensagens:js.youLabel", "Você")
+          : (currentThread?.patientDisplayName || tr("mensagens:js.peerFallback", "Paciente"));
+        replyBlock = `<div style="border-left: 3px solid ${mine ? "rgba(255,255,255,0.5)" : "var(--ep-accent)"}; padding: 4px 8px; margin-bottom: 6px; font-size: 12px; opacity: 0.85; background: ${mine ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.04)"}; border-radius: 4px; cursor: pointer;" data-jump="${escapeHtml(m.replyToMessageId)}">
+          <div style="font-weight: 600; margin-bottom: 2px;">${escapeHtml(origSenderLabel)}</div>
+          <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(origText.slice(0, 80))}</div>
+        </div>`;
+      }
+
       let tick = "";
       if (mine) {
         if (m.status === "sending") tick = ' <span style="opacity: 0.7;">✓</span>';
         else if (m.status === "error") tick = ' <span style="color: #ffb4b4;" title="Erro">!</span>';
         else tick = ' <span style="opacity: 0.7;">✓</span>';
       }
-      div.innerHTML = `<div>${escapeHtml(m.plain)}</div><div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">${fmtTime(m.createdAt)}${tick}</div>`;
+
+      // Indicador favoritado (estrela amarela)
+      const favIcon = m.favoritedByMe
+        ? ` <span title="${escapeHtml(tr("mensagens:js.favorited", "Favoritada"))}" style="color: #f0c850;">★</span>`
+        : "";
+
+      // Chevron (so visivel no hover via CSS)
+      const chevron = `<button class="ep-chat-bubble__chevron" data-action="open-menu" aria-label="Opções" style="position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border: 0; background: transparent; color: ${mine ? "rgba(255,255,255,0.85)" : "var(--ep-ink-3)"}; cursor: pointer; opacity: 0; transition: opacity 0.15s; border-radius: 4px; display: flex; align-items: center; justify-content: center; padding: 0;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>`;
+
+      div.innerHTML = `${chevron}${replyBlock}<div>${escapeHtml(m.plain)}</div><div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">${fmtTime(m.createdAt)}${favIcon}${tick}</div>`;
       list.appendChild(div);
     }
     if (opts.scroll !== false) list.scrollTop = list.scrollHeight;
@@ -449,17 +500,26 @@
     const isFirstLoad = lastRenderedThreadId !== currentThreadId;
     for (const m of (d.messages || [])) {
       let plain;
-      try {
-        plain = await decryptNote({ ciphertext: m.ciphertext, iv: m.iv }, threadKeyBytes);
-      } catch {
-        plain = tr("mensagens:js.corruptedMsg", "[mensagem corrompida]");
+      if (m.deleted) {
+        plain = "";
+      } else if (m.ciphertext) {
+        try {
+          plain = await decryptNote({ ciphertext: m.ciphertext, iv: m.iv }, threadKeyBytes);
+        } catch {
+          plain = tr("mensagens:js.corruptedMsg", "[mensagem corrompida]");
+        }
+      } else {
+        plain = "";
       }
       messageCache.set(m.messageId, {
         messageId: m.messageId,
         senderRole: m.senderRole,
         plain,
         createdAt: m.createdAt,
-        status: "sent"
+        status: "sent",
+        deleted: !!m.deleted,
+        replyToMessageId: m.replyToMessageId || null,
+        favoritedByMe: !!m.favoritedByMe
       });
     }
 
@@ -479,11 +539,197 @@
     renderMessages({ scroll: isFirstLoad || grewSinceLast });
   }
 
+  // ─── Menu de contexto da mensagem (chevron + dropdown) ───────────
+  const ctxMenu = document.getElementById("msgCtxMenu");
+  let ctxMenuMsgId = null;
+
+  function openCtxMenu(messageId, anchorBtn) {
+    const m = messageCache.get(messageId);
+    if (!m || m.deleted) return;
+    ctxMenuMsgId = messageId;
+
+    // Atualiza visibilidade dos items dependentes de "minha msg".
+    const isMine = m.senderRole === "therapist";
+    ctxMenu.querySelectorAll("[data-only-mine]").forEach(btn => {
+      btn.style.display = isMine ? "flex" : "none";
+    });
+    // Texto do botao favoritar
+    const favLabel = ctxMenu.querySelector("[data-favorite-label]");
+    if (favLabel) {
+      favLabel.textContent = m.favoritedByMe
+        ? tr("mensagens:js.unfavorite", "Desfavoritar")
+        : tr("mensagens:js.favorite", "Favoritar");
+    }
+
+    // Posiciona o menu logo abaixo do chevron, alinhado a direita.
+    const rect = anchorBtn.getBoundingClientRect();
+    ctxMenu.style.display = "block";
+    const menuW = ctxMenu.offsetWidth;
+    let left = rect.right - menuW;
+    let top = rect.bottom + 4;
+    // Clamp dentro da viewport.
+    if (left < 8) left = 8;
+    if (left + menuW > window.innerWidth - 8) left = window.innerWidth - menuW - 8;
+    if (top + ctxMenu.offsetHeight > window.innerHeight - 8) {
+      top = rect.top - ctxMenu.offsetHeight - 4;
+    }
+    ctxMenu.style.left = left + "px";
+    ctxMenu.style.top  = top  + "px";
+  }
+  function closeCtxMenu() { ctxMenu.style.display = "none"; ctxMenuMsgId = null; }
+
+  // Click no chevron de qualquer bolha abre o menu pra aquela msg.
+  $("msgList").addEventListener("click", (e) => {
+    const chev = e.target.closest('[data-action="open-menu"]');
+    if (chev) {
+      e.stopPropagation();
+      const bubble = chev.closest("[data-msg-id]");
+      if (bubble) openCtxMenu(bubble.dataset.msgId, chev);
+      return;
+    }
+    // Click numa quote pula pra mensagem original.
+    const jump = e.target.closest("[data-jump]");
+    if (jump) {
+      const target = $("msgList").querySelector(`[data-msg-id="${CSS.escape(jump.dataset.jump)}"]`);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        target.style.transition = "background-color 0.3s";
+        const origBg = target.style.background;
+        target.style.background = "var(--ep-accent-soft)";
+        setTimeout(() => { target.style.background = origBg; }, 700);
+      }
+    }
+  });
+
+  // Click fora do menu fecha.
+  document.addEventListener("click", (e) => {
+    if (ctxMenu.style.display === "block" && !ctxMenu.contains(e.target)) closeCtxMenu();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && ctxMenu.style.display === "block") closeCtxMenu();
+  });
+
+  // Toast simples pra stubs "em breve".
+  function showToast(msg, kind = "info") {
+    const t = document.createElement("div");
+    t.style.cssText = `position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: ${kind === "err" ? "#b8453d" : "var(--ep-ink)"}; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; z-index: 2000; box-shadow: 0 4px 16px rgba(0,0,0,0.2); animation: epToastIn 0.2s ease;`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2400);
+  }
+
+  // Handlers dos items do menu.
+  ctxMenu.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-ctx]");
+    if (!btn || !ctxMenuMsgId) return;
+    const action = btn.dataset.ctx;
+    const msgId = ctxMenuMsgId;
+    const m = messageCache.get(msgId);
+    closeCtxMenu();
+    if (!m) return;
+
+    if (action === "responder") {
+      startReply(msgId);
+    } else if (action === "copiar") {
+      try {
+        await navigator.clipboard.writeText(m.plain || "");
+        showToast(tr("mensagens:js.toastCopied", "Mensagem copiada."));
+      } catch {
+        showToast(tr("mensagens:js.toastCopyErr", "Erro ao copiar."), "err");
+      }
+    } else if (action === "favoritar") {
+      const desired = !m.favoritedByMe;
+      // Otimista
+      m.favoritedByMe = desired;
+      renderMessages({ scroll: false });
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/messages/${encodeURIComponent(msgId)}`, {
+          method: "PATCH",
+          headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ favorite: desired })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+        showToast(desired
+          ? tr("mensagens:js.toastFavorited", "Adicionada aos favoritos.")
+          : tr("mensagens:js.toastUnfavorited", "Removida dos favoritos."));
+      } catch (err) {
+        // Reverte otimismo.
+        m.favoritedByMe = !desired;
+        renderMessages({ scroll: false });
+        showToast(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }), "err");
+      }
+    } else if (action === "apagar") {
+      if (m.senderRole !== "therapist") return; // double-check; backend tb bloqueia
+      if (!confirm(tr("mensagens:js.confirmDelete", "Apagar essa mensagem? Não tem como desfazer."))) return;
+      // Otimista
+      const prev = { ...m };
+      m.deleted = true;
+      m.plain = "";
+      renderMessages({ scroll: false });
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/messages/${encodeURIComponent(msgId)}`, {
+          method: "PATCH",
+          headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ deleted: true })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+        showToast(tr("mensagens:js.toastDeleted", "Mensagem apagada."));
+      } catch (err) {
+        // Reverte.
+        Object.assign(m, prev);
+        renderMessages({ scroll: false });
+        showToast(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }), "err");
+      }
+    } else if (action === "reagir" || action === "encaminhar" || action === "fixar" || action === "denunciar") {
+      // Stubs — features substanciais (emoji picker, thread picker, banner de
+      // fixadas, fluxo de denuncia). Toast informando que vem em proxima iter.
+      showToast(tr("mensagens:js.toastSoon", "Em breve — feature em desenvolvimento."));
+    }
+  });
+
+  // ─── Estado de reply em curso (mensagem sendo respondida) ────────
+  let replyingTo = null; // { messageId, plain, senderRole }
+
+  function startReply(messageId) {
+    const orig = messageCache.get(messageId);
+    if (!orig || orig.deleted) return;
+    replyingTo = { messageId, plain: orig.plain, senderRole: orig.senderRole };
+    renderReplyBar();
+    $("msgInput").focus();
+  }
+  function cancelReply() { replyingTo = null; renderReplyBar(); }
+  function renderReplyBar() {
+    let bar = document.getElementById("replyBar");
+    if (!replyingTo) { if (bar) bar.remove(); return; }
+    const label = replyingTo.senderRole === "therapist"
+      ? tr("mensagens:js.youLabel", "Você")
+      : (currentThread?.patientDisplayName || tr("mensagens:js.peerFallback", "Paciente"));
+    const html = `
+      <div id="replyBar" style="padding: 8px 12px; border-top: 1px solid var(--ep-line); background: var(--ep-bg-2); display: flex; align-items: center; gap: 10px;">
+        <div style="width: 3px; background: var(--ep-accent); align-self: stretch; border-radius: 2px;"></div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-size: 11px; font-weight: 600; color: var(--ep-accent); margin-bottom: 2px;">${escapeHtml(tr("mensagens:js.replyingTo", "Respondendo a {{name}}", { name: label }))}</div>
+          <div style="font-size: 12.5px; color: var(--ep-ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(replyingTo.plain.slice(0, 120))}</div>
+        </div>
+        <button type="button" id="replyCancelBtn" style="border: 0; background: transparent; cursor: pointer; color: var(--ep-ink-3); padding: 4px; line-height: 0;" aria-label="${escapeHtml(tr("mensagens:js.cancelReply", "Cancelar resposta"))}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+      </div>`;
+    if (bar) {
+      bar.outerHTML = html;
+    } else {
+      const composer = $("msgInput").parentElement;
+      composer.insertAdjacentHTML("beforebegin", html);
+    }
+    document.getElementById("replyCancelBtn").addEventListener("click", cancelReply);
+  }
+
   // ─── Enviar mensagem ─────────────────────────────────────────────
   // Agora input single-line — Enter envia (igual mensagens-pro). Sem Ctrl+Enter.
   $("msgSendBtn").addEventListener("click", () => sendCurrentMessage());
   $("msgInput").addEventListener("keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); sendCurrentMessage(); }
+    if (e.key === "Escape" && replyingTo) { e.preventDefault(); cancelReply(); }
   });
 
   async function sendCurrentMessage() {
@@ -493,9 +739,13 @@
     const threadKeyBytes = threadKeyCache.get(currentThreadId);
     if (!threadKeyBytes) return;
 
-    // Limpa input + status IMEDIATAMENTE — UX otimista.
+    // Captura replyTo antes de limpar o estado.
+    const replyToMessageId = replyingTo?.messageId || null;
+
+    // Limpa input + reply state + status IMEDIATAMENTE — UX otimista.
     $("msgInput").value = "";
     $("msgStatus").textContent = "";
+    if (replyingTo) cancelReply();
 
     // Bolha aparece instantaneamente com tempId + status "sending".
     const tempId = "tmp-" + Math.random().toString(36).slice(2);
@@ -504,7 +754,8 @@
       senderRole: "therapist",
       plain: text,
       createdAt: Date.now(),
-      status: "sending"
+      status: "sending",
+      replyToMessageId
     });
     saveLastMsgPreview(currentThreadId, text, "therapist");
     renderMessages();
@@ -514,7 +765,7 @@
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/messages`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify(enc)
+        body: JSON.stringify({ ...enc, ...(replyToMessageId ? { replyToMessageId } : {}) })
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
@@ -526,7 +777,8 @@
         senderRole: "therapist",
         plain: text,
         createdAt: d.createdAt || Date.now(),
-        status: "sent"
+        status: "sent",
+        replyToMessageId
       });
       renderMessages({ scroll: false });
       // Atualiza lista lateral (lastMessageAt mudou).
