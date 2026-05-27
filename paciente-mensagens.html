@@ -239,14 +239,22 @@
   let presenceTimer = null;
   let lastSeenMessageMs = 0;
 
-  function pingPresence(threadId) {
-    fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(threadId)}/patient-presence`, {
+  function pingPresence(threadId, offline = false) {
+    if (!threadId) return;
+    const opts = {
       method: "PATCH",
-      headers: { "Authorization": `Bearer ${idToken}` }
-    }).catch(() => {});
+      headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+      body: offline ? JSON.stringify({ offline: true }) : undefined,
+      keepalive: offline  // keepalive garante envio mesmo durante unload
+    };
+    if (!offline) delete opts.body;
+    fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(threadId)}/patient-presence`, opts).catch(() => {});
   }
+  // Offline imediato ao sair/trocar aba
+  document.addEventListener("pagehide", () => pingPresence(currentThreadId, true));
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden && currentThreadId) pingPresence(currentThreadId);
+    if (document.hidden) pingPresence(currentThreadId, true);
+    else if (currentThreadId) pingPresence(currentThreadId);
   });
 
   $("logoutBtn").addEventListener("click", async () => {
@@ -338,7 +346,7 @@
     // Presença: ping imediato + heartbeat a cada 60s enquanto thread aberta
     pingPresence(threadId);
     if (presenceTimer) clearInterval(presenceTimer);
-    presenceTimer = setInterval(() => pingPresence(currentThreadId), 60000);
+    presenceTimer = setInterval(() => pingPresence(currentThreadId), 10000);
 
     loadThreads();
   }
