@@ -514,7 +514,8 @@
       const div = document.createElement("div");
       div.dataset.msgId = m.messageId;
       div.className = "ep-chat-bubble";
-      div.style.cssText = `position: relative; align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 70%; padding: 8px 12px 8px 12px; padding-right: ${mine ? 28 : 12}px; border-radius: 12px; background: ${mine ? "var(--ep-accent)" : "var(--ep-bg-2)"}; color: ${mine ? "#fff" : "var(--ep-ink)"}; font-size: 14px; opacity: ${m.status === "sending" ? "0.6" : "1"}; transition: opacity 0.18s ease;`;
+      const hasReactionsPreCalc = Array.isArray(m.reactions) && m.reactions.length > 0;
+      div.style.cssText = `position: relative; align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 70%; padding: 8px 12px 8px 12px; padding-right: ${mine ? 28 : 12}px; border-radius: 12px; background: ${mine ? "var(--ep-accent)" : "var(--ep-bg-2)"}; color: ${mine ? "#fff" : "var(--ep-ink)"}; font-size: 14px; opacity: ${m.status === "sending" ? "0.6" : "1"}; transition: opacity 0.18s ease;${hasReactionsPreCalc ? " margin-bottom: 14px;" : ""}`;
 
       // Msg apagada: mostra placeholder italic muted, sem chevron.
       if (m.deleted) {
@@ -557,18 +558,22 @@
         ? `<div style="font-size: 11px; opacity: 0.7; font-style: italic; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 14 20 9 15 4"></polyline><path d="M4 20v-7a4 4 0 0 1 4-4h12"></path></svg> ${escapeHtml(tr("mensagens:js.forwardedLabel", "Encaminhada"))}</div>`
         : "";
 
-      // Reactions row (chips com emoji + count, destacado se mine)
-      let reactionsRow = "";
-      if (Array.isArray(m.reactions) && m.reactions.length > 0) {
-        reactionsRow = `<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px;">` +
-          m.reactions.map(r => `<button data-react-emoji="${escapeHtml(r.emoji)}" data-react-msg="${escapeHtml(m.messageId)}" style="background: ${r.mine ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.06)"}; border: 1px solid ${r.mine ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.1)"}; border-radius: 999px; padding: 2px 8px; font-size: 12px; cursor: pointer; display: inline-flex; gap: 3px; align-items: center; color: inherit;"><span>${r.emoji}</span><span style="font-weight: 600;">${r.count}</span></button>`).join("") +
+      // Reactions overlay estilo WhatsApp: pill flutuante no canto inferior
+      // direito da bolha, overlapping pra baixo. Sombra + bg branco + count
+      // so se > 1. Bolha ganha margin-bottom extra quando tem reactions
+      // pra nao colidir com a proxima.
+      let reactionsOverlay = "";
+      const hasReactions = Array.isArray(m.reactions) && m.reactions.length > 0;
+      if (hasReactions) {
+        reactionsOverlay = `<div style="position: absolute; bottom: -12px; right: 10px; display: flex; gap: 2px; z-index: 1; flex-direction: row-reverse;">` +
+          m.reactions.map(r => `<button data-react-emoji="${escapeHtml(r.emoji)}" data-react-msg="${escapeHtml(m.messageId)}" title="${r.mine ? escapeHtml(tr("mensagens:js.removeReaction", "Remover sua reação")) : escapeHtml(tr("mensagens:js.addReaction", "Reagir"))}" style="background: ${r.mine ? "var(--ep-accent-soft)" : "#fff"}; border: 1px solid ${r.mine ? "var(--ep-accent)" : "var(--ep-line)"}; border-radius: 999px; padding: 2px 7px; font-size: 13px; cursor: pointer; display: inline-flex; gap: 3px; align-items: center; line-height: 1; box-shadow: 0 2px 6px rgba(0,0,0,0.15); color: var(--ep-ink);"><span style="font-size: 14px;">${r.emoji}</span>${r.count > 1 ? `<span style="font-size: 11px; font-weight: 600;">${r.count}</span>` : ""}</button>`).join("") +
           `</div>`;
       }
 
       // Chevron (so visivel no hover via CSS)
       const chevron = `<button class="ep-chat-bubble__chevron" data-action="open-menu" aria-label="Opções" style="position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border: 0; background: transparent; color: ${mine ? "rgba(255,255,255,0.85)" : "var(--ep-ink-3)"}; cursor: pointer; opacity: 0; transition: opacity 0.15s; border-radius: 4px; display: flex; align-items: center; justify-content: center; padding: 0;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>`;
 
-      div.innerHTML = `${chevron}${forwardedTag}${replyBlock}<div>${escapeHtml(m.plain)}</div>${reactionsRow}<div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">${fmtTime(m.createdAt)}${pinIcon}${favIcon}${tick}</div>`;
+      div.innerHTML = `${chevron}${forwardedTag}${replyBlock}<div>${escapeHtml(m.plain)}</div><div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">${fmtTime(m.createdAt)}${pinIcon}${favIcon}${tick}</div>${reactionsOverlay}`;
       list.appendChild(div);
     }
     if (opts.scroll !== false) list.scrollTop = list.scrollHeight;
