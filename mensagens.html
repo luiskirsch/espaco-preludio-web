@@ -72,9 +72,9 @@
       </p>
     </div>
 
-    <div class="ep-grid" style="grid-template-columns: 320px 1fr; gap: 16px; height: calc(100dvh - 280px); min-height: 420px; margin-top: 16px;">
+    <div class="ep-chat-shell" style="display: flex; height: calc(100dvh - 260px); min-height: 420px; margin-top: 16px; border: 1px solid var(--ep-line); border-radius: var(--ep-radius-lg, 12px); overflow: hidden; box-shadow: var(--ep-shadow-soft); background: var(--ep-surface);">
       <!-- Sidebar threads -->
-      <aside class="ep-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+      <aside style="width: 320px; flex-shrink: 0; border-right: 1px solid var(--ep-line); display: flex; flex-direction: column; overflow: hidden; background: var(--ep-surface);">
         <div class="ep-flex" style="padding: 12px 14px; border-bottom: 1px solid var(--ep-line); justify-content: space-between; align-items: center;">
           <strong class="ep-text-sm" data-i18n="mensagens:threads.header">Conversas</strong>
           <button id="newThreadBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="mensagens:threads.newBtn">+ Nova</button>
@@ -85,7 +85,7 @@
       </aside>
 
       <!-- Painel da thread ativa -->
-      <section id="threadPanel" class="ep-card" style="display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden; padding: 0;">
+      <section id="threadPanel" style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
         <div id="msgEmpty" style="margin: auto; text-align: center; padding: 40px; color: var(--ep-ink-3);">
           <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
           <h3 class="ep-h3 ep-mt-0" data-i18n="mensagens:empty.h3">Selecione uma conversa</h3>
@@ -176,6 +176,15 @@
 </div>
 
 <style>
+  /* Container unificado nao se mexe — override do ep-card global.
+     Sem ep-card, nao precisa do override, mas defensivo pro caso de
+     heranca via .ep-shell ou parent com transition. */
+  .ep-chat-shell,
+  .ep-chat-shell:hover {
+    transform: none !important;
+    transition: none !important;
+  }
+
   /* Chat area background estilo WhatsApp — levemente diferente da sidebar */
   .ep-chat-area {
     background: #efe8d8;
