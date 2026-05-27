@@ -92,10 +92,7 @@
           <p class="ep-text-muted ep-mt-8" data-i18n-html="mensagens:empty.body">Ou clique em <strong>+ Nova</strong> para começar uma com um paciente que já atendeu.</p>
         </div>
         <div id="msgThread" class="ep-hide" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
-          <div style="padding: 12px 16px; border-bottom: 1px solid var(--ep-line);">
-            <div id="msgPeerName" style="font-weight: 600;">—</div>
-            <div id="msgThreadMeta" class="ep-text-xs ep-text-muted" data-i18n="mensagens:thread.metaE2ee">cifrada ponta-a-ponta</div>
-          </div>
+          <div id="msgPeerName" style="padding: 12px 16px; border-bottom: 1px solid var(--ep-line); font-weight: 600;">—</div>
           <div id="msgList" style="flex: 1; overflow-y: auto; min-height: 0; padding: 16px; display: flex; flex-direction: column; gap: 8px;"></div>
           <div style="padding: 12px 16px; border-top: 1px solid var(--ep-line); display: flex; gap: 8px; align-items: center;">
             <input id="msgInput" type="text" class="ep-input" data-i18n-placeholder="mensagens:composer.placeholder" placeholder="Digite uma mensagem…" maxlength="3000" style="flex: 1;">
@@ -270,15 +267,23 @@
     }
   }
   function renderThreads(threads) {
+    // Mesmo estilo de card do mensagens-pro: linha com nome+badge em cima,
+    // tempo embaixo, background accent-soft quando ativa.
     $("threadList").innerHTML = threads.map(t => {
       const peerName = t.patientDisplayName || tr("mensagens:js.peerFallback", "Paciente");
-      const unreadDot = t.hasUnread ? `<span class="ep-msg-unread"></span>` : "";
-      const lastTime = t.lastMessageAt ? fmtTime(t.lastMessageAt) : "";
-      const cls = t.threadId === currentThreadId ? " is-active" : "";
+      const lastTime = t.lastMessageAt ? fmtTime(t.lastMessageAt) : tr("mensagens:js.threadNoMessages", "Sem mensagens");
+      const isActive = t.threadId === currentThreadId;
+      const bg = isActive ? "var(--ep-accent-soft)" : "transparent";
+      const badge = t.hasUnread
+        ? `<span class="ep-badge ep-badge--ok" style="font-size: 10px;">${escapeHtml(tr("mensagens:js.threadBadgeNew", "novo"))}</span>`
+        : "";
       return `
-        <button type="button" class="ep-msg-thread-item${cls}" data-thread-id="${t.threadId}">
-          <div class="ep-msg-thread-item__name">${escapeHtml(peerName)} ${unreadDot}</div>
-          <div class="ep-msg-thread-item__time">${lastTime}</div>
+        <button type="button" data-thread-id="${escapeHtml(t.threadId)}" style="text-align: left; padding: 12px 14px; border: 0; background: ${bg}; border-bottom: 1px solid var(--ep-line); cursor: pointer; display: flex; flex-direction: column; gap: 4px; width: 100%;">
+          <div class="ep-flex" style="justify-content: space-between; align-items: center; gap: 8px;">
+            <span style="font-weight: 600; font-size: 14px;">${escapeHtml(peerName)}</span>
+            ${badge}
+          </div>
+          <span style="font-size: 11px; color: var(--ep-ink-3);">${lastTime}</span>
         </button>
       `;
     }).join("");
@@ -295,6 +300,9 @@
   // ─── Abrir thread ────────────────────────────────────────────────
   async function openThread(threadId) {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    // Reset cache de msgs pra nao vazar entre threads.
+    messageCache.clear();
+    lastSeenMessageMs = 0;
     currentThreadId = threadId;
     $("msgEmpty").classList.add("ep-hide");
     $("msgThread").classList.remove("ep-hide");
@@ -346,6 +354,43 @@
     loadThreads();
   }
 
+  // ─── messageCache + render otimista (padrão mensagens-pro) ──────────
+  // Cache local de msgs (id → {plain, senderRole, createdAt, status}). Render
+  // monta o DOM a partir do cache, então uma msg "sending" (otimista) aparece
+  // instantaneamente; depois do POST, troca o tempId pelo messageId real.
+  const messageCache = new Map();
+  let lastRenderedThreadId = null;
+
+  function renderMessages(opts = {}) {
+    const list = $("msgList");
+    if (!currentThreadId) return;
+    if (lastRenderedThreadId !== currentThreadId) {
+      list.innerHTML = "";
+      lastRenderedThreadId = currentThreadId;
+    }
+    const sorted = [...messageCache.values()].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    if (sorted.length === 0) {
+      list.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${escapeHtml(tr("mensagens:js.noMessagesYet", "Nenhuma mensagem ainda. Diga oi."))}</div>`;
+      return;
+    }
+    list.innerHTML = "";
+    for (const m of sorted) {
+      const mine = m.senderRole === "therapist";
+      const div = document.createElement("div");
+      div.dataset.msgId = m.messageId;
+      div.style.cssText = `align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 70%; padding: 8px 12px; border-radius: 12px; background: ${mine ? "var(--ep-accent)" : "var(--ep-bg-2)"}; color: ${mine ? "#fff" : "var(--ep-ink)"}; font-size: 14px; opacity: ${m.status === "sending" ? "0.6" : "1"}; transition: opacity 0.18s ease;`;
+      let tick = "";
+      if (mine) {
+        if (m.status === "sending") tick = ' <span style="opacity: 0.7;">✓</span>';
+        else if (m.status === "error") tick = ' <span style="color: #ffb4b4;" title="Erro">!</span>';
+        else tick = ' <span style="opacity: 0.7;">✓</span>';
+      }
+      div.innerHTML = `<div>${escapeHtml(m.plain)}</div><div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">${fmtTime(m.createdAt)}${tick}</div>`;
+      list.appendChild(div);
+    }
+    if (opts.scroll !== false) list.scrollTop = list.scrollHeight;
+  }
+
   async function refreshMessages(threadKeyBytes) {
     const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/messages?limit=100`, {
       headers: { "Authorization": `Bearer ${idToken}` }
@@ -353,34 +398,30 @@
     const d = await r.json().catch(() => ({}));
     if (!r.ok || !d.ok) return;
 
-    const decrypted = [];
+    // Mescla msgs do servidor no cache. Preserva entries otimistas com tempId
+    // (ainda não confirmadas) — só sobreescreve quando o servidor confirma.
+    const isFirstLoad = lastRenderedThreadId !== currentThreadId;
     for (const m of (d.messages || [])) {
+      let plain;
       try {
-        const plain = await decryptNote({ ciphertext: m.ciphertext, iv: m.iv }, threadKeyBytes);
-        decrypted.push({ ...m, plain });
+        plain = await decryptNote({ ciphertext: m.ciphertext, iv: m.iv }, threadKeyBytes);
       } catch {
-        decrypted.push({ ...m, plain: tr("mensagens:js.corruptedMsg", "[mensagem corrompida]") });
+        plain = tr("mensagens:js.corruptedMsg", "[mensagem corrompida]");
       }
+      messageCache.set(m.messageId, {
+        messageId: m.messageId,
+        senderRole: m.senderRole,
+        plain,
+        createdAt: m.createdAt,
+        status: "sent"
+      });
     }
 
-    const newest = decrypted.length ? decrypted[decrypted.length - 1].createdAt : 0;
+    const newest = Math.max(0, ...[...messageCache.values()].map(m => m.createdAt || 0));
     const grewSinceLast = newest > lastSeenMessageMs;
     lastSeenMessageMs = newest;
 
-    $("msgList").innerHTML = decrypted.map(m => {
-      const mine = m.senderRole === "therapist";
-      return `
-        <div class="ep-msg-bubble ${mine ? "is-mine" : "is-theirs"}">
-          <div class="ep-msg-bubble__text">${escapeHtml(m.plain)}</div>
-          <div class="ep-msg-bubble__time">${fmtTime(m.createdAt)}</div>
-        </div>
-      `;
-    }).join("") || `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${escapeHtml(tr("mensagens:js.noMessagesYet", "Nenhuma mensagem ainda. Diga oi."))}</div>`;
-
-    if (grewSinceLast) {
-      const list = $("msgList");
-      list.scrollTop = list.scrollHeight;
-    }
+    renderMessages({ scroll: isFirstLoad || grewSinceLast });
   }
 
   // ─── Enviar mensagem ─────────────────────────────────────────────
@@ -397,8 +438,21 @@
     const threadKeyBytes = threadKeyCache.get(currentThreadId);
     if (!threadKeyBytes) return;
 
-    $("msgSendBtn").disabled = true;
-    $("msgStatus").textContent = tr("mensagens:js.encrypting", "cifrando…");
+    // Limpa input + status IMEDIATAMENTE — UX otimista.
+    $("msgInput").value = "";
+    $("msgStatus").textContent = "";
+
+    // Bolha aparece instantaneamente com tempId + status "sending".
+    const tempId = "tmp-" + Math.random().toString(36).slice(2);
+    messageCache.set(tempId, {
+      messageId: tempId,
+      senderRole: "therapist",
+      plain: text,
+      createdAt: Date.now(),
+      status: "sending"
+    });
+    renderMessages();
+
     try {
       const enc = await encryptNote(text, threadKeyBytes);
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/messages`, {
@@ -408,14 +462,23 @@
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
-      $("msgInput").value = "";
-      $("msgStatus").textContent = "";
-      await refreshMessages(threadKeyBytes);
+      // Substitui tempId pelo messageId real do servidor.
+      messageCache.delete(tempId);
+      const realId = d.messageId || ("real-" + tempId);
+      messageCache.set(realId, {
+        messageId: realId,
+        senderRole: "therapist",
+        plain: text,
+        createdAt: d.createdAt || Date.now(),
+        status: "sent"
+      });
+      renderMessages({ scroll: false });
+      // Atualiza lista lateral (lastMessageAt mudou).
       loadThreads();
     } catch (e) {
+      const m = messageCache.get(tempId);
+      if (m) { m.status = "error"; renderMessages({ scroll: false }); }
       $("msgStatus").textContent = tr("mensagens:js.sendError", "Erro: {{message}}", { message: e?.message || "" });
-    } finally {
-      $("msgSendBtn").disabled = false;
     }
   }
 
