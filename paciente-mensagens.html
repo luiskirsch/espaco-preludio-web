@@ -36,8 +36,8 @@
 </head>
 <body>
 
-<div class="ep-shell">
-  <header class="ep-topbar">
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
     <a href="./paciente-painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
@@ -51,53 +51,63 @@
       <span id="navUser" class="ep-text-sm ep-text-muted" data-i18n="paciente-mensagens:nav.userLoading">…</span>
       <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="logoutBtn" data-i18n="paciente-mensagens:nav.logout">Sair</button>
     </nav>
-  </header>
+  </div>
+</header>
 
-  <main class="ep-main">
-    <div class="ep-eyebrow" data-i18n="paciente-mensagens:eyebrow">Conversas</div>
-    <h1 class="ep-h1 ep-mt-12" data-i18n="paciente-mensagens:h1">Mensagens</h1>
-    <p class="ep-text-muted ep-mt-8" data-i18n-html="paciente-mensagens:subtitle">
-      Conversas com seu(sua) profissional. <strong>Cifradas ponta-a-ponta</strong> — só você e ele(a) leem.
-    </p>
+<main class="ep-container ep-mt-32 ep-mb-16 ep-page-main" style="overflow: hidden;">
+  <section class="ep-stack">
+    <div>
+      <div class="ep-eyebrow" data-i18n="paciente-mensagens:eyebrow">Conversas</div>
+      <h1 class="ep-h1 ep-mt-12 ep-page-title" data-i18n="paciente-mensagens:h1">Mensagens</h1>
+      <p class="ep-text-muted ep-mt-8" data-i18n-html="paciente-mensagens:subtitle">
+        Conversas com seu(sua) profissional. <strong>Cifradas ponta-a-ponta</strong> — só você e ele(a) leem.
+      </p>
+    </div>
 
-    <div id="mensagensLayout" class="ep-msg-layout ep-mt-24">
-      <aside class="ep-msg-threads">
-        <div class="ep-msg-threads__head">
+    <div style="display: flex; height: calc(100dvh - 260px); min-height: 420px; margin-top: 16px; border: 1px solid var(--ep-line); border-radius: var(--ep-radius-lg, 12px); overflow: hidden; box-shadow: var(--ep-shadow-soft); background: var(--ep-surface);">
+      <!-- Sidebar de threads -->
+      <aside style="width: 280px; flex-shrink: 0; border-right: 1px solid var(--ep-line); display: flex; flex-direction: column; overflow: hidden; background: var(--ep-surface);">
+        <div style="padding: 12px 14px; border-bottom: 1px solid var(--ep-line);">
           <strong class="ep-text-sm" data-i18n="paciente-mensagens:threadsHead">Profissionais</strong>
         </div>
-        <div id="threadList" class="ep-msg-threads__list">
+        <div id="threadList" style="display: flex; flex-direction: column; gap: 0; flex: 1; overflow-y: auto; align-content: flex-start;">
           <div class="ep-text-xs ep-text-muted" style="padding: 12px;" data-i18n="paciente-mensagens:threads.loading">Carregando…</div>
         </div>
       </aside>
 
-      <section class="ep-msg-main">
-        <div id="msgEmpty" class="ep-msg-empty">
-          <h3 class="ep-h3" data-i18n="paciente-mensagens:emptyTitle">Selecione uma conversa</h3>
+      <!-- Painel da thread ativa -->
+      <section style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
+        <div id="msgEmpty" style="margin: auto; text-align: center; padding: 40px; color: var(--ep-ink-3);">
+          <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
+          <h3 class="ep-h3 ep-mt-0" data-i18n="paciente-mensagens:emptyTitle">Selecione uma conversa</h3>
           <p class="ep-text-muted ep-mt-8" data-i18n="paciente-mensagens:emptySub">
             Conversas aparecem aqui quando seu(sua) profissional iniciar.
           </p>
         </div>
-
-        <div id="msgThread" class="ep-msg-thread ep-hide">
-          <header class="ep-msg-thread__head">
-            <div>
-              <div id="msgPeerName" class="ep-h3 ep-mt-0">—</div>
-              <div class="ep-text-xs ep-text-muted" data-i18n="paciente-mensagens:e2eeBadge">cifrada ponta-a-ponta</div>
+        <div id="msgThread" class="ep-hide" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
+          <div style="padding: 8px 16px; background: var(--ep-bg-2); border-bottom: 1px solid var(--ep-line);">
+            <div id="msgPeerName" style="font-weight: 600; font-size: 15px; line-height: 1.3;">—</div>
+            <div class="ep-text-xs ep-text-muted" data-i18n="paciente-mensagens:e2eeBadge">cifrada ponta-a-ponta</div>
+          </div>
+          <div id="msgList" class="ep-chat-area" style="flex: 1; overflow-y: auto; min-height: 0; padding: 12px 14px; display: flex; flex-direction: column; gap: 3px;"></div>
+          <div style="background: var(--ep-bg-2); border-top: 1px solid var(--ep-line); position: relative;">
+            <div style="padding: 10px 12px; display: flex; gap: 8px; align-items: center;">
+              <button id="emojiToggleBtn" type="button" aria-label="Inserir emoji" title="Inserir emoji" style="border: 0; background: transparent; cursor: pointer; padding: 4px; line-height: 1; border-radius: 8px; flex-shrink: 0; color: var(--ep-ink-3); display: flex; align-items: center;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              </button>
+              <input id="msgInput" type="text" class="ep-input" data-i18n-placeholder="paciente-mensagens:composer.placeholder" placeholder="Digite uma mensagem…" maxlength="3000" style="flex: 1; border-radius: 20px; padding: 8px 16px; font-size: 14px;">
+              <button id="msgSendBtn" type="button" class="ep-btn ep-btn--primary" style="border-radius: 20px; padding: 8px 20px;" data-i18n="paciente-mensagens:composer.send">Enviar</button>
             </div>
-          </header>
-          <div id="msgList" class="ep-msg-thread__list"></div>
-          <form id="msgForm" class="ep-msg-thread__composer">
-            <textarea id="msgInput" data-i18n-placeholder="paciente-mensagens:composer.placeholder" placeholder="Digite uma mensagem… (Ctrl+Enter envia)" maxlength="3000" rows="2"></textarea>
-            <div class="ep-flex" style="justify-content: space-between; align-items: center; padding: 8px 12px; border-top: 1px solid var(--ep-line);">
-              <span id="msgStatus" class="ep-text-xs ep-text-muted">&nbsp;</span>
-              <button id="msgSendBtn" type="submit" class="ep-btn ep-btn--primary ep-btn--sm" data-i18n="paciente-mensagens:composer.send">Enviar</button>
-            </div>
-          </form>
+            <span id="msgStatus" class="ep-text-xs ep-text-muted" style="position: absolute; bottom: 3px; left: 16px;"></span>
+          </div>
         </div>
       </section>
     </div>
-  </main>
-</div>
+  </section>
+</main>
+
+<!-- Emoji picker do composer -->
+<div id="composerEmojiPicker" role="dialog" style="position: fixed; z-index: 1001; display: none; background: #fff; border: 1px solid var(--ep-line); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); padding: 8px; gap: 2px; grid-template-columns: repeat(10, 36px); width: max-content;"></div>
 
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
@@ -428,12 +438,55 @@
     }
   }
 
-  $("msgForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    await sendCurrentMessage();
-  });
+  $("msgSendBtn").addEventListener("click", () => sendCurrentMessage());
   $("msgInput").addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendCurrentMessage(); }
+    if (e.key === "Enter") { e.preventDefault(); sendCurrentMessage(); }
+  });
+
+  // ─── Emoji picker do composer ────────────────────────────────────
+  const COMPOSER_EMOJIS = [
+    "😀","😃","😄","😁","😆","😅","😂","🤣","😊","🙂",
+    "😉","😍","🥰","😘","😋","😎","🤩","🥳","😏","😞",
+    "😢","😭","😤","😠","🤬","🤯","😱","😨","🥺","🙄",
+    "😴","🤐","🤔","🤫","🤥","😷","🤒","🤕","❤️","🧡",
+    "💛","💚","💙","💜","🖤","💔","💯","👍","👎","👌",
+    "✌️","🤞","🤝","🙏","👏","🙌","💪","👋","🎉","🔥"
+  ];
+  const composerPicker = $("composerEmojiPicker");
+  composerPicker.innerHTML = COMPOSER_EMOJIS.map(e =>
+    `<button type="button" data-insert-emoji="${e}" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 0; width: 36px; height: 36px; border-radius: 6px; line-height: 1; display: flex; align-items: center; justify-content: center;">${e}</button>`
+  ).join("");
+  const emojiToggleBtn = $("emojiToggleBtn");
+  function closeComposerPicker() { composerPicker.style.display = "none"; }
+  function toggleComposerPicker() {
+    if (composerPicker.style.display !== "none") { closeComposerPicker(); return; }
+    composerPicker.style.display = "grid";
+    const rect = emojiToggleBtn.getBoundingClientRect();
+    const w = composerPicker.offsetWidth;
+    let left = Math.max(8, rect.left);
+    if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+    let top = rect.top - composerPicker.offsetHeight - 8;
+    if (top < 8) top = rect.bottom + 8;
+    composerPicker.style.left = left + "px";
+    composerPicker.style.top  = top  + "px";
+  }
+  emojiToggleBtn.addEventListener("click", (e) => { e.stopPropagation(); toggleComposerPicker(); });
+  composerPicker.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-insert-emoji]");
+    if (!btn) return;
+    const emoji = btn.dataset.insertEmoji;
+    const inp = $("msgInput");
+    const start = inp.selectionStart ?? inp.value.length;
+    const end = inp.selectionEnd ?? inp.value.length;
+    inp.value = inp.value.slice(0, start) + emoji + inp.value.slice(end);
+    inp.focus();
+    inp.setSelectionRange(start + emoji.length, start + emoji.length);
+  });
+  document.addEventListener("click", (e) => {
+    if (composerPicker.style.display !== "none" && !composerPicker.contains(e.target) && e.target !== emojiToggleBtn) closeComposerPicker();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && composerPicker.style.display !== "none") closeComposerPicker();
   });
 
   async function sendCurrentMessage() {
