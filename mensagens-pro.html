@@ -479,7 +479,10 @@
   setInterval(() => { if (activeThread) refreshActiveThread(); }, 3_000);
   setInterval(() => { loadThreads(); }, 15_000);
 
-  loadThreads();
+  await loadThreads();
+  // Auto-abre thread se vier de um cartão de contato em mensagens.html
+  const threadParam = new URLSearchParams(location.search).get("thread");
+  if (threadParam) openThread(threadParam);
 </script>
 
 </body>
