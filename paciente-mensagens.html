@@ -288,6 +288,85 @@
     window.location.href = "./paciente-login.html";
   });
 
+  // ─── Preview cache (localStorage, nunca sai para o servidor) ────
+  const lastMsgKey = id => `ep:pm:preview:${id}`;
+  function saveLastMsgPreview(threadId, text, senderRole) {
+    if (!threadId || !text) return;
+    try { localStorage.setItem(lastMsgKey(threadId), JSON.stringify({ text: String(text).slice(0, 200), senderRole: senderRole || null, at: Date.now() })); } catch(_) {}
+  }
+  function getLastMsgPreview(threadId) {
+    try { const raw = localStorage.getItem(lastMsgKey(threadId)); if (!raw) return null; return JSON.parse(raw); } catch(_) { return null; }
+  }
+  function plainForPreview(plain) {
+    if (plain && plain.startsWith("CONTACT_CARD:")) {
+      try { const card = JSON.parse(plain.slice(13)); return `👤 ${card.displayName || "Contato"}`; } catch {}
+    }
+    return plain;
+  }
+
+  function renderThreads(threads) {
+    const peerFallback = tr("paciente-mensagens:peerFallback", "Profissional");
+    if (!threads.length) {
+      $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${tr("paciente-mensagens:threads.empty", "Você ainda não tem conversas.<br>O(a) profissional inicia a partir do consultório.")}</div>`;
+      return;
+    }
+    $("threadList").innerHTML = threads.map(t => {
+      const peerName = t.therapistDisplayName || peerFallback;
+      const lastTime = t.lastMessageAt ? fmtTime(t.lastMessageAt) : "";
+      const isActive = t.threadId === currentThreadId;
+      const count = Number(t.unreadCount) || 0;
+      const badgeNew = count > 0
+        ? `<span style="background:#25d366;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;flex-shrink:0;">${count > 99 ? "99+" : count}</span>`
+        : "";
+      const initials = peerName.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "?";
+      const preview = getLastMsgPreview(t.threadId);
+      let previewLine;
+      if (preview && preview.text) {
+        const prefix = preview.senderRole === "patient" ? '<span style="color:var(--ep-ink-3);">Você: </span>' : "";
+        previewLine = `${prefix}${escapeHtml(preview.text)}`;
+      } else {
+        previewLine = `<span style="color:var(--ep-ink-3);font-style:italic;">${escapeHtml(tr("paciente-mensagens:threads.noMessages", "Sem mensagens"))}</span>`;
+      }
+      return `<button type="button" class="ep-thread-card${isActive ? " is-active" : ""}" data-thread-id="${escapeHtml(t.threadId)}" style="text-align:left;padding:10px 12px;margin:6px 8px;border:1px solid ${isActive ? "var(--ep-accent)" : "var(--ep-line)"};border-radius:12px;background:${isActive ? "var(--ep-accent-soft)" : "var(--ep-bg-2)"};cursor:pointer;display:flex;gap:10px;align-items:center;width:calc(100% - 16px);transition:background-color 0.15s ease,border-color 0.15s ease;">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--ep-accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0;">${escapeHtml(initials)}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="ep-flex" style="justify-content:space-between;align-items:center;gap:6px;">
+            <span style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(peerName)}</span>
+            <span style="font-size:11px;color:var(--ep-ink-3);flex-shrink:0;">${escapeHtml(lastTime)}</span>
+          </div>
+          <div class="ep-flex" style="gap:6px;align-items:center;margin-top:2px;">
+            <span style="font-size:12.5px;color:var(--ep-ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;">${previewLine}</span>
+            ${badgeNew}
+          </div>
+        </div>
+      </button>`;
+    }).join("");
+  }
+
+  async function decryptThreadPreviews(threads) {
+    let changed = false;
+    for (const t of threads) {
+      if (!t.lastMessageCiphertext || !t.lastMessageIv || !t.lastMessageAt) continue;
+      const cached = getLastMsgPreview(t.threadId);
+      if (cached && (cached.at || 0) >= t.lastMessageAt) continue;
+      try {
+        let key = threadKeyCache.get(t.threadId);
+        if (!key && t.myThreadKeyWrapper) {
+          key = t.myThreadKeyWrappedVia === "own-dek"
+            ? await unwrapKey(t.myThreadKeyWrapper, dek)
+            : await unwrapThreadKeyFromPeer(t.myThreadKeyWrapper, myEcdhPrivBytes, t.peerEcdhPublicJwk);
+          threadKeyCache.set(t.threadId, key);
+        }
+        if (!key) continue;
+        const plain = await decryptNote({ ciphertext: t.lastMessageCiphertext, iv: t.lastMessageIv }, key);
+        saveLastMsgPreview(t.threadId, plainForPreview(plain), t.lastMessageSenderRole);
+        changed = true;
+      } catch {}
+    }
+    if (changed) renderThreads(threads);
+  }
+
+  let _lastThreads = [];
   async function loadThreads() {
     const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, {
       headers: { "Authorization": `Bearer ${idToken}` }
@@ -297,24 +376,9 @@
       $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${escapeHtml(tr("paciente-mensagens:threads.loadError", "Erro ao carregar."))}</div>`;
       return;
     }
-    const threads = d.threads || [];
-    if (!threads.length) {
-      $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${tr("paciente-mensagens:threads.empty", "Você ainda não tem conversas.<br>O(a) profissional inicia a partir do consultório.")}</div>`;
-      return;
-    }
-    const peerFallback = tr("paciente-mensagens:peerFallback", "Profissional");
-    $("threadList").innerHTML = threads.map(t => {
-      const peerName = t.therapistDisplayName || peerFallback;
-      const unreadDot = t.hasUnread ? `<span class="ep-msg-unread"></span>` : "";
-      const lastTime = t.lastMessageAt ? fmtTime(t.lastMessageAt) : "";
-      const cls = t.threadId === currentThreadId ? " is-active" : "";
-      return `
-        <button type="button" class="ep-msg-thread-item${cls}" data-thread-id="${t.threadId}">
-          <div class="ep-msg-thread-item__name">${escapeHtml(peerName)} ${unreadDot}</div>
-          <div class="ep-msg-thread-item__time">${lastTime}</div>
-        </button>
-      `;
-    }).join("");
+    _lastThreads = d.threads || [];
+    renderThreads(_lastThreads);
+    decryptThreadPreviews(_lastThreads);
   }
   if (ecdhReady) await loadThreads();
 
@@ -432,6 +496,12 @@
       `;
     }).join("") || `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${escapeHtml(emptyMsg)}</div>`;
 
+    if (decrypted.length) {
+      const last = decrypted[decrypted.length - 1];
+      saveLastMsgPreview(currentThreadId, plainForPreview(last.plain), last.senderRole);
+      renderThreads(_lastThreads);
+    }
+
     if (grewSinceLast) {
       const list = $("msgList");
       list.scrollTop = list.scrollHeight;
@@ -509,6 +579,7 @@
       if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
       $("msgInput").value = "";
       $("msgStatus").textContent = "";
+      saveLastMsgPreview(currentThreadId, plainForPreview(text), "patient");
       await refreshMessages(threadKeyBytes);
       loadThreads();
     } catch (e) {
