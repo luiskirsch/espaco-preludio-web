@@ -239,18 +239,21 @@
   }
 
   /* Cartão de contato profissional */
-  .ep-contact-card { border-radius: 8px; overflow: hidden; min-width: 220px; max-width: 270px; background: rgba(0,0,0,0.04); }
-  html[data-theme="dark"] .ep-contact-card { background: rgba(255,255,255,0.06); }
+  .ep-contact-card { border-radius: 8px; overflow: hidden; min-width: 220px; max-width: 270px; background: rgba(0,0,0,0.06); }
   .ep-contact-card__head { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
-  .ep-contact-card__avatar { width: 46px; height: 46px; border-radius: 50%; background: #2a3d5c; color: #fff; font-weight: 700; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .ep-chat-bubble--mine .ep-contact-card__avatar { background: #1f2f47; }
+  .ep-contact-card__avatar { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,0.15); color: #fff; font-weight: 700; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .ep-contact-card__name { font-weight: 600; font-size: 14px; line-height: 1.3; }
   .ep-contact-card__sub { font-size: 11.5px; opacity: 0.7; margin-top: 2px; line-height: 1.3; }
-  .ep-contact-card__divider { border-top: 1px solid rgba(0,0,0,0.12); }
-  html[data-theme="dark"] .ep-contact-card__divider { border-color: rgba(255,255,255,0.12); }
-  .ep-contact-card__btn { display: block; width: 100%; padding: 10px 14px; border: 0; background: transparent; color: #128c7e; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; letter-spacing: 0.2px; transition: background 0.12s; }
-  .ep-contact-card__btn:hover { background: rgba(0,0,0,0.06); }
-  html[data-theme="dark"] .ep-contact-card__btn { color: #25d366; }
+  .ep-contact-card__divider { border-top: 1px solid rgba(255,255,255,0.18); }
+  .ep-contact-card__btn { display: block; width: 100%; padding: 10px 14px; border: 0; background: transparent; color: rgba(255,255,255,0.85); font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; letter-spacing: 0.2px; transition: background 0.12s; }
+  .ep-contact-card__btn:hover { background: rgba(255,255,255,0.08); }
+  /* Bolhas "theirs" têm fundo claro — cartão precisa de cores invertidas */
+  .ep-chat-bubble--theirs .ep-contact-card { background: rgba(0,0,0,0.05); }
+  .ep-chat-bubble--theirs .ep-contact-card__avatar { background: #2a3d5c; }
+  .ep-chat-bubble--theirs .ep-contact-card__divider { border-color: rgba(0,0,0,0.12); }
+  .ep-chat-bubble--theirs .ep-contact-card__btn { color: #128c7e; }
+  .ep-chat-bubble--theirs .ep-contact-card__btn:hover { background: rgba(0,0,0,0.05); }
+  html[data-theme="dark"] .ep-chat-bubble--theirs .ep-contact-card__btn { color: #25d366; }
 
   /* Bolhas estilo WhatsApp — tail pointer, time inline, padding tight */
   .ep-chat-bubble {
