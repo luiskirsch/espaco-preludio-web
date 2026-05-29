@@ -237,9 +237,7 @@ function mountHelpBubble() {
   const panel = document.createElement("div");
   panel.id = "epSupportPanel";
   panel.style.cssText = `position: fixed; bottom: 100px; right: 24px; width: 360px; max-height: 520px; background: var(--ep-bg, #fff); border: 1px solid var(--ep-line, #ddd); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); display: none; flex-direction: column; z-index: 9999; font-family: var(--ep-font-sans, system-ui);`;
-  // Avatar SVG inline da Aurora — monograma "A" em serif sobre verde-pinheiro
-  // com ponto dourado (alusão a aurora/amanhecer). Sem dependência externa.
-  const AURORA_AVATAR = `<svg viewBox="0 0 64 64" width="36" height="36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;border-radius:50%;background:#f6f5f1;border:1.5px solid rgba(255,255,255,0.25);"><circle cx="32" cy="32" r="32" fill="#2d4a3e"/><text x="32" y="44" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-size="34" font-weight="500" fill="#f6f5f1">A</text><circle cx="48" cy="18" r="3.5" fill="#c89b4a"/></svg>`;
+  const AURORA_AVATAR = `<img src="/img/aurora-avatar.png" alt="Aurora" width="36" height="36" aria-hidden="true" style="flex-shrink:0;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,0.25);">`;
 
   panel.innerHTML = `
     <div style="padding: 12px 16px; border-bottom: 1px solid var(--ep-line, #eee); display: flex; justify-content: space-between; align-items: center; background: var(--ep-accent, #2d4a3e); color: #fff; border-radius: 12px 12px 0 0; gap: 12px;">
