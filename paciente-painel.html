@@ -39,14 +39,13 @@
   </header>
 
   <main class="ep-main">
-    <section class="ep-prontuario__header">
+    <section class="ep-prontuario__header" style="grid-template-columns: auto 1fr;">
       <div class="ep-prontuario__avatar" id="avatar" aria-hidden="true">P</div>
       <div class="ep-prontuario__title">
-        <div class="ep-eyebrow" data-i18n="paciente-painel:header.eyebrow">Suas anotações</div>
+        <div class="ep-eyebrow" data-i18n="paciente-painel:header.eyebrow">Seu painel</div>
         <h1 class="ep-h1" id="patientName" data-i18n="paciente-painel:header.loadingName">…</h1>
         <div class="ep-pill-row" id="pillRow"></div>
       </div>
-      <div class="ep-prontuario__actions"></div>
     </section>
 
     <section class="ep-stats-strip" id="statsStrip"></section>
@@ -272,12 +271,16 @@
     }
 
     for (const [, g] of groups) {
-      const head = document.createElement("div");
-      head.className = "ep-timeline__month";
-      head.textContent = g.label;
-      timeline.appendChild(head);
+      const group = document.createElement("div");
+      group.className = "ep-timeline-month";
 
-      for (const s of g.items) timeline.appendChild(renderSessionCard(s));
+      const head = document.createElement("div");
+      head.className = "ep-timeline-month__label";
+      head.textContent = g.label;
+      group.appendChild(head);
+
+      for (const s of g.items) group.appendChild(renderSessionCard(s));
+      timeline.appendChild(group);
     }
   }
 
