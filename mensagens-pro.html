@@ -475,6 +475,7 @@
       document.getElementById("typingIndicator").textContent = "";
       await loadMessages();
       renderThreadList();
+      postPresence();
       api(`/therapy/pro-chat/threads/${encodeURIComponent(threadId)}/marcar-lido`, {
         method: "POST", body: JSON.stringify({ until: Date.now() })
       }).catch(() => {});
@@ -615,15 +616,49 @@
     api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}/typing`, { method: "POST" }).catch(() => {});
   });
 
+  // ─── Presença ────────────────────────────────────────────────────
+  function renderPresence(lastSeenMs, typing) {
+    const el = document.getElementById("typingIndicator");
+    if (!el) return;
+    if (typing) {
+      el.textContent = `${activeThread.peerName} está digitando…`;
+      el.style.color = "var(--ep-ink-3)";
+      return;
+    }
+    if (!lastSeenMs) { el.textContent = ""; return; }
+    const diffMs = Date.now() - lastSeenMs;
+    if (diffMs < 15_000) {
+      el.textContent = "● Online agora";
+      el.style.color = "#25d366";
+    } else {
+      const d = new Date(lastSeenMs);
+      const loc = currentLocale();
+      const isToday = d.toDateString() === new Date().toDateString();
+      const when = isToday
+        ? d.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" })
+        : d.toLocaleDateString(loc, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+      el.textContent = `Visto às ${when}`;
+      el.style.color = "var(--ep-ink-3)";
+    }
+  }
+
+  function postPresence(offline = false) {
+    if (!activeThread) return;
+    api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}/presence`, {
+      method: "PATCH",
+      body: JSON.stringify({ offline })
+    }).catch(() => {});
+  }
+
   async function refreshActiveThread() {
     if (!activeThread) return;
     try {
       const d = await api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}`);
-      activeThread.lastReadByPeer = d.thread.lastReadByPeer || 0;
-      activeThread.peerTypingAt   = d.thread.peerTypingAt || 0;
+      activeThread.lastReadByPeer  = d.thread.lastReadByPeer  || 0;
+      activeThread.peerTypingAt    = d.thread.peerTypingAt    || 0;
+      activeThread.lastSeenByPeer  = d.thread.lastSeenByPeer  || 0;
       const typing = (Date.now() - (activeThread.peerTypingAt || 0)) < 6000;
-      document.getElementById("typingIndicator").textContent = typing
-        ? `${activeThread.peerName} está digitando…` : "";
+      renderPresence(activeThread.lastSeenByPeer, typing);
       await loadMessages({ scroll: false });
     } catch { /* silencioso */ }
   }
@@ -804,7 +839,12 @@
 
   // ─── Polling ─────────────────────────────────────────────────────
   setInterval(() => { if (activeThread) refreshActiveThread(); }, 3_000);
+  setInterval(() => { if (activeThread) postPresence(); }, 30_000);
   setInterval(() => { loadThreads(); }, 15_000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) postPresence(true);
+    else if (activeThread) postPresence();
+  });
 
   await loadThreads();
   const threadParam = new URLSearchParams(location.search).get("thread");
