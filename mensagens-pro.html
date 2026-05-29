@@ -22,25 +22,95 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=2" defer></script>
-  <!-- Página não rola (main overflow:hidden + altura fixa). Desliga o
-       scrollbar-gutter:stable global pra eliminar a faixa branca lateral
-       que era reservada pro scroll que nunca aparece. -->
   <style>
     html { scrollbar-gutter: auto; }
-    .ep-contact-card{border-radius:8px;overflow:hidden;min-width:200px;max-width:260px;background:rgba(255,255,255,0.12);}
-    .ep-pro-msg.is-theirs .ep-contact-card{background:rgba(0,0,0,0.06);}
-    .ep-contact-card__head{display:flex;align-items:center;gap:10px;padding:10px 12px;}
-    .ep-contact-card__avatar{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.18);color:#fff;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .ep-pro-msg.is-theirs .ep-contact-card__avatar{background:#2a3d5c;}
+
+    /* Chat shell — sem jitter no hover */
+    .ep-chat-shell, .ep-chat-shell:hover { transform: none !important; transition: none !important; }
+
+    /* Chat area background estilo WhatsApp */
+    .ep-chat-area {
+      background: #efe8d8;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4c9b0' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    html[data-theme="dark"] .ep-chat-area {
+      background: #1a1a1a;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23333' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    /* Bolhas estilo WhatsApp */
+    .ep-pro-msg { word-wrap: break-word; overflow-wrap: break-word; }
+    .ep-pro-msg .ep-wb-text { display: inline; white-space: pre-wrap; word-break: break-word; }
+    .ep-pro-msg .ep-wb-meta {
+      float: right; font-size: 10.5px; opacity: 0.65;
+      margin: 4px 0 0 12px; white-space: nowrap; position: relative; top: 4px;
+    }
+    .ep-pro-msg--mine::after {
+      content: ""; position: absolute; top: 0; right: -6px;
+      width: 0; height: 0;
+      border-left: 6px solid var(--ep-accent, #2d4a3e);
+      border-top: 6px solid transparent; border-bottom: 0 solid transparent;
+    }
+    .ep-pro-msg--theirs::after {
+      content: ""; position: absolute; top: 0; left: -6px;
+      width: 0; height: 0;
+      border-right: 6px solid var(--ep-bg-2, #f5f0e6);
+      border-top: 6px solid transparent; border-bottom: 0 solid transparent;
+    }
+    html[data-theme="dark"] .ep-pro-msg--mine { background: #005c4b !important; color: #e9edef !important; }
+    html[data-theme="dark"] .ep-pro-msg--mine::after { border-left-color: #005c4b !important; }
+    html[data-theme="dark"] .ep-pro-msg--theirs { background: #fff !important; color: #111 !important; }
+    html[data-theme="dark"] .ep-pro-msg--theirs::after { border-right-color: #fff !important; }
+    html[data-theme="dark"] .ep-pro-msg--theirs .ep-wb-meta { color: #667781 !important; opacity: 1 !important; }
+    html[data-theme="dark"] .ep-pro-msg--mine   .ep-wb-meta { color: rgba(255,255,255,0.7) !important; opacity: 1 !important; }
+
+    /* Cartão de contato */
+    .ep-contact-card{border-radius:8px;overflow:hidden;min-width:220px;max-width:270px;background:rgba(255,255,255,0.12);}
+    .ep-pro-msg--theirs .ep-contact-card{background:rgba(0,0,0,0.06);}
+    .ep-contact-card__head{display:flex;align-items:center;gap:12px;padding:12px 14px;}
+    .ep-contact-card__avatar{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,0.15);color:#fff;font-weight:700;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .ep-pro-msg--theirs .ep-contact-card__avatar{background:#2a3d5c;}
     .ep-contact-card__name{font-weight:600;font-size:14px;line-height:1.3;}
     .ep-contact-card__sub{font-size:11.5px;opacity:0.7;margin-top:2px;line-height:1.3;}
     .ep-contact-card__divider{border-top:1px solid rgba(255,255,255,0.18);}
-    .ep-pro-msg.is-theirs .ep-contact-card__divider{border-color:rgba(0,0,0,0.12);}
-    .ep-contact-card__btn{display:block;width:100%;padding:9px 12px;border:0;background:transparent;color:rgba(255,255,255,0.85);font-size:14px;font-weight:600;cursor:pointer;text-align:center;letter-spacing:0.2px;transition:background 0.12s;}
+    .ep-pro-msg--theirs .ep-contact-card__divider{border-color:rgba(0,0,0,0.12);}
+    .ep-contact-card__btn{display:block;width:100%;padding:10px 14px;border:0;background:transparent;color:rgba(255,255,255,0.85);font-size:14px;font-weight:600;cursor:pointer;text-align:center;letter-spacing:0.2px;transition:background 0.12s;}
     .ep-contact-card__btn:hover{background:rgba(255,255,255,0.08);}
-    .ep-pro-msg.is-theirs .ep-contact-card__btn{color:#128c7e;}
-    .ep-pro-msg.is-theirs .ep-contact-card__btn:hover{background:rgba(0,0,0,0.05);}
-    html[data-theme="dark"] .ep-pro-msg.is-theirs .ep-contact-card__btn{color:#25d366;}
+    .ep-pro-msg--theirs .ep-contact-card__btn{color:#128c7e;}
+    .ep-pro-msg--theirs .ep-contact-card__btn:hover{background:rgba(0,0,0,0.05);}
+    html[data-theme="dark"] .ep-pro-msg--theirs .ep-contact-card__btn{color:#25d366;}
+
+    /* Dark mode — sidebar e header */
+    html[data-theme="dark"] .ep-chat-shell { border-color: #2a2a2a !important; }
+    html[data-theme="dark"] .ep-chat-shell aside { background: #111b21 !important; }
+    html[data-theme="dark"] #proMsgPeerName { background: #1f2c33 !important; color: #e9edef !important; }
+
+    /* Attach menu */
+    #attachMenu button { transition: background 0.15s; box-sizing: border-box; width: 100%; }
+    #attachMenu button:hover { background: #f5f4f2 !important; }
+    #contactPickerList button:hover { background: var(--ep-bg-2) !important; }
+
+    /* Ctx menu */
+    #proCtxMenu button:hover { background: #f0f0f0 !important; }
+
+    /* Hover thread cards */
+    .ep-thread-card:not(.is-active):hover { background: rgba(226,183,106,0.10) !important; border-color: rgba(226,183,106,0.35) !important; }
+    .ep-thread-card.is-active:hover { background: rgba(226,183,106,0.20) !important; }
+
+    /* No jitter */
+    #threadList button:hover, #threadList button:active,
+    .ep-thread-card:hover, .ep-thread-card:active,
+    .ep-pro-msg:hover, .ep-pro-msg:active,
+    #msgSendBtn:hover, #msgSendBtn:active,
+    #emojiToggleBtn:hover, #emojiToggleBtn:active,
+    #attachToggleBtn:hover, #attachToggleBtn:active,
+    #proCtxMenu button:hover, #proCtxMenu button:active,
+    #composerEmojiPicker button:hover, #composerEmojiPicker button:active { transform: none !important; }
+
+    #emojiToggleBtn:hover, #attachToggleBtn:hover { background: var(--ep-bg-2) !important; color: var(--ep-ink-1) !important; }
+    #composerEmojiPicker button:hover { background: var(--ep-bg-2) !important; }
+    #attachToggleBtn, #emojiToggleBtn { transition: background 0.15s, color 0.15s; }
+    #msgSendBtn { transition: background 0.15s, border-color 0.15s; }
   </style>
 </head>
 <body class="ep-has-sidebar">
@@ -88,36 +158,53 @@
       <h1 class="ep-h1 ep-mt-12 ep-page-title" data-i18n="mensagens-pro:hero.h1">Colegas</h1>
       <p class="ep-text-muted ep-mt-8" data-i18n="mensagens-pro:hero.intro">
         Chat cifrado de ponta-a-ponta com outros profissionais verificados no Espaço Prelúdio.
-        Útil para trocar opinião sobre caso (sem nomes!), pedir indicação, ou só conversar.
       </p>
     </div>
 
-    <div class="ep-grid" style="grid-template-columns: 320px 1fr; gap: 16px; height: calc(100dvh - 280px); min-height: 420px; margin-top: 16px;">
-      <!-- Sidebar threads -->
-      <aside class="ep-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+    <div class="ep-chat-shell" style="display: flex; height: calc(100dvh - 260px); min-height: 420px; margin-top: 16px; border: 1px solid var(--ep-line); border-radius: var(--ep-radius-lg, 12px); overflow: hidden; box-shadow: var(--ep-shadow-soft); background: var(--ep-surface);">
+
+      <!-- Sidebar: lista de threads -->
+      <aside style="width: 320px; flex-shrink: 0; border-right: 1px solid var(--ep-line); display: flex; flex-direction: column; overflow: hidden; background: var(--ep-surface);">
         <div style="padding: 12px 14px; border-bottom: 1px solid var(--ep-line);">
-          <div class="ep-flex ep-gap-8" style="margin-bottom: 8px;">
-            <input id="searchInput" type="text" class="ep-input ep-input--sm" data-i18n-placeholder="mensagens-pro:sidebar.searchPlaceholder" placeholder="🔍 Buscar colega (3+ letras)…" style="flex: 1;">
+          <div class="ep-flex" style="justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong class="ep-text-sm" data-i18n="mensagens-pro:sidebar.header">Colegas</strong>
           </div>
-          <div id="searchResults" class="ep-stack ep-hide" style="gap: 4px; max-height: 200px; overflow: auto;"></div>
+          <input id="searchInput" type="text" class="ep-input ep-input--sm" data-i18n-placeholder="mensagens-pro:sidebar.searchPlaceholder" placeholder="🔍 Buscar colega (3+ letras)…" style="width: 100%;">
+          <div id="searchResults" class="ep-hide" style="margin-top: 6px; display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto;"></div>
         </div>
-        <div id="threadList" class="ep-stack" style="gap: 0; flex: 1; overflow: auto;"></div>
+        <div id="threadList" style="display: flex; flex-direction: column; gap: 0; flex: 1; overflow-y: auto; align-content: flex-start;">
+          <div class="ep-text-xs ep-text-muted" style="padding: 12px;">Carregando…</div>
+        </div>
       </aside>
 
       <!-- Painel da thread ativa -->
-      <section id="threadPanel" class="ep-card" style="display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden;">
+      <section style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
         <div id="emptyState" style="margin: auto; text-align: center; padding: 40px; color: var(--ep-ink-3);">
           <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
-          <p data-i18n="mensagens-pro:empty.msg">Selecione uma conversa à esquerda ou busque um colega pra iniciar.</p>
+          <h3 class="ep-h3 ep-mt-0" data-i18n="mensagens-pro:empty.h3">Selecione uma conversa</h3>
+          <p class="ep-text-muted ep-mt-8" data-i18n="mensagens-pro:empty.msg">Selecione uma conversa à esquerda ou busque um colega pra iniciar.</p>
         </div>
+
         <div id="threadActive" class="ep-hide" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
-          <div id="threadHeader" style="padding: 12px 16px; border-bottom: 1px solid var(--ep-line); font-weight: 600;"></div>
-          <div id="messageList" style="flex: 1; overflow-y: auto; min-height: 0; padding: 16px; display: flex; flex-direction: column; gap: 8px;"></div>
-          <!-- Indicador "digitando…" — peer só vê quando peerTypingAt < 6s. -->
-          <div id="typingIndicator" style="padding: 0 16px 6px; font-size: 12px; color: var(--ep-ink-3); font-style: italic; min-height: 18px;"></div>
-          <div style="padding: 12px 16px; border-top: 1px solid var(--ep-line); display: flex; gap: 8px;">
-            <input id="msgInput" type="text" class="ep-input" data-i18n-placeholder="mensagens-pro:input.placeholder" placeholder="Digite a mensagem…" style="flex: 1;">
-            <button type="button" id="msgSendBtn" class="ep-btn ep-btn--primary" data-i18n="mensagens-pro:input.send">Enviar</button>
+          <!-- Header: nome + digitando -->
+          <div id="proMsgPeerName" style="padding: 8px 16px; background: var(--ep-bg-2); border-bottom: 1px solid var(--ep-line); display: flex; flex-direction: column; gap: 1px;">
+            <span id="threadHeader" style="font-weight: 600; font-size: 15px; line-height: 1.3;">—</span>
+            <span id="typingIndicator" style="font-size: 11px; font-weight: 400; line-height: 1.3; min-height: 14px; color: var(--ep-ink-3); font-style: italic;"></span>
+          </div>
+          <!-- Mensagens -->
+          <div id="messageList" class="ep-chat-area" style="flex: 1; overflow-y: auto; min-height: 0; padding: 12px 14px; display: flex; flex-direction: column; gap: 3px;"></div>
+          <!-- Composer -->
+          <div style="background: var(--ep-bg-2); border-top: 1px solid var(--ep-line); position: relative;">
+            <div style="padding: 10px 12px; display: flex; gap: 8px; align-items: center;">
+              <button id="attachToggleBtn" type="button" aria-label="Anexar" title="Anexar" style="border: 0; background: transparent; cursor: pointer; padding: 4px; line-height: 1; border-radius: 8px; flex-shrink: 0; color: var(--ep-ink-3); display: flex; align-items: center;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <button id="emojiToggleBtn" type="button" aria-label="Inserir emoji" title="Inserir emoji" style="border: 0; background: transparent; cursor: pointer; padding: 4px; line-height: 1; border-radius: 8px; flex-shrink: 0; color: var(--ep-ink-3); display: flex; align-items: center;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              </button>
+              <input id="msgInput" type="text" class="ep-input" data-i18n-placeholder="mensagens-pro:input.placeholder" placeholder="Digite a mensagem…" maxlength="3000" style="flex: 1; border-radius: 20px; padding: 8px 16px; font-size: 14px;">
+              <button id="msgSendBtn" type="button" class="ep-btn ep-btn--primary" style="border-radius: 20px; padding: 8px 20px;" data-i18n="mensagens-pro:input.send">Enviar</button>
+            </div>
           </div>
         </div>
       </section>
@@ -125,7 +212,47 @@
   </section>
 </main>
 
-<a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" data-i18n-title="mensagens-pro:help.title" title="Suporte"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
+<!-- Menu de anexo -->
+<div id="attachMenu" role="menu" style="position: fixed; z-index: 1002; display: none; background: #fff; border-radius: 14px; box-shadow: 0 6px 28px rgba(0,0,0,0.20); padding: 0; min-width: 210px; overflow: hidden;">
+  <button data-attach="documento" style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 11px 18px; border: 0; background: transparent; cursor: pointer; font-size: 14px; color: #111; text-align: left;">
+    <span style="width: 36px; height: 36px; border-radius: 50%; background: #6c5ce7; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    </span>
+    Documento
+  </button>
+  <button data-attach="contato" style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 11px 18px; border: 0; background: transparent; cursor: pointer; font-size: 14px; color: #111; text-align: left;">
+    <span style="width: 36px; height: 36px; border-radius: 50%; background: #0984e3; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </span>
+    Colega
+  </button>
+</div>
+<input type="file" id="attachFileInput" accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.csv,.zip" style="display:none;">
+
+<!-- Modal: compartilhar contato de colega -->
+<div class="ep-modal" id="contactPickerModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 520px;">
+    <h3 class="ep-modal__title">Compartilhar colega</h3>
+    <div style="padding: 0 28px 16px;">
+      <input id="contactSearchInput" type="search" class="ep-input" placeholder="Buscar por nome ou especialidade…" style="width: 100%; margin-bottom: 12px;">
+      <div id="contactPickerList" style="max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;">
+        <div class="ep-text-xs ep-text-muted" style="padding: 8px;">Carregando…</div>
+      </div>
+    </div>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="contactPickerCancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Emoji picker do composer -->
+<div id="composerEmojiPicker" role="dialog" style="position: fixed; z-index: 1001; display: none; background: #fff; border: 1px solid var(--ep-line); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); padding: 8px; gap: 2px; grid-template-columns: repeat(10, 36px); width: max-content;"></div>
+
+<!-- Menu de contexto de mensagem -->
+<div id="proCtxMenu" role="menu" style="position: fixed; z-index: 1000; display: none; background: #fff; color: #111; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); min-width: 180px; padding: 6px 0; font-size: 14px; overflow: hidden;">
+  <button data-ctx="copiar"    style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: #111; box-sizing: border-box;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copiar</button>
+  <button data-ctx="apagar" data-only-mine="1" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: #b8453d; box-sizing: border-box;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg> Apagar</button>
+</div>
 
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
@@ -203,6 +330,13 @@
     if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP_${r.status}`);
     return d;
   }
+  function insertAtCursor(input, text) {
+    const s = input.selectionStart, e = input.selectionEnd;
+    const v = input.value;
+    input.value = v.slice(0, s) + text + v.slice(e);
+    input.selectionStart = input.selectionEnd = s + text.length;
+    input.focus();
+  }
 
   // ─── Estado ──────────────────────────────────────────────────────
   let threads = [];
@@ -216,7 +350,7 @@
       threads = d.threads || [];
       renderThreadList();
     } catch (e) {
-      document.getElementById("threadList").innerHTML = `<div class="ep-status is-err" style="margin:12px;">${esc(tr("mensagens-pro:js.loadError", "Erro: {{message}}", { message: e.message }))}</div>`;
+      document.getElementById("threadList").innerHTML = `<div class="ep-status is-err" style="margin:12px;">${esc(e.message)}</div>`;
     }
   }
 
@@ -236,12 +370,12 @@
       return;
     }
     el.innerHTML = threads.map(t => {
-      const peerName = t.peerName || tr("mensagens-pro:js.threadFallback", "—");
+      const peerName = t.peerName || "—";
       const lastTime = t.lastMessageAt ? fmtTime(t.lastMessageAt) : "";
       const isActive = activeThread?.threadId === t.threadId;
       const initials = peerName.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "?";
       const count = Number(t.unreadCount) || (t.hasUnread ? 1 : 0);
-      const badgeNew = count > 0
+      const badge = count > 0
         ? `<span style="background:#25d366;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;flex-shrink:0;">${count > 99 ? "99+" : count}</span>`
         : "";
       const preview = getProPreview(t.threadId);
@@ -250,7 +384,7 @@
         const prefix = preview.isMine ? `<span style="color:var(--ep-ink-3);">Você: </span>` : "";
         previewLine = `${prefix}${esc(preview.text)}`;
       } else {
-        previewLine = `<span style="color:var(--ep-ink-3);font-style:italic;">${esc(tr("mensagens-pro:js.threadNoMessages", "Sem mensagens"))}</span>`;
+        previewLine = `<span style="color:var(--ep-ink-3);font-style:italic;">Sem mensagens</span>`;
       }
       return `<button type="button" data-thr="${esc(t.threadId)}" class="ep-thread-card${isActive ? " is-active" : ""}" style="text-align:left;padding:10px 12px;margin:6px 8px;border:1px solid ${isActive ? "var(--ep-accent)" : "var(--ep-line)"};border-radius:12px;background:${isActive ? "var(--ep-accent-soft)" : "var(--ep-bg-2)"};cursor:pointer;display:flex;gap:10px;align-items:center;width:calc(100% - 16px);transition:background-color 0.15s ease,border-color 0.15s ease;">
         <div style="width:40px;height:40px;border-radius:50%;background:var(--ep-accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0;">${esc(initials)}</div>
@@ -261,7 +395,7 @@
           </div>
           <div class="ep-flex" style="gap:6px;align-items:center;margin-top:2px;">
             <span style="font-size:12.5px;color:var(--ep-ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;">${previewLine}</span>
-            ${badgeNew}
+            ${badge}
           </div>
         </div>
       </button>`;
@@ -283,7 +417,7 @@
         const d = await api(`/therapy/pro-chat/buscar?q=${encodeURIComponent(q)}`);
         const items = d.items || [];
         if (items.length === 0) {
-          box.innerHTML = `<p class="ep-text-xs ep-text-muted" style="padding: 8px;">${esc(tr("mensagens-pro:js.searchEmpty", "Nenhum colega verificado encontrado."))}</p>`;
+          box.innerHTML = `<p class="ep-text-xs ep-text-muted" style="padding: 8px;">Nenhum colega verificado encontrado.</p>`;
         } else {
           box.innerHTML = items.map(p => `
             <button type="button" data-peer="${esc(p.uid)}" data-peer-name="${esc(p.displayName)}" style="text-align: left; padding: 8px 10px; border: 1px solid var(--ep-line); background: var(--ep-bg-2); border-radius: 6px; cursor: pointer; font-size: 13px;">
@@ -303,78 +437,56 @@
 
   async function startThreadWithPeer(peerUid, peerName) {
     try {
-      // 1. Busca public key do peer
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/public-key/${encodeURIComponent(peerUid)}`, {
         headers: { "Authorization": `Bearer ${idToken}` }
       });
       const pkData = await r.json();
-      if (!r.ok || !pkData.ok) { alert(tr("mensagens-pro:js.alertNoEcdh", "Colega ainda não habilitou chat (sem ECDH keypair).")); return; }
-
-      // 2. Gera thread key, wrap pro creator (DEK) e pro peer (ECDH)
+      if (!r.ok || !pkData.ok) { alert("Colega ainda não habilitou chat (sem ECDH keypair)."); return; }
       const threadKeyBytes = await generateThreadKey();
       const threadKeyForCreator = await wrapKey(threadKeyBytes, dek);
       const threadKeyForPeer = await wrapThreadKeyForPeer(threadKeyBytes, myEcdhPrivBytes, pkData.ecdhPublicJwk);
-
-      // 3. POST cria thread
       const created = await api("/therapy/pro-chat/threads", {
         method: "POST",
-        body: JSON.stringify({
-          peerUid,
-          threadKeyForCreator,
-          threadKeyForPeer,
-          creatorEcdhPublicJwk: myEcdhPublicJwk
-        })
+        body: JSON.stringify({ peerUid, threadKeyForCreator, threadKeyForPeer, creatorEcdhPublicJwk: myEcdhPublicJwk })
       });
-
       document.getElementById("searchInput").value = "";
       document.getElementById("searchResults").classList.add("ep-hide");
       await loadThreads();
       await openThread(created.threadId);
-    } catch (e) { alert(tr("mensagens-pro:js.alertGeneric", "Erro: {{message}}", { message: e.message })); }
+    } catch (e) { alert("Erro: " + e.message); }
   }
 
   // ─── Thread ativa + mensagens ────────────────────────────────────
   async function openThread(threadId) {
     try {
-      // Reset cache se trocando de thread.
       if (activeThread?.threadId !== threadId) {
         messageCache.clear();
         lastRenderedThreadId = null;
       }
       const d = await api(`/therapy/pro-chat/threads/${encodeURIComponent(threadId)}`);
       activeThread = d.thread;
-
-      // Desembrulha threadKey: se eu sou criador, wrapper é o meu DEK.
-      // Se sou peer, é via ECDH(meu_priv, creator_pub_snapshot).
       if (activeThread.peerEcdhPublicJwkSnapshot) {
         activeThreadKeyBytes = await unwrapThreadKeyFromPeer(
-          activeThread.myWrappedThreadKey,
-          myEcdhPrivBytes,
-          activeThread.peerEcdhPublicJwkSnapshot
+          activeThread.myWrappedThreadKey, myEcdhPrivBytes, activeThread.peerEcdhPublicJwkSnapshot
         );
       } else {
         activeThreadKeyBytes = await unwrapKey(activeThread.myWrappedThreadKey, dek);
       }
-
       document.getElementById("emptyState").classList.add("ep-hide");
       document.getElementById("threadActive").classList.remove("ep-hide");
-      document.getElementById("threadHeader").textContent = activeThread.peerName || tr("mensagens-pro:js.threadFallback", "—");
+      document.getElementById("threadHeader").textContent = activeThread.peerName || "—";
+      document.getElementById("typingIndicator").textContent = "";
       await loadMessages();
-      renderThreadList(); // re-render pra marcar ativa
-      // marcar lido
+      renderThreadList();
       api(`/therapy/pro-chat/threads/${encodeURIComponent(threadId)}/marcar-lido`, {
-        method: "POST",
-        body: JSON.stringify({ until: Date.now() })
+        method: "POST", body: JSON.stringify({ until: Date.now() })
       }).catch(() => {});
-    } catch (e) { alert(tr("mensagens-pro:js.alertOpen", "Erro abrindo conversa: {{message}}", { message: e.message })); }
+    } catch (e) { alert("Erro abrindo conversa: " + e.message); }
   }
 
-  // Cache local das mensagens — render incremental (não re-cria DOM toda
-  // hora). Permite otimismo: bolha aparece local antes do POST voltar.
-  // Map messageId → { messageId, senderUid, text, createdAt, status }
-  // status: "sent" (confirmada pelo servidor) | "sending" (otimista) | "error"
   const messageCache = new Map();
   let lastRenderedThreadId = null;
+  let ctxMenuMsgId = null;
 
   function renderMsgBody(text) {
     if (text && text.startsWith("CONTACT_CARD:")) {
@@ -395,36 +507,35 @@
         </div>`;
       } catch { /* fallthrough */ }
     }
-    return `<div style="white-space:pre-wrap;word-break:break-word;">${esc(text)}</div>`;
+    return `<span class="ep-wb-text">${esc(text)}</span>`;
   }
 
   function renderMessages(opts = {}) {
     const list = document.getElementById("messageList");
     if (!activeThread) return;
-    // Reset se mudou de thread
     if (lastRenderedThreadId !== activeThread.threadId) {
       list.innerHTML = "";
       lastRenderedThreadId = activeThread.threadId;
     }
     const sorted = [...messageCache.values()].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-    // Re-build (simples e correto — tipicamente <100 msgs por thread).
     list.innerHTML = "";
     const lastReadByPeer = activeThread.lastReadByPeer || 0;
     for (const m of sorted) {
       const mine = m.senderUid === myUid;
+      const side = mine ? "mine" : "theirs";
       const div = document.createElement("div");
       div.dataset.msgId = m.messageId;
-      div.className = `ep-pro-msg ${mine ? "is-mine" : "is-theirs"}`;
-      div.style.cssText = `align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 70%; padding: 8px 12px; border-radius: 12px; background: ${mine ? "var(--ep-accent)" : "var(--ep-bg-2)"}; color: ${mine ? "#fff" : "var(--ep-ink)"}; font-size: 14px; opacity: ${m.status === "sending" ? "0.6" : "1"}; transition: opacity 0.18s ease;`;
-      // Ticks: ✓ (sending), ✓ (sent), ✓✓ (read) — só pras minhas.
+      div.className = `ep-pro-msg ep-pro-msg--${side}`;
+      div.style.cssText = `align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 72%; padding: 6px 10px; border-radius: 12px; background: ${mine ? "var(--ep-accent)" : "var(--ep-bg-2)"}; color: ${mine ? "#fff" : "var(--ep-ink)"}; font-size: 14px; line-height: 1.45; position: relative; opacity: ${m.status === "sending" ? "0.6" : "1"}; transition: opacity 0.18s;`;
       let tick = "";
       if (mine) {
-        if (m.status === "sending") tick = ' <span style="opacity: 0.7;">✓</span>';
-        else if (m.status === "error") tick = ' <span style="color: #ffb4b4;" title="Erro — clique pra reenviar">!</span>';
-        else if ((m.createdAt || 0) <= lastReadByPeer) tick = ' <span style="color: #7fc99f;">✓✓</span>';
-        else tick = ' <span style="opacity: 0.7;">✓</span>';
+        if      (m.status === "sending") tick = ' <span style="opacity:0.7;">✓</span>';
+        else if (m.status === "error")   tick = ' <span style="color:#ffb4b4;" title="Erro">!</span>';
+        else if ((m.createdAt || 0) <= lastReadByPeer) tick = ' <span style="color:#7fc99f;">✓✓</span>';
+        else tick = ' <span style="opacity:0.7;">✓</span>';
       }
-      div.innerHTML = `${renderMsgBody(m.text)}<div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">${fmtTime(m.createdAt)}${tick}</div>`;
+      div.innerHTML = `${renderMsgBody(m.text)}<span class="ep-wb-meta">${fmtTime(m.createdAt)}${tick}</span>`;
+      div.addEventListener("contextmenu", (e) => { e.preventDefault(); openCtxMenu(e, m.messageId, mine, m.text); });
       list.appendChild(div);
     }
     if (opts.scroll !== false) list.scrollTop = list.scrollHeight;
@@ -434,28 +545,18 @@
     if (!activeThread || !activeThreadKeyBytes) return;
     const isFirstLoad = lastRenderedThreadId !== activeThread.threadId;
     if (isFirstLoad) {
-      document.getElementById("messageList").innerHTML = `<div style="text-align: center; color: var(--ep-ink-3); padding: 20px;">${esc(tr("mensagens-pro:js.loading", "Carregando…"))}</div>`;
+      document.getElementById("messageList").innerHTML = `<div style="text-align:center;color:var(--ep-ink-3);padding:20px;">Carregando…</div>`;
     }
     try {
       const d = await api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}/messages?limit=100`);
       const msgs = d.messages || [];
-      // Mescla — preserva entradas otimistas que ainda não voltaram do servidor
-      // (status "sending"); remove dups (servidor já confirmou).
       for (const m of msgs) {
         let text = "";
-        try {
-          text = await decryptNote({ ciphertext: m.ciphertext, iv: m.iv }, activeThreadKeyBytes);
-        } catch { text = tr("mensagens-pro:js.corruptedMsg", "[mensagem corrompida]"); }
-        messageCache.set(m.messageId, {
-          messageId: m.messageId,
-          senderUid: m.senderUid,
-          text,
-          createdAt: m.createdAt,
-          status: "sent"
-        });
+        try { text = await decryptNote({ ciphertext: m.ciphertext, iv: m.iv }, activeThreadKeyBytes); }
+        catch { text = "[mensagem corrompida]"; }
+        messageCache.set(m.messageId, { messageId: m.messageId, senderUid: m.senderUid, text, createdAt: m.createdAt, status: "sent" });
       }
       renderMessages({ scroll: isFirstLoad || opts.scroll });
-      // Salva preview do último msg no localStorage
       const sorted = [...messageCache.values()].filter(m => m.status === "sent").sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
       if (sorted.length) {
         const last = sorted[sorted.length - 1];
@@ -463,13 +564,13 @@
       }
     } catch (e) {
       if (isFirstLoad) {
-        document.getElementById("messageList").innerHTML = `<div class="ep-status is-err">${esc(tr("mensagens-pro:js.loadError", "Erro: {{message}}", { message: e.message }))}</div>`;
+        document.getElementById("messageList").innerHTML = `<div class="ep-status is-err">Erro: ${esc(e.message)}</div>`;
       }
     }
   }
 
   document.getElementById("msgSendBtn").addEventListener("click", sendMessage);
-  document.getElementById("msgInput").addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(); });
+  document.getElementById("msgInput").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); sendMessage(); } });
 
   document.getElementById("messageList").addEventListener("click", async (e) => {
     const btn = e.target.closest("[data-contact-peer]");
@@ -487,88 +588,228 @@
     const text = input.value.trim();
     if (!text || !activeThread || !activeThreadKeyBytes) return;
     input.value = "";
-
-    // Otimismo: bolha aparece IMEDIATAMENTE com tempId.
     const tempId = "tmp-" + Math.random().toString(36).slice(2);
-    const tempMsg = {
-      messageId: tempId,
-      senderUid: myUid,
-      text,
-      createdAt: Date.now(),
-      status: "sending"
-    };
-    messageCache.set(tempId, tempMsg);
+    messageCache.set(tempId, { messageId: tempId, senderUid: myUid, text, createdAt: Date.now(), status: "sending" });
     renderMessages();
-
     try {
       const enc = await encryptNote(text, activeThreadKeyBytes);
       const result = await api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}/messages`, {
-        method: "POST",
-        body: JSON.stringify({ ciphertext: enc.ciphertext, iv: enc.iv })
+        method: "POST", body: JSON.stringify({ ciphertext: enc.ciphertext, iv: enc.iv })
       });
-      // Troca o tempId pelo real messageId que o servidor retornou.
       messageCache.delete(tempId);
-      messageCache.set(result.messageId, {
-        messageId: result.messageId,
-        senderUid: myUid,
-        text,
-        createdAt: result.createdAt || tempMsg.createdAt,
-        status: "sent"
-      });
+      messageCache.set(result.messageId, { messageId: result.messageId, senderUid: myUid, text, createdAt: result.createdAt || Date.now(), status: "sent" });
       renderMessages({ scroll: false });
       saveProPreview(activeThread.threadId, text, true);
-      // Refresh threads (lastMessageAt mudou).
       loadThreads();
     } catch (e) {
-      // Marca a bolha como erro — user pode tentar de novo.
       const m = messageCache.get(tempId);
       if (m) { m.status = "error"; renderMessages({ scroll: false }); }
       console.error("send_failed", e);
     }
   }
 
-  // Indicador "digitando..." — POSTa typing debounced enquanto user digita.
-  // Backend grava timestamp; peer detecta via peerTypingAt no GET thread.
+  // ─── Typing indicator ────────────────────────────────────────────
   let lastTypingPost = 0;
   document.getElementById("msgInput").addEventListener("input", () => {
     if (!activeThread) return;
     const now = Date.now();
-    if (now - lastTypingPost < 3000) return; // debounce 3s
+    if (now - lastTypingPost < 3000) return;
     lastTypingPost = now;
-    api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}/typing`, {
-      method: "POST"
-    }).catch(() => { /* silencioso */ });
+    api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}/typing`, { method: "POST" }).catch(() => {});
   });
 
-  // Refresh do thread aberto a cada 3s — pega mensagens novas + lastReadByPeer
-  // + peerTypingAt. Combina render incremental → sensação de tempo real.
   async function refreshActiveThread() {
     if (!activeThread) return;
     try {
       const d = await api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}`);
-      // Atualiza meta da thread (lastReadByPeer pros ticks).
       activeThread.lastReadByPeer = d.thread.lastReadByPeer || 0;
       activeThread.peerTypingAt   = d.thread.peerTypingAt || 0;
-      // "Digitando..." se peer typed nos últimos 6s e não sou eu.
       const typing = (Date.now() - (activeThread.peerTypingAt || 0)) < 6000;
       document.getElementById("typingIndicator").textContent = typing
-        ? tr("mensagens-pro:js.typing", "{{name}} está digitando…", { name: activeThread.peerName })
-        : "";
+        ? `${activeThread.peerName} está digitando…` : "";
       await loadMessages({ scroll: false });
     } catch { /* silencioso */ }
   }
 
+  // ─── Context menu ────────────────────────────────────────────────
+  const proCtxMenu = document.getElementById("proCtxMenu");
+  function openCtxMenu(e, msgId, isMine, text) {
+    ctxMenuMsgId = msgId;
+    proCtxMenu.querySelectorAll("[data-only-mine]").forEach(btn => {
+      btn.style.display = isMine ? "" : "none";
+    });
+    proCtxMenu.style.display = "block";
+    const x = Math.min(e.clientX, window.innerWidth - proCtxMenu.offsetWidth - 8);
+    const y = Math.min(e.clientY, window.innerHeight - proCtxMenu.offsetHeight - 8);
+    proCtxMenu.style.left = x + "px";
+    proCtxMenu.style.top  = y + "px";
+  }
+  proCtxMenu.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-ctx]");
+    if (!btn) return;
+    proCtxMenu.style.display = "none";
+    const action = btn.dataset.ctx;
+    const m = ctxMenuMsgId ? messageCache.get(ctxMenuMsgId) : null;
+    if (action === "copiar" && m) {
+      await navigator.clipboard.writeText(m.text).catch(() => {});
+    }
+    if (action === "apagar" && m && activeThread) {
+      if (!confirm("Apagar esta mensagem?")) return;
+      try {
+        await api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}/messages/${encodeURIComponent(m.messageId)}`, { method: "DELETE" });
+        messageCache.delete(m.messageId);
+        renderMessages({ scroll: false });
+      } catch(err) { console.error(err); }
+    }
+  });
+  document.addEventListener("click", (e) => {
+    if (proCtxMenu.style.display !== "none" && !proCtxMenu.contains(e.target)) proCtxMenu.style.display = "none";
+  });
+
+  // ─── Attach menu ─────────────────────────────────────────────────
+  const attachMenu = document.getElementById("attachMenu");
+  const attachFileInput = document.getElementById("attachFileInput");
+  const attachToggleBtn = document.getElementById("attachToggleBtn");
+  function closeAttachMenu() { attachMenu.style.display = "none"; }
+  function openAttachMenu() {
+    closeComposerPicker();
+    attachMenu.style.display = "block";
+    const rect = attachToggleBtn.getBoundingClientRect();
+    const w = attachMenu.offsetWidth;
+    let left = Math.max(8, rect.left);
+    if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+    attachMenu.style.left = left + "px";
+    attachMenu.style.top  = (rect.top - attachMenu.offsetHeight - 8) + "px";
+  }
+  attachToggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (attachMenu.style.display !== "none") { closeAttachMenu(); return; }
+    openAttachMenu();
+  });
+  attachMenu.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-attach]");
+    if (!btn) return;
+    closeAttachMenu();
+    if (btn.dataset.attach === "documento") attachFileInput.click();
+    if (btn.dataset.attach === "contato") openContactPicker();
+  });
+  attachFileInput.addEventListener("change", () => {
+    const file = attachFileInput.files?.[0];
+    if (!file) return;
+    insertAtCursor(document.getElementById("msgInput"), `[Arquivo: ${file.name}]`);
+    attachFileInput.value = "";
+  });
+  document.addEventListener("click", (e) => {
+    if (attachMenu.style.display !== "none" && !attachMenu.contains(e.target) && e.target !== attachToggleBtn) closeAttachMenu();
+  });
+
+  // ─── Contact picker ──────────────────────────────────────────────
+  const contactPickerModal = document.getElementById("contactPickerModal");
+  let allProfessionals = null;
+  document.getElementById("contactPickerCancel").addEventListener("click", () => contactPickerModal.classList.remove("is-open"));
+  async function openContactPicker() {
+    contactPickerModal.classList.add("is-open");
+    document.getElementById("contactSearchInput").value = "";
+    if (!allProfessionals) {
+      try {
+        const d = await api("/therapy/chat/profissionais");
+        allProfessionals = d.profissionais || [];
+      } catch { allProfessionals = []; }
+    }
+    renderContactList(allProfessionals);
+  }
+  function renderContactList(list) {
+    const el = document.getElementById("contactPickerList");
+    if (!list.length) { el.innerHTML = `<p class="ep-text-xs ep-text-muted" style="padding:8px;">Nenhum profissional verificado.</p>`; return; }
+    el.innerHTML = list.map(p => {
+      const sub = [p.especialidade, p.conselho].filter(Boolean).join(" · ");
+      return `<button type="button" data-pick-uid="${esc(p.uid)}" style="display:flex;align-items:center;gap:12px;text-align:left;padding:10px 12px;border:1px solid var(--ep-line);border-radius:8px;background:var(--ep-bg-2);cursor:pointer;box-sizing:border-box;width:100%;">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--ep-accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">${esc((p.displayName||"?").charAt(0).toUpperCase())}</div>
+        <div><div style="font-weight:600;font-size:14px;">${esc(p.displayName||"")}</div>${sub ? `<div style="font-size:11.5px;color:var(--ep-ink-3);">${esc(sub)}</div>` : ""}</div>
+      </button>`;
+    }).join("");
+    el.querySelectorAll("[data-pick-uid]").forEach(btn => {
+      btn.addEventListener("click", () => shareContact(btn.dataset.pickUid));
+    });
+  }
+  document.getElementById("contactSearchInput").addEventListener("input", (e) => {
+    if (!allProfessionals) return;
+    const q = e.target.value.toLowerCase();
+    renderContactList(q ? allProfessionals.filter(p => (p.displayName||"").toLowerCase().includes(q) || (p.especialidade||"").toLowerCase().includes(q)) : allProfessionals);
+  });
+  async function shareContact(uid) {
+    const pro = (allProfessionals || []).find(p => p.uid === uid);
+    if (!pro || !activeThread) return;
+    contactPickerModal.classList.remove("is-open");
+    const payload = JSON.stringify({ uid: pro.uid, displayName: pro.displayName, especialidade: pro.especialidade || "", conselho: pro.conselho || "" });
+    const text = "CONTACT_CARD:" + payload;
+    const tempId = "tmp-" + Math.random().toString(36).slice(2);
+    messageCache.set(tempId, { messageId: tempId, senderUid: myUid, text, createdAt: Date.now(), status: "sending" });
+    renderMessages();
+    try {
+      const enc = await encryptNote(text, activeThreadKeyBytes);
+      const result = await api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}/messages`, {
+        method: "POST", body: JSON.stringify({ ciphertext: enc.ciphertext, iv: enc.iv })
+      });
+      messageCache.delete(tempId);
+      messageCache.set(result.messageId, { messageId: result.messageId, senderUid: myUid, text, createdAt: result.createdAt || Date.now(), status: "sent" });
+      renderMessages({ scroll: false });
+    } catch(e) {
+      const m = messageCache.get(tempId);
+      if (m) { m.status = "error"; renderMessages({ scroll: false }); }
+    }
+  }
+
+  // ─── Emoji picker do composer ─────────────────────────────────────
+  const composerEmojiPicker = document.getElementById("composerEmojiPicker");
+  const emojiToggleBtn = document.getElementById("emojiToggleBtn");
+  const EMOJIS = ["😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🤭","🤫","🤥","😶","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","👾","🤖","🎃","😺","😸","😹","😻","😼","😽","🙀","😿","😾","👋","🤚","🖐","✋","🖖","👌","🤌","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦿","🦵","🦶","👂","🦻","👃","🫀","🫁","🧠","🦷","🦴","👀","👁","👅","👄","💋","🩸","❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","💟","☮️","✝️","☪️","🕉","🔥","💥","✨","🌟","⭐","🎉","🎊","🎈","🎁","🎀","🏆","🥇","👑","💎","🔑","🗝","🔒","🔓","🔔","🔕","🎵","🎶","🎼","🎤","🎧","🎸","🎹","🎷","🎺","🎻","🥁","🎯","🎮","🕹","🎲","🧩","🃏","🀄","🎴","📱","💻","🖥","🖨","⌨️","🖱","🖲","💾","💿","📀","📷","📸","📹","📽","🎞","📞","☎️","📟","📠","📺","📻","🧭","⏱","⏰","🕰","⌚","⏳","📡","🔭","🔬","💡","🔦","🕯","🪔","💸","💵","💴","💶","💷","💰","💳","🏧","📈","📉","📊","📋","📌","📍","📎","🖇","📏","📐","✂️","🗃","🗄","🗑","🔧","🔨","⚒","🛠","⛏","🔩","🪛","🔫","🧱","💣","🪓","🔪","🗡","⚔️","🛡","🚒","🚑","🚓","🚗","🚕","🚙","🚌","🚎","🏎","🚐","🚚","🚛","🚜","🏍","🛵","🚲","🛴","🛹","🛼","🚁","🛸","🚀","✈️","🛺","⛵","🚢","🚤","🛥","🛳","🏖","🏝","🏜","🏔","⛰","🌋","🗻","🏕","🏠","🏡","🏢","🏣","🏤","🏥","🏦","🏨","🏩","🏪","🏫","🏬","🏭","🗼","🗽","⛪","🕌","🛕","🕍","⛩","🕋","⛲","🎠","🎡","🎢","💈","⛺","🌁","🌃","🌄","🌅","🌆","🌇","🌉","🌌","🌠","🎆","🎇","🗺","🌍","🌎","🌏","🌐","🌑","🌒","🌓","🌔","🌕","🌖","🌗","🌘","🌙","🌚","🌛","🌜","🌝","🌞","🌟","⭐","✨","⚡","🔥","💧","🌊","☀️","🌤","⛅","🌥","🌦","🌧","⛈","🌩","🌨","❄️","☃️","⛄","🌬","🌀","🌈","☔","☂️","🌂","⛱","🌱","🌲","🌳","🌴","🌵","🌾","🌿","☘️","🍀","🎍","🎋","🍃","🍂","🍁","🍄","🐚","🪸","🌺","🌸","🌼","🌻","🌞","🌝","🌛","🌜","🌚","🌕","🌙"];
+  composerEmojiPicker.style.display = "none";
+  const frag = document.createDocumentFragment();
+  EMOJIS.slice(0, 120).forEach(em => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = em;
+    btn.style.cssText = "font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 4px; border-radius: 6px; line-height: 1;";
+    btn.addEventListener("click", () => {
+      insertAtCursor(document.getElementById("msgInput"), em);
+      closeComposerPicker();
+    });
+    frag.appendChild(btn);
+  });
+  composerEmojiPicker.appendChild(frag);
+
+  function closeComposerPicker() { composerEmojiPicker.style.display = "none"; }
+  function openComposerPicker() {
+    closeAttachMenu();
+    composerEmojiPicker.style.display = "grid";
+    const rect = emojiToggleBtn.getBoundingClientRect();
+    const w = composerEmojiPicker.offsetWidth || 380;
+    let left = Math.max(8, rect.left);
+    if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+    composerEmojiPicker.style.left = left + "px";
+    composerEmojiPicker.style.top  = (rect.top - composerEmojiPicker.offsetHeight - 8) + "px";
+  }
+  emojiToggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (composerEmojiPicker.style.display !== "none") { closeComposerPicker(); return; }
+    openComposerPicker();
+  });
+  document.addEventListener("click", (e) => {
+    if (composerEmojiPicker.style.display !== "none" && !composerEmojiPicker.contains(e.target) && e.target !== emojiToggleBtn) closeComposerPicker();
+  });
+
+  // ─── Logout ──────────────────────────────────────────────────────
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     await signOut(auth);
     window.location.href = "./login.html";
   });
 
-  // Polling: thread ativa a cada 3s (real-time feel), lista a cada 15s.
+  // ─── Polling ─────────────────────────────────────────────────────
   setInterval(() => { if (activeThread) refreshActiveThread(); }, 3_000);
   setInterval(() => { loadThreads(); }, 15_000);
 
   await loadThreads();
-  // Auto-abre thread se vier de um cartão de contato em mensagens.html
   const threadParam = new URLSearchParams(location.search).get("thread");
   if (threadParam) openThread(threadParam);
 </script>
