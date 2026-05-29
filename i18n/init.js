@@ -129,7 +129,7 @@
 
     const style = document.createElement('style');
     style.textContent =
-      '#ep-lang-switcher{position:fixed;bottom:14px;right:14px;z-index:2147483646;' +
+      '#ep-lang-switcher{position:fixed;bottom:16px;right:16px;z-index:2147483646;' +
       'font-family:system-ui,-apple-system,Segoe UI,sans-serif}' +
       '#ep-lang-btn{all:unset;cursor:pointer;background:rgba(28,31,29,.78);color:#fff;' +
       'padding:6px 11px;border-radius:999px;font-size:12px;font-weight:600;' +
