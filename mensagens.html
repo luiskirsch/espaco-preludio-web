@@ -813,8 +813,10 @@
 
       let tick = "";
       if (mine) {
+        const lastRead = currentThread?.lastReadByPatient || 0;
         if (m.status === "sending") tick = ' <span style="opacity: 0.7;">✓</span>';
         else if (m.status === "error") tick = ' <span style="color: #ffb4b4;" title="Erro">!</span>';
+        else if (lastRead >= (m.createdAt || 0)) tick = ' <span style="color: #7fc99f;">✓✓</span>';
         else tick = ' <span style="opacity: 0.7;">✓</span>';
       }
 
@@ -911,6 +913,7 @@
     const grewSinceLast = newest > lastSeenMessageMs;
     lastSeenMessageMs = newest;
 
+    if (d.lastReadByPatient && currentThread) currentThread.lastReadByPatient = d.lastReadByPatient;
     renderMessages({ scroll: isFirstLoad || grewSinceLast });
     if (d.lastSeenByPatient) renderPresence(d.lastSeenByPatient);
 
