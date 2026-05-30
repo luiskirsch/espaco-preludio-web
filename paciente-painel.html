@@ -20,6 +20,30 @@
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
 <body>
+<script>
+(function () {
+  if (typeof document === "undefined") return;
+  function buildStack() {
+    if (document.querySelector(".ep-fab-stack")) return;
+    const stack = document.createElement("div");
+    stack.className = "ep-fab-stack";
+    document.body.appendChild(stack);
+    const SELECTORS = ".ep-theme-toggle, .ep-msg-bubble-fab, .ep-help-bubble, .ep-logout-fab";
+    function collect() {
+      document.querySelectorAll(SELECTORS).forEach(function (el) {
+        if (el.parentNode !== stack) stack.appendChild(el);
+      });
+    }
+    collect();
+    new MutationObserver(collect).observe(document.body, { childList: true });
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", buildStack);
+  } else {
+    buildStack();
+  }
+})();
+</script>
 
 <div class="ep-shell">
   <header class="ep-topbar">
