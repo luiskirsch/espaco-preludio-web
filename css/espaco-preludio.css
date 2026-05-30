@@ -468,6 +468,31 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   .ep-fab-stack { display: contents; }
 }
 
+/* Páginas sem sidebar (ex: área do paciente) — mesmo stack centralizado
+   que as páginas com sidebar, mas sem a faixa de 90px. */
+@media (min-width: 900px) {
+  body:not(.ep-has-sidebar) .ep-fab-stack {
+    position: fixed;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 180;
+  }
+  body:not(.ep-has-sidebar) .ep-fab-stack > .ep-theme-toggle,
+  body:not(.ep-has-sidebar) .ep-fab-stack > .ep-msg-bubble-fab,
+  body:not(.ep-has-sidebar) .ep-fab-stack > .ep-help-bubble,
+  body:not(.ep-has-sidebar) .ep-fab-stack > .ep-logout-fab {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+  }
+}
+
 .ep-sidebar__brand {
   display: flex;
   align-items: center;
