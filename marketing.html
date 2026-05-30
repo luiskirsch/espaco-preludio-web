@@ -236,7 +236,8 @@
         .map(({ patientId }) => {
           const p = pacMap.get(patientId);
           if (!p) return null;
-          const email = String(p.contact || "").includes("@") ? String(p.contact).trim() : null;
+          const raw = p.contactEmail || (String(p.contact || "").includes("@") ? p.contact : null);
+          const email = raw ? String(raw).trim().toLowerCase() : null;
           if (!email) return null;
           return { patientId, name: p.name || "", email };
         })
