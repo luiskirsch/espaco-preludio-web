@@ -22,26 +22,20 @@
 <body>
 <script>
 (function () {
-  if (typeof document === "undefined") return;
-  function buildStack() {
-    if (document.querySelector(".ep-fab-stack")) return;
-    const stack = document.createElement("div");
-    stack.className = "ep-fab-stack";
-    document.body.appendChild(stack);
-    const SELECTORS = ".ep-theme-toggle, .ep-msg-bubble-fab, .ep-help-bubble, .ep-logout-fab";
-    function collect() {
-      document.querySelectorAll(SELECTORS).forEach(function (el) {
-        if (el.parentNode !== stack) stack.appendChild(el);
-      });
-    }
-    collect();
-    new MutationObserver(collect).observe(document.body, { childList: true });
+  var stack = document.createElement("div");
+  stack.style.cssText = "position:fixed;right:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:14px;z-index:180;";
+  document.body.appendChild(stack);
+  var SELECTORS = ".ep-theme-toggle, .ep-msg-bubble-fab, .ep-help-bubble, .ep-logout-fab";
+  function collect() {
+    document.querySelectorAll(SELECTORS).forEach(function (el) {
+      if (el.parentNode !== stack) {
+        el.style.cssText = "position:static!important;top:auto!important;right:auto!important;bottom:auto!important;margin:0!important;";
+        stack.appendChild(el);
+      }
+    });
   }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", buildStack);
-  } else {
-    buildStack();
-  }
+  collect();
+  new MutationObserver(collect).observe(document.body, { childList: true });
 })();
 </script>
 
