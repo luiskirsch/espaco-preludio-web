@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+  <link rel="preconnect" href="https://firestore.googleapis.com">
+  <link rel="dns-prefetch" href="https://www.gstatic.com">
+  <link rel="dns-prefetch" href="https://osl-video-server-staging.up.railway.app">
+  <script type="speculationrules">{"prerender":[{"where":{"selector_matches":"a[href$='.html']:not([href^='http'])"},"eagerness":"moderate"}]}</script>
+  <title>Admin · Pacientes · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-276">
+  <script src="./i18n/init.js?v=1-2" defer></script>
+  <script src="./js/monitoring.js?v=3" defer></script>
+</head>
+<body>
+
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio · Admin</span>
+      </span>
+    </a>
+    <nav class="ep-nav">
+      <a href="./admin-painel.html" class="ep-text-sm">Painel</a>
+      <a href="./admin-profissionais.html" class="ep-text-sm">Profissionais</a>
+      <a href="./admin-pacientes.html" class="ep-text-sm is-active">Pacientes</a>
+      <a href="./admin-denuncias.html" class="ep-text-sm">Denúncias</a>
+      <a href="./admin-verificacoes.html" class="ep-text-sm">CRP/CRM</a>
+      <a href="./admin-comprovantes.html" class="ep-text-sm">Estudante</a>
+      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm">Recém-formado</a>
+      <a href="./admin-comprovantes-formacao.html" class="ep-text-sm">Sem conselho</a>
+      <span id="adminEmail" class="ep-text-sm ep-text-muted">…</span>
+      <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Sair</button>
+    </nav>
+  </header>
+
+  <main class="ep-container ep-mt-32 ep-mb-16 ep-page-main">
+    <div id="forbiddenPanel" class="ep-card ep-mt-32" style="display:none;">
+      <p class="ep-text-muted">Acesso restrito a administradores.</p>
+    </div>
+
+    <div id="mainPanel">
+      <div>
+        <div class="ep-eyebrow">Painel administrativo</div>
+        <h1 class="ep-h1 ep-mt-12">Pacientes cadastrados</h1>
+        <p class="ep-text-muted ep-mt-8">Lista completa de pacientes com conta criada na plataforma.</p>
+      </div>
+
+      <div class="ep-flex ep-mt-24" style="gap: 12px; align-items: center;">
+        <input id="searchInput" type="search" class="ep-input" placeholder="Buscar por nome ou e-mail…" style="flex: 1; max-width: 480px;">
+      </div>
+
+      <div id="countEl" class="ep-text-sm ep-text-muted ep-mt-12"></div>
+      <div id="listEl" class="ep-stack ep-mt-8" style="gap: 8px;"></div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  const listEl     = document.getElementById("listEl");
+  const countEl    = document.getElementById("countEl");
+  const searchInput = document.getElementById("searchInput");
+  let idToken = null;
+  let allItems = [];
+
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  }
+  function fmtDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleString("pt-BR", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
+  }
+
+  async function api(path, opts = {}) {
+    const headers = { ...(opts.headers || {}), "Authorization": `Bearer ${idToken}` };
+    if (opts.body) headers["Content-Type"] = "application/json";
+    const res = await fetch(BACKEND_BASE_URL + path, { ...opts, headers });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw Object.assign(new Error(data?.error || ("HTTP_" + res.status)), { status: res.status });
+    return data;
+  }
+
+  function renderList(items) {
+    countEl.textContent = `${items.length} paciente${items.length === 1 ? "" : "s"} listado${items.length === 1 ? "" : "s"}`;
+    if (items.length === 0) {
+      listEl.innerHTML = `<div class="ep-empty"><p class="ep-text-muted ep-mt-8">Nenhum paciente encontrado.</p></div>`;
+      return;
+    }
+    listEl.innerHTML = "";
+    for (const it of items) {
+      const card = document.createElement("article");
+      card.className = "ep-admin-card";
+      card.innerHTML = `
+        <div class="ep-flex" style="justify-content: space-between; align-items: flex-start; gap: 12px;">
+          <div style="min-width: 0; flex: 1;">
+            <div class="ep-flex" style="gap: 8px; align-items: center; flex-wrap: wrap;">
+              <strong>${escapeHtml(it.displayName || "(sem nome)")}</strong>
+              ${it.consentAiSummary ? `<span class="ep-badge ep-badge--ok">IA autorizada</span>` : ""}
+            </div>
+            <div class="ep-text-sm ep-text-muted ep-mt-4">
+              ${escapeHtml(it.email || "—")} · UID: <code style="font-size:11px">${escapeHtml(it.uid)}</code>
+            </div>
+            <div class="ep-text-sm ep-text-muted ep-mt-4">
+              Cadastro: ${fmtDate(it.createdAt)}
+            </div>
+          </div>
+        </div>
+      `;
+      listEl.appendChild(card);
+    }
+  }
+
+  function applySearch() {
+    const q = searchInput.value.trim().toLowerCase();
+    if (!q) { renderList(allItems); return; }
+    renderList(allItems.filter(i =>
+      (i.displayName || "").toLowerCase().includes(q) ||
+      (i.email || "").toLowerCase().includes(q)
+    ));
+  }
+  searchInput.addEventListener("input", applySearch);
+
+  async function loadList() {
+    listEl.innerHTML = `<div class="ep-skeleton">Carregando…</div>`;
+    try {
+      const data = await api("/therapy/admin/pacientes");
+      allItems = data.items || [];
+      applySearch();
+    } catch (err) {
+      listEl.innerHTML = `<div class="ep-error-state">Erro: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await signOut(auth);
+    location.href = "./login.html";
+  });
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) { location.href = "./login.html"; return; }
+    idToken = await user.getIdToken();
+    document.getElementById("adminEmail").textContent = user.email || "";
+    try {
+      await loadList();
+    } catch (err) {
+      if (err.status === 403) {
+        document.getElementById("mainPanel").style.display = "none";
+        document.getElementById("forbiddenPanel").style.display = "";
+      }
+    }
+  });
+</script>
+
+</body>
+</html>
