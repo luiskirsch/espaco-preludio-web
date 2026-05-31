@@ -135,6 +135,9 @@ export async function fetchTherapistProfile(idToken, uid) {
         if (!capsEqual(cached.conselho?.capabilities, fresh.conselho?.capabilities)) {
           applyCapabilityVisibility(fresh.conselho?.capabilities);
         }
+        if (!!cached.therapist?.tissEnabled !== !!fresh.therapist?.tissEnabled) {
+          applyTissVisibility(fresh.therapist);
+        }
       })
       .catch(() => {});
     return cached;
