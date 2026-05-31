@@ -72,6 +72,7 @@
       <div class="ep-flex ep-gap-6">
         <select id="tipoSwitcher" class="ep-select" data-i18n-aria-label="documento:header.tipoAria" aria-label="Tipo de documento">
           <option value="atestado" data-i18n="documento:header.tipoAtestado">Atestado</option>
+          <option value="comparecimento" data-i18n="documento:header.tipoComparecimento">Comparecimento</option>
           <option value="exames" data-i18n="documento:header.tipoExames">Solicitação de exames</option>
           <option value="encaminhamento" data-i18n="documento:header.tipoEncaminhamento">Encaminhamento</option>
           <option value="relatorio" data-i18n="documento:header.tipoRelatorio">Relatório</option>
@@ -116,12 +117,12 @@
           // ─── Título do documento ───
           if (conselho?.sigla) {
             const MAP = {
-              CRM:           { atestado: "Atestado Médico",                encaminhamento: "Encaminhamento Médico",            relatorio: "Relatório Médico",                exames: "Solicitação de exames" },
-              CRP:           { atestado: "Atestado Psicológico",           encaminhamento: "Encaminhamento Psicológico",       relatorio: "Relatório Psicológico",           exames: "Solicitação de avaliação" },
-              CREFITO_FISIO: { atestado: "Atestado Fisioterapêutico",      encaminhamento: "Encaminhamento Fisioterapêutico",  relatorio: "Relatório Fisioterapêutico",      exames: "Solicitação de exames" },
-              CREFITO_TO:    { atestado: "Atestado de Terapia Ocupacional", encaminhamento: "Encaminhamento — Terapia Ocupacional", relatorio: "Relatório de Terapia Ocupacional", exames: "Solicitação de exames" },
-              CRN:           { atestado: "Atestado Nutricional",           encaminhamento: "Encaminhamento Nutricional",       relatorio: "Relatório Nutricional",           exames: "Solicitação de exames bioquímicos" },
-              CRO:           { atestado: "Atestado Odontológico",          encaminhamento: "Encaminhamento Odontológico",      relatorio: "Relatório Odontológico",          exames: "Solicitação de exames" }
+              CRM:           { atestado: "Atestado Médico",                comparecimento: "Atestado de Comparecimento", encaminhamento: "Encaminhamento Médico",            relatorio: "Relatório Médico",                exames: "Solicitação de exames" },
+              CRP:           { atestado: "Atestado Psicológico",           comparecimento: "Atestado de Comparecimento", encaminhamento: "Encaminhamento Psicológico",       relatorio: "Relatório Psicológico",           exames: "Solicitação de avaliação" },
+              CREFITO_FISIO: { atestado: "Atestado Fisioterapêutico",      comparecimento: "Atestado de Comparecimento", encaminhamento: "Encaminhamento Fisioterapêutico",  relatorio: "Relatório Fisioterapêutico",      exames: "Solicitação de exames" },
+              CREFITO_TO:    { atestado: "Atestado de Terapia Ocupacional", comparecimento: "Atestado de Comparecimento", encaminhamento: "Encaminhamento — Terapia Ocupacional", relatorio: "Relatório de Terapia Ocupacional", exames: "Solicitação de exames" },
+              CRN:           { atestado: "Atestado Nutricional",           comparecimento: "Atestado de Comparecimento", encaminhamento: "Encaminhamento Nutricional",       relatorio: "Relatório Nutricional",           exames: "Solicitação de exames bioquímicos" },
+              CRO:           { atestado: "Atestado Odontológico",          comparecimento: "Atestado de Comparecimento", encaminhamento: "Encaminhamento Odontológico",      relatorio: "Relatório Odontológico",          exames: "Solicitação de exames" }
             };
             let key = String(conselho.sigla).toUpperCase();
             if (key === "CREFITO") {
@@ -383,12 +384,12 @@
   // emite atestado fisioterapêutico/de TO. Mesmo helper que services/professional-councils.js
   // no backend, espelhado aqui pra montar o PDF e o switcher.
   const TITULOS_POR_CONSELHO = {
-    CRM:           { atestado: "Atestado Médico",                encaminhamento: "Encaminhamento Médico",            relatorio: "Relatório Médico",                exames: "Solicitação de exames" },
-    CRP:           { atestado: "Atestado Psicológico",           encaminhamento: "Encaminhamento Psicológico",       relatorio: "Relatório Psicológico",           exames: "Solicitação de avaliação" },
-    CREFITO_FISIO: { atestado: "Atestado Fisioterapêutico",      encaminhamento: "Encaminhamento Fisioterapêutico",  relatorio: "Relatório Fisioterapêutico",      exames: "Solicitação de exames" },
-    CREFITO_TO:    { atestado: "Atestado de Terapia Ocupacional", encaminhamento: "Encaminhamento — Terapia Ocupacional", relatorio: "Relatório de Terapia Ocupacional", exames: "Solicitação de exames" },
-    CRN:           { atestado: "Atestado Nutricional",           encaminhamento: "Encaminhamento Nutricional",       relatorio: "Relatório Nutricional",           exames: "Solicitação de exames bioquímicos" },
-    CRO:           { atestado: "Atestado Odontológico",          encaminhamento: "Encaminhamento Odontológico",      relatorio: "Relatório Odontológico",          exames: "Solicitação de exames" }
+    CRM:           { atestado: "Atestado Médico",                comparecimento: "Atestado de Comparecimento", encaminhamento: "Encaminhamento Médico",            relatorio: "Relatório Médico",                exames: "Solicitação de exames" },
+    CRP:           { atestado: "Atestado Psicológico",           comparecimento: "Atestado de Comparecimento", encaminhamento: "Encaminhamento Psicológico",       relatorio: "Relatório Psicológico",           exames: "Solicitação de avaliação" },
+    CREFITO_FISIO: { atestado: "Atestado Fisioterapêutico",      comparecimento: "Atestado de Comparecimento", encaminhamento: "Encaminhamento Fisioterapêutico",  relatorio: "Relatório Fisioterapêutico",      exames: "Solicitação de exames" },
+    CREFITO_TO:    { atestado: "Atestado de Terapia Ocupacional", comparecimento: "Atestado de Comparecimento", encaminhamento: "Encaminhamento — Terapia Ocupacional", relatorio: "Relatório de Terapia Ocupacional", exames: "Solicitação de exames" },
+    CRN:           { atestado: "Atestado Nutricional",           comparecimento: "Atestado de Comparecimento", encaminhamento: "Encaminhamento Nutricional",       relatorio: "Relatório Nutricional",           exames: "Solicitação de exames bioquímicos" },
+    CRO:           { atestado: "Atestado Odontológico",          comparecimento: "Atestado de Comparecimento", encaminhamento: "Encaminhamento Odontológico",      relatorio: "Relatório Odontológico",          exames: "Solicitação de exames" }
   };
 
   function resolveConselhoKey(c) {
@@ -404,8 +405,8 @@
     const key = resolveConselhoKey(conselho);
     const set = key && TITULOS_POR_CONSELHO[key];
     const titulo = set?.[tipoArg] || ({
-      atestado: "Atestado Profissional", encaminhamento: "Encaminhamento Profissional",
-      relatorio: "Relatório Profissional", exames: "Solicitação"
+      atestado: "Atestado Profissional", comparecimento: "Atestado de Comparecimento",
+      encaminhamento: "Encaminhamento Profissional", relatorio: "Relatório Profissional", exames: "Solicitação"
     })[tipoArg] || "Documento";
     return { titulo, cabecalho: titulo.toUpperCase() };
   }
