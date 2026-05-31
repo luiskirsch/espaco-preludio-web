@@ -145,6 +145,7 @@
     'receita.html':      'pacientes.html',
     'documento.html':    'pacientes.html',
     'audit.html':        'relatorios.html',
+    'calculadora.html':  'financeiro.html',
   };
   const activePath = PARENT_MAP[path] || path;
   document.querySelectorAll('.ep-sidebar__nav a').forEach(function (a) {
