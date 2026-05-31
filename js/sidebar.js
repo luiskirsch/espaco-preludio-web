@@ -135,11 +135,21 @@
 
   var sideEl = document.querySelector('.ep-sidebar');
 
-  // Marca link ativo pelo pathname (basename do URL). Roda imediato.
+  // Marca link ativo pelo pathname. Sub-páginas herdam o pai no menu.
   const path = (window.location.pathname.split('/').pop() || 'painel.html').toLowerCase();
+  const PARENT_MAP = {
+    'prontuario.html':   'pacientes.html',
+    'aniversarios.html': 'pacientes.html',
+    'lista-espera.html': 'pacientes.html',
+    'anamnese.html':     'pacientes.html',
+    'receita.html':      'pacientes.html',
+    'documento.html':    'pacientes.html',
+    'audit.html':        'relatorios.html',
+  };
+  const activePath = PARENT_MAP[path] || path;
   document.querySelectorAll('.ep-sidebar__nav a').forEach(function (a) {
     const href = (a.getAttribute('href') || '').replace(/^\.?\//, '').toLowerCase();
-    if (href === path) a.classList.add('is-active');
+    if (href === activePath) a.classList.add('is-active');
   });
 
   // i18n re-apply (sidebar pode aparecer antes do i18next botar) — roda imediato.
