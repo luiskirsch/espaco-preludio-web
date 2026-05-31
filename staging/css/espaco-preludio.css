@@ -442,7 +442,10 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   body.ep-has-sidebar .ep-fab-stack > .ep-msg-bubble-fab,
   body.ep-has-sidebar .ep-fab-stack > .ep-notif-fab,
   body.ep-has-sidebar .ep-fab-stack > .ep-help-bubble,
-  body.ep-has-sidebar .ep-fab-stack > .ep-logout-fab {
+  body.ep-has-sidebar .ep-fab-stack > .ep-logout-fab,
+  body.ep-has-sidebar .ep-fab-stack > .ep-receita-fab,
+  body.ep-has-sidebar .ep-fab-stack > .ep-atestado-fab,
+  body.ep-has-sidebar .ep-fab-stack > .ep-calc-fab {
     position: static !important;
     top: auto !important;
     right: auto !important;
@@ -452,7 +455,10 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   body.ep-has-sidebar .ep-fab-stack > .ep-theme-toggle   { order: 1; }
   body.ep-has-sidebar .ep-fab-stack > .ep-msg-bubble-fab { order: 2; }
   body.ep-has-sidebar .ep-fab-stack > .ep-notif-fab      { order: 3; }
-  body.ep-has-sidebar .ep-fab-stack > .ep-help-bubble    { order: 4; }
+  body.ep-has-sidebar .ep-fab-stack > .ep-receita-fab    { order: 4; }
+  body.ep-has-sidebar .ep-fab-stack > .ep-atestado-fab   { order: 5; }
+  body.ep-has-sidebar .ep-fab-stack > .ep-calc-fab       { order: 6; }
+  body.ep-has-sidebar .ep-fab-stack > .ep-help-bubble    { order: 7; }
   /* Logout redundante com botão Sair da sidebar. Continua no stack pra
      manter o #logoutBtn no DOM (sidebar.js dispara click), só não aparece. */
   body.ep-has-sidebar .ep-fab-stack > .ep-logout-fab { display: none !important; }
@@ -829,6 +835,35 @@ body:has(.ep-logout-fab):has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-
   outline: 2px solid var(--ep-gold);
   outline-offset: 2px;
 }
+/* FABs de ferramentas clínicas — capability-gated, montados pelo auth-guard */
+.ep-receita-fab,
+.ep-atestado-fab,
+.ep-calc-fab {
+  position: fixed;
+  right: 16px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(28,31,29,.20), 0 1px 3px rgba(28,31,29,.10);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  z-index: 180;
+}
+.ep-receita-fab  { background: #1a5c8a; }
+.ep-atestado-fab { background: #2d6b4a; }
+.ep-calc-fab     { background: #5c3d8a; }
+.ep-receita-fab:hover  { transform: translateY(-2px) scale(1.04); background: #134a72; box-shadow: 0 8px 22px rgba(26,92,138,.40); color: #fff; }
+.ep-atestado-fab:hover { transform: translateY(-2px) scale(1.04); background: #1f5038; box-shadow: 0 8px 22px rgba(45,107,74,.40); color: #fff; }
+.ep-calc-fab:hover     { transform: translateY(-2px) scale(1.04); background: #4a2d72; box-shadow: 0 8px 22px rgba(92,61,138,.40); color: #fff; }
+.ep-receita-fab:active, .ep-atestado-fab:active, .ep-calc-fab:active { transform: translateY(0) scale(1); }
+.ep-receita-fab svg, .ep-atestado-fab svg, .ep-calc-fab svg { width: 22px; height: 22px; display: block; }
+@media print { .ep-receita-fab, .ep-atestado-fab, .ep-calc-fab { display: none !important; } }
+
 .ep-msg-bubble-fab__badge {
   position: absolute;
   top: -4px;

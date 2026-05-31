@@ -560,6 +560,50 @@ export { mountThemeToggle };
 // na navegação entre páginas (mesma aba). Sem cache (1ª visita) = no-op, e o
 // requireTherapist aplica depois com dados frescos.
 //
+// FABs de ferramentas clínicas — montados só para quem tem a capability.
+function mountCapabilityFabs(capabilities) {
+  if (typeof document === "undefined") return;
+  const set = new Set(capabilities || []);
+  const FABS = [
+    {
+      id: "epReceitaFab",
+      cls: "ep-receita-fab",
+      href: "./receita.html",
+      label: "Emitir receita",
+      cap: "receita",
+      svg: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 12h6m-3-3v6"/><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+    },
+    {
+      id: "epAtestadoFab",
+      cls: "ep-atestado-fab",
+      href: "./documento.html?tipo=atestado",
+      label: "Emitir atestado",
+      cap: "documentos-clinicos",
+      svg: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg>'
+    },
+    {
+      id: "epCalcFab",
+      cls: "ep-calc-fab",
+      href: "./calculadora.html",
+      label: "Calculadora clínica",
+      cap: "calculadora-clinica",
+      svg: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="11" x2="8" y2="11"/><line x1="12" y1="11" x2="12" y2="11"/><line x1="16" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="8" y2="15"/><line x1="12" y1="15" x2="12" y2="15"/><line x1="16" y1="15" x2="16" y2="15"/><line x1="8" y1="19" x2="12" y2="19"/></svg>'
+    }
+  ];
+  FABS.forEach(({ id, cls, href, label, cap, svg }) => {
+    if (!set.has(cap)) return;
+    if (document.getElementById(id)) return;
+    const a = document.createElement("a");
+    a.id = id;
+    a.href = href;
+    a.className = cls;
+    a.title = label;
+    a.setAttribute("aria-label", label);
+    a.innerHTML = svg;
+    document.body.appendChild(a);
+  });
+}
+
 // Módulos ES são deferred — quando este IIFE roda, o DOM já está parseado e
 // os elementos #topUserAvatar/#topUserName existem.
 // Botão flutuante de mensagens — empilhado entre help (gold, em baixo) e
@@ -660,6 +704,8 @@ export async function requireTherapist({ requireDek = true } = {}) {
   // Aplica visibilidade baseada nas capabilities do conselho — esconde
   // links/botões pra features que o profissional não pode usar.
   applyCapabilityVisibility(profile.conselho?.capabilities);
+  // FABs de ferramentas clínicas (receita, atestado, calculadora).
+  mountCapabilityFabs(profile.conselho?.capabilities);
   // TISS opt-in: mostra/esconde links com [data-tiss-only] (link "TISS" no nav).
   applyTissVisibility(profile.therapist);
 
