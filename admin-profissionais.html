@@ -265,10 +265,21 @@
               Cadastro: ${fmtDate(it.createdAt)}${it.adminNote ? " · Nota: " + escapeHtml(it.adminNote) : ""}
             </div>
           </div>
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-uid="${escapeHtml(it.uid)}">Editar</button>
+          <div class="ep-flex ep-gap-8">
+            ${!it.displayName && !it.email ? `<button class="ep-btn ep-btn--ghost ep-btn--sm" style="color:#b8453d;border-color:#b8453d;" data-del="${escapeHtml(it.uid)}">🗑 Deletar</button>` : ""}
+            <button class="ep-btn ep-btn--ghost ep-btn--sm" data-uid="${escapeHtml(it.uid)}">Editar</button>
+          </div>
         </div>
       `;
-      card.querySelector("button").addEventListener("click", () => openEdit(it.uid));
+      card.querySelector("[data-uid]").addEventListener("click", () => openEdit(it.uid));
+      const delBtn = card.querySelector("[data-del]");
+      if (delBtn) delBtn.addEventListener("click", async () => {
+        if (!confirm("Deletar este documento fantasma? Não dá para desfazer.")) return;
+        try {
+          await api(`/therapy/admin/profissionais/${delBtn.dataset.del}`, { method: "DELETE" });
+          card.remove();
+        } catch (e) { alert("Erro: " + e.message); }
+      });
       listEl.appendChild(card);
     }
   }
