@@ -165,6 +165,9 @@ function applyTissVisibility(therapist) {
   document.querySelectorAll("[data-tiss-only]").forEach(el => {
     el.style.display = enabled ? "" : "none";
   });
+  // Controla sidebar diretamente — não depende do MutationObserver/syncTiss
+  const sideTiss = document.getElementById("sidebarTissLink");
+  if (sideTiss) sideTiss.classList.toggle("is-hidden", !enabled);
 }
 
 function applyCapabilityVisibility(capabilities) {
