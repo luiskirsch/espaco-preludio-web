@@ -376,7 +376,7 @@
   const editId = params.get("id");
   const presetPatientId = params.get("patientId");
   const presetSessionId = params.get("sessionId");
-  const VALID_TIPOS = ["atestado", "exames", "encaminhamento", "relatorio"];
+  const VALID_TIPOS = ["atestado", "comparecimento", "exames", "encaminhamento", "relatorio"];
   let tipo = (params.get("tipo") || "atestado").toLowerCase();
   if (!VALID_TIPOS.includes(tipo)) tipo = "atestado";
 
@@ -413,6 +413,7 @@
 
   const TIPO_META = {
     atestado:        tituloFor("atestado"),
+    comparecimento:  tituloFor("comparecimento"),
     exames:          tituloFor("exames"),
     encaminhamento:  tituloFor("encaminhamento"),
     relatorio:       tituloFor("relatorio")
