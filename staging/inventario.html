@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" data-i18n-ns="inventario">
 <head>
   <meta charset="UTF-8">
@@ -10,7 +10,7 @@
   <link rel="dns-prefetch" href="https://www.gstatic.com">
   <link rel="dns-prefetch" href="https://osl-video-server-staging.up.railway.app">
   <script type="speculationrules">{"prerender":[{"where":{"selector_matches":"a[href$='.html']:not([href^='http'])"},"eagerness":"moderate"}]}</script>
-  <title data-i18n="inventario:title">Estoque · Espaço Prelúdio</title>
+  <title data-i18n="inventario:title">Estoque Â· EspaÃ§o PrelÃºdio</title>
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,11 +28,11 @@
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
-    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+    <a href="./painel.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
-        <span data-i18n="common:brand.tail">Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">EspaÃ§o</span>
+        <span data-i18n="common:brand.tail">PrelÃºdio</span>
       </span>
     </a>
     <nav class="ep-nav" data-i18n-aria-label="inventario:nav.ariaLabel" aria-label="Painel">
@@ -44,8 +44,8 @@
       <a href="./mensagens-pro.html" data-i18n="inventario:nav.colegas">Colegas</a>
       <a href="./marketing.html" data-i18n="inventario:nav.marketing">Marketing</a>
 
-      <a href="./relatorios.html" data-i18n="inventario:nav.relatorios">Relatórios</a>
-      <a href="./clinica.html" data-i18n="inventario:nav.clinica">Clínica</a>
+      <a href="./relatorios.html" data-i18n="inventario:nav.relatorios">RelatÃ³rios</a>
+      <a href="./clinica.html" data-i18n="inventario:nav.clinica">ClÃ­nica</a>
       <a href="./inventario.html" class="is-active" data-i18n="inventario:nav.estoque">Estoque</a>
       <a href="./receita.html" data-i18n="inventario:nav.receitas">Receitas</a>
       <a href="./calculadora.html" data-i18n="inventario:nav.calculadora">Calculadora</a>
@@ -53,7 +53,7 @@
       <a href="./whatsapp.html" data-i18n="inventario:nav.whatsapp">WhatsApp</a>
       <div class="ep-profile-group">
         <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" data-i18n-aria-label="inventario:nav.perfilAria" aria-label="Abrir perfil">
-        <span class="ep-nav-avatar" id="topUserAvatar">·</span>
+        <span class="ep-nav-avatar" id="topUserAvatar">Â·</span>
         <span class="ep-nav-profile__name" id="topUserName"></span>
       </a>
         <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="inventario:nav.sair">Sair</button>
@@ -70,32 +70,32 @@
         <div class="ep-eyebrow" data-i18n="inventario:header.eyebrow">Controle de estoque</div>
         <h1 class="ep-h1 ep-mt-12 ep-page-title" data-i18n="inventario:header.h1">Seus materiais</h1>
         <p class="ep-text-muted ep-mt-8" data-i18n="inventario:header.lead">
-          Cadastre os itens que você usa no consultório e registre entradas e saídas.
+          Cadastre os itens que vocÃª usa no consultÃ³rio e registre entradas e saÃ­das.
         </p>
       </div>
       <button id="newItemBtn" type="button" class="ep-btn ep-btn--primary ep-btn--lg" data-i18n="inventario:header.newItem">+ Novo item</button>
     </div>
 
-    <!-- Banner de baixo estoque (só aparece se houver itens) -->
+    <!-- Banner de baixo estoque (sÃ³ aparece se houver itens) -->
     <div id="lowStockBanner" class="ep-alert ep-mt-16 ep-hide" style="background: var(--ep-gold-soft); border-color: var(--ep-gold-line); color: var(--ep-warn);">
-      <strong id="lowStockTitle">—</strong>
-      <span id="lowStockSub">—</span>
+      <strong id="lowStockTitle">â€”</strong>
+      <span id="lowStockSub">â€”</span>
     </div>
 
     <div class="ep-mt-16">
       <div class="ep-flex ep-gap-8" style="flex-wrap: wrap; align-items: center;">
-        <input id="searchInput" class="ep-input" type="text" placeholder="Buscar por nome…" data-i18n-placeholder="inventario:filters.searchPh" style="max-width: 280px;">
+        <input id="searchInput" class="ep-input" type="text" placeholder="Buscar por nomeâ€¦" data-i18n-placeholder="inventario:filters.searchPh" style="max-width: 280px;">
         <select id="categoryFilter" class="ep-select" data-i18n-aria-label="inventario:filters.categoryAria" aria-label="Filtrar por categoria">
           <option value="" data-i18n="inventario:filters.allCategories">Todas as categorias</option>
         </select>
         <label class="ep-flex" style="gap: 6px; align-items: center; cursor: pointer;">
-          <input type="checkbox" id="lowStockOnly"> <span class="ep-text-sm" data-i18n="inventario:filters.onlyLowStock">Só baixo estoque</span>
+          <input type="checkbox" id="lowStockOnly"> <span class="ep-text-sm" data-i18n="inventario:filters.onlyLowStock">SÃ³ baixo estoque</span>
         </label>
       </div>
 
       <!-- Skeleton: 3 rows prefigurando items do estoque. -->
       <div id="loadingBanner" class="ep-mt-16" aria-live="polite" aria-busy="true">
-        <span class="ep-hide" data-i18n="inventario:list.loading">Carregando itens…</span>
+        <span class="ep-hide" data-i18n="inventario:list.loading">Carregando itensâ€¦</span>
         <div class="ep-skel ep-skel--row"></div>
         <div class="ep-skel ep-skel--row"></div>
         <div class="ep-skel ep-skel--row"></div>
@@ -104,7 +104,7 @@
       <div id="emptyState" class="ep-empty ep-mt-16 ep-hide">
         <h3 class="ep-h3" data-i18n="inventario:list.emptyTitle">Nenhum item no estoque ainda.</h3>
         <p class="ep-text-muted ep-mt-8" style="margin: 0;" data-i18n="inventario:list.emptyLead">
-          Cadastre o primeiro material — eletrodos, ataduras, amostras de suplemento, testes, etc.
+          Cadastre o primeiro material â€” eletrodos, ataduras, amostras de suplemento, testes, etc.
         </p>
         <button class="ep-btn ep-btn--primary ep-mt-16" type="button" id="emptyCta" data-i18n="inventario:list.emptyCta">Cadastrar primeiro item</button>
       </div>
@@ -118,13 +118,13 @@
   <div class="ep-modal__panel">
     <h3 class="ep-modal__title" id="itemModalTitle" data-i18n="inventario:modal.newTitle">Novo item</h3>
     <p class="ep-modal__sub" data-i18n="inventario:modal.sub">
-      Cadastre um material do consultório. Saldo só muda via entradas/saídas — preserva o histórico.
+      Cadastre um material do consultÃ³rio. Saldo sÃ³ muda via entradas/saÃ­das â€” preserva o histÃ³rico.
     </p>
 
     <form id="itemForm" class="ep-stack" novalidate>
       <div class="ep-field">
         <label class="ep-label" for="itemName" data-i18n="inventario:modal.nameLabel">Nome *</label>
-        <input id="itemName" class="ep-input" type="text" maxlength="100" placeholder="Ex.: Eletrodo descartável" data-i18n-placeholder="inventario:modal.namePh" required>
+        <input id="itemName" class="ep-input" type="text" maxlength="100" placeholder="Ex.: Eletrodo descartÃ¡vel" data-i18n-placeholder="inventario:modal.namePh" required>
       </div>
       <div class="ep-row">
         <div class="ep-field">
@@ -159,7 +159,7 @@
         </div>
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="itemDescription" data-i18n="inventario:modal.descLabel">Descrição (opcional)</label>
+        <label class="ep-label" for="itemDescription" data-i18n="inventario:modal.descLabel">DescriÃ§Ã£o (opcional)</label>
         <input id="itemDescription" class="ep-input" type="text" maxlength="300" placeholder="Marca, fornecedor, etc." data-i18n-placeholder="inventario:modal.descPh">
       </div>
       <div class="ep-status" id="itemStatusMsg"></div>
@@ -172,11 +172,11 @@
   </div>
 </div>
 
-<!-- Modal: Entrada / saída -->
+<!-- Modal: Entrada / saÃ­da -->
 <div class="ep-modal" id="movModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel">
-    <h3 class="ep-modal__title" id="movModalTitle" data-i18n="inventario:mov.title">Movimentação</h3>
-    <p class="ep-modal__sub" id="movModalSub">—</p>
+    <h3 class="ep-modal__title" id="movModalTitle" data-i18n="inventario:mov.title">MovimentaÃ§Ã£o</h3>
+    <p class="ep-modal__sub" id="movModalSub">â€”</p>
 
     <form id="movForm" class="ep-stack" novalidate>
       <div class="ep-row">
@@ -184,7 +184,7 @@
           <label class="ep-label" for="movType" data-i18n="inventario:mov.typeLabel">Tipo *</label>
           <select id="movType" class="ep-select" required>
             <option value="entrada" data-i18n="inventario:mov.typeIn">Entrada (adicionar)</option>
-            <option value="saida" data-i18n="inventario:mov.typeOut">Saída (remover)</option>
+            <option value="saida" data-i18n="inventario:mov.typeOut">SaÃ­da (remover)</option>
           </select>
         </div>
         <div class="ep-field">
@@ -199,7 +199,7 @@
       </div>
       <div class="ep-field">
         <label class="ep-label" for="movReason" data-i18n="inventario:mov.reasonLabel">Motivo (opcional)</label>
-        <input id="movReason" class="ep-input" type="text" maxlength="200" placeholder="Ex.: Compra Fornecedor X / Uso na sessão" data-i18n-placeholder="inventario:mov.reasonPh">
+        <input id="movReason" class="ep-input" type="text" maxlength="200" placeholder="Ex.: Compra Fornecedor X / Uso na sessÃ£o" data-i18n-placeholder="inventario:mov.reasonPh">
       </div>
       <div class="ep-status" id="movStatusMsg"></div>
     </form>
@@ -211,11 +211,11 @@
   </div>
 </div>
 
-<!-- Modal: Histórico de movimentações -->
+<!-- Modal: HistÃ³rico de movimentaÃ§Ãµes -->
 <div class="ep-modal" id="historyModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel" style="max-width: 640px;">
-    <h3 class="ep-modal__title" id="historyTitle" data-i18n="inventario:history.title">Histórico</h3>
-    <p class="ep-modal__sub" id="historySub">—</p>
+    <h3 class="ep-modal__title" id="historyTitle" data-i18n="inventario:history.title">HistÃ³rico</h3>
+    <p class="ep-modal__sub" id="historySub">â€”</p>
     <div id="historyList" class="ep-stack"></div>
     <div class="ep-modal__actions">
       <button type="button" class="ep-btn ep-btn--primary" id="closeHistoryBtn" data-i18n="inventario:history.closeBtn">Fechar</button>
@@ -226,10 +226,10 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=3-27";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-28";
   import { clearDek } from "./js/crypto.js";
 
-  // ─── Boot ───────────────────────────────────────────────────
+  // â”€â”€â”€ Boot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const session = await requireTherapist({ requireDek: false });
   const { user, idToken, therapist } = session;
   const uid = user.uid;
@@ -258,14 +258,14 @@
     return (document.documentElement.lang || "pt-BR");
   }
 
-  // ─── Helpers ───────────────────────────────────────────────────
+  // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function escapeHtml(s) {
     return String(s || "").replace(/[&<>"']/g, c => ({
       "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
     }[c]));
   }
   function fmtDate(ms) {
-    if (!ms) return "—";
+    if (!ms) return "â€”";
     return new Date(ms).toLocaleDateString(currentLocale(), { day: "2-digit", month: "short", year: "numeric" });
   }
   function isoDateInput(ms) {
@@ -289,10 +289,10 @@
     return item && typeof item.minStock === "number" && item.minStock > 0 && (item.currentStock || 0) <= item.minStock;
   }
 
-  // ─── Estado ────────────────────────────────────────────────────
+  // â”€â”€â”€ Estado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let allItems = [];
 
-  // ─── Carregamento ──────────────────────────────────────────────
+  // â”€â”€â”€ Carregamento â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const loadingBanner = document.getElementById("loadingBanner");
   const itemList      = document.getElementById("itemList");
   const emptyState    = document.getElementById("emptyState");
@@ -345,7 +345,7 @@
       document.getElementById("lowStockTitle").textContent = low.length === 1
         ? tr("inventario:lowStock.single", "1 item em estoque baixo.")
         : tr("inventario:lowStock.many", "{{n}} itens em estoque baixo.", { n: low.length });
-      document.getElementById("lowStockSub").textContent = low.map(i => i.name).slice(0, 5).join(", ") + (low.length > 5 ? "…" : "");
+      document.getElementById("lowStockSub").textContent = low.map(i => i.name).slice(0, 5).join(", ") + (low.length > 5 ? "â€¦" : "");
     } else {
       banner.classList.add("ep-hide");
     }
@@ -388,7 +388,7 @@
     if (isLowStock(item)) div.classList.add("ep-session--active"); // marca lateral dourada
     const stockLine = `<strong style="font-size: 18px;">${item.currentStock} ${unitLabel(item.unit)}</strong>`;
     const lowBadge = isLowStock(item)
-      ? `<span class="ep-badge" style="background: var(--ep-gold-soft); color: var(--ep-warn); border-color: var(--ep-gold-line);">${escapeHtml(tr("inventario:lowStock.badge", "Baixo estoque (mín. {{min}})", { min: item.minStock }))}</span>`
+      ? `<span class="ep-badge" style="background: var(--ep-gold-soft); color: var(--ep-warn); border-color: var(--ep-gold-line);">${escapeHtml(tr("inventario:lowStock.badge", "Baixo estoque (mÃ­n. {{min}})", { min: item.minStock }))}</span>`
       : "";
     const catBadge = item.category
       ? `<span class="ep-badge ep-badge--muted">${escapeHtml(item.category)}</span>`
@@ -423,7 +423,7 @@
   document.getElementById("categoryFilter").addEventListener("change", renderAll);
   document.getElementById("lowStockOnly").addEventListener("change", renderAll);
 
-  // ─── Modal: item (criar/editar) ────────────────────────────────
+  // â”€â”€â”€ Modal: item (criar/editar) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const itemModal = document.getElementById("itemModal");
   const itemModalTitle = document.getElementById("itemModalTitle");
   const itemName = document.getElementById("itemName");
@@ -447,7 +447,7 @@
     itemInitialStock.value = "0";
     itemMinStock.value = item?.minStock ?? 0;
     itemDescription.value = item?.description || "";
-    // Estoque inicial só na criação
+    // Estoque inicial sÃ³ na criaÃ§Ã£o
     initialStockField.style.display = editingItemId ? "none" : "";
     itemStatusMsg.textContent = "";
     itemStatusMsg.className = "ep-status";
@@ -462,7 +462,7 @@
 
   document.getElementById("saveItemBtn").addEventListener("click", async () => {
     const name = itemName.value.trim();
-    if (!name) { itemStatusMsg.textContent = tr("inventario:errors.nameRequired", "Nome é obrigatório."); itemStatusMsg.className = "ep-status is-err"; return; }
+    if (!name) { itemStatusMsg.textContent = tr("inventario:errors.nameRequired", "Nome Ã© obrigatÃ³rio."); itemStatusMsg.className = "ep-status is-err"; return; }
     const body = {
       name,
       category: itemCategory.value.trim() || null,
@@ -492,7 +492,7 @@
     }
   });
 
-  // ─── Modal: movimentação ───────────────────────────────────────
+  // â”€â”€â”€ Modal: movimentaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const movModal = document.getElementById("movModal");
   const movModalTitle = document.getElementById("movModalTitle");
   const movModalSub = document.getElementById("movModalSub");
@@ -505,7 +505,7 @@
 
   function openMovModal(item) {
     movItemId = item.itemId;
-    movModalTitle.textContent = tr("inventario:mov.titleWith", "Movimentação — {{name}}", { name: item.name });
+    movModalTitle.textContent = tr("inventario:mov.titleWith", "MovimentaÃ§Ã£o â€” {{name}}", { name: item.name });
     movModalSub.textContent = tr("inventario:mov.currentStock", "Estoque atual: {{value}} {{unit}}", { value: item.currentStock, unit: unitLabel(item.unit) });
     movType.value = "entrada";
     movQuantity.value = "1";
@@ -523,7 +523,7 @@
   document.getElementById("saveMovBtn").addEventListener("click", async () => {
     const quantity = Number(movQuantity.value);
     if (!Number.isInteger(quantity) || quantity < 1) {
-      movStatusMsg.textContent = tr("inventario:errors.qtyInvalid", "Quantidade inválida."); movStatusMsg.className = "ep-status is-err"; return;
+      movStatusMsg.textContent = tr("inventario:errors.qtyInvalid", "Quantidade invÃ¡lida."); movStatusMsg.className = "ep-status is-err"; return;
     }
     const body = {
       itemId: movItemId,
@@ -553,16 +553,16 @@
     }
   });
 
-  // ─── Modal: histórico ──────────────────────────────────────────
+  // â”€â”€â”€ Modal: histÃ³rico â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const historyModal = document.getElementById("historyModal");
   document.getElementById("closeHistoryBtn").addEventListener("click", () => historyModal.classList.remove("is-open"));
   historyModal.addEventListener("click", (e) => { if (e.target === historyModal) historyModal.classList.remove("is-open"); });
 
   async function openHistoryModal(item) {
-    document.getElementById("historyTitle").textContent = tr("inventario:history.titleWith", "Histórico — {{name}}", { name: item.name });
+    document.getElementById("historyTitle").textContent = tr("inventario:history.titleWith", "HistÃ³rico â€” {{name}}", { name: item.name });
     document.getElementById("historySub").textContent = tr("inventario:history.currentStock", "Estoque atual: {{value}} {{unit}}", { value: item.currentStock, unit: unitLabel(item.unit) });
     const listEl = document.getElementById("historyList");
-    listEl.innerHTML = escapeHtml(tr("inventario:history.loading", "Carregando…"));
+    listEl.innerHTML = escapeHtml(tr("inventario:history.loading", "Carregandoâ€¦"));
     historyModal.classList.add("is-open");
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/inventario/movimentos?itemId=${encodeURIComponent(item.itemId)}`, {
@@ -572,17 +572,17 @@
       if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
       const movs = data.movements || [];
       if (movs.length === 0) {
-        listEl.innerHTML = `<p class="ep-text-muted">${escapeHtml(tr("inventario:history.empty", "Sem movimentações ainda."))}</p>`;
+        listEl.innerHTML = `<p class="ep-text-muted">${escapeHtml(tr("inventario:history.empty", "Sem movimentaÃ§Ãµes ainda."))}</p>`;
         return;
       }
       listEl.innerHTML = movs.map(m => {
-        const sign = m.type === "entrada" ? "+" : "−";
+        const sign = m.type === "entrada" ? "+" : "âˆ’";
         const color = m.type === "entrada" ? "var(--ep-ok)" : "var(--ep-danger)";
         return `
           <div class="ep-flex" style="justify-content: space-between; padding: 10px 12px; border: 1px solid var(--ep-line); border-radius: 8px;">
             <div>
               <strong style="color: ${color};">${sign} ${m.quantity} ${unitLabel(item.unit)}</strong>
-              ${m.reason ? `<span class="ep-text-sm ep-text-muted"> — ${escapeHtml(m.reason)}</span>` : ""}
+              ${m.reason ? `<span class="ep-text-sm ep-text-muted"> â€” ${escapeHtml(m.reason)}</span>` : ""}
               <div class="ep-text-xs ep-text-muted">${fmtDate(m.movDate)}</div>
             </div>
           </div>
@@ -593,7 +593,7 @@
     }
   }
 
-  // ─── Lista: delegação de eventos ───────────────────────────────
+  // â”€â”€â”€ Lista: delegaÃ§Ã£o de eventos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   itemList.addEventListener("click", async (e) => {
     const btn = e.target.closest("button[data-action]");
     if (!btn) return;
@@ -605,7 +605,7 @@
     else if (action === "history") openHistoryModal(item);
     else if (action === "edit")    openItemModal(item);
     else if (action === "delete") {
-      if (!confirm(tr("inventario:confirm.archive", "Arquivar \"{{name}}\"? O histórico de movimentações fica preservado.", { name: item.name }))) return;
+      if (!confirm(tr("inventario:confirm.archive", "Arquivar \"{{name}}\"? O histÃ³rico de movimentaÃ§Ãµes fica preservado.", { name: item.name }))) return;
       btn.disabled = true;
       try {
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/inventario/itens/${encodeURIComponent(item.itemId)}`, {

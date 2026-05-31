@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" data-i18n-ns="confirmar">
 <head>
   <meta charset="UTF-8">
@@ -10,7 +10,7 @@
   <link rel="dns-prefetch" href="https://www.gstatic.com">
   <link rel="dns-prefetch" href="https://osl-video-server-staging.up.railway.app">
   <script type="speculationrules">{"prerender":[{"where":{"selector_matches":"a[href$='.html']:not([href^='http'])"},"eagerness":"moderate"}]}</script>
-  <title data-i18n="confirmar:title">Confirmar presença · Espaço Prelúdio</title>
+  <title data-i18n="confirmar:title">Confirmar presenÃ§a Â· EspaÃ§o PrelÃºdio</title>
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,15 +23,15 @@
 
 <div class="ep-shell">
   <header class="ep-topbar">
-    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+    <a href="./index.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
-        <span data-i18n="common:brand.tail">Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">EspaÃ§o</span>
+        <span data-i18n="common:brand.tail">PrelÃºdio</span>
       </span>
     </a>
     <nav class="ep-nav">
-      <span class="ep-text-sm ep-text-muted" data-i18n="confirmar:navLabel">Confirmar presença</span>
+      <span class="ep-text-sm ep-text-muted" data-i18n="confirmar:navLabel">Confirmar presenÃ§a</span>
     </nav>
   </header>
 
@@ -39,31 +39,31 @@
 
     <div id="missingToken" class="ep-hide ep-mt-32">
       <div class="ep-alert ep-alert--danger" data-i18n="confirmar:missingToken">
-        Link inválido. Use o link enviado no e-mail de lembrete.
+        Link invÃ¡lido. Use o link enviado no e-mail de lembrete.
       </div>
     </div>
 
     <div id="loadingBox" class="ep-mt-32">
-      <div class="ep-skeleton" data-i18n="confirmar:loading">Confirmando…</div>
+      <div class="ep-skeleton" data-i18n="confirmar:loading">Confirmandoâ€¦</div>
     </div>
 
     <div id="successBox" class="ep-hide ep-mt-32">
       <div class="ep-alert ep-alert--ok">
-        <strong data-i18n="confirmar:success.title">Presença confirmada.</strong>
-        <p class="ep-mt-0" id="successMsg" data-i18n="confirmar:success.default">O profissional foi notificado. Você pode fechar esta janela.</p>
+        <strong data-i18n="confirmar:success.title">PresenÃ§a confirmada.</strong>
+        <p class="ep-mt-0" id="successMsg" data-i18n="confirmar:success.default">O profissional foi notificado. VocÃª pode fechar esta janela.</p>
       </div>
     </div>
 
     <div id="alreadyBox" class="ep-hide ep-mt-32">
       <div class="ep-alert">
-        <strong data-i18n="confirmar:already.title">Você já havia confirmado.</strong>
-        <p class="ep-mt-0" data-i18n="confirmar:already.desc">Sem problema — sua confirmação continua valendo. Te vejo no horário marcado.</p>
+        <strong data-i18n="confirmar:already.title">VocÃª jÃ¡ havia confirmado.</strong>
+        <p class="ep-mt-0" data-i18n="confirmar:already.desc">Sem problema â€” sua confirmaÃ§Ã£o continua valendo. Te vejo no horÃ¡rio marcado.</p>
       </div>
     </div>
 
     <div id="errorBox" class="ep-hide ep-mt-32">
       <div class="ep-alert ep-alert--danger">
-        <strong id="errorTitle" data-i18n="confirmar:error.defaultTitle">Não foi possível confirmar.</strong>
+        <strong id="errorTitle" data-i18n="confirmar:error.defaultTitle">NÃ£o foi possÃ­vel confirmar.</strong>
         <p id="errorMsg" class="ep-mt-0"></p>
       </div>
     </div>
@@ -134,15 +134,15 @@
         const errorTitle = document.getElementById("errorTitle");
         if (data?.error === "SESSAO_CANCELADA") {
           errorTitle.textContent = tr("confirmar:error.cancelledTitle", "Consulta cancelada.");
-          errorMsg.textContent = tr("confirmar:error.cancelledMsg", "Esta consulta foi cancelada e não precisa mais ser confirmada.");
+          errorMsg.textContent = tr("confirmar:error.cancelledMsg", "Esta consulta foi cancelada e nÃ£o precisa mais ser confirmada.");
         } else if (data?.error === "SESSAO_JA_ENCERRADA") {
-          errorTitle.textContent = tr("confirmar:error.endedTitle", "Consulta já encerrada.");
-          errorMsg.textContent = tr("confirmar:error.endedMsg", "Esta consulta já aconteceu.");
+          errorTitle.textContent = tr("confirmar:error.endedTitle", "Consulta jÃ¡ encerrada.");
+          errorMsg.textContent = tr("confirmar:error.endedMsg", "Esta consulta jÃ¡ aconteceu.");
         } else if (data?.error === "TOKEN_EXPIRADO" || data?.error === "TOKEN_INVALIDO") {
-          errorTitle.textContent = tr("confirmar:error.invalidTitle", "Link inválido ou expirado.");
-          errorMsg.textContent = tr("confirmar:error.invalidMsg", "Use o link mais recente que você recebeu por e-mail, ou fale direto com o profissional.");
+          errorTitle.textContent = tr("confirmar:error.invalidTitle", "Link invÃ¡lido ou expirado.");
+          errorMsg.textContent = tr("confirmar:error.invalidMsg", "Use o link mais recente que vocÃª recebeu por e-mail, ou fale direto com o profissional.");
         } else {
-          errorTitle.textContent = tr("confirmar:error.defaultTitle", "Não foi possível confirmar.");
+          errorTitle.textContent = tr("confirmar:error.defaultTitle", "NÃ£o foi possÃ­vel confirmar.");
           errorMsg.textContent = data?.error
             || (res.ok ? tr("confirmar:error.unknownMsg", "Erro desconhecido. Tente novamente ou fale com o profissional.") : `HTTP ${res.status}`);
         }

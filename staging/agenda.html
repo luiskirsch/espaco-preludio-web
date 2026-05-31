@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" data-i18n-ns="agenda,painel">
 <head>
   <meta charset="UTF-8">
@@ -10,7 +10,7 @@
   <link rel="dns-prefetch" href="https://www.gstatic.com">
   <link rel="dns-prefetch" href="https://osl-video-server-staging.up.railway.app">
   <script type="speculationrules">{"prerender":[{"where":{"selector_matches":"a[href$='.html']:not([href^='http'])"},"eagerness":"moderate"}]}</script>
-  <title data-i18n="agenda:title">Agenda · Espaço Prelúdio</title>
+  <title data-i18n="agenda:title">Agenda Â· EspaÃ§o PrelÃºdio</title>
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,11 +28,11 @@
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
-    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+    <a href="./painel.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
-        <span data-i18n="common:brand.tail">Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">EspaÃ§o</span>
+        <span data-i18n="common:brand.tail">PrelÃºdio</span>
       </span>
     </a>
     <nav class="ep-nav" aria-label="Painel" data-i18n-aria-label="agenda:nav.painelAria">
@@ -44,8 +44,8 @@
       <a href="./mensagens-pro.html" data-i18n="agenda:nav.colegas">Colegas</a>
       <a href="./marketing.html" data-i18n="agenda:nav.marketing">Marketing</a>
 
-      <a href="./relatorios.html" data-i18n="agenda:nav.relatorios">Relatórios</a>
-      <a href="./clinica.html" data-i18n="agenda:nav.clinica">Clínica</a>
+      <a href="./relatorios.html" data-i18n="agenda:nav.relatorios">RelatÃ³rios</a>
+      <a href="./clinica.html" data-i18n="agenda:nav.clinica">ClÃ­nica</a>
       <a href="./inventario.html" data-i18n="agenda:nav.estoque">Estoque</a>
       <a href="./receita.html" data-i18n="agenda:nav.receitas">Receitas</a>
       <a href="./calculadora.html" data-i18n="agenda:nav.calculadora">Calculadora</a>
@@ -53,7 +53,7 @@
       <a href="./whatsapp.html" data-i18n="agenda:nav.whatsapp">WhatsApp</a>
       <div class="ep-profile-group">
         <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" aria-label="Abrir perfil" data-i18n-aria-label="agenda:nav.perfilAria">
-        <span class="ep-nav-avatar" id="topUserAvatar">·</span>
+        <span class="ep-nav-avatar" id="topUserAvatar">Â·</span>
         <span class="ep-nav-profile__name" id="topUserName"></span>
       </a>
         <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="agenda:nav.logout">Sair</button>
@@ -68,29 +68,29 @@
     <div>
       <div class="ep-eyebrow" data-i18n="agenda:header.eyebrow">Agenda</div>
       <h1 class="ep-h1 ep-mt-12 ep-page-title" data-i18n="agenda:header.h1">Sua semana</h1>
-      <p class="ep-text-muted ep-mt-0" data-i18n="agenda:header.lead">Visualize, navegue e crie consultas direto no horário desejado.</p>
+      <p class="ep-text-muted ep-mt-0" data-i18n="agenda:header.lead">Visualize, navegue e crie consultas direto no horÃ¡rio desejado.</p>
     </div>
   </div>
 
-  <!-- Busca + ações (⋯ Mais, + Nova consulta) na mesma linha. Busca à esquerda,
-       ações empurradas pra direita via margin-left:auto. IDs originais
-       preservados — JS dos modais continua usando getElementById. -->
+  <!-- Busca + aÃ§Ãµes (â‹¯ Mais, + Nova consulta) na mesma linha. Busca Ã  esquerda,
+       aÃ§Ãµes empurradas pra direita via margin-left:auto. IDs originais
+       preservados â€” JS dos modais continua usando getElementById. -->
   <div class="ep-agenda-search-row ep-flex ep-flex--end-wrap ep-no-print" style="gap: 10px; align-items: center;">
     <div class="ep-field" style="flex: 1; max-width: 360px; margin: 0;">
-      <input id="patientSearch" class="ep-input" type="search" placeholder="🔍 Buscar consulta por paciente…" aria-label="Buscar paciente" data-i18n-placeholder="agenda:search.placeholder" data-i18n-aria-label="agenda:search.aria">
+      <input id="patientSearch" class="ep-input" type="search" placeholder="ðŸ” Buscar consulta por pacienteâ€¦" aria-label="Buscar paciente" data-i18n-placeholder="agenda:search.placeholder" data-i18n-aria-label="agenda:search.aria">
     </div>
     <span id="searchHint" class="ep-text-xs ep-text-muted ep-hide"></span>
     <div class="ep-flex ep-flex--wrap ep-gap-8" style="align-items: center; margin-left: auto;">
       <div class="ep-toolbar-more" id="agendaToolbarMore">
         <button type="button" class="ep-btn ep-btn--ghost" id="toolbarMoreBtn"
                 aria-haspopup="true" aria-expanded="false"
-                aria-label="Mais ações" data-i18n-aria-label="agenda:header.moreAria"
-                data-i18n="agenda:header.moreBtn">⋯ Mais</button>
+                aria-label="Mais aÃ§Ãµes" data-i18n-aria-label="agenda:header.moreAria"
+                data-i18n="agenda:header.moreBtn">â‹¯ Mais</button>
         <div class="ep-toolbar-more__menu" id="toolbarMoreMenu" role="menu" hidden>
           <button type="button" class="ep-toolbar-more__item" id="openSyncBtn" role="menuitem" data-i18n="agenda:header.syncBtn">Sincronizar agenda</button>
-          <button type="button" class="ep-toolbar-more__item" id="openBlackoutBtn" role="menuitem" data-i18n="agenda:header.blackoutBtn">Bloquear horário</button>
+          <button type="button" class="ep-toolbar-more__item" id="openBlackoutBtn" role="menuitem" data-i18n="agenda:header.blackoutBtn">Bloquear horÃ¡rio</button>
           <button type="button" class="ep-toolbar-more__item" id="openWaitlistBtn" role="menuitem" data-i18n="agenda:header.waitlistBtn">Lista de espera</button>
-          <button type="button" class="ep-toolbar-more__item" id="openAgendaConfigBtn" role="menuitem" data-i18n="agenda:header.configBtn">Configurações</button>
+          <button type="button" class="ep-toolbar-more__item" id="openAgendaConfigBtn" role="menuitem" data-i18n="agenda:header.configBtn">ConfiguraÃ§Ãµes</button>
           <button type="button" class="ep-toolbar-more__item" id="printAgendaBtn" role="menuitem" title="Imprimir agenda" data-i18n="agenda:header.printBtn" data-i18n-title="agenda:header.printTitle">Imprimir</button>
         </div>
       </div>
@@ -98,28 +98,28 @@
     </div>
   </div>
 
-  <!-- Navegação semanal + legenda -->
+  <!-- NavegaÃ§Ã£o semanal + legenda -->
   <div class="ep-agenda-nav">
     <div class="ep-flex ep-flex--center ep-gap-6">
-      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="prevWeekBtn" title="Semana anterior" data-i18n-title="agenda:weekNav.prevTitle">←</button>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="prevWeekBtn" title="Semana anterior" data-i18n-title="agenda:weekNav.prevTitle">â†</button>
       <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="todayBtn" data-i18n="agenda:weekNav.today">Hoje</button>
-      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="nextWeekBtn" title="Próxima semana" data-i18n-title="agenda:weekNav.nextTitle">→</button>
-      <span class="ep-agenda-nav__label" id="weekLabel">—</span>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="nextWeekBtn" title="PrÃ³xima semana" data-i18n-title="agenda:weekNav.nextTitle">â†’</button>
+      <span class="ep-agenda-nav__label" id="weekLabel">â€”</span>
     </div>
     <div class="ep-agenda-legend" aria-label="Legenda" data-i18n-aria-label="agenda:legend.aria">
       <span class="ep-agenda-legend__item is-scheduled"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.scheduled">Agendada</span></span>
-      <span class="ep-agenda-legend__item is-progress"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.progress">Em sessão</span></span>
+      <span class="ep-agenda-legend__item is-progress"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.progress">Em sessÃ£o</span></span>
       <span class="ep-agenda-legend__item is-done"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.done">Encerrada</span></span>
       <span class="ep-agenda-legend__item is-canceled"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.canceled">Cancelada</span></span>
-      <span class="ep-agenda-legend__item is-note"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.note">Anotação</span></span>
+      <span class="ep-agenda-legend__item is-note"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.note">AnotaÃ§Ã£o</span></span>
     </div>
   </div>
 
   <!-- Grid semanal -->
-  <!-- Skeleton estrutural — bloco com altura do grid pra evitar CLS quando
+  <!-- Skeleton estrutural â€” bloco com altura do grid pra evitar CLS quando
        o agendaGrid real assume. JS esconde via classList.add("ep-hide"). -->
   <div id="loadingBanner" class="ep-mt-16" aria-live="polite" aria-busy="true">
-    <span class="ep-hide" data-i18n="agenda:loading">Carregando agenda…</span>
+    <span class="ep-hide" data-i18n="agenda:loading">Carregando agendaâ€¦</span>
     <div class="ep-skel" style="height: 56px; border-radius: 12px 12px 0 0; margin-bottom: 1px;"></div>
     <div class="ep-skel" style="height: 480px; border-radius: 0 0 12px 12px;"></div>
   </div>
@@ -149,25 +149,25 @@
   </div>
 
   <p class="ep-text-xs ep-text-muted ep-mt-12 ep-text-center" data-i18n="agenda:hint">
-    Clique em um horário vago para criar consulta ou fazer uma anotação. Clique em uma sessão para abrir o prontuário.
+    Clique em um horÃ¡rio vago para criar consulta ou fazer uma anotaÃ§Ã£o. Clique em uma sessÃ£o para abrir o prontuÃ¡rio.
   </p>
 
 </main>
 
-<!-- Popover de sessão -->
+<!-- Popover de sessÃ£o -->
 <div class="ep-modal" id="sessionPopover" role="dialog" aria-modal="true">
   <div class="ep-modal__panel ep-modal__panel--md">
-    <h3 class="ep-modal__title" id="popPatientName">—</h3>
-    <p class="ep-modal__sub" id="popDateTime">—</p>
+    <h3 class="ep-modal__title" id="popPatientName">â€”</h3>
+    <p class="ep-modal__sub" id="popDateTime">â€”</p>
     <div class="ep-pop-status-wrap">
-      <span class="ep-pop-status" id="popStatus">—</span>
+      <span class="ep-pop-status" id="popStatus">â€”</span>
     </div>
     <p class="ep-text-xs ep-text-muted ep-mt-12 ep-hide" id="popRecurrence"></p>
     <div class="ep-recovery ep-pop-link-box ep-hide" id="popLinkBox"></div>
     <div class="ep-modal__actions ep-pop-actions">
       <div class="ep-pop-actions__group">
         <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="popCloseBtn" data-i18n="agenda:pop.close">Fechar</button>
-        <a id="popOpenProntuario" href="#" class="ep-btn ep-btn--ghost ep-btn--sm ep-hide" data-i18n="agenda:pop.chart">Prontuário</a>
+        <a id="popOpenProntuario" href="#" class="ep-btn ep-btn--ghost ep-btn--sm ep-hide" data-i18n="agenda:pop.chart">ProntuÃ¡rio</a>
         <button type="button" id="popCopyLinkBtn" class="ep-btn ep-btn--ghost ep-btn--sm ep-hide" data-i18n="agenda:pop.copyLink">Copiar link</button>
       </div>
       <div class="ep-pop-actions__group">
@@ -178,21 +178,21 @@
   </div>
 </div>
 
-<!-- Modal de sincronização com calendário externo (iCal feed) -->
+<!-- Modal de sincronizaÃ§Ã£o com calendÃ¡rio externo (iCal feed) -->
 <div class="ep-modal" id="syncModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel ep-modal__panel--md">
     <h3 class="ep-modal__title" data-i18n="agenda:sync.title">Sincronizar agenda</h3>
     <p class="ep-modal__sub" data-i18n="agenda:sync.sub">
-      Assine este link no Google Calendar / Apple Calendar para ver suas consultas no seu calendário pessoal. Atualiza automaticamente.
+      Assine este link no Google Calendar / Apple Calendar para ver suas consultas no seu calendÃ¡rio pessoal. Atualiza automaticamente.
     </p>
-    <div class="ep-recovery ep-pop-link-box" id="syncUrlBox" data-i18n="agenda:sync.generating">Gerando link…</div>
+    <div class="ep-recovery ep-pop-link-box" id="syncUrlBox" data-i18n="agenda:sync.generating">Gerando linkâ€¦</div>
     <p class="ep-text-xs ep-text-muted ep-mt-12" data-i18n-html="agenda:sync.instructions">
-      <strong>Google Calendar:</strong> Outras agendas → + → A partir de URL → cole o link.<br>
-      <strong>Apple Calendar (Mac):</strong> Arquivo → Nova assinatura de calendário → cole o link.<br>
-      Atualizações em até 1h (Google) ou 5min (Apple).
+      <strong>Google Calendar:</strong> Outras agendas â†’ + â†’ A partir de URL â†’ cole o link.<br>
+      <strong>Apple Calendar (Mac):</strong> Arquivo â†’ Nova assinatura de calendÃ¡rio â†’ cole o link.<br>
+      AtualizaÃ§Ãµes em atÃ© 1h (Google) ou 5min (Apple).
     </p>
     <div class="ep-alert ep-alert--info ep-mt-12 ep-text-xs" data-i18n="agenda:sync.warning">
-      Quem tiver este link consegue ler sua agenda. Não compartilhe. Use "Gerar novo link" se vazar — o anterior para de funcionar imediatamente.
+      Quem tiver este link consegue ler sua agenda. NÃ£o compartilhe. Use "Gerar novo link" se vazar â€” o anterior para de funcionar imediatamente.
     </div>
     <div class="ep-modal__actions">
       <button type="button" class="ep-btn ep-btn--ghost" id="syncCloseBtn" data-i18n="agenda:sync.close">Fechar</button>
@@ -205,10 +205,10 @@
 <!-- Modal de criar bloqueio -->
 <div class="ep-modal" id="blackoutModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel ep-modal__panel--md">
-    <h3 class="ep-modal__title" data-i18n="agenda:blackout.title">Bloquear horário</h3>
-    <p class="ep-modal__sub" data-i18n="agenda:blackout.sub">Marque um período em que você não estará disponível (férias, almoço fixo, licença).</p>
+    <h3 class="ep-modal__title" data-i18n="agenda:blackout.title">Bloquear horÃ¡rio</h3>
+    <p class="ep-modal__sub" data-i18n="agenda:blackout.sub">Marque um perÃ­odo em que vocÃª nÃ£o estarÃ¡ disponÃ­vel (fÃ©rias, almoÃ§o fixo, licenÃ§a).</p>
     <div class="ep-field">
-      <label class="ep-label" for="blackoutFrom" data-i18n="agenda:blackout.from">Início</label>
+      <label class="ep-label" for="blackoutFrom" data-i18n="agenda:blackout.from">InÃ­cio</label>
       <input id="blackoutFrom" class="ep-input" type="datetime-local">
     </div>
     <div class="ep-field">
@@ -217,7 +217,7 @@
     </div>
     <div class="ep-field">
       <label class="ep-label" for="blackoutReason" data-i18n="agenda:blackout.reason">Motivo (opcional)</label>
-      <input id="blackoutReason" class="ep-input" type="text" maxlength="200" placeholder="Ex.: férias, supervisão semanal…" data-i18n-placeholder="agenda:blackout.reasonPlaceholder">
+      <input id="blackoutReason" class="ep-input" type="text" maxlength="200" placeholder="Ex.: fÃ©rias, supervisÃ£o semanalâ€¦" data-i18n-placeholder="agenda:blackout.reasonPlaceholder">
     </div>
     <div class="ep-status" id="blackoutStatus"></div>
     <div class="ep-modal__actions">
@@ -227,11 +227,11 @@
   </div>
 </div>
 
-<!-- Modal de confirmação de cancelamento -->
+<!-- Modal de confirmaÃ§Ã£o de cancelamento -->
 <div class="ep-modal" id="cancelModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel ep-modal__panel--md">
     <h3 class="ep-modal__title" data-i18n="agenda:cancelModal.title">Cancelar consulta</h3>
-    <p class="ep-modal__sub" id="cancelSub">—</p>
+    <p class="ep-modal__sub" id="cancelSub">â€”</p>
     <div class="ep-field ep-hide" id="cancelScopeField">
       <label class="ep-label" data-i18n="agenda:cancelModal.applyTo">Aplicar a</label>
       <label class="ep-radio">
@@ -240,16 +240,16 @@
       </label>
       <label class="ep-radio">
         <input type="radio" name="cancelScope" value="forward">
-        <span id="cancelScopeForwardLabel" data-i18n="agenda:cancelModal.thisAndNext">Esta e as próximas da série</span>
+        <span id="cancelScopeForwardLabel" data-i18n="agenda:cancelModal.thisAndNext">Esta e as prÃ³ximas da sÃ©rie</span>
       </label>
     </div>
     <div class="ep-field">
       <label class="ep-label" for="cancelReason" data-i18n="agenda:cancelModal.reasonLabel">Motivo (opcional)</label>
       <textarea id="cancelReason" class="ep-textarea" rows="3" maxlength="500"
-        placeholder="Ex.: imprevisto pessoal, paciente solicitou remarcar…" data-i18n-placeholder="agenda:cancelModal.reasonPlaceholder"></textarea>
+        placeholder="Ex.: imprevisto pessoal, paciente solicitou remarcarâ€¦" data-i18n-placeholder="agenda:cancelModal.reasonPlaceholder"></textarea>
     </div>
     <div class="ep-alert ep-alert--info ep-mt-12 ep-text-xs" data-i18n="agenda:cancelModal.note">
-      A consulta fica marcada como cancelada, mas o registro permanece no prontuário.
+      A consulta fica marcada como cancelada, mas o registro permanece no prontuÃ¡rio.
     </div>
     <div class="ep-modal__actions">
       <button type="button" class="ep-btn ep-btn--ghost" id="cancelAbortBtn" data-i18n="agenda:cancelModal.back">Voltar</button>
@@ -258,30 +258,30 @@
   </div>
 </div>
 
-<!-- Modal: ação no slot vazio (criar consulta ou nota) -->
+<!-- Modal: aÃ§Ã£o no slot vazio (criar consulta ou nota) -->
 <div class="ep-modal" id="slotActionModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel ep-modal__panel--md">
-    <h3 class="ep-modal__title" id="slotActionTitle" data-i18n="agenda:slot.title">Horário</h3>
-    <p class="ep-modal__sub" id="slotActionSub">—</p>
+    <h3 class="ep-modal__title" id="slotActionTitle" data-i18n="agenda:slot.title">HorÃ¡rio</h3>
+    <p class="ep-modal__sub" id="slotActionSub">â€”</p>
     <div style="padding: 8px 28px 0;">
-      <button type="button" class="ep-btn ep-btn--primary ep-btn--block" id="slotCreateSessionBtn" data-i18n="agenda:slot.createSession">📅 Criar consulta</button>
-      <div class="ep-text-xs ep-text-muted ep-text-center ep-mt-12" style="margin-bottom: 12px;" data-i18n="agenda:slot.or">— ou —</div>
-      <label class="ep-label" for="slotNoteText" data-i18n="agenda:slot.addNote">Adicionar observação</label>
-      <textarea id="slotNoteText" class="ep-input" rows="3" maxlength="300" placeholder="Ex.: almoço, supervisão, ligar pro paciente X…" data-i18n-placeholder="agenda:slot.notePlaceholder"></textarea>
+      <button type="button" class="ep-btn ep-btn--primary ep-btn--block" id="slotCreateSessionBtn" data-i18n="agenda:slot.createSession">ðŸ“… Criar consulta</button>
+      <div class="ep-text-xs ep-text-muted ep-text-center ep-mt-12" style="margin-bottom: 12px;" data-i18n="agenda:slot.or">â€” ou â€”</div>
+      <label class="ep-label" for="slotNoteText" data-i18n="agenda:slot.addNote">Adicionar observaÃ§Ã£o</label>
+      <textarea id="slotNoteText" class="ep-input" rows="3" maxlength="300" placeholder="Ex.: almoÃ§o, supervisÃ£o, ligar pro paciente Xâ€¦" data-i18n-placeholder="agenda:slot.notePlaceholder"></textarea>
       <div class="ep-status" id="slotActionStatus"></div>
     </div>
     <div class="ep-modal__actions">
       <button type="button" class="ep-btn ep-btn--ghost" id="slotActionCancelBtn" data-i18n="agenda:slot.close">Fechar</button>
-      <button type="button" class="ep-btn ep-btn--primary" id="slotSaveNoteBtn" data-i18n="agenda:slot.saveNote">Salvar observação</button>
+      <button type="button" class="ep-btn ep-btn--primary" id="slotSaveNoteBtn" data-i18n="agenda:slot.saveNote">Salvar observaÃ§Ã£o</button>
     </div>
   </div>
 </div>
 
-<!-- Modal: editar/remover observação -->
+<!-- Modal: editar/remover observaÃ§Ã£o -->
 <div class="ep-modal" id="noteEditModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel ep-modal__panel--md">
-    <h3 class="ep-modal__title" data-i18n="agenda:noteEdit.title">Editar observação</h3>
-    <p class="ep-modal__sub" id="noteEditSub">—</p>
+    <h3 class="ep-modal__title" data-i18n="agenda:noteEdit.title">Editar observaÃ§Ã£o</h3>
+    <p class="ep-modal__sub" id="noteEditSub">â€”</p>
     <div style="padding: 8px 28px 0;">
       <label class="ep-label" for="noteEditText" data-i18n="agenda:noteEdit.text">Texto</label>
       <textarea id="noteEditText" class="ep-input" rows="3" maxlength="300"></textarea>
@@ -296,25 +296,25 @@
   </div>
 </div>
 
-<!-- Modal: Configurações de agenda -->
+<!-- Modal: ConfiguraÃ§Ãµes de agenda -->
 <div class="ep-modal" id="agendaConfigModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel ep-modal__panel--md">
-    <h3 class="ep-modal__title" data-i18n="agenda:config.title">Configurações de agenda</h3>
+    <h3 class="ep-modal__title" data-i18n="agenda:config.title">ConfiguraÃ§Ãµes de agenda</h3>
     <p class="ep-modal__sub" data-i18n="agenda:config.sub">
-      Personalize sua janela de trabalho e a duração padrão das consultas.
+      Personalize sua janela de trabalho e a duraÃ§Ã£o padrÃ£o das consultas.
     </p>
     <div class="ep-row" style="padding: 0 28px;">
       <div class="ep-field">
-        <label class="ep-label" for="cfgStartHour" data-i18n="agenda:config.startHour">Hora de início</label>
+        <label class="ep-label" for="cfgStartHour" data-i18n="agenda:config.startHour">Hora de inÃ­cio</label>
         <select id="cfgStartHour" class="ep-select"></select>
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="cfgEndHour" data-i18n="agenda:config.endHour">Hora de término</label>
+        <label class="ep-label" for="cfgEndHour" data-i18n="agenda:config.endHour">Hora de tÃ©rmino</label>
         <select id="cfgEndHour" class="ep-select"></select>
       </div>
     </div>
     <div class="ep-field" style="padding: 0 28px;">
-      <label class="ep-label" for="cfgSlotMinutes" data-i18n="agenda:config.slotMinutes">Duração padrão da consulta</label>
+      <label class="ep-label" for="cfgSlotMinutes" data-i18n="agenda:config.slotMinutes">DuraÃ§Ã£o padrÃ£o da consulta</label>
       <select id="cfgSlotMinutes" class="ep-select">
         <option value="30" data-i18n="agenda:config.min30">30 minutos</option>
         <option value="45" data-i18n="agenda:config.min45">45 minutos</option>
@@ -323,7 +323,7 @@
         <option value="90" data-i18n="agenda:config.min90">90 minutos</option>
         <option value="120" data-i18n="agenda:config.min120">120 minutos</option>
       </select>
-      <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="agenda:config.slotHint">Aplicado ao criar consultas sem horário de fim explícito.</p>
+      <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="agenda:config.slotHint">Aplicado ao criar consultas sem horÃ¡rio de fim explÃ­cito.</p>
     </div>
     <div class="ep-status" id="agendaConfigStatus" style="padding: 0 28px;"></div>
     <div class="ep-modal__actions">
@@ -336,7 +336,7 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist, refreshIdToken, invalidateProfileCache } from "./js/auth-guard.js?v=3-27";
+  import { requireTherapist, refreshIdToken, invalidateProfileCache } from "./js/auth-guard.js?v=3-28";
   import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=2-84";
   import { clearDek } from "./js/crypto.js";
   import { createNewSessionModal } from "./js/new-session-modal.js?v=3";
@@ -362,7 +362,7 @@
   const ctx = await requireTherapist({ requireDek: true });
   const { user, therapist, dek } = ctx;
   // idToken pode expirar (Firebase TTL 1h). let + getFreshToken() pra usar
-  // sempre token válido — padrão estabelecido em painel.html.
+  // sempre token vÃ¡lido â€” padrÃ£o estabelecido em painel.html.
   let idToken = ctx.idToken;
   async function getFreshToken() {
     idToken = await refreshIdToken();
@@ -377,10 +377,10 @@
     window.location.href = "./login.html";
   });
 
-  // ─── Configuração da grade ──────────────────────────────────────────
-  // Defaults sobrescritos por therapist.agendaConfig (configurável via modal).
+  // â”€â”€â”€ ConfiguraÃ§Ã£o da grade â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Defaults sobrescritos por therapist.agendaConfig (configurÃ¡vel via modal).
   let START_HOUR = 8;
-  let END_HOUR   = 21; // exclusivo — última linha mostra 20h-21h
+  let END_HOUR   = 21; // exclusivo â€” Ãºltima linha mostra 20h-21h
   let SESSION_DEFAULT_MIN = 60;
   const HOUR_PX    = 56;
 
@@ -396,20 +396,20 @@
   })();
 
   function dayNames() {
-    return [0,1,2,3,4,5,6].map(i => tr("agenda:daysShort." + i, ["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"][i]));
+    return [0,1,2,3,4,5,6].map(i => tr("agenda:daysShort." + i, ["Seg","Ter","Qua","Qui","Sex","SÃ¡b","Dom"][i]));
   }
   function monthNames() {
     return ["01","02","03","04","05","06","07","08","09","10","11","12"].map((k, i) =>
       tr("agenda:monthsShort." + k, ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"][i]));
   }
 
-  // ─── Estado ─────────────────────────────────────────────────────────
+  // â”€â”€â”€ Estado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let weekStart = getMondayOf(new Date()); // Date 00:00 da segunda da semana atual
   let allSessions  = []; // todas, do backend (limit 200)
   let allBlackouts = []; // bloqueios do terapeuta
-  let allNotes     = []; // observações em slots vazios
+  let allNotes     = []; // observaÃ§Ãµes em slots vazios
 
-  // Builder de link de paciente — copiado do painel pra manter mesma assinatura.
+  // Builder de link de paciente â€” copiado do painel pra manter mesma assinatura.
   // Short code (~8 chars) vai como ?c=; joinToken JWT legado vai como ?t=.
   function buildPatientLink(codeOrToken) {
     const s = String(codeOrToken || "");
@@ -417,8 +417,8 @@
     return `${location.origin}/entrar.html?${paramName}=${encodeURIComponent(s)}`;
   }
 
-  // Modal "Nova consulta" — compartilhado com painel.html via módulo.
-  // Após criar, re-fetch das sessões pra mostrar na grade imediatamente.
+  // Modal "Nova consulta" â€” compartilhado com painel.html via mÃ³dulo.
+  // ApÃ³s criar, re-fetch das sessÃµes pra mostrar na grade imediatamente.
   const newSessionModalApi = createNewSessionModal({
     getToken: getFreshToken,
     uid, dek, therapist,
@@ -428,7 +428,7 @@
     getAllSessions: () => allSessions,
     buildPatientLink,
     onCreated: async () => {
-      // Invalida todas as variantes — sessão recém-criada deve aparecer no
+      // Invalida todas as variantes â€” sessÃ£o recÃ©m-criada deve aparecer no
       // painel (cache "sessoes") E na agenda (cache "sessoes:all").
       invalidatePrefix("sessoes", uid);
       await loadSessions();
@@ -438,7 +438,7 @@
   function getMondayOf(date) {
     const d = new Date(date);
     d.setHours(0, 0, 0, 0);
-    const day = d.getDay(); // 0=Dom, 1=Seg, ..., 6=Sáb
+    const day = d.getDay(); // 0=Dom, 1=Seg, ..., 6=SÃ¡b
     const diff = day === 0 ? -6 : 1 - day; // pra chegar na segunda
     d.setDate(d.getDate() + diff);
     return d;
@@ -468,11 +468,11 @@
     const sameMonth = weekStart.getMonth() === end.getMonth();
     const mn = monthNames();
     if (sameMonth) {
-      return tr("agenda:js.weekSameMonth", "{{start}} – {{end}} de {{month}} de {{year}}", {
+      return tr("agenda:js.weekSameMonth", "{{start}} â€“ {{end}} de {{month}} de {{year}}", {
         start: weekStart.getDate(), end: end.getDate(), month: mn[end.getMonth()], year: end.getFullYear()
       });
     }
-    return tr("agenda:js.weekCrossMonth", "{{startDay}} {{startMonth}} – {{endDay}} {{endMonth}} {{year}}", {
+    return tr("agenda:js.weekCrossMonth", "{{startDay}} {{startMonth}} â€“ {{endDay}} {{endMonth}} {{year}}", {
       startDay: weekStart.getDate(), startMonth: mn[weekStart.getMonth()],
       endDay: end.getDate(), endMonth: mn[end.getMonth()], year: end.getFullYear()
     });
@@ -485,7 +485,7 @@
   }
   function statusLabel(s) {
     if (s === "completed")   return tr("agenda:legend.done", "Encerrada");
-    if (s === "in_progress") return tr("agenda:legend.progress", "Em sessão");
+    if (s === "in_progress") return tr("agenda:legend.progress", "Em sessÃ£o");
     if (s === "canceled")    return tr("agenda:legend.canceled", "Cancelada");
     return tr("agenda:legend.scheduled", "Agendada");
   }
@@ -494,14 +494,14 @@
     return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   }
 
-  // ─── Carregar sessões + bloqueios ────────────────────────────────────
+  // â”€â”€â”€ Carregar sessÃµes + bloqueios â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // SWR independente por endpoint: render inicial pode disparar com cache
-  // stale (instantâneo), e cada refetch que vier atualiza o que mudou.
+  // stale (instantÃ¢neo), e cada refetch que vier atualiza o que mudou.
   function showAgenda() {
     document.getElementById("loadingBanner").classList.add("ep-hide");
     document.getElementById("agendaGrid").classList.remove("ep-hide");
     renderWeek();
-    // Reaplica filtro de busca após re-render (navegação semanal).
+    // Reaplica filtro de busca apÃ³s re-render (navegaÃ§Ã£o semanal).
     if (typeof applyPatientSearch === "function") applyPatientSearch();
   }
 
@@ -509,9 +509,9 @@
     try {
       await Promise.all([
         cachedGet({
-          // includeHidden=true: agenda é histórico — mostra também sessões
+          // includeHidden=true: agenda Ã© histÃ³rico â€” mostra tambÃ©m sessÃµes
           // "removidas da lista" no painel (hiddenFromPainel). Cache key
-          // diferente do painel pra não conflitar dados entre as 2 views.
+          // diferente do painel pra nÃ£o conflitar dados entre as 2 views.
           url: `${BACKEND_BASE_URL}/therapy/sessoes?includeHidden=true`,
           idToken, uid, key: "sessoes:all", ttl: 30_000, getFreshToken,
           onData: (data) => { allSessions = data.sessions || []; showAgenda(); }
@@ -539,7 +539,7 @@
   // alias mantido pra calls existentes (cancelamento, copiar link)
   const loadSessions = loadAgenda;
 
-  // ─── Renderização ───────────────────────────────────────────────────
+  // â”€â”€â”€ RenderizaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function buildHourLabels() {
     const col = document.getElementById("hourCol");
     col.innerHTML = "";
@@ -553,9 +553,9 @@
   }
   buildHourLabels();
 
-  // Hover horizontal: passar o mouse num hour-label realça todos os slots
+  // Hover horizontal: passar o mouse num hour-label realÃ§a todos os slots
   // dessa hora ao longo da semana. Delegation no hourCol (evita 14 listeners).
-  // CSS gateia via @media (hover:hover) — touch não dispara.
+  // CSS gateia via @media (hover:hover) â€” touch nÃ£o dispara.
   (function setupHourHover() {
     const hourCol = document.getElementById("hourCol");
     if (!hourCol) return;
@@ -588,7 +588,7 @@
       el.innerHTML = fmtDayHeader(d, isToday);
     });
 
-    // Day columns: limpa + adiciona linhas de hora + sessões + clique no vazio
+    // Day columns: limpa + adiciona linhas de hora + sessÃµes + clique no vazio
     document.querySelectorAll(".ep-agenda-grid__day-col").forEach(col => {
       const i = Number(col.dataset.day);
       const dayDate = addDays(weekStart, i);
@@ -597,7 +597,7 @@
       col.innerHTML = "";
       col.style.height = `${(END_HOUR - START_HOUR) * HOUR_PX}px`;
 
-      // Linhas horárias clicáveis
+      // Linhas horÃ¡rias clicÃ¡veis
       for (let h = START_HOUR; h < END_HOUR; h++) {
         const slot = document.createElement("button");
         slot.type = "button";
@@ -617,8 +617,8 @@
 
     const weekEnd = addDays(weekStart, 7);
 
-    // Bloqueios da semana — render PRIMEIRO (z-index menor que sessão).
-    // Um blackout que cruza vários dias é fatiado em segmentos por dia.
+    // Bloqueios da semana â€” render PRIMEIRO (z-index menor que sessÃ£o).
+    // Um blackout que cruza vÃ¡rios dias Ã© fatiado em segmentos por dia.
     const weekStartMs = weekStart.getTime();
     const weekEndMs   = weekEnd.getTime();
     const blackoutsThisWeek = allBlackouts.filter(b => b.from < weekEndMs && b.to > weekStartMs);
@@ -640,7 +640,7 @@
           const topPx    = Math.max(0, ((startD.getHours() + startD.getMinutes()/60) - START_HOUR) * HOUR_PX);
           const endHours = endD.getDate() !== startD.getDate() ? END_HOUR : (endD.getHours() + endD.getMinutes()/60);
           const heightPx = Math.max(8, (endHours - Math.max(START_HOUR, startD.getHours() + startD.getMinutes()/60)) * HOUR_PX);
-          // Recorta blackouts inteiramente fora do range visível
+          // Recorta blackouts inteiramente fora do range visÃ­vel
           if (topPx < (END_HOUR - START_HOUR) * HOUR_PX && heightPx > 0) {
             const block = document.createElement("button");
             block.type = "button";
@@ -665,8 +665,8 @@
       }
     }
 
-    // Observações (notas) da semana — renderiza antes das sessões pra que
-    // o clique numa sessão tenha prioridade visual.
+    // ObservaÃ§Ãµes (notas) da semana â€” renderiza antes das sessÃµes pra que
+    // o clique numa sessÃ£o tenha prioridade visual.
     const notesThisWeek = allNotes.filter(n => {
       const nAt = Number(n.at || 0);
       return nAt >= weekStartMs && nAt < weekEndMs;
@@ -679,7 +679,7 @@
       if (!col) continue;
       const startMin = (nDate.getHours() - START_HOUR) * 60 + nDate.getMinutes();
       const topPx = Math.max(0, (startMin / 60) * HOUR_PX);
-      // Clamp ao tamanho do slot inteiro — bloco sempre preenche o horário.
+      // Clamp ao tamanho do slot inteiro â€” bloco sempre preenche o horÃ¡rio.
       const heightPx = Math.max(HOUR_PX, ((n.durationMin || 60) / 60) * HOUR_PX);
       if (topPx >= (END_HOUR - START_HOUR) * HOUR_PX) continue;
       const block = document.createElement("button");
@@ -699,7 +699,7 @@
       col.appendChild(block);
     }
 
-    // Sessões da semana
+    // SessÃµes da semana
     const sessionsThisWeek = allSessions.filter(s => {
       if (!s.scheduledAt) return false;
       const sd = new Date(s.scheduledAt);
@@ -720,7 +720,7 @@
 
       const startMinutesFromTop = (sessionStartHour - START_HOUR) * 60;
       const topPx = Math.max(0, (startMinutesFromTop / 60) * HOUR_PX);
-      // Clamp ao tamanho do slot inteiro — bloco sempre preenche o horário.
+      // Clamp ao tamanho do slot inteiro â€” bloco sempre preenche o horÃ¡rio.
       const heightPx = Math.max(HOUR_PX, (SESSION_DEFAULT_MIN / 60) * HOUR_PX);
 
       const block = document.createElement("button");
@@ -731,7 +731,7 @@
       block.dataset.patientName = s.patientName || "";
       block.innerHTML = `
         <div class="ep-agenda-session__time">${pad2(sd.getHours())}:${pad2(sd.getMinutes())}</div>
-        <div class="ep-agenda-session__name">${escapeHtml(s.patientName || "—")}</div>
+        <div class="ep-agenda-session__name">${escapeHtml(s.patientName || "â€”")}</div>
       `;
       block.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -747,7 +747,7 @@
     }[c]));
   }
 
-  // ─── Navegação ──────────────────────────────────────────────────────
+  // â”€â”€â”€ NavegaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   document.getElementById("prevWeekBtn").addEventListener("click", () => {
     weekStart = addDays(weekStart, -7);
     renderWeek();
@@ -761,7 +761,7 @@
     renderWeek();
   });
 
-  // ─── Popover de sessão ──────────────────────────────────────────────
+  // â”€â”€â”€ Popover de sessÃ£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const popover = document.getElementById("sessionPopover");
   document.getElementById("popCloseBtn").addEventListener("click", () => popover.classList.remove("is-open"));
   popover.addEventListener("click", (e) => { if (e.target === popover) popover.classList.remove("is-open"); });
@@ -781,7 +781,7 @@
 
   function openSessionPopover(s) {
     popoverSession = s;
-    document.getElementById("popPatientName").textContent = s.patientName || "—";
+    document.getElementById("popPatientName").textContent = s.patientName || "â€”";
     const sd = new Date(s.scheduledAt);
     document.getElementById("popDateTime").textContent =
       sd.toLocaleString(currentLocale(), { weekday: "long", day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" });
@@ -792,10 +792,10 @@
     if (s.status === "in_progress") statusEl.classList.add("is-ok");
     if (s.status === "canceled")    statusEl.classList.add("is-err");
 
-    // Indicador de recorrência
+    // Indicador de recorrÃªncia
     const recEl = document.getElementById("popRecurrence");
     if (s.recurrenceGroupId && typeof s.recurrenceIndex === "number" && s.recurrenceCount) {
-      recEl.textContent = tr("agenda:js.recurrenceInfo", "Consulta {{i}} de {{n}} de uma série semanal.", { i: s.recurrenceIndex + 1, n: s.recurrenceCount });
+      recEl.textContent = tr("agenda:js.recurrenceInfo", "Consulta {{i}} de {{n}} de uma sÃ©rie semanal.", { i: s.recurrenceIndex + 1, n: s.recurrenceCount });
       recEl.classList.remove("ep-hide");
     } else {
       recEl.classList.add("ep-hide");
@@ -823,14 +823,14 @@
     popover.classList.add("is-open");
   }
 
-  // ─── Copiar link (regenera joinToken) ────────────────────────────────
+  // â”€â”€â”€ Copiar link (regenera joinToken) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   document.getElementById("popCopyLinkBtn").addEventListener("click", async () => {
     if (!popoverSession) return;
     const btn = document.getElementById("popCopyLinkBtn");
     const box = document.getElementById("popLinkBox");
     const orig = btn.textContent;
     btn.disabled = true;
-    btn.textContent = tr("agenda:js.generating", "Gerando…");
+    btn.textContent = tr("agenda:js.generating", "Gerandoâ€¦");
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(popoverSession.sessionId)}/regenerar-link`, {
         method: "POST",
@@ -839,7 +839,7 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok || !data.joinToken) throw new Error(data?.error || `HTTP ${res.status}`);
       // Backend devolve joinCode (~8 chars) + joinToken (~500 chars JWT).
-      // Usa code quando disponível pro link bonito; cai no token se faltar.
+      // Usa code quando disponÃ­vel pro link bonito; cai no token se faltar.
       const codeOrToken = data.joinCode || data.joinToken;
       const paramName = codeOrToken.length <= 16 ? "c" : "t";
       const link = `${location.origin}/entrar.html?${paramName}=${encodeURIComponent(codeOrToken)}`;
@@ -857,7 +857,7 @@
     }
   });
 
-  // ─── Cancelamento de consulta ───────────────────────────────────────
+  // â”€â”€â”€ Cancelamento de consulta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const cancelModal      = document.getElementById("cancelModal");
   const cancelReasonEl   = document.getElementById("cancelReason");
   const cancelConfirmBtn = document.getElementById("cancelConfirmBtn");
@@ -866,16 +866,16 @@
     if (!popoverSession) return;
     const sd = new Date(popoverSession.scheduledAt);
     document.getElementById("cancelSub").textContent =
-      `${popoverSession.patientName || "—"} · ${sd.toLocaleString(currentLocale(), { day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" })}`;
+      `${popoverSession.patientName || "â€”"} Â· ${sd.toLocaleString(currentLocale(), { day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" })}`;
     cancelReasonEl.value = "";
 
-    // Mostra escopo de cancelamento se a sessão pertence a uma série com
-    // pelo menos uma ocorrência futura adicional ainda ativa.
+    // Mostra escopo de cancelamento se a sessÃ£o pertence a uma sÃ©rie com
+    // pelo menos uma ocorrÃªncia futura adicional ainda ativa.
     const scopeField = document.getElementById("cancelScopeField");
     const forward = countForwardSiblings(popoverSession);
     if (forward > 1) {
       document.getElementById("cancelScopeForwardLabel").textContent =
-        tr("agenda:js.thisAndNextN", "Esta e as próximas {{n}} da série", { n: forward - 1 });
+        tr("agenda:js.thisAndNextN", "Esta e as prÃ³ximas {{n}} da sÃ©rie", { n: forward - 1 });
       scopeField.classList.remove("ep-hide");
       const thisRadio = scopeField.querySelector('input[value="this"]');
       if (thisRadio) thisRadio.checked = true;
@@ -895,7 +895,7 @@
     const scopeRadio = document.querySelector('input[name="cancelScope"]:checked');
     const scope = scopeRadio?.value === "forward" ? "forward" : "this";
     cancelConfirmBtn.disabled = true;
-    cancelConfirmBtn.textContent = tr("agenda:js.canceling", "Cancelando…");
+    cancelConfirmBtn.textContent = tr("agenda:js.canceling", "Cancelandoâ€¦");
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(popoverSession.sessionId)}/cancelar`, {
         method: "POST",
@@ -909,14 +909,14 @@
       await loadSessions();
     } catch (e) {
       console.error("cancel_failed", e);
-      alert(tr("agenda:js.cancelFailed", "Não foi possível cancelar: {{msg}}", { msg: e?.message || tr("agenda:js.unknownError", "erro desconhecido") }));
+      alert(tr("agenda:js.cancelFailed", "NÃ£o foi possÃ­vel cancelar: {{msg}}", { msg: e?.message || tr("agenda:js.unknownError", "erro desconhecido") }));
     } finally {
       cancelConfirmBtn.disabled = false;
       cancelConfirmBtn.textContent = tr("agenda:cancelModal.confirm", "Confirmar cancelamento");
     }
   });
 
-  // ─── Bloqueios de horário (blackouts) ────────────────────────────────
+  // â”€â”€â”€ Bloqueios de horÃ¡rio (blackouts) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const blackoutModal      = document.getElementById("blackoutModal");
   const blackoutFromEl     = document.getElementById("blackoutFrom");
   const blackoutToEl       = document.getElementById("blackoutTo");
@@ -925,7 +925,7 @@
   const blackoutSaveBtn    = document.getElementById("blackoutSaveBtn");
 
   document.getElementById("openBlackoutBtn").addEventListener("click", () => {
-    // Pré-preenche com o agora arredondado pra próxima hora cheia.
+    // PrÃ©-preenche com o agora arredondado pra prÃ³xima hora cheia.
     const now = new Date();
     now.setMinutes(0, 0, 0);
     now.setHours(now.getHours() + 1);
@@ -944,19 +944,19 @@
     const fromRaw = blackoutFromEl.value;
     const toRaw   = blackoutToEl.value;
     if (!fromRaw || !toRaw) {
-      blackoutStatusEl.textContent = tr("agenda:js.fillFromTo", "Preencha início e fim.");
+      blackoutStatusEl.textContent = tr("agenda:js.fillFromTo", "Preencha inÃ­cio e fim.");
       blackoutStatusEl.className = "ep-status is-err";
       return;
     }
     const from = new Date(fromRaw).getTime();
     const to   = new Date(toRaw).getTime();
     if (to <= from) {
-      blackoutStatusEl.textContent = tr("agenda:js.endAfterStart", "Fim deve ser depois do início.");
+      blackoutStatusEl.textContent = tr("agenda:js.endAfterStart", "Fim deve ser depois do inÃ­cio.");
       blackoutStatusEl.className = "ep-status is-err";
       return;
     }
     blackoutSaveBtn.disabled = true;
-    blackoutSaveBtn.textContent = tr("agenda:js.saving", "Salvando…");
+    blackoutSaveBtn.textContent = tr("agenda:js.saving", "Salvandoâ€¦");
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/agenda/blackout`, {
         method: "POST",
@@ -987,11 +987,11 @@
       await loadAgenda();
     } catch (e) {
       console.error("delete_blackout_failed", e);
-      alert(tr("agenda:js.removeFailed", "Não foi possível remover: {{msg}}", { msg: e?.message || tr("agenda:js.unknown", "desconhecido") }));
+      alert(tr("agenda:js.removeFailed", "NÃ£o foi possÃ­vel remover: {{msg}}", { msg: e?.message || tr("agenda:js.unknown", "desconhecido") }));
     }
   }
 
-  // ─── Sincronizar com calendário externo (iCal feed) ──────────────────
+  // â”€â”€â”€ Sincronizar com calendÃ¡rio externo (iCal feed) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const syncModal      = document.getElementById("syncModal");
   const syncUrlBox     = document.getElementById("syncUrlBox");
   const syncCopyBtn    = document.getElementById("syncCopyBtn");
@@ -1012,9 +1012,9 @@
     return `${BACKEND_BASE_URL}/therapy/agenda/feed.ics?token=${encodeURIComponent(token)}`;
   }
 
-  // Dropdown "⋯ Mais" da toolbar — esconde 5 ações secundárias num overflow
-  // pra reduzir poluição visual (anti-padrão: 6 botões competindo). Click fora
-  // ou Esc fecha. Click em qualquer item fecha (eles próprios abrem modals).
+  // Dropdown "â‹¯ Mais" da toolbar â€” esconde 5 aÃ§Ãµes secundÃ¡rias num overflow
+  // pra reduzir poluiÃ§Ã£o visual (anti-padrÃ£o: 6 botÃµes competindo). Click fora
+  // ou Esc fecha. Click em qualquer item fecha (eles prÃ³prios abrem modals).
   (function setupToolbarMore() {
     const btn = document.getElementById("toolbarMoreBtn");
     const menu = document.getElementById("toolbarMoreMenu");
@@ -1035,7 +1035,7 @@
   })();
 
   document.getElementById("openSyncBtn").addEventListener("click", async () => {
-    syncUrlBox.textContent = tr("agenda:sync.generating", "Gerando link…");
+    syncUrlBox.textContent = tr("agenda:sync.generating", "Gerando linkâ€¦");
     syncModal.classList.add("is-open");
     try {
       const token = await fetchFeedToken();
@@ -1060,7 +1060,7 @@
 
   syncRegenBtn.addEventListener("click", async () => {
     if (!confirm(tr("agenda:js.confirmRegen", "Gerar novo link? O link anterior vai parar de funcionar imediatamente."))) return;
-    syncUrlBox.textContent = tr("agenda:js.generating", "Gerando…");
+    syncUrlBox.textContent = tr("agenda:js.generating", "Gerandoâ€¦");
     try {
       const token = await fetchFeedToken({ regenerate: true });
       syncUrlBox.textContent = buildFeedUrl(token);
@@ -1069,10 +1069,10 @@
     }
   });
 
-  // ─── Busca por paciente ──────────────────────────────────────────────
-  // Aplica filtro nos blocos de sessão renderizados — destaque (ouro forte)
-  // pros que casam, fade pros que não casam. Não esconde nada — usuário ainda
-  // vê o contexto da semana. Match: substring case-insensitive no patientName.
+  // â”€â”€â”€ Busca por paciente â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Aplica filtro nos blocos de sessÃ£o renderizados â€” destaque (ouro forte)
+  // pros que casam, fade pros que nÃ£o casam. NÃ£o esconde nada â€” usuÃ¡rio ainda
+  // vÃª o contexto da semana. Match: substring case-insensitive no patientName.
   const searchInput = document.getElementById("patientSearch");
   const searchHint  = document.getElementById("searchHint");
 
@@ -1103,19 +1103,19 @@
   }
 
   searchInput.addEventListener("input", applyPatientSearch);
-  // showAgenda() já reaplica applyPatientSearch após cada re-render.
+  // showAgenda() jÃ¡ reaplica applyPatientSearch apÃ³s cada re-render.
 
-  // ─── Imprimir agenda ─────────────────────────────────────────────────
+  // â”€â”€â”€ Imprimir agenda â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   document.getElementById("printAgendaBtn").addEventListener("click", () => {
     window.print();
   });
 
-  // Placeholder do Phase 4 (lista de espera ainda não construída).
+  // Placeholder do Phase 4 (lista de espera ainda nÃ£o construÃ­da).
   document.getElementById("openWaitlistBtn").addEventListener("click", () => {
     window.location.href = "./lista-espera.html";
   });
 
-  // ─── Slot action modal (criar consulta OU adicionar nota) ────────────
+  // â”€â”€â”€ Slot action modal (criar consulta OU adicionar nota) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let pendingSlotDate = null;
 
   function openSlotActionModal(slotDate) {
@@ -1124,7 +1124,7 @@
     const dm = slotDate.toLocaleDateString(currentLocale(), { day: "2-digit", month: "long" });
     const hm = `${pad2(slotDate.getHours())}:${pad2(slotDate.getMinutes())}`;
     document.getElementById("slotActionTitle").textContent = `${wd[0].toUpperCase()+wd.slice(1)}, ${dm}`;
-    document.getElementById("slotActionSub").textContent   = tr("agenda:js.timeAt", "Horário: {{hm}}", { hm });
+    document.getElementById("slotActionSub").textContent   = tr("agenda:js.timeAt", "HorÃ¡rio: {{hm}}", { hm });
     document.getElementById("slotNoteText").value = "";
     document.getElementById("slotActionStatus").textContent = "";
     document.getElementById("slotActionStatus").className = "ep-status";
@@ -1138,7 +1138,7 @@
     newSessionModalApi.open({ scheduledAt: toISOLocal(pendingSlotDate) });
   });
 
-  // "+ Nova consulta" da toolbar — antes era <a href="painel.html">,
+  // "+ Nova consulta" da toolbar â€” antes era <a href="painel.html">,
   // agora abre o modal direto.
   document.getElementById("agendaNewSessionBtn").addEventListener("click", () => {
     newSessionModalApi.open();
@@ -1151,14 +1151,14 @@
     const text = document.getElementById("slotNoteText").value.trim();
     const status = document.getElementById("slotActionStatus");
     if (!text) {
-      status.textContent = tr("agenda:js.writeNoteFirst", "Escreva uma observação antes de salvar.");
+      status.textContent = tr("agenda:js.writeNoteFirst", "Escreva uma observaÃ§Ã£o antes de salvar.");
       status.classList.add("is-err");
       return;
     }
     const btn = document.getElementById("slotSaveNoteBtn");
     btn.disabled = true;
     status.className = "ep-status";
-    status.textContent = tr("agenda:js.saving", "Salvando…");
+    status.textContent = tr("agenda:js.saving", "Salvandoâ€¦");
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/agenda/note`, {
         method: "POST",
@@ -1178,7 +1178,7 @@
     }
   });
 
-  // ─── Editar/remover nota existente ───────────────────────────────────
+  // â”€â”€â”€ Editar/remover nota existente â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let pendingNote = null;
 
   function openNoteEditModal(note) {
@@ -1187,7 +1187,7 @@
     const wd = at.toLocaleDateString(currentLocale(), { weekday: "long" });
     const dm = at.toLocaleDateString(currentLocale(), { day: "2-digit", month: "long" });
     const hm = `${pad2(at.getHours())}:${pad2(at.getMinutes())}`;
-    document.getElementById("noteEditSub").textContent = `${wd[0].toUpperCase()+wd.slice(1)}, ${dm} · ${hm}`;
+    document.getElementById("noteEditSub").textContent = `${wd[0].toUpperCase()+wd.slice(1)}, ${dm} Â· ${hm}`;
     document.getElementById("noteEditText").value = note.text || "";
     document.getElementById("noteEditStatus").textContent = "";
     document.getElementById("noteEditStatus").className = "ep-status";
@@ -1202,14 +1202,14 @@
     const text = document.getElementById("noteEditText").value.trim();
     const status = document.getElementById("noteEditStatus");
     if (!text) {
-      status.textContent = tr("agenda:js.textRequired", "Texto é obrigatório.");
+      status.textContent = tr("agenda:js.textRequired", "Texto Ã© obrigatÃ³rio.");
       status.classList.add("is-err");
       return;
     }
     const btn = document.getElementById("noteEditSaveBtn");
     btn.disabled = true;
     status.className = "ep-status";
-    status.textContent = tr("agenda:js.saving", "Salvando…");
+    status.textContent = tr("agenda:js.saving", "Salvandoâ€¦");
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/agenda/note/${encodeURIComponent(pendingNote.noteId)}`, {
         method: "PATCH",
@@ -1230,7 +1230,7 @@
   });
   document.getElementById("noteEditDeleteBtn").addEventListener("click", async () => {
     if (!pendingNote) return;
-    if (!confirm(tr("agenda:js.confirmRemoveNote", "Remover esta observação?"))) return;
+    if (!confirm(tr("agenda:js.confirmRemoveNote", "Remover esta observaÃ§Ã£o?"))) return;
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/agenda/note/${encodeURIComponent(pendingNote.noteId)}`, {
         method: "DELETE",
@@ -1248,7 +1248,7 @@
     }
   });
 
-  // ─── Configurações de agenda ─────────────────────────────────────────
+  // â”€â”€â”€ ConfiguraÃ§Ãµes de agenda â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const cfgModal     = document.getElementById("agendaConfigModal");
   const cfgStartEl   = document.getElementById("cfgStartHour");
   const cfgEndEl     = document.getElementById("cfgEndHour");
@@ -1263,7 +1263,7 @@
     cfgStartEl.appendChild(o1);
     cfgEndEl.appendChild(o2);
   }
-  // Adiciona 24:00 só no Fim
+  // Adiciona 24:00 sÃ³ no Fim
   const o24 = document.createElement("option"); o24.value = 24; o24.textContent = "24:00"; cfgEndEl.appendChild(o24);
 
   document.getElementById("openAgendaConfigBtn").addEventListener("click", () => {
@@ -1282,13 +1282,13 @@
     const eh = Number(cfgEndEl.value);
     const sm = Number(cfgSlotEl.value);
     if (!(eh > sh)) {
-      cfgStatusEl.textContent = tr("agenda:js.endGreaterStart", "Hora de término deve ser maior que a de início.");
+      cfgStatusEl.textContent = tr("agenda:js.endGreaterStart", "Hora de tÃ©rmino deve ser maior que a de inÃ­cio.");
       cfgStatusEl.classList.add("is-err");
       return;
     }
     cfgSaveBtn.disabled = true;
     cfgStatusEl.className = "ep-status";
-    cfgStatusEl.textContent = tr("agenda:js.saving", "Salvando…");
+    cfgStatusEl.textContent = tr("agenda:js.saving", "Salvandoâ€¦");
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
         method: "PATCH",
@@ -1297,12 +1297,12 @@
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
-      // Aplica em memória + re-render
+      // Aplica em memÃ³ria + re-render
       START_HOUR = sh; END_HOUR = eh; SESSION_DEFAULT_MIN = sm;
       invalidateProfileCache();
-      cfgStatusEl.textContent = tr("agenda:js.savedUpdating", "Salvo. Atualizando agenda…");
+      cfgStatusEl.textContent = tr("agenda:js.savedUpdating", "Salvo. Atualizando agendaâ€¦");
       cfgStatusEl.classList.add("is-ok");
-      // Reconstrói coluna de horas + grade
+      // ReconstrÃ³i coluna de horas + grade
       buildHourLabels();
       renderWeek();
       setTimeout(() => cfgModal.classList.remove("is-open"), 600);
@@ -1314,12 +1314,12 @@
     }
   });
 
-  // ─── Boot ───────────────────────────────────────────────────────────
+  // â”€â”€â”€ Boot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   await loadAgenda();
 
-  // Aba voltou a ficar visível: alguém pode ter cancelado/encerrado/criado
+  // Aba voltou a ficar visÃ­vel: alguÃ©m pode ter cancelado/encerrado/criado
   // consulta no painel em outra aba, ou o token expirou (>1h). Refresh
-  // proativo + reload pra agenda mostrar versão atual.
+  // proativo + reload pra agenda mostrar versÃ£o atual.
   document.addEventListener("visibilitychange", async () => {
     if (document.visibilityState !== "visible") return;
     try { await getFreshToken(); } catch { /* cachedGet faz retry */ }

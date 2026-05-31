@@ -835,12 +835,14 @@ body:has(.ep-logout-fab):has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-
   outline: 2px solid var(--ep-gold);
   outline-offset: 2px;
 }
-/* FABs de ferramentas clínicas — capability-gated, montados pelo auth-guard */
+/* FABs de ferramentas clínicas — capability-gated, montados pelo auth-guard.
+   bottom: 24px é fallback — no stack ficam position:static (flex flow). */
 .ep-receita-fab,
 .ep-atestado-fab,
 .ep-calc-fab {
   position: fixed;
   right: 16px;
+  bottom: 24px;
   width: 52px;
   height: 52px;
   border-radius: 50%;

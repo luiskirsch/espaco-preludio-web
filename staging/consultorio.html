@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" class="ep-consult-html ep-consult-html--session" data-i18n-ns="consultorio">
 <head>
   <meta charset="UTF-8">
@@ -10,7 +10,7 @@
   <link rel="dns-prefetch" href="https://www.gstatic.com">
   <link rel="dns-prefetch" href="https://osl-video-server-staging.up.railway.app">
   <script type="speculationrules">{"prerender":[{"where":{"selector_matches":"a[href$='.html']:not([href^='http'])"},"eagerness":"moderate"}]}</script>
-  <title data-i18n="consultorio:title">Consultório · Espaço Prelúdio</title>
+  <title data-i18n="consultorio:title">ConsultÃ³rio Â· EspaÃ§o PrelÃºdio</title>
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,14 +31,14 @@
     <a href="./painel.html" class="ep-brand" data-i18n-aria-label="consultorio:brand.ariaLabel" aria-label="Voltar ao painel">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead" data-i18n="consultorio:brand.lead">Consultório</span>
+        <span class="ep-brand__lead" data-i18n="consultorio:brand.lead">ConsultÃ³rio</span>
         <span id="topPatientName" class="ep-brand__waiting" data-i18n="consultorio:brand.waiting">Aguardando paciente</span>
       </span>
     </a>
     <div class="ep-flex ep-flex--center ep-gap-14 ep-w-full">
-      <span id="connectionStatus" class="ep-consult__status" data-i18n="consultorio:status.connecting">conectando…</span>
+      <span id="connectionStatus" class="ep-consult__status" data-i18n="consultorio:status.connecting">conectandoâ€¦</span>
       <span id="e2eeBadge" class="ep-badge ep-badge--ok ep-hide" data-i18n-title="consultorio:e2ee.title" title="End-to-end encrypted" data-i18n="consultorio:e2ee.badge">E2EE ativo</span>
-      <span id="aiCaptureBadge" class="ep-badge ep-badge--ok ep-hide" data-i18n-title="consultorio:aiCapture.title" title="Áudio sendo capturado para resumo IA pós-sessão" data-i18n="consultorio:aiCapture.badge">Áudio → IA</span>
+      <span id="aiCaptureBadge" class="ep-badge ep-badge--ok ep-hide" data-i18n-title="consultorio:aiCapture.title" title="Ãudio sendo capturado para resumo IA pÃ³s-sessÃ£o" data-i18n="consultorio:aiCapture.badge">Ãudio â†’ IA</span>
       <span class="ep-text-xs ep-text-muted" id="infoDuration">0min 00s</span>
 
       <!-- Controles centrais (mic / cam / rec / hangup) na topbar -->
@@ -46,10 +46,10 @@
         <button class="ep-ctrl" id="ctrlMic" type="button" title="Silenciar microfone" data-i18n-title="consultorio:controls.mic" aria-pressed="false">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
         </button>
-        <button class="ep-ctrl" id="ctrlCam" type="button" title="Desligar câmera" data-i18n-title="consultorio:controls.cam" aria-pressed="false">
+        <button class="ep-ctrl" id="ctrlCam" type="button" title="Desligar cÃ¢mera" data-i18n-title="consultorio:controls.cam" aria-pressed="false">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="m17 10 4-2v8l-4-2z"/></svg>
         </button>
-        <button class="ep-ctrl" id="ctrlRecord" type="button" title="Gravar sessão (cifrada local)" data-i18n-title="consultorio:controls.rec" aria-pressed="false">
+        <button class="ep-ctrl" id="ctrlRecord" type="button" title="Gravar sessÃ£o (cifrada local)" data-i18n-title="consultorio:controls.rec" aria-pressed="false">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6" fill="currentColor"/></svg>
         </button>
         <button class="ep-ctrl ep-ctrl--leave" id="ctrlLeave" type="button" title="Encerrar consulta" data-i18n-title="consultorio:controls.leave">
@@ -58,7 +58,7 @@
       </div>
     </div>
     <div class="ep-flex ep-gap-8" style="align-items: center;">
-      <!-- Ajustar ambiente na topbar — painel abre pra baixo -->
+      <!-- Ajustar ambiente na topbar â€” painel abre pra baixo -->
       <div class="ep-ambient ep-ambient--topbar">
         <button id="ambientBtn" class="ep-ambient__btn" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="ambientPanel">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
@@ -81,12 +81,12 @@
           <div class="ep-ambient__section">
             <div class="ep-ambient__label" data-i18n="consultorio:ambient.soundLabel">Som ambiente</div>
             <div class="ep-ambient__pills" role="group" data-i18n-aria-label="consultorio:ambient.soundGroup" aria-label="Som ambiente">
-              <button class="ep-ambient__pill" type="button" data-sound="off" data-i18n="consultorio:ambient.soundOff">Silêncio</button>
+              <button class="ep-ambient__pill" type="button" data-sound="off" data-i18n="consultorio:ambient.soundOff">SilÃªncio</button>
               <button class="ep-ambient__pill" type="button" data-sound="brown" data-i18n="consultorio:ambient.soundWarm">Acolhedor</button>
             </div>
             <input type="range" data-ambient-volume class="ep-ambient__slider" min="0" max="100" value="40" data-i18n-aria-label="consultorio:ambient.volumeAria" aria-label="Volume do som ambiente">
           </div>
-          <p class="ep-ambient__hint" data-i18n="consultorio:ambient.hint">Suas preferências ficam só neste dispositivo.</p>
+          <p class="ep-ambient__hint" data-i18n="consultorio:ambient.hint">Suas preferÃªncias ficam sÃ³ neste dispositivo.</p>
         </div>
       </div>
       <button type="button" id="endSessionBtn" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="consultorio:topbar.endBtn">Encerrar</button>
@@ -99,57 +99,57 @@
 
       <div class="ep-tile ep-tile--gilded" id="tileLocal">
         <video id="videoLocal" autoplay muted playsinline></video>
-        <div class="ep-tile__name" data-i18n="consultorio:tile.youProfessional">Você (profissional)</div>
+        <div class="ep-tile__name" data-i18n="consultorio:tile.youProfessional">VocÃª (profissional)</div>
       </div>
       <div class="ep-tile ep-tile--gilded" id="tileRemote">
         <div class="ep-tile__placeholder" id="remotePlaceholder">
           <div class="ep-waiting">
             <div class="ep-waiting__pulse" aria-hidden="true"></div>
-            <div class="ep-waiting__text" data-i18n="consultorio:waiting.title">A sala está aberta.</div>
-            <div class="ep-waiting__sub" data-i18n="consultorio:waiting.sub">O paciente entrará pelo link enviado.</div>
+            <div class="ep-waiting__text" data-i18n="consultorio:waiting.title">A sala estÃ¡ aberta.</div>
+            <div class="ep-waiting__sub" data-i18n="consultorio:waiting.sub">O paciente entrarÃ¡ pelo link enviado.</div>
           </div>
         </div>
         <video id="videoRemote" autoplay playsinline class="ep-hide"></video>
         <div class="ep-tile__name ep-hide" id="remoteName"></div>
       </div>
 
-      <!-- Tópicos clínicos — pinado na coluna direita, sempre visível.
+      <!-- TÃ³picos clÃ­nicos â€” pinado na coluna direita, sempre visÃ­vel.
            Toggle e close ficam no DOM (JS depende deles) mas escondidos. -->
-      <button class="ep-topics-toggle" id="topicsToggle" type="button" aria-expanded="true" style="display:none;" data-i18n="consultorio:topics.toggle">＋ Tópicos</button>
+      <button class="ep-topics-toggle" id="topicsToggle" type="button" aria-expanded="true" style="display:none;" data-i18n="consultorio:topics.toggle">ï¼‹ TÃ³picos</button>
       <aside class="ep-topics-deck ep-topics-deck--pinned is-open" id="topicsDeck" aria-hidden="false">
         <div class="ep-topics-deck__head">
-          <span class="ep-topics-deck__title" data-i18n="consultorio:topics.title">Tópicos de assuntos e perguntas</span>
-          <button class="ep-topics-deck__close" id="topicsClose" type="button" data-i18n-aria-label="consultorio:topics.close" aria-label="Fechar" style="display:none;">×</button>
+          <span class="ep-topics-deck__title" data-i18n="consultorio:topics.title">TÃ³picos de assuntos e perguntas</span>
+          <button class="ep-topics-deck__close" id="topicsClose" type="button" data-i18n-aria-label="consultorio:topics.close" aria-label="Fechar" style="display:none;">Ã—</button>
         </div>
         <div class="ep-topics-deck__filters" id="topicsFilters"></div>
         <div class="ep-topics-deck__list" id="topicsList"></div>
-        <button class="ep-topics-deck__draw" id="topicsDraw" type="button" data-i18n="consultorio:topics.draw">Puxar tópico aleatório</button>
+        <button class="ep-topics-deck__draw" id="topicsDraw" type="button" data-i18n="consultorio:topics.draw">Puxar tÃ³pico aleatÃ³rio</button>
       </aside>
 
-      <!-- Anotações inline (coluna ESQUERDA, alinhada com o tile do profissional) -->
+      <!-- AnotaÃ§Ãµes inline (coluna ESQUERDA, alinhada com o tile do profissional) -->
       <div class="ep-inline-notes">
         <div class="ep-inline-notes__head">
           <span class="ep-lock">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-            <span data-i18n="consultorio:notes.lock">Anotações cifradas · só você lê</span>
+            <span data-i18n="consultorio:notes.lock">AnotaÃ§Ãµes cifradas Â· sÃ³ vocÃª lÃª</span>
           </span>
           <span class="ep-text-xs ep-text-muted" id="noteStatus">&nbsp;</span>
         </div>
         <div class="ep-inline-notes__list" id="notesList"></div>
         <div id="notesEmpty" class="ep-inline-notes__empty ep-hide" data-i18n="consultorio:notes.empty">
-          Nenhuma anotação ainda. Use o campo abaixo durante a sessão.
+          Nenhuma anotaÃ§Ã£o ainda. Use o campo abaixo durante a sessÃ£o.
         </div>
         <div class="ep-inline-notes__composer">
-          <textarea id="noteInput" placeholder="Digite uma anotação… (cifrada antes de enviar)" data-i18n-placeholder="consultorio:notes.placeholder"></textarea>
+          <textarea id="noteInput" placeholder="Digite uma anotaÃ§Ã£oâ€¦ (cifrada antes de enviar)" data-i18n-placeholder="consultorio:notes.placeholder"></textarea>
           <div class="ep-inline-notes__actions">
             <span class="ep-text-xs ep-text-muted" data-i18n="consultorio:notes.shortcut">Ctrl + Enter pra salvar</span>
             <div class="ep-flex ep-gap-8" style="align-items: center; position: relative;">
               <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="cidBtn" title="Buscar e inserir CID-10" data-i18n-title="consultorio:notes.cidTitle" data-i18n="consultorio:notes.cidBtn">+ CID</button>
-              <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="templateBtn" title="Inserir template no campo" data-i18n-title="consultorio:notes.templateTitle" data-i18n="consultorio:notes.templateBtn">Templates ▾</button>
+              <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="templateBtn" title="Inserir template no campo" data-i18n-title="consultorio:notes.templateTitle" data-i18n="consultorio:notes.templateBtn">Templates â–¾</button>
               <button class="ep-btn ep-btn--primary ep-btn--sm" type="button" id="saveNoteBtn" data-i18n="consultorio:notes.saveBtn">Salvar nota</button>
               <div id="templateMenu" class="ep-hide" style="position: absolute; bottom: calc(100% + 14px); right: 0; min-width: 280px; max-width: 360px; max-height: 320px; overflow-y: auto; background: #14110d; border: 1px solid rgba(215,176,107,0.32); border-radius: 14px; box-shadow: 0 -30px 60px -8px rgba(0,0,0,0.65), 0 -8px 20px -4px rgba(0,0,0,0.5), 0 0 0 1px rgba(215,176,107,0.05); z-index: 9999; padding: 8px;"></div>
               <div id="cidMenu" class="ep-hide" style="position: absolute; bottom: calc(100% + 14px); right: 0; min-width: 360px; max-width: 480px; background: #14110d; border: 1px solid rgba(215,176,107,0.32); border-radius: 14px; box-shadow: 0 -30px 60px -8px rgba(0,0,0,0.65), 0 -8px 20px -4px rgba(0,0,0,0.5), 0 0 0 1px rgba(215,176,107,0.05); z-index: 9999; padding: 10px;">
-                <input id="cidSearch" type="text" placeholder="Código (F32) ou nome (depressivo)…" data-i18n-placeholder="consultorio:cid.searchPh" style="margin-bottom: 8px; width: 100%; padding: 8px 10px; background: rgba(255,251,240,0.05); border: 1px solid rgba(215,176,107,0.22); border-radius: 8px; color: #fbf7ec; font: inherit; font-size: 13px;">
+                <input id="cidSearch" type="text" placeholder="CÃ³digo (F32) ou nome (depressivo)â€¦" data-i18n-placeholder="consultorio:cid.searchPh" style="margin-bottom: 8px; width: 100%; padding: 8px 10px; background: rgba(255,251,240,0.05); border: 1px solid rgba(215,176,107,0.22); border-radius: 8px; color: #fbf7ec; font: inherit; font-size: 13px;">
                 <div id="cidResults" style="max-height: 320px; overflow-y: auto;"></div>
               </div>
             </div>
@@ -157,7 +157,7 @@
         </div>
       </div>
 
-      <!-- Indicador "REC" visível quando gravando -->
+      <!-- Indicador "REC" visÃ­vel quando gravando -->
       <div id="recIndicator" class="ep-hide" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:200;display:flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(220,38,38,0.92);color:#fff;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(220,38,38,0.35);">
         <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;animation:ep-rec-blink 1.4s infinite ease-in-out;"></span>
         <span>REC</span>
@@ -166,21 +166,21 @@
       </div>
     </section>
 
-    <!-- Modal de consentimento LGPD pra gravação -->
+    <!-- Modal de consentimento LGPD pra gravaÃ§Ã£o -->
     <div class="ep-modal" id="recConsentModal" role="dialog" aria-modal="true">
       <div class="ep-modal__panel" style="max-width:560px;">
-        <h3 class="ep-modal__title" data-i18n="consultorio:rec.title">Gravar esta sessão?</h3>
+        <h3 class="ep-modal__title" data-i18n="consultorio:rec.title">Gravar esta sessÃ£o?</h3>
         <p class="ep-modal__sub" data-i18n-html="consultorio:rec.subHtml">
-          A gravação fica <strong>cifrada com sua chave</strong> e é baixada direto pro seu computador. <strong>Nada sobe pro nosso servidor.</strong>
+          A gravaÃ§Ã£o fica <strong>cifrada com sua chave</strong> e Ã© baixada direto pro seu computador. <strong>Nada sobe pro nosso servidor.</strong>
         </p>
         <div style="padding:0 28px;">
           <div class="ep-alert ep-mt-0" style="background:rgba(220,170,80,0.10);border-left:3px solid var(--ep-gold);font-size:13px;line-height:1.55;">
             <strong data-i18n="consultorio:rec.lgpdTitle">Conforme LGPD (Art. 11) e CFP/CFM:</strong>
             <ul style="margin:8px 0 0 18px;padding:0;">
-              <li data-i18n-html="consultorio:rec.bullet1Html">Você precisa do <strong>consentimento expresso do paciente</strong> antes de iniciar a gravação. Avise verbalmente agora.</li>
-              <li data-i18n="consultorio:rec.bullet2">A finalidade deve ser explicada (registro clínico, supervisão, etc).</li>
-              <li data-i18n="consultorio:rec.bullet3">A retenção do arquivo é responsabilidade sua — guarde em local seguro pelo prazo do conselho de classe.</li>
-              <li data-i18n="consultorio:rec.bullet4">Paciente tem direito a pedir exclusão a qualquer momento.</li>
+              <li data-i18n-html="consultorio:rec.bullet1Html">VocÃª precisa do <strong>consentimento expresso do paciente</strong> antes de iniciar a gravaÃ§Ã£o. Avise verbalmente agora.</li>
+              <li data-i18n="consultorio:rec.bullet2">A finalidade deve ser explicada (registro clÃ­nico, supervisÃ£o, etc).</li>
+              <li data-i18n="consultorio:rec.bullet3">A retenÃ§Ã£o do arquivo Ã© responsabilidade sua â€” guarde em local seguro pelo prazo do conselho de classe.</li>
+              <li data-i18n="consultorio:rec.bullet4">Paciente tem direito a pedir exclusÃ£o a qualquer momento.</li>
             </ul>
           </div>
           <label style="display:flex;align-items:flex-start;gap:10px;margin-top:14px;cursor:pointer;line-height:1.4;">
@@ -190,7 +190,7 @@
         </div>
         <div class="ep-modal__actions">
           <button type="button" class="ep-btn ep-btn--ghost" id="recCancelBtn" data-i18n="consultorio:rec.cancelBtn">Cancelar</button>
-          <button type="button" class="ep-btn ep-btn--primary" id="recStartBtn" disabled data-i18n="consultorio:rec.startBtn">Iniciar gravação</button>
+          <button type="button" class="ep-btn ep-btn--primary" id="recStartBtn" disabled data-i18n="consultorio:rec.startBtn">Iniciar gravaÃ§Ã£o</button>
         </div>
       </div>
     </div>
@@ -202,7 +202,7 @@
 
   <div class="ep-ritual-open ep-hide" id="ritualOpen" aria-hidden="true">
     <div class="ep-ritual-open__circle"></div>
-    <div class="ep-ritual-open__text" data-i18n="consultorio:ritual.text">a sessão começou</div>
+    <div class="ep-ritual-open__text" data-i18n="consultorio:ritual.text">a sessÃ£o comeÃ§ou</div>
   </div>
 
 </div>
@@ -210,7 +210,7 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=3-27";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-28";
   import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
   import { TOPIC_LIBRARY, ABORDAGEM_LABEL, shuffle } from "./js/topics.js";
   import { initAtmosphere } from "./js/atmosphere.js";
@@ -234,17 +234,17 @@
     return (document.documentElement.lang || "pt-BR");
   }
 
-  // ─── Lang switcher relocate ──────────────────────────────────────
+  // â”€â”€â”€ Lang switcher relocate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Move o #ep-lang-switcher (criado por i18n/init.js com position:fixed
-  // bottom-left default) pra dentro da action row das anotações inline.
-  // Default ficava perdido no canto inferior esquerdo do consultório
-  // dark — pouco contraste, dava sensação de "deslocado". Agora alinha
+  // bottom-left default) pra dentro da action row das anotaÃ§Ãµes inline.
+  // Default ficava perdido no canto inferior esquerdo do consultÃ³rio
+  // dark â€” pouco contraste, dava sensaÃ§Ã£o de "deslocado". Agora alinha
   // ao lado de "Ctrl + Enter pra salvar", grupo visual coerente.
   function moveLangSwitcher() {
     const switcher = document.getElementById("ep-lang-switcher");
     const actions = document.querySelector(".ep-inline-notes__actions");
     if (!switcher || !actions) return false;
-    if (switcher.parentNode === actions) return true; // já movido
+    if (switcher.parentNode === actions) return true; // jÃ¡ movido
     actions.insertBefore(switcher, actions.firstChild);
     // Sobrescreve inline styles + CSS do init.js que mantinham fixed.
     switcher.style.setProperty("position", "static", "important");
@@ -262,16 +262,16 @@
   // Todo o estado fica em localStorage; nada disso vai pro servidor.
   await initAtmosphere({ buttonId: "ambientBtn", panelId: "ambientPanel" });
 
-  // LiveKit via esm.sh — pin de versão para reprodutibilidade.
+  // LiveKit via esm.sh â€” pin de versÃ£o para reprodutibilidade.
   const LIVEKIT_VERSION = "2.5.6";
   const livekitMod = await import(`https://esm.sh/livekit-client@${LIVEKIT_VERSION}`);
   const { Room, RoomEvent, Track, ExternalE2EEKeyProvider } = livekitMod;
 
-  // ─── Boot ───────────────────────────────────────────────────
+  // â”€â”€â”€ Boot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const params = new URLSearchParams(location.search);
   const sessionId = params.get("session");
   if (!sessionId) {
-    alert(tr("consultorio:alerts.noSession", "Sessão não informada."));
+    alert(tr("consultorio:alerts.noSession", "SessÃ£o nÃ£o informada."));
     window.location.href = "./painel.html";
     throw new Error("NO_SESSION");
   }
@@ -279,7 +279,7 @@
   const sess = await requireTherapist({ requireDek: true });
   const { idToken, therapist, dek } = sess;
 
-  // ─── Pega token LiveKit + e2eeKey ───────────────────────────
+  // â”€â”€â”€ Pega token LiveKit + e2eeKey â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const tokenRes = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/livekit-token`, {
     method: "POST",
     headers: { "Authorization": `Bearer ${idToken}` }
@@ -291,7 +291,7 @@
     throw new Error("TOKEN_FAIL");
   }
 
-  // ─── DOM refs ───────────────────────────────────────────────
+  // â”€â”€â”€ DOM refs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const topPatientName    = document.getElementById("topPatientName");
   const connectionStatus  = document.getElementById("connectionStatus");
   const e2eeBadge         = document.getElementById("e2eeBadge");
@@ -302,13 +302,13 @@
   const remotePlaceholder = document.getElementById("remotePlaceholder");
   const remoteName        = document.getElementById("remoteName");
 
-  // Iteração 7 (final): volta pro iter5 (tile match aspect do source —
-  // portrait quando paciente celular, landscape quando desktop) + força
+  // IteraÃ§Ã£o 7 (final): volta pro iter5 (tile match aspect do source â€”
+  // portrait quando paciente celular, landscape quando desktop) + forÃ§a
   // BLACK no background do container do grid (.ep-consult__video) pra
-  // área que sobra ao redor do tile portrait ficar preta sólida (sem o
+  // Ã¡rea que sobra ao redor do tile portrait ficar preta sÃ³lida (sem o
   // dark navy do mode-foco aparecendo).
   const setRemoteVideoFit = () => {
-    // Background do video area = preto sólido. Área ao redor do tile
+    // Background do video area = preto sÃ³lido. Ãrea ao redor do tile
     // portrait fica preta, sem mostrar gradient/cor do .ep-consult__video.
     const videoArea = document.getElementById("videoArea");
     if (videoArea) {
@@ -328,7 +328,7 @@
     tileRemote.style.setProperty("max-width", "100%", "important");
     tileRemote.style.setProperty("max-height", "100%", "important");
     tileRemote.style.setProperty("justify-self", "center", "important");
-    // Video preenche o tile (aspects match após o ajuste acima, cover não
+    // Video preenche o tile (aspects match apÃ³s o ajuste acima, cover nÃ£o
     // corta nada).
     videoRemote.style.setProperty("width", "100%", "important");
     videoRemote.style.setProperty("height", "100%", "important");
@@ -337,7 +337,7 @@
   videoRemote.addEventListener("loadedmetadata", setRemoteVideoFit);
   videoRemote.addEventListener("resize", setRemoteVideoFit);
   setRemoteVideoFit();
-  // Alias antigo pro código de onTrackSubscribed continuar válido.
+  // Alias antigo pro cÃ³digo de onTrackSubscribed continuar vÃ¡lido.
   const enforceRemoteContain = setRemoteVideoFit;
 
   const ctrlMic           = document.getElementById("ctrlMic");
@@ -352,8 +352,8 @@
   const templateBtn       = document.getElementById("templateBtn");
   const templateMenu      = document.getElementById("templateMenu");
 
-  // ─── Templates de prontuário ─────────────────────────────
-  // Lazy load no 1º clique. Cached client-side por sessão.
+  // â”€â”€â”€ Templates de prontuÃ¡rio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Lazy load no 1Âº clique. Cached client-side por sessÃ£o.
   let _templatesCache = null;
   async function loadTemplates() {
     if (_templatesCache) return _templatesCache;
@@ -369,7 +369,7 @@
   }
   function insertTemplate(content) {
     const existing = noteInput.value;
-    // Se composer vazio, insere direto. Caso contrário, anexa com 2 quebras de linha.
+    // Se composer vazio, insere direto. Caso contrÃ¡rio, anexa com 2 quebras de linha.
     noteInput.value = existing.trim() ? `${existing.trimEnd()}\n\n${content}` : content;
     noteInput.focus();
     // Posiciona cursor no fim
@@ -377,7 +377,7 @@
   }
   function renderTemplateMenu(templates) {
     if (!templates.length) {
-      templateMenu.innerHTML = `<div style="padding: 12px; font-size: 12px; color: rgba(255,251,240,0.55);">${tr("consultorio:templates.empty", "Nenhum template disponível.")}</div>`;
+      templateMenu.innerHTML = `<div style="padding: 12px; font-size: 12px; color: rgba(255,251,240,0.55);">${tr("consultorio:templates.empty", "Nenhum template disponÃ­vel.")}</div>`;
       return;
     }
     templateMenu.innerHTML = templates.map(t => `
@@ -404,7 +404,7 @@
       templateMenu.classList.add("ep-hide");
       return;
     }
-    templateMenu.innerHTML = `<div class="ep-skeleton" style="margin: 8px;">${tr("consultorio:templates.loading", "Carregando templates…")}</div>`;
+    templateMenu.innerHTML = `<div class="ep-skeleton" style="margin: 8px;">${tr("consultorio:templates.loading", "Carregando templatesâ€¦")}</div>`;
     templateMenu.classList.remove("ep-hide");
     const templates = await loadTemplates();
     renderTemplateMenu(templates);
@@ -415,7 +415,7 @@
     }
   });
 
-  // ─── CID-10 autocomplete ─────────────────────────────────────────
+  // â”€â”€â”€ CID-10 autocomplete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const cidBtn      = document.getElementById("cidBtn");
   const cidMenu     = document.getElementById("cidMenu");
   const cidSearch   = document.getElementById("cidSearch");
@@ -423,14 +423,14 @@
 
   function insertCid(item) {
     const desc = item.description || item.title;
-    const snippet = `${item.code} — ${desc}`;
+    const snippet = `${item.code} â€” ${desc}`;
     const existing = noteInput.value;
     noteInput.value = existing.trim() ? `${existing.trimEnd()}\n${snippet}\n` : snippet + "\n";
     noteInput.focus();
     noteInput.selectionStart = noteInput.selectionEnd = noteInput.value.length;
   }
 
-  // Busca CID local — usa js/cid10.js (~165 codigos F/Z). Sem fetch, sem
+  // Busca CID local â€” usa js/cid10.js (~165 codigos F/Z). Sem fetch, sem
   // dependencia de backend. Backend tem rota /therapy/cid10 mas o Railway
   // esta servindo versao desatualizada que nao tem ela registrada.
   function searchCid(q) {
@@ -441,7 +441,7 @@
     }
     cidResults.innerHTML = results.map(r => `
       <button type="button" class="ep-cid-item" data-code="${r.code}" style="display: block; width: 100%; padding: 8px 10px; text-align: left; background: transparent; border: 0; border-radius: 6px; cursor: pointer; color: #fbf7ec; font-size: 13px; line-height: 1.4;">
-        <strong style="font-family: 'JetBrains Mono', monospace; color: #d7b06b;">${r.code}</strong> · ${r.title}
+        <strong style="font-family: 'JetBrains Mono', monospace; color: #d7b06b;">${r.code}</strong> Â· ${r.title}
       </button>
     `).join("");
     cidResults.querySelectorAll(".ep-cid-item").forEach(btn => {
@@ -461,13 +461,13 @@
     if (!cidMenu.classList.contains("ep-hide")) { cidMenu.classList.add("ep-hide"); return; }
     cidMenu.classList.remove("ep-hide");
     cidSearch.value = "";
-    cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.55);">${tr("consultorio:cid.promptShort", "Digite 2+ caracteres pra buscar…")}</div>`;
+    cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.55);">${tr("consultorio:cid.promptShort", "Digite 2+ caracteres pra buscarâ€¦")}</div>`;
     setTimeout(() => cidSearch.focus(), 50);
   });
   cidSearch.addEventListener("input", () => {
     const q = cidSearch.value.trim();
     if (q.length < 2) {
-      cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.55);">${tr("consultorio:cid.promptShort", "Digite 2+ caracteres pra buscar…")}</div>`;
+      cidResults.innerHTML = `<div style="padding: 8px; font-size: 12px; color: rgba(255,251,240,0.55);">${tr("consultorio:cid.promptShort", "Digite 2+ caracteres pra buscarâ€¦")}</div>`;
       return;
     }
     searchCid(q);
@@ -478,7 +478,7 @@
     }
   });
 
-  // ─── LiveKit + E2EE ─────────────────────────────────────────
+  // â”€â”€â”€ LiveKit + E2EE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function setStatus(text) { connectionStatus.textContent = text; }
 
   function b64ToBytes(b64) {
@@ -493,14 +493,14 @@
   let aiCapture = null;
 
   try {
-    setStatus(tr("consultorio:status.preparingE2ee", "preparando E2EE…"));
+    setStatus(tr("consultorio:status.preparingE2ee", "preparando E2EEâ€¦"));
     // Worker E2EE do LiveKit. esm.sh serve o arquivo de worker do pacote.
     e2eeWorker = new Worker(
       `https://esm.sh/livekit-client@${LIVEKIT_VERSION}/dist/livekit-client.e2ee.worker.js`,
       { type: "module" }
     );
   } catch (err) {
-    console.warn("E2EE worker indisponível, seguindo sem E2EE", err);
+    console.warn("E2EE worker indisponÃ­vel, seguindo sem E2EE", err);
   }
 
   const e2eeKeyBytes = tokenData.e2eeKey ? b64ToBytes(tokenData.e2eeKey) : null;
@@ -514,25 +514,25 @@
   room = new Room({
     adaptiveStream: true,
     dynacast: true,
-    // Captura em 1280x720@30 com facingMode: user (frontal) — telessaúde 1:1
-    // não precisa de mais resolução; reduz CPU/GPU local.
+    // Captura em 1280x720@30 com facingMode: user (frontal) â€” telessaÃºde 1:1
+    // nÃ£o precisa de mais resoluÃ§Ã£o; reduz CPU/GPU local.
     videoCaptureDefaults: {
       resolution: { width: 1280, height: 720, frameRate: 30 },
       facingMode: "user"
     },
     publishDefaults: {
       dtx: true,
-      red: true,                 // redundância pra audio em redes ruins
-      simulcast: false,          // 1:1, simulcast só adiciona custo CPU
+      red: true,                 // redundÃ¢ncia pra audio em redes ruins
+      simulcast: false,          // 1:1, simulcast sÃ³ adiciona custo CPU
       videoCodec: "vp9",         // melhor que VP8 em qualquer bitrate
-      // 3.5 Mbps de teto — headroom suficiente pra preservar nitidez TANTO
+      // 3.5 Mbps de teto â€” headroom suficiente pra preservar nitidez TANTO
       // parado quanto em movimento. adaptiveStream + dynacast baixam
       // automaticamente quando a banda piora.
       videoEncoding: { maxBitrate: 3_500_000, maxFramerate: 30, priority: "high" },
       // degradationPreference: balanced (era maintain-resolution)
       // 'maintain-resolution' borra movimento pra preservar nitidez parado.
-      // 'balanced' deixa o encoder decidir caso a caso — melhor pra rosto
-      // que se mexe naturalmente durante a sessão.
+      // 'balanced' deixa o encoder decidir caso a caso â€” melhor pra rosto
+      // que se mexe naturalmente durante a sessÃ£o.
       degradationPreference: "balanced",
       audioPreset: { maxBitrate: 32_000 }
     },
@@ -571,16 +571,16 @@
     console.info("[lk] trackSubscribed", { kind: track.kind, sid: pub?.trackSid, participant: p?.identity });
     if (track.kind === Track.Kind.Video) {
       track.attach(videoRemote);
-      // pausa a animação do ::before do tile (fica coberta pelo video, mas
+      // pausa a animaÃ§Ã£o do ::before do tile (fica coberta pelo video, mas
       // continua consumindo GPU se nao for parada explicitamente)
       tileRemote.classList.add("ep-tile--has-video");
-      // Re-aplica object-fit:contain após attach — LiveKit pode ter
+      // Re-aplica object-fit:contain apÃ³s attach â€” LiveKit pode ter
       // resetado o style attribute ao setar srcObject em alguns paths.
       enforceRemoteContain();
-      // Log de diagnóstico — confirma dimensões reais do stream + computed
+      // Log de diagnÃ³stico â€” confirma dimensÃµes reais do stream + computed
       // object-fit final. Se reportar landscape (videoWidth > videoHeight)
-      // mesmo com paciente em celular portrait, é problema de orientation
-      // do iOS Safari e o fix CSS não basta — precisamos de outra abordagem.
+      // mesmo com paciente em celular portrait, Ã© problema de orientation
+      // do iOS Safari e o fix CSS nÃ£o basta â€” precisamos de outra abordagem.
       videoRemote.addEventListener("loadedmetadata", () => {
         console.info("[debug] remote video", {
           videoWidth: videoRemote.videoWidth,
@@ -602,18 +602,18 @@
       tileRemote.classList.remove("ep-tile--has-video");
     }
   }
-  // Logs auxiliares — diagnosticar vídeo unilateral / E2EE.
+  // Logs auxiliares â€” diagnosticar vÃ­deo unilateral / E2EE.
   room
     .on(RoomEvent.LocalTrackPublished, (pub) => console.info("[lk] localPublished", { kind: pub?.kind, sid: pub?.trackSid }))
     .on(RoomEvent.TrackPublished, (pub, p) => console.info("[lk] trackPublished", { kind: pub?.kind, sid: pub?.trackSid, participant: p?.identity }))
     .on(RoomEvent.EncryptionError, (err) => console.error("[lk] encryptionError", err));
 
   try {
-    setStatus(tr("consultorio:status.connecting", "conectando…"));
-    // Ordem canônica do LiveKit 2.x: setKey + setE2EEEnabled ANTES do connect.
-    // Se ativar E2EE depois de connect, auto-subscribe das tracks já publicadas
+    setStatus(tr("consultorio:status.connecting", "conectandoâ€¦"));
+    // Ordem canÃ´nica do LiveKit 2.x: setKey + setE2EEEnabled ANTES do connect.
+    // Se ativar E2EE depois de connect, auto-subscribe das tracks jÃ¡ publicadas
     // pelo participante remoto pode rodar antes do worker estar pronto, o que
-    // deixa essa subscription permanentemente "muda" até a track ser republicada.
+    // deixa essa subscription permanentemente "muda" atÃ© a track ser republicada.
     if (useE2EE) {
       await keyProvider.setKey(e2eeKeyBytes);
       await room.setE2EEEnabled(true);
@@ -621,10 +621,10 @@
     }
     await room.connect(tokenData.livekitUrl, tokenData.livekitToken);
 
-    // BUG histórico: RoomEvent.ParticipantConnected só dispara pra quem
-    // entra DEPOIS de nós. Se o paciente já tá na sala quando o profissional
-    // chega (ou vice-versa), o handler nunca rodava — placeholder ficava
-    // visível mesmo com o video chegando. Tracks ja sao subscribed
+    // BUG histÃ³rico: RoomEvent.ParticipantConnected sÃ³ dispara pra quem
+    // entra DEPOIS de nÃ³s. Se o paciente jÃ¡ tÃ¡ na sala quando o profissional
+    // chega (ou vice-versa), o handler nunca rodava â€” placeholder ficava
+    // visÃ­vel mesmo com o video chegando. Tracks ja sao subscribed
     // automaticamente via TrackSubscribed (que pega ambos os casos), mas
     // a UI (esconder placeholder, atualizar nome) precisa ser disparada
     // manualmente pra quem ja tava la.
@@ -632,26 +632,26 @@
       onRemoteConnected(p);
     }
 
-    setStatus(tr("consultorio:status.turningOnCamera", "ligando câmera…"));
+    setStatus(tr("consultorio:status.turningOnCamera", "ligando cÃ¢meraâ€¦"));
     await room.localParticipant.enableCameraAndMicrophone();
     const camTrack = Array.from(room.localParticipant.videoTrackPublications.values())[0]?.videoTrack;
     if (camTrack) {
       camTrack.attach(videoLocal);
       tileLocal.classList.add("ep-tile--has-video");
-      // contentHint vazio (default) — encoder analisa a cena dinamicamente.
+      // contentHint vazio (default) â€” encoder analisa a cena dinamicamente.
       // 'detail' era agressivo demais (otimizava pra parado e borrava
       // movimento). Com VP9 + 3.5 Mbps + balanced degradation, o default
       // entrega bom equilibrio nitidez/fluidez.
     }
 
-    setStatus(tr("consultorio:status.inSession", "em sessão"));
+    setStatus(tr("consultorio:status.inSession", "em sessÃ£o"));
 
-    // ─── Captura de áudio pra resumo IA ──────────────────────────
-    // Só inicia se: profissional opted-in (aiSummaryEnabled) + paciente
-    // consentiu (consentAiSummary). Backend já validou ambos e devolveu
+    // â”€â”€â”€ Captura de Ã¡udio pra resumo IA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // SÃ³ inicia se: profissional opted-in (aiSummaryEnabled) + paciente
+    // consentiu (consentAiSummary). Backend jÃ¡ validou ambos e devolveu
     // aiSummaryReady no token. Captura roda em paralelo ao session-record
-    // (que é a gravação cifrada local pro arquivo do terapeuta) — aqui é
-    // só áudio mixado pro Whisper. Web Audio API consome ~1-2% CPU.
+    // (que Ã© a gravaÃ§Ã£o cifrada local pro arquivo do terapeuta) â€” aqui Ã©
+    // sÃ³ Ã¡udio mixado pro Whisper. Web Audio API consome ~1-2% CPU.
     if (tokenData.aiSummaryReady) {
       try {
         const { SessionAiCapture } = await import("./js/session-ai-capture.js?v=1");
@@ -660,7 +660,7 @@
           room,
           sessionId,
           backendBaseUrl: BACKEND_BASE_URL,
-          // Sessão pode durar 50+ min — pega token fresco no upload (Firebase
+          // SessÃ£o pode durar 50+ min â€” pega token fresco no upload (Firebase
           // auto-renova internamente). O idToken inicial pode ter expirado.
           idTokenGetter: () => sess.user.getIdToken(),
           onStateChange: (s) => {
@@ -671,20 +671,20 @@
         await aiCapture.start();
         console.info("[ai-capture] started");
       } catch (err) {
-        console.warn("[ai-capture] falha ao iniciar — segue sessão normal", err);
+        console.warn("[ai-capture] falha ao iniciar â€” segue sessÃ£o normal", err);
         aiCapture = null;
       }
     }
   } catch (err) {
     console.error("connect_error", err);
     setStatus(tr("consultorio:status.connectError", "erro ao conectar"));
-    alert(tr("consultorio:alerts.connectError", "Não foi possível conectar à consulta:\n") + (err?.message || err));
+    alert(tr("consultorio:alerts.connectError", "NÃ£o foi possÃ­vel conectar Ã  consulta:\n") + (err?.message || err));
   }
 
-  // ─── Controles ──────────────────────────────────────────────
+  // â”€â”€â”€ Controles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   ctrlMic.addEventListener("click", async () => {
     const enabled = !ctrlMic.classList.contains("is-off");
-    // feedback visual imediato — UI atualiza antes do await do LiveKit
+    // feedback visual imediato â€” UI atualiza antes do await do LiveKit
     ctrlMic.classList.toggle("is-off", enabled);
     ctrlMic.setAttribute("aria-pressed", enabled ? "true" : "false");
     try {
@@ -697,7 +697,7 @@
   });
   ctrlCam.addEventListener("click", async () => {
     const enabled = !ctrlCam.classList.contains("is-off");
-    // feedback visual imediato — nao espera o await
+    // feedback visual imediato â€” nao espera o await
     ctrlCam.classList.toggle("is-off", enabled);
     ctrlCam.setAttribute("aria-pressed", enabled ? "true" : "false");
     tileLocal.classList.toggle("ep-tile--has-video", !enabled);
@@ -711,24 +711,24 @@
       console.error("cam_toggle_error", err);
     }
   });
-  // Handler unificado de encerrar — TANTO o botão vermelho de telefone
-  // (ctrlLeave, no controls bar) QUANTO o botão "Encerrar" do topbar
-  // (endSessionBtn) executam o mesmo fluxo: sobe o áudio pro resumo IA,
+  // Handler unificado de encerrar â€” TANTO o botÃ£o vermelho de telefone
+  // (ctrlLeave, no controls bar) QUANTO o botÃ£o "Encerrar" do topbar
+  // (endSessionBtn) executam o mesmo fluxo: sobe o Ã¡udio pro resumo IA,
   // chama o endpoint /encerrar no backend, desconecta do LiveKit.
   //
-  // Antes: ctrlLeave era "Sair" (descartava áudio) e endSessionBtn era
-  // "Encerrar" (subia áudio). Bug grave de UX porque o botão vermelho de
-  // telefone é universal pra "encerrar chamada" (Zoom/Meet/FaceTime), e
-  // o usuário clicava nele descartando o áudio sem perceber — resumo IA
+  // Antes: ctrlLeave era "Sair" (descartava Ã¡udio) e endSessionBtn era
+  // "Encerrar" (subia Ã¡udio). Bug grave de UX porque o botÃ£o vermelho de
+  // telefone Ã© universal pra "encerrar chamada" (Zoom/Meet/FaceTime), e
+  // o usuÃ¡rio clicava nele descartando o Ã¡udio sem perceber â€” resumo IA
   // nunca era gerado.
   async function endSessionFlow() {
-    if (!confirm(tr("consultorio:alerts.endConfirm", "Encerrar definitivamente esta consulta? O paciente será desconectado."))) return;
+    if (!confirm(tr("consultorio:alerts.endConfirm", "Encerrar definitivamente esta consulta? O paciente serÃ¡ desconectado."))) return;
     // Ordem importa: stopAndUpload precisa rodar ANTES de room.disconnect
-    // porque o MediaRecorder lê as tracks de áudio do LiveKit. Depois do
-    // disconnect, as tracks são destruídas e o último chunk fica vazio.
+    // porque o MediaRecorder lÃª as tracks de Ã¡udio do LiveKit. Depois do
+    // disconnect, as tracks sÃ£o destruÃ­das e o Ãºltimo chunk fica vazio.
     let aiResult = null;
     if (aiCapture && aiCapture.state() === "recording") {
-      setStatus(tr("consultorio:status.uploadingAi", "salvando áudio pra resumo IA…"));
+      setStatus(tr("consultorio:status.uploadingAi", "salvando Ã¡udio pra resumo IAâ€¦"));
       try { aiResult = await aiCapture.stopAndUpload(); } catch (err) { console.error("[ai-capture] upload error", err); }
     }
     try {
@@ -740,9 +740,9 @@
     try { recorder?.stop(); } catch {}
     try { await room?.disconnect(); } catch {}
     if (aiResult?.ok) {
-      // Confirmação leve — não bloqueia. Backend processa async.
+      // ConfirmaÃ§Ã£o leve â€” nÃ£o bloqueia. Backend processa async.
       try {
-        alert(tr("consultorio:alerts.aiQueued", "Sessão encerrada. O resumo IA será gerado em alguns minutos e ficará disponível no prontuário do paciente."));
+        alert(tr("consultorio:alerts.aiQueued", "SessÃ£o encerrada. O resumo IA serÃ¡ gerado em alguns minutos e ficarÃ¡ disponÃ­vel no prontuÃ¡rio do paciente."));
       } catch {}
     }
     window.location.href = "./painel.html";
@@ -750,7 +750,7 @@
   ctrlLeave.addEventListener("click", endSessionFlow);
   endSessionBtn.addEventListener("click", endSessionFlow);
 
-  // ─── Gravação local cifrada ──────────────────────────────────
+  // â”€â”€â”€ GravaÃ§Ã£o local cifrada â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const { SessionRecorder, downloadRecording } = await import("./js/session-record.js");
   const ctrlRecord       = document.getElementById("ctrlRecord");
   const recConsentModal  = document.getElementById("recConsentModal");
@@ -781,8 +781,8 @@
 
   ctrlRecord.addEventListener("click", () => {
     if (recorder) {
-      // Parar gravação em andamento
-      if (!confirm(tr("consultorio:rec.stopConfirm", "Encerrar gravação e baixar o arquivo cifrado?"))) return;
+      // Parar gravaÃ§Ã£o em andamento
+      if (!confirm(tr("consultorio:rec.stopConfirm", "Encerrar gravaÃ§Ã£o e baixar o arquivo cifrado?"))) return;
       recorder.stop();
     } else {
       recConsentCheck.checked = false;
@@ -795,7 +795,7 @@
     if (!recConsentCheck.checked) return;
     recConsentModal.classList.remove("is-open");
     try {
-      // Audit log do consentimento (best-effort, não bloqueia).
+      // Audit log do consentimento (best-effort, nÃ£o bloqueia).
       fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/recording-consent`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
@@ -828,12 +828,12 @@
       }, 1000);
     } catch (e) {
       console.error("recording_start_failed", e);
-      alert(tr("consultorio:rec.startError", "Erro ao iniciar gravação: ") + (e?.message || tr("consultorio:rec.permissionDenied", "Permissão de câmera/microfone negada?")));
+      alert(tr("consultorio:rec.startError", "Erro ao iniciar gravaÃ§Ã£o: ") + (e?.message || tr("consultorio:rec.permissionDenied", "PermissÃ£o de cÃ¢mera/microfone negada?")));
       recorder = null;
     }
   });
 
-  // ─── Notas cifradas ─────────────────────────────────────────
+  // â”€â”€â”€ Notas cifradas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let sessionStartTs = Date.now();
 
   async function loadNotes() {
@@ -844,7 +844,7 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
         notesEmpty.classList.remove("ep-hide");
-        notesEmpty.textContent = tr("consultorio:notes.loadError", "Erro ao carregar anotações.");
+        notesEmpty.textContent = tr("consultorio:notes.loadError", "Erro ao carregar anotaÃ§Ãµes.");
         return;
       }
       notesList.innerHTML = "";
@@ -877,7 +877,7 @@
     const text = noteInput.value.trim();
     if (!text) return;
     saveNoteBtn.disabled = true;
-    noteStatus.textContent = tr("consultorio:notes.encrypting", "cifrando…");
+    noteStatus.textContent = tr("consultorio:notes.encrypting", "cifrandoâ€¦");
     try {
       const { ciphertext, iv } = await encryptNote(text, dek);
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/notas`, {
@@ -895,9 +895,9 @@
         return;
       }
       noteInput.value = "";
-      noteStatus.textContent = tr("consultorio:notes.saved", "salva · cifrada");
+      noteStatus.textContent = tr("consultorio:notes.saved", "salva Â· cifrada");
       await loadNotes();
-      setTimeout(() => { noteStatus.textContent = " "; }, 2000);
+      setTimeout(() => { noteStatus.textContent = "Â "; }, 2000);
     } catch (err) {
       console.error("save_note_error", err);
       noteStatus.textContent = tr("consultorio:notes.saveError", "erro ao salvar");
@@ -914,8 +914,8 @@
     }
   });
 
-  // ─── Duração + Linha do tempo dourada ───────────────────────
-  // Sessão típica: 50 min. A linha enche linearmente. Sem alarme — pista visual.
+  // â”€â”€â”€ DuraÃ§Ã£o + Linha do tempo dourada â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // SessÃ£o tÃ­pica: 50 min. A linha enche linearmente. Sem alarme â€” pista visual.
   const SESSION_TARGET_MS = 50 * 60 * 1000;
   const timelineFill = document.getElementById("timelineFill");
   const infoDuration = document.getElementById("infoDuration");
@@ -929,9 +929,9 @@
     timelineFill.style.width = pct + "%";
   }, 1000);
 
-  // ─── Ritual de abertura (overlay + chime) ───────────────────
+  // â”€â”€â”€ Ritual de abertura (overlay + chime) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Toca uma vez quando o paciente entra. Som suave gerado por Web Audio
-  // (sem assets) — duas oitavas em fade triangular, cabeçalho de sessão.
+  // (sem assets) â€” duas oitavas em fade triangular, cabeÃ§alho de sessÃ£o.
   function playOpeningRitual() {
     const overlay = document.getElementById("ritualOpen");
     overlay.classList.remove("ep-hide");
@@ -955,7 +955,7 @@
     } catch (e) { /* navegador sem WebAudio: ignora */ }
   }
 
-  // ─── Cards de Tópicos Clínicos ──────────────────────────────
+  // â”€â”€â”€ Cards de TÃ³picos ClÃ­nicos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const topicsToggle  = document.getElementById("topicsToggle");
   const topicsDeck    = document.getElementById("topicsDeck");
   const topicsClose   = document.getElementById("topicsClose");
@@ -1000,9 +1000,9 @@
     card.appendChild(abord);
     card.appendChild(text);
     card.addEventListener("click", () => {
-      // Insere o tópico como prefixo na anotação atual.
+      // Insere o tÃ³pico como prefixo na anotaÃ§Ã£o atual.
       const prefix = noteInput.value.trim();
-      noteInput.value = (prefix ? prefix + "\n\n" : "") + "› " + t.text + "\n";
+      noteInput.value = (prefix ? prefix + "\n\n" : "") + "â€º " + t.text + "\n";
       noteInput.focus();
     });
     return card;
@@ -1023,14 +1023,14 @@
     if (pool.length === 0) return;
     const t = pool[Math.floor(Math.random() * pool.length)];
     const prefix = noteInput.value.trim();
-    noteInput.value = (prefix ? prefix + "\n\n" : "") + "› " + t.text + "\n";
+    noteInput.value = (prefix ? prefix + "\n\n" : "") + "â€º " + t.text + "\n";
     noteInput.focus();
   });
 
   renderFilters();
   renderList();
 
-  // Som ambiente e clima já foram inicializados por initAtmosphere() acima.
+  // Som ambiente e clima jÃ¡ foram inicializados por initAtmosphere() acima.
 
   await loadNotes();
 

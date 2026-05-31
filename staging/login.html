@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" class="ep-consult-html" data-i18n-ns="login">
 <head>
   <meta charset="UTF-8">
@@ -10,7 +10,7 @@
   <link rel="dns-prefetch" href="https://www.gstatic.com">
   <link rel="dns-prefetch" href="https://osl-video-server-staging.up.railway.app">
   <script type="speculationrules">{"prerender":[{"where":{"selector_matches":"a[href$='.html']:not([href^='http'])"},"eagerness":"moderate"}]}</script>
-  <title data-i18n="login:title">Entrar · Espaço Prelúdio</title>
+  <title data-i18n="login:title">Entrar Â· EspaÃ§o PrelÃºdio</title>
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,21 +23,21 @@
 
 <main class="ep-auth">
   <div class="ep-auth__panel">
-    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+    <a href="./index.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
-        <span data-i18n="common:brand.tail">Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">EspaÃ§o</span>
+        <span data-i18n="common:brand.tail">PrelÃºdio</span>
       </span>
     </a>
 
-    <h2 class="ep-auth__title ep-mt-32" data-i18n="login:h2">Entrar no consultório</h2>
+    <h2 class="ep-auth__title ep-mt-32" data-i18n="login:h2">Entrar no consultÃ³rio</h2>
     <p class="ep-auth__sub" data-i18n="login:sub">
-      Use seu e-mail profissional. Sua senha desbloqueia também a chave que cifra suas anotações.
+      Use seu e-mail profissional. Sua senha desbloqueia tambÃ©m a chave que cifra suas anotaÃ§Ãµes.
     </p>
 
     <div id="reauthAlert" class="ep-alert ep-alert--info ep-mt-12 ep-hide" data-i18n="login:reauthAlert">
-      Sua sessão de cifragem expirou. Confirme sua senha para continuar.
+      Sua sessÃ£o de cifragem expirou. Confirme sua senha para continuar.
     </div>
 
     <form id="loginForm" class="ep-stack ep-mt-16" novalidate>
@@ -54,12 +54,12 @@
 
       <div class="ep-stack" style="gap: 8px;">
         <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="submitBtn" data-i18n="login:btnSubmit">Entrar</button>
-        <a href="./cadastro.html" class="ep-btn ep-btn--ghost ep-btn--block" data-i18n="login:btnCreate">Criar consultório</a>
+        <a href="./cadastro.html" class="ep-btn ep-btn--ghost ep-btn--block" data-i18n="login:btnCreate">Criar consultÃ³rio</a>
       </div>
     </form>
 
     <div class="ep-auth__bottom">
-      <a href="./recuperar.html" data-i18n="login:forgot">Esqueci minha senha · usar chave-semente</a>
+      <a href="./recuperar.html" data-i18n="login:forgot">Esqueci minha senha Â· usar chave-semente</a>
     </div>
   </div>
 </main>
@@ -70,7 +70,7 @@
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { unwrapDek, rememberDek, rememberUser } from "./js/crypto.js";
-  // Tradução com fallback PT-BR — caso o i18n ainda não tenha carregado.
+  // TraduÃ§Ã£o com fallback PT-BR â€” caso o i18n ainda nÃ£o tenha carregado.
   function tr(key, fallback) {
     if (window.EP_I18N && window.EP_I18N.t) {
       const v = window.EP_I18N.t(key);
@@ -79,7 +79,7 @@
     return fallback;
   }
   // Sanitiza redirect: aceita so path relativo same-origin (./...). Bloqueia
-  // //evil, /\\evil, https://evil, javascript:, data:, etc. — protege phishing
+  // //evil, /\\evil, https://evil, javascript:, data:, etc. â€” protege phishing
   // que abusava do redirect pra mandar user pro fake-login.
   function sanitizeRedirect(raw, fallback) {
     if (!raw || typeof raw !== "string") return fallback;
@@ -104,7 +104,7 @@
   }
 
   if (errorParam === "NAO_REGISTRADO") {
-    setStatus(tr("login:errors.naoRegistrado", "Você ainda não tem cadastro de profissional. Crie sua conta primeiro."), "err");
+    setStatus(tr("login:errors.naoRegistrado", "VocÃª ainda nÃ£o tem cadastro de profissional. Crie sua conta primeiro."), "err");
   }
 
   async function fetchProfile(idToken) {
@@ -121,9 +121,9 @@
     const code = err?.code || "";
     if (code === "auth/invalid-credential") return tr("login:errors.invalidCredential", "E-mail ou senha incorretos.");
     if (code === "auth/wrong-password")     return tr("login:errors.wrongPassword", "Senha incorreta.");
-    if (code === "auth/user-not-found")     return tr("login:errors.userNotFound", "Conta não encontrada.");
+    if (code === "auth/user-not-found")     return tr("login:errors.userNotFound", "Conta nÃ£o encontrada.");
     if (code === "auth/too-many-requests")  return tr("login:errors.tooManyRequests", "Muitas tentativas. Tente novamente em alguns minutos.");
-    if (code === "auth/network-request-failed") return tr("login:errors.networkError", "Erro de conexão.");
+    if (code === "auth/network-request-failed") return tr("login:errors.networkError", "Erro de conexÃ£o.");
     return err?.message || tr("login:errors.genericError", "Erro ao entrar.");
   }
 
@@ -142,15 +142,15 @@
     }
 
     try {
-      setStatus(tr("login:errors.authenticating", "Autenticando…"));
+      setStatus(tr("login:errors.authenticating", "Autenticandoâ€¦"));
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await cred.user.getIdToken();
 
-      setStatus(tr("login:errors.loadingProfile", "Carregando perfil…"));
+      setStatus(tr("login:errors.loadingProfile", "Carregando perfilâ€¦"));
       const profile = await fetchProfile(idToken);
       if (!profile.ok) {
         if (profile.code === "NAO_REGISTRADO") {
-          setStatus(tr("login:errors.incompleteProfile", "Sua conta existe mas o cadastro de profissional não foi finalizado. Indo para o cadastro…"), "err");
+          setStatus(tr("login:errors.incompleteProfile", "Sua conta existe mas o cadastro de profissional nÃ£o foi finalizado. Indo para o cadastroâ€¦"), "err");
           setTimeout(() => { window.location.href = "./cadastro.html?step=profissional"; }, 1500);
           return;
         }
@@ -161,12 +161,12 @@
 
       const t = profile.therapist;
       if (!t.e2eeSalt || !t.wrappedDEK || !t.wrappedDEKIv) {
-        setStatus(tr("login:errors.noKey", "Sua conta está sem chave de cifragem. Recadastre-se ou entre em contato."), "err");
+        setStatus(tr("login:errors.noKey", "Sua conta estÃ¡ sem chave de cifragem. Recadastre-se ou entre em contato."), "err");
         submitBtn.disabled = false;
         return;
       }
 
-      setStatus(tr("login:errors.unlockingKey", "Desbloqueando sua chave…"));
+      setStatus(tr("login:errors.unlockingKey", "Desbloqueando sua chaveâ€¦"));
       let dek;
       try {
         dek = await unwrapDek({
@@ -175,7 +175,7 @@
           e2eeSalt:     t.e2eeSalt
         }, password);
       } catch {
-        setStatus(tr("login:errors.keyUnlockFailed", "Senha aceita mas a chave não pôde ser desbloqueada — possivelmente o cadastro está corrompido."), "err");
+        setStatus(tr("login:errors.keyUnlockFailed", "Senha aceita mas a chave nÃ£o pÃ´de ser desbloqueada â€” possivelmente o cadastro estÃ¡ corrompido."), "err");
         submitBtn.disabled = false;
         return;
       }
@@ -183,7 +183,7 @@
       rememberDek(dek);
       rememberUser({ uid: cred.user.uid, email, displayName: t.displayName });
 
-      setStatus(tr("login:errors.entering", "Entrando…"), "ok");
+      setStatus(tr("login:errors.entering", "Entrandoâ€¦"), "ok");
       window.location.href = redirect;
     } catch (error) {
       console.error("login_error", error);

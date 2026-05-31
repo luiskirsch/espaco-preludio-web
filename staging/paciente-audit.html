@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" data-i18n-ns="paciente-audit">
 <head>
   <meta charset="UTF-8">
@@ -10,7 +10,7 @@
   <link rel="dns-prefetch" href="https://www.gstatic.com">
   <link rel="dns-prefetch" href="https://osl-video-server-staging.up.railway.app">
   <script type="speculationrules">{"prerender":[{"where":{"selector_matches":"a[href$='.html']:not([href^='http'])"},"eagerness":"moderate"}]}</script>
-  <title data-i18n="paciente-audit:title">Histórico de atividade · Espaço Prelúdio</title>
+  <title data-i18n="paciente-audit:title">HistÃ³rico de atividade Â· EspaÃ§o PrelÃºdio</title>
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,11 +23,11 @@
 
 <div class="ep-shell">
   <header class="ep-topbar">
-    <a href="./paciente-painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+    <a href="./paciente-painel.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
-        <span data-i18n="common:brand.tail">Prelúdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">EspaÃ§o</span>
+        <span data-i18n="common:brand.tail">PrelÃºdio</span>
       </span>
     </a>
     <nav class="ep-nav">
@@ -38,24 +38,24 @@
 
   <main class="ep-main" style="max-width: 760px;">
 
-    <a href="./paciente-painel.html" class="ep-text-sm ep-text-muted" data-i18n="paciente-audit:back">← Voltar ao painel</a>
+    <a href="./paciente-painel.html" class="ep-text-sm ep-text-muted" data-i18n="paciente-audit:back">â† Voltar ao painel</a>
 
-    <div class="ep-eyebrow ep-mt-12" data-i18n="paciente-audit:eyebrow">LGPD · Art. 18, II</div>
-    <h1 class="ep-h1 ep-mt-12" data-i18n="paciente-audit:h1">Histórico da sua conta</h1>
+    <div class="ep-eyebrow ep-mt-12" data-i18n="paciente-audit:eyebrow">LGPD Â· Art. 18, II</div>
+    <h1 class="ep-h1 ep-mt-12" data-i18n="paciente-audit:h1">HistÃ³rico da sua conta</h1>
     <p class="ep-text-muted ep-mt-0" data-i18n-html="paciente-audit:intro">
-      Eventos da sua conta no Espaço Prelúdio. Para correção, exportação ou
-      exclusão de dados, escreva para
+      Eventos da sua conta no EspaÃ§o PrelÃºdio. Para correÃ§Ã£o, exportaÃ§Ã£o ou
+      exclusÃ£o de dados, escreva para
       <a href="mailto:dpo@preludiojogos.com">dpo@preludiojogos.com</a>.
     </p>
 
-    <div id="loading" class="ep-skeleton ep-mt-16" data-i18n="paciente-audit:loading">Carregando…</div>
+    <div id="loading" class="ep-skeleton ep-mt-16" data-i18n="paciente-audit:loading">Carregandoâ€¦</div>
     <div id="list" class="ep-stack ep-mt-16 ep-hide" style="gap: 8px;"></div>
     <div id="empty" class="ep-empty ep-mt-16 ep-hide">
       <p class="ep-text-muted ep-mt-0" data-i18n="paciente-audit:empty">Nenhum evento registrado ainda.</p>
     </div>
 
     <p class="ep-text-xs ep-text-muted ep-mt-24" style="text-align: center;" data-i18n="paciente-audit:footer">
-      Mostramos seus eventos recentes. Para histórico completo, solicite via
+      Mostramos seus eventos recentes. Para histÃ³rico completo, solicite via
       e-mail ao Encarregado de Dados.
     </p>
 
@@ -97,24 +97,24 @@
     }[c]));
   }
   function fmtAt(ms) {
-    if (!ms) return tr("paciente-audit:dash", "—");
+    if (!ms) return tr("paciente-audit:dash", "â€”");
     return new Date(ms).toLocaleString(currentLocale(), {
       day: "2-digit", month: "short", year: "numeric",
       hour: "2-digit", minute: "2-digit"
     });
   }
   function fmtRelative(ms) {
-    if (!ms) return tr("paciente-audit:dash", "—");
+    if (!ms) return tr("paciente-audit:dash", "â€”");
     const diff = Date.now() - ms;
     const m = Math.floor(diff / 60_000);
     if (m < 1)  return tr("paciente-audit:relative.now", "agora");
-    if (m < 60) return tr("paciente-audit:relative.minutes", `há ${m} min`, { m });
+    if (m < 60) return tr("paciente-audit:relative.minutes", `hÃ¡ ${m} min`, { m });
     const h = Math.floor(m / 60);
-    if (h < 24) return tr("paciente-audit:relative.hours", `há ${h} h`, { h });
+    if (h < 24) return tr("paciente-audit:relative.hours", `hÃ¡ ${h} h`, { h });
     const d = Math.floor(h / 24);
-    if (d < 30) return tr("paciente-audit:relative.days", `há ${d} d`, { d });
+    if (d < 30) return tr("paciente-audit:relative.days", `hÃ¡ ${d} d`, { d });
     const n = Math.floor(d / 30);
-    return tr("paciente-audit:relative.months", `há ${n} meses`, { n });
+    return tr("paciente-audit:relative.months", `hÃ¡ ${n} meses`, { n });
   }
 
   (async () => {
@@ -135,14 +135,14 @@
         return;
       }
 
-      const sessionLabel = tr("paciente-audit:meta.sessionPrefix", "Sessão ");
+      const sessionLabel = tr("paciente-audit:meta.sessionPrefix", "SessÃ£o ");
       const ipLabel = tr("paciente-audit:meta.ipPrefix", "IP: ");
 
       list.innerHTML = "";
       for (const ev of events) {
         const meta = ev.meta || {};
         const metaParts = [];
-        if (meta.sessionId) metaParts.push(`${escapeHtml(sessionLabel)}<code>${escapeHtml(meta.sessionId.slice(0, 12))}…</code>`);
+        if (meta.sessionId) metaParts.push(`${escapeHtml(sessionLabel)}<code>${escapeHtml(meta.sessionId.slice(0, 12))}â€¦</code>`);
         if (meta.ip)        metaParts.push(escapeHtml(ipLabel) + escapeHtml(meta.ip));
 
         const row = document.createElement("article");
@@ -153,7 +153,7 @@
           </div>
           <div class="ep-audit-row__main">
             <div class="ep-audit-row__title">${escapeHtml(ev.description)}</div>
-            <div class="ep-audit-row__meta">${metaParts.join(" · ") || "&nbsp;"}</div>
+            <div class="ep-audit-row__meta">${metaParts.join(" Â· ") || "&nbsp;"}</div>
           </div>
           <div class="ep-audit-row__time" title="${escapeHtml(fmtAt(ev.at))}">${escapeHtml(fmtRelative(ev.at))}</div>
         `;
