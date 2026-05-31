@@ -50,6 +50,7 @@
     building: '<rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="12" y1="6" x2="12" y2="11"/>',
     package: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
     msg: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    calc: '<rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="11" x2="8" y2="11"/><line x1="12" y1="11" x2="12" y2="11"/><line x1="16" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="8" y2="15"/><line x1="12" y1="15" x2="12" y2="15"/><line x1="16" y1="15" x2="16" y2="15"/><line x1="8" y1="19" x2="12" y2="19"/>',
     megaphone: '<path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
     chat: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>'
   };
@@ -85,13 +86,16 @@
       ['painel.html', 'video', 'Consultas', 'common:sidebar.consultas'],
       ['agenda.html', 'calendar', 'Agenda', 'common:sidebar.agenda'],
       ['pacientes.html', 'users', 'Pacientes', 'common:sidebar.pacientes'],
-      ['tiss.html', 'fileText', 'TISS', 'common:sidebar.tiss', tissExtra]
+      ['tiss.html', 'fileText', 'TISS', 'common:sidebar.tiss', tissExtra],
+      ['receita.html', 'fileText', 'Receita', 'common:sidebar.receita', 'style="display:none"'],
+      ['documento.html?tipo=atestado', 'fileText', 'Atestado', 'common:sidebar.atestado', 'style="display:none"']
     ]},
     { labelKey: 'common:sidebar.groupGestao', label: 'Gestão', items: [
       ['financeiro.html', 'dollar', 'Financeiro', 'common:sidebar.financeiro'],
       ['relatorios.html', 'barChart', 'Relatórios', 'common:sidebar.relatorios'],
       ['clinica.html', 'building', 'Clínica', 'common:sidebar.clinica'],
-      ['inventario.html', 'package', 'Estoque', 'common:sidebar.estoque']
+      ['inventario.html', 'package', 'Estoque', 'common:sidebar.estoque'],
+      ['calculadora.html', 'calc', 'Calculadora', 'common:sidebar.calculadora', 'style="display:none"']
     ]},
     { labelKey: 'common:sidebar.groupEngajamento', label: 'Engajamento', items: [
       ['mensagens-pro.html', 'msg', 'Colegas', 'common:sidebar.colegas'],
@@ -142,10 +146,8 @@
     'aniversarios.html': 'pacientes.html',
     'lista-espera.html': 'pacientes.html',
     'anamnese.html':     'pacientes.html',
-    'receita.html':      'pacientes.html',
     'documento.html':    'pacientes.html',
     'audit.html':        'relatorios.html',
-    'calculadora.html':  'financeiro.html',
   };
   const activePath = PARENT_MAP[path] || path;
   document.querySelectorAll('.ep-sidebar__nav a').forEach(function (a) {
