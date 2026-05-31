@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR" data-i18n-ns="paciente-login">
 <head>
   <meta charset="UTF-8">
@@ -10,7 +10,7 @@
   <link rel="dns-prefetch" href="https://www.gstatic.com">
   <link rel="dns-prefetch" href="https://osl-video-server-staging.up.railway.app">
   <script type="speculationrules">{"prerender":[{"where":{"selector_matches":"a[href$='.html']:not([href^='http'])"},"eagerness":"moderate"}]}</script>
-  <title data-i18n="paciente-login:title">Entrar Â· EspaÃ§o PrelÃºdio</title>
+  <title data-i18n="paciente-login:title">Entrar · Espaço Prelúdio</title>
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,21 +23,21 @@
 
 <main class="ep-auth">
   <div class="ep-auth__panel">
-    <a href="./index.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead" data-i18n="common:brand.lead">EspaÃ§o</span>
-        <span data-i18n="common:brand.tail">PrelÃºdio</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="common:brand.tail">Prelúdio</span>
       </span>
     </a>
 
     <h2 class="ep-auth__title ep-mt-32" data-i18n="paciente-login:h2">Entrar na sua conta</h2>
     <p class="ep-auth__sub" data-i18n="paciente-login:sub">
-      Sua senha desbloqueia tambÃ©m a chave que decifra suas anotaÃ§Ãµes.
+      Sua senha desbloqueia também a chave que decifra suas anotações.
     </p>
 
     <div id="reauthAlert" class="ep-alert ep-alert--info ep-mt-12 ep-hide" data-i18n="paciente-login:reauthAlert">
-      Sua sessÃ£o de cifragem expirou. Confirme sua senha para continuar.
+      Sua sessão de cifragem expirou. Confirme sua senha para continuar.
     </div>
 
     <form id="loginForm" class="ep-stack ep-mt-16" novalidate>
@@ -59,7 +59,7 @@
     </form>
 
     <div class="ep-auth__bottom">
-      <a href="./paciente-recuperar.html" data-i18n="paciente-login:forgot">Esqueci minha senha Â· usar chave-semente</a>
+      <a href="./paciente-recuperar.html" data-i18n="paciente-login:forgot">Esqueci minha senha · usar chave-semente</a>
     </div>
   </div>
 </main>
@@ -79,7 +79,7 @@
     return fallback;
   }
   // Sanitiza redirect: aceita so path relativo same-origin (./...). Bloqueia
-  // //evil, /\\evil, https://evil, javascript:, data:, etc. â€” protege phishing
+  // //evil, /\\evil, https://evil, javascript:, data:, etc. — protege phishing
   // que abusava do redirect pra mandar user pro fake-login.
   function sanitizeRedirect(raw, fallback) {
     if (!raw || typeof raw !== "string") return fallback;
@@ -104,7 +104,7 @@
   }
 
   if (errorParam === "NAO_REGISTRADO") {
-    setStatus(tr("paciente-login:errors.naoRegistrado", "Sua conta existe, mas o cadastro de paciente nÃ£o foi finalizado."), "err");
+    setStatus(tr("paciente-login:errors.naoRegistrado", "Sua conta existe, mas o cadastro de paciente não foi finalizado."), "err");
   }
 
   async function fetchProfile(idToken) {
@@ -121,9 +121,9 @@
     const code = err?.code || "";
     if (code === "auth/invalid-credential") return tr("paciente-login:errors.invalidCredential", "E-mail ou senha incorretos.");
     if (code === "auth/wrong-password")     return tr("paciente-login:errors.wrongPassword", "Senha incorreta.");
-    if (code === "auth/user-not-found")     return tr("paciente-login:errors.userNotFound", "Conta nÃ£o encontrada.");
+    if (code === "auth/user-not-found")     return tr("paciente-login:errors.userNotFound", "Conta não encontrada.");
     if (code === "auth/too-many-requests")  return tr("paciente-login:errors.tooManyRequests", "Muitas tentativas. Tente novamente em alguns minutos.");
-    if (code === "auth/network-request-failed") return tr("paciente-login:errors.networkError", "Erro de conexÃ£o.");
+    if (code === "auth/network-request-failed") return tr("paciente-login:errors.networkError", "Erro de conexão.");
     return err?.message || tr("paciente-login:errors.genericError", "Erro ao entrar.");
   }
 
@@ -142,15 +142,15 @@
     }
 
     try {
-      setStatus(tr("paciente-login:errors.authenticating", "Autenticandoâ€¦"));
+      setStatus(tr("paciente-login:errors.authenticating", "Autenticando…"));
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await cred.user.getIdToken();
 
-      setStatus(tr("paciente-login:errors.loadingProfile", "Carregando perfilâ€¦"));
+      setStatus(tr("paciente-login:errors.loadingProfile", "Carregando perfil…"));
       const profile = await fetchProfile(idToken);
       if (!profile.ok) {
         if (profile.code === "NAO_REGISTRADO") {
-          setStatus(tr("paciente-login:errors.incompleteProfile", "Sua conta existe mas falta finalizar o cadastro de paciente. Indoâ€¦"), "err");
+          setStatus(tr("paciente-login:errors.incompleteProfile", "Sua conta existe mas falta finalizar o cadastro de paciente. Indo…"), "err");
           setTimeout(() => { window.location.href = "./paciente-cadastro.html"; }, 1500);
           return;
         }
@@ -161,12 +161,12 @@
 
       const a = profile.account;
       if (!a.e2eeSalt || !a.wrappedDEK || !a.wrappedDEKIv) {
-        setStatus(tr("paciente-login:errors.noKey", "Sua conta estÃ¡ sem chave de cifragem. Recadastre-se."), "err");
+        setStatus(tr("paciente-login:errors.noKey", "Sua conta está sem chave de cifragem. Recadastre-se."), "err");
         submitBtn.disabled = false;
         return;
       }
 
-      setStatus(tr("paciente-login:errors.unlockingKey", "Desbloqueando sua chaveâ€¦"));
+      setStatus(tr("paciente-login:errors.unlockingKey", "Desbloqueando sua chave…"));
       let dek;
       try {
         dek = await unwrapDek({
@@ -175,7 +175,7 @@
           e2eeSalt:     a.e2eeSalt
         }, password);
       } catch {
-        setStatus(tr("paciente-login:errors.keyUnlockFailed", "Senha aceita mas a chave nÃ£o pÃ´de ser desbloqueada."), "err");
+        setStatus(tr("paciente-login:errors.keyUnlockFailed", "Senha aceita mas a chave não pôde ser desbloqueada."), "err");
         submitBtn.disabled = false;
         return;
       }
@@ -183,7 +183,7 @@
       rememberPatientDek(dek);
       rememberPatientUser({ uid: cred.user.uid, email, displayName: a.displayName });
 
-      setStatus(tr("paciente-login:errors.entering", "Entrandoâ€¦"), "ok");
+      setStatus(tr("paciente-login:errors.entering", "Entrando…"), "ok");
       window.location.href = redirect;
     } catch (error) {
       console.error("paciente_login_error", error);

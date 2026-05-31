@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR" data-i18n-ns="2fa-verify">
 <head>
   <meta charset="UTF-8">
@@ -10,7 +10,7 @@
   <link rel="dns-prefetch" href="https://www.gstatic.com">
   <link rel="dns-prefetch" href="https://osl-video-server-staging.up.railway.app">
   <script type="speculationrules">{"prerender":[{"where":{"selector_matches":"a[href$='.html']:not([href^='http'])"},"eagerness":"moderate"}]}</script>
-  <title data-i18n="2fa-verify:title">VerificaÃ§Ã£o 2FA Â· EspaÃ§o PrelÃºdio</title>
+  <title data-i18n="2fa-verify:title">Verificação 2FA · Espaço Prelúdio</title>
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,20 +42,20 @@
 
 <div class="twofa-shell">
   <div style="text-align: center; margin-bottom: 24px;">
-    <a href="./painel.html" style="text-decoration: none; color: var(--ep-ink); font-family: var(--ep-font-serif); font-weight: 600; font-size: 18px;" data-i18n="2fa-verify:brand">EspaÃ§o PrelÃºdio</a>
+    <a href="./painel.html" style="text-decoration: none; color: var(--ep-ink); font-family: var(--ep-font-serif); font-weight: 600; font-size: 18px;" data-i18n="2fa-verify:brand">Espaço Prelúdio</a>
   </div>
 
   <div class="twofa-card">
-    <div class="ep-eyebrow" style="color: var(--ep-accent);" data-i18n="2fa-verify:eyebrow">VerificaÃ§Ã£o em 2 etapas</div>
+    <div class="ep-eyebrow" style="color: var(--ep-accent);" data-i18n="2fa-verify:eyebrow">Verificação em 2 etapas</div>
     <h1 style="font-family: var(--ep-font-serif); font-size: 24px; font-weight: 600; margin: 12px 0 14px; letter-spacing: -0.01em;" data-i18n="2fa-verify:h1">
-      Digite seu cÃ³digo
+      Digite seu código
     </h1>
     <p class="ep-text-muted" style="margin: 0 0 24px; font-size: 14px;" data-i18n="2fa-verify:sub">
-      Abra seu app de autenticador (Google Authenticator, Authy, 1Password) e digite o cÃ³digo de 6 dÃ­gitos.
+      Abra seu app de autenticador (Google Authenticator, Authy, 1Password) e digite o código de 6 dígitos.
     </p>
 
     <input id="codeInput" class="ep-input twofa-code-input" type="text" inputmode="numeric"
-           autocomplete="one-time-code" maxlength="6" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢" autofocus>
+           autocomplete="one-time-code" maxlength="6" placeholder="••••••" autofocus>
 
     <div class="ep-status" id="status"></div>
 
@@ -76,7 +76,7 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { authReady, save2faSession, clear2faSession } from "./js/auth-guard.js?v=3-28";
+  import { authReady, save2faSession, clear2faSession } from "./js/auth-guard.js?v=3-27";
   import { clearDek } from "./js/crypto.js";
 
   function tr(key, fallback) {
@@ -90,7 +90,7 @@
   const user = await authReady();
   if (!user) { window.location.href = "./login.html"; throw new Error("NOT_AUTH"); }
   // Sanitiza redirect: aceita so path relativo same-origin (./...). Bloqueia
-  // //evil, /\\evil, https://evil, javascript:, data:, etc. â€” protege phishing
+  // //evil, /\\evil, https://evil, javascript:, data:, etc. — protege phishing
   // que abusava do redirect pra mandar user pro fake-login.
   function sanitizeRedirect(raw, fallback) {
     if (!raw || typeof raw !== "string") return fallback;
@@ -121,7 +121,7 @@
     if (!/^\d{6}$/.test(code)) return;
     btnEl.disabled = true;
     stEl.className = "ep-status";
-    stEl.textContent = tr("2fa-verify:status.verifying", "Verificandoâ€¦");
+    stEl.textContent = tr("2fa-verify:status.verifying", "Verificando…");
 
     try {
       const idToken = await user.getIdToken();
@@ -136,7 +136,7 @@
       window.location.href = redirect;
     } catch (e) {
       stEl.textContent = e.message === "CODIGO_INCORRETO"
-        ? tr("2fa-verify:status.wrongCode", "CÃ³digo incorreto. Tente o prÃ³ximo (cÃ³digos mudam a cada 30s).")
+        ? tr("2fa-verify:status.wrongCode", "Código incorreto. Tente o próximo (códigos mudam a cada 30s).")
         : tr("2fa-verify:status.errorPrefix", "Erro: ") + (e?.message || tr("2fa-verify:status.unknownError", "desconhecido"));
       stEl.classList.add("is-err");
       btnEl.disabled = false;

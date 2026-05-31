@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR" data-i18n-ns="admin-verificacoes">
 <head>
   <meta charset="UTF-8">
@@ -10,7 +10,7 @@
   <link rel="dns-prefetch" href="https://www.gstatic.com">
   <link rel="dns-prefetch" href="https://osl-video-server-staging.up.railway.app">
   <script type="speculationrules">{"prerender":[{"where":{"selector_matches":"a[href$='.html']:not([href^='http'])"},"eagerness":"moderate"}]}</script>
-  <title data-i18n="admin-verificacoes:title">Admin Â· VerificaÃ§Ãµes Â· EspaÃ§o PrelÃºdio</title>
+  <title data-i18n="admin-verificacoes:title">Admin · Verificações · Espaço Prelúdio</title>
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,29 +23,29 @@
 
 <div class="ep-shell">
   <header class="ep-topbar">
-    <a href="./index.html" class="ep-brand" aria-label="EspaÃ§o PrelÃºdio">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
-        <span class="ep-brand__lead" data-i18n="common:brand.lead">EspaÃ§o</span>
-        <span data-i18n="admin-verificacoes:brand.tail">PrelÃºdio Â· Admin</span>
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="admin-verificacoes:brand.tail">Prelúdio · Admin</span>
       </span>
     </a>
     <nav class="ep-nav">
       <a href="./admin-painel.html" class="ep-text-sm" data-i18n="common:nav.painel">Painel</a>
       <a href="./admin-profissionais.html" class="ep-text-sm">Profissionais</a>
-      <a href="./admin-denuncias.html" class="ep-text-sm">DenÃºncias</a>
+      <a href="./admin-denuncias.html" class="ep-text-sm">Denúncias</a>
       <a href="./admin-verificacoes.html" class="ep-text-sm is-active"><span data-i18n="admin-verificacoes:nav.crpcrm">CRP/CRM</span><span id="navBadgeCrpCrm" class="ep-nav-badge ep-hide">0</span></a>
       <a href="./admin-comprovantes.html" class="ep-text-sm"><span data-i18n="admin-verificacoes:nav.estudante">Estudante</span><span id="navBadgeEstudante" class="ep-nav-badge ep-hide">0</span></a>
-      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm"><span data-i18n="admin-verificacoes:nav.recemFormado">RecÃ©m-formado</span><span id="navBadgeRecemFormado" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm"><span data-i18n="admin-verificacoes:nav.recemFormado">Recém-formado</span><span id="navBadgeRecemFormado" class="ep-nav-badge ep-hide">0</span></a>
       <a href="./admin-comprovantes-formacao.html" class="ep-text-sm"><span data-i18n="admin-verificacoes:nav.semConselho">Sem conselho</span><span id="navBadgeSemConselho" class="ep-nav-badge ep-hide">0</span></a>
-      <span id="adminEmail" class="ep-text-sm ep-text-muted">â€¦</span>
+      <span id="adminEmail" class="ep-text-sm ep-text-muted">…</span>
       <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button" data-i18n="admin-verificacoes:nav.logout">Sair</button>
     </nav>
   </header>
 
   <main class="ep-main">
 
-    <!-- Tela 1: login (caso nÃ£o autenticado) -->
+    <!-- Tela 1: login (caso não autenticado) -->
     <section id="loginPanel" class="ep-hide" style="max-width: 400px; margin: 40px auto;">
       <div class="ep-auth__panel">
         <h2 class="ep-auth__title" data-i18n="admin-verificacoes:login.h2">Acesso Admin</h2>
@@ -65,12 +65,12 @@
       </div>
     </section>
 
-    <!-- Tela 2: dashboard de verificaÃ§Ãµes -->
+    <!-- Tela 2: dashboard de verificações -->
     <section id="dashboardPanel" class="ep-hide">
       <div class="ep-flex ep-flex--end-wrap" style="justify-content: space-between; align-items: end; margin-bottom: 24px;">
         <div>
           <div class="ep-eyebrow" data-i18n="admin-verificacoes:dashboard.eyebrow">Painel administrativo</div>
-          <h1 class="ep-h1 ep-mt-12" data-i18n="admin-verificacoes:dashboard.h1">VerificaÃ§Ãµes de profissionais</h1>
+          <h1 class="ep-h1 ep-mt-12" data-i18n="admin-verificacoes:dashboard.h1">Verificações de profissionais</h1>
           <p class="ep-text-muted ep-mt-8" data-i18n="admin-verificacoes:dashboard.subtitle">Revise documentos enviados e libere o selo "Verificado".</p>
         </div>
         <div class="ep-flex" style="gap: 6px;">
@@ -82,16 +82,16 @@
       </div>
 
       <div id="list" class="ep-stack" style="gap: 12px;">
-        <div class="ep-skeleton" data-i18n="admin-verificacoes:loading">Carregandoâ€¦</div>
+        <div class="ep-skeleton" data-i18n="admin-verificacoes:loading">Carregando…</div>
       </div>
     </section>
 
-    <!-- Tela 3: erro de autorizaÃ§Ã£o -->
+    <!-- Tela 3: erro de autorização -->
     <section id="forbiddenPanel" class="ep-hide" style="max-width: 460px; margin: 60px auto; text-align: center;">
       <div class="ep-auth__panel">
         <h2 class="ep-auth__title" data-i18n="admin-verificacoes:forbidden.h2">Acesso negado.</h2>
         <p class="ep-auth__sub" data-i18n="admin-verificacoes:forbidden.sub">
-          Sua conta nÃ£o estÃ¡ na allowlist de admin. Se isso Ã© um erro, fale com a equipe tÃ©cnica.
+          Sua conta não está na allowlist de admin. Se isso é um erro, fale com a equipe técnica.
         </p>
         <button class="ep-btn ep-btn--ghost ep-btn--block ep-mt-16" type="button" id="forbiddenLogout" data-i18n="admin-verificacoes:forbidden.logout">Sair</button>
       </div>
@@ -100,14 +100,14 @@
   </main>
 </div>
 
-<!-- Modal: detalhes da verificaÃ§Ã£o -->
+<!-- Modal: detalhes da verificação -->
 <div class="ep-modal" id="detailModal" role="dialog" aria-modal="true">
   <div class="ep-modal__panel" style="max-width: 720px;">
-    <h3 class="ep-modal__title" id="modalTitle" data-i18n="admin-verificacoes:modal.title">VerificaÃ§Ã£o</h3>
+    <h3 class="ep-modal__title" id="modalTitle" data-i18n="admin-verificacoes:modal.title">Verificação</h3>
     <div id="modalBody"></div>
     <div class="ep-modal__actions">
       <button type="button" class="ep-btn ep-btn--ghost" id="closeModal" data-i18n="admin-verificacoes:modal.close">Fechar</button>
-      <button type="button" class="ep-btn ep-btn--ghost" id="autoValidateBtn" title="Roda validaÃ§Ã£o automatizada via API paga" data-i18n="admin-verificacoes:modal.autoValidateLabel" data-i18n-title="admin-verificacoes:modal.autoValidateTitle">ðŸ” API</button>
+      <button type="button" class="ep-btn ep-btn--ghost" id="autoValidateBtn" title="Roda validação automatizada via API paga" data-i18n="admin-verificacoes:modal.autoValidateLabel" data-i18n-title="admin-verificacoes:modal.autoValidateTitle">🔍 API</button>
       <button type="button" class="ep-btn ep-btn--ghost" id="rejectBtn" style="color: #b8453d; border-color: rgba(184,69,61,0.3);" data-i18n="admin-verificacoes:modal.reject">Rejeitar</button>
       <button type="button" class="ep-btn ep-btn--primary" id="approveBtn" data-i18n="admin-verificacoes:modal.approve">Aprovar</button>
     </div>
@@ -155,7 +155,7 @@
     }[c]));
   }
   function fmtDate(ms) {
-    if (!ms) return tr("admin-verificacoes:js.dash", "â€”");
+    if (!ms) return tr("admin-verificacoes:js.dash", "—");
     return new Date(ms).toLocaleString(currentLocale(), {
       day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
     });
@@ -165,7 +165,7 @@
     panel.classList.remove("ep-hide");
   }
 
-  // â”€â”€â”€ Login flow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Login flow ──────────────────────────────────────────────────────
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const email    = document.getElementById("email").value.trim().toLowerCase();
@@ -173,13 +173,13 @@
     const statusEl = document.getElementById("loginStatus");
     const loginBtn = document.getElementById("loginBtn");
     loginBtn.disabled = true;
-    statusEl.textContent = tr("admin-verificacoes:js.authenticating", "Autenticandoâ€¦");
+    statusEl.textContent = tr("admin-verificacoes:js.authenticating", "Autenticando…");
     try {
       await signInWithEmailAndPassword(auth, email, password);
       // onAuthStateChanged abaixo vai redirecionar
     } catch (err) {
       console.error("admin_login_error", err);
-      statusEl.textContent = err?.message || tr("admin-verificacoes:js.authError", "Erro de autenticaÃ§Ã£o.");
+      statusEl.textContent = err?.message || tr("admin-verificacoes:js.authError", "Erro de autenticação.");
       statusEl.className = "ep-status is-err";
       loginBtn.disabled = false;
     }
@@ -194,7 +194,7 @@
     window.location.reload();
   });
 
-  // â”€â”€â”€ Filtros â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Filtros ─────────────────────────────────────────────────────────
   document.querySelectorAll("[data-filter]").forEach(btn => {
     btn.addEventListener("click", () => {
       currentFilter = btn.dataset.filter;
@@ -214,7 +214,7 @@
   }
 
   async function loadList() {
-    listEl.innerHTML = `<div class="ep-skeleton">${escapeHtml(tr("admin-verificacoes:loading", "Carregandoâ€¦"))}</div>`;
+    listEl.innerHTML = `<div class="ep-skeleton">${escapeHtml(tr("admin-verificacoes:loading", "Carregando…"))}</div>`;
     try {
       const data = await api(`/therapy/admin/verificacoes?status=${currentFilter}`);
       renderList(data.items || []);
@@ -229,7 +229,7 @@
 
   function renderList(items) {
     if (items.length === 0) {
-      listEl.innerHTML = `<div class="ep-empty"><p class="ep-text-muted ep-mt-8">${escapeHtml(tr("admin-verificacoes:js.emptyFilter", "Nenhuma submissÃ£o neste filtro."))}</p></div>`;
+      listEl.innerHTML = `<div class="ep-empty"><p class="ep-text-muted ep-mt-8">${escapeHtml(tr("admin-verificacoes:js.emptyFilter", "Nenhuma submissão neste filtro."))}</p></div>`;
       return;
     }
     listEl.innerHTML = "";
@@ -251,11 +251,11 @@
           <div class="ep-admin-card__name">${escapeHtml(t.displayName || tr("admin-verificacoes:js.noName", "(sem nome)"))}</div>
           <div class="ep-admin-card__meta">
             ${t.crp ? `CRP ${escapeHtml(t.crp)}` : ""}
-            ${t.crm ? ` Â· CRM ${escapeHtml(t.crm)}` : ""}
-            ${t.especialidade ? ` Â· ${escapeHtml(t.especialidade)}` : ""}
+            ${t.crm ? ` · CRM ${escapeHtml(t.crm)}` : ""}
+            ${t.especialidade ? ` · ${escapeHtml(t.especialidade)}` : ""}
             <br>
             ${escapeHtml(tr("admin-verificacoes:js.sentAt", "Enviado"))} ${fmtDate(item.submittedAt)}
-            ${item.reviewedAt ? ` Â· ${escapeHtml(tr("admin-verificacoes:js.reviewedAt", "revisado"))} ${fmtDate(item.reviewedAt)} ${escapeHtml(tr("admin-verificacoes:js.reviewedBy", "por"))} ${escapeHtml(item.reviewedBy || "")}` : ""}
+            ${item.reviewedAt ? ` · ${escapeHtml(tr("admin-verificacoes:js.reviewedAt", "revisado"))} ${fmtDate(item.reviewedAt)} ${escapeHtml(tr("admin-verificacoes:js.reviewedBy", "por"))} ${escapeHtml(item.reviewedBy || "")}` : ""}
           </div>
           ${item.rejectionReason ? `<div class="ep-admin-card__reject">${escapeHtml(tr("admin-verificacoes:js.rejectReasonLabel", "Motivo da recusa:"))} ${escapeHtml(item.rejectionReason)}</div>` : ""}
         </div>
@@ -269,7 +269,7 @@
     }
   }
 
-  // â”€â”€â”€ Modal de detalhe â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Modal de detalhe ────────────────────────────────────────────────
   const modal       = document.getElementById("detailModal");
   const modalTitle  = document.getElementById("modalTitle");
   const modalBody   = document.getElementById("modalBody");
@@ -283,28 +283,28 @@
   async function openDetail(id) {
     activeId = id;
     modal.classList.add("is-open");
-    modalBody.innerHTML = `<div class="ep-skeleton">${escapeHtml(tr("admin-verificacoes:loading", "Carregandoâ€¦"))}</div>`;
+    modalBody.innerHTML = `<div class="ep-skeleton">${escapeHtml(tr("admin-verificacoes:loading", "Carregando…"))}</div>`;
     approveBtn.disabled = true;
     rejectBtn.disabled  = true;
     try {
       const { item } = await api(`/therapy/admin/verificacoes/${encodeURIComponent(id)}`);
       const t = item.therapist || {};
       const dataUrl = `data:${item.documentMime};base64,${item.documentBase64}`;
-      modalTitle.textContent = tr("admin-verificacoes:js.modalTitlePrefix", "VerificaÃ§Ã£o Â· ") + (t.displayName || "");
+      modalTitle.textContent = tr("admin-verificacoes:js.modalTitlePrefix", "Verificação · ") + (t.displayName || "");
       modalBody.innerHTML = `
         <div class="ep-stack" style="gap: 14px;">
           <div>
             <strong>${escapeHtml(t.displayName || "")}</strong><br>
             <span class="ep-text-sm ep-text-muted">
               ${t.crp ? `CRP ${escapeHtml(t.crp)}` : ""}
-              ${t.crm ? ` Â· CRM ${escapeHtml(t.crm)}` : ""}
-              ${t.especialidade ? ` Â· ${escapeHtml(t.especialidade)}` : ""}
+              ${t.crm ? ` · CRM ${escapeHtml(t.crm)}` : ""}
+              ${t.especialidade ? ` · ${escapeHtml(t.especialidade)}` : ""}
             </span>
           </div>
-          ${item.notes ? `<div class="ep-alert" style="font-size: 13px;"><strong>${escapeHtml(tr("admin-verificacoes:js.notesLabel", "ObservaÃ§Ãµes:"))}</strong> ${escapeHtml(item.notes)}</div>` : ""}
+          ${item.notes ? `<div class="ep-alert" style="font-size: 13px;"><strong>${escapeHtml(tr("admin-verificacoes:js.notesLabel", "Observações:"))}</strong> ${escapeHtml(item.notes)}</div>` : ""}
           <div>
             ${item.documentMime === "application/pdf"
-              ? `<a class="ep-btn ep-btn--ghost ep-btn--sm" href="${dataUrl}" target="_blank">${escapeHtml(tr("admin-verificacoes:js.openPdf", "Abrir PDF em nova aba â†—"))}</a>`
+              ? `<a class="ep-btn ep-btn--ghost ep-btn--sm" href="${dataUrl}" target="_blank">${escapeHtml(tr("admin-verificacoes:js.openPdf", "Abrir PDF em nova aba ↗"))}</a>`
               : `<img src="${dataUrl}" alt="${escapeHtml(tr("admin-verificacoes:js.imgAlt", "Documento"))}" style="max-width: 100%; max-height: 480px; border-radius: 10px; border: 1px solid rgba(28,31,29,0.10);">`
             }
           </div>
@@ -314,14 +314,14 @@
           </div>
           <div class="ep-text-sm ep-text-muted">
             <strong>${escapeHtml(tr("admin-verificacoes:js.verifyPublic", "Verificar publicamente:"))}</strong>
-            ${t.crp ? `<a href="https://cadastro.cfp.org.br/buscaPublica/" target="_blank" rel="noopener">CFP</a> Â· <a href="https://e-psi.cfp.org.br/" target="_blank" rel="noopener">e-Psi</a>` : ""}
+            ${t.crp ? `<a href="https://cadastro.cfp.org.br/buscaPublica/" target="_blank" rel="noopener">CFP</a> · <a href="https://e-psi.cfp.org.br/" target="_blank" rel="noopener">e-Psi</a>` : ""}
             ${t.crm ? `<a href="https://portal.cfm.org.br/busca-medicos/" target="_blank" rel="noopener">CFM</a>` : ""}
           </div>
         </div>
       `;
-      // Habilita aÃ§Ãµes se ainda revisÃ¡vel
+      // Habilita ações se ainda revisável
       approveBtn.disabled = (item.status === "verified");
-      rejectBtn.disabled  = (item.status === "verified"); // jÃ¡ aprovada nÃ£o rejeita; sÃ³ pendente/rejeitada permite re-rejeiÃ§Ã£o
+      rejectBtn.disabled  = (item.status === "verified"); // já aprovada não rejeita; só pendente/rejeitada permite re-rejeição
     } catch (err) {
       modalBody.innerHTML = `<div class="ep-error-state">${escapeHtml(tr("admin-verificacoes:js.errorPrefix", "Erro:"))} ${escapeHtml(err.message)}</div>`;
     }
@@ -329,7 +329,7 @@
 
   approveBtn.addEventListener("click", async () => {
     if (!activeId) return;
-    if (!confirm(tr("admin-verificacoes:js.confirmApprove", "Aprovar esta verificaÃ§Ã£o? O profissional ganha o selo 'Verificado'."))) return;
+    if (!confirm(tr("admin-verificacoes:js.confirmApprove", "Aprovar esta verificação? O profissional ganha o selo 'Verificado'."))) return;
     approveBtn.disabled = true;
     try {
       await api(`/therapy/admin/verificacoes/${encodeURIComponent(activeId)}/aprovar`, { method: "POST" });
@@ -345,20 +345,20 @@
     if (!activeId) return;
     autoValidateBtn.disabled = true;
     const original = autoValidateBtn.textContent;
-    autoValidateBtn.textContent = tr("admin-verificacoes:js.validating", "Validandoâ€¦");
+    autoValidateBtn.textContent = tr("admin-verificacoes:js.validating", "Validando…");
     try {
       const { result } = await api(`/therapy/admin/verificacoes/${encodeURIComponent(activeId)}/auto-validar`, { method: "POST" });
       const verified = !!result.verified;
-      const provider = result.provider || tr("admin-verificacoes:js.dash", "â€”");
-      const conf     = result.confidence != null ? Math.round(result.confidence * 100) + "%" : tr("admin-verificacoes:js.dash", "â€”");
+      const provider = result.provider || tr("admin-verificacoes:js.dash", "—");
+      const conf     = result.confidence != null ? Math.round(result.confidence * 100) + "%" : tr("admin-verificacoes:js.dash", "—");
       const errMsg   = result.error ? `\n\n${tr("admin-verificacoes:js.autoErrorLabel", "Erro:")} ${result.error}` : "";
       const rawNote  = result.raw?.message ? `\n\n${result.raw.message}` : "";
       const yes = tr("admin-verificacoes:js.autoVerifiedYes", "SIM");
-      const no  = tr("admin-verificacoes:js.autoVerifiedNo", "NÃƒO");
+      const no  = tr("admin-verificacoes:js.autoVerifiedNo", "NÃO");
       alert(
-        tr("admin-verificacoes:js.autoTitle", "ValidaÃ§Ã£o automatizada (provider: {{provider}})", { provider }) + "\n\n" +
+        tr("admin-verificacoes:js.autoTitle", "Validação automatizada (provider: {{provider}})", { provider }) + "\n\n" +
         tr("admin-verificacoes:js.autoVerifiedLabel", "Verificado:") + " " + (verified ? yes : no) + "\n" +
-        tr("admin-verificacoes:js.autoConfidenceLabel", "ConfianÃ§a:") + " " + conf +
+        tr("admin-verificacoes:js.autoConfidenceLabel", "Confiança:") + " " + conf +
         errMsg + rawNote
       );
     } catch (err) {
@@ -371,7 +371,7 @@
 
   rejectBtn.addEventListener("click", async () => {
     if (!activeId) return;
-    const reason = prompt(tr("admin-verificacoes:js.promptReason", "Motivo da recusa (serÃ¡ mostrado ao profissional):"), "");
+    const reason = prompt(tr("admin-verificacoes:js.promptReason", "Motivo da recusa (será mostrado ao profissional):"), "");
     if (reason == null) return;
     const trimmed = reason.trim();
     if (!trimmed) { alert(tr("admin-verificacoes:js.promptReasonEmpty", "Informe um motivo.")); return; }
@@ -389,7 +389,7 @@
     }
   });
 
-  // â”€â”€â”€ Boot: detecta auth state e decide qual painel mostrar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Boot: detecta auth state e decide qual painel mostrar ───────────
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       show(loginPanel);
@@ -402,14 +402,14 @@
       adminEmailEl.textContent = currentEmail;
       refreshNavBadges(idToken);
 
-      // Tenta uma chamada admin pra validar autorizaÃ§Ã£o
+      // Tenta uma chamada admin pra validar autorização
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/admin/verificacoes?status=pending`, {
         headers: { "Authorization": `Bearer ${idToken}` }
       });
       if (res.status === 403) { show(forbiddenPanel); return; }
       if (res.status === 503) {
         forbiddenPanel.querySelector(".ep-auth__sub").textContent =
-          tr("admin-verificacoes:js.allowlistMissing", "Allowlist de admin nÃ£o configurada no servidor (THERAPY_ADMIN_EMAILS).");
+          tr("admin-verificacoes:js.allowlistMissing", "Allowlist de admin não configurada no servidor (THERAPY_ADMIN_EMAILS).");
         show(forbiddenPanel);
         return;
       }
