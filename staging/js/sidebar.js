@@ -8,6 +8,38 @@
 (function () {
   if (document.querySelector('.ep-sidebar')) return;
 
+  // Estilos do sino flutuante — injetados inline pra não exigir bump de versão do CSS.
+  if (!document.getElementById('ep-notif-fab-style')) {
+    var styleEl = document.createElement('style');
+    styleEl.id = 'ep-notif-fab-style';
+    styleEl.textContent = [
+      '.ep-notif-fab{position:fixed;right:16px;bottom:222px;width:52px;height:52px;border-radius:50%;border:none;background:#2a3d5c;color:#ffffff;display:grid;place-items:center;cursor:pointer;text-decoration:none;box-shadow:0 4px 14px rgba(42,61,92,.30),0 1px 3px rgba(28,31,29,.10);transition:transform 160ms ease,box-shadow 160ms ease,background 160ms ease;z-index:180;}',
+      '.ep-notif-fab:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 8px 22px rgba(42,61,92,.40),0 2px 4px rgba(28,31,29,.14);background:#1f2f47;color:#ffffff;}',
+      '.ep-notif-fab svg{width:22px;height:22px;display:block;}',
+      '.ep-notif-fab:active{transform:translateY(0) scale(1);}',
+      '.ep-notif-fab:focus-visible{outline:2px solid #c89b4a;outline-offset:2px;}',
+      '.ep-notif-fab__badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#c0392b;color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center;border:2px solid #f5f0e8;box-shadow:0 2px 6px rgba(28,31,29,.20);}',
+      'body:has(.ep-logout-fab) .ep-notif-fab{bottom:288px;}',
+      'body.ep-has-sidebar .ep-fab-stack>.ep-notif-fab{position:relative!important;top:auto!important;right:auto!important;bottom:auto!important;margin:0!important;}',
+      '@media print{.ep-notif-fab{display:none!important;}}'
+    ].join('');
+    document.head.appendChild(styleEl);
+  }
+
+  // API pública para atualizar badge do sino a partir de qualquer página.
+  window.EP_NOTIF = {
+    setBadge: function (count) {
+      var badge = document.getElementById('sidebarNotifBadge');
+      if (!badge) return;
+      if (count > 0) {
+        badge.textContent = count > 99 ? '99+' : String(count);
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  };
+
   const ICONS = {
     video: '<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>',
     calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
@@ -94,136 +126,130 @@
       '</div>' +
     '</aside>';
 
+  // ─── PARTE IMEDIATA — roda no momento que o script executa ───────────
+  // Script eh sync (sem defer) no inicio do body, entao body existe mas o
+  // resto do body ainda nao foi parsed. Injetamos o aside agora pra que ele
+  // apareca com o PRIMEIRO PAINT da pagina (sem flicker entre navegacoes).
   document.body.classList.add('ep-has-sidebar');
   document.body.insertAdjacentHTML('afterbegin', html);
 
-  // INLINE-STYLE FORCE — vence cache de CSS. Comprime nav agressivamente
-  // pra que tudo (brand + 11 items + footer) caiba na viewport sem
-  // empurrar o "Sair" pra fora da tela.
   var sideEl = document.querySelector('.ep-sidebar');
-  var navEl = document.querySelector('.ep-sidebar__nav');
-  var footerEl = document.querySelector('.ep-sidebar__footer');
-  if (sideEl) {
-    sideEl.style.setProperty('gap', '14px', 'important');
-    sideEl.style.setProperty('padding', '14px 12px', 'important');
-  }
-  if (navEl) {
-    navEl.style.setProperty('flex', '0 0 auto', 'important');
-    navEl.style.setProperty('min-height', 'auto', 'important');
-    navEl.style.setProperty('gap', '12px', 'important');
-    navEl.style.removeProperty('justify-content');
-  }
-  // Items + group labels mais compactos.
-  document.querySelectorAll('.ep-sidebar__nav a').forEach(function (a) {
-    a.style.setProperty('padding', '6px 12px', 'important');
-  });
-  document.querySelectorAll('.ep-sidebar__group-label').forEach(function (l) {
-    l.style.setProperty('padding-bottom', '3px', 'important');
-    l.style.setProperty('margin-bottom', '2px', 'important');
-  });
-  if (footerEl) {
-    footerEl.style.setProperty('margin-top', '0', 'important');
-    footerEl.style.setProperty('padding-top', '8px', 'important');
-  }
 
-  // Marca link ativo pelo pathname (basename do URL).
+  // Marca link ativo pelo pathname. Sub-páginas herdam o pai no menu.
   const path = (window.location.pathname.split('/').pop() || 'painel.html').toLowerCase();
+  const PARENT_MAP = {
+    'prontuario.html':   'pacientes.html',
+    'aniversarios.html': 'pacientes.html',
+    'lista-espera.html': 'pacientes.html',
+    'anamnese.html':     'pacientes.html',
+    'receita.html':      'pacientes.html',
+    'documento.html':    'pacientes.html',
+    'audit.html':        'relatorios.html',
+    'calculadora.html':  'financeiro.html',
+  };
+  const activePath = PARENT_MAP[path] || path;
   document.querySelectorAll('.ep-sidebar__nav a').forEach(function (a) {
     const href = (a.getAttribute('href') || '').replace(/^\.?\//, '').toLowerCase();
-    if (href === path) a.classList.add('is-active');
+    if (href === activePath) a.classList.add('is-active');
   });
 
-  // Sync avatar/nome/TISS do topbar — auth-guard.js seta foto base64,
-  // selo verificado (innerHTML) e iniciais (textContent). Replicamos tudo
-  // via MutationObserver pra reatividade quando Firebase emite mudança.
-  const topName = document.getElementById('topUserName');
-  const sideName = document.getElementById('sidebarUserName');
-  const topAvatar = document.getElementById('topUserAvatar');
-  const sideAvatar = document.getElementById('sidebarUserAvatar');
-
-  function syncName() {
-    if (!topName || !sideName) return;
-    const parts = (topName.textContent || '').trim().split(/\s+/).filter(Boolean);
-    const first = parts[0] || 'Perfil';
-    const last = parts.length > 1 ? parts[parts.length - 1] : '';
-    sideName.innerHTML = last
-      ? '<span>' + first + '</span><span>' + last + '</span>'
-      : '<span>' + first + '</span>';
-  }
-  function syncAvatar() {
-    if (!topAvatar || !sideAvatar) return;
-    sideAvatar.style.backgroundImage = topAvatar.style.backgroundImage;
-    sideAvatar.style.backgroundSize = topAvatar.style.backgroundSize || 'cover';
-    sideAvatar.style.backgroundPosition = topAvatar.style.backgroundPosition || 'center';
-    sideAvatar.innerHTML = topAvatar.innerHTML;
-    if (topAvatar.classList.contains('ep-avatar-wrap')) sideAvatar.classList.add('ep-avatar-wrap');
-  }
-
-  if (topName) new MutationObserver(syncName).observe(topName, { childList: true, characterData: true, subtree: true });
-  if (topAvatar) new MutationObserver(syncAvatar).observe(topAvatar, {
-    childList: true, characterData: true, subtree: true,
-    attributes: true, attributeFilter: ['style', 'class']
-  });
-  syncName();
-  syncAvatar();
-
-  // TISS link visibility — fonte da verdade é o COMPUTED style do topbar
-  // (não o inline). HTML estático tem `style="display:none"` inline em
-  // [data-tiss-only]; capability-preflight aplica CSS `display:inline-block
-  // !important` quando tissEnabled, que sobrescreve VISUALMENTE mas deixa
-  // o inline intacto. Checar `.style.display` direto retornaria "none"
-  // (errado) e esconderia o sidebar TISS por ~100-500ms até auth-guard
-  // async sobrescrever o inline → flicker "TISS some/volta" a cada nav.
-  // getComputedStyle considera tanto inline quanto CSS com !important.
-  const topTiss = document.querySelector('header.ep-topbar [data-tiss-only]');
-  const sideTiss = document.getElementById('sidebarTissLink');
-  if (topTiss && sideTiss) {
-    const syncTiss = function () {
-      const hidden = window.getComputedStyle(topTiss).display === 'none';
-      sideTiss.classList.toggle('is-hidden', hidden);
-    };
-    // Observa style inline (auth-guard mexe lá) E também atributos style/class
-    // do html (caso preflight troque <style> tag).
-    new MutationObserver(syncTiss).observe(topTiss, { attributes: true, attributeFilter: ['style', 'class'] });
-    syncTiss();
-  }
-
-  // Logout encaminha pro handler original (Firebase signOut em auth-guard)
-  const sideLogout = document.getElementById('sidebarLogout');
-  const topLogout = document.getElementById('logoutBtn');
-  if (sideLogout && topLogout) {
-    sideLogout.addEventListener('click', function () { topLogout.click(); });
-  }
-
-  // Re-aplica traduções no sidebar: como i18next boota async (CDN),
-  // ele pode ter rodado applyTranslations antes do aside existir. Ouvimos
-  // `ep:i18n-ready` (disparado uma vez no boot) e também tentamos imediato
-  // caso já esteja pronto.
-  const sideEl = document.querySelector('.ep-sidebar');
+  // i18n re-apply (sidebar pode aparecer antes do i18next botar) — roda imediato.
   function applyToSidebar() {
     if (window.EP_I18N && window.EP_I18N.apply && sideEl) window.EP_I18N.apply(sideEl);
   }
   if (window.EP_I18N) applyToSidebar();
   document.addEventListener('ep:i18n-ready', applyToSidebar);
 
-  // FAB stack — container flex que agrupa todos os botões flutuantes
-  // (theme/msg/help/logout) e centraliza verticalmente como BLOCO. Resolve
-  // o caos das regras body:has(...) que mudavam bottom conforme quais
-  // FABs existiam. Auth-guard monta os FABs async, então usamos
-  // MutationObserver pra mover qualquer FAB novo pra cá. Em mobile
-  // (sem sidebar), o stack vira display:contents e FABs voltam ao fluxo.
-  (function setupFabStack() {
-    if (document.querySelector('.ep-fab-stack')) return;
-    const stack = document.createElement('div');
-    stack.className = 'ep-fab-stack';
-    document.body.appendChild(stack);
-    const SELECTORS = '.ep-theme-toggle, .ep-msg-bubble-fab, .ep-help-bubble, .ep-logout-fab';
-    function collect() {
-      document.querySelectorAll(SELECTORS).forEach(el => {
-        if (el.parentNode !== stack) stack.appendChild(el);
-      });
+  // ─── PARTE DEFERIDA — espera o resto do body (topbar) ser parsed ────
+  // Topbar elements (topUserName, topUserAvatar, [data-tiss-only], logoutBtn)
+  // vem DEPOIS no HTML. Esperamos DOMContentLoaded pra configurar mirror.
+  function setupDeferred() {
+    // Sync avatar/nome/TISS do topbar — auth-guard.js seta foto base64,
+    // selo verificado (innerHTML) e iniciais (textContent). Replicamos tudo
+    // via MutationObserver pra reatividade quando Firebase emite mudança.
+    const topName = document.getElementById('topUserName');
+    const sideName = document.getElementById('sidebarUserName');
+    const topAvatar = document.getElementById('topUserAvatar');
+    const sideAvatar = document.getElementById('sidebarUserAvatar');
+
+    function syncName() {
+      if (!topName || !sideName) return;
+      const parts = (topName.textContent || '').trim().split(/\s+/).filter(Boolean);
+      const first = parts[0] || 'Perfil';
+      const last = parts.length > 1 ? parts[parts.length - 1] : '';
+      sideName.innerHTML = last
+        ? '<span>' + first + '</span><span>' + last + '</span>'
+        : '<span>' + first + '</span>';
     }
-    collect();
-    new MutationObserver(collect).observe(document.body, { childList: true });
-  })();
+    function syncAvatar() {
+      if (!topAvatar || !sideAvatar) return;
+      sideAvatar.style.backgroundImage = topAvatar.style.backgroundImage;
+      sideAvatar.style.backgroundSize = topAvatar.style.backgroundSize || 'cover';
+      sideAvatar.style.backgroundPosition = topAvatar.style.backgroundPosition || 'center';
+      sideAvatar.innerHTML = topAvatar.innerHTML;
+      if (topAvatar.classList.contains('ep-avatar-wrap')) sideAvatar.classList.add('ep-avatar-wrap');
+    }
+
+    if (topName) new MutationObserver(syncName).observe(topName, { childList: true, characterData: true, subtree: true });
+    if (topAvatar) new MutationObserver(syncAvatar).observe(topAvatar, {
+      childList: true, characterData: true, subtree: true,
+      attributes: true, attributeFilter: ['style', 'class']
+    });
+    syncName();
+    syncAvatar();
+
+    // TISS link visibility — getComputedStyle considera inline + CSS !important.
+    const topTiss = document.querySelector('header.ep-topbar [data-tiss-only]');
+    const sideTiss = document.getElementById('sidebarTissLink');
+    if (topTiss && sideTiss) {
+      const syncTiss = function () {
+        const hidden = window.getComputedStyle(topTiss).display === 'none';
+        sideTiss.classList.toggle('is-hidden', hidden);
+      };
+      new MutationObserver(syncTiss).observe(topTiss, { attributes: true, attributeFilter: ['style', 'class'] });
+      syncTiss();
+    }
+
+    // Logout encaminha pro handler original (Firebase signOut em auth-guard)
+    const sideLogout = document.getElementById('sidebarLogout');
+    const topLogout = document.getElementById('logoutBtn');
+    if (sideLogout && topLogout) {
+      sideLogout.addEventListener('click', function () { topLogout.click(); });
+    }
+
+    // FAB stack — container flex que agrupa todos os botões flutuantes
+    // (theme/msg/help/logout/notif) e centraliza verticalmente como BLOCO.
+    if (!document.querySelector('.ep-fab-stack')) {
+      const stack = document.createElement('div');
+      stack.className = 'ep-fab-stack';
+      document.body.appendChild(stack);
+      const SELECTORS = '.ep-theme-toggle, .ep-msg-bubble-fab, .ep-help-bubble, .ep-logout-fab, .ep-notif-fab';
+      function collect() {
+        document.querySelectorAll(SELECTORS).forEach(el => {
+          if (el.parentNode !== stack) stack.appendChild(el);
+        });
+      }
+      collect();
+      new MutationObserver(collect).observe(document.body, { childList: true });
+
+      // Sino de notificações — injetado pelo sidebar pra aparecer em todas as páginas.
+      const notifFab = document.createElement('a');
+      notifFab.href = './notificacoes.html';
+      notifFab.className = 'ep-notif-fab';
+      notifFab.setAttribute('aria-label', 'Notificações');
+      notifFab.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;display:block;">' +
+          '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>' +
+          '<path d="M13.73 21a2 2 0 0 1-3.46 0"/>' +
+        '</svg>' +
+        '<span class="ep-notif-fab__badge" id="sidebarNotifBadge" style="display:none;">0</span>';
+      document.body.appendChild(notifFab);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupDeferred);
+  } else {
+    setupDeferred();
+  }
 })();

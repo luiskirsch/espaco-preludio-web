@@ -377,10 +377,13 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     width: 200px;
     background: #0d0d0d;
     border-right: 1px solid rgba(226,183,106,0.18);
-    padding: 22px 14px;
-    gap: 22px;
+    /* Padding-top + gap escalam com vh — em viewport pequeno (~640px com
+       taskbar) ficam apertados, em viewport grande (~1000px+) crescem.
+       Padding-bottom fica curto pra Sair nunca clipar. */
+    padding: clamp(14px, 2vh, 24px) 14px 15px;
+    gap: clamp(16px, 2.2vh, 24px);
     z-index: 50;
-    overflow-y: auto;
+    overflow: hidden;
   }
   /* Topbar oculta com sidebar ativa. Combinador descendente (não `>`) pra
      cobrir páginas que envolvem o header num wrapper (.ep-shell em
@@ -391,7 +394,25 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
      cards ocuparem todo body content area — assim a borda visual do card
      fica no body padding-right boundary, e o FAB tem gap simétrico real. */
   body.ep-has-sidebar { padding-left: 200px; padding-right: 90px; }
-  body.ep-has-sidebar #ep-lang-switcher { left: 214px; }
+  /* GHOST SIDEBAR — pinta o stripe dark de 200px ANTES do JS injetar o <aside>.
+     Sem isso, em navegação entre páginas o body fica visível (cream) na faixa
+     da sidebar por ~1 frame até sidebar.js executar, gerando "flicker" de
+     reload. Com isso, o usuário vê continuidade visual: dark já está lá. */
+  body.ep-has-sidebar::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 200px;
+    background: #0d0d0d;
+    border-right: 1px solid rgba(226,183,106,0.18);
+    z-index: 49;
+    pointer-events: none;
+  }
+  /* Lang switcher fica em bottom:14px;right:14px (default em i18n/init.js) —
+     mesmo lado dos FABs mas no canto inferior, sem colidir com FAB stack
+     (que está em top:50% center). */
   /* Remove max-width:1320 do container só em sidebar pages — cards ocupam
      toda a largura disponível, e o FAB gap de 19px cada lado fica equal. */
   body.ep-has-sidebar > main.ep-container { max-width: none; }
@@ -419,6 +440,7 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
      (convenção SOS canto inferior direito). flex order > ordem de mount. */
   body.ep-has-sidebar .ep-fab-stack > .ep-theme-toggle,
   body.ep-has-sidebar .ep-fab-stack > .ep-msg-bubble-fab,
+  body.ep-has-sidebar .ep-fab-stack > .ep-notif-fab,
   body.ep-has-sidebar .ep-fab-stack > .ep-help-bubble,
   body.ep-has-sidebar .ep-fab-stack > .ep-logout-fab {
     position: static !important;
@@ -429,7 +451,8 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   }
   body.ep-has-sidebar .ep-fab-stack > .ep-theme-toggle   { order: 1; }
   body.ep-has-sidebar .ep-fab-stack > .ep-msg-bubble-fab { order: 2; }
-  body.ep-has-sidebar .ep-fab-stack > .ep-help-bubble    { order: 3; }
+  body.ep-has-sidebar .ep-fab-stack > .ep-notif-fab      { order: 3; }
+  body.ep-has-sidebar .ep-fab-stack > .ep-help-bubble    { order: 4; }
   /* Logout redundante com botão Sair da sidebar. Continua no stack pra
      manter o #logoutBtn no DOM (sidebar.js dispara click), só não aparece. */
   body.ep-has-sidebar .ep-fab-stack > .ep-logout-fab { display: none !important; }
@@ -443,6 +466,31 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
    fluxo normal e as regras originais (bottom: X) aplicam. */
 @media (max-width: 899px) {
   .ep-fab-stack { display: contents; }
+}
+
+/* Páginas sem sidebar (ex: área do paciente) — mesmo stack centralizado
+   que as páginas com sidebar, mas sem a faixa de 90px. */
+@media (min-width: 900px) {
+  body:not(.ep-has-sidebar) .ep-fab-stack {
+    position: fixed;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 180;
+  }
+  body:not(.ep-has-sidebar) .ep-fab-stack > .ep-theme-toggle,
+  body:not(.ep-has-sidebar) .ep-fab-stack > .ep-msg-bubble-fab,
+  body:not(.ep-has-sidebar) .ep-fab-stack > .ep-help-bubble,
+  body:not(.ep-has-sidebar) .ep-fab-stack > .ep-logout-fab {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+  }
 }
 
 .ep-sidebar__brand {
@@ -476,8 +524,10 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
 .ep-sidebar__nav {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  /* Altura natural — items empilhados em cima, footer cola logo abaixo. */
+  /* Gap entre grupos escala com vh — tela maior = mais respiro. */
+  gap: clamp(14px, 2.4vh, 24px);
+  /* SEM scroll — flex 0 0 auto pra ocupar tamanho natural, footer cola
+     logo após o último item. */
   flex: 0 0 auto;
 }
 .ep-sidebar__group { display: flex; flex-direction: column; gap: 2px; }
@@ -488,14 +538,16 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   text-transform: uppercase;
   color: #e2b76a;
   padding: 0 12px 6px 12px;
-  margin-bottom: 4px;
+  /* Margin escala com vh. */
+  margin-bottom: clamp(4px, 0.8vh, 10px);
   border-bottom: 1px solid rgba(226,183,106,0.18);
 }
 .ep-sidebar__nav a {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 9px 12px;
+  /* Item padding escala — telão grande = botões mais altos, mais clicáveis. */
+  padding: clamp(8px, 1.2vh, 14px) 12px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
@@ -537,8 +589,8 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
 .ep-sidebar__footer {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-top: 14px;
+  gap: 2px;
+  padding-top: 2px;
   border-top: 1px solid rgba(235,224,200,0.10);
   flex-shrink: 0;
   /* Footer cola logo após o nav (linha divisória perto do WhatsApp). */
@@ -548,7 +600,7 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
+  padding: 4px 10px;
   border-radius: 8px;
   text-decoration: none;
   color: #ebe0c8;
@@ -573,8 +625,8 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   text-overflow: ellipsis;
 }
 .ep-sidebar__profile .ep-nav-avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
 }
 /* Selo verificado dentro da sidebar (avatar 40px): badge proporcionalmente
@@ -600,16 +652,8 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   background: rgba(226,183,106,0.08);
 }
 
-/* Adaptação por altura — clamp(vh) escala paddings/gaps em viewport
-   curto. SEM !important pra não conflitar com regras inline forçadas
-   pelo sidebar.js. */
-body.ep-has-sidebar .ep-sidebar {
-  padding: clamp(10px, 2.75vh, 22px) 14px;
-  gap: clamp(14px, 2.5vh, 22px);
-}
-body.ep-has-sidebar .ep-sidebar__footer {
-  padding-top: 10px;
-}
+/* (Adaptação vh-based removida — espaçamentos finais já apertados o
+   suficiente pra caber em qualquer viewport sem scroll.) */
 
 /* Divisor de seções: linha fina em gradiente (transparent → ouro → transparent).
    Premium minimal — sinaliza transição sem peso visual de border-top sólido. */
@@ -740,7 +784,7 @@ body:not(:has(.ep-help-bubble)):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
   bottom: 24px;
 }
 body:not(:has(.ep-help-bubble)):has(.ep-msg-bubble-fab) .ep-theme-toggle {
-  bottom: 90px;
+  bottom: 156px;
 }
 body:has(.ep-help-bubble):not(:has(.ep-msg-bubble-fab)) .ep-theme-toggle {
   bottom: 90px;

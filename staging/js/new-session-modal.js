@@ -46,9 +46,9 @@ const MODAL_HTML = `
         <input id="patientName" class="ep-input" type="text" maxlength="80" placeholder="Ex.: João S." data-i18n-placeholder="painel:modalNew.patientNamePlaceholder">
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="patientEmail" data-i18n="painel:modalNew.patientEmail">E-mail do paciente (opcional)</label>
-        <input id="patientEmail" class="ep-input" type="email" maxlength="120" placeholder="paciente@exemplo.com" data-i18n-placeholder="painel:modalNew.patientEmailPlaceholder">
-        <span class="ep-text-xs ep-text-muted" data-i18n="painel:modalNew.patientEmailHint">Para enviar confirmação agora e lembrete 24h antes.</span>
+        <label class="ep-label" for="patientEmail" data-i18n="painel:modalNew.patientEmail">E-mail do paciente *</label>
+        <input id="patientEmail" class="ep-input" type="email" maxlength="120" placeholder="paciente@exemplo.com" required data-i18n-placeholder="painel:modalNew.patientEmailPlaceholder">
+        <span class="ep-text-xs ep-text-muted" data-i18n="painel:modalNew.patientEmailHint">Obrigatório — usado pra confirmação, lembrete 24h antes e pra vincular a conta do paciente (chat E2EE).</span>
       </div>
       <div class="ep-field">
         <label class="ep-label" for="patientPhone" data-i18n="painel:modalNew.patientPhone">WhatsApp do paciente (opcional)</label>
@@ -368,6 +368,12 @@ export function createNewSessionModal({
       statusEl.textContent = tr("painel:modalNew.errMissingTime", "Defina o horário da consulta — sem isso ela não aparece na agenda.");
       statusEl.className = "ep-status is-err";
       document.getElementById("scheduledAt").focus();
+      return;
+    }
+    if (!patientEmailRaw || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patientEmailRaw)) {
+      statusEl.textContent = tr("painel:modalNew.errMissingEmail", "Informe o e-mail do paciente — necessário pra confirmação, lembrete e vincular conta (chat).");
+      statusEl.className = "ep-status is-err";
+      document.getElementById("patientEmail").focus();
       return;
     }
     statusEl.textContent = tr("painel:modalNew.creating", "Criando…");

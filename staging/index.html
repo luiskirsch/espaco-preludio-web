@@ -176,9 +176,63 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-262">
-  <script src="./i18n/init.js?v=1-0" defer></script>
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-276">
+  <script src="./i18n/init.js?v=1-2" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
+  <style>
+    /* ── Refinamento de paleta: seção de planos ─────────────────────────
+       Objetivo: suavizar os pontos de alto contraste sem perder hierarquia.
+       1. Fundo mais quente → menos harshness
+       2. Checkmarks verde-sálvia em vez de ouro sólido
+       3. Badge "ECONOMIZE" translúcido (elimina o ouro saturado hardcoded)
+       4. Borda do card featured semi-transparente + glow sutil
+       5. Badges de plano com borda ouro leve para identidade */
+
+    /* Fundo da seção — um toque mais quente que o #17150f puro */
+    #planos.ep-section--alt { background: #1c1812; border-color: rgba(235,224,200,0.07); }
+
+    /* Cards de plano: fundo levemente mais profundo + borda mais suave */
+    #planos .ep-card--strong {
+      background: #231f18;
+      border-color: rgba(235,224,200,0.09);
+    }
+
+    /* Card featured (Recém-formado): borda dourada suave + glow sutil */
+    #planos .ep-card--strong[style*="border-color"] {
+      border-color: rgba(212,165,83,0.45) !important;
+      box-shadow:
+        0 0 0 1px rgba(212,165,83,0.18),
+        0 24px 48px -24px rgba(0,0,0,0.65),
+        0 8px 16px -12px rgba(0,0,0,0.45);
+    }
+
+    /* Checkmarks: verde-sálvia suave em vez de ouro sólido */
+    #planos .ep-card__features li::before {
+      border-left-color: #7aaa80;
+      border-bottom-color: #7aaa80;
+    }
+
+    /* Badge de nome do plano: borda ouro leve para identidade visual */
+    #planos .ep-badge {
+      background: rgba(212,165,83,0.10);
+      color: #c4a060;
+      border-color: rgba(212,165,83,0.22);
+    }
+
+    /* "ECONOMIZE ATÉ 16%" — troca ouro saturado por translúcido */
+    .ep-billing-switch__save {
+      background: rgba(212,165,83,0.14);
+      color: #d4a553;
+      border: 1px solid rgba(212,165,83,0.28);
+      box-shadow: none;
+    }
+    .ep-billing-switch__btn.is-active .ep-billing-switch__save {
+      background: rgba(212,165,83,0.22);
+      color: #e2b76a;
+      border: 1px solid rgba(212,165,83,0.40);
+      box-shadow: none;
+    }
+  </style>
 </head>
 <body>
 

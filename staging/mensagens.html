@@ -16,14 +16,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-262">
-  <script src="./i18n/init.js?v=1-0" defer></script>
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-276">
+  <script src="./i18n/init.js?v=1-2" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=2" defer></script>
 </head>
 <body class="ep-has-sidebar">
+<script src="./js/sidebar.js?v=19"></script>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
@@ -61,50 +62,59 @@
   </div>
 </header>
 
-<main class="ep-container ep-mt-32 ep-mb-16 ep-page-main" style="max-width: 1100px;">
-  <div class="ep-eyebrow" data-i18n="mensagens:hero.eyebrow">Conversas</div>
-  <h1 class="ep-h1 ep-mt-12 ep-page-title" data-i18n="mensagens:hero.h1">Mensagens</h1>
-  <p class="ep-text-muted ep-mt-16" data-i18n-html="mensagens:hero.intro">
-    Conversas com seus pacientes. <strong>Cifradas de ponta-a-ponta</strong>. Cada conversa é registro clínico (CFP Res. 1/2009) — guarde junto com o prontuário.
-  </p>
+<main class="ep-container ep-mt-32 ep-mb-16 ep-page-main" style="overflow: hidden;">
+  <section class="ep-stack">
+    <div>
+      <div class="ep-eyebrow" data-i18n="mensagens:hero.eyebrow">Conversas</div>
+      <h1 class="ep-h1 ep-mt-12 ep-page-title" data-i18n="mensagens:hero.h1">Mensagens</h1>
+      <p class="ep-text-muted ep-mt-8" data-i18n-html="mensagens:hero.intro">
+        Conversas com seus pacientes. <strong>Cifradas de ponta-a-ponta</strong>. Cada conversa é registro clínico (CFP Res. 1/2009) — guarde junto com o prontuário.
+      </p>
+    </div>
 
-  <div id="mensagensLayout" class="ep-msg-layout ep-mt-24">
-    <!-- Lista de threads -->
-    <aside class="ep-msg-threads">
-      <div class="ep-msg-threads__head">
-        <strong class="ep-text-sm" data-i18n="mensagens:threads.header">Pacientes</strong>
-        <button id="newThreadBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="mensagens:threads.newBtn">+ Nova</button>
-      </div>
-      <div id="threadList" class="ep-msg-threads__list">
-        <div class="ep-text-xs ep-text-muted" style="padding: 12px;" data-i18n="mensagens:threads.loading">Carregando…</div>
-      </div>
-    </aside>
+    <div class="ep-chat-shell" style="display: flex; height: calc(100dvh - 260px); min-height: 420px; margin-top: 16px; border: 1px solid var(--ep-line); border-radius: var(--ep-radius-lg, 12px); overflow: hidden; box-shadow: var(--ep-shadow-soft); background: var(--ep-surface);">
+      <!-- Sidebar threads -->
+      <aside style="width: 320px; flex-shrink: 0; border-right: 1px solid var(--ep-line); display: flex; flex-direction: column; overflow: hidden; background: var(--ep-surface);">
+        <div class="ep-flex" style="padding: 12px 14px; border-bottom: 1px solid var(--ep-line); justify-content: space-between; align-items: center;">
+          <strong class="ep-text-sm" data-i18n="mensagens:threads.header">Pacientes</strong>
+          <button id="newThreadBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="mensagens:threads.newBtn">+ Nova</button>
+        </div>
+        <div id="threadList" style="display: flex; flex-direction: column; gap: 0; flex: 1; overflow-y: auto; align-content: flex-start;">
+          <div class="ep-text-xs ep-text-muted" style="padding: 12px;" data-i18n="mensagens:threads.loading">Carregando…</div>
+        </div>
+      </aside>
 
-    <!-- Painel principal -->
-    <section class="ep-msg-main">
-      <div id="msgEmpty" class="ep-msg-empty">
-        <h3 class="ep-h3" data-i18n="mensagens:empty.h3">Selecione uma conversa</h3>
-        <p class="ep-text-muted ep-mt-8" data-i18n-html="mensagens:empty.body">Ou clique em <strong>+ Nova</strong> para começar uma com um paciente que já atendeu.</p>
-      </div>
-
-      <div id="msgThread" class="ep-msg-thread ep-hide">
-        <header class="ep-msg-thread__head">
-          <div>
-            <div id="msgPeerName" class="ep-h3 ep-mt-0">—</div>
-            <div class="ep-text-xs ep-text-muted" id="msgThreadMeta" data-i18n="mensagens:thread.metaE2ee">cifrada ponta-a-ponta</div>
+      <!-- Painel da thread ativa -->
+      <section id="threadPanel" style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
+        <div id="msgEmpty" style="margin: auto; text-align: center; padding: 40px; color: var(--ep-ink-3);">
+          <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
+          <h3 class="ep-h3 ep-mt-0" data-i18n="mensagens:empty.h3">Selecione uma conversa</h3>
+          <p class="ep-text-muted ep-mt-8" data-i18n-html="mensagens:empty.body">Ou clique em <strong>+ Nova</strong> para começar uma com um paciente que já atendeu.</p>
+        </div>
+        <div id="msgThread" class="ep-hide" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
+          <div id="msgPeerName" style="padding: 8px 16px; background: var(--ep-bg-2); border-bottom: 1px solid var(--ep-line); display: flex; flex-direction: column; gap: 1px;">
+            <span id="msgPeerNameText" style="font-weight: 600; font-size: 15px; line-height: 1.3;">—</span>
+            <span id="msgPeerPresence" style="font-size: 11px; font-weight: 400; line-height: 1.3; min-height: 14px;"></span>
           </div>
-        </header>
-        <div id="msgList" class="ep-msg-thread__list"></div>
-        <form id="msgForm" class="ep-msg-thread__composer">
-          <textarea id="msgInput" data-i18n-placeholder="mensagens:composer.placeholder" placeholder="Digite uma mensagem… (Ctrl+Enter envia)" maxlength="3000" rows="2"></textarea>
-          <div class="ep-flex" style="justify-content: space-between; align-items: center; padding: 8px 12px; border-top: 1px solid var(--ep-line);">
-            <span id="msgStatus" class="ep-text-xs ep-text-muted">&nbsp;</span>
-            <button id="msgSendBtn" type="submit" class="ep-btn ep-btn--primary ep-btn--sm" data-i18n="mensagens:composer.send">Enviar</button>
+          <div id="pinnedBanner" class="ep-hide" style="padding: 8px 12px; background: rgba(226,183,106,0.10); border-bottom: 1px solid var(--ep-line); font-size: 12.5px; cursor: pointer; display: flex; gap: 8px; align-items: center;"></div>
+          <div id="msgList" class="ep-chat-area" style="flex: 1; overflow-y: auto; min-height: 0; padding: 12px 14px; display: flex; flex-direction: column; gap: 3px;"></div>
+          <div style="background: var(--ep-bg-2); border-top: 1px solid var(--ep-line); position: relative;">
+            <div style="padding: 10px 12px; display: flex; gap: 8px; align-items: center;">
+              <button id="attachToggleBtn" type="button" aria-label="Anexar" title="Anexar" style="border: 0; background: transparent; cursor: pointer; padding: 4px; line-height: 1; border-radius: 8px; flex-shrink: 0; color: var(--ep-ink-3); display: flex; align-items: center;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <button id="emojiToggleBtn" type="button" aria-label="Inserir emoji" title="Inserir emoji" style="border: 0; background: transparent; cursor: pointer; padding: 4px; line-height: 1; border-radius: 8px; flex-shrink: 0; color: var(--ep-ink-3); display: flex; align-items: center;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              </button>
+              <input id="msgInput" type="text" class="ep-input" data-i18n-placeholder="mensagens:composer.placeholder" placeholder="Digite uma mensagem…" maxlength="3000" style="flex: 1; border-radius: 20px; padding: 8px 16px; font-size: 14px;">
+              <button id="msgSendBtn" type="button" class="ep-btn ep-btn--primary" style="border-radius: 20px; padding: 8px 20px;" data-i18n="mensagens:composer.send">Enviar</button>
+            </div>
+            <span id="msgStatus" class="ep-text-xs ep-text-muted" style="position: absolute; bottom: 3px; left: 16px;"></span>
           </div>
-        </form>
-      </div>
-    </section>
-  </div>
+        </div>
+      </section>
+    </div>
+  </section>
 </main>
 
 <!-- Modal: Nova conversa -->
@@ -130,6 +140,259 @@
     </div>
   </div>
 </div>
+
+<!-- Menu de anexo (+ button) -->
+<div id="attachMenu" role="menu" style="position: fixed; z-index: 1002; display: none; background: #fff; border-radius: 14px; box-shadow: 0 6px 28px rgba(0,0,0,0.20); padding: 0; min-width: 210px; overflow: hidden;">
+  <button data-attach="documento" style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 11px 18px; border: 0; background: transparent; cursor: pointer; font-size: 14px; color: #111; text-align: left;">
+    <span style="width: 36px; height: 36px; border-radius: 50%; background: #6c5ce7; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    </span>
+    Documento
+  </button>
+  <button data-attach="contato" style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 11px 18px; border: 0; background: transparent; cursor: pointer; font-size: 14px; color: #111; text-align: left;">
+    <span style="width: 36px; height: 36px; border-radius: 50%; background: #0984e3; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </span>
+    Contato
+  </button>
+</div>
+<input type="file" id="attachFileInput" accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.csv,.zip" style="display:none;">
+
+<!-- Modal: compartilhar contato de profissional -->
+<div class="ep-modal" id="contactPickerModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 520px;">
+    <h3 class="ep-modal__title">Compartilhar profissional</h3>
+    <div style="padding: 0 28px 16px;">
+      <input id="contactSearchInput" type="search" class="ep-input" placeholder="Buscar por nome ou especialidade…" style="width: 100%; margin-bottom: 12px;">
+      <div id="contactPickerList" style="max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;">
+        <div class="ep-text-xs ep-text-muted" style="padding: 8px;">Carregando…</div>
+      </div>
+    </div>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="contactPickerCancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Emoji picker do composer (singleton, repositioned). Grid 10x6 = 60 emojis. -->
+<div id="composerEmojiPicker" role="dialog" style="position: fixed; z-index: 1001; display: none; background: #fff; border: 1px solid var(--ep-line); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); padding: 8px; gap: 2px; grid-template-columns: repeat(10, 36px); width: max-content;">
+  <!-- Grid populado abaixo (escolhi 60 emojis comuns) -->
+</div>
+
+<!-- Emoji picker (reactions — 6 emojis fixos, anchorado na bolha) -->
+<div id="emojiPicker" role="dialog" style="position: fixed; z-index: 1001; display: none; background: #fff; border: 1px solid var(--ep-line); border-radius: 999px; box-shadow: 0 4px 16px rgba(0,0,0,0.18); padding: 6px 10px; gap: 4px;">
+  <button data-emoji="👍" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 8px;">👍</button>
+  <button data-emoji="❤️" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 8px;">❤️</button>
+  <button data-emoji="😂" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 8px;">😂</button>
+  <button data-emoji="😮" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 8px;">😮</button>
+  <button data-emoji="😢" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 8px;">😢</button>
+  <button data-emoji="🙏" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 8px;">🙏</button>
+</div>
+
+<!-- Modal: encaminhar para outra conversa -->
+<div class="ep-modal" id="forwardModal" role="dialog" aria-modal="true">
+  <div class="ep-modal__panel" style="max-width: 480px;">
+    <h3 class="ep-modal__title">Encaminhar mensagem</h3>
+    <p class="ep-modal__sub">Selecione a conversa de destino.</p>
+    <div style="padding: 0 28px;">
+      <div id="forwardPreview" style="padding: 10px 12px; background: var(--ep-bg-2); border-radius: 8px; margin-bottom: 12px; font-size: 13px; color: var(--ep-ink-2); border-left: 3px solid var(--ep-accent);">—</div>
+      <div id="forwardThreadList" style="display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto;"></div>
+      <div class="ep-status" id="forwardStatus"></div>
+    </div>
+    <div class="ep-modal__actions">
+      <button type="button" class="ep-btn ep-btn--ghost" id="forwardCancelBtn">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Menu de contexto da mensagem (singleton, repositioned no click) -->
+<div id="msgCtxMenu" role="menu" style="position: fixed; z-index: 1000; display: none; background: #fff; color: #111; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); min-width: 200px; padding: 6px 0; font-size: 14px;">
+  <button data-ctx="responder"  style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: #111;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg> Responder</button>
+  <button data-ctx="copiar"     style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: #111;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copiar</button>
+  <button data-ctx="reagir"     style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: #111;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg> Reagir</button>
+  <button data-ctx="encaminhar" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: #111;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 14 20 9 15 4"></polyline><path d="M4 20v-7a4 4 0 0 1 4-4h12"></path></svg> Encaminhar</button>
+  <button data-ctx="fixar"      style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: #111;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14l-1.5-7H6.5L5 17z"></path><path d="M8 10V6a4 4 0 0 1 8 0v4"></path></svg> Fixar</button>
+  <button data-ctx="favoritar"  style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: #111;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> <span data-favorite-label>Favoritar</span></button>
+  <hr style="border: 0; border-top: 1px solid #eee; margin: 4px 0;">
+  <button data-ctx="denunciar"  style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: #111;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 15v-3M22 12l-2 8H4l-2-8 5 4 5-8 5 8 5-4z"></path></svg> Denunciar</button>
+  <button data-ctx="apagar" data-only-mine="1" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: transparent; cursor: pointer; text-align: left; color: #b8453d;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg> Apagar</button>
+</div>
+
+<style>
+  /* Container unificado nao se mexe — override do ep-card global.
+     Sem ep-card, nao precisa do override, mas defensivo pro caso de
+     heranca via .ep-shell ou parent com transition. */
+  .ep-chat-shell,
+  .ep-chat-shell:hover {
+    transform: none !important;
+    transition: none !important;
+  }
+
+  /* Chat area background estilo WhatsApp — levemente diferente da sidebar */
+  .ep-chat-area {
+    background: #efe8d8;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4c9b0' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  html[data-theme="dark"] .ep-chat-area {
+    background: #1a1a1a;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23333' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* Cartão de contato profissional */
+  .ep-contact-card { border-radius: 8px; overflow: hidden; min-width: 220px; max-width: 270px; background: rgba(255,255,255,0.12); }
+  .ep-chat-bubble--theirs .ep-contact-card { background: rgba(0,0,0,0.06); }
+  .ep-contact-card__head { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+  .ep-contact-card__avatar { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,0.15); color: #fff; font-weight: 700; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ep-contact-card__name { font-weight: 600; font-size: 14px; line-height: 1.3; }
+  .ep-contact-card__sub { font-size: 11.5px; opacity: 0.7; margin-top: 2px; line-height: 1.3; }
+  .ep-contact-card__divider { border-top: 1px solid rgba(255,255,255,0.18); }
+  .ep-contact-card__btn { display: block; width: 100%; padding: 10px 14px; border: 0; background: transparent; color: rgba(255,255,255,0.85); font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; letter-spacing: 0.2px; transition: background 0.12s; }
+  .ep-contact-card__btn:hover { background: rgba(255,255,255,0.08); }
+  /* Bolhas "theirs" têm fundo claro — cartão precisa de cores invertidas */
+  .ep-chat-bubble--theirs .ep-contact-card { background: rgba(0,0,0,0.05); }
+  .ep-chat-bubble--theirs .ep-contact-card__avatar { background: #2a3d5c; }
+  .ep-chat-bubble--theirs .ep-contact-card__divider { border-color: rgba(0,0,0,0.12); }
+  .ep-chat-bubble--theirs .ep-contact-card__btn { color: #128c7e; }
+  .ep-chat-bubble--theirs .ep-contact-card__btn:hover { background: rgba(0,0,0,0.05); }
+  html[data-theme="dark"] .ep-chat-bubble--theirs .ep-contact-card__btn { color: #25d366; }
+
+  /* Bolhas estilo WhatsApp — tail pointer, time inline, padding tight */
+  .ep-chat-bubble {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  .ep-chat-bubble .ep-wb-text { display: inline; white-space: pre-wrap; word-break: break-word; }
+  .ep-chat-bubble .ep-wb-meta {
+    float: right;
+    font-size: 10.5px;
+    opacity: 0.65;
+    margin: 4px 0 0 12px;
+    white-space: nowrap;
+    position: relative;
+    top: 4px;
+  }
+  /* Tail (pseudo) — triangulo CSS na lateral da bolha */
+  .ep-chat-bubble--mine::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: -6px;
+    width: 0; height: 0;
+    border-left: 6px solid var(--ep-accent, #2d4a3e);
+    border-top: 6px solid transparent;
+    border-bottom: 0 solid transparent;
+  }
+  .ep-chat-bubble--theirs::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -6px;
+    width: 0; height: 0;
+    border-right: 6px solid var(--ep-bg-2, #f5f0e6);
+    border-top: 6px solid transparent;
+    border-bottom: 0 solid transparent;
+  }
+
+  /* Dark mode: enviadas = verde WhatsApp, recebidas = branco com texto preto */
+  html[data-theme="dark"] .ep-chat-bubble--mine {
+    background: #005c4b !important;
+    color: #e9edef !important;
+  }
+  html[data-theme="dark"] .ep-chat-bubble--mine::after {
+    border-left-color: #005c4b !important;
+  }
+  html[data-theme="dark"] .ep-chat-bubble--theirs {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  html[data-theme="dark"] .ep-chat-bubble--theirs::after {
+    border-right-color: #fff !important;
+  }
+  html[data-theme="dark"] .ep-chat-bubble--theirs .ep-wb-meta {
+    color: #667781 !important;
+    opacity: 1 !important;
+  }
+  html[data-theme="dark"] .ep-chat-bubble--mine .ep-wb-meta {
+    color: rgba(255,255,255,0.7) !important;
+    opacity: 1 !important;
+  }
+  html[data-theme="dark"] .ep-chat-bubble--theirs .ep-chat-bubble__chevron {
+    color: #667781 !important;
+  }
+  /* Sidebar + header + composer dark */
+  html[data-theme="dark"] .ep-chat-shell {
+    border-color: #2a2a2a !important;
+  }
+  html[data-theme="dark"] .ep-chat-shell aside {
+    background: #111b21 !important;
+  }
+  html[data-theme="dark"] #msgPeerName {
+    background: #1f2c33 !important;
+    color: #e9edef !important;
+  }
+  /* Reply quote ajusta no dark pra theirs (texto preto precisa borda visivel) */
+  html[data-theme="dark"] .ep-chat-bubble--theirs [data-jump] {
+    border-left-color: #005c4b !important;
+    background: rgba(0,0,0,0.06) !important;
+  }
+
+  .ep-chat-bubble:hover .ep-chat-bubble__chevron { opacity: 1 !important; }
+  .ep-chat-bubble__chevron:hover { background: rgba(0,0,0,0.08) !important; }
+  #msgCtxMenu button:hover { background: #f0f0f0 !important; }
+  #attachMenu button { transition: background 0.15s; box-sizing: border-box; width: 100%; }
+  #attachMenu button:hover { background: #f5f4f2 !important; }
+
+  /* Estabilidade visual: bolhas de mensagem, cards de thread no sidebar,
+     botoes do header/composer (+ Nova, Enviar) e botoes dentro do chat
+     NAO se mexem no hover. Override do .ep-btn:hover { translateY(-1px) }
+     padrao que causava jitter visual nos cards. */
+  #threadList button:hover,
+  #threadList button:active,
+  .ep-thread-card:hover,
+  .ep-thread-card:active,
+  .ep-chat-bubble:hover,
+  .ep-chat-bubble:active,
+  .ep-chat-bubble button:hover,
+  .ep-chat-bubble button:active,
+  #pinnedBanner:hover,
+  #newThreadBtn:hover,
+  #newThreadBtn:active,
+  #msgSendBtn:hover,
+  #msgSendBtn:active,
+  #emojiToggleBtn:hover,
+  #emojiToggleBtn:active,
+  #attachToggleBtn:hover,
+  #attachToggleBtn:active,
+  #msgCtxMenu button:hover,
+  #msgCtxMenu button:active,
+  #emojiPicker button:hover,
+  #emojiPicker button:active,
+  #composerEmojiPicker button:hover,
+  #composerEmojiPicker button:active {
+    transform: none !important;
+  }
+  #emojiPicker button:hover,
+  #composerEmojiPicker button:hover,
+  #emojiToggleBtn:hover,
+  #attachToggleBtn:hover {
+    background: var(--ep-bg-2) !important;
+  }
+  #attachToggleBtn:hover { color: var(--ep-ink-1) !important; }
+  #emojiToggleBtn:hover  { color: var(--ep-ink-1) !important; }
+  #attachToggleBtn,
+  #emojiToggleBtn { transition: background 0.15s, color 0.15s; }
+  #msgSendBtn { transition: background 0.15s, border-color 0.15s; }
+
+  /* Hover nos thread cards (sidebar) — feedback visual sutil. Cards ativos
+     mantem o estilo accent-soft existente (selector :not(.is-active)). */
+  .ep-thread-card:not(.is-active):hover {
+    background: rgba(226, 183, 106, 0.10) !important;
+    border-color: rgba(226, 183, 106, 0.35) !important;
+  }
+  .ep-thread-card.is-active:hover {
+    background: rgba(226, 183, 106, 0.20) !important;
+  }
+</style>
 
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
@@ -231,6 +494,28 @@
     return d.toLocaleString(loc, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
   }
 
+  // Exibe status de presença do paciente abaixo do nome. Só visível pro profissional.
+  // Mostra "● Online agora" se lastSeenByPatient < 5min, senão "Visto às HH:MM".
+  function renderPresence(lastSeenMs) {
+    const el = $("msgPeerPresence");
+    if (!el) return;
+    if (!lastSeenMs) { el.textContent = ""; el.style.color = ""; return; }
+    const diffMs = Date.now() - lastSeenMs;
+    if (diffMs < 15 * 1000) {
+      el.textContent = "● Online agora";
+      el.style.color = "#25d366";
+    } else {
+      const d = new Date(lastSeenMs);
+      const loc = currentLocale();
+      const isToday = d.toDateString() === new Date().toDateString();
+      const when = isToday
+        ? d.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" })
+        : d.toLocaleString(loc, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+      el.textContent = "Visto às " + when;
+      el.style.color = "var(--ep-ink-3)";
+    }
+  }
+
   // Cache de threadKeys decifradas (por threadId).
   const threadKeyCache = new Map();
   let currentThreadId = null;
@@ -244,6 +529,59 @@
     try { await signOut(auth); } catch {}
     window.location.href = "./login.html";
   });
+
+  // ─── Preview da ultima msg (localStorage) ────────────────────────
+  // Server nao consegue ler plaintext E2EE — entao guardamos local apos
+  // cada decrypt. Limit 200 chars pra nao explodir o storage.
+  function lastMsgKey(threadId) { return `ep:lastMsg:${threadId}`; }
+  function saveLastMsgPreview(threadId, text, senderRole) {
+    if (!threadId || !text) return;
+    try {
+      localStorage.setItem(lastMsgKey(threadId), JSON.stringify({
+        text: String(text).slice(0, 200),
+        senderRole: senderRole || null,
+        at: Date.now()
+      }));
+    } catch (_) { /* quota cheio, ignora */ }
+  }
+  function getLastMsgPreview(threadId) {
+    try {
+      const raw = localStorage.getItem(lastMsgKey(threadId));
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (_) { return null; }
+  }
+
+  // Decifra last message de threads pra popular preview na sidebar SEM
+  // precisar abrir cada thread. Cache hit: pula se preview local eh mais
+  // recente que lastMessageAt do servidor.
+  async function decryptThreadPreviews(threads) {
+    let changed = false;
+    for (const t of threads) {
+      if (!t.lastMessageCiphertext || !t.lastMessageIv || !t.lastMessageAt) continue;
+      const cached = getLastMsgPreview(t.threadId);
+      // Skip se preview local foi salvo APOS o lastMessageAt do servidor.
+      if (cached && (cached.at || 0) >= t.lastMessageAt) continue;
+      try {
+        let key = threadKeyCache.get(t.threadId);
+        if (!key && t.myThreadKeyWrapper) {
+          key = t.myThreadKeyWrappedVia === "own-dek"
+            ? await unwrapKey(t.myThreadKeyWrapper, dek)
+            : await unwrapThreadKeyFromPeer(t.myThreadKeyWrapper, myEcdhPrivBytes, t.peerEcdhPublicJwk);
+          threadKeyCache.set(t.threadId, key);
+        }
+        if (!key) continue;
+        const plain = await decryptNote({ ciphertext: t.lastMessageCiphertext, iv: t.lastMessageIv }, key);
+        saveLastMsgPreview(t.threadId, plain, t.lastMessageSenderRole);
+        changed = true;
+      } catch (e) {
+        // Decrypt falhou (msg corrompida ou key invalida) — ignora,
+        // preview antigo mantido.
+      }
+    }
+    // Re-render se algum preview novo foi cacheado.
+    if (changed) renderThreads(threads);
+  }
 
   // ─── Listar threads ──────────────────────────────────────────────
   async function loadThreads() {
@@ -261,7 +599,12 @@
         $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${tr("mensagens:js.noThreads", "Nenhuma conversa ainda.<br>Clique em <strong>+ Nova</strong>.")}</div>`;
         return;
       }
+      // Render imediato (preview vem do localStorage se ja decifrado antes).
       renderThreads(threads);
+      // Decifra last message de cada thread em background pra popular previews
+      // de threads que ainda nao foram abertas. Pula se ja temos preview
+      // mais recente que lastMessageAt (cache hit).
+      decryptThreadPreviews(threads).catch(err => console.error("preview_decrypt", err));
       return;
     } catch (e) {
       console.error("loadThreads_failed", e);
@@ -269,15 +612,48 @@
     }
   }
   function renderThreads(threads) {
+    // Card horizontal estilo WhatsApp: avatar circular + nome/tempo na linha 1
+    // + preview da ultima msg + badge "novo" na linha 2. Truncate ellipsis no
+    // nome e na preview pra nao quebrar layout em conversas longas.
     $("threadList").innerHTML = threads.map(t => {
       const peerName = t.patientDisplayName || tr("mensagens:js.peerFallback", "Paciente");
-      const unreadDot = t.hasUnread ? `<span class="ep-msg-unread"></span>` : "";
       const lastTime = t.lastMessageAt ? fmtTime(t.lastMessageAt) : "";
-      const cls = t.threadId === currentThreadId ? " is-active" : "";
+      const isActive = t.threadId === currentThreadId;
+      const bg = isActive ? "var(--ep-accent-soft)" : "var(--ep-bg-2)";
+      const borderColor = isActive ? "var(--ep-accent)" : "var(--ep-line)";
+      const activeClass = isActive ? " is-active" : "";
+      const initials = peerName.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "?";
+      // Bolinha verde com contador estilo WhatsApp. So mostra se tiver msg
+      // nao lida (unreadCount > 0). 99+ pra contadores grandes nao quebrarem.
+      const count = Number(t.unreadCount) || 0;
+      const badgeNew = count > 0
+        ? `<span style="background: #25d366; color: #fff; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; padding: 0 6px; flex-shrink: 0;">${count > 99 ? "99+" : count}</span>`
+        : "";
+
+      // Preview da ultima msg (localStorage). Prefixo "Você:" se foi o terapeuta.
+      const preview = getLastMsgPreview(t.threadId);
+      let previewLine;
+      if (preview && preview.text) {
+        const meSent = preview.senderRole === "therapist";
+        const prefix = meSent ? '<span style="color: var(--ep-ink-3);">Você: </span>' : "";
+        previewLine = `${prefix}${escapeHtml(preview.text)}`;
+      } else {
+        previewLine = `<span style="color: var(--ep-ink-3); font-style: italic;">${escapeHtml(tr("mensagens:js.threadNoMessages", "Sem mensagens"))}</span>`;
+      }
+
       return `
-        <button type="button" class="ep-msg-thread-item${cls}" data-thread-id="${t.threadId}">
-          <div class="ep-msg-thread-item__name">${escapeHtml(peerName)} ${unreadDot}</div>
-          <div class="ep-msg-thread-item__time">${lastTime}</div>
+        <button type="button" class="ep-thread-card${activeClass}" data-thread-id="${escapeHtml(t.threadId)}" style="text-align: left; padding: 10px 12px; margin: 6px 8px; border: 1px solid ${borderColor}; border-radius: 12px; background: ${bg}; cursor: pointer; display: flex; gap: 10px; align-items: center; width: calc(100% - 16px); transition: background-color 0.15s ease, border-color 0.15s ease;">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--ep-accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; flex-shrink: 0;">${escapeHtml(initials)}</div>
+          <div style="flex: 1; min-width: 0;">
+            <div class="ep-flex" style="justify-content: space-between; align-items: center; gap: 6px;">
+              <span style="font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(peerName)}</span>
+              <span style="font-size: 11px; color: var(--ep-ink-3); flex-shrink: 0;">${escapeHtml(lastTime)}</span>
+            </div>
+            <div class="ep-flex" style="gap: 6px; align-items: center; margin-top: 2px;">
+              <span style="font-size: 12.5px; color: var(--ep-ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;">${previewLine}</span>
+              ${badgeNew}
+            </div>
+          </div>
         </button>
       `;
     }).join("");
@@ -294,11 +670,16 @@
   // ─── Abrir thread ────────────────────────────────────────────────
   async function openThread(threadId) {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    // Reset cache de msgs pra nao vazar entre threads.
+    messageCache.clear();
+    lastSeenMessageMs = 0;
     currentThreadId = threadId;
     $("msgEmpty").classList.add("ep-hide");
     $("msgThread").classList.remove("ep-hide");
     $("msgList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${escapeHtml(tr("mensagens:js.loading", "Carregando…"))}</div>`;
     $("msgStatus").textContent = "";
+    $("msgPeerNameText").textContent = "—";
+    renderPresence(null);
 
     // Busca thread doc
     const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(threadId)}`, {
@@ -310,7 +691,8 @@
       return;
     }
     currentThread = d.thread;
-    $("msgPeerName").textContent = currentThread.patientDisplayName || tr("mensagens:js.peerFallback", "Paciente");
+    $("msgPeerNameText").textContent = currentThread.patientDisplayName || tr("mensagens:js.peerFallback", "Paciente");
+    renderPresence(currentThread.lastSeenByPatient || null);
 
     // Decifra threadKey (cache)
     let threadKeyBytes = threadKeyCache.get(threadId);
@@ -345,6 +727,133 @@
     loadThreads();
   }
 
+  // ─── messageCache + render otimista (padrão mensagens-pro) ──────────
+  // Cache local de msgs (id → {plain, senderRole, createdAt, status}). Render
+  // monta o DOM a partir do cache, então uma msg "sending" (otimista) aparece
+  // instantaneamente; depois do POST, troca o tempId pelo messageId real.
+  const messageCache = new Map();
+  let lastRenderedThreadId = null;
+
+  // Renderiza o conteúdo de uma mensagem — texto normal ou cartão de contato.
+  function renderMessageBody(plain) {
+    if (plain && plain.startsWith("CONTACT_CARD:")) {
+      try {
+        const card = JSON.parse(plain.slice(13));
+        const initials = escapeHtml((card.displayName || "?").charAt(0).toUpperCase());
+        const sub = [card.especialidade, card.conselho].filter(Boolean).join(" · ");
+        return `<div class="ep-contact-card">
+          <div class="ep-contact-card__head">
+            <div class="ep-contact-card__avatar">${initials}</div>
+            <div>
+              <div class="ep-contact-card__name">${escapeHtml(card.displayName || "")}</div>
+              ${sub ? `<div class="ep-contact-card__sub">${escapeHtml(sub)}</div>` : ""}
+            </div>
+          </div>
+          <div class="ep-contact-card__divider"></div>
+          <button type="button" class="ep-contact-card__btn" data-contact-peer="${escapeHtml(card.uid || "")}">Conversar</button>
+        </div>`;
+      } catch { /* fallthrough pra texto */ }
+    }
+    return `<span class="ep-wb-text">${escapeHtml(plain)}</span>`;
+  }
+
+  // Retorna preview legível de uma mensagem (usado na sidebar e reply quote).
+  function plainForPreview(plain) {
+    if (plain && plain.startsWith("CONTACT_CARD:")) {
+      try {
+        const card = JSON.parse(plain.slice(13));
+        return `👤 ${card.displayName || "Contato"}`;
+      } catch {}
+    }
+    return plain;
+  }
+
+  function renderMessages(opts = {}) {
+    const list = $("msgList");
+    if (!currentThreadId) return;
+    if (lastRenderedThreadId !== currentThreadId) {
+      list.innerHTML = "";
+      lastRenderedThreadId = currentThreadId;
+    }
+    const sorted = [...messageCache.values()].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    if (sorted.length === 0) {
+      list.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${escapeHtml(tr("mensagens:js.noMessagesYet", "Nenhuma mensagem ainda. Diga oi."))}</div>`;
+      return;
+    }
+    list.innerHTML = "";
+    renderPinnedBanner(sorted);
+    for (const m of sorted) {
+      const mine = m.senderRole === "therapist";
+      const div = document.createElement("div");
+      div.dataset.msgId = m.messageId;
+      div.className = `ep-chat-bubble ${mine ? "ep-chat-bubble--mine" : "ep-chat-bubble--theirs"}`;
+      const hasReactionsPreCalc = Array.isArray(m.reactions) && m.reactions.length > 0;
+      div.style.cssText = `position: relative; align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 65%; padding: 6px 8px 6px 9px; border-radius: ${mine ? "8px 0 8px 8px" : "0 8px 8px 8px"}; background: ${mine ? "var(--ep-accent)" : "var(--ep-bg-2)"}; color: ${mine ? "#fff" : "var(--ep-ink)"}; font-size: 13.5px; line-height: 1.35; opacity: ${m.status === "sending" ? "0.6" : "1"};${hasReactionsPreCalc ? " margin-bottom: 14px;" : ""}`;
+
+      // Msg apagada: mostra placeholder italic muted, sem chevron.
+      if (m.deleted) {
+        div.innerHTML = `<div style="font-style: italic; opacity: 0.7;">${escapeHtml(tr("mensagens:js.deletedMsg", "Mensagem apagada"))}</div><div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">${fmtTime(m.createdAt)}</div>`;
+        list.appendChild(div);
+        continue;
+      }
+
+      // Reply quote (se a msg foi resposta a outra)
+      let replyBlock = "";
+      if (m.replyToMessageId) {
+        const orig = messageCache.get(m.replyToMessageId);
+        const origText = orig?.plain || tr("mensagens:js.replyOrigUnavailable", "Mensagem original");
+        const origSenderLabel = orig?.senderRole === "therapist"
+          ? tr("mensagens:js.youLabel", "Você")
+          : (currentThread?.patientDisplayName || tr("mensagens:js.peerFallback", "Paciente"));
+        replyBlock = `<div style="border-left: 3px solid ${mine ? "rgba(255,255,255,0.5)" : "var(--ep-accent)"}; padding: 4px 8px; margin-bottom: 6px; font-size: 12px; opacity: 0.85; background: ${mine ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.04)"}; border-radius: 4px; cursor: pointer;" data-jump="${escapeHtml(m.replyToMessageId)}">
+          <div style="font-weight: 600; margin-bottom: 2px;">${escapeHtml(origSenderLabel)}</div>
+          <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(origText.slice(0, 80))}</div>
+        </div>`;
+      }
+
+      let tick = "";
+      if (mine) {
+        const lastRead = currentThread?.lastReadByPatient || 0;
+        if (m.status === "sending") tick = ' <span style="opacity: 0.7;">✓</span>';
+        else if (m.status === "error") tick = ' <span style="color: #ffb4b4;" title="Erro">!</span>';
+        else if (lastRead >= (m.createdAt || 0)) tick = ' <span style="color: #7fc99f;">✓✓</span>';
+        else tick = ' <span style="opacity: 0.7;">✓</span>';
+      }
+
+      // Icones inline (favoritada / fixada)
+      const favIcon = m.favoritedByMe
+        ? ` <span title="${escapeHtml(tr("mensagens:js.favorited", "Favoritada"))}" style="color: #f0c850;">★</span>`
+        : "";
+      const pinIcon = m.pinned
+        ? ` <span title="${escapeHtml(tr("mensagens:js.pinned", "Fixada"))}" style="opacity: 0.8;">📌</span>`
+        : "";
+
+      // Etiqueta "Encaminhada" no topo se forwardedFromMessageId.
+      const forwardedTag = m.forwardedFromMessageId
+        ? `<div style="font-size: 11px; opacity: 0.7; font-style: italic; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 14 20 9 15 4"></polyline><path d="M4 20v-7a4 4 0 0 1 4-4h12"></path></svg> ${escapeHtml(tr("mensagens:js.forwardedLabel", "Encaminhada"))}</div>`
+        : "";
+
+      // Reactions overlay estilo WhatsApp: pill flutuante BRANCA no canto
+      // inferior direito da bolha, overlapping pra baixo. Sombra + count
+      // so se > 1. Bolha ganha margin-bottom extra quando tem reactions
+      // pra nao colidir com a proxima.
+      let reactionsOverlay = "";
+      const hasReactions = Array.isArray(m.reactions) && m.reactions.length > 0;
+      if (hasReactions) {
+        reactionsOverlay = `<div style="position: absolute; bottom: -12px; right: 10px; display: flex; gap: 2px; z-index: 1; flex-direction: row-reverse;">` +
+          m.reactions.map(r => `<button data-react-emoji="${escapeHtml(r.emoji)}" data-react-msg="${escapeHtml(m.messageId)}" title="${r.mine ? escapeHtml(tr("mensagens:js.removeReaction", "Remover sua reação")) : escapeHtml(tr("mensagens:js.addReaction", "Reagir"))}" style="background: #fff; border: 1px solid var(--ep-line); border-radius: 999px; padding: 2px 7px; font-size: 13px; cursor: pointer; display: inline-flex; gap: 3px; align-items: center; line-height: 1; box-shadow: 0 2px 6px rgba(0,0,0,0.18); color: var(--ep-ink);"><span style="font-size: 14px;">${r.emoji}</span>${r.count > 1 ? `<span style="font-size: 11px; font-weight: 600;">${r.count}</span>` : ""}</button>`).join("") +
+          `</div>`;
+      }
+
+      // Chevron (so visivel no hover via CSS)
+      const chevron = `<button class="ep-chat-bubble__chevron" data-action="open-menu" aria-label="Opções" style="position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border: 0; background: transparent; color: ${mine ? "rgba(255,255,255,0.85)" : "var(--ep-ink-3)"}; cursor: pointer; opacity: 0; transition: opacity 0.15s; border-radius: 4px; display: flex; align-items: center; justify-content: center; padding: 0;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>`;
+
+      div.innerHTML = `${chevron}${forwardedTag}${replyBlock}${renderMessageBody(m.plain)}<span class="ep-wb-meta">${fmtTime(m.createdAt)}${pinIcon}${favIcon}${tick}</span>${reactionsOverlay}`;
+      list.appendChild(div);
+    }
+    if (opts.scroll !== false) list.scrollTop = list.scrollHeight;
+  }
+
   async function refreshMessages(threadKeyBytes) {
     const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/messages?limit=100`, {
       headers: { "Authorization": `Bearer ${idToken}` }
@@ -352,44 +861,800 @@
     const d = await r.json().catch(() => ({}));
     if (!r.ok || !d.ok) return;
 
-    const decrypted = [];
+    // Mescla msgs do servidor no cache. Preserva entries otimistas com tempId
+    // (ainda não confirmadas) — só sobreescreve quando o servidor confirma.
+    const isFirstLoad = lastRenderedThreadId !== currentThreadId;
     for (const m of (d.messages || [])) {
-      try {
-        const plain = await decryptNote({ ciphertext: m.ciphertext, iv: m.iv }, threadKeyBytes);
-        decrypted.push({ ...m, plain });
-      } catch {
-        decrypted.push({ ...m, plain: tr("mensagens:js.corruptedMsg", "[mensagem corrompida]") });
+      let plain;
+      if (m.deleted) {
+        plain = "";
+      } else if (m.ciphertext) {
+        try {
+          plain = await decryptNote({ ciphertext: m.ciphertext, iv: m.iv }, threadKeyBytes);
+        } catch {
+          plain = tr("mensagens:js.corruptedMsg", "[mensagem corrompida]");
+        }
+      } else {
+        plain = "";
       }
+      // Se ha um toggleReaction em voo pra essa msg, PRESERVA reactions
+      // local (otimista) — server pode devolver dado antigo enquanto write
+      // ainda nao propagou. Senao, usa o que veio do server.
+      const isReactPending = pendingReactions.has(m.messageId);
+      const existing = messageCache.get(m.messageId);
+      messageCache.set(m.messageId, {
+        messageId: m.messageId,
+        senderRole: m.senderRole,
+        plain,
+        createdAt: m.createdAt,
+        status: "sent",
+        deleted: !!m.deleted,
+        replyToMessageId: m.replyToMessageId || null,
+        forwardedFromMessageId: m.forwardedFromMessageId || null,
+        favoritedByMe: !!m.favoritedByMe,
+        pinned: !!m.pinned,
+        pinnedAt: m.pinnedAt || null,
+        reactions: isReactPending
+          ? (existing?.reactions || [])
+          : (Array.isArray(m.reactions) ? m.reactions : [])
+      });
     }
 
-    const newest = decrypted.length ? decrypted[decrypted.length - 1].createdAt : 0;
+    // Cacheia ultima msg em localStorage pra preview na lista de threads.
+    // (Server nao consegue ler plaintext E2EE, entao precisamos guardar
+    // local apos decrypt.)
+    const sorted = [...messageCache.values()].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    if (sorted.length > 0) {
+      const last = sorted[sorted.length - 1];
+      saveLastMsgPreview(currentThreadId, plainForPreview(last.plain), last.senderRole);
+    }
+
+    const newest = Math.max(0, ...[...messageCache.values()].map(m => m.createdAt || 0));
     const grewSinceLast = newest > lastSeenMessageMs;
     lastSeenMessageMs = newest;
 
-    $("msgList").innerHTML = decrypted.map(m => {
-      const mine = m.senderRole === "therapist";
-      return `
-        <div class="ep-msg-bubble ${mine ? "is-mine" : "is-theirs"}">
-          <div class="ep-msg-bubble__text">${escapeHtml(m.plain)}</div>
-          <div class="ep-msg-bubble__time">${fmtTime(m.createdAt)}</div>
-        </div>
-      `;
-    }).join("") || `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${escapeHtml(tr("mensagens:js.noMessagesYet", "Nenhuma mensagem ainda. Diga oi."))}</div>`;
+    if (d.lastReadByPatient && currentThread) currentThread.lastReadByPatient = d.lastReadByPatient;
+    renderMessages({ scroll: isFirstLoad || grewSinceLast });
+    if (d.lastSeenByPatient) renderPresence(d.lastSeenByPatient);
 
+    // Se chegou msg nova, re-renderiza o sidebar (preview + time + unread).
+    // Se a msg nova eh do peer (nao minha), marca como lida tambem — user
+    // esta com a thread aberta lendo em tempo real.
     if (grewSinceLast) {
-      const list = $("msgList");
-      list.scrollTop = list.scrollHeight;
+      loadThreads();
+      const sortedAll = [...messageCache.values()].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+      const newestMsg = sortedAll[sortedAll.length - 1];
+      if (newestMsg && newestMsg.senderRole !== "therapist") {
+        fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/read`, {
+          method: "PATCH",
+          headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ until: Date.now() })
+        }).catch(() => {});
+      }
     }
   }
 
+  // ─── Banner de mensagens fixadas (estilo WhatsApp) ────────────────
+  function renderPinnedBanner(sorted) {
+    const banner = document.getElementById("pinnedBanner");
+    if (!banner) return;
+    const pinned = sorted.filter(m => m.pinned && !m.deleted);
+    if (pinned.length === 0) {
+      banner.classList.add("ep-hide");
+      banner.innerHTML = "";
+      banner.onclick = null;
+      return;
+    }
+    // Mostra a mais recente (ultima do array sorted asc).
+    const last = pinned[pinned.length - 1];
+    const moreCount = pinned.length - 1;
+    banner.classList.remove("ep-hide");
+    banner.innerHTML = `
+      <span style="font-size: 14px;">📌</span>
+      <div data-pinned-action="jump" style="flex: 1; min-width: 0; cursor: pointer;">
+        <div style="font-weight: 600; font-size: 11px; color: var(--ep-accent); margin-bottom: 1px;">${escapeHtml(tr("mensagens:js.pinnedLabel", "Mensagem fixada"))}${moreCount > 0 ? ` (+${moreCount})` : ""}</div>
+        <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ep-ink-2);">${escapeHtml(last.plain.slice(0, 100))}</div>
+      </div>
+      <button type="button" data-pinned-action="unpin" data-msg-id="${escapeHtml(last.messageId)}" title="${escapeHtml(tr("mensagens:js.unpin", "Desafixar"))}" aria-label="${escapeHtml(tr("mensagens:js.unpin", "Desafixar"))}" style="border: 0; background: transparent; cursor: pointer; color: var(--ep-ink-3); padding: 6px; line-height: 0; border-radius: 6px; flex-shrink: 0;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    `;
+    // Click handler: jump na content area, unpin no X. Reuso de uma func soh.
+    banner.onclick = async (e) => {
+      const action = e.target.closest("[data-pinned-action]")?.dataset.pinnedAction;
+      if (action === "jump") {
+        const target = $("msgList").querySelector(`[data-msg-id="${CSS.escape(last.messageId)}"]`);
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+          const orig = target.style.background;
+          target.style.transition = "background-color 0.3s";
+          target.style.background = "var(--ep-accent-soft)";
+          setTimeout(() => { target.style.background = orig; }, 700);
+        }
+      } else if (action === "unpin") {
+        const msgId = last.messageId;
+        const m = messageCache.get(msgId);
+        if (!m) return;
+        // Otimista: desfixa local + re-render. PATCH em background.
+        m.pinned = false;
+        renderMessages({ scroll: false });
+        try {
+          const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/messages/${encodeURIComponent(msgId)}`, {
+            method: "PATCH",
+            headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ pinned: false })
+          });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+          showToast(tr("mensagens:js.toastUnpinned", "Mensagem desafixada."));
+        } catch (err) {
+          m.pinned = true; // reverte
+          renderMessages({ scroll: false });
+          showToast(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }), "err");
+        }
+      }
+    };
+  }
+
+  // ─── Menu de contexto da mensagem (chevron + dropdown) ───────────
+  const ctxMenu = document.getElementById("msgCtxMenu");
+  let ctxMenuMsgId = null;
+
+  function openCtxMenu(messageId, anchorBtn) {
+    const m = messageCache.get(messageId);
+    if (!m || m.deleted) return;
+    ctxMenuMsgId = messageId;
+
+    // Atualiza visibilidade dos items dependentes de "minha msg".
+    const isMine = m.senderRole === "therapist";
+    ctxMenu.querySelectorAll("[data-only-mine]").forEach(btn => {
+      btn.style.display = isMine ? "flex" : "none";
+    });
+    // Texto do botao favoritar
+    const favLabel = ctxMenu.querySelector("[data-favorite-label]");
+    if (favLabel) {
+      favLabel.textContent = m.favoritedByMe
+        ? tr("mensagens:js.unfavorite", "Desfavoritar")
+        : tr("mensagens:js.favorite", "Favoritar");
+    }
+
+    // Posiciona o menu logo abaixo do chevron, alinhado a direita.
+    const rect = anchorBtn.getBoundingClientRect();
+    ctxMenu.style.display = "block";
+    const menuW = ctxMenu.offsetWidth;
+    let left = rect.right - menuW;
+    let top = rect.bottom + 4;
+    // Clamp dentro da viewport.
+    if (left < 8) left = 8;
+    if (left + menuW > window.innerWidth - 8) left = window.innerWidth - menuW - 8;
+    if (top + ctxMenu.offsetHeight > window.innerHeight - 8) {
+      top = rect.top - ctxMenu.offsetHeight - 4;
+    }
+    ctxMenu.style.left = left + "px";
+    ctxMenu.style.top  = top  + "px";
+  }
+  function closeCtxMenu() { ctxMenu.style.display = "none"; ctxMenuMsgId = null; }
+
+  // Click no botão "Conversar" do cartão de contato — abre/cria thread pro-to-pro.
+  $("msgList").addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-contact-peer]");
+    if (!btn) return;
+    const peerUid = btn.dataset.contactPeer;
+    if (!peerUid) return;
+    btn.disabled = true;
+    btn.textContent = "Abrindo…";
+    try {
+      // Busca ECDH public key do peer
+      const pkRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/public-key/${encodeURIComponent(peerUid)}`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const pkData = await pkRes.json().catch(() => ({}));
+      if (!pkRes.ok || !pkData.ok) { alert("Profissional ainda não habilitou o chat seguro."); btn.disabled = false; btn.textContent = "Conversar"; return; }
+      // Gera thread key + wrap para os dois lados
+      const tKeyBytes = generateThreadKey();
+      const threadKeyForCreator = await wrapKey(tKeyBytes, dek);
+      const threadKeyForPeer = await wrapThreadKeyForPeer(tKeyBytes, myEcdhPrivBytes, pkData.ecdhPublicJwk);
+      // Cria (ou reutiliza existente) thread pro-to-pro
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/pro-chat/threads`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ peerUid, threadKeyForCreator, threadKeyForPeer, creatorEcdhPublicJwk: myEcdhPublicJwk })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok || !d.threadId) throw new Error(d?.error || "Erro ao criar conversa");
+      window.location.href = `./mensagens-pro.html?thread=${encodeURIComponent(d.threadId)}`;
+    } catch (err) {
+      alert("Erro ao abrir conversa: " + (err.message || ""));
+      btn.disabled = false;
+      btn.textContent = "Conversar";
+    }
+  });
+
+  // Click no chevron de qualquer bolha abre o menu pra aquela msg.
+  $("msgList").addEventListener("click", (e) => {
+    const chev = e.target.closest('[data-action="open-menu"]');
+    if (chev) {
+      e.stopPropagation();
+      const bubble = chev.closest("[data-msg-id]");
+      if (bubble) openCtxMenu(bubble.dataset.msgId, chev);
+      return;
+    }
+    // Click numa quote pula pra mensagem original.
+    const jump = e.target.closest("[data-jump]");
+    if (jump) {
+      const target = $("msgList").querySelector(`[data-msg-id="${CSS.escape(jump.dataset.jump)}"]`);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        target.style.transition = "background-color 0.3s";
+        const origBg = target.style.background;
+        target.style.background = "var(--ep-accent-soft)";
+        setTimeout(() => { target.style.background = origBg; }, 700);
+      }
+    }
+  });
+
+  // Click fora do menu fecha.
+  document.addEventListener("click", (e) => {
+    if (ctxMenu.style.display === "block" && !ctxMenu.contains(e.target)) closeCtxMenu();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && ctxMenu.style.display === "block") closeCtxMenu();
+  });
+
+  // Toast simples pra stubs "em breve".
+  function showToast(msg, kind = "info") {
+    const t = document.createElement("div");
+    t.style.cssText = `position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: ${kind === "err" ? "#b8453d" : "#1a1a1a"}; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; z-index: 2000; box-shadow: 0 4px 16px rgba(0,0,0,0.3);`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2400);
+  }
+
+  // Handlers dos items do menu.
+  ctxMenu.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-ctx]");
+    if (!btn || !ctxMenuMsgId) return;
+    const action = btn.dataset.ctx;
+    const msgId = ctxMenuMsgId;
+    const m = messageCache.get(msgId);
+    closeCtxMenu();
+    if (!m) return;
+
+    if (action === "responder") {
+      startReply(msgId);
+    } else if (action === "copiar") {
+      try {
+        await navigator.clipboard.writeText(m.plain || "");
+        showToast(tr("mensagens:js.toastCopied", "Mensagem copiada."));
+      } catch {
+        showToast(tr("mensagens:js.toastCopyErr", "Erro ao copiar."), "err");
+      }
+    } else if (action === "favoritar") {
+      const desired = !m.favoritedByMe;
+      // Otimista
+      m.favoritedByMe = desired;
+      renderMessages({ scroll: false });
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/messages/${encodeURIComponent(msgId)}`, {
+          method: "PATCH",
+          headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ favorite: desired })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+        showToast(desired
+          ? tr("mensagens:js.toastFavorited", "Adicionada aos favoritos.")
+          : tr("mensagens:js.toastUnfavorited", "Removida dos favoritos."));
+      } catch (err) {
+        // Reverte otimismo.
+        m.favoritedByMe = !desired;
+        renderMessages({ scroll: false });
+        showToast(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }), "err");
+      }
+    } else if (action === "apagar") {
+      if (m.senderRole !== "therapist") return; // double-check; backend tb bloqueia
+      if (!confirm(tr("mensagens:js.confirmDelete", "Apagar essa mensagem? Não tem como desfazer."))) return;
+      // Otimista
+      const prev = { ...m };
+      m.deleted = true;
+      m.plain = "";
+      renderMessages({ scroll: false });
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/messages/${encodeURIComponent(msgId)}`, {
+          method: "PATCH",
+          headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ deleted: true })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+        showToast(tr("mensagens:js.toastDeleted", "Mensagem apagada."));
+      } catch (err) {
+        // Reverte.
+        Object.assign(m, prev);
+        renderMessages({ scroll: false });
+        showToast(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }), "err");
+      }
+    } else if (action === "reagir") {
+      // Abre emoji picker proximo da bolha. Defer com setTimeout pra evitar
+      // que o handler global de "fechar picker no click fora" feche logo.
+      const bubble = $("msgList").querySelector(`[data-msg-id="${CSS.escape(msgId)}"]`);
+      if (bubble) setTimeout(() => openEmojiPicker(msgId, bubble), 0);
+    } else if (action === "encaminhar") {
+      openForwardModal(msgId);
+    } else if (action === "fixar") {
+      const desired = !m.pinned;
+      m.pinned = desired;
+      renderMessages({ scroll: false });
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/messages/${encodeURIComponent(msgId)}`, {
+          method: "PATCH",
+          headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ pinned: desired })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+        showToast(desired
+          ? tr("mensagens:js.toastPinned", "Mensagem fixada.")
+          : tr("mensagens:js.toastUnpinned", "Mensagem desafixada."));
+      } catch (err) {
+        m.pinned = !desired;
+        renderMessages({ scroll: false });
+        showToast(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }), "err");
+      }
+    } else if (action === "denunciar") {
+      const reason = window.prompt(tr("mensagens:js.reportPrompt", "Por que está denunciando essa mensagem? (descreva brevemente)"));
+      if (reason == null || !reason.trim()) return;
+      try {
+        // Envia snapshot do plaintext junto — admin precisa ler o conteudo
+        // reportado sem ter a key E2EE da thread.
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/messages/${encodeURIComponent(msgId)}/report`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ reason: reason.trim(), messageSnapshot: m.plain || "" })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+        showToast(tr("mensagens:js.toastReported", "Denúncia enviada. Vamos revisar."));
+      } catch (err) {
+        showToast(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }), "err");
+      }
+    }
+  });
+
+  // ─── Emoji picker do composer (60 emojis comuns) ─────────────────
+  const COMPOSER_EMOJIS = [
+    "😀","😃","😄","😁","😆","😅","😂","🤣","😊","🙂",
+    "😉","😍","🥰","😘","😋","😎","🤩","🥳","😏","😞",
+    "😢","😭","😤","😠","🤬","🤯","😱","😨","🥺","🙄",
+    "😴","🤐","🤔","🤫","🤥","😷","🤒","🤕","❤️","🧡",
+    "💛","💚","💙","💜","🖤","💔","💯","👍","👎","👌",
+    "✌️","🤞","🤝","🙏","👏","🙌","💪","👋","🎉","🔥"
+  ];
+  const composerPicker = document.getElementById("composerEmojiPicker");
+  composerPicker.innerHTML = COMPOSER_EMOJIS.map(e =>
+    `<button type="button" data-insert-emoji="${e}" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 0; width: 36px; height: 36px; border-radius: 6px; line-height: 1; display: flex; align-items: center; justify-content: center;">${e}</button>`
+  ).join("");
+
+  const emojiToggleBtn = document.getElementById("emojiToggleBtn");
+  function toggleComposerPicker() {
+    if (composerPicker.style.display !== "none") { closeComposerPicker(); return; }
+    composerPicker.style.display = "grid";
+    const rect = emojiToggleBtn.getBoundingClientRect();
+    // Posiciona acima do botao, alinhado a esquerda. Clamp na viewport.
+    const w = composerPicker.offsetWidth;
+    let left = Math.max(8, rect.left);
+    if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+    let top = rect.top - composerPicker.offsetHeight - 8;
+    if (top < 8) top = rect.bottom + 8;
+    composerPicker.style.left = left + "px";
+    composerPicker.style.top  = top  + "px";
+  }
+  function closeComposerPicker() { composerPicker.style.display = "none"; }
+
+  emojiToggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleComposerPicker();
+  });
+  composerPicker.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-insert-emoji]");
+    if (!btn) return;
+    const emoji = btn.dataset.insertEmoji;
+    insertAtCursor($("msgInput"), emoji);
+    // Mantem picker aberto pra inserir varios. Esc/click fora fecha.
+  });
+  document.addEventListener("click", (e) => {
+    if (composerPicker.style.display !== "none" && !composerPicker.contains(e.target) && e.target !== emojiToggleBtn) {
+      closeComposerPicker();
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && composerPicker.style.display !== "none") closeComposerPicker();
+  });
+
+  // ─── Attach menu (+ button) ──────────────────────────────────────
+  const attachMenu = document.getElementById("attachMenu");
+  const attachFileInput = document.getElementById("attachFileInput");
+  const attachToggleBtn = document.getElementById("attachToggleBtn");
+
+  function closeAttachMenu() { attachMenu.style.display = "none"; }
+  function openAttachMenu() {
+    closeComposerPicker();
+    attachMenu.style.display = "block";
+    const rect = attachToggleBtn.getBoundingClientRect();
+    const w = attachMenu.offsetWidth;
+    let left = Math.max(8, rect.left);
+    if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+    const top = rect.top - attachMenu.offsetHeight - 8;
+    attachMenu.style.left = left + "px";
+    attachMenu.style.top  = top  + "px";
+  }
+
+  attachToggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (attachMenu.style.display !== "none") { closeAttachMenu(); return; }
+    openAttachMenu();
+  });
+  attachMenu.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-attach]");
+    if (!btn) return;
+    closeAttachMenu();
+    if (btn.dataset.attach === "documento") attachFileInput.click();
+    if (btn.dataset.attach === "contato") openContactPicker();
+  });
+  attachFileInput.addEventListener("change", () => {
+    const file = attachFileInput.files?.[0];
+    if (!file) return;
+    // Insere o nome do arquivo no campo como texto por enquanto (upload E2EE a implementar)
+    insertAtCursor($("msgInput"), `[Arquivo: ${file.name}]`);
+    attachFileInput.value = "";
+  });
+  document.addEventListener("click", (e) => {
+    if (attachMenu.style.display !== "none" && !attachMenu.contains(e.target) && e.target !== attachToggleBtn) closeAttachMenu();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeAttachMenu();
+  });
+
+  // Fecha attach ao abrir emoji e vice-versa (já coberto acima, mas garante)
+  emojiToggleBtn.addEventListener("click", () => closeAttachMenu(), true);
+
+  // ─── Contact picker (Contato) ─────────────────────────────────────
+  let allProfissionais = [];
+
+  async function loadProfissionais() {
+    if (allProfissionais.length) return; // cache
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/profissionais`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      allProfissionais = d.profissionais || [];
+    } catch { allProfissionais = []; }
+  }
+
+  function renderContactList(filter = "") {
+    const q = filter.toLowerCase().trim();
+    const list = q
+      ? allProfissionais.filter(p =>
+          p.displayName.toLowerCase().includes(q) ||
+          (p.especialidade || "").toLowerCase().includes(q)
+        )
+      : allProfissionais;
+
+    const el = $("contactPickerList");
+    if (!list.length) {
+      el.innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:8px;">Nenhum profissional encontrado.</div>`;
+      return;
+    }
+    el.innerHTML = list.map(p => {
+      const sub = [p.especialidade, p.conselho, p.cidade && p.uf ? `${p.cidade}/${p.uf}` : (p.cidade || p.uf)].filter(Boolean).join(" · ");
+      return `
+        <button type="button" data-contact-uid="${escapeHtml(p.uid)}" style="display:flex; align-items:center; gap:12px; width:100%; padding:10px 12px; border:0; background:transparent; cursor:pointer; border-radius:8px; text-align:left; transition: background 0.1s;" onmouseover="this.style.background='var(--ep-bg-2)'" onmouseout="this.style.background='transparent'">
+          <span style="width:38px; height:38px; border-radius:50%; background:#2a3d5c; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; flex-shrink:0;">${escapeHtml(p.displayName.charAt(0).toUpperCase())}</span>
+          <span style="display:flex; flex-direction:column; gap:2px; overflow:hidden;">
+            <span style="font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(p.displayName)}</span>
+            <span class="ep-text-xs ep-text-muted" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(sub)}</span>
+          </span>
+        </button>
+      `;
+    }).join("");
+  }
+
+  async function openContactPicker() {
+    $("contactPickerModal").classList.add("is-open");
+    $("contactSearchInput").value = "";
+    $("contactPickerList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:8px;">Carregando…</div>`;
+    await loadProfissionais();
+    renderContactList();
+    $("contactSearchInput").focus();
+  }
+
+  $("contactPickerCancel").addEventListener("click", () => {
+    $("contactPickerModal").classList.remove("is-open");
+  });
+  $("contactSearchInput").addEventListener("input", (e) => {
+    renderContactList(e.target.value);
+  });
+  $("contactPickerList").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-contact-uid]");
+    if (!btn) return;
+    const uid = btn.dataset.contactUid;
+    const p = allProfissionais.find(x => x.uid === uid);
+    if (!p) return;
+    $("contactPickerModal").classList.remove("is-open");
+    sendText("CONTACT_CARD:" + JSON.stringify({
+      uid: p.uid,
+      displayName: p.displayName,
+      especialidade: p.especialidade || "",
+      conselho: p.conselho || "",
+      cidade: p.cidade || "",
+      uf: p.uf || "",
+      telefone: p.telefone || ""
+    }));
+  });
+
+  function insertAtCursor(input, text) {
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+    const before = input.value.slice(0, start);
+    const after  = input.value.slice(end);
+    input.value = before + text + after;
+    input.focus();
+    const newPos = start + text.length;
+    input.setSelectionRange(newPos, newPos);
+  }
+
+  // ─── Emoji picker (reagir) ────────────────────────────────────────
+  const emojiPicker = document.getElementById("emojiPicker");
+  let emojiPickerMsgId = null;
+  function openEmojiPicker(messageId, anchorEl) {
+    emojiPickerMsgId = messageId;
+    emojiPicker.style.display = "flex";
+    const rect = anchorEl.getBoundingClientRect();
+    const pickerW = emojiPicker.offsetWidth;
+    let left = Math.max(8, Math.min(window.innerWidth - pickerW - 8, rect.left + rect.width / 2 - pickerW / 2));
+    let top = rect.top - emojiPicker.offsetHeight - 8;
+    if (top < 8) top = rect.bottom + 8;
+    emojiPicker.style.left = left + "px";
+    emojiPicker.style.top  = top  + "px";
+  }
+  function closeEmojiPicker() { emojiPicker.style.display = "none"; emojiPickerMsgId = null; }
+  emojiPicker.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-emoji]");
+    if (!btn || !emojiPickerMsgId) return;
+    const emoji = btn.dataset.emoji;
+    const msgId = emojiPickerMsgId;
+    closeEmojiPicker();
+    await toggleReaction(msgId, emoji);
+  });
+  document.addEventListener("click", (e) => {
+    if (emojiPicker.style.display !== "none" && !emojiPicker.contains(e.target)) {
+      // Nao fecha se for click no chevron/menu que abriu o picker.
+      if (!e.target.closest("[data-ctx]")) closeEmojiPicker();
+    }
+  });
+
+  // Click direto numa reaction chip = toggle (sem precisar abrir picker).
+  $("msgList").addEventListener("click", async (e) => {
+    const chip = e.target.closest("[data-react-emoji]");
+    if (chip) {
+      e.stopPropagation();
+      await toggleReaction(chip.dataset.reactMsg, chip.dataset.reactEmoji);
+    }
+  });
+
+  // Set de msgs com reaction otimista em voo (POST /react). Polling do
+  // refreshMessages que rodar nesse intervalo NAO sobrescreve o campo
+  // reactions pra evitar race (servidor pode devolver dado antigo enquanto
+  // o write ainda nao propagou).
+  const pendingReactions = new Set();
+
+  async function toggleReaction(msgId, emoji) {
+    const m = messageCache.get(msgId);
+    if (!m) return;
+    // Otimismo: atualiza local. reactions: array de {emoji,count,mine}.
+    const rx = Array.isArray(m.reactions) ? [...m.reactions] : [];
+    const idx = rx.findIndex(r => r.emoji === emoji);
+    if (idx >= 0) {
+      if (rx[idx].mine) {
+        rx[idx] = { ...rx[idx], count: rx[idx].count - 1, mine: false };
+        if (rx[idx].count <= 0) rx.splice(idx, 1);
+      } else {
+        rx[idx] = { ...rx[idx], count: rx[idx].count + 1, mine: true };
+      }
+    } else {
+      rx.push({ emoji, count: 1, mine: true });
+    }
+    m.reactions = rx;
+    renderMessages({ scroll: false });
+    pendingReactions.add(msgId);
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/messages/${encodeURIComponent(msgId)}/react`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ emoji })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+      // Mantem o flag por +5s apos resolve. Cobre janela de propagacao do
+      // Firestore — polling concorrente nesse intervalo nao sobrescreve a
+      // reacao otimista. 5s eh conservador (propagacao real eh ~100ms).
+      setTimeout(() => pendingReactions.delete(msgId), 5000);
+    } catch (err) {
+      showToast(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }), "err");
+      pendingReactions.delete(msgId);
+      // Re-fetch pra recuperar estado correto
+      const threadKey = threadKeyCache.get(currentThreadId);
+      if (threadKey) refreshMessages(threadKey);
+    }
+  }
+
+  // ─── Modal de encaminhar ──────────────────────────────────────────
+  const forwardModal = document.getElementById("forwardModal");
+  let forwardSourceMsgId = null;
+  document.getElementById("forwardCancelBtn").addEventListener("click", () => forwardModal.classList.remove("is-open"));
+  forwardModal.addEventListener("click", (e) => { if (e.target === forwardModal) forwardModal.classList.remove("is-open"); });
+
+  async function openForwardModal(messageId) {
+    const m = messageCache.get(messageId);
+    if (!m || m.deleted) return;
+    forwardSourceMsgId = messageId;
+    document.getElementById("forwardPreview").textContent = m.plain.slice(0, 200);
+    document.getElementById("forwardStatus").textContent = "";
+    // Lista todas as threads do user (exceto a atual).
+    const list = document.getElementById("forwardThreadList");
+    list.innerHTML = `<div class="ep-text-xs ep-text-muted">${escapeHtml(tr("mensagens:js.loading", "Carregando…"))}</div>`;
+    forwardModal.classList.add("is-open");
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) throw new Error(d?.error || "ERRO");
+      const threads = (d.threads || []).filter(t => t.threadId !== currentThreadId);
+      if (threads.length === 0) {
+        list.innerHTML = `<div class="ep-text-xs ep-text-muted">${escapeHtml(tr("mensagens:js.noOtherThreads", "Você não tem outras conversas pra encaminhar."))}</div>`;
+        return;
+      }
+      list.innerHTML = threads.map(t => `
+        <button type="button" data-target-thread="${escapeHtml(t.threadId)}" style="text-align: left; padding: 10px 12px; border: 1px solid var(--ep-line); border-radius: 8px; background: var(--ep-bg-2); cursor: pointer; font-size: 14px;">${escapeHtml(t.patientDisplayName || tr("mensagens:js.peerFallback", "Paciente"))}</button>
+      `).join("");
+      list.querySelectorAll("[data-target-thread]").forEach(btn => {
+        btn.addEventListener("click", () => forwardToThread(btn.dataset.targetThread, m.plain));
+      });
+    } catch (err) {
+      list.innerHTML = `<div class="ep-status is-err">${escapeHtml(tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" }))}</div>`;
+    }
+  }
+
+  async function forwardToThread(targetThreadId, plainText) {
+    const statusEl = document.getElementById("forwardStatus");
+    statusEl.textContent = tr("mensagens:js.forwarding", "Encaminhando…");
+    statusEl.className = "ep-status";
+    try {
+      // 1. Carrega target thread pra obter o threadKey wrapper
+      let targetKey = threadKeyCache.get(targetThreadId);
+      if (!targetKey) {
+        const r1 = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(targetThreadId)}`, {
+          headers: { "Authorization": `Bearer ${idToken}` }
+        });
+        const d1 = await r1.json();
+        if (!r1.ok || !d1.ok) throw new Error(d1?.error || "ERRO_THREAD");
+        const tt = d1.thread;
+        targetKey = tt.myThreadKeyWrappedVia === "own-dek"
+          ? await unwrapKey(tt.myThreadKeyWrapper, dek)
+          : await unwrapThreadKeyFromPeer(tt.myThreadKeyWrapper, myEcdhPrivBytes, tt.peerEcdhPublicJwk);
+        threadKeyCache.set(targetThreadId, targetKey);
+      }
+      // 2. Cifra texto com a key do destino
+      const enc = await encryptNote(plainText, targetKey);
+      // 3. POST no thread destino marcando como forwarded
+      const r2 = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(targetThreadId)}/messages`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ ...enc, forwardedFromMessageId: forwardSourceMsgId })
+      });
+      const d2 = await r2.json();
+      if (!r2.ok || !d2.ok) throw new Error(d2?.error || "ERRO_POST");
+      forwardModal.classList.remove("is-open");
+      showToast(tr("mensagens:js.toastForwarded", "Mensagem encaminhada."));
+    } catch (err) {
+      statusEl.textContent = tr("mensagens:js.toastActionErr", "Erro: {{message}}", { message: err?.message || "" });
+      statusEl.className = "ep-status is-err";
+    }
+  }
+
+  // ─── Estado de reply em curso (mensagem sendo respondida) ────────
+  let replyingTo = null; // { messageId, plain, senderRole }
+
+  function startReply(messageId) {
+    const orig = messageCache.get(messageId);
+    if (!orig || orig.deleted) return;
+    replyingTo = { messageId, plain: orig.plain, senderRole: orig.senderRole };
+    renderReplyBar();
+    $("msgInput").focus();
+  }
+  function cancelReply() { replyingTo = null; renderReplyBar(); }
+  function renderReplyBar() {
+    let bar = document.getElementById("replyBar");
+    if (!replyingTo) { if (bar) bar.remove(); return; }
+    const label = replyingTo.senderRole === "therapist"
+      ? tr("mensagens:js.youLabel", "Você")
+      : (currentThread?.patientDisplayName || tr("mensagens:js.peerFallback", "Paciente"));
+    const html = `
+      <div id="replyBar" style="padding: 8px 12px; border-top: 1px solid var(--ep-line); background: var(--ep-bg-2); display: flex; align-items: center; gap: 10px;">
+        <div style="width: 3px; background: var(--ep-accent); align-self: stretch; border-radius: 2px;"></div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-size: 11px; font-weight: 600; color: var(--ep-accent); margin-bottom: 2px;">${escapeHtml(tr("mensagens:js.replyingTo", "Respondendo a {{name}}", { name: label }))}</div>
+          <div style="font-size: 12.5px; color: var(--ep-ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(replyingTo.plain.slice(0, 120))}</div>
+        </div>
+        <button type="button" id="replyCancelBtn" style="border: 0; background: transparent; cursor: pointer; color: var(--ep-ink-3); padding: 4px; line-height: 0;" aria-label="${escapeHtml(tr("mensagens:js.cancelReply", "Cancelar resposta"))}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+      </div>`;
+    if (bar) {
+      bar.outerHTML = html;
+    } else {
+      const composer = $("msgInput").parentElement;
+      composer.insertAdjacentHTML("beforebegin", html);
+    }
+    document.getElementById("replyCancelBtn").addEventListener("click", cancelReply);
+  }
+
   // ─── Enviar mensagem ─────────────────────────────────────────────
-  $("msgForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    await sendCurrentMessage();
-  });
+  // Agora input single-line — Enter envia (igual mensagens-pro). Sem Ctrl+Enter.
+  $("msgSendBtn").addEventListener("click", () => sendCurrentMessage());
   $("msgInput").addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendCurrentMessage(); }
+    if (e.key === "Enter") { e.preventDefault(); sendCurrentMessage(); }
+    if (e.key === "Escape" && replyingTo) { e.preventDefault(); cancelReply(); }
   });
+
+  // Envia qualquer texto diretamente (sem passar pelo input). Usado tanto
+  // pelo composer normal quanto pelo contact picker.
+  async function sendText(text, replyToMessageId = null) {
+    if (!currentThreadId || !text) return;
+    const threadKeyBytes = threadKeyCache.get(currentThreadId);
+    if (!threadKeyBytes) return;
+
+    $("msgStatus").textContent = "";
+
+    const tempId = "tmp-" + Math.random().toString(36).slice(2);
+    messageCache.set(tempId, {
+      messageId: tempId,
+      senderRole: "therapist",
+      plain: text,
+      createdAt: Date.now(),
+      status: "sending",
+      replyToMessageId
+    });
+    saveLastMsgPreview(currentThreadId, plainForPreview(text), "therapist");
+    renderMessages({ scroll: true });
+
+    try {
+      const enc = await encryptNote(text, threadKeyBytes);
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/messages`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ ...enc, ...(replyToMessageId ? { replyToMessageId } : {}) })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+      messageCache.delete(tempId);
+      const realId = d.messageId || ("real-" + tempId);
+      messageCache.set(realId, {
+        messageId: realId,
+        senderRole: "therapist",
+        plain: text,
+        createdAt: d.createdAt || Date.now(),
+        status: "sent",
+        replyToMessageId
+      });
+      renderMessages({ scroll: false });
+      loadThreads();
+    } catch (e) {
+      const m = messageCache.get(tempId);
+      if (m) { m.status = "error"; renderMessages({ scroll: false }); }
+      $("msgStatus").textContent = tr("mensagens:js.sendError", "Erro: {{message}}", { message: e?.message || "" });
+    }
+  }
 
   async function sendCurrentMessage() {
     if (!currentThreadId) return;
@@ -398,26 +1663,10 @@
     const threadKeyBytes = threadKeyCache.get(currentThreadId);
     if (!threadKeyBytes) return;
 
-    $("msgSendBtn").disabled = true;
-    $("msgStatus").textContent = tr("mensagens:js.encrypting", "cifrando…");
-    try {
-      const enc = await encryptNote(text, threadKeyBytes);
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/messages`, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify(enc)
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
-      $("msgInput").value = "";
-      $("msgStatus").textContent = "";
-      await refreshMessages(threadKeyBytes);
-      loadThreads();
-    } catch (e) {
-      $("msgStatus").textContent = tr("mensagens:js.sendError", "Erro: {{message}}", { message: e?.message || "" });
-    } finally {
-      $("msgSendBtn").disabled = false;
-    }
+    const replyToMessageId = replyingTo?.messageId || null;
+    $("msgInput").value = "";
+    if (replyingTo) cancelReply();
+    await sendText(text, replyToMessageId);
   }
 
   // ─── Nova thread ─────────────────────────────────────────────────
@@ -488,8 +1737,12 @@
       const d = await r.json().catch(() => ({}));
       if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
 
-      // Cache local da threadKey pra abrir já decifrada
-      threadKeyCache.set(d.threadId, threadKeyBytes);
+      // Cache local da threadKey SO se thread foi realmente criada.
+      // Se ja existia (existed=true), a key gerada eh DIFERENTE da original
+      // — nao cachear, deixar openThread buscar e unwrap a correta.
+      if (!d.existed) {
+        threadKeyCache.set(d.threadId, threadKeyBytes);
+      }
 
       $("newThreadModal").classList.remove("is-open");
       await loadThreads();
@@ -512,6 +1765,5 @@
 </script>
 
 <a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" data-i18n-title="mensagens:help.title" data-i18n-aria-label="mensagens:help.aria" title="Suporte e ajuda" aria-label="Abrir suporte"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
-<script src="./js/sidebar.js?v=12" defer></script>
 </body>
 </html>

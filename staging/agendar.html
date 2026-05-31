@@ -15,8 +15,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-262">
-  <script src="./i18n/init.js?v=1-0" defer></script>
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-276">
+  <script src="./i18n/init.js?v=1-2" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
 <body>
@@ -323,6 +323,9 @@
       btn.type = "button";
       btn.className = "ep-day-chip";
       btn.dataset.day = String(dayMs);
+      // fmtDayLabel pt-BR retorna "seg., 25 de mai." → splita em weekday/dia/mês.
+      // Estrutura: 3 linhas (weekday uppercase pequeno / dia em serif grande /
+      // mês minúsculo pequeno) — padrão premium booking apps.
       const raw = fmtDayLabel(dayMs).replace(/,/g, "");
       const parts = raw.split(/\s+/);
       const weekday = (parts[0] || "").replace(/\.$/, "");
@@ -403,6 +406,7 @@
     $("formStatus").textContent = "";
     $("formStatus").className = "ep-status";
     document.querySelectorAll("#slotPicker .ep-slot-chip").forEach(b => b.classList.remove("is-selected"));
+    // Marca o slot selecionado (procura por label igual)
     const lbl = fmtTimeLabel(slot.start);
     document.querySelectorAll("#slotPicker .ep-slot-chip").forEach(b => {
       if (b.textContent === lbl) b.classList.add("is-selected");

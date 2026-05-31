@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+  <link rel="preconnect" href="https://firestore.googleapis.com">
+  <link rel="dns-prefetch" href="https://www.gstatic.com">
+  <title>Notificações · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <script src="./js/capability-preflight.js?v=5"></script>
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-276">
+  <script src="./i18n/init.js?v=1-2" defer></script>
+  <script src="./js/monitoring.js?v=3" defer></script>
+</head>
+<body class="ep-has-sidebar">
+<script src="./js/sidebar.js?v=19"></script>
+
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
+    <a href="./painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <nav class="ep-nav">
+      <div class="ep-profile-group">
+        <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile">
+          <span class="ep-nav-avatar" id="topUserAvatar">·</span>
+          <span class="ep-nav-profile__name" id="topUserName"></span>
+        </a>
+        <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Sair</button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="ep-container ep-mt-32 ep-mb-16 ep-page-main">
+
+  <div style="max-width: 680px;">
+    <div class="ep-eyebrow">Sua conta</div>
+    <h1 class="ep-h1 ep-mt-12">Notificações</h1>
+    <p class="ep-text-muted ep-mt-8">Avisos e comunicados da equipe Espaço Prelúdio.</p>
+
+    <div id="notifList" style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px;">
+      <div class="ep-skeleton">Carregando…</div>
+    </div>
+  </div>
+
+</main>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { requireTherapist, refreshIdToken } from "./js/auth-guard.js?v=3-27";
+
+  const listEl = document.getElementById("notifList");
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "./index.html";
+  });
+
+  function fmtDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  function typeLabel(type) {
+    const map = {
+      warning:            "Aviso de conduta",
+      resolved_no_action: "Denúncia revisada",
+      resolved_action:    "Providências tomadas",
+      admin_message:      "Comunicado"
+    };
+    return map[type] || "Notificação";
+  }
+
+  function esc(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  }
+
+  async function run() {
+    const { idToken } = await requireTherapist();
+    let token = idToken;
+
+    async function apiFetch(path, opts = {}) {
+      const headers = { ...(opts.headers || {}), "Authorization": `Bearer ${token}` };
+      if (opts.body) headers["Content-Type"] = "application/json";
+      const res = await fetch(BACKEND_BASE_URL + path, { ...opts, headers });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+      return data;
+    }
+
+    try {
+      const data = await apiFetch("/therapy/notifications");
+      const items = data.items || [];
+
+      // Marca todas como lidas e zera badge
+      if (items.some(n => !n.read)) {
+        apiFetch("/therapy/notifications/read-all", { method: "PATCH" }).catch(() => {});
+      }
+      if (window.EP_NOTIF) window.EP_NOTIF.setBadge(0);
+
+      if (items.length === 0) {
+        listEl.innerHTML = `<div style="text-align:center; padding:60px 20px; color:var(--ep-ink-3);">
+          <div style="font-size:40px; margin-bottom:12px;">🔔</div>
+          <div style="font-size:15px;">Nenhuma notificação por enquanto.</div>
+        </div>`;
+        return;
+      }
+
+      listEl.innerHTML = items.map(n => {
+        const isUnread = !n.read;
+        return `<article style="padding: 16px 20px; border: 1px solid var(--ep-line); border-radius: 10px; background: var(--ep-surface); ${isUnread ? "border-left: 4px solid var(--ep-accent);" : ""}">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                ${isUnread ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--ep-accent);flex-shrink:0;display:inline-block;"></span>' : ''}
+                <span style="font-size:11px; font-weight:600; color:var(--ep-ink-3); text-transform:uppercase; letter-spacing:.05em;">${esc(typeLabel(n.type))}</span>
+                <span style="font-size:12px; color:var(--ep-ink-3);">${fmtDate(n.createdAt)}</span>
+              </div>
+              <div style="font-size:15px; font-weight:600; color:var(--ep-ink); margin-bottom:8px;">${esc(n.title)}</div>
+              <div style="font-size:13.5px; color:var(--ep-ink-2); line-height:1.6; white-space:pre-wrap;">${esc(n.body)}</div>
+            </div>
+          </div>
+        </article>`;
+      }).join("");
+    } catch (err) {
+      listEl.innerHTML = `<div class="ep-status is-err">Erro ao carregar notificações: ${esc(err.message)}</div>`;
+    }
+  }
+
+  run();
+</script>
+
+</body>
+</html>

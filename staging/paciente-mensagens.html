@@ -15,14 +15,29 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-262">
-  <script src="./i18n/init.js?v=1-0" defer></script>
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-276">
+  <script src="./i18n/init.js?v=1-2" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
+  <style>
+    .ep-contact-card{border-radius:8px;overflow:hidden;min-width:200px;max-width:260px;background:rgba(255,255,255,0.12);}
+    .ep-msg-bubble.is-theirs .ep-contact-card{background:rgba(0,0,0,0.06);}
+    .ep-contact-card__head{display:flex;align-items:center;gap:10px;padding:10px 12px;}
+    .ep-contact-card__avatar{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.18);color:#fff;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .ep-msg-bubble.is-theirs .ep-contact-card__avatar{background:#2a3d5c;}
+    .ep-contact-card__name{font-weight:600;font-size:14px;line-height:1.3;}
+    .ep-contact-card__sub{font-size:11.5px;opacity:0.7;margin-top:2px;line-height:1.3;}
+    .ep-contact-card__divider{border-top:1px solid rgba(255,255,255,0.18);}
+    .ep-msg-bubble.is-theirs .ep-contact-card__divider{border-color:rgba(0,0,0,0.12);}
+    .ep-contact-card__label{display:block;padding:8px 12px;font-size:13px;font-weight:600;text-align:center;color:rgba(255,255,255,0.8);}
+    .ep-msg-bubble.is-theirs .ep-contact-card__label{color:#128c7e;}
+    html[data-theme="dark"] .ep-msg-bubble.is-theirs .ep-contact-card__label{color:#25d366;}
+    .ep-wb-text{display:inline;white-space:pre-wrap;word-break:break-word;}
+  </style>
 </head>
 <body>
 
-<div class="ep-shell">
-  <header class="ep-topbar">
+<header class="ep-topbar">
+  <div class="ep-container ep-topbar__inner">
     <a href="./paciente-painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
@@ -36,53 +51,63 @@
       <span id="navUser" class="ep-text-sm ep-text-muted" data-i18n="paciente-mensagens:nav.userLoading">…</span>
       <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="logoutBtn" data-i18n="paciente-mensagens:nav.logout">Sair</button>
     </nav>
-  </header>
+  </div>
+</header>
 
-  <main class="ep-main">
-    <div class="ep-eyebrow" data-i18n="paciente-mensagens:eyebrow">Conversas</div>
-    <h1 class="ep-h1 ep-mt-12" data-i18n="paciente-mensagens:h1">Mensagens</h1>
-    <p class="ep-text-muted ep-mt-8" data-i18n-html="paciente-mensagens:subtitle">
-      Conversas com seu(sua) profissional. <strong>Cifradas ponta-a-ponta</strong> — só você e ele(a) leem.
-    </p>
+<main class="ep-container ep-mt-32 ep-mb-16 ep-page-main" style="overflow: hidden;">
+  <section class="ep-stack">
+    <div>
+      <div class="ep-eyebrow" data-i18n="paciente-mensagens:eyebrow">Conversas</div>
+      <h1 class="ep-h1 ep-mt-12 ep-page-title" data-i18n="paciente-mensagens:h1">Mensagens</h1>
+      <p class="ep-text-muted ep-mt-8" data-i18n-html="paciente-mensagens:subtitle">
+        Conversas com seu(sua) profissional. <strong>Cifradas ponta-a-ponta</strong> — só você e ele(a) leem.
+      </p>
+    </div>
 
-    <div id="mensagensLayout" class="ep-msg-layout ep-mt-24">
-      <aside class="ep-msg-threads">
-        <div class="ep-msg-threads__head">
+    <div style="display: flex; height: calc(100dvh - 260px); min-height: 420px; margin-top: 16px; border: 1px solid var(--ep-line); border-radius: var(--ep-radius-lg, 12px); overflow: hidden; box-shadow: var(--ep-shadow-soft); background: var(--ep-surface);">
+      <!-- Sidebar de threads -->
+      <aside style="width: 280px; flex-shrink: 0; border-right: 1px solid var(--ep-line); display: flex; flex-direction: column; overflow: hidden; background: var(--ep-surface);">
+        <div style="padding: 12px 14px; border-bottom: 1px solid var(--ep-line);">
           <strong class="ep-text-sm" data-i18n="paciente-mensagens:threadsHead">Profissionais</strong>
         </div>
-        <div id="threadList" class="ep-msg-threads__list">
+        <div id="threadList" style="display: flex; flex-direction: column; gap: 0; flex: 1; overflow-y: auto; align-content: flex-start;">
           <div class="ep-text-xs ep-text-muted" style="padding: 12px;" data-i18n="paciente-mensagens:threads.loading">Carregando…</div>
         </div>
       </aside>
 
-      <section class="ep-msg-main">
-        <div id="msgEmpty" class="ep-msg-empty">
-          <h3 class="ep-h3" data-i18n="paciente-mensagens:emptyTitle">Selecione uma conversa</h3>
+      <!-- Painel da thread ativa -->
+      <section style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
+        <div id="msgEmpty" style="margin: auto; text-align: center; padding: 40px; color: var(--ep-ink-3);">
+          <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
+          <h3 class="ep-h3 ep-mt-0" data-i18n="paciente-mensagens:emptyTitle">Selecione uma conversa</h3>
           <p class="ep-text-muted ep-mt-8" data-i18n="paciente-mensagens:emptySub">
             Conversas aparecem aqui quando seu(sua) profissional iniciar.
           </p>
         </div>
-
-        <div id="msgThread" class="ep-msg-thread ep-hide">
-          <header class="ep-msg-thread__head">
-            <div>
-              <div id="msgPeerName" class="ep-h3 ep-mt-0">—</div>
-              <div class="ep-text-xs ep-text-muted" data-i18n="paciente-mensagens:e2eeBadge">cifrada ponta-a-ponta</div>
+        <div id="msgThread" class="ep-hide" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
+          <div style="padding: 8px 16px; background: var(--ep-bg-2); border-bottom: 1px solid var(--ep-line);">
+            <div id="msgPeerName" style="font-weight: 600; font-size: 15px; line-height: 1.3;">—</div>
+            <div class="ep-text-xs ep-text-muted" data-i18n="paciente-mensagens:e2eeBadge">cifrada ponta-a-ponta</div>
+          </div>
+          <div id="msgList" class="ep-chat-area" style="flex: 1; overflow-y: auto; min-height: 0; padding: 12px 14px; display: flex; flex-direction: column; gap: 3px;"></div>
+          <div style="background: var(--ep-bg-2); border-top: 1px solid var(--ep-line); position: relative;">
+            <div style="padding: 10px 12px; display: flex; gap: 8px; align-items: center;">
+              <button id="emojiToggleBtn" type="button" aria-label="Inserir emoji" title="Inserir emoji" style="border: 0; background: transparent; cursor: pointer; padding: 4px; line-height: 1; border-radius: 8px; flex-shrink: 0; color: var(--ep-ink-3); display: flex; align-items: center;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              </button>
+              <input id="msgInput" type="text" class="ep-input" data-i18n-placeholder="paciente-mensagens:composer.placeholder" placeholder="Digite uma mensagem…" maxlength="3000" style="flex: 1; border-radius: 20px; padding: 8px 16px; font-size: 14px;">
+              <button id="msgSendBtn" type="button" class="ep-btn ep-btn--primary" style="border-radius: 20px; padding: 8px 20px;" data-i18n="paciente-mensagens:composer.send">Enviar</button>
             </div>
-          </header>
-          <div id="msgList" class="ep-msg-thread__list"></div>
-          <form id="msgForm" class="ep-msg-thread__composer">
-            <textarea id="msgInput" data-i18n-placeholder="paciente-mensagens:composer.placeholder" placeholder="Digite uma mensagem… (Ctrl+Enter envia)" maxlength="3000" rows="2"></textarea>
-            <div class="ep-flex" style="justify-content: space-between; align-items: center; padding: 8px 12px; border-top: 1px solid var(--ep-line);">
-              <span id="msgStatus" class="ep-text-xs ep-text-muted">&nbsp;</span>
-              <button id="msgSendBtn" type="submit" class="ep-btn ep-btn--primary ep-btn--sm" data-i18n="paciente-mensagens:composer.send">Enviar</button>
-            </div>
-          </form>
+            <span id="msgStatus" class="ep-text-xs ep-text-muted" style="position: absolute; bottom: 3px; left: 16px;"></span>
+          </div>
         </div>
       </section>
     </div>
-  </main>
-</div>
+  </section>
+</main>
+
+<!-- Emoji picker do composer -->
+<div id="composerEmojiPicker" role="dialog" style="position: fixed; z-index: 1001; display: none; background: #fff; border: 1px solid var(--ep-line); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); padding: 8px; gap: 2px; grid-template-columns: repeat(10, 36px); width: max-content;"></div>
 
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
@@ -236,7 +261,26 @@
   let currentThreadId = null;
   let currentThread = null;
   let pollTimer = null;
+  let presenceTimer = null;
   let lastSeenMessageMs = 0;
+
+  function pingPresence(threadId, offline = false) {
+    if (!threadId) return;
+    const opts = {
+      method: "PATCH",
+      headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+      body: offline ? JSON.stringify({ offline: true }) : undefined,
+      keepalive: offline  // keepalive garante envio mesmo durante unload
+    };
+    if (!offline) delete opts.body;
+    fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(threadId)}/patient-presence`, opts).catch(() => {});
+  }
+  // Offline imediato ao sair/trocar aba
+  document.addEventListener("pagehide", () => pingPresence(currentThreadId, true));
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) pingPresence(currentThreadId, true);
+    else if (currentThreadId) pingPresence(currentThreadId);
+  });
 
   $("logoutBtn").addEventListener("click", async () => {
     clearPatientDek();
@@ -244,6 +288,85 @@
     window.location.href = "./paciente-login.html";
   });
 
+  // ─── Preview cache (localStorage, nunca sai para o servidor) ────
+  const lastMsgKey = id => `ep:pm:preview:${id}`;
+  function saveLastMsgPreview(threadId, text, senderRole) {
+    if (!threadId || !text) return;
+    try { localStorage.setItem(lastMsgKey(threadId), JSON.stringify({ text: String(text).slice(0, 200), senderRole: senderRole || null, at: Date.now() })); } catch(_) {}
+  }
+  function getLastMsgPreview(threadId) {
+    try { const raw = localStorage.getItem(lastMsgKey(threadId)); if (!raw) return null; return JSON.parse(raw); } catch(_) { return null; }
+  }
+  function plainForPreview(plain) {
+    if (plain && plain.startsWith("CONTACT_CARD:")) {
+      try { const card = JSON.parse(plain.slice(13)); return `👤 ${card.displayName || "Contato"}`; } catch {}
+    }
+    return plain;
+  }
+
+  function renderThreads(threads) {
+    const peerFallback = tr("paciente-mensagens:peerFallback", "Profissional");
+    if (!threads.length) {
+      $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${tr("paciente-mensagens:threads.empty", "Você ainda não tem conversas.<br>O(a) profissional inicia a partir do consultório.")}</div>`;
+      return;
+    }
+    $("threadList").innerHTML = threads.map(t => {
+      const peerName = t.therapistDisplayName || peerFallback;
+      const lastTime = t.lastMessageAt ? fmtTime(t.lastMessageAt) : "";
+      const isActive = t.threadId === currentThreadId;
+      const count = Number(t.unreadCount) || 0;
+      const badgeNew = count > 0
+        ? `<span style="background:#25d366;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;flex-shrink:0;">${count > 99 ? "99+" : count}</span>`
+        : "";
+      const initials = peerName.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "?";
+      const preview = getLastMsgPreview(t.threadId);
+      let previewLine;
+      if (preview && preview.text) {
+        const prefix = preview.senderRole === "patient" ? '<span style="color:var(--ep-ink-3);">Você: </span>' : "";
+        previewLine = `${prefix}${escapeHtml(preview.text)}`;
+      } else {
+        previewLine = `<span style="color:var(--ep-ink-3);font-style:italic;">${escapeHtml(tr("paciente-mensagens:threads.noMessages", "Sem mensagens"))}</span>`;
+      }
+      return `<button type="button" class="ep-thread-card${isActive ? " is-active" : ""}" data-thread-id="${escapeHtml(t.threadId)}" style="text-align:left;padding:10px 12px;margin:6px 8px;border:1px solid ${isActive ? "var(--ep-accent)" : "var(--ep-line)"};border-radius:12px;background:${isActive ? "var(--ep-accent-soft)" : "var(--ep-bg-2)"};cursor:pointer;display:flex;gap:10px;align-items:center;width:calc(100% - 16px);transition:background-color 0.15s ease,border-color 0.15s ease;">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--ep-accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0;">${escapeHtml(initials)}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="ep-flex" style="justify-content:space-between;align-items:center;gap:6px;">
+            <span style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(peerName)}</span>
+            <span style="font-size:11px;color:var(--ep-ink-3);flex-shrink:0;">${escapeHtml(lastTime)}</span>
+          </div>
+          <div class="ep-flex" style="gap:6px;align-items:center;margin-top:2px;">
+            <span style="font-size:12.5px;color:var(--ep-ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;">${previewLine}</span>
+            ${badgeNew}
+          </div>
+        </div>
+      </button>`;
+    }).join("");
+  }
+
+  async function decryptThreadPreviews(threads) {
+    let changed = false;
+    for (const t of threads) {
+      if (!t.lastMessageCiphertext || !t.lastMessageIv || !t.lastMessageAt) continue;
+      const cached = getLastMsgPreview(t.threadId);
+      if (cached && (cached.at || 0) >= t.lastMessageAt) continue;
+      try {
+        let key = threadKeyCache.get(t.threadId);
+        if (!key && t.myThreadKeyWrapper) {
+          key = t.myThreadKeyWrappedVia === "own-dek"
+            ? await unwrapKey(t.myThreadKeyWrapper, dek)
+            : await unwrapThreadKeyFromPeer(t.myThreadKeyWrapper, myEcdhPrivBytes, t.peerEcdhPublicJwk);
+          threadKeyCache.set(t.threadId, key);
+        }
+        if (!key) continue;
+        const plain = await decryptNote({ ciphertext: t.lastMessageCiphertext, iv: t.lastMessageIv }, key);
+        saveLastMsgPreview(t.threadId, plainForPreview(plain), t.lastMessageSenderRole);
+        changed = true;
+      } catch {}
+    }
+    if (changed) renderThreads(threads);
+  }
+
+  let _lastThreads = [];
   async function loadThreads() {
     const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, {
       headers: { "Authorization": `Bearer ${idToken}` }
@@ -253,24 +376,9 @@
       $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${escapeHtml(tr("paciente-mensagens:threads.loadError", "Erro ao carregar."))}</div>`;
       return;
     }
-    const threads = d.threads || [];
-    if (!threads.length) {
-      $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${tr("paciente-mensagens:threads.empty", "Você ainda não tem conversas.<br>O(a) profissional inicia a partir do consultório.")}</div>`;
-      return;
-    }
-    const peerFallback = tr("paciente-mensagens:peerFallback", "Profissional");
-    $("threadList").innerHTML = threads.map(t => {
-      const peerName = t.therapistDisplayName || peerFallback;
-      const unreadDot = t.hasUnread ? `<span class="ep-msg-unread"></span>` : "";
-      const lastTime = t.lastMessageAt ? fmtTime(t.lastMessageAt) : "";
-      const cls = t.threadId === currentThreadId ? " is-active" : "";
-      return `
-        <button type="button" class="ep-msg-thread-item${cls}" data-thread-id="${t.threadId}">
-          <div class="ep-msg-thread-item__name">${escapeHtml(peerName)} ${unreadDot}</div>
-          <div class="ep-msg-thread-item__time">${lastTime}</div>
-        </button>
-      `;
-    }).join("");
+    _lastThreads = d.threads || [];
+    renderThreads(_lastThreads);
+    decryptThreadPreviews(_lastThreads);
   }
   if (ecdhReady) await loadThreads();
 
@@ -282,6 +390,7 @@
 
   async function openThread(threadId) {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    if (presenceTimer) { clearInterval(presenceTimer); presenceTimer = null; }
     currentThreadId = threadId;
     $("msgEmpty").classList.add("ep-hide");
     $("msgThread").classList.remove("ep-hide");
@@ -322,6 +431,12 @@
     }).catch(() => {});
 
     pollTimer = setInterval(() => refreshMessages(threadKeyBytes), 8000);
+
+    // Presença: ping imediato + heartbeat a cada 60s enquanto thread aberta
+    pingPresence(threadId);
+    if (presenceTimer) clearInterval(presenceTimer);
+    presenceTimer = setInterval(() => pingPresence(currentThreadId), 10000);
+
     loadThreads();
   }
 
@@ -348,15 +463,44 @@
     lastSeenMessageMs = newest;
 
     const emptyMsg = tr("paciente-mensagens:messages.empty", "Nenhuma mensagem ainda.");
+
+    function renderBubbleContent(plain) {
+      if (plain && plain.startsWith("CONTACT_CARD:")) {
+        try {
+          const card = JSON.parse(plain.slice(13));
+          const initials = escapeHtml((card.displayName || "?").charAt(0).toUpperCase());
+          const sub = [card.especialidade, card.conselho].filter(Boolean).join(" · ");
+          return `<div class="ep-contact-card">
+            <div class="ep-contact-card__head">
+              <div class="ep-contact-card__avatar">${initials}</div>
+              <div>
+                <div class="ep-contact-card__name">${escapeHtml(card.displayName || "")}</div>
+                ${sub ? `<div class="ep-contact-card__sub">${escapeHtml(sub)}</div>` : ""}
+              </div>
+            </div>
+            <div class="ep-contact-card__divider"></div>
+            <div class="ep-contact-card__label">👤 Profissional indicado</div>
+          </div>`;
+        } catch {}
+      }
+      return `<span class="ep-wb-text">${escapeHtml(plain)}</span>`;
+    }
+
     $("msgList").innerHTML = decrypted.map(m => {
       const mine = m.senderRole === "patient";
       return `
         <div class="ep-msg-bubble ${mine ? "is-mine" : "is-theirs"}">
-          <div class="ep-msg-bubble__text">${escapeHtml(m.plain)}</div>
+          ${renderBubbleContent(m.plain)}
           <div class="ep-msg-bubble__time">${fmtTime(m.createdAt)}</div>
         </div>
       `;
     }).join("") || `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${escapeHtml(emptyMsg)}</div>`;
+
+    if (decrypted.length) {
+      const last = decrypted[decrypted.length - 1];
+      saveLastMsgPreview(currentThreadId, plainForPreview(last.plain), last.senderRole);
+      renderThreads(_lastThreads);
+    }
 
     if (grewSinceLast) {
       const list = $("msgList");
@@ -364,12 +508,55 @@
     }
   }
 
-  $("msgForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    await sendCurrentMessage();
-  });
+  $("msgSendBtn").addEventListener("click", () => sendCurrentMessage());
   $("msgInput").addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendCurrentMessage(); }
+    if (e.key === "Enter") { e.preventDefault(); sendCurrentMessage(); }
+  });
+
+  // ─── Emoji picker do composer ────────────────────────────────────
+  const COMPOSER_EMOJIS = [
+    "😀","😃","😄","😁","😆","😅","😂","🤣","😊","🙂",
+    "😉","😍","🥰","😘","😋","😎","🤩","🥳","😏","😞",
+    "😢","😭","😤","😠","🤬","🤯","😱","😨","🥺","🙄",
+    "😴","🤐","🤔","🤫","🤥","😷","🤒","🤕","❤️","🧡",
+    "💛","💚","💙","💜","🖤","💔","💯","👍","👎","👌",
+    "✌️","🤞","🤝","🙏","👏","🙌","💪","👋","🎉","🔥"
+  ];
+  const composerPicker = $("composerEmojiPicker");
+  composerPicker.innerHTML = COMPOSER_EMOJIS.map(e =>
+    `<button type="button" data-insert-emoji="${e}" style="font-size: 22px; background: transparent; border: 0; cursor: pointer; padding: 0; width: 36px; height: 36px; border-radius: 6px; line-height: 1; display: flex; align-items: center; justify-content: center;">${e}</button>`
+  ).join("");
+  const emojiToggleBtn = $("emojiToggleBtn");
+  function closeComposerPicker() { composerPicker.style.display = "none"; }
+  function toggleComposerPicker() {
+    if (composerPicker.style.display !== "none") { closeComposerPicker(); return; }
+    composerPicker.style.display = "grid";
+    const rect = emojiToggleBtn.getBoundingClientRect();
+    const w = composerPicker.offsetWidth;
+    let left = Math.max(8, rect.left);
+    if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+    let top = rect.top - composerPicker.offsetHeight - 8;
+    if (top < 8) top = rect.bottom + 8;
+    composerPicker.style.left = left + "px";
+    composerPicker.style.top  = top  + "px";
+  }
+  emojiToggleBtn.addEventListener("click", (e) => { e.stopPropagation(); toggleComposerPicker(); });
+  composerPicker.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-insert-emoji]");
+    if (!btn) return;
+    const emoji = btn.dataset.insertEmoji;
+    const inp = $("msgInput");
+    const start = inp.selectionStart ?? inp.value.length;
+    const end = inp.selectionEnd ?? inp.value.length;
+    inp.value = inp.value.slice(0, start) + emoji + inp.value.slice(end);
+    inp.focus();
+    inp.setSelectionRange(start + emoji.length, start + emoji.length);
+  });
+  document.addEventListener("click", (e) => {
+    if (composerPicker.style.display !== "none" && !composerPicker.contains(e.target) && e.target !== emojiToggleBtn) closeComposerPicker();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && composerPicker.style.display !== "none") closeComposerPicker();
   });
 
   async function sendCurrentMessage() {
@@ -392,6 +579,7 @@
       if (!r.ok || !d.ok) throw new Error(d?.error || `HTTP ${r.status}`);
       $("msgInput").value = "";
       $("msgStatus").textContent = "";
+      saveLastMsgPreview(currentThreadId, plainForPreview(text), "patient");
       await refreshMessages(threadKeyBytes);
       loadThreads();
     } catch (e) {

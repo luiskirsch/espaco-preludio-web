@@ -15,11 +15,29 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-262">
-  <script src="./i18n/init.js?v=1-0" defer></script>
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-276">
+  <script src="./i18n/init.js?v=1-2" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
 <body>
+<script>
+(function () {
+  var stack = document.createElement("div");
+  stack.style.cssText = "position:fixed;right:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:14px;z-index:180;";
+  document.body.appendChild(stack);
+  var SELECTORS = ".ep-theme-toggle, .ep-msg-bubble-fab, .ep-help-bubble, .ep-logout-fab";
+  function collect() {
+    document.querySelectorAll(SELECTORS).forEach(function (el) {
+      if (el.parentNode !== stack) {
+        el.style.cssText = "position:static!important;top:auto!important;right:auto!important;bottom:auto!important;margin:0!important;";
+        stack.appendChild(el);
+      }
+    });
+  }
+  collect();
+  new MutationObserver(collect).observe(document.body, { childList: true });
+})();
+</script>
 
 <div class="ep-shell">
   <header class="ep-topbar">
@@ -39,14 +57,13 @@
   </header>
 
   <main class="ep-main">
-    <section class="ep-prontuario__header">
+    <section class="ep-prontuario__header" style="grid-template-columns: auto 1fr;">
       <div class="ep-prontuario__avatar" id="avatar" aria-hidden="true">P</div>
       <div class="ep-prontuario__title">
-        <div class="ep-eyebrow" data-i18n="paciente-painel:header.eyebrow">Suas anotações</div>
-        <h1 class="ep-h1" id="patientName" data-i18n="paciente-painel:header.loadingName">…</h1>
+        <div class="ep-eyebrow" data-i18n="paciente-painel:header.eyebrow">Seu painel</div>
+        <h1 class="ep-h1" id="patientName">…</h1>
         <div class="ep-pill-row" id="pillRow"></div>
       </div>
-      <div class="ep-prontuario__actions"></div>
     </section>
 
     <section class="ep-stats-strip" id="statsStrip"></section>
@@ -272,12 +289,16 @@
     }
 
     for (const [, g] of groups) {
-      const head = document.createElement("div");
-      head.className = "ep-timeline__month";
-      head.textContent = g.label;
-      timeline.appendChild(head);
+      const group = document.createElement("div");
+      group.className = "ep-timeline-month";
 
-      for (const s of g.items) timeline.appendChild(renderSessionCard(s));
+      const head = document.createElement("div");
+      head.className = "ep-timeline-month__label";
+      head.textContent = g.label;
+      group.appendChild(head);
+
+      for (const s of g.items) group.appendChild(renderSessionCard(s));
+      timeline.appendChild(group);
     }
   }
 

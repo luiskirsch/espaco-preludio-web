@@ -16,14 +16,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-262">
-  <script src="./i18n/init.js?v=1-0" defer></script>
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-276">
+  <script src="./i18n/init.js?v=1-2" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=2" defer></script>
 </head>
 <body class="ep-has-sidebar">
+<script src="./js/sidebar.js?v=19"></script>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
@@ -302,7 +303,7 @@
   import { requireTherapist, refreshIdToken } from "./js/auth-guard.js?v=3-27";
   import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=2-84";
   import { clearDek, recallUser, decryptNote } from "./js/crypto.js";
-  import { createNewSessionModal } from "./js/new-session-modal.js?v=2";
+  import { createNewSessionModal } from "./js/new-session-modal.js?v=3";
   import { runOnboarding } from "./js/onboarding.js?v=3-12";
 
   // ─── i18n helper ────────────────────────────────────────────
@@ -634,6 +635,24 @@
   // (carregado em paralelo), então renderHero é re-chamado quando sessões
   // chegam pra atualizar a contagem semanal.
   let lastHeroData = null;
+  let nextSessionScheduledAt = null;
+  let countdownInterval = null;
+  function tickCountdown() {
+    const el = document.getElementById("heroCountdownBadge");
+    if (!el || !nextSessionScheduledAt) { clearInterval(countdownInterval); countdownInterval = null; return; }
+    const diffMin = (nextSessionScheduledAt - Date.now()) / 60000;
+    if (diffMin <= 0) {
+      el.textContent = tr("painel:hero.alreadyNow", "Já no horário");
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    } else if (diffMin < 60) {
+      el.textContent = tr("painel:hero.inMin", "Em {{min}}min", { min: Math.round(diffMin) });
+    } else {
+      el.remove();
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+  }
   async function loadHero() {
     async function doFetch(token) {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/painel/hoje`, {
@@ -683,8 +702,15 @@
       if (s.confirmedAt) badges.push(`<span class="ep-badge ep-badge--ok">${tr("painel:hero.confirmed","✓ Confirmada")}</span>`);
       const diffMin = (s.scheduledAt - Date.now()) / 60000;
       if (diffMin <= 0) badges.push(`<span class="ep-badge ep-badge--warn">${tr("painel:hero.alreadyNow","Já no horário")}</span>`);
-      else if (diffMin < 60) badges.push(`<span class="ep-badge ep-badge--warn">${tr("painel:hero.inMin","Em {{min}}min",{min:Math.round(diffMin)})}</span>`);
+      else if (diffMin < 60) badges.push(`<span id="heroCountdownBadge" class="ep-badge ep-badge--warn">${tr("painel:hero.inMin","Em {{min}}min",{min:Math.round(diffMin)})}</span>`);
       document.getElementById("heroNextBadges").innerHTML = badges.join(" ");
+      // Real-time countdown — atualiza a cada 10s sem recarregar a página
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+      if (diffMin > 0 && diffMin < 60) {
+        nextSessionScheduledAt = s.scheduledAt;
+        countdownInterval = setInterval(tickCountdown, 10000);
+      }
       const btn = document.getElementById("heroEnterBtn");
       btn.dataset.sessionId = s.sessionId;
       // Reaproveita o handler de "Entrar" da lista — dispara o mesmo data-action="enter" virtualmente
@@ -883,6 +909,9 @@
         ${s.status !== "canceled" ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="recibo" data-id="${s.sessionId}" title="${tr("painel:list.reciboTitle","Enviar recibo ao paciente")}">${tr("painel:list.recibo","Recibo")}</button>
         ` : ""}
+        ${!s.patientAccountUid ? `
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="vincular" data-id="${s.sessionId}" title="${tr("painel:list.vincularTitle","Vincular conta de paciente pra abrir chat E2EE")}">${tr("painel:list.vincular","Vincular conta")}</button>
+        ` : ""}
         ${(s.status === "completed" || s.status === "canceled") ? `
           <button class="ep-btn-icon" data-action="ocultar" data-id="${s.sessionId}" aria-label="${tr("painel:list.ocultar","Remover da lista")}" title="${tr("painel:list.ocultarTitle","Remover da lista (mantém no prontuário)")}">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -941,8 +970,50 @@
       openReciboModal(allSessions.find(x => x.sessionId === id));
     } else if (action === "prenote") {
       openPreNoteModal(id);
+    } else if (action === "vincular") {
+      await openVincularPrompt(id);
     }
   });
+
+  // ─── Vincular conta de paciente a sessão sem patientAccountUid ───
+  // Usado pra sessões antigas criadas sem patientEmail. Backend roda autoLink
+  // retroativo após salvar — vincula ESTA sessão e outras do mesmo email.
+  async function openVincularPrompt(sessionId) {
+    const sess = allSessions.find(x => x.sessionId === sessionId);
+    const currentEmail = sess?.patientEmail || "";
+    const promptMsg = tr("painel:list.vincularPrompt", "E-mail da conta do paciente (mesmo usado pra fazer login):");
+    const email = window.prompt(promptMsg, currentEmail);
+    if (email == null) return; // user cancelou
+    const trimmed = String(email).trim().toLowerCase();
+    if (!trimmed) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      alert(tr("painel:list.vincularEmailInvalid", "E-mail inválido."));
+      return;
+    }
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/paciente`, {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${idToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ patientEmail: trimmed })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
+      const linked = data.patientAccountUid;
+      const more = data.autoLinkedCount || 0;
+      if (linked) {
+        alert(tr("painel:list.vincularOk", "Conta vinculada. {{more}} sessões antigas também foram vinculadas.", { more }));
+      } else {
+        alert(tr("painel:list.vincularSavedNoAccount", "E-mail salvo. Ainda não existe conta de paciente com esse email — quando o paciente criar conta, a vinculação acontece automaticamente."));
+      }
+      invalidatePrefix("sessoes", uid);
+      await loadSessions();
+    } catch (err) {
+      alert(tr("painel:list.vincularErr", "Erro ao vincular: ") + (err?.message || tr("painel:list.unknown", "desconhecido")));
+    }
+  }
 
   // ─── Notas pré-sessão (local-only, localStorage) ───────────
   function preNoteKey(sid) { return `ep:prenote:${sid}`; }
@@ -1316,6 +1387,5 @@
 
 <a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" aria-label="Abrir suporte" data-i18n-title="painel:support.title" data-i18n-aria-label="painel:support.aria"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
 
-<script src="./js/sidebar.js?v=12" defer></script>
 </body>
 </html>
