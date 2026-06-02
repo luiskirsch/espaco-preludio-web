@@ -8,9 +8,12 @@
 // Layout: paciente à esquerda | terapeuta à direita.
 // Fallback automático se um dos lados não tiver vídeo (full-width do lado ativo).
 //
+// Nota: não usa os elementos <video> do DOM (que ficam display:none) —
+// cria elementos off-screen próprios a partir das MediaStreamTracks do room,
+// garantindo decodificação de frames em todos os browsers.
+//
 // Formato .ep-rec v2: JSON { format, version, sessionId, mimeType,
 //   startedAt, durationMs, chunkCount, chunks: [{idx, ts, ciphertext, iv}] }
-// Reassemble: concatenar ArrayBuffers dos chunks decifrados, em ordem de idx.
 
 import { encryptNote } from "./crypto.js";
 
@@ -26,7 +29,7 @@ function base64FromArrayBuffer(buffer) {
   return btoa(bin);
 }
 
-// Desenha `vid` cobrindo a área (x, y, w, h) com object-fit:cover + clip.
+// Desenha `vid` cobrindo a área (x, y, w, h) como object-fit:cover + clip.
 function drawCover(ctx, vid, x, y, w, h) {
   const vw = vid.videoWidth, vh = vid.videoHeight;
   if (!vw || !vh) return;
@@ -38,6 +41,38 @@ function drawCover(ctx, vid, x, y, w, h) {
   ctx.clip();
   ctx.drawImage(vid, x + (w - sw) / 2, y + (h - sh) / 2, sw, sh);
   ctx.restore();
+}
+
+// Cria um <video> fora da viewport (NÃO display:none) com a MediaStreamTrack.
+// display:none impede decodificação de frames em alguns browsers — posição
+// off-screen garante que o browser processe os frames para o canvas.
+function makeOffscreenVideo(mediaStreamTrack) {
+  if (!mediaStreamTrack) return null;
+  const v = document.createElement("video");
+  v.autoplay    = true;
+  v.muted       = true;
+  v.playsInline = true;
+  Object.assign(v.style, {
+    position:      "fixed",
+    top:           "-9999px",
+    left:          "-9999px",
+    width:         "1px",
+    height:        "1px",
+    pointerEvents: "none",
+    opacity:       "0",
+  });
+  v.srcObject = new MediaStream([mediaStreamTrack]);
+  document.body.appendChild(v);
+  return v;
+}
+
+// Aguarda loadedmetadata (ou retorna imediatamente se já carregou).
+function waitMetadata(videoEl) {
+  return new Promise(resolve => {
+    if (!videoEl || videoEl.readyState >= 1) { resolve(); return; }
+    videoEl.addEventListener("loadedmetadata", resolve, { once: true });
+    setTimeout(resolve, 3000); // timeout de segurança
+  });
 }
 
 // ─── SessionRecorder ────────────────────────────────────────────────────────
@@ -55,13 +90,49 @@ export class SessionRecorder {
     this._drawInterval     = null;
     this._audioCtx         = null;
     this._localAudioStream = null;
+    this._offscreenEls     = []; // <video> off-screen criados aqui — removidos no stop
   }
 
-  // localVideoEl  — <video> do terapeuta (já reproduzindo via LiveKit)
-  // remoteVideoEl — <video> do paciente  (já reproduzindo via LiveKit)
-  // room          — instância LiveKit Room (fallback p/ áudio remoto)
-  async start({ localVideoEl, remoteVideoEl, room } = {}) {
+  // room — instância LiveKit Room (fonte de tracks de vídeo e áudio)
+  async start({ room } = {}) {
     if (this.recorder) throw new Error("already_recording");
+
+    // ── Resolve tracks do room ──────────────────────────────────
+    let localVideoMST  = null;
+    let remoteVideoMST = null;
+    let remoteAudioMST = null;
+
+    if (room) {
+      // Track de vídeo local (câmera do terapeuta)
+      for (const pub of room.localParticipant.videoTrackPublications.values()) {
+        const mst = pub.videoTrack?.mediaStreamTrack;
+        if (mst && mst.readyState === "live") { localVideoMST = mst; break; }
+      }
+
+      // Tracks do primeiro participante remoto (paciente)
+      for (const p of room.remoteParticipants.values()) {
+        if (!remoteVideoMST) {
+          for (const pub of p.videoTrackPublications.values()) {
+            const mst = pub.track?.mediaStreamTrack;
+            if (mst && mst.readyState === "live") { remoteVideoMST = mst; break; }
+          }
+        }
+        if (!remoteAudioMST) {
+          for (const pub of p.audioTrackPublications.values()) {
+            const mst = pub.track?.mediaStreamTrack;
+            if (mst && mst.readyState === "live") { remoteAudioMST = mst; break; }
+          }
+        }
+        if (remoteVideoMST && remoteAudioMST) break;
+      }
+    }
+
+    // ── Elementos off-screen para decodificação de frames ───────
+    const localSrc  = makeOffscreenVideo(localVideoMST);
+    const remoteSrc = makeOffscreenVideo(remoteVideoMST);
+    if (localSrc)  this._offscreenEls.push(localSrc);
+    if (remoteSrc) this._offscreenEls.push(remoteSrc);
+    await Promise.all([waitMetadata(localSrc), waitMetadata(remoteSrc)]);
 
     // ── Áudio local (microfone) ──────────────────────────────────
     this._localAudioStream = await navigator.mediaDevices.getUserMedia({
@@ -69,58 +140,44 @@ export class SessionRecorder {
       video: false,
     });
 
-    // ── Canvas HD ────────────────────────────────────────────────
+    // ── AudioContext: mix local + remoto ─────────────────────────
+    const audioCtx = new AudioContext();
+    this._audioCtx = audioCtx;
+    const dest = audioCtx.createMediaStreamDestination();
+
+    audioCtx.createMediaStreamSource(this._localAudioStream).connect(dest);
+    if (remoteAudioMST) {
+      audioCtx.createMediaStreamSource(new MediaStream([remoteAudioMST])).connect(dest);
+    }
+
+    // ── Canvas HD 1280×720 ───────────────────────────────────────
     const W = 1280, H = 720;
     const canvas = document.createElement("canvas");
     canvas.width  = W;
     canvas.height = H;
     const ctx = canvas.getContext("2d", { alpha: false });
 
-    // ── AudioContext: mix local + remoto ─────────────────────────
-    const audioCtx = new AudioContext();
-    this._audioCtx = audioCtx;
-    const dest = audioCtx.createMediaStreamDestination();
-
-    // Mic local
-    audioCtx.createMediaStreamSource(this._localAudioStream).connect(dest);
-
-    // Áudio remoto: LiveKit não expõe áudio no srcObject do <video>;
-    // acessa direto pelo mediaStreamTrack da publicação do room.
-    if (room) {
-      for (const p of room.remoteParticipants.values()) {
-        for (const pub of p.audioTrackPublications.values()) {
-          const mst = pub.track?.mediaStreamTrack;
-          if (mst && mst.readyState === "live") {
-            audioCtx.createMediaStreamSource(new MediaStream([mst])).connect(dest);
-            break;
-          }
-        }
-      }
-    }
-
-    // ── Loop de desenho 24fps ────────────────────────────────────
     const drawFrame = () => {
-      const hasLocal  = localVideoEl  && localVideoEl.readyState  >= 2 && localVideoEl.videoWidth  > 0;
-      const hasRemote = remoteVideoEl && remoteVideoEl.readyState >= 2 && remoteVideoEl.videoWidth > 0;
+      const hasLocal  = localSrc  && localSrc.readyState  >= 2 && localSrc.videoWidth  > 0;
+      const hasRemote = remoteSrc && remoteSrc.readyState >= 2 && remoteSrc.videoWidth > 0;
 
       ctx.fillStyle = "#0a0805";
       ctx.fillRect(0, 0, W, H);
 
       if (hasLocal && hasRemote) {
-        drawCover(ctx, remoteVideoEl, 0,     0, W / 2, H);
-        drawCover(ctx, localVideoEl,  W / 2, 0, W / 2, H);
-        // separador sutil entre os dois lados
-        ctx.fillStyle = "rgba(0,0,0,0.45)";
-        ctx.fillRect(W / 2 - 1, 0, 2, H);
+        drawCover(ctx, remoteSrc, 0,     0, W / 2, H); // paciente à esquerda
+        drawCover(ctx, localSrc,  W / 2, 0, W / 2, H); // terapeuta à direita
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(W / 2 - 1, 0, 2, H);              // divisor central
       } else if (hasLocal) {
-        drawCover(ctx, localVideoEl,  0, 0, W, H);
+        drawCover(ctx, localSrc,  0, 0, W, H);
       } else if (hasRemote) {
-        drawCover(ctx, remoteVideoEl, 0, 0, W, H);
+        drawCover(ctx, remoteSrc, 0, 0, W, H);
       }
     };
     this._drawInterval = setInterval(drawFrame, Math.round(1000 / 24));
 
-    // ── MediaRecorder com VP9 + Opus ─────────────────────────────
+    // ── MediaRecorder VP9 + Opus ─────────────────────────────────
     const canvasStream = canvas.captureStream(24);
     const mixedStream  = new MediaStream([
       ...canvasStream.getVideoTracks(),
@@ -132,7 +189,7 @@ export class SessionRecorder {
     }
     this.recorder = new MediaRecorder(mixedStream, {
       mimeType: this.mimeType,
-      videoBitsPerSecond: 1_200_000, // VP9 1.2 Mbps — ~40% + eficiente que VP8 equivalente
+      videoBitsPerSecond: 1_200_000, // VP9 1.2 Mbps — excelente pra 1280×720 de rostos
       audioBitsPerSecond:   128_000, // Opus 128 kbps — transparente pra voz
     });
 
@@ -153,6 +210,8 @@ export class SessionRecorder {
 
     this.recorder.onstop = () => {
       clearInterval(this._drawInterval);
+      this._offscreenEls.forEach(v => { v.srcObject = null; v.remove(); });
+      this._offscreenEls = [];
       this._localAudioStream?.getTracks().forEach(t => t.stop());
       this._audioCtx?.close().catch(() => {});
       this.onStop(this._buildBlob());
