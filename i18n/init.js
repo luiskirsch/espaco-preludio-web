@@ -10,6 +10,12 @@
 (function () {
   'use strict';
 
+  // Força HTTPS — evita que mobile acesse via HTTP sem redirecionamento do servidor.
+  if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+    location.replace('https:' + location.href.slice(5));
+    return;
+  }
+
   if (window.EP_I18N_LOADED) return;
   window.EP_I18N_LOADED = true;
 
