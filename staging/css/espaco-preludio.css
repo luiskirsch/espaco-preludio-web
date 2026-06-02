@@ -5997,10 +5997,11 @@ html.ep-degraded body { padding-top: 38px; }
   /* Auth panel (login/cadastro): reduz padding (era 36px = 72px lost) */
   .ep-auth__panel { padding: 24px 18px !important; }
 
-  /* Cadastro --wide: esconde hero em mobile — o form ocupa tela toda */
-  .ep-auth__panel--wide { max-width: 100%; border-radius: 0; min-height: 100vh; margin: 0; grid-template-columns: 1fr !important; }
+  /* Cadastro --wide: esconde hero, form ocupa tela toda com scroll natural */
+  .ep-auth { display: block !important; min-height: 100vh; }
+  .ep-auth__panel--wide { max-width: 100% !important; border-radius: 0 !important; min-height: 100vh; margin: 0 !important; grid-template-columns: 1fr !important; overflow: visible !important; }
   .ep-auth__hero { display: none !important; }
-  .ep-auth__panel--wide .ep-auth__form { max-height: none; overflow-y: visible; padding: 28px 20px; }
+  .ep-auth__panel--wide .ep-auth__form { max-height: none !important; overflow-y: visible !important; padding: 28px 20px; }
 
   /* Hero h1: tipografia mais conservadora */
   .ep-h1 { font-size: clamp(22px, 6vw, 32px); }
