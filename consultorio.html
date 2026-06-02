@@ -815,7 +815,7 @@
           if (recTimerInterval) clearInterval(recTimerInterval);
         }
       });
-      await recorder.start({ video: true, audio: true });
+      await recorder.start({ localVideoEl: videoLocal, remoteVideoEl: videoRemote, room });
 
       ctrlRecord.classList.add("is-recording");
       ctrlRecord.setAttribute("aria-pressed", "true");
