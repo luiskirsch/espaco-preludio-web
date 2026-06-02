@@ -22,6 +22,56 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=2" defer></script>
+  <style>
+    .rec-drop {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--ep-surface);
+      border: 2px dashed var(--ep-line-strong);
+      border-radius: var(--ep-radius-lg);
+      padding: 20px 24px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ep-ink-2);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .rec-drop:hover, .rec-drop.is-over {
+      border-color: var(--ep-gold);
+      background: var(--ep-gold-soft);
+      color: var(--ep-ink);
+    }
+    .rec-bar-track {
+      height: 5px;
+      background: var(--ep-line-strong);
+      border-radius: 999px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+    .rec-bar-fill {
+      height: 100%;
+      background: var(--ep-gold);
+      border-radius: 999px;
+      transition: width 0.2s;
+      width: 0%;
+    }
+    .rec-player-wrap video {
+      width: 100%;
+      display: block;
+      border-radius: var(--ep-radius);
+      background: #0a0805;
+      max-height: 65vh;
+    }
+    .rec-player-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body class="ep-has-sidebar">
 <script src="./js/sidebar.js?v=19"></script>
@@ -152,6 +202,43 @@
         <div class="ep-error-state__detail" id="errorStateDetail"></div>
       </div>
       <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="retryBtn" data-i18n="prontuario:error.retry">Tentar novamente</button>
+    </div>
+  </section>
+
+  <!-- Gravações de sessão — arquivo .ep-rec local, descriptografado no browser -->
+  <section class="ep-mt-32" id="gravacaoSection">
+    <div class="ep-eyebrow">Gravações de sessão</div>
+    <h2 class="ep-h2 ep-mt-12">Reproduzir gravação</h2>
+    <p class="ep-text-muted ep-text-sm ep-mt-8">
+      Abra um arquivo <strong>.ep-rec</strong> salvo durante a consulta.
+      A descriptografia acontece no seu navegador — nada é enviado ao servidor.
+    </p>
+
+    <div id="recDropzone" class="rec-drop ep-mt-16" role="button" tabindex="0" aria-label="Selecionar arquivo .ep-rec">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" flex-shrink="0" style="flex-shrink:0"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/><line x1="12" y1="17" x2="12" y2="3"/></svg>
+      <span>Arraste o arquivo aqui ou <strong>clique para selecionar</strong> (.ep-rec)</span>
+      <input id="recFileInput" type="file" accept=".ep-rec,application/json" style="display:none">
+    </div>
+
+    <div id="recProgress" class="ep-hide" style="margin-top:16px;">
+      <div class="ep-text-sm ep-text-muted" id="recProgressLabel">Descriptografando…</div>
+      <div class="rec-bar-track"><div class="rec-bar-fill" id="recBarFill"></div></div>
+    </div>
+
+    <div id="recPlayer" class="rec-player-wrap ep-hide" style="margin-top:16px;">
+      <video id="recVideoEl" controls playsinline></video>
+      <div class="rec-player-footer">
+        <span class="ep-text-xs ep-text-muted" id="recMetaText"></span>
+        <div style="display:flex;gap:8px;">
+          <a id="recDownloadBtn" class="ep-btn ep-btn--ghost ep-btn--sm" download>Baixar .webm</a>
+          <button id="recCloseBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="recError" class="ep-alert ep-alert--danger ep-mt-16 ep-hide" role="alert">
+      <strong id="recErrorTitle">Erro ao processar o arquivo.</strong>
+      <p style="margin:4px 0 0;" id="recErrorMsg"></p>
     </div>
   </section>
 
@@ -815,6 +902,126 @@
   }
 
   document.getElementById("retryBtn").addEventListener("click", boot);
+
+  // ─── Gravações (.ep-rec) ─────────────────────────────────────
+  function b64ToArrayBuffer(b64) {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes.buffer;
+  }
+
+  (function initRecPlayer() {
+    const dropzone     = document.getElementById("recDropzone");
+    const fileInput    = document.getElementById("recFileInput");
+    const progressDiv  = document.getElementById("recProgress");
+    const progressLbl  = document.getElementById("recProgressLabel");
+    const barFill      = document.getElementById("recBarFill");
+    const playerDiv    = document.getElementById("recPlayer");
+    const videoEl      = document.getElementById("recVideoEl");
+    const downloadBtn  = document.getElementById("recDownloadBtn");
+    const closeBtn     = document.getElementById("recCloseBtn");
+    const metaText     = document.getElementById("recMetaText");
+    const errorDiv     = document.getElementById("recError");
+    const errorTitle   = document.getElementById("recErrorTitle");
+    const errorMsg     = document.getElementById("recErrorMsg");
+
+    dropzone.addEventListener("click", () => fileInput.click());
+    dropzone.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") fileInput.click(); });
+    dropzone.addEventListener("dragover", e => { e.preventDefault(); dropzone.classList.add("is-over"); });
+    dropzone.addEventListener("dragleave", () => dropzone.classList.remove("is-over"));
+    dropzone.addEventListener("drop", e => {
+      e.preventDefault();
+      dropzone.classList.remove("is-over");
+      if (e.dataTransfer.files[0]) processRec(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener("change", () => { if (fileInput.files[0]) processRec(fileInput.files[0]); });
+
+    closeBtn.addEventListener("click", () => {
+      playerDiv.classList.add("ep-hide");
+      dropzone.classList.remove("ep-hide");
+      if (videoEl.src) URL.revokeObjectURL(videoEl.src);
+      if (downloadBtn.href) URL.revokeObjectURL(downloadBtn.href);
+      videoEl.src = "";
+      fileInput.value = "";
+    });
+
+    function showRecError(title, detail) {
+      progressDiv.classList.add("ep-hide");
+      errorTitle.textContent = title;
+      errorMsg.textContent = detail || "";
+      errorDiv.classList.remove("ep-hide");
+      dropzone.classList.remove("ep-hide");
+    }
+
+    async function processRec(file) {
+      dropzone.classList.add("ep-hide");
+      playerDiv.classList.add("ep-hide");
+      errorDiv.classList.add("ep-hide");
+      barFill.style.width = "0%";
+      progressLbl.textContent = "Lendo arquivo…";
+      progressDiv.classList.remove("ep-hide");
+
+      let manifest;
+      try {
+        const text = await file.text();
+        manifest = JSON.parse(text);
+      } catch {
+        showRecError("Arquivo inválido.", "O arquivo não é um .ep-rec válido ou está corrompido.");
+        return;
+      }
+
+      if (manifest.format !== "ep-rec" || !Array.isArray(manifest.chunks)) {
+        showRecError("Formato não reconhecido.", "Este arquivo não foi gerado pelo Espaço Prelúdio.");
+        return;
+      }
+
+      const chunks = [...manifest.chunks].sort((a, b) => a.idx - b.idx);
+      const buffers = [];
+
+      for (let i = 0; i < chunks.length; i++) {
+        barFill.style.width = Math.round(((i + 1) / chunks.length) * 100) + "%";
+        progressLbl.textContent = `Parte ${i + 1} de ${chunks.length}`;
+
+        let plainB64;
+        try {
+          plainB64 = await decryptNote({ ciphertext: chunks[i].ciphertext, iv: chunks[i].iv }, dek);
+        } catch {
+          showRecError("Falha na descriptografia.", "A chave desta conta não consegue abrir este arquivo. Verifique se está logado com o mesmo usuário que gravou a sessão.");
+          return;
+        }
+
+        if (!plainB64 || plainB64.startsWith("[nota corrompida")) {
+          showRecError("Arquivo corrompido.", `A parte ${i + 1} não pôde ser descriptografada.`);
+          return;
+        }
+
+        buffers.push(b64ToArrayBuffer(plainB64));
+      }
+
+      const mimeType = manifest.mimeType || "video/webm";
+      const blob = new Blob(buffers, { type: mimeType });
+      const url  = URL.createObjectURL(blob);
+
+      const ext = mimeType.includes("mp4") ? "mp4" : "webm";
+      const sessionSlug = (manifest.sessionId || "").slice(0, 8);
+      const dateSlug = manifest.startedAt
+        ? new Date(manifest.startedAt).toISOString().slice(0, 16).replace(/[T:]/g, "-")
+        : "gravacao";
+      downloadBtn.href = url;
+      downloadBtn.download = `sessao-${sessionSlug}-${dateSlug}.${ext}`;
+      videoEl.src = url;
+      metaText.textContent = [
+        manifest.durationMs ? fmtDuration(manifest.durationMs) : null,
+        `${chunks.length} partes`,
+        `${(blob.size / 1024 / 1024).toFixed(1)} MB`
+      ].filter(Boolean).join(" · ");
+
+      progressDiv.classList.add("ep-hide");
+      playerDiv.classList.remove("ep-hide");
+    }
+  })();
+
 
   // ─── Export PDF do prontuário (CFP Res. 1/2019 — retenção 20 anos) ──
   // Estado em memória pra o exportador usar (preenchido por boot/receitas)
