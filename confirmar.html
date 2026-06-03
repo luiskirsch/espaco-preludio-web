@@ -84,6 +84,7 @@
 
   const params = new URLSearchParams(location.search);
   const token = (params.get("t") || "").trim();
+  const code  = (params.get("c") || "").trim();
 
   function show(id) {
     ["missingToken", "loadingBox", "successBox", "alreadyBox", "errorBox"].forEach(x => {
@@ -104,15 +105,16 @@
     });
   }
 
-  if (!token) {
+  if (!token && !code) {
     show("missingToken");
   } else {
     (async () => {
       try {
+        const body = code ? { confirmCode: code } : { confirmToken: token };
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/confirmar-publico`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ confirmToken: token })
+          body: JSON.stringify(body)
         });
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.ok) {
