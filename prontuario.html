@@ -635,6 +635,16 @@
         <ul>${followups.map(f => `<li>${escapeHtml(f)}</li>`).join("")}</ul>
       </div>` : "";
 
+    const transcript = typeof data.transcript === "string" && data.transcript.trim() ? data.transcript.trim() : null;
+    const hasContent = summary.summary || topics.length || commitments.length || followups.length;
+    const transcriptHtml = transcript ? `
+      <details class="ep-ai-summary__transcript">
+        <summary class="ep-text-xs" style="cursor:pointer;color:var(--ep-ink-2);user-select:none;margin-top:10px;">
+          Ver transcrição completa
+        </summary>
+        <p style="margin:8px 0 0;font-size:12px;line-height:1.6;color:var(--ep-ink-2);white-space:pre-wrap;">${escapeHtml(transcript)}</p>
+      </details>` : "";
+
     box.innerHTML = `
       <div class="ep-ai-summary ep-ai-summary--ok">
         <div class="ep-ai-summary__head">
@@ -642,9 +652,11 @@
           <span>${escapeHtml(tr("prontuario:aiSummary.title", "Resumo IA"))}</span>
         </div>
         ${summary.summary ? `<p class="ep-ai-summary__lead">${escapeHtml(summary.summary)}</p>` : ""}
+        ${!hasContent && transcript ? `<p class="ep-ai-summary__lead" style="color:var(--ep-ink-2);font-style:italic;">Não foi possível extrair tópicos desta sessão. Veja a transcrição abaixo.</p>` : ""}
         ${topicsHtml}
         ${commitmentsHtml}
         ${followupsHtml}
+        ${transcriptHtml}
         <div class="ep-text-xs ep-text-muted ep-ai-summary__foot">${escapeHtml(tr("prontuario:aiSummary.foot", "Gerado automaticamente. Sempre confira contra suas anotações."))}</div>
       </div>
     `;
