@@ -721,8 +721,13 @@
   // telefone é universal pra "encerrar chamada" (Zoom/Meet/FaceTime), e
   // o usuário clicava nele descartando o áudio sem perceber — resumo IA
   // nunca era gerado.
+  let _endingSession = false;
   async function endSessionFlow() {
+    if (_endingSession) return;
     if (!confirm(tr("consultorio:alerts.endConfirm", "Encerrar definitivamente esta consulta? O paciente será desconectado."))) return;
+    _endingSession = true;
+    ctrlLeave.disabled = true;
+    endSessionBtn.disabled = true;
     // Ordem importa: stopAndUpload precisa rodar ANTES de room.disconnect
     // porque o MediaRecorder lê as tracks de áudio do LiveKit. Depois do
     // disconnect, as tracks são destruídas e o último chunk fica vazio.
@@ -815,7 +820,7 @@
           if (recTimerInterval) clearInterval(recTimerInterval);
         }
       });
-      await recorder.start({ room });
+      await recorder.start({ room, remoteVideoEl: videoRemote });
 
       ctrlRecord.classList.add("is-recording");
       ctrlRecord.setAttribute("aria-pressed", "true");

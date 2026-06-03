@@ -93,43 +93,45 @@ export class SessionRecorder {
     this._offscreenEls     = []; // <video> off-screen criados aqui — removidos no stop
   }
 
-  // room — instância LiveKit Room (fonte de tracks de vídeo e áudio)
-  async start({ room } = {}) {
+  // room          — instância LiveKit Room (fonte de tracks locais e áudio remoto)
+  // remoteVideoEl — <video> do paciente já em play (srcObject = stream descriptografado pelo LiveKit)
+  async start({ room, remoteVideoEl } = {}) {
     if (this.recorder) throw new Error("already_recording");
 
-    // ── Resolve tracks do room ──────────────────────────────────
+    // ── Resolve tracks de vídeo ─────────────────────────────────
     let localVideoMST  = null;
-    let remoteVideoMST = null;
     let remoteAudioMST = null;
 
     if (room) {
-      // Track de vídeo local (câmera do terapeuta)
+      // Track de vídeo local (câmera local é pré-criptografia — funciona direto)
       for (const pub of room.localParticipant.videoTrackPublications.values()) {
         const mst = pub.videoTrack?.mediaStreamTrack;
         if (mst && mst.readyState === "live") { localVideoMST = mst; break; }
       }
-
-      // Tracks do primeiro participante remoto (paciente)
+      // Áudio remoto via room (para AudioContext)
       for (const p of room.remoteParticipants.values()) {
-        if (!remoteVideoMST) {
-          for (const pub of p.videoTrackPublications.values()) {
-            const mst = pub.track?.mediaStreamTrack;
-            if (mst && mst.readyState === "live") { remoteVideoMST = mst; break; }
-          }
+        for (const pub of p.audioTrackPublications.values()) {
+          const mst = pub.track?.mediaStreamTrack;
+          if (mst && mst.readyState === "live") { remoteAudioMST = mst; break; }
         }
-        if (!remoteAudioMST) {
-          for (const pub of p.audioTrackPublications.values()) {
-            const mst = pub.track?.mediaStreamTrack;
-            if (mst && mst.readyState === "live") { remoteAudioMST = mst; break; }
-          }
-        }
-        if (remoteVideoMST && remoteAudioMST) break;
+        if (remoteAudioMST) break;
       }
     }
 
     // ── Elementos off-screen para decodificação de frames ───────
-    const localSrc  = makeOffscreenVideo(localVideoMST);
-    const remoteSrc = makeOffscreenVideo(remoteVideoMST);
+    // Vídeo local: track direto do room (pré-E2EE, sem problema)
+    const localSrc = makeOffscreenVideo(localVideoMST);
+
+    // Vídeo remoto: NÃO usar pub.track.mediaStreamTrack com E2EE (pode ser stream
+    // cifrado antes de decodificação). Usar srcObject do elemento <video> que o
+    // LiveKit já descriptografou e renderiza. Clonar em elemento off-screen
+    // (não display:none) para garantir decodificação de frames pelo browser.
+    let remoteSrc = null;
+    if (remoteVideoEl?.srcObject) {
+      const videoTracks = remoteVideoEl.srcObject.getVideoTracks().filter(t => t.readyState === "live");
+      if (videoTracks.length) remoteSrc = makeOffscreenVideo(videoTracks[0]);
+    }
+
     if (localSrc)  this._offscreenEls.push(localSrc);
     if (remoteSrc) this._offscreenEls.push(remoteSrc);
     await Promise.all([waitMetadata(localSrc), waitMetadata(remoteSrc)]);

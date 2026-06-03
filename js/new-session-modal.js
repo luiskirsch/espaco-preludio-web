@@ -378,6 +378,8 @@ export function createNewSessionModal({
     }
     statusEl.textContent = tr("painel:modalNew.creating", "Criando…");
     statusEl.className = "ep-status";
+    const createBtn = document.getElementById("createNewSession");
+    createBtn.disabled = true;
 
     let scheduledAt = null;
     if (scheduledAtRaw) {
@@ -411,6 +413,7 @@ export function createNewSessionModal({
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 402) {
+        createBtn.disabled = false;
         if (confirm(tr("painel:modalNew.trialExpired", "Sua trial expirou. Você precisa contratar um plano para criar consultas. Ir para o perfil agora?"))) {
           window.location.href = "./perfil.html";
         }
@@ -419,6 +422,7 @@ export function createNewSessionModal({
       if (!res.ok || !data.ok) {
         statusEl.textContent = tr("painel:modalNew.errPrefix", "Erro: ") + (data?.error || res.status);
         statusEl.className = "ep-status is-err";
+        createBtn.disabled = false;
         return;
       }
 
@@ -472,6 +476,7 @@ export function createNewSessionModal({
     } catch (error) {
       statusEl.textContent = tr("painel:modalNew.netErr", "Erro de rede.");
       statusEl.className = "ep-status is-err";
+      createBtn.disabled = false;
     }
   });
 
