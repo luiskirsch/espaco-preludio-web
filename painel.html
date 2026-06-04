@@ -743,7 +743,8 @@
     })();
     const weekEndMs = weekStartMs + 7 * 86400000;
     const weekSessions = allSessions.filter(s =>
-      s.scheduledAt && s.scheduledAt >= weekStartMs && s.scheduledAt < weekEndMs && s.status !== "canceled"
+      s.scheduledAt && s.scheduledAt >= weekStartMs && s.scheduledAt < weekEndMs
+      && s.status !== "canceled" && s.status !== "completed"
     );
     const weekCount     = weekSessions.length;
     const weekConfirmed = weekSessions.filter(s => s.confirmedAt).length;
