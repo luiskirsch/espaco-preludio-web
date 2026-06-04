@@ -26,6 +26,22 @@
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-276">
   <script src="./i18n/init.js?v=1-2" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
+  <style>
+    /* Cápsula de idioma inline no topbar da sessão do paciente */
+    #top-lang-slot #ep-lang-switcher { position: static !important; }
+    #top-lang-slot #ep-lang-btn {
+      background: transparent !important;
+      border-color: rgba(255,255,255,.22) !important;
+      box-shadow: none !important;
+      padding: 5px 10px !important;
+    }
+    #top-lang-slot #ep-lang-menu {
+      position: absolute !important;
+      bottom: auto !important;
+      top: calc(100% + 6px) !important;
+      right: 0 !important;
+    }
+  </style>
 </head>
 <body class="ep-consult">
 
@@ -105,6 +121,9 @@
         </button>
       </div>
     </div>
+    <!-- Slot da cápsula de idioma — init.js cria #ep-lang-switcher no body;
+         movemos via JS para cá assim que aparecer. -->
+    <div id="top-lang-slot" style="position:relative;flex-shrink:0;margin-left:12px;"></div>
   </header>
 
   <main class="ep-consult__main ep-consult__main--solo">
@@ -671,6 +690,18 @@
 
     window.addEventListener("beforeunload", () => { try { room.disconnect(); } catch {} });
   }
+
+  // Move #ep-lang-switcher para o slot no topbar assim que for criado pelo init.js
+  (function moveLangToTopbar() {
+    const slot = document.getElementById("top-lang-slot");
+    if (!slot) return;
+    function tryMove() {
+      const sw = document.getElementById("ep-lang-switcher");
+      if (sw && !slot.contains(sw)) slot.appendChild(sw);
+    }
+    tryMove();
+    new MutationObserver(tryMove).observe(document.body, { childList: true });
+  })();
 </script>
 
 </body>
