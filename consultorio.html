@@ -56,6 +56,14 @@
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" transform="rotate(135 12 12)"/></svg>
         </button>
       </div>
+
+      <!-- Indicador REC — inline ao lado dos botões, sem position:fixed -->
+      <div id="recIndicator" class="ep-hide" style="display:flex;align-items:center;gap:8px;padding:5px 13px;background:rgba(220,38,38,0.92);color:#fff;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(220,38,38,0.35);flex-shrink:0;">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;animation:ep-rec-blink 1.4s infinite ease-in-out;"></span>
+        <span>REC</span>
+        <span id="recTimer">00:00</span>
+        <span id="recChunkInfo" style="opacity:0.75;font-weight:400;">0 partes</span>
+      </div>
     </div>
     <div class="ep-flex ep-gap-8" style="align-items: center;">
       <!-- Ajustar ambiente na topbar — painel abre pra baixo -->
@@ -157,13 +165,6 @@
         </div>
       </div>
 
-      <!-- Indicador "REC" visível quando gravando -->
-      <div id="recIndicator" class="ep-hide" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:200;display:flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(220,38,38,0.92);color:#fff;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(220,38,38,0.35);">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;animation:ep-rec-blink 1.4s infinite ease-in-out;"></span>
-        <span>REC</span>
-        <span id="recTimer">00:00</span>
-        <span id="recChunkInfo" style="opacity:0.75;font-weight:400;">0 chunks</span>
-      </div>
     </section>
 
     <!-- Modal de consentimento LGPD pra gravação -->
