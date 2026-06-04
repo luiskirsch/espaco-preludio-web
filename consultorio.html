@@ -728,28 +728,25 @@
     _endingSession = true;
     ctrlLeave.disabled = true;
     endSessionBtn.disabled = true;
-    // Ordem importa: stopAndUpload precisa rodar ANTES de room.disconnect
-    // porque o MediaRecorder lê as tracks de áudio do LiveKit. Depois do
-    // disconnect, as tracks são destruídas e o último chunk fica vazio.
-    let aiResult = null;
-    if (aiCapture && aiCapture.state() === "recording") {
-      setStatus(tr("consultorio:status.uploadingAi", "salvando áudio pra resumo IA…"));
-      try { aiResult = await aiCapture.stopAndUpload(); } catch (err) { console.error("[ai-capture] upload error", err); }
-    }
-    try {
-      await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/encerrar`, {
+    setStatus(tr("consultorio:status.ending", "Encerrando…"));
+
+    // Para o recorder local (não depende das tracks LiveKit)
+    try { recorder?.stop(); } catch {}
+
+    // /encerrar e stopAndUpload rodam em PARALELO — são independentes.
+    // stopAndUpload precisa terminar ANTES de room.disconnect (tracks
+    // do LiveKit são destruídas no disconnect e o último chunk ficaria vazio).
+    await Promise.all([
+      fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/encerrar`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${idToken}` }
-      });
-    } catch {}
-    try { recorder?.stop(); } catch {}
+      }).catch(() => {}),
+      (aiCapture && aiCapture.state() === "recording")
+        ? aiCapture.stopAndUpload().catch(() => {})
+        : Promise.resolve()
+    ]);
+
     try { await room?.disconnect(); } catch {}
-    if (aiResult?.ok) {
-      // Confirmação leve — não bloqueia. Backend processa async.
-      try {
-        alert(tr("consultorio:alerts.aiQueued", "Sessão encerrada. O resumo IA será gerado em alguns minutos e ficará disponível no prontuário do paciente."));
-      } catch {}
-    }
     window.location.href = "./painel.html";
   }
   ctrlLeave.addEventListener("click", endSessionFlow);
