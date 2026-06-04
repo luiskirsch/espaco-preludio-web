@@ -163,6 +163,14 @@
       </div>
     </section>
   </main>
+
+  <!-- Overlay de sessão encerrada pelo profissional -->
+  <div id="sessionEndedOverlay" class="ep-hide" style="position:fixed;inset:0;z-index:999;background:rgba(10,8,5,0.94);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;color:#fff;">
+    <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" style="margin-bottom:20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <h2 style="font-size:22px;font-weight:600;margin:0 0 10px;" data-i18n="entrar:sessionEnded.title">Sessão encerrada</h2>
+    <p style="font-size:15px;color:rgba(255,255,255,0.65);margin:0 0 6px;" data-i18n="entrar:sessionEnded.msg">O profissional encerrou a consulta.</p>
+    <p style="font-size:13px;color:rgba(255,255,255,0.4);margin:0;" data-i18n="entrar:sessionEnded.redirect">Você será redirecionado em instantes…</p>
+  </div>
 </div>
 
 <!-- Tela 3: erro / link inválido -->
@@ -564,13 +572,29 @@
       remoteName.textContent = p.name || tr("entrar:session.remoteDefaultName", "Profissional");
     }
 
+    // Timer de encerramento — aguarda 8s antes de redirecionar.
+    // Se o profissional reconectar (queda de rede), o timer é cancelado.
+    let sessionEndTimer = null;
+    function scheduleSessionEnd() {
+      clearTimeout(sessionEndTimer);
+      sessionEndTimer = setTimeout(() => {
+        document.getElementById("sessionEndedOverlay")?.classList.remove("ep-hide");
+        setTimeout(() => { window.location.href = "/"; }, 4000);
+      }, 8000);
+    }
+    function cancelSessionEnd() {
+      clearTimeout(sessionEndTimer);
+      sessionEndTimer = null;
+    }
+
     room
-      .on(RoomEvent.ParticipantConnected, onRemoteConnected)
+      .on(RoomEvent.ParticipantConnected, p => { cancelSessionEnd(); onRemoteConnected(p); })
       .on(RoomEvent.ParticipantDisconnected, () => {
         remotePlaceholder.classList.remove("ep-hide");
         videoRemote.classList.add("ep-hide");
         remoteName.classList.add("ep-hide");
         tileRemote.classList.remove("ep-tile--has-video");
+        scheduleSessionEnd();
       })
       .on(RoomEvent.TrackSubscribed, (track, pub, p) => {
         console.info("[lk] trackSubscribed", { kind: track.kind, sid: pub?.trackSid, participant: p?.identity });
