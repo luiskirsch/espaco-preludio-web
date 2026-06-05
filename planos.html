@@ -107,8 +107,15 @@
     </p>
   </section>
 
+  <!-- Toggle de moeda BRL / USD -->
+  <div id="currencyToggle" style="display:none;align-items:center;justify-content:center;gap:10px;margin-top:24px;">
+    <button type="button" id="btnBRL" class="ep-btn ep-btn--primary ep-btn--sm">R$ BRL</button>
+    <button type="button" id="btnUSD" class="ep-btn ep-btn--ghost ep-btn--sm">$ USD</button>
+    <span class="ep-text-xs ep-text-muted" data-i18n="planos:currency.usdNote">USD · Stripe · Cartão internacional</span>
+  </div>
+
   <!-- Cards lado-a-lado: recém-formado + profissional -->
-  <div id="tiersGrid" style="display: none; grid-template-columns: 1fr 1fr; gap: 16px;" class="ep-mt-24">
+  <div id="tiersGrid" style="display: none; grid-template-columns: 1fr 1fr; gap: 16px;" class="ep-mt-16">
 
     <!-- Tier Recém-formado -->
     <section id="recemCard" class="ep-plan-card" style="position: relative;">
@@ -127,8 +134,11 @@
         <li data-i18n-html="planos:recem.f2Html">✓ Desconto válido enquanto inscrição no conselho &lt; 12 meses</li>
         <li data-i18n="planos:recem.f3">✓ Após 12 meses migra automaticamente para Profissional</li>
       </ul>
-      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16" id="subscribeRecemBtn" data-i18n="planos:recem.subscribeBtn">
+      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16 ep-btn-brl" id="subscribeRecemBtn" data-i18n="planos:recem.subscribeBtn">
         Assinar como Recém-formado
+      </button>
+      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-8 ep-btn-usd ep-hide" id="subscribeRecemUsdBtn">
+        Subscribe — $29 / month
       </button>
     </section>
 
@@ -155,8 +165,11 @@
         <li data-i18n-html="planos:prof.f10Html">✓ Suporte prioritário 24h via <strong>e-mail e WhatsApp</strong></li>
         <li data-i18n="planos:prof.f11">✓ Sem reverificação periódica</li>
       </ul>
-      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16" id="subscribeProfBtn" data-i18n="planos:prof.subscribeBtn">
+      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16 ep-btn-brl" id="subscribeProfBtn" data-i18n="planos:prof.subscribeBtn">
         Assinar Profissional
+      </button>
+      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-8 ep-btn-usd ep-hide" id="subscribeProfUsdBtn">
+        Subscribe — $49 / month
       </button>
     </section>
 
@@ -417,6 +430,78 @@
   subscribeProfBtn.addEventListener("click", () =>
     startSubscription("profissional", subscribeProfBtn, t("prof.subscribeBtn", null, "Assinar Profissional"))
   );
+
+  // ─── Stripe USD checkout ─────────────────────────────────────────────────
+  const subscribeRecemUsdBtn = document.getElementById("subscribeRecemUsdBtn");
+  const subscribeProfUsdBtn  = document.getElementById("subscribeProfUsdBtn");
+  const currencyToggle = document.getElementById("currencyToggle");
+  const btnBRL = document.getElementById("btnBRL");
+  const btnUSD = document.getElementById("btnUSD");
+
+  let isUSD = false;
+
+  function setCurrency(usd) {
+    isUSD = usd;
+    // Preços
+    document.querySelectorAll(".ep-plan-card__currency").forEach(el => { el.textContent = usd ? "$" : "R$"; });
+    document.querySelectorAll("[data-i18n='planos:recem.amount']").forEach(el => { el.textContent = usd ? "29.00" : "165,00"; });
+    document.querySelectorAll("[data-i18n='planos:prof.amount']").forEach(el => { el.textContent = usd ? "49.00" : "279,00"; });
+    document.querySelectorAll("[data-i18n='planos:recem.per'],[data-i18n='planos:prof.per']").forEach(el => { el.textContent = usd ? "/month" : "/mês"; });
+    // Botões
+    document.querySelectorAll(".ep-btn-brl").forEach(el => el.classList.toggle("ep-hide", usd));
+    document.querySelectorAll(".ep-btn-usd").forEach(el => el.classList.toggle("ep-hide", !usd));
+    // Toggle styling
+    btnBRL.className = usd ? "ep-btn ep-btn--ghost ep-btn--sm" : "ep-btn ep-btn--primary ep-btn--sm";
+    btnUSD.className = usd ? "ep-btn ep-btn--primary ep-btn--sm" : "ep-btn ep-btn--ghost ep-btn--sm";
+  }
+
+  btnBRL.addEventListener("click", () => setCurrency(false));
+  btnUSD.addEventListener("click", () => setCurrency(true));
+
+  // Mostra toggle quando tiersGrid é exibido
+  const tierObserver = new MutationObserver(() => {
+    if (tiersGrid.style.display !== "none") currencyToggle.style.display = "flex";
+  });
+  tierObserver.observe(tiersGrid, { attributes: true, attributeFilter: ["style"] });
+
+  async function startStripeCheckout(tier, btn, originalText) {
+    btn.disabled = true;
+    btn.textContent = "Redirecting to Stripe…";
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/stripe/create-checkout`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ tier })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok || !data.url) throw new Error(data?.error || ("HTTP_" + res.status));
+      window.location.href = data.url;
+    } catch (e) {
+      alert("Could not start Stripe checkout: " + e.message);
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
+
+  subscribeRecemUsdBtn.addEventListener("click", () =>
+    startStripeCheckout("recem_formado", subscribeRecemUsdBtn, "Subscribe — $29 / month")
+  );
+  subscribeProfUsdBtn.addEventListener("click", () =>
+    startStripeCheckout("profissional", subscribeProfUsdBtn, "Subscribe — $49 / month")
+  );
+
+  // Retorno do Stripe Checkout
+  if (params.get("stripe") === "success") {
+    showStatus("ep-status-card--ok", ICON_OK,
+      "Payment successful! 🎉",
+      "Your Stripe subscription is active. It may take a few seconds to reflect here — refresh if needed."
+    );
+  } else if (params.get("stripe") === "cancel") {
+    showStatus("ep-status-card--pending", ICON_PENDING,
+      "Checkout cancelled",
+      "No charge was made. You can try again whenever you're ready."
+    );
+  }
 
   // Cancel
   cancelBtn.addEventListener("click", async () => {
