@@ -639,34 +639,42 @@
     }
   });
 
-  // Banner indicativo do plano escolhido + duração do trial. Aparece em
-  // qualquer cadastro vindo de um botão da landing (sempre passa ?plano=).
-  try {
-    const params = new URLSearchParams(location.search);
-    const plano = params.get("plano");
-    const config = {
-      "estudante": {
-        title: tr("cadastro:planBanner.estudanteTitle", "Plano Estudante (gratuito)"),
-        sub: tr("cadastro:planBanner.estudanteSub", "Após cadastrar, você envia sua declaração de matrícula. A IA valida em segundos.")
-      },
-      "recem": {
-        title: tr("cadastro:planBanner.recemTitle", "Plano Recém-formado (R$ 99,50/mês)"),
-        sub: tr("cadastro:planBanner.recemSub", "30 dias grátis. Após cadastrar, você envia o comprovante de inscrição CRP/CRM (<12 meses).")
-      },
-      "profissional": {
-        title: tr("cadastro:planBanner.profissionalTitle", "Plano Profissional (R$ 199,00/mês)"),
-        sub: tr("cadastro:planBanner.profissionalSub", "30 dias grátis para experimentar. Você decide quando contratar — direto pelo perfil.")
+  // Banner indicativo do plano escolhido + duração do trial. Aguarda i18n
+  // antes de renderizar para garantir tradução correta em en-US e es-ES.
+  (async () => {
+    await new Promise(resolve => {
+      if (window.EP_I18N && window.EP_I18N.t) return resolve();
+      const onReady = () => { document.removeEventListener("ep:i18n-ready", onReady); resolve(); };
+      document.addEventListener("ep:i18n-ready", onReady);
+      setTimeout(resolve, 2500);
+    });
+    try {
+      const params = new URLSearchParams(location.search);
+      const plano = params.get("plano");
+      const config = {
+        "estudante": {
+          title: tr("cadastro:planBanner.estudanteTitle", "Plano Estudante (gratuito)"),
+          sub: tr("cadastro:planBanner.estudanteSub", "Após cadastrar, você envia sua declaração de matrícula. A IA valida em segundos.")
+        },
+        "recem": {
+          title: tr("cadastro:planBanner.recemTitle", "Plano Recém-formado (R$ 99,50/mês)"),
+          sub: tr("cadastro:planBanner.recemSub", "30 dias grátis. Após cadastrar, você envia o comprovante de inscrição CRP/CRM (<12 meses).")
+        },
+        "profissional": {
+          title: tr("cadastro:planBanner.profissionalTitle", "Plano Profissional (R$ 199,00/mês)"),
+          sub: tr("cadastro:planBanner.profissionalSub", "30 dias grátis para experimentar. Você decide quando contratar — direto pelo perfil.")
+        }
+      };
+      const c = config[plano];
+      if (c) {
+        const banner = document.createElement("div");
+        banner.className = "ep-alert ep-alert--info";
+        banner.style.marginBottom = "16px";
+        banner.innerHTML = `<strong>${c.title}</strong><br><span class="ep-text-sm">${c.sub}</span>`;
+        stepData.insertBefore(banner, stepData.firstChild.nextSibling);
       }
-    };
-    const c = config[plano];
-    if (c) {
-      const banner = document.createElement("div");
-      banner.className = "ep-alert ep-alert--info";
-      banner.style.marginBottom = "16px";
-      banner.innerHTML = `<strong>${c.title}</strong><br><span class="ep-text-sm">${c.sub}</span>`;
-      stepData.insertBefore(banner, stepData.firstChild.nextSibling);
-    }
-  } catch {}
+    } catch {}
+  })();
 </script>
 
 </body>
