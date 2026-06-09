@@ -22,8 +22,8 @@
   const SUPPORTED = ['pt-BR', 'en-US', 'es-ES'];
   const DEFAULT_LOCALE = 'pt-BR';
   const STORAGE_KEY = 'ep_lang';
-  const I18NEXT_CDN = 'https://unpkg.com/i18next@23.16.4/dist/umd/i18next.min.js';
-  const BACKEND_CDN = 'https://unpkg.com/i18next-http-backend@2.6.2/i18nextHttpBackend.min.js';
+  const I18NEXT_CDN = '/i18n/i18next.min.js';
+  const BACKEND_CDN = '/i18n/i18nextHttpBackend.min.js';
 
   function detectLocale() {
     try {
