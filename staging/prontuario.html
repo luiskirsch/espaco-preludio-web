@@ -126,6 +126,14 @@
     .ep-jornada-empty {
       padding: 8px 0;
     }
+    .ep-risco-dot {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: default;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body class="ep-has-sidebar">
@@ -234,6 +242,21 @@
       Eventos marcantes identificados automaticamente a partir dos resumos de IA das sessões, agrupados por ano.
     </p>
     <div id="jornadaContent" class="ep-mt-16"></div>
+  </section>
+
+  <!-- Mapa emocional — evolução de humor, ansiedade, sono e autoestima ao
+       longo do tempo + risco por sessão, a partir dos sinais clínicos
+       extraídos por IA. Só aparece com pelo menos 2 sessões com resumo. -->
+  <section class="ep-mt-32 ep-hide" id="mapaEmocionalBlock" aria-label="Mapa emocional">
+    <div class="ep-eyebrow ep-mb-12">Mapa emocional</div>
+    <h2 class="ep-h2 ep-mt-12">Evolução ao longo do tempo</h2>
+    <p class="ep-text-muted ep-text-sm ep-mt-8">
+      Estimativas geradas por IA a partir dos resumos de sessão. Apoio para identificar tendências — não substitui avaliação clínica.
+    </p>
+    <div id="mapaEmocionalChartWrap" class="ep-card ep-mt-16" style="padding: 14px 16px;">
+      <canvas id="mapaEmocionalChart" style="max-height: 280px;"></canvas>
+    </div>
+    <div id="riscoStrip" class="ep-mt-16" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"></div>
   </section>
 
   <!-- Histórico clínico -->
@@ -781,8 +804,8 @@
     // Carrega + renderiza evolução de escalas (não bloqueia se falhar)
     loadAndRenderEscalas(patient).catch(e => console.warn("escalas_load_failed", e));
 
-    // Carrega + renderiza jornada do paciente (timeline por ano, não bloqueia se falhar)
-    loadAndRenderJornada(patient).catch(e => console.warn("jornada_load_failed", e));
+    // Carrega + renderiza sinais clínicos: jornada por ano + mapa emocional (não bloqueia se falhar)
+    loadAndRenderClinicalSignals(patient).catch(e => console.warn("clinical_signals_load_failed", e));
 
     if (sessions.length === 0) {
       document.getElementById("sessionsLoading").classList.add("ep-hide");
@@ -914,6 +937,24 @@
     }
   }
 
+  // ─── Sinais clínicos (IA) — fetch compartilhado p/ jornada + mapa ────
+  async function fetchSinaisEntries(patient) {
+    if (!patient || !patient.patientId) return [];
+    const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patient.patientId)}/sinais`, {
+      headers: { "Authorization": `Bearer ${idToken}` }
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) return [];
+    return data.entries || [];
+  }
+
+  async function loadAndRenderClinicalSignals(patient) {
+    const entries = await fetchSinaisEntries(patient);
+    if (!entries.length) return;
+    try { renderJornada(entries); } catch (e) { console.warn("render_jornada_failed", e); }
+    try { await renderMapaEmocional(entries); } catch (e) { console.warn("render_mapa_emocional_failed", e); }
+  }
+
   // ─── Jornada do paciente — timeline por ano (sinais clínicos de IA) ──
   const JORNADA_CATEGORIAS = {
     marco_terapeutico: { label: "Marco terapêutico", color: "#2d8a52" },
@@ -924,71 +965,145 @@
     outro:             { label: "Outro",              color: "#6b6b6b" }
   };
 
-  async function loadAndRenderJornada(patient) {
-    if (!patient || !patient.patientId) return;
+  function renderJornada(entries) {
     const block   = document.getElementById("jornadaBlock");
     const content = document.getElementById("jornadaContent");
-    try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patient.patientId)}/sinais`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) return;
-      const entries = data.entries || [];
-      if (!entries.length) return;
 
-      // Agrupa por ano: contagem de sessões + eventos marcantes do período
-      const years = new Map();
-      for (const e of entries) {
-        const year = new Date(e.completedAt).getFullYear();
-        if (!years.has(year)) years.set(year, { sessionCount: 0, events: [] });
-        const y = years.get(year);
-        y.sessionCount++;
-        for (const ev of (e.signals?.notableEvents || [])) {
-          y.events.push({ ...ev, completedAt: e.completedAt });
+    // Agrupa por ano: contagem de sessões + eventos marcantes do período
+    const years = new Map();
+    for (const e of entries) {
+      const year = new Date(e.completedAt).getFullYear();
+      if (!years.has(year)) years.set(year, { sessionCount: 0, events: [] });
+      const y = years.get(year);
+      y.sessionCount++;
+      for (const ev of (e.signals?.notableEvents || [])) {
+        y.events.push({ ...ev, completedAt: e.completedAt });
+      }
+    }
+
+    const sortedYears = [...years.keys()].sort((a, b) => b - a);
+
+    content.innerHTML = "";
+    for (const year of sortedYears) {
+      const y = years.get(year);
+      const yearEl = document.createElement("div");
+      yearEl.className = "ep-jornada-year";
+      const sessLabel = y.sessionCount === 1 ? "1 sessão" : `${y.sessionCount} sessões`;
+      yearEl.innerHTML = `<div class="ep-jornada-year__label">${year} <span class="ep-jornada-year__count">${escapeHtml(sessLabel)}</span></div>`;
+
+      const itemsEl = document.createElement("div");
+      itemsEl.className = "ep-jornada-year__items";
+
+      if (y.events.length === 0) {
+        itemsEl.innerHTML = `<div class="ep-text-xs ep-text-muted ep-jornada-empty">Sem eventos marcantes destacados pela IA neste período.</div>`;
+      } else {
+        const sortedEvents = [...y.events].sort((a, b) => b.completedAt - a.completedAt);
+        for (const ev of sortedEvents) {
+          const cat = JORNADA_CATEGORIAS[ev.category] || JORNADA_CATEGORIAS.outro;
+          const item = document.createElement("div");
+          item.className = "ep-jornada-item";
+          item.innerHTML = `
+            <span class="ep-jornada-item__dot" style="background:${cat.color}"></span>
+            <div class="ep-jornada-item__body">
+              <div class="ep-jornada-item__title">${escapeHtml(ev.title)}</div>
+              <div class="ep-jornada-item__meta">${escapeHtml(cat.label)} · ${escapeHtml(fmtDateLong(ev.completedAt))}</div>
+            </div>
+          `;
+          itemsEl.appendChild(item);
         }
       }
 
-      const sortedYears = [...years.keys()].sort((a, b) => b - a);
+      yearEl.appendChild(itemsEl);
+      content.appendChild(yearEl);
+    }
 
-      content.innerHTML = "";
-      for (const year of sortedYears) {
-        const y = years.get(year);
-        const yearEl = document.createElement("div");
-        yearEl.className = "ep-jornada-year";
-        const sessLabel = y.sessionCount === 1 ? "1 sessão" : `${y.sessionCount} sessões`;
-        yearEl.innerHTML = `<div class="ep-jornada-year__label">${year} <span class="ep-jornada-year__count">${escapeHtml(sessLabel)}</span></div>`;
+    block.classList.remove("ep-hide");
+  }
 
-        const itemsEl = document.createElement("div");
-        itemsEl.className = "ep-jornada-year__items";
+  // ─── Mapa emocional — evolução de humor/ansiedade/sono/autoestima ────
+  const RISCO_CORES = {
+    none: "#9aa3a8",
+    low: "#c9a23e",
+    moderate: "#d97706",
+    high: "#b8453d"
+  };
+  const RISCO_LABELS = {
+    none: "Sem risco indicado",
+    low: "Risco baixo",
+    moderate: "Risco moderado",
+    high: "Risco alto"
+  };
 
-        if (y.events.length === 0) {
-          itemsEl.innerHTML = `<div class="ep-text-xs ep-text-muted ep-jornada-empty">Sem eventos marcantes destacados pela IA neste período.</div>`;
-        } else {
-          const sortedEvents = [...y.events].sort((a, b) => b.completedAt - a.completedAt);
-          for (const ev of sortedEvents) {
-            const cat = JORNADA_CATEGORIAS[ev.category] || JORNADA_CATEGORIAS.outro;
-            const item = document.createElement("div");
-            item.className = "ep-jornada-item";
-            item.innerHTML = `
-              <span class="ep-jornada-item__dot" style="background:${cat.color}"></span>
-              <div class="ep-jornada-item__body">
-                <div class="ep-jornada-item__title">${escapeHtml(ev.title)}</div>
-                <div class="ep-jornada-item__meta">${escapeHtml(cat.label)} · ${escapeHtml(fmtDateLong(ev.completedAt))}</div>
-              </div>
-            `;
-            itemsEl.appendChild(item);
+  async function renderMapaEmocional(entries) {
+    if (entries.length < 2) return;
+
+    const block      = document.getElementById("mapaEmocionalBlock");
+    const chartWrap  = document.getElementById("mapaEmocionalChartWrap");
+    const strip      = document.getElementById("riscoStrip");
+
+    const points = entries.filter(e => {
+      const s = e.signals || {};
+      return [s.mood, s.anxiety, s.sleepQuality, s.selfEsteem].some(v => Number.isFinite(v));
+    });
+
+    if (points.length >= 2) {
+      const ChartMod = await import("https://esm.sh/chart.js@4.4.0/auto");
+      const Chart = ChartMod.default || ChartMod.Chart;
+
+      const labels = points.map(p => new Date(p.completedAt).toLocaleDateString(currentLocale(), { day: "2-digit", month: "short", year: "2-digit" }));
+
+      const series = [
+        { key: "mood", label: "Humor", color: "#2d8a52" },
+        { key: "anxiety", label: "Ansiedade", color: "#b8453d" },
+        { key: "sleepQuality", label: "Qualidade do sono", color: "#3b6ea5" },
+        { key: "selfEsteem", label: "Autoestima", color: "#a06a2d" }
+      ];
+
+      const datasets = series.map(s => ({
+        label: s.label,
+        data: points.map(p => Number.isFinite(p.signals?.[s.key]) ? p.signals[s.key] : null),
+        borderColor: s.color,
+        backgroundColor: s.color,
+        borderWidth: 2,
+        pointRadius: 3,
+        tension: 0.25,
+        spanGaps: true,
+        fill: false
+      }));
+
+      new Chart(document.getElementById("mapaEmocionalChart"), {
+        type: "line",
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } }
+          },
+          scales: {
+            y: { min: 0, max: 10, ticks: { stepSize: 2 } },
+            x: { ticks: { autoSkip: true, maxRotation: 0 } }
           }
         }
-
-        yearEl.appendChild(itemsEl);
-        content.appendChild(yearEl);
-      }
-
-      block.classList.remove("ep-hide");
-    } catch (e) {
-      console.warn("render_jornada_failed", e);
+      });
+      chartWrap.classList.remove("ep-hide");
+    } else {
+      chartWrap.classList.add("ep-hide");
     }
+
+    // Risco por sessão (sempre disponível — riskLevel default "none")
+    strip.innerHTML = `<span class="ep-text-xs ep-text-muted" style="margin-right:4px;">Risco por sessão:</span>`;
+    for (const e of entries) {
+      const level = e.signals?.riskLevel || "none";
+      const dot = document.createElement("span");
+      dot.className = "ep-risco-dot";
+      dot.style.background = RISCO_CORES[level] || RISCO_CORES.none;
+      const factors = (e.signals?.riskFactors || []).join(", ");
+      dot.title = `${fmtDateLong(e.completedAt)} — ${RISCO_LABELS[level] || RISCO_LABELS.none}${factors ? ": " + factors : ""}`;
+      strip.appendChild(dot);
+    }
+
+    block.classList.remove("ep-hide");
   }
 
   // ─── Receitas digitais — listagem por paciente ─────────────────────
