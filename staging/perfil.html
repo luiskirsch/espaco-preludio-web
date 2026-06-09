@@ -612,6 +612,21 @@
         <div id="aiSummaryStatus" class="ep-status ep-mt-12"></div>
       </section>
 
+      <!-- Tópicos da sessão -->
+      <section class="ep-receita-form">
+        <h2 class="ep-h3 ep-mt-0">Tópicos da sessão</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Aparecem no deck lateral durante suas consultas. Clique num tópico na sessão para inserir nas anotações clínicas.
+        </p>
+        <div id="topicsCustomList" class="ep-stack ep-mt-16" style="gap: 8px;"></div>
+        <div class="ep-flex ep-gap-8 ep-mt-16" style="align-items: flex-start; flex-wrap: wrap;">
+          <input id="topicInput" class="ep-input" type="text" maxlength="300"
+            placeholder="Ex.: O que você quer levar dessa sessão?" style="flex: 1; min-width: 200px;">
+          <button type="button" id="topicAddBtn" class="ep-btn ep-btn--ghost ep-btn--sm">+ Adicionar</button>
+        </div>
+        <p class="ep-text-xs ep-text-muted ep-mt-8">Salvos ao clicar em <strong>Salvar perfil</strong>.</p>
+      </section>
+
       <!-- 2FA -->
       <section class="ep-receita-form">
         <h2 class="ep-h3 ep-mt-0" data-i18n="perfil:twofa.h2">Verificação em 2 etapas (2FA)</h2>
@@ -830,6 +845,52 @@
   let pendingPhoto = null; // { base64, mime, dirty: bool, removed: bool }
   let pendingLogo  = null;
 
+  // ─── Tópicos da sessão ─────────────────────────────────────────────────
+  let customTopics = [];
+
+  function renderTopicsList() {
+    const list = $("topicsCustomList");
+    if (!list) return;
+    if (customTopics.length === 0) {
+      list.innerHTML = `<p class="ep-text-sm ep-text-muted" style="margin:0;">Nenhum tópico personalizado ainda.</p>`;
+      return;
+    }
+    list.innerHTML = "";
+    customTopics.forEach((t, i) => {
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex;gap:10px;align-items:center;padding:10px 12px;background:var(--ep-bg-2);border-radius:8px;";
+      const txt = document.createElement("span");
+      txt.className = "ep-text-sm";
+      txt.style.flex = "1";
+      txt.textContent = t.text;
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "ep-btn ep-btn--ghost ep-btn--xs";
+      del.style.cssText = "flex-shrink:0;";
+      del.textContent = "×";
+      del.setAttribute("aria-label", "Remover tópico");
+      del.addEventListener("click", () => { customTopics.splice(i, 1); renderTopicsList(); });
+      row.appendChild(txt);
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  const topicInput  = $("topicInput");
+  const topicAddBtn = $("topicAddBtn");
+  topicAddBtn?.addEventListener("click", () => {
+    const text = (topicInput?.value || "").trim();
+    if (!text) { topicInput?.focus(); return; }
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    customTopics.push({ id, text, abord: "custom" });
+    if (topicInput) topicInput.value = "";
+    topicInput?.focus();
+    renderTopicsList();
+  });
+  topicInput?.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); topicAddBtn?.click(); }
+  });
+
   // ─── Carrega dados existentes ────────────────────────────────────────
   function applyTherapist(t) {
     $("displayName").value   = t.displayName || "";
@@ -873,6 +934,10 @@
     renderSchedActiveLink(t.publicSchedulingSlug || "", !!t.publicSchedulingEnabled);
 
     // Asaas.
+    // Tópicos personalizados da sessão.
+    customTopics = Array.isArray(t.sessionTopics) ? t.sessionTopics.map(x => ({ ...x })) : [];
+    renderTopicsList();
+
     $("asaasEnv").value = t.asaasEnv === "production" ? "production" : "sandbox";
     $("asaasEnabled").checked = !!t.asaasEnabled;
     if (t.asaasConfigured) {
@@ -1961,6 +2026,7 @@ Direito de portabilidade — LGPD Art. 18, V.
         cep:         $("cep").value.trim(),
         telefone:    $("telefone").value.trim()
       },
+      sessionTopics:                   customTopics,
       aiSummaryEnabled:                $("aiSummaryEnabledToggle")?.checked || false,
       publicSchedulingSlug:            $("schedSlug").value.trim().toLowerCase(),
       publicSchedulingEnabled:         $("schedEnabled").checked,

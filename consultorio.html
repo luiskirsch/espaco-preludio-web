@@ -966,16 +966,21 @@
   const topicsList    = document.getElementById("topicsList");
   const topicsDraw    = document.getElementById("topicsDraw");
 
+  const customTopics = Array.isArray(therapist?.sessionTopics) ? therapist.sessionTopics : [];
   let activeAbord = "all";
 
   function renderFilters() {
-    const abords = ["all", ...Object.keys(ABORDAGEM_LABEL)];
+    const abords = ["all"];
+    if (customTopics.length > 0) abords.push("custom");
+    abords.push(...Object.keys(ABORDAGEM_LABEL));
     topicsFilters.innerHTML = "";
     abords.forEach(a => {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "ep-topics-deck__filter" + (a === activeAbord ? " is-active" : "");
-      btn.textContent = a === "all" ? tr("consultorio:topics.all", "Todas") : ABORDAGEM_LABEL[a];
+      if (a === "all")    btn.textContent = tr("consultorio:topics.all", "Todas");
+      else if (a === "custom") btn.textContent = "Meus tópicos";
+      else                btn.textContent = ABORDAGEM_LABEL[a];
       btn.addEventListener("click", () => {
         activeAbord = a;
         renderFilters();
@@ -985,9 +990,14 @@
     });
   }
   function renderList() {
-    const filtered = activeAbord === "all"
-      ? TOPIC_LIBRARY
-      : TOPIC_LIBRARY.filter(t => t.abord === activeAbord);
+    let filtered;
+    if (activeAbord === "all") {
+      filtered = [...customTopics, ...TOPIC_LIBRARY];
+    } else if (activeAbord === "custom") {
+      filtered = customTopics;
+    } else {
+      filtered = TOPIC_LIBRARY.filter(t => t.abord === activeAbord);
+    }
     topicsList.innerHTML = "";
     filtered.forEach(t => topicsList.appendChild(buildTopicCard(t)));
   }
@@ -997,13 +1007,12 @@
     card.className = "ep-topic-card";
     const abord = document.createElement("span");
     abord.className = "ep-topic-card__abord";
-    abord.textContent = ABORDAGEM_LABEL[t.abord] || t.abord;
+    abord.textContent = t.abord === "custom" ? "Meus tópicos" : (ABORDAGEM_LABEL[t.abord] || t.abord);
     const text = document.createElement("span");
     text.textContent = t.text;
     card.appendChild(abord);
     card.appendChild(text);
     card.addEventListener("click", () => {
-      // Insere o tópico como prefixo na anotação atual.
       const prefix = noteInput.value.trim();
       noteInput.value = (prefix ? prefix + "\n\n" : "") + "› " + t.text + "\n";
       noteInput.focus();
@@ -1022,7 +1031,10 @@
     topicsDeck.setAttribute("aria-hidden", "true");
   });
   topicsDraw.addEventListener("click", () => {
-    const pool = activeAbord === "all" ? TOPIC_LIBRARY : TOPIC_LIBRARY.filter(t => t.abord === activeAbord);
+    let pool;
+    if (activeAbord === "all")       pool = [...customTopics, ...TOPIC_LIBRARY];
+    else if (activeAbord === "custom") pool = customTopics;
+    else                              pool = TOPIC_LIBRARY.filter(t => t.abord === activeAbord);
     if (pool.length === 0) return;
     const t = pool[Math.floor(Math.random() * pool.length)];
     const prefix = noteInput.value.trim();

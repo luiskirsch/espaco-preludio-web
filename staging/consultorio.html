@@ -24,7 +24,6 @@
   <script src="./js/pwa.js?v=2" defer></script>
 </head>
 <body class="ep-consult">
-<div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
 
 <div class="ep-shell">
 
@@ -56,6 +55,14 @@
         <button class="ep-ctrl ep-ctrl--leave" id="ctrlLeave" type="button" title="Encerrar consulta" data-i18n-title="consultorio:controls.leave">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" transform="rotate(135 12 12)"/></svg>
         </button>
+      </div>
+
+      <!-- Indicador REC — inline ao lado dos botões, sem position:fixed -->
+      <div id="recIndicator" class="ep-hide" style="display:flex;align-items:center;gap:8px;padding:5px 13px;background:rgba(220,38,38,0.92);color:#fff;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(220,38,38,0.35);flex-shrink:0;">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;animation:ep-rec-blink 1.4s infinite ease-in-out;"></span>
+        <span>REC</span>
+        <span id="recTimer">00:00</span>
+        <span id="recChunkInfo" style="opacity:0.75;font-weight:400;">0 partes</span>
       </div>
     </div>
     <div class="ep-flex ep-gap-8" style="align-items: center;">
@@ -158,13 +165,6 @@
         </div>
       </div>
 
-      <!-- Indicador "REC" visível quando gravando -->
-      <div id="recIndicator" class="ep-hide" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:200;display:flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(220,38,38,0.92);color:#fff;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(220,38,38,0.35);">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;animation:ep-rec-blink 1.4s infinite ease-in-out;"></span>
-        <span>REC</span>
-        <span id="recTimer">00:00</span>
-        <span id="recChunkInfo" style="opacity:0.75;font-weight:400;">0 chunks</span>
-      </div>
     </section>
 
     <!-- Modal de consentimento LGPD pra gravação -->
@@ -722,37 +722,39 @@
   // telefone é universal pra "encerrar chamada" (Zoom/Meet/FaceTime), e
   // o usuário clicava nele descartando o áudio sem perceber — resumo IA
   // nunca era gerado.
+  let _endingSession = false;
   async function endSessionFlow() {
+    if (_endingSession) return;
     if (!confirm(tr("consultorio:alerts.endConfirm", "Encerrar definitivamente esta consulta? O paciente será desconectado."))) return;
-    // Ordem importa: stopAndUpload precisa rodar ANTES de room.disconnect
-    // porque o MediaRecorder lê as tracks de áudio do LiveKit. Depois do
-    // disconnect, as tracks são destruídas e o último chunk fica vazio.
-    let aiResult = null;
-    if (aiCapture && aiCapture.state() === "recording") {
-      setStatus(tr("consultorio:status.uploadingAi", "salvando áudio pra resumo IA…"));
-      try { aiResult = await aiCapture.stopAndUpload(); } catch (err) { console.error("[ai-capture] upload error", err); }
-    }
-    try {
-      await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/encerrar`, {
+    _endingSession = true;
+    ctrlLeave.disabled = true;
+    endSessionBtn.disabled = true;
+    setStatus(tr("consultorio:status.ending", "Encerrando…"));
+
+    // Para o recorder local (não depende das tracks LiveKit)
+    try { recorder?.stop(); } catch {}
+
+    // /encerrar e stopAndUpload rodam em PARALELO — são independentes.
+    // stopAndUpload precisa terminar ANTES de room.disconnect (tracks
+    // do LiveKit são destruídas no disconnect e o último chunk ficaria vazio).
+    await Promise.all([
+      fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/encerrar`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${idToken}` }
-      });
-    } catch {}
-    try { recorder?.stop(); } catch {}
+      }).catch(() => {}),
+      (aiCapture && aiCapture.state() === "recording")
+        ? aiCapture.stopAndUpload().catch(() => {})
+        : Promise.resolve()
+    ]);
+
     try { await room?.disconnect(); } catch {}
-    if (aiResult?.ok) {
-      // Confirmação leve — não bloqueia. Backend processa async.
-      try {
-        alert(tr("consultorio:alerts.aiQueued", "Sessão encerrada. O resumo IA será gerado em alguns minutos e ficará disponível no prontuário do paciente."));
-      } catch {}
-    }
     window.location.href = "./painel.html";
   }
   ctrlLeave.addEventListener("click", endSessionFlow);
   endSessionBtn.addEventListener("click", endSessionFlow);
 
   // ─── Gravação local cifrada ──────────────────────────────────
-  const { SessionRecorder, downloadRecording } = await import("./js/session-record.js");
+  const { SessionRecorder, downloadRecording } = await import("./js/session-record.js?v=3");
   const ctrlRecord       = document.getElementById("ctrlRecord");
   const recConsentModal  = document.getElementById("recConsentModal");
   const recConsentCheck  = document.getElementById("recConsentCheck");
@@ -806,7 +808,7 @@
       recorder = new SessionRecorder({
         sessionId,
         dek,
-        onChunk: (n) => { recChunkInfo.textContent = tr("consultorio:rec.chunks", "{{n}} chunks", { n }); },
+        onChunk: (n) => { recChunkInfo.textContent = tr("consultorio:rec.chunks", "{{n}} partes", { n }); },
         onStop: (blob) => {
           downloadRecording(blob, sessionId);
           recorder = null;
@@ -816,7 +818,7 @@
           if (recTimerInterval) clearInterval(recTimerInterval);
         }
       });
-      await recorder.start({ video: true, audio: true });
+      await recorder.start({ room, remoteVideoEl: videoRemote });
 
       ctrlRecord.classList.add("is-recording");
       ctrlRecord.setAttribute("aria-pressed", "true");
@@ -964,16 +966,21 @@
   const topicsList    = document.getElementById("topicsList");
   const topicsDraw    = document.getElementById("topicsDraw");
 
+  const customTopics = Array.isArray(therapist?.sessionTopics) ? therapist.sessionTopics : [];
   let activeAbord = "all";
 
   function renderFilters() {
-    const abords = ["all", ...Object.keys(ABORDAGEM_LABEL)];
+    const abords = ["all"];
+    if (customTopics.length > 0) abords.push("custom");
+    abords.push(...Object.keys(ABORDAGEM_LABEL));
     topicsFilters.innerHTML = "";
     abords.forEach(a => {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "ep-topics-deck__filter" + (a === activeAbord ? " is-active" : "");
-      btn.textContent = a === "all" ? tr("consultorio:topics.all", "Todas") : ABORDAGEM_LABEL[a];
+      if (a === "all")    btn.textContent = tr("consultorio:topics.all", "Todas");
+      else if (a === "custom") btn.textContent = "Meus tópicos";
+      else                btn.textContent = ABORDAGEM_LABEL[a];
       btn.addEventListener("click", () => {
         activeAbord = a;
         renderFilters();
@@ -983,9 +990,14 @@
     });
   }
   function renderList() {
-    const filtered = activeAbord === "all"
-      ? TOPIC_LIBRARY
-      : TOPIC_LIBRARY.filter(t => t.abord === activeAbord);
+    let filtered;
+    if (activeAbord === "all") {
+      filtered = [...customTopics, ...TOPIC_LIBRARY];
+    } else if (activeAbord === "custom") {
+      filtered = customTopics;
+    } else {
+      filtered = TOPIC_LIBRARY.filter(t => t.abord === activeAbord);
+    }
     topicsList.innerHTML = "";
     filtered.forEach(t => topicsList.appendChild(buildTopicCard(t)));
   }
@@ -995,13 +1007,12 @@
     card.className = "ep-topic-card";
     const abord = document.createElement("span");
     abord.className = "ep-topic-card__abord";
-    abord.textContent = ABORDAGEM_LABEL[t.abord] || t.abord;
+    abord.textContent = t.abord === "custom" ? "Meus tópicos" : (ABORDAGEM_LABEL[t.abord] || t.abord);
     const text = document.createElement("span");
     text.textContent = t.text;
     card.appendChild(abord);
     card.appendChild(text);
     card.addEventListener("click", () => {
-      // Insere o tópico como prefixo na anotação atual.
       const prefix = noteInput.value.trim();
       noteInput.value = (prefix ? prefix + "\n\n" : "") + "› " + t.text + "\n";
       noteInput.focus();
@@ -1020,7 +1031,10 @@
     topicsDeck.setAttribute("aria-hidden", "true");
   });
   topicsDraw.addEventListener("click", () => {
-    const pool = activeAbord === "all" ? TOPIC_LIBRARY : TOPIC_LIBRARY.filter(t => t.abord === activeAbord);
+    let pool;
+    if (activeAbord === "all")       pool = [...customTopics, ...TOPIC_LIBRARY];
+    else if (activeAbord === "custom") pool = customTopics;
+    else                              pool = TOPIC_LIBRARY.filter(t => t.abord === activeAbord);
     if (pool.length === 0) return;
     const t = pool[Math.floor(Math.random() * pool.length)];
     const prefix = noteInput.value.trim();
