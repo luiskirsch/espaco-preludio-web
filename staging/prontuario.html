@@ -134,6 +134,28 @@
       cursor: default;
       flex-shrink: 0;
     }
+    .ep-radar-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: help;
+    }
+    .ep-radar-pill--low {
+      background: rgba(45,138,82,0.12);
+      color: #2d8a52;
+    }
+    .ep-radar-pill--moderate {
+      background: rgba(217,119,6,0.14);
+      color: #b8730a;
+    }
+    .ep-radar-pill--high {
+      background: rgba(184,69,61,0.15);
+      color: #b8453d;
+    }
   </style>
 </head>
 <body class="ep-has-sidebar">
@@ -804,8 +826,8 @@
     // Carrega + renderiza evolução de escalas (não bloqueia se falhar)
     loadAndRenderEscalas(patient).catch(e => console.warn("escalas_load_failed", e));
 
-    // Carrega + renderiza sinais clínicos: jornada por ano + mapa emocional (não bloqueia se falhar)
-    loadAndRenderClinicalSignals(patient).catch(e => console.warn("clinical_signals_load_failed", e));
+    // Carrega + renderiza sinais clínicos: radar de risco + jornada por ano + mapa emocional (não bloqueia se falhar)
+    loadAndRenderClinicalSignals(patient, sessions).catch(e => console.warn("clinical_signals_load_failed", e));
 
     if (sessions.length === 0) {
       document.getElementById("sessionsLoading").classList.add("ep-hide");
@@ -948,11 +970,95 @@
     return data.entries || [];
   }
 
-  async function loadAndRenderClinicalSignals(patient) {
+  async function loadAndRenderClinicalSignals(patient, sessions) {
     const entries = await fetchSinaisEntries(patient);
+    try { renderRadarRisco(sessions, entries); } catch (e) { console.warn("render_radar_risco_failed", e); }
     if (!entries.length) return;
     try { renderJornada(entries); } catch (e) { console.warn("render_jornada_failed", e); }
     try { await renderMapaEmocional(entries); } catch (e) { console.warn("render_mapa_emocional_failed", e); }
+  }
+
+  // ─── Radar de risco — classificação 🟢/🟡/🔴 combinando sinais de IA
+  // com padrões de frequência/faltas. Indicador de apoio, não diagnóstico.
+  const RADAR_RISK_SCORE = { none: 0, low: 1, moderate: 2, high: 3 };
+  const RADAR_LABELS = {
+    low: "🟢 Estável",
+    moderate: "🟡 Atenção",
+    high: "🔴 Alto risco"
+  };
+
+  function calcRadarRisco(sessions, entries) {
+    if (!entries.length) return null;
+
+    const reasons = [];
+    let score = 0;
+
+    // 1) Pior riskLevel sinalizado pela IA nas últimas sessões com resumo
+    const recentEntries = entries.slice(-3);
+    const maxRisk = Math.max(...recentEntries.map(e => RADAR_RISK_SCORE[e.signals?.riskLevel || "none"]));
+    if (maxRisk >= 3) { score += 2; reasons.push("Risco alto sinalizado pela IA em sessão recente."); }
+    else if (maxRisk === 2) { score += 1; reasons.push("Risco moderado sinalizado pela IA em sessão recente."); }
+    else if (maxRisk === 1) { reasons.push("Risco baixo sinalizado pela IA em sessão recente."); }
+
+    // 2) Tendência emocional: últimas 2 sessões vs as 2 anteriores
+    if (entries.length >= 4) {
+      const avg = (arr, key) => {
+        const vals = arr.map(e => e.signals?.[key]).filter(Number.isFinite);
+        return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+      };
+      const last2 = entries.slice(-2);
+      const prev2 = entries.slice(-4, -2);
+      const moodNow = avg(last2, "mood"), moodPrev = avg(prev2, "mood");
+      const anxNow  = avg(last2, "anxiety"), anxPrev  = avg(prev2, "anxiety");
+      const selfNow = avg(last2, "selfEsteem"), selfPrev = avg(prev2, "selfEsteem");
+      if (moodNow != null && moodPrev != null && moodPrev - moodNow >= 2) { score += 1; reasons.push("Queda no humor nas últimas sessões."); }
+      if (anxNow != null && anxPrev != null && anxNow - anxPrev >= 2) { score += 1; reasons.push("Aumento na ansiedade nas últimas sessões."); }
+      if (selfNow != null && selfPrev != null && selfPrev - selfNow >= 2) { score += 1; reasons.push("Queda na autoestima nas últimas sessões."); }
+    }
+
+    // 3) Faltas/cancelamentos recentes
+    const recentSessions = [...sessions].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 5);
+    const canceled = recentSessions.filter(s => s.status === "canceled").length;
+    if (canceled >= 2) { score += 1; reasons.push(`${canceled} sessões canceladas/faltas entre as últimas 5.`); }
+
+    // 4) Queda na frequência: intervalo entre sessões aumentando
+    const completedAsc = sessions.filter(s => s.status === "completed" && s.createdAt).sort((a, b) => a.createdAt - b.createdAt);
+    if (completedAsc.length >= 6) {
+      const gaps = [];
+      for (let i = 1; i < completedAsc.length; i++) gaps.push(completedAsc[i].createdAt - completedAsc[i - 1].createdAt);
+      const avgG = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+      const recentGaps = avgG(gaps.slice(-3));
+      const prevGaps = avgG(gaps.slice(-6, -3));
+      if (prevGaps > 0 && recentGaps > prevGaps * 1.6) { score += 1; reasons.push("Intervalo entre sessões aumentou significativamente."); }
+    }
+
+    // 5) Tema clínico recorrente nas últimas sessões
+    const lastThemes = entries.slice(-6);
+    const themeCounts = {};
+    for (const e of lastThemes) for (const t of (e.signals?.keyThemes || [])) themeCounts[t] = (themeCounts[t] || 0) + 1;
+    const recurrent = Object.entries(themeCounts).filter(([, c]) => c >= 3).map(([t]) => t);
+    if (recurrent.length) { score += 1; reasons.push(`Tema recorrente nas sessões: ${recurrent.join(", ")}.`); }
+
+    let level;
+    if (score >= 3) level = "high";
+    else if (score >= 1) level = "moderate";
+    else level = "low";
+
+    if (!reasons.length) reasons.push("Nenhum sinal de atenção identificado nas sessões recentes.");
+
+    return { level, reasons };
+  }
+
+  function renderRadarRisco(sessions, entries) {
+    const radar = calcRadarRisco(sessions || [], entries || []);
+    if (!radar) return;
+    const pills = document.getElementById("patientPills");
+    const pill = document.createElement("span");
+    pill.className = `ep-radar-pill ep-radar-pill--${radar.level}`;
+    pill.textContent = RADAR_LABELS[radar.level];
+    pill.title = "Radar de risco — apoio automático, não substitui avaliação clínica.\n"
+      + radar.reasons.map(r => "• " + r).join("\n");
+    pills.appendChild(pill);
   }
 
   // ─── Jornada do paciente — timeline por ano (sinais clínicos de IA) ──
