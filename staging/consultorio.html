@@ -1097,11 +1097,38 @@
     );
   }
 
+  let _slidesKey = null;
+  async function slidesGetKey() {
+    if (_slidesKey) return _slidesKey;
+    if (!e2eeKeyBytes) return null;
+    _slidesKey = await crypto.subtle.importKey("raw", e2eeKeyBytes, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+    return _slidesKey;
+  }
+  function slidesB64(bytes) {
+    let s = "";
+    for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s);
+  }
+
   async function slidesSendOne(idx) {
-    const b64 = (slidesData[idx] || "").split(",")[1] || "";
+    const dataUrl = slidesData[idx] || "";
+    const key = await slidesGetKey();
+    let sendB64, ivB64 = null;
+    if (key) {
+      const iv  = crypto.getRandomValues(new Uint8Array(12));
+      const enc = new Uint8Array(await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv },
+        key,
+        new TextEncoder().encode(dataUrl.split(",")[1] || "")
+      ));
+      sendB64 = slidesB64(enc);
+      ivB64   = slidesB64(iv);
+    } else {
+      sendB64 = dataUrl.split(",")[1] || "";
+    }
     const chunks = [];
-    for (let i = 0; i < b64.length; i += SLIDES_CHUNK) chunks.push(b64.slice(i, i + SLIDES_CHUNK));
-    slidesPublish({ t: "slides:slide", idx, cn: chunks.length });
+    for (let i = 0; i < sendB64.length; i += SLIDES_CHUNK) chunks.push(sendB64.slice(i, i + SLIDES_CHUNK));
+    slidesPublish({ t: "slides:slide", idx, cn: chunks.length, iv: ivB64 });
     for (let ci = 0; ci < chunks.length; ci++) {
       slidesPublish({ t: "slides:chunk", idx, ci, d: chunks[ci] });
       if (ci % 8 === 7) await new Promise(r => setTimeout(r, 0));

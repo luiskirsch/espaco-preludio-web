@@ -728,7 +728,11 @@
     const _pSlidesBuf   = {};
     const _pSlidesData  = [];
 
-    room.on(RoomEvent.DataReceived, (payload) => {
+    const _pSlidesKey = e2eeKeyBytes
+      ? await crypto.subtle.importKey("raw", e2eeKeyBytes, { name: "AES-GCM" }, false, ["encrypt", "decrypt"])
+      : null;
+
+    room.on(RoomEvent.DataReceived, async (payload) => {
       let msg;
       try { msg = JSON.parse(new TextDecoder().decode(payload)); } catch { return; }
       switch (msg.t) {
@@ -737,14 +741,24 @@
           slidesImg.src = "";
           break;
         case "slides:slide":
-          _pSlidesBuf[msg.idx] = { cn: msg.cn, chunks: new Array(msg.cn).fill(null) };
+          _pSlidesBuf[msg.idx] = { cn: msg.cn, iv: msg.iv || null, chunks: new Array(msg.cn).fill(null) };
           break;
         case "slides:chunk": {
           const buf = _pSlidesBuf[msg.idx];
           if (buf) {
             buf.chunks[msg.ci] = msg.d;
             if (buf.chunks.every(c => c !== null)) {
-              _pSlidesData[msg.idx] = "data:image/jpeg;base64," + buf.chunks.join("");
+              const assembled = buf.chunks.join("");
+              if (buf.iv && _pSlidesKey) {
+                try {
+                  const iv  = Uint8Array.from(atob(buf.iv),  c => c.charCodeAt(0));
+                  const enc = Uint8Array.from(atob(assembled), c => c.charCodeAt(0));
+                  const dec = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, _pSlidesKey, enc);
+                  _pSlidesData[msg.idx] = "data:image/jpeg;base64," + new TextDecoder().decode(dec);
+                } catch (e) { console.warn("[slides] decrypt failed", e); }
+              } else {
+                _pSlidesData[msg.idx] = "data:image/jpeg;base64," + assembled;
+              }
             }
           }
           break;
