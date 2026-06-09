@@ -156,6 +156,30 @@
       background: rgba(184,69,61,0.15);
       color: #b8453d;
     }
+    .ep-gemeo-chip {
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--ep-line);
+      background: var(--ep-surface);
+      color: var(--ep-ink-2);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .ep-gemeo-chip:hover {
+      border-color: var(--ep-gold);
+      color: var(--ep-ink);
+    }
+    .ep-gemeo-answer {
+      background: var(--ep-surface);
+      border: 1px solid var(--ep-line);
+      border-radius: var(--ep-radius);
+      padding: 14px 16px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--ep-ink);
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body class="ep-has-sidebar">
@@ -279,6 +303,23 @@
       <canvas id="mapaEmocionalChart" style="max-height: 280px;"></canvas>
     </div>
     <div id="riscoStrip" class="ep-mt-16" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"></div>
+  </section>
+
+  <!-- Gêmeo Clínico — pergunta livre sobre o histórico do paciente,
+       respondida por IA com base nos resumos de sessão. Só aparece se
+       houver pelo menos 1 sessão com resumo concluído. -->
+  <section class="ep-mt-32 ep-hide" id="gemeoClinicoBlock" aria-label="Gêmeo Clínico">
+    <div class="ep-eyebrow ep-mb-12">Gêmeo Clínico</div>
+    <h2 class="ep-h2 ep-mt-12">Pergunte sobre o histórico</h2>
+    <p class="ep-text-muted ep-text-sm ep-mt-8">
+      Respostas geradas por IA com base nos resumos de sessão deste paciente. Apoio à memória — não substitui sua avaliação clínica.
+    </p>
+    <div id="gemeoChips" class="ep-mt-16" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+    <div class="ep-mt-12" style="display:flex; gap:8px;">
+      <input type="text" id="gemeoInput" class="ep-input" style="flex:1;" placeholder="Ex: o que mudou desde a última consulta?">
+      <button type="button" class="ep-btn ep-btn--primary" id="gemeoAsk">Perguntar</button>
+    </div>
+    <div id="gemeoAnswer" class="ep-mt-16 ep-hide"></div>
   </section>
 
   <!-- Histórico clínico -->
@@ -976,6 +1017,7 @@
     if (!entries.length) return;
     try { renderJornada(entries); } catch (e) { console.warn("render_jornada_failed", e); }
     try { await renderMapaEmocional(entries); } catch (e) { console.warn("render_mapa_emocional_failed", e); }
+    try { initGemeoClinico(); } catch (e) { console.warn("init_gemeo_clinico_failed", e); }
   }
 
   // ─── Radar de risco — classificação 🟢/🟡/🔴 combinando sinais de IA
@@ -1208,6 +1250,62 @@
       dot.title = `${fmtDateLong(e.completedAt)} — ${RISCO_LABELS[level] || RISCO_LABELS.none}${factors ? ": " + factors : ""}`;
       strip.appendChild(dot);
     }
+
+    block.classList.remove("ep-hide");
+  }
+
+  // ─── Gêmeo Clínico — pergunta livre sobre o histórico ──────────────
+  const GEMEO_SUGESTOES = [
+    "O que mudou desde a última consulta?",
+    "Quais temas têm aparecido repetidamente?",
+    "Qual é a hipótese mais provável para a piora recente?",
+    "Resuma a evolução geral do paciente."
+  ];
+
+  function initGemeoClinico() {
+    const block = document.getElementById("gemeoClinicoBlock");
+    const chips = document.getElementById("gemeoChips");
+    const input = document.getElementById("gemeoInput");
+    const askBtn = document.getElementById("gemeoAsk");
+    const answerBox = document.getElementById("gemeoAnswer");
+
+    chips.innerHTML = "";
+    for (const sug of GEMEO_SUGESTOES) {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "ep-gemeo-chip";
+      chip.textContent = sug;
+      chip.addEventListener("click", () => { input.value = sug; askGemeo(); });
+      chips.appendChild(chip);
+    }
+
+    async function askGemeo() {
+      const question = input.value.trim();
+      if (!question) return;
+      askBtn.disabled = true;
+      askBtn.textContent = "Pensando…";
+      answerBox.classList.remove("ep-hide");
+      answerBox.innerHTML = `<div class="ep-gemeo-answer ep-text-muted">Consultando o histórico…</div>`;
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patientId)}/gemeo-clinico`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ question })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+        answerBox.innerHTML = `<div class="ep-gemeo-answer">${escapeHtml(data.answer || "")}</div>`;
+      } catch (e) {
+        console.error("gemeo_clinico_error", e);
+        answerBox.innerHTML = `<div class="ep-gemeo-answer ep-text-muted">Não foi possível obter resposta agora. Tente novamente.</div>`;
+      } finally {
+        askBtn.disabled = false;
+        askBtn.textContent = "Perguntar";
+      }
+    }
+
+    askBtn.addEventListener("click", askGemeo);
+    input.addEventListener("keydown", e => { if (e.key === "Enter") askGemeo(); });
 
     block.classList.remove("ep-hide");
   }
