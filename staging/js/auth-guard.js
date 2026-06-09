@@ -8,6 +8,8 @@ import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
 import { recallDek } from "./crypto.js";
 import { mountThemeToggle } from "./theme-toggle.js";
 import "./cmdk.js";
+import db from "./db.js";
+import { connectRealtime } from "./realtime.js?v=1";
 
 // ─── 2FA session ─────────────────────────────────────────────────────
 // Token TOTP-session salvo em sessionStorage após verify. Validade = 8h
@@ -52,12 +54,11 @@ export function authReady() {
 // Versão da chave: bumpar quando o shape do profile mudar OU quando precisar
 // invalidar caches stale em todos os users (ex.: ajuste de capabilities no
 // backend que muda a matriz pra um conselho).
-const PROFILE_CACHE_KEY = "ep:profile:v2";
+const PROFILE_CACHE_KEY    = "ep:profile:v2";
 const PROFILE_CACHE_TTL_MS = 30_000;
-const PROFILE_LS_KEY = "ep:profile:ls:v2";
-const PROFILE_LS_TTL_MS = 5 * 60 * 1000;
+const PROFILE_IDB_TTL_MS   = 30 * 60_000;
 
-function readProfileCache(uid) {
+async function readProfileCache(uid) {
   // 1. sessionStorage (quente, 30s).
   try {
     const raw = sessionStorage.getItem(PROFILE_CACHE_KEY);
@@ -66,14 +67,11 @@ function readProfileCache(uid) {
       if (entry.uid === uid && Date.now() - entry.t <= PROFILE_CACHE_TTL_MS) return entry.profile;
     }
   } catch {}
-  // 2. localStorage (morno, 5min — sobrevive ao fechar aba).
+  // 2. IndexedDB (morno, 30min — sobrevive ao fechar aba).
   try {
-    const raw = localStorage.getItem(PROFILE_LS_KEY);
-    if (!raw) return null;
-    const entry = JSON.parse(raw);
-    if (entry.uid !== uid) return null;
-    if (Date.now() - entry.t > PROFILE_LS_TTL_MS) return null;
-    // Aquece sessionStorage para evitar re-leitura do LS.
+    const entry = await db.profile.get(uid);
+    if (!entry) return null;
+    if (Date.now() - entry.t > PROFILE_IDB_TTL_MS) return null;
     try { sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify({ uid, t: Date.now(), profile: entry.profile })); } catch {}
     return entry.profile;
   } catch { return null; }
@@ -83,9 +81,9 @@ function writeProfileCache(uid, profile) {
   try {
     sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify({ uid, t: Date.now(), profile }));
   } catch {}
-  try {
-    localStorage.setItem(PROFILE_LS_KEY, JSON.stringify({ uid, t: Date.now(), profile }));
-  } catch {}
+  db.profile.put({ uid, t: Date.now(), profile }).catch(() => {});
+  // Flag sync para sidebar.js: preflight TISS antes do primeiro auth async.
+  try { localStorage.setItem("ep:tiss:enabled", profile?.therapist?.tissEnabled ? "1" : "0"); } catch {}
 }
 
 export function invalidateProfileCache() {
@@ -93,9 +91,8 @@ export function invalidateProfileCache() {
     sessionStorage.removeItem(PROFILE_CACHE_KEY);
     sessionStorage.removeItem("ep:profile:v1");
   } catch {}
-  try {
-    localStorage.removeItem(PROFILE_LS_KEY);
-  } catch {}
+  try { localStorage.removeItem("ep:tiss:enabled"); } catch {}
+  db.profile.clear().catch(() => {});
 }
 
 // Invalida automaticamente em signOut ou troca de conta — listener global
@@ -140,7 +137,7 @@ export async function fetchTherapistProfile(idToken, uid) {
   // Sem uid (compat retro) → busca direto, sem cache.
   if (!uid) return fetchProfileFromBackend(idToken);
 
-  const cached = readProfileCache(uid);
+  const cached = await readProfileCache(uid);
   if (cached) {
     // SWR: dispara revalidate em background, retorna cache imediato. Se
     // o fresh fetch trouxer capabilities diferentes (ex.: cache stale do
@@ -679,14 +676,30 @@ function mountMessagesBubble(idTokenGetter) {
     const u = auth.currentUser;
     return u ? u.getIdToken() : null;
   });
+  let hydratedSync = false;
   try {
     const raw = sessionStorage.getItem(PROFILE_CACHE_KEY);
-    if (!raw) return;
-    const entry = JSON.parse(raw);
-    if (!entry?.profile?.therapist) return;
-    applyTopUserSlot(entry.profile.therapist);
-    mountHelpBubble();
-  } catch { /* no-op silencioso */ }
+    if (raw) {
+      const entry = JSON.parse(raw);
+      if (entry?.profile?.therapist) {
+        applyTopUserSlot(entry.profile.therapist);
+        mountHelpBubble();
+        hydratedSync = true;
+      }
+    }
+  } catch {}
+  if (!hydratedSync) {
+    // Novo tab / reabriu: sessionStorage vazio, mas IDB tem o profile (~1-5ms).
+    authReady().then(user => {
+      if (!user) return;
+      return db.profile.get(user.uid).then(entry => {
+        if (entry?.profile?.therapist) {
+          applyTopUserSlot(entry.profile.therapist);
+          mountHelpBubble();
+        }
+      });
+    }).catch(() => {});
+  }
 })();
 
 export async function requireTherapist({ requireDek = true } = {}) {
@@ -740,6 +753,9 @@ export async function requireTherapist({ requireDek = true } = {}) {
 
   // Botão flutuante de suporte (canto inferior direito).
   mountHelpBubble();
+
+  // Realtime: conecta Socket.io (singleton — seguro chamar N vezes).
+  connectRealtime(user.uid, idToken).catch(() => {});
 
   if (requireDek) {
     const dek = recallDek();

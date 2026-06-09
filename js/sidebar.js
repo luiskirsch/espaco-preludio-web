@@ -67,10 +67,13 @@
   // de "TISS some/aparece" tanto em navegações intra-sessão quanto ao reabrir.
   var tissCachedEnabled = false;
   try {
-    var profileRaw = sessionStorage.getItem('ep:profile:v2') || localStorage.getItem('ep:profile:ls:v2');
+    var profileRaw = sessionStorage.getItem('ep:profile:v2');
     if (profileRaw) {
       var profileEntry = JSON.parse(profileRaw);
       tissCachedEnabled = !!(profileEntry && profileEntry.profile && profileEntry.profile.therapist && profileEntry.profile.therapist.tissEnabled);
+    } else {
+      // Fallback: flag simples gravado por auth-guard.writeProfileCache (sync, sobrevive ao fechar aba).
+      tissCachedEnabled = localStorage.getItem('ep:tiss:enabled') === '1';
     }
   } catch (e) { /* sem cache, mantém hidden */ }
   var tissExtra = 'id="sidebarTissLink" class="ep-sidebar__tiss' + (tissCachedEnabled ? '' : ' is-hidden') + '"';
