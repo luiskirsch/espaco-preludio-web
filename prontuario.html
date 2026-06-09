@@ -71,6 +71,61 @@
       gap: 10px;
       margin-top: 10px;
     }
+    .ep-jornada-year {
+      margin-bottom: 22px;
+    }
+    .ep-jornada-year__label {
+      font-family: "Fraunces", serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--ep-ink);
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--ep-line);
+      margin-bottom: 10px;
+    }
+    .ep-jornada-year__count {
+      font-family: "Inter", sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ep-ink-2);
+    }
+    .ep-jornada-year__items {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ep-jornada-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--ep-surface);
+      border-radius: var(--ep-radius);
+      border: 1px solid var(--ep-line);
+    }
+    .ep-jornada-item__dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+    .ep-jornada-item__title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ep-ink);
+    }
+    .ep-jornada-item__meta {
+      font-size: 12px;
+      color: var(--ep-ink-2);
+      margin-top: 2px;
+    }
+    .ep-jornada-empty {
+      padding: 8px 0;
+    }
   </style>
 </head>
 <body class="ep-has-sidebar">
@@ -167,6 +222,18 @@
   <section class="ep-mt-32 ep-hide" id="escalasBlock" data-i18n-aria-label="prontuario:escalas.blockAria" aria-label="Evolução de escalas clínicas">
     <div class="ep-eyebrow ep-mb-12" data-i18n="prontuario:escalas.block">Evolução de escalas</div>
     <div id="escalasGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px;"></div>
+  </section>
+
+  <!-- Jornada do paciente — timeline de eventos marcantes por ano, gerada a
+       partir dos sinais clínicos extraídos por IA dos resumos de sessão.
+       Só aparece se houver pelo menos 1 sessão com resumo concluído. -->
+  <section class="ep-mt-32 ep-hide" id="jornadaBlock" aria-label="Jornada do paciente">
+    <div class="ep-eyebrow ep-mb-12">Jornada do paciente</div>
+    <h2 class="ep-h2 ep-mt-12">Linha do tempo</h2>
+    <p class="ep-text-muted ep-text-sm ep-mt-8">
+      Eventos marcantes identificados automaticamente a partir dos resumos de IA das sessões, agrupados por ano.
+    </p>
+    <div id="jornadaContent" class="ep-mt-16"></div>
   </section>
 
   <!-- Histórico clínico -->
@@ -714,6 +781,9 @@
     // Carrega + renderiza evolução de escalas (não bloqueia se falhar)
     loadAndRenderEscalas(patient).catch(e => console.warn("escalas_load_failed", e));
 
+    // Carrega + renderiza jornada do paciente (timeline por ano, não bloqueia se falhar)
+    loadAndRenderJornada(patient).catch(e => console.warn("jornada_load_failed", e));
+
     if (sessions.length === 0) {
       document.getElementById("sessionsLoading").classList.add("ep-hide");
       document.getElementById("sessionsEmpty").classList.remove("ep-hide");
@@ -841,6 +911,83 @@
       block.classList.remove("ep-hide");
     } catch (e) {
       console.warn("render_escalas_failed", e);
+    }
+  }
+
+  // ─── Jornada do paciente — timeline por ano (sinais clínicos de IA) ──
+  const JORNADA_CATEGORIAS = {
+    marco_terapeutico: { label: "Marco terapêutico", color: "#2d8a52" },
+    evento_vida:       { label: "Evento de vida",     color: "#3b6ea5" },
+    saude:             { label: "Saúde",              color: "#2d7a8a" },
+    crise:             { label: "Crise",              color: "#b8453d" },
+    medicacao:         { label: "Medicação",          color: "#a06a2d" },
+    outro:             { label: "Outro",              color: "#6b6b6b" }
+  };
+
+  async function loadAndRenderJornada(patient) {
+    if (!patient || !patient.patientId) return;
+    const block   = document.getElementById("jornadaBlock");
+    const content = document.getElementById("jornadaContent");
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patient.patientId)}/sinais`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) return;
+      const entries = data.entries || [];
+      if (!entries.length) return;
+
+      // Agrupa por ano: contagem de sessões + eventos marcantes do período
+      const years = new Map();
+      for (const e of entries) {
+        const year = new Date(e.completedAt).getFullYear();
+        if (!years.has(year)) years.set(year, { sessionCount: 0, events: [] });
+        const y = years.get(year);
+        y.sessionCount++;
+        for (const ev of (e.signals?.notableEvents || [])) {
+          y.events.push({ ...ev, completedAt: e.completedAt });
+        }
+      }
+
+      const sortedYears = [...years.keys()].sort((a, b) => b - a);
+
+      content.innerHTML = "";
+      for (const year of sortedYears) {
+        const y = years.get(year);
+        const yearEl = document.createElement("div");
+        yearEl.className = "ep-jornada-year";
+        const sessLabel = y.sessionCount === 1 ? "1 sessão" : `${y.sessionCount} sessões`;
+        yearEl.innerHTML = `<div class="ep-jornada-year__label">${year} <span class="ep-jornada-year__count">${escapeHtml(sessLabel)}</span></div>`;
+
+        const itemsEl = document.createElement("div");
+        itemsEl.className = "ep-jornada-year__items";
+
+        if (y.events.length === 0) {
+          itemsEl.innerHTML = `<div class="ep-text-xs ep-text-muted ep-jornada-empty">Sem eventos marcantes destacados pela IA neste período.</div>`;
+        } else {
+          const sortedEvents = [...y.events].sort((a, b) => b.completedAt - a.completedAt);
+          for (const ev of sortedEvents) {
+            const cat = JORNADA_CATEGORIAS[ev.category] || JORNADA_CATEGORIAS.outro;
+            const item = document.createElement("div");
+            item.className = "ep-jornada-item";
+            item.innerHTML = `
+              <span class="ep-jornada-item__dot" style="background:${cat.color}"></span>
+              <div class="ep-jornada-item__body">
+                <div class="ep-jornada-item__title">${escapeHtml(ev.title)}</div>
+                <div class="ep-jornada-item__meta">${escapeHtml(cat.label)} · ${escapeHtml(fmtDateLong(ev.completedAt))}</div>
+              </div>
+            `;
+            itemsEl.appendChild(item);
+          }
+        }
+
+        yearEl.appendChild(itemsEl);
+        content.appendChild(yearEl);
+      }
+
+      block.classList.remove("ep-hide");
+    } catch (e) {
+      console.warn("render_jornada_failed", e);
     }
   }
 

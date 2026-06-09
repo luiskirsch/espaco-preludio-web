@@ -22,9 +22,113 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=2" defer></script>
+  <style>
+    .rec-drop {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--ep-surface);
+      border: 2px dashed var(--ep-line-strong);
+      border-radius: var(--ep-radius-lg);
+      padding: 20px 24px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ep-ink-2);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .rec-drop:hover, .rec-drop.is-over {
+      border-color: var(--ep-gold);
+      background: var(--ep-gold-soft);
+      color: var(--ep-ink);
+    }
+    .rec-bar-track {
+      height: 5px;
+      background: var(--ep-line-strong);
+      border-radius: 999px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+    .rec-bar-fill {
+      height: 100%;
+      background: var(--ep-gold);
+      border-radius: 999px;
+      transition: width 0.2s;
+      width: 0%;
+    }
+    .rec-player-wrap video {
+      width: 100%;
+      display: block;
+      border-radius: var(--ep-radius);
+      background: #0a0805;
+      max-height: 65vh;
+    }
+    .rec-player-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .ep-jornada-year {
+      margin-bottom: 22px;
+    }
+    .ep-jornada-year__label {
+      font-family: "Fraunces", serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--ep-ink);
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--ep-line);
+      margin-bottom: 10px;
+    }
+    .ep-jornada-year__count {
+      font-family: "Inter", sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ep-ink-2);
+    }
+    .ep-jornada-year__items {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ep-jornada-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--ep-surface);
+      border-radius: var(--ep-radius);
+      border: 1px solid var(--ep-line);
+    }
+    .ep-jornada-item__dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+    .ep-jornada-item__title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ep-ink);
+    }
+    .ep-jornada-item__meta {
+      font-size: 12px;
+      color: var(--ep-ink-2);
+      margin-top: 2px;
+    }
+    .ep-jornada-empty {
+      padding: 8px 0;
+    }
+  </style>
 </head>
 <body class="ep-has-sidebar">
-<div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
 <script src="./js/sidebar.js?v=19"></script>
 
 <header class="ep-topbar">
@@ -120,6 +224,18 @@
     <div id="escalasGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px;"></div>
   </section>
 
+  <!-- Jornada do paciente — timeline de eventos marcantes por ano, gerada a
+       partir dos sinais clínicos extraídos por IA dos resumos de sessão.
+       Só aparece se houver pelo menos 1 sessão com resumo concluído. -->
+  <section class="ep-mt-32 ep-hide" id="jornadaBlock" aria-label="Jornada do paciente">
+    <div class="ep-eyebrow ep-mb-12">Jornada do paciente</div>
+    <h2 class="ep-h2 ep-mt-12">Linha do tempo</h2>
+    <p class="ep-text-muted ep-text-sm ep-mt-8">
+      Eventos marcantes identificados automaticamente a partir dos resumos de IA das sessões, agrupados por ano.
+    </p>
+    <div id="jornadaContent" class="ep-mt-16"></div>
+  </section>
+
   <!-- Histórico clínico -->
   <section class="ep-mt-32">
     <div class="ep-eyebrow" data-i18n="prontuario:history.eyebrow">Histórico clínico</div>
@@ -153,6 +269,43 @@
         <div class="ep-error-state__detail" id="errorStateDetail"></div>
       </div>
       <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="retryBtn" data-i18n="prontuario:error.retry">Tentar novamente</button>
+    </div>
+  </section>
+
+  <!-- Gravações de sessão — arquivo .ep-rec local, descriptografado no browser -->
+  <section class="ep-mt-32" id="gravacaoSection">
+    <div class="ep-eyebrow">Gravações de sessão</div>
+    <h2 class="ep-h2 ep-mt-12">Reproduzir gravação</h2>
+    <p class="ep-text-muted ep-text-sm ep-mt-8">
+      Abra um arquivo <strong>.ep-rec</strong> salvo durante a consulta.
+      A descriptografia acontece no seu navegador — nada é enviado ao servidor.
+    </p>
+
+    <div id="recDropzone" class="rec-drop ep-mt-16" role="button" tabindex="0" aria-label="Selecionar arquivo .ep-rec">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" flex-shrink="0" style="flex-shrink:0"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/><line x1="12" y1="17" x2="12" y2="3"/></svg>
+      <span>Arraste o arquivo aqui ou <strong>clique para selecionar</strong> (.ep-rec)</span>
+      <input id="recFileInput" type="file" accept=".ep-rec,application/json" style="display:none">
+    </div>
+
+    <div id="recProgress" class="ep-hide" style="margin-top:16px;">
+      <div class="ep-text-sm ep-text-muted" id="recProgressLabel">Descriptografando…</div>
+      <div class="rec-bar-track"><div class="rec-bar-fill" id="recBarFill"></div></div>
+    </div>
+
+    <div id="recPlayer" class="rec-player-wrap ep-hide" style="margin-top:16px;">
+      <video id="recVideoEl" controls playsinline></video>
+      <div class="rec-player-footer">
+        <span class="ep-text-xs ep-text-muted" id="recMetaText"></span>
+        <div style="display:flex;gap:8px;">
+          <a id="recDownloadBtn" class="ep-btn ep-btn--ghost ep-btn--sm" download>Baixar .webm</a>
+          <button id="recCloseBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="recError" class="ep-alert ep-alert--danger ep-mt-16 ep-hide" role="alert">
+      <strong id="recErrorTitle">Erro ao processar o arquivo.</strong>
+      <p style="margin:4px 0 0;" id="recErrorMsg"></p>
     </div>
   </section>
 
@@ -518,11 +671,15 @@
       return;
     }
     if (status === "failed") {
+      const isHallucinated = data.error === "TRANSCRIPT_ALUCINADO";
+      const failedMsg = isHallucinated
+        ? tr("prontuario:aiSummary.hallucinated", "Áudio da sessão sem fala detectável — transcrição não gerada.")
+        : tr("prontuario:aiSummary.failed", "Falha ao gerar resumo IA.");
       box.innerHTML = `
         <div class="ep-ai-summary ep-ai-summary--failed">
           <div class="ep-ai-summary__head">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span>${escapeHtml(tr("prontuario:aiSummary.failed", "Falha ao gerar resumo IA."))}</span>
+            <span>${escapeHtml(failedMsg)}</span>
           </div>
           ${data.error ? `<div class="ep-text-xs ep-text-muted">${escapeHtml(data.error)}</div>` : ""}
         </div>`;
@@ -549,6 +706,16 @@
         <ul>${followups.map(f => `<li>${escapeHtml(f)}</li>`).join("")}</ul>
       </div>` : "";
 
+    const transcript = typeof data.transcript === "string" && data.transcript.trim() ? data.transcript.trim() : null;
+    const hasContent = summary.summary || topics.length || commitments.length || followups.length;
+    const transcriptHtml = transcript ? `
+      <details class="ep-ai-summary__transcript">
+        <summary class="ep-text-xs" style="cursor:pointer;color:var(--ep-ink-2);user-select:none;margin-top:10px;">
+          Ver transcrição completa
+        </summary>
+        <p style="margin:8px 0 0;font-size:12px;line-height:1.6;color:var(--ep-ink-2);white-space:pre-wrap;">${escapeHtml(transcript)}</p>
+      </details>` : "";
+
     box.innerHTML = `
       <div class="ep-ai-summary ep-ai-summary--ok">
         <div class="ep-ai-summary__head">
@@ -556,9 +723,11 @@
           <span>${escapeHtml(tr("prontuario:aiSummary.title", "Resumo IA"))}</span>
         </div>
         ${summary.summary ? `<p class="ep-ai-summary__lead">${escapeHtml(summary.summary)}</p>` : ""}
+        ${!hasContent && transcript ? `<p class="ep-ai-summary__lead" style="color:var(--ep-ink-2);font-style:italic;">Não foi possível extrair tópicos desta sessão. Veja a transcrição abaixo.</p>` : ""}
         ${topicsHtml}
         ${commitmentsHtml}
         ${followupsHtml}
+        ${transcriptHtml}
         <div class="ep-text-xs ep-text-muted ep-ai-summary__foot">${escapeHtml(tr("prontuario:aiSummary.foot", "Gerado automaticamente. Sempre confira contra suas anotações."))}</div>
       </div>
     `;
@@ -611,6 +780,9 @@
 
     // Carrega + renderiza evolução de escalas (não bloqueia se falhar)
     loadAndRenderEscalas(patient).catch(e => console.warn("escalas_load_failed", e));
+
+    // Carrega + renderiza jornada do paciente (timeline por ano, não bloqueia se falhar)
+    loadAndRenderJornada(patient).catch(e => console.warn("jornada_load_failed", e));
 
     if (sessions.length === 0) {
       document.getElementById("sessionsLoading").classList.add("ep-hide");
@@ -742,6 +914,83 @@
     }
   }
 
+  // ─── Jornada do paciente — timeline por ano (sinais clínicos de IA) ──
+  const JORNADA_CATEGORIAS = {
+    marco_terapeutico: { label: "Marco terapêutico", color: "#2d8a52" },
+    evento_vida:       { label: "Evento de vida",     color: "#3b6ea5" },
+    saude:             { label: "Saúde",              color: "#2d7a8a" },
+    crise:             { label: "Crise",              color: "#b8453d" },
+    medicacao:         { label: "Medicação",          color: "#a06a2d" },
+    outro:             { label: "Outro",              color: "#6b6b6b" }
+  };
+
+  async function loadAndRenderJornada(patient) {
+    if (!patient || !patient.patientId) return;
+    const block   = document.getElementById("jornadaBlock");
+    const content = document.getElementById("jornadaContent");
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patient.patientId)}/sinais`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) return;
+      const entries = data.entries || [];
+      if (!entries.length) return;
+
+      // Agrupa por ano: contagem de sessões + eventos marcantes do período
+      const years = new Map();
+      for (const e of entries) {
+        const year = new Date(e.completedAt).getFullYear();
+        if (!years.has(year)) years.set(year, { sessionCount: 0, events: [] });
+        const y = years.get(year);
+        y.sessionCount++;
+        for (const ev of (e.signals?.notableEvents || [])) {
+          y.events.push({ ...ev, completedAt: e.completedAt });
+        }
+      }
+
+      const sortedYears = [...years.keys()].sort((a, b) => b - a);
+
+      content.innerHTML = "";
+      for (const year of sortedYears) {
+        const y = years.get(year);
+        const yearEl = document.createElement("div");
+        yearEl.className = "ep-jornada-year";
+        const sessLabel = y.sessionCount === 1 ? "1 sessão" : `${y.sessionCount} sessões`;
+        yearEl.innerHTML = `<div class="ep-jornada-year__label">${year} <span class="ep-jornada-year__count">${escapeHtml(sessLabel)}</span></div>`;
+
+        const itemsEl = document.createElement("div");
+        itemsEl.className = "ep-jornada-year__items";
+
+        if (y.events.length === 0) {
+          itemsEl.innerHTML = `<div class="ep-text-xs ep-text-muted ep-jornada-empty">Sem eventos marcantes destacados pela IA neste período.</div>`;
+        } else {
+          const sortedEvents = [...y.events].sort((a, b) => b.completedAt - a.completedAt);
+          for (const ev of sortedEvents) {
+            const cat = JORNADA_CATEGORIAS[ev.category] || JORNADA_CATEGORIAS.outro;
+            const item = document.createElement("div");
+            item.className = "ep-jornada-item";
+            item.innerHTML = `
+              <span class="ep-jornada-item__dot" style="background:${cat.color}"></span>
+              <div class="ep-jornada-item__body">
+                <div class="ep-jornada-item__title">${escapeHtml(ev.title)}</div>
+                <div class="ep-jornada-item__meta">${escapeHtml(cat.label)} · ${escapeHtml(fmtDateLong(ev.completedAt))}</div>
+              </div>
+            `;
+            itemsEl.appendChild(item);
+          }
+        }
+
+        yearEl.appendChild(itemsEl);
+        content.appendChild(yearEl);
+      }
+
+      block.classList.remove("ep-hide");
+    } catch (e) {
+      console.warn("render_jornada_failed", e);
+    }
+  }
+
   // ─── Receitas digitais — listagem por paciente ─────────────────────
   async function loadReceitas() {
     const url = `${BACKEND_BASE_URL}/therapy/receitas?patientId=${encodeURIComponent(patientId)}`;
@@ -816,6 +1065,126 @@
   }
 
   document.getElementById("retryBtn").addEventListener("click", boot);
+
+  // ─── Gravações (.ep-rec) ─────────────────────────────────────
+  function b64ToArrayBuffer(b64) {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes.buffer;
+  }
+
+  (function initRecPlayer() {
+    const dropzone     = document.getElementById("recDropzone");
+    const fileInput    = document.getElementById("recFileInput");
+    const progressDiv  = document.getElementById("recProgress");
+    const progressLbl  = document.getElementById("recProgressLabel");
+    const barFill      = document.getElementById("recBarFill");
+    const playerDiv    = document.getElementById("recPlayer");
+    const videoEl      = document.getElementById("recVideoEl");
+    const downloadBtn  = document.getElementById("recDownloadBtn");
+    const closeBtn     = document.getElementById("recCloseBtn");
+    const metaText     = document.getElementById("recMetaText");
+    const errorDiv     = document.getElementById("recError");
+    const errorTitle   = document.getElementById("recErrorTitle");
+    const errorMsg     = document.getElementById("recErrorMsg");
+
+    dropzone.addEventListener("click", () => fileInput.click());
+    dropzone.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") fileInput.click(); });
+    dropzone.addEventListener("dragover", e => { e.preventDefault(); dropzone.classList.add("is-over"); });
+    dropzone.addEventListener("dragleave", () => dropzone.classList.remove("is-over"));
+    dropzone.addEventListener("drop", e => {
+      e.preventDefault();
+      dropzone.classList.remove("is-over");
+      if (e.dataTransfer.files[0]) processRec(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener("change", () => { if (fileInput.files[0]) processRec(fileInput.files[0]); });
+
+    closeBtn.addEventListener("click", () => {
+      playerDiv.classList.add("ep-hide");
+      dropzone.classList.remove("ep-hide");
+      if (videoEl.src) URL.revokeObjectURL(videoEl.src);
+      if (downloadBtn.href) URL.revokeObjectURL(downloadBtn.href);
+      videoEl.src = "";
+      fileInput.value = "";
+    });
+
+    function showRecError(title, detail) {
+      progressDiv.classList.add("ep-hide");
+      errorTitle.textContent = title;
+      errorMsg.textContent = detail || "";
+      errorDiv.classList.remove("ep-hide");
+      dropzone.classList.remove("ep-hide");
+    }
+
+    async function processRec(file) {
+      dropzone.classList.add("ep-hide");
+      playerDiv.classList.add("ep-hide");
+      errorDiv.classList.add("ep-hide");
+      barFill.style.width = "0%";
+      progressLbl.textContent = "Lendo arquivo…";
+      progressDiv.classList.remove("ep-hide");
+
+      let manifest;
+      try {
+        const text = await file.text();
+        manifest = JSON.parse(text);
+      } catch {
+        showRecError("Arquivo inválido.", "O arquivo não é um .ep-rec válido ou está corrompido.");
+        return;
+      }
+
+      if (manifest.format !== "ep-rec" || !Array.isArray(manifest.chunks)) {
+        showRecError("Formato não reconhecido.", "Este arquivo não foi gerado pelo Espaço Prelúdio.");
+        return;
+      }
+
+      const chunks = [...manifest.chunks].sort((a, b) => a.idx - b.idx);
+      const buffers = [];
+
+      for (let i = 0; i < chunks.length; i++) {
+        barFill.style.width = Math.round(((i + 1) / chunks.length) * 100) + "%";
+        progressLbl.textContent = `Parte ${i + 1} de ${chunks.length}`;
+
+        let plainB64;
+        try {
+          plainB64 = await decryptNote({ ciphertext: chunks[i].ciphertext, iv: chunks[i].iv }, dek);
+        } catch {
+          showRecError("Falha na descriptografia.", "A chave desta conta não consegue abrir este arquivo. Verifique se está logado com o mesmo usuário que gravou a sessão.");
+          return;
+        }
+
+        if (!plainB64 || plainB64.startsWith("[nota corrompida")) {
+          showRecError("Arquivo corrompido.", `A parte ${i + 1} não pôde ser descriptografada.`);
+          return;
+        }
+
+        buffers.push(b64ToArrayBuffer(plainB64));
+      }
+
+      const mimeType = manifest.mimeType || "video/webm";
+      const blob = new Blob(buffers, { type: mimeType });
+      const url  = URL.createObjectURL(blob);
+
+      const ext = mimeType.includes("mp4") ? "mp4" : "webm";
+      const sessionSlug = (manifest.sessionId || "").slice(0, 8);
+      const dateSlug = manifest.startedAt
+        ? new Date(manifest.startedAt).toISOString().slice(0, 16).replace(/[T:]/g, "-")
+        : "gravacao";
+      downloadBtn.href = url;
+      downloadBtn.download = `sessao-${sessionSlug}-${dateSlug}.${ext}`;
+      videoEl.src = url;
+      metaText.textContent = [
+        manifest.durationMs ? fmtDuration(manifest.durationMs) : null,
+        `${chunks.length} partes`,
+        `${(blob.size / 1024 / 1024).toFixed(1)} MB`
+      ].filter(Boolean).join(" · ");
+
+      progressDiv.classList.add("ep-hide");
+      playerDiv.classList.remove("ep-hide");
+    }
+  })();
+
 
   // ─── Export PDF do prontuário (CFP Res. 1/2019 — retenção 20 anos) ──
   // Estado em memória pra o exportador usar (preenchido por boot/receitas)
