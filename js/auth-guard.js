@@ -54,14 +54,27 @@ export function authReady() {
 // backend que muda a matriz pra um conselho).
 const PROFILE_CACHE_KEY = "ep:profile:v2";
 const PROFILE_CACHE_TTL_MS = 30_000;
+const PROFILE_LS_KEY = "ep:profile:ls:v2";
+const PROFILE_LS_TTL_MS = 5 * 60 * 1000;
 
 function readProfileCache(uid) {
+  // 1. sessionStorage (quente, 30s).
   try {
     const raw = sessionStorage.getItem(PROFILE_CACHE_KEY);
+    if (raw) {
+      const entry = JSON.parse(raw);
+      if (entry.uid === uid && Date.now() - entry.t <= PROFILE_CACHE_TTL_MS) return entry.profile;
+    }
+  } catch {}
+  // 2. localStorage (morno, 5min — sobrevive ao fechar aba).
+  try {
+    const raw = localStorage.getItem(PROFILE_LS_KEY);
     if (!raw) return null;
     const entry = JSON.parse(raw);
     if (entry.uid !== uid) return null;
-    if (Date.now() - entry.t > PROFILE_CACHE_TTL_MS) return null;
+    if (Date.now() - entry.t > PROFILE_LS_TTL_MS) return null;
+    // Aquece sessionStorage para evitar re-leitura do LS.
+    try { sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify({ uid, t: Date.now(), profile: entry.profile })); } catch {}
     return entry.profile;
   } catch { return null; }
 }
@@ -70,13 +83,18 @@ function writeProfileCache(uid, profile) {
   try {
     sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify({ uid, t: Date.now(), profile }));
   } catch {}
+  try {
+    localStorage.setItem(PROFILE_LS_KEY, JSON.stringify({ uid, t: Date.now(), profile }));
+  } catch {}
 }
 
 export function invalidateProfileCache() {
   try {
     sessionStorage.removeItem(PROFILE_CACHE_KEY);
-    // Limpa também a key antiga v1 caso ainda exista da sessão pré-bump.
     sessionStorage.removeItem("ep:profile:v1");
+  } catch {}
+  try {
+    localStorage.removeItem(PROFILE_LS_KEY);
   } catch {}
 }
 
