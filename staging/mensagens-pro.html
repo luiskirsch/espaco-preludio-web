@@ -114,7 +114,6 @@
   </style>
 </head>
 <body class="ep-has-sidebar">
-<div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
 <script src="./js/sidebar.js?v=19"></script>
 
 <header class="ep-topbar">
@@ -439,7 +438,7 @@
         headers: { "Authorization": `Bearer ${idToken}` }
       });
       const pkData = await r.json();
-      if (!r.ok || !pkData.ok) { alert("Colega ainda não habilitou chat (sem ECDH keypair)."); return; }
+      if (!r.ok || !pkData.ok) { alert(tr("mensagens-pro:js.alertNoEcdh", "Colega ainda não habilitou chat (sem ECDH keypair).")); return; }
       const threadKeyBytes = await generateThreadKey();
       const threadKeyForCreator = await wrapKey(threadKeyBytes, dek);
       const threadKeyForPeer = await wrapThreadKeyForPeer(threadKeyBytes, myEcdhPrivBytes, pkData.ecdhPublicJwk);
@@ -451,7 +450,7 @@
       document.getElementById("searchResults").classList.add("ep-hide");
       await loadThreads();
       await openThread(created.threadId);
-    } catch (e) { alert("Erro: " + e.message); }
+    } catch (e) { alert(tr("mensagens-pro:js.alertGeneric", "Erro: {{message}}", { message: e.message })); }
   }
 
   // ─── Thread ativa + mensagens ────────────────────────────────────
@@ -480,7 +479,7 @@
       api(`/therapy/pro-chat/threads/${encodeURIComponent(threadId)}/marcar-lido`, {
         method: "POST", body: JSON.stringify({ until: Date.now() })
       }).catch(() => {});
-    } catch (e) { alert("Erro abrindo conversa: " + e.message); }
+    } catch (e) { alert(tr("mensagens-pro:js.alertOpen", "Erro abrindo conversa: {{message}}", { message: e.message })); }
   }
 
   const messageCache = new Map();
@@ -687,7 +686,7 @@
       await navigator.clipboard.writeText(m.text).catch(() => {});
     }
     if (action === "apagar" && m && activeThread) {
-      if (!confirm("Apagar esta mensagem?")) return;
+      if (!confirm(tr("mensagens-pro:js.confirmDelete", "Apagar esta mensagem?"))) return;
       try {
         await api(`/therapy/pro-chat/threads/${encodeURIComponent(activeThread.threadId)}/messages/${encodeURIComponent(m.messageId)}`, { method: "DELETE" });
         messageCache.delete(m.messageId);

@@ -1060,7 +1060,7 @@
   }
 
   $("exportDataBtn").addEventListener("click", async () => {
-    if (!confirm("Vamos baixar TODOS os seus dados como ZIP. O arquivo pode ficar grande dependendo do volume. Continuar?")) return;
+    if (!confirm(tr("perfil:js.confirmExportData", "Vamos baixar TODOS os seus dados como ZIP. O arquivo pode ficar grande dependendo do volume. Continuar?"))) return;
     const btn = $("exportDataBtn");
     const st = $("exportDataStatus");
     btn.disabled = true;
@@ -1392,7 +1392,7 @@ Direito de portabilidade — LGPD Art. 18, V.
   //
   // Formato: JSON com versão + metadata + arrays de blobs cifrados.
   $("backupE2eeBtn").addEventListener("click", async () => {
-    if (!confirm("Baixar backup com seus dados ainda cifrados (.epbk)?\n\nO arquivo só pode ser aberto com sua senha do Espaço Prelúdio. Ideal para guardar em pen-drive ou nuvem pessoal.")) return;
+    if (!confirm(tr("perfil:js.confirmBackupEpbk", "Baixar backup com seus dados ainda cifrados (.epbk)?\n\nO arquivo só pode ser aberto com sua senha do Espaço Prelúdio. Ideal para guardar em pen-drive ou nuvem pessoal."))) return;
     const btn = $("backupE2eeBtn");
     const st = $("exportDataStatus");
     btn.disabled = true;
@@ -1585,7 +1585,7 @@ Direito de portabilidade — LGPD Art. 18, V.
   });
 
   $("asaasClearBtn").addEventListener("click", async () => {
-    if (!confirm("Apagar a chave Asaas? As cobranças geradas continuam visíveis mas não dá pra gerar novas até reconectar.")) return;
+    if (!confirm(tr("perfil:js.confirmDeleteAsaas", "Apagar a chave Asaas? As cobranças geradas continuam visíveis mas não dá pra gerar novas até reconectar."))) return;
     $("asaasClearBtn").disabled = true;
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
@@ -1595,7 +1595,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
-        alert("Erro: " + (data?.error || res.status));
+        alert(tr("perfil:js.errGeneric", "Erro: {{message}}", { message: data?.error || res.status }));
         $("asaasClearBtn").disabled = false;
         return;
       }
@@ -1608,7 +1608,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       setStatus("Chave Asaas removida.", "ok");
     } catch (e) {
       $("asaasClearBtn").disabled = false;
-      alert("Erro de rede.");
+      alert(tr("perfil:js.errNetwork", "Erro de rede."));
     }
   });
 
@@ -2084,11 +2084,11 @@ Direito de portabilidade — LGPD Art. 18, V.
       listEl.querySelectorAll("[data-tiss-del]").forEach(btn => {
         btn.addEventListener("click", async () => {
           const code = btn.getAttribute("data-tiss-del");
-          if (!confirm(`Remover convênio ${code}?`)) return;
+          if (!confirm(tr("perfil:js.confirmRemoveConvenio", "Remover convênio {{code}}?", { code }))) return;
           try {
             await tissApi(`/therapy/profissional/tiss/convenios/${encodeURIComponent(code)}`, { method: "DELETE" });
             await renderTissConvenios();
-          } catch (e) { alert("Erro ao remover: " + e.message); }
+          } catch (e) { alert(tr("perfil:js.errRemove", "Erro ao remover: {{message}}", { message: e.message })); }
         });
       });
     } catch (e) {
@@ -2104,7 +2104,7 @@ Direito de portabilidade — LGPD Art. 18, V.
           body: JSON.stringify({ enabled: e.target.checked })
         });
       } catch (err) {
-        alert("Erro: " + err.message);
+        alert(tr("perfil:js.errGeneric", "Erro: {{message}}", { message: err.message }));
         e.target.checked = !e.target.checked; // reverte
       }
     });
@@ -2208,7 +2208,7 @@ Direito de portabilidade — LGPD Art. 18, V.
   });
 
   $("smsTestBtn")?.addEventListener("click", async () => {
-    const to = prompt("Digite um número pra receber o SMS de teste (formato +5548999998888):");
+    const to = prompt(tr("perfil:js.promptSmsTest", "Digite um número pra receber o SMS de teste (formato +5548999998888):"));
     if (!to) return;
     const sEl = $("smsStatus");
     sEl.textContent = "Enviando teste…"; sEl.className = "ep-status";

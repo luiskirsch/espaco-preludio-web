@@ -1066,7 +1066,7 @@
         headers: { "Authorization": `Bearer ${idToken}` }
       });
       const pkData = await pkRes.json().catch(() => ({}));
-      if (!pkRes.ok || !pkData.ok) { alert("Profissional ainda não habilitou o chat seguro."); btn.disabled = false; btn.textContent = "Conversar"; return; }
+      if (!pkRes.ok || !pkData.ok) { alert(tr("mensagens:js.chatNotEnabled", "Profissional ainda não habilitou o chat seguro.")); btn.disabled = false; btn.textContent = "Conversar"; return; }
       // Gera thread key + wrap para os dois lados
       const tKeyBytes = generateThreadKey();
       const threadKeyForCreator = await wrapKey(tKeyBytes, dek);
@@ -1081,7 +1081,7 @@
       if (!d.ok || !d.threadId) throw new Error(d?.error || "Erro ao criar conversa");
       window.location.href = `./mensagens-pro.html?thread=${encodeURIComponent(d.threadId)}`;
     } catch (err) {
-      alert("Erro ao abrir conversa: " + (err.message || ""));
+      alert(tr("mensagens:js.errOpenConversation", "Erro ao abrir conversa:") + " " + (err.message || ""));
       btn.disabled = false;
       btn.textContent = "Conversar";
     }
