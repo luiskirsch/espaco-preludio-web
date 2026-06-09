@@ -24,8 +24,7 @@
   <script src="./js/pwa.js?v=2" defer></script>
 </head>
 <body class="ep-has-sidebar">
-<div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
-<script defer src="./js/sidebar.js?v=19"></script>
+<script src="./js/sidebar.js?v=19"></script>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
@@ -229,6 +228,7 @@
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist } from "./js/auth-guard.js?v=3-27";
   import { clearDek } from "./js/crypto.js";
+  import { cachedGet, invalidate } from "./js/api-cache.js?v=3";
 
   // ─── Boot ───────────────────────────────────────────────────
   const session = await requireTherapist({ requireDek: false });
@@ -302,23 +302,31 @@
     loadingBanner.classList.remove("ep-hide");
     itemList.classList.add("ep-hide");
     emptyState.classList.add("ep-hide");
+    let rendered = false;
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/inventario/itens`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
+      await cachedGet({
+        url: `${BACKEND_BASE_URL}/therapy/inventario/itens`,
+        idToken, uid,
+        key: "inventario",
+        ttl: 5 * 60 * 1000,
+        onData: (data) => {
+          rendered = true;
+          loadingBanner.classList.add("ep-hide");
+          allItems = data.items || [];
+          populateCategoryDatalist();
+          renderAll();
+        }
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
-      allItems = data.items || [];
-      populateCategoryDatalist();
-      renderAll();
     } catch (error) {
-      console.error("load_inventory_error", error);
-      const human = error?.message === "ERRO_INTERNO"
-        ? tr("inventario:errors.internal", "Algo deu errado no servidor. Tente novamente em alguns segundos.")
-        : tr("inventario:errors.loadFailed", "Erro ao carregar: {{msg}}", { msg: error?.message || tr("inventario:errors.unknown", "desconhecido") });
-      loadingBanner.innerHTML = `${escapeHtml(human)} <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" style="margin-left: 12px;" id="retryBtn">${escapeHtml(tr("inventario:errors.retryBtn", "Tentar de novo"))}</button>`;
-      loadingBanner.className = "ep-alert ep-alert--danger";
-      document.getElementById("retryBtn")?.addEventListener("click", () => loadItems());
+      if (!rendered) {
+        console.error("load_inventory_error", error);
+        const human = error?.message === "ERRO_INTERNO"
+          ? tr("inventario:errors.internal", "Algo deu errado no servidor. Tente novamente em alguns segundos.")
+          : tr("inventario:errors.loadFailed", "Erro ao carregar: {{msg}}", { msg: error?.message || tr("inventario:errors.unknown", "desconhecido") });
+        loadingBanner.innerHTML = `${escapeHtml(human)} <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" style="margin-left: 12px;" id="retryBtn">${escapeHtml(tr("inventario:errors.retryBtn", "Tentar de novo"))}</button>`;
+        loadingBanner.className = "ep-alert ep-alert--danger";
+        document.getElementById("retryBtn")?.addEventListener("click", () => loadItems());
+      }
     }
   }
 
@@ -486,6 +494,7 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
       closeItemModal();
+      invalidate("inventario", uid);
       await loadItems();
     } catch (e) {
       itemStatusMsg.textContent = tr("inventario:errors.saveFailed", "Erro ao salvar: ") + e.message;
@@ -547,6 +556,7 @@
         throw new Error(data.error || ("HTTP_" + res.status));
       }
       closeMovModal();
+      invalidate("inventario", uid);
       await loadItems();
     } catch (e) {
       movStatusMsg.textContent = e.message;
@@ -615,6 +625,7 @@
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+        invalidate("inventario", uid);
         await loadItems();
       } catch (err) {
         btn.disabled = false;

@@ -24,8 +24,7 @@
   <script src="./js/pwa.js?v=2" defer></script>
 </head>
 <body class="ep-has-sidebar">
-<div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
-<script defer src="./js/sidebar.js?v=19"></script>
+<script src="./js/sidebar.js?v=19"></script>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
@@ -202,6 +201,7 @@
 <script type="module">
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist } from "./js/auth-guard.js?v=3-27";
+  import { cachedGet, invalidatePrefix } from "./js/api-cache.js?v=3";
 
   // tr(): tenta EP_I18N.t(key); fallback PT se i18n nao carregou.
   function tr(key, fallback, opts) {
@@ -222,6 +222,7 @@
   }
 
   let idToken = null;
+  let uid = null;
   let currentStatus = "";
   let currentConvenio = "";
   let conveniosAceitos = [];
@@ -258,10 +259,17 @@
 
   async function loadConveniosAceitos() {
     try {
-      const d = await api("/therapy/profissional/tiss/convenios");
-      conveniosAceitos = d.convenios || [];
-      const sel = document.getElementById("tissConvenioFilter");
-      sel.innerHTML = `<option value="">${esc(tr("tiss:filters.todosConvenios", "Todos os convênios"))}</option>` + conveniosAceitos.map(c => `<option value="${esc(c.code)}">${esc(c.nome)}</option>`).join("");
+      await cachedGet({
+        url: `${BACKEND_BASE_URL}/therapy/profissional/tiss/convenios`,
+        idToken, uid,
+        key: "tiss:convenios",
+        ttl: 30 * 60 * 1000,
+        onData: (d) => {
+          conveniosAceitos = d.convenios || [];
+          const sel = document.getElementById("tissConvenioFilter");
+          sel.innerHTML = `<option value="">${esc(tr("tiss:filters.todosConvenios", "Todos os convênios"))}</option>` + conveniosAceitos.map(c => `<option value="${esc(c.code)}">${esc(c.nome)}</option>`).join("");
+        }
+      });
     } catch {}
   }
 
@@ -274,11 +282,20 @@
     list.classList.add("ep-hide");
     list.innerHTML = "";
 
+    const qs = new URLSearchParams();
+    if (currentStatus)   qs.set("status", currentStatus);
+    if (currentConvenio) qs.set("convenioCode", currentConvenio);
+    const cacheKey = `tiss:guias:${currentStatus}:${currentConvenio}`;
+    let rendered = false;
+
     try {
-      const qs = new URLSearchParams();
-      if (currentStatus)   qs.set("status", currentStatus);
-      if (currentConvenio) qs.set("convenioCode", currentConvenio);
-      const d = await api("/therapy/tiss/guias" + (qs.toString() ? "?" + qs : ""));
+      await cachedGet({
+        url: `${BACKEND_BASE_URL}/therapy/tiss/guias${qs.toString() ? "?" + qs : ""}`,
+        idToken, uid,
+        key: cacheKey,
+        ttl: 5 * 60 * 1000,
+        onData: (d) => {
+      rendered = true;
       const items = d.items || [];
       loading.classList.add("ep-hide");
       if (items.length === 0) { empty.classList.remove("ep-hide"); return; }
@@ -335,10 +352,14 @@
       list.querySelectorAll("[data-pdf-btn]").forEach(btn => {
         btn.addEventListener("click", () => downloadGuia(btn.getAttribute("data-pdf-btn"), "pdf"));
       });
+        }
+      });
     } catch (e) {
-      loading.classList.add("ep-hide");
-      list.classList.remove("ep-hide");
-      list.innerHTML = `<p class="ep-text-xs" style="color: #b8453d;">${esc(tr("tiss:msg.erroPrefix", "Erro: "))}${esc(e.message)}</p>`;
+      if (!rendered) {
+        loading.classList.add("ep-hide");
+        list.classList.remove("ep-hide");
+        list.innerHTML = `<p class="ep-text-xs" style="color: #b8453d;">${esc(tr("tiss:msg.erroPrefix", "Erro: "))}${esc(e.message)}</p>`;
+      }
     }
   }
 
@@ -366,6 +387,7 @@
         method: "POST",
         body: JSON.stringify(body)
       });
+      invalidatePrefix("tiss:guias", uid);
       await loadGuias();
     } catch (e) { alert(tr("tiss:msg.erroPrefix", "Erro: ") + e.message); }
   }
@@ -576,6 +598,7 @@
     try {
       const ctx = await requireTherapist({ requireDek: false });
       idToken = ctx.idToken;
+      uid = ctx.user.uid;
       await loadConveniosAceitos();
       await loadSubmitters();
       await loadGuias();

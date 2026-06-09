@@ -67,8 +67,7 @@
   <script src="./js/pwa.js?v=2" defer></script>
 </head>
 <body class="ep-has-sidebar">
-<div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
-<script defer src="./js/sidebar.js?v=19"></script>
+<script src="./js/sidebar.js?v=19"></script>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
@@ -237,6 +236,7 @@
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist } from "./js/auth-guard.js?v=3-27";
   import { clearDek } from "./js/crypto.js";
+  import { cachedGet } from "./js/api-cache.js?v=3";
 
   // tr(): helper i18n com fallback PT.
   function tr(key, fallback, opts) {
@@ -266,7 +266,8 @@
   });
 
   const ctx = await requireTherapist({ requireDek: false });
-  const { idToken } = ctx;
+  const { idToken, user } = ctx;
+  const uid = user.uid;
 
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     clearDek();
@@ -345,12 +346,15 @@
     const range = $("rangeFilter").value;
     $("loadingBanner").classList.remove("ep-hide");
     $("content").classList.add("ep-hide");
+    let rendered = false;
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/relatorios/analytics?range=${encodeURIComponent(range)}`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      await cachedGet({
+        url: `${BACKEND_BASE_URL}/therapy/relatorios/analytics?range=${encodeURIComponent(range)}`,
+        idToken, uid,
+        key: `relatorios:${range}`,
+        ttl: 10 * 60 * 1000,
+        onData: (data) => {
+      rendered = true;
 
       // Cards
       $("statTotal").textContent       = data.totals.sessions;
@@ -406,20 +410,25 @@
 
       // NPS — load em paralelo, não bloqueia o resto.
       loadNps(range).catch(e => console.error("nps_load_error", e));
+        }
+      });
     } catch (e) {
-      console.error("relatorios_error", e);
-      $("loadingBanner").textContent = tr("relatorios:js.error", "Erro: {{msg}}", { msg: e?.message || tr("relatorios:js.unknown", "desconhecido") });
-      $("loadingBanner").className = "ep-alert ep-alert--danger";
+      if (!rendered) {
+        console.error("relatorios_error", e);
+        $("loadingBanner").textContent = tr("relatorios:js.error", "Erro: {{msg}}", { msg: e?.message || tr("relatorios:js.unknown", "desconhecido") });
+        $("loadingBanner").className = "ep-alert ep-alert--danger";
+      }
     }
   }
 
   async function loadNps(range) {
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/nps?range=${encodeURIComponent(range)}`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) return;
+      await cachedGet({
+        url: `${BACKEND_BASE_URL}/therapy/nps?range=${encodeURIComponent(range)}`,
+        idToken, uid,
+        key: `relatorios:nps:${range}`,
+        ttl: 10 * 60 * 1000,
+        onData: (data) => {
       const m = data.metrics;
       $("npsScore").textContent  = m.npsScore == null ? "—" : (m.npsScore > 0 ? "+" + m.npsScore : String(m.npsScore));
       $("npsAvg").textContent    = m.avg == null ? "—" : String(m.avg);
@@ -444,6 +453,8 @@
       } else {
         card.classList.add("ep-hide");
       }
+        }
+      });
     } catch (e) {
       // Silent fail — NPS é opcional
     }

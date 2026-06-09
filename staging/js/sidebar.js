@@ -61,15 +61,13 @@
     return '<a href="./' + href + '" ' + (extra || '') + '>' + svg(icon) + '<span data-i18n="' + i18n + '">' + label + '</span></a>';
   }
 
-  // Preflight do TISS: lê cache do profile (capability-preflight grava
-  // sessionStorage["ep:profile:v2"]). Se tissEnabled, sidebar já nasce
-  // com TISS VISÍVEL pre-paint — sem o "is-hidden" inicial. Elimina o
-  // flicker de "TISS some/aparece" a cada navegação entre páginas.
-  // Sem cache (1ª visita), começa hidden e syncTiss revela quando o
-  // auth-guard async termina.
+  // Preflight do TISS: lê cache do profile (auth-guard grava sessionStorage
+  // e localStorage). sessionStorage primeiro (30s, mais rápido); fallback
+  // para localStorage (5min, sobrevive ao fechar aba) — elimina o flicker
+  // de "TISS some/aparece" tanto em navegações intra-sessão quanto ao reabrir.
   var tissCachedEnabled = false;
   try {
-    var profileRaw = sessionStorage.getItem('ep:profile:v2');
+    var profileRaw = sessionStorage.getItem('ep:profile:v2') || localStorage.getItem('ep:profile:ls:v2');
     if (profileRaw) {
       var profileEntry = JSON.parse(profileRaw);
       tissCachedEnabled = !!(profileEntry && profileEntry.profile && profileEntry.profile.therapist && profileEntry.profile.therapist.tissEnabled);
