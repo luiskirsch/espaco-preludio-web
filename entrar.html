@@ -164,6 +164,16 @@
     </section>
   </main>
 
+  <!-- Overlay de slides compartilhados pelo terapeuta -->
+  <div id="slidesOverlay" style="display:none;position:fixed;inset:0;z-index:500;background:#000;flex-direction:column;align-items:stretch;">
+    <div style="padding:10px 16px;background:rgba(0,0,0,0.85);color:rgba(255,255,255,0.65);font-size:13px;text-align:center;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.08);">
+      Material compartilhado pelo(a) terapeuta
+    </div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:12px;">
+      <img id="slidesImg" src="" alt="" style="max-width:100%;max-height:100%;object-fit:contain;display:block;border-radius:4px;">
+    </div>
+  </div>
+
   <!-- Overlay de sessão encerrada pelo profissional -->
   <div id="sessionEndedOverlay" class="ep-hide" style="position:fixed;inset:0;z-index:999;background:rgba(10,8,5,0.94);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;color:#fff;">
     <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" style="margin-bottom:20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -711,6 +721,49 @@
         notesEl.classList.add("is-expanded");
       });
     }
+
+    // ─── Recebe slides do terapeuta via DataChannel ──────────────
+    const slidesOverlay = document.getElementById("slidesOverlay");
+    const slidesImg     = document.getElementById("slidesImg");
+    const _pSlidesBuf   = {};
+    const _pSlidesData  = [];
+
+    room.on(RoomEvent.DataReceived, (payload) => {
+      let msg;
+      try { msg = JSON.parse(new TextDecoder().decode(payload)); } catch { return; }
+      switch (msg.t) {
+        case "slides:start":
+          slidesOverlay.style.display = "flex";
+          slidesImg.src = "";
+          break;
+        case "slides:slide":
+          _pSlidesBuf[msg.idx] = { cn: msg.cn, chunks: new Array(msg.cn).fill(null) };
+          break;
+        case "slides:chunk": {
+          const buf = _pSlidesBuf[msg.idx];
+          if (buf) {
+            buf.chunks[msg.ci] = msg.d;
+            if (buf.chunks.every(c => c !== null)) {
+              _pSlidesData[msg.idx] = "data:image/jpeg;base64," + buf.chunks.join("");
+            }
+          }
+          break;
+        }
+        case "slides:nav":
+          slidesOverlay.style.display = "flex";
+          if (_pSlidesData[msg.idx]) {
+            slidesImg.src = _pSlidesData[msg.idx];
+            slidesImg.alt = `Slide ${msg.idx + 1}`;
+          }
+          break;
+        case "slides:end":
+          slidesOverlay.style.display = "none";
+          slidesImg.src = "";
+          _pSlidesData.length = 0;
+          Object.keys(_pSlidesBuf).forEach(k => delete _pSlidesBuf[k]);
+          break;
+      }
+    });
 
     window.addEventListener("beforeunload", () => { try { room.disconnect(); } catch {} });
   }
