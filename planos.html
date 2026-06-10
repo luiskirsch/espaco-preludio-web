@@ -15,12 +15,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-276">
   <script src="./i18n/init.js?v=1-2" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#1a130a">
+  <script src="./js/pwa.js?v=2" defer></script>
 </head>
-<body>
+<body class="ep-has-sidebar">
+<script src="./js/sidebar.js?v=19"></script>
 
+<div class="ep-shell">
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
     <a href="./painel.html" class="ep-brand" data-i18n-aria-label="planos:topbar.brandAria" aria-label="Espaço Prelúdio">
@@ -35,6 +41,9 @@
       <a href="./agenda.html" data-i18n="planos:topbar.agenda">Agenda</a>
       <a href="./pacientes.html" data-i18n="planos:topbar.pacientes">Pacientes</a>
       <a href="./financeiro.html" data-i18n="planos:topbar.financeiro">Financeiro</a>
+      <a href="./tiss.html" class="ep-text-sm" data-tiss-only style="display: none;" data-i18n="planos:topbar.tiss">TISS</a>
+      <a href="./mensagens-pro.html" data-i18n="planos:topbar.colegas">Colegas</a>
+      <a href="./marketing.html" data-i18n="planos:topbar.marketing">Marketing</a>
       <a href="./relatorios.html" data-i18n="planos:topbar.relatorios">Relatórios</a>
       <a href="./clinica.html" data-i18n="planos:topbar.clinica">Clínica</a>
       <a href="./inventario.html" data-i18n="planos:topbar.estoque">Estoque</a>
@@ -42,15 +51,18 @@
       <a href="./calculadora.html" data-i18n="planos:topbar.calculadora">Calculadora</a>
       <a href="./documento.html?tipo=atestado" data-i18n="planos:topbar.atestado">Atestado</a>
       <a href="./whatsapp.html" data-i18n="planos:topbar.whatsapp">WhatsApp</a>
-      <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" data-i18n-aria-label="planos:topbar.perfilAria" aria-label="Abrir perfil">
-        <span class="ep-nav-avatar" id="topUserAvatar">·</span>
-        <span class="ep-nav-profile__name" id="topUserName"></span>
-      </a>
+      <div class="ep-profile-group">
+        <a href="./perfil.html" id="topProfileLink" class="ep-nav-profile" data-i18n-aria-label="planos:topbar.perfilAria" aria-label="Abrir perfil">
+          <span class="ep-nav-avatar" id="topUserAvatar">·</span>
+          <span class="ep-nav-profile__name" id="topUserName"></span>
+        </a>
+        <button id="logoutBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="planos:topbar.logout">Sair</button>
+      </div>
     </nav>
   </div>
 </header>
 
-<main class="ep-container ep-mt-32 ep-mb-16" style="max-width: 980px;">
+<main class="ep-container ep-mt-32 ep-mb-16 ep-page-main" style="max-width: 980px;">
 
   <div class="ep-eyebrow" data-i18n="planos:header.eyebrow">Plano da sua conta</div>
   <h1 class="ep-h1 ep-mt-12" data-i18n="planos:header.h1">Espaço Prelúdio Pro</h1>
@@ -186,6 +198,7 @@
   </p>
 
 </main>
+</div>
 
 <style>
   @media (max-width: 720px) {
@@ -196,7 +209,13 @@
 
 <script type="module">
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { requireTherapist } from "./js/auth-guard.js?v=3-27";
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "./login.html";
+  });
 
   const ctx = await requireTherapist({ requireDek: false });
   const { idToken, therapist } = ctx;
