@@ -577,7 +577,7 @@
       const res = await fetch(`${BACKEND_BASE_URL}/stripe/create-checkout`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ tier, billingCycle })
+        body: JSON.stringify({ tier, billingCycle, locale: getLocale() })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok || !data.url) throw new Error(data?.error || ("HTTP_" + res.status));
