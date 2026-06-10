@@ -532,17 +532,38 @@
     btnUSD.className = usd ? "ep-btn ep-btn--primary ep-btn--sm" : "ep-btn ep-btn--ghost ep-btn--sm";
   }
 
-  btnBRL.addEventListener("click", () => setCurrency(false));
-  btnUSD.addEventListener("click", () => setCurrency(true));
+  const CURRENCY_STORAGE_KEY = "ep:currency";
+  function saveCurrencyPref(usd) {
+    try { localStorage.setItem(CURRENCY_STORAGE_KEY, usd ? "USD" : "BRL"); } catch (_) {}
+  }
+  btnBRL.addEventListener("click", () => { saveCurrencyPref(false); setCurrency(false); });
+  btnUSD.addEventListener("click", () => { saveCurrencyPref(true); setCurrency(true); });
 
   // Mostra toggles quando tiersGrid é exibido
-  const tierObserver = new MutationObserver(() => {
+  function syncToggleVisibility() {
     if (tiersGrid.style.display !== "none") {
       currencyToggle.style.display = "flex";
       if (!isUSD) billingToggle.style.display = "flex";
     }
-  });
+  }
+  const tierObserver = new MutationObserver(syncToggleVisibility);
   tierObserver.observe(tiersGrid, { attributes: true, attributeFilter: ["style"] });
+  syncToggleVisibility();
+
+  // ─── Moeda padrão por geolocalização ─────────────────────────────────────
+  // Preferência manual salva em localStorage tem prioridade. Sem preferência
+  // salva, BR (por IP) usa BRL/Mercado Pago e o resto do mundo usa USD/Stripe.
+  // Anual fica restrito a BRL (ver setCurrency).
+  let savedCurrency = null;
+  try { savedCurrency = localStorage.getItem(CURRENCY_STORAGE_KEY); } catch (_) {}
+  if (savedCurrency === "USD") {
+    setCurrency(true);
+  } else if (savedCurrency !== "BRL") {
+    fetch(`${BACKEND_BASE_URL}/therapy/geo`)
+      .then(res => res.json())
+      .then(data => { if (data?.country && data.country !== "BR") setCurrency(true); })
+      .catch(() => {});
+  }
 
   async function startStripeCheckout(tier, btn, originalText) {
     btn.disabled = true;
