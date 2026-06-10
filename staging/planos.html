@@ -120,8 +120,16 @@
     </p>
   </section>
 
+  <!-- Toggle de periodicidade Mensal / Anual -->
+  <div id="billingToggle" style="display:none; justify-content:center; margin-top:24px;">
+    <div class="ep-billing-switch" role="tablist" aria-label="Periodicidade de cobrança">
+      <button type="button" class="ep-billing-switch__btn is-active" data-billing="month" role="tab" aria-selected="true" data-i18n="planos:billing.month">Mensal</button>
+      <button type="button" class="ep-billing-switch__btn" data-billing="year" role="tab" aria-selected="false" data-i18n-html="planos:billing.yearHtml">Anual <span class="ep-billing-switch__save">economize 16%</span></button>
+    </div>
+  </div>
+
   <!-- Toggle de moeda BRL / USD -->
-  <div id="currencyToggle" style="display:none;align-items:center;justify-content:center;gap:10px;margin-top:24px;">
+  <div id="currencyToggle" style="display:none;align-items:center;justify-content:center;gap:10px;margin-top:12px;">
     <button type="button" id="btnBRL" class="ep-btn ep-btn--primary ep-btn--sm">R$ BRL</button>
     <button type="button" id="btnUSD" class="ep-btn ep-btn--ghost ep-btn--sm">$ USD</button>
     <span class="ep-text-xs ep-text-muted" data-i18n="planos:currency.usdNote">USD · Stripe · Cartão internacional</span>
@@ -194,7 +202,7 @@
   </p>
 
   <p class="ep-text-xs ep-text-muted ep-mt-24" style="text-align: center;" data-i18n-html="planos:footer.noteHtml">
-    Pagamento processado pelo Mercado Pago. Cobrança mensal recorrente.
+    Pagamento processado pelo Mercado Pago. Cobrança recorrente mensal ou anual.
     Dúvidas? Escreva para <a href="mailto:contato@espacopreludio.com.br">contato@espacopreludio.com.br</a>.
   </p>
 
@@ -253,6 +261,40 @@
   const subscribeRecemBtn = document.getElementById("subscribeRecemBtn");
   const subscribeProfBtn  = document.getElementById("subscribeProfBtn");
   const recemHint         = document.getElementById("recemHint");
+  const billingToggle     = document.getElementById("billingToggle");
+  const recemAmountEl     = document.querySelector("[data-i18n='planos:recem.amount']");
+  const recemPerEl        = document.querySelector("[data-i18n='planos:recem.per']");
+  const profAmountEl      = document.querySelector("[data-i18n='planos:prof.amount']");
+  const profPerEl         = document.querySelector("[data-i18n='planos:prof.per']");
+
+  let billingCycle = "month";
+
+  function applyBillingCycle(cycle) {
+    billingCycle = cycle;
+    if (cycle === "year") {
+      recemAmountEl.textContent = t("recem.amountYearly", null, "1.002,96");
+      recemPerEl.textContent    = t("recem.perYearly", null, "/Anual");
+      profAmountEl.textContent  = t("prof.amountYearly", null, "2.005,92");
+      profPerEl.textContent     = t("prof.perYearly", null, "/Anual");
+    } else {
+      recemAmountEl.textContent = t("recem.amount", null, "99,50");
+      recemPerEl.textContent    = t("recem.per", null, "/mês");
+      profAmountEl.textContent  = t("prof.amount", null, "199,00");
+      profPerEl.textContent     = t("prof.per", null, "/mês");
+    }
+  }
+
+  document.querySelectorAll("#billingToggle .ep-billing-switch__btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const cycle = btn.dataset.billing;
+      if (cycle === billingCycle) return;
+      document.querySelectorAll("#billingToggle .ep-billing-switch__btn").forEach(b => {
+        b.classList.toggle("is-active", b === btn);
+        b.setAttribute("aria-selected", b === btn ? "true" : "false");
+      });
+      applyBillingCycle(cycle);
+    });
+  });
 
   function fmtDate(ms) {
     if (!ms) return "—";
@@ -295,7 +337,9 @@
     if (therapist.proPriceCents) {
       const lc = getLocale();
       const amount = (therapist.proPriceCents / 100).toFixed(2);
-      const per = t("prof.per", null, "/mês");
+      const per = therapist.proBillingCycle === "year"
+        ? t("manage.perAnnual", null, "/Anual")
+        : t("prof.per", null, "/mês");
       const formatted = lc === "pt-BR" || lc === "es-ES" ? amount.replace(".", ",") : amount;
       manageCardSub.textContent = `R$ ${formatted}${per}`;
     } else {
@@ -426,7 +470,7 @@
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/plano/iniciar`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ tier })
+        body: JSON.stringify({ tier, billingCycle })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok || !data.initPoint) {
@@ -462,11 +506,25 @@
 
   function setCurrency(usd) {
     isUSD = usd;
+    // Anual disponível só em BRL/Mercado Pago — força mensal e esconde o toggle de período em USD
+    if (usd) {
+      if (billingCycle !== "month") {
+        document.querySelectorAll("#billingToggle .ep-billing-switch__btn").forEach(b => {
+          b.classList.toggle("is-active", b.dataset.billing === "month");
+          b.setAttribute("aria-selected", b.dataset.billing === "month" ? "true" : "false");
+        });
+      }
+      billingToggle.style.display = "none";
+    } else if (tiersGrid.style.display !== "none") {
+      billingToggle.style.display = "flex";
+    }
     // Preços
     document.querySelectorAll(".ep-plan-card__currency").forEach(el => { el.textContent = usd ? "$" : "R$"; });
     document.querySelectorAll("[data-i18n='planos:recem.amount']").forEach(el => { el.textContent = usd ? "29.00" : "99,50"; });
     document.querySelectorAll("[data-i18n='planos:prof.amount']").forEach(el => { el.textContent = usd ? "49.00" : "199,00"; });
     document.querySelectorAll("[data-i18n='planos:recem.per'],[data-i18n='planos:prof.per']").forEach(el => { el.textContent = usd ? "/month" : "/mês"; });
+    if (usd) billingCycle = "month";
+    else applyBillingCycle(billingCycle);
     // Botões
     document.querySelectorAll(".ep-btn-brl").forEach(el => el.classList.toggle("ep-hide", usd));
     document.querySelectorAll(".ep-btn-usd").forEach(el => el.classList.toggle("ep-hide", !usd));
@@ -478,9 +536,12 @@
   btnBRL.addEventListener("click", () => setCurrency(false));
   btnUSD.addEventListener("click", () => setCurrency(true));
 
-  // Mostra toggle quando tiersGrid é exibido
+  // Mostra toggles quando tiersGrid é exibido
   const tierObserver = new MutationObserver(() => {
-    if (tiersGrid.style.display !== "none") currencyToggle.style.display = "flex";
+    if (tiersGrid.style.display !== "none") {
+      currencyToggle.style.display = "flex";
+      if (!isUSD) billingToggle.style.display = "flex";
+    }
   });
   tierObserver.observe(tiersGrid, { attributes: true, attributeFilter: ["style"] });
 
