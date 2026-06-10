@@ -11,7 +11,7 @@
 //
 // Bump SW_VERSION pra forçar refresh do cache em todas as instalações.
 
-const SW_VERSION = "ep-sw-v14-2026-05-26-sidebar-tight-no-scroll";
+const SW_VERSION = "ep-sw-v16-2026-06-09-perf-staging";
 const PRECACHE   = `precache-${SW_VERSION}`;
 const RUNTIME    = `runtime-${SW_VERSION}`;
 
@@ -23,6 +23,12 @@ const PRECACHE_URLS = [
   "/financeiro.html",
   "/relatorios.html",
   "/tiss.html",
+  "/consultorio.html",
+  "/mensagens.html",
+  "/clinica.html",
+  "/receita.html",
+  "/documento.html",
+  "/calculadora.html",
   "/manifest.webmanifest",
   "/logo_oficial_fundo_transparente.png?v=2"
 ];
