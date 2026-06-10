@@ -268,9 +268,22 @@
 
   let billingCycle = "month";
 
-  function applyBillingCycle(cycle) {
-    billingCycle = cycle;
-    if (cycle === "year") {
+  // Preços USD (Stripe) — anual = mensal x 12 x 0.84 (16% off, mesmo desconto do BRL)
+  const USD_PRICES = {
+    month: { recem: "29.00",  prof: "49.00",  per: "/month" },
+    year:  { recem: "292.00", prof: "494.00", per: "/year" }
+  };
+
+  function updatePricing() {
+    if (isUSD) {
+      const p = USD_PRICES[billingCycle] || USD_PRICES.month;
+      recemAmountEl.textContent = p.recem;
+      profAmountEl.textContent  = p.prof;
+      recemPerEl.textContent    = p.per;
+      profPerEl.textContent     = p.per;
+      subscribeRecemUsdBtn.textContent = `Subscribe — $${parseFloat(p.recem)} ${p.per}`;
+      subscribeProfUsdBtn.textContent  = `Subscribe — $${parseFloat(p.prof)} ${p.per}`;
+    } else if (billingCycle === "year") {
       recemAmountEl.textContent = t("recem.amountYearly", null, "1.002,96");
       recemPerEl.textContent    = t("recem.perYearly", null, "/Anual");
       profAmountEl.textContent  = t("prof.amountYearly", null, "2.005,92");
@@ -281,6 +294,11 @@
       profAmountEl.textContent  = t("prof.amount", null, "199,00");
       profPerEl.textContent     = t("prof.per", null, "/mês");
     }
+  }
+
+  function applyBillingCycle(cycle) {
+    billingCycle = cycle;
+    updatePricing();
   }
 
   document.querySelectorAll("#billingToggle .ep-billing-switch__btn").forEach(btn => {
@@ -335,12 +353,13 @@
     manageCard.style.display = "block";
     if (therapist.proPriceCents) {
       const lc = getLocale();
+      const isStripe = therapist.planSource === "stripe";
       const amount = (therapist.proPriceCents / 100).toFixed(2);
       const per = therapist.proBillingCycle === "year"
-        ? t("manage.perAnnual", null, "/Anual")
-        : t("prof.per", null, "/mês");
-      const formatted = lc === "pt-BR" || lc === "es-ES" ? amount.replace(".", ",") : amount;
-      manageCardSub.textContent = `R$ ${formatted}${per}`;
+        ? (isStripe ? "/year" : t("manage.perAnnual", null, "/Anual"))
+        : (isStripe ? "/month" : t("prof.per", null, "/mês"));
+      const formatted = (!isStripe && (lc === "pt-BR" || lc === "es-ES")) ? amount.replace(".", ",") : amount;
+      manageCardSub.textContent = isStripe ? `$ ${formatted}${per}` : `R$ ${formatted}${per}`;
     } else {
       manageCardSub.textContent = t("manage.subDefault", null, "Cobrança mensal recorrente.");
     }
@@ -505,25 +524,10 @@
 
   function setCurrency(usd) {
     isUSD = usd;
-    // Anual disponível só em BRL/Mercado Pago — força mensal e esconde o toggle de período em USD
-    if (usd) {
-      if (billingCycle !== "month") {
-        document.querySelectorAll("#billingToggle .ep-billing-switch__btn").forEach(b => {
-          b.classList.toggle("is-active", b.dataset.billing === "month");
-          b.setAttribute("aria-selected", b.dataset.billing === "month" ? "true" : "false");
-        });
-      }
-      billingToggle.style.display = "none";
-    } else if (tiersGrid.style.display !== "none") {
-      billingToggle.style.display = "flex";
-    }
+    if (tiersGrid.style.display !== "none") billingToggle.style.display = "flex";
     // Preços
     document.querySelectorAll(".ep-plan-card__currency").forEach(el => { el.textContent = usd ? "$" : "R$"; });
-    document.querySelectorAll("[data-i18n='planos:recem.amount']").forEach(el => { el.textContent = usd ? "29.00" : "99,50"; });
-    document.querySelectorAll("[data-i18n='planos:prof.amount']").forEach(el => { el.textContent = usd ? "49.00" : "199,00"; });
-    document.querySelectorAll("[data-i18n='planos:recem.per'],[data-i18n='planos:prof.per']").forEach(el => { el.textContent = usd ? "/month" : "/mês"; });
-    if (usd) billingCycle = "month";
-    else applyBillingCycle(billingCycle);
+    updatePricing();
     // Botões
     document.querySelectorAll(".ep-btn-brl").forEach(el => el.classList.toggle("ep-hide", usd));
     document.querySelectorAll(".ep-btn-usd").forEach(el => el.classList.toggle("ep-hide", !usd));
@@ -543,7 +547,7 @@
   function syncToggleVisibility() {
     if (tiersGrid.style.display !== "none") {
       currencyToggle.style.display = "flex";
-      if (!isUSD) billingToggle.style.display = "flex";
+      billingToggle.style.display = "flex";
     }
   }
   const tierObserver = new MutationObserver(syncToggleVisibility);
@@ -553,7 +557,6 @@
   // ─── Moeda padrão por geolocalização ─────────────────────────────────────
   // Preferência manual salva em localStorage tem prioridade. Sem preferência
   // salva, BR (por IP) usa BRL/Mercado Pago e o resto do mundo usa USD/Stripe.
-  // Anual fica restrito a BRL (ver setCurrency).
   let savedCurrency = null;
   try { savedCurrency = localStorage.getItem(CURRENCY_STORAGE_KEY); } catch (_) {}
   if (savedCurrency === "USD") {
@@ -572,7 +575,7 @@
       const res = await fetch(`${BACKEND_BASE_URL}/stripe/create-checkout`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ tier })
+        body: JSON.stringify({ tier, billingCycle })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok || !data.url) throw new Error(data?.error || ("HTTP_" + res.status));
@@ -585,10 +588,10 @@
   }
 
   subscribeRecemUsdBtn.addEventListener("click", () =>
-    startStripeCheckout("recem_formado", subscribeRecemUsdBtn, "Subscribe — $29 / month")
+    startStripeCheckout("recem_formado", subscribeRecemUsdBtn, subscribeRecemUsdBtn.textContent)
   );
   subscribeProfUsdBtn.addEventListener("click", () =>
-    startStripeCheckout("profissional", subscribeProfUsdBtn, "Subscribe — $49 / month")
+    startStripeCheckout("profissional", subscribeProfUsdBtn, subscribeProfUsdBtn.textContent)
   );
 
   // Retorno do Stripe Checkout
