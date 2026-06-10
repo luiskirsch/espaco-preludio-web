@@ -269,19 +269,22 @@
 
   // Preços USD (Stripe) — anual = mensal x 12 x 0.84 (16% off, mesmo desconto do BRL)
   const USD_PRICES = {
-    month: { recem: "29.00",  prof: "49.00",  per: "/month" },
-    year:  { recem: "292.00", prof: "494.00", per: "/year" }
+    month: { recem: "29.00",  prof: "49.00" },
+    year:  { recem: "292.00", prof: "494.00" }
   };
 
   function updatePricing() {
     if (isUSD) {
       const p = USD_PRICES[billingCycle] || USD_PRICES.month;
+      const per = billingCycle === "year"
+        ? t("currency.perYear", null, "/ano")
+        : t("currency.perMonth", null, "/mês");
       recemAmountEl.textContent = p.recem;
       profAmountEl.textContent  = p.prof;
-      recemPerEl.textContent    = p.per;
-      profPerEl.textContent     = p.per;
-      subscribeRecemUsdBtn.textContent = `Subscribe — $${parseFloat(p.recem)} ${p.per}`;
-      subscribeProfUsdBtn.textContent  = `Subscribe — $${parseFloat(p.prof)} ${p.per}`;
+      recemPerEl.textContent    = per;
+      profPerEl.textContent     = per;
+      subscribeRecemUsdBtn.textContent = `${t("recem.subscribeBtn", null, "Assinar como Recém-formado")} — $${parseFloat(p.recem)}${per}`;
+      subscribeProfUsdBtn.textContent  = `${t("prof.subscribeBtn", null, "Assinar Profissional")} — $${parseFloat(p.prof)}${per}`;
     } else if (billingCycle === "year") {
       recemAmountEl.textContent = t("recem.amountYearly", null, "1.002,96");
       recemPerEl.textContent    = t("recem.perYearly", null, "/Anual");
@@ -355,8 +358,8 @@
       const isStripe = therapist.planSource === "stripe";
       const amount = (therapist.proPriceCents / 100).toFixed(2);
       const per = therapist.proBillingCycle === "year"
-        ? (isStripe ? "/year" : t("manage.perAnnual", null, "/Anual"))
-        : (isStripe ? "/month" : t("prof.per", null, "/mês"));
+        ? (isStripe ? t("currency.perYear", null, "/ano") : t("manage.perAnnual", null, "/Anual"))
+        : (isStripe ? t("currency.perMonth", null, "/mês") : t("prof.per", null, "/mês"));
       const formatted = (!isStripe && (lc === "pt-BR" || lc === "es-ES")) ? amount.replace(".", ",") : amount;
       manageCardSub.textContent = isStripe ? `$ ${formatted}${per}` : `R$ ${formatted}${per}`;
     } else {
