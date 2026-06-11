@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+  <link rel="preconnect" href="https://firestore.googleapis.com">
+  <link rel="dns-prefetch" href="https://www.gstatic.com">
+  <title>Admin · Leads Estudante · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-276">
+  <script src="./i18n/init.js?v=1-2" defer></script>
+  <script src="./js/monitoring.js?v=3" defer></script>
+</head>
+<body>
+
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio · Admin</span>
+      </span>
+    </a>
+    <nav class="ep-nav">
+      <a href="./admin-painel.html" class="ep-text-sm">Painel</a>
+      <a href="./admin-profissionais.html" class="ep-text-sm">Profissionais</a>
+      <a href="./admin-pacientes.html" class="ep-text-sm">Pacientes</a>
+      <a href="./admin-denuncias.html" class="ep-text-sm">Denúncias</a>
+      <a href="./admin-verificacoes.html" class="ep-text-sm">CRP/CRM</a>
+      <a href="./admin-comprovantes.html" class="ep-text-sm">Estudante</a>
+      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm">Recém-formado</a>
+      <a href="./admin-comprovantes-formacao.html" class="ep-text-sm">Sem conselho</a>
+      <a href="./admin-leads-estudante.html" class="ep-text-sm is-active">Leads Estudante<span id="navBadgeLeadsEstudante" class="ep-nav-badge ep-hide">0</span></a>
+      <span id="adminEmail" class="ep-text-sm ep-text-muted">…</span>
+      <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Sair</button>
+    </nav>
+  </header>
+
+  <main class="ep-main">
+
+    <section id="loginPanel" class="ep-hide" style="max-width: 400px; margin: 40px auto;">
+      <div class="ep-auth__panel">
+        <h2 class="ep-auth__title">Acesso Admin</h2>
+        <p class="ep-auth__sub">Login restrito a e-mails na allowlist do servidor.</p>
+        <form id="loginForm" class="ep-stack ep-mt-16" novalidate>
+          <div class="ep-field">
+            <label class="ep-label" for="email">E-mail</label>
+            <input id="email" class="ep-input" type="email" autocomplete="email" required>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="password">Senha</label>
+            <input id="password" class="ep-input" type="password" autocomplete="current-password" required>
+          </div>
+          <div class="ep-status" id="loginStatus"></div>
+          <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="loginBtn">Entrar</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="dashboardPanel" class="ep-hide">
+      <div class="ep-flex ep-flex--end-wrap" style="justify-content: space-between; align-items: end; margin-bottom: 16px; gap: 16px;">
+        <div>
+          <div class="ep-eyebrow">Painel administrativo</div>
+          <h1 class="ep-h1 ep-mt-12">Leads — plano Estudante</h1>
+          <p class="ep-text-muted ep-mt-8">Pessoas que pediram acesso ao plano Estudante pelo modal da landing page. Entre em contato e marque como "Contatado" quando responder.</p>
+        </div>
+      </div>
+
+      <div class="ep-flex" style="gap: 8px; margin-bottom: 16px;">
+        <button class="ep-btn ep-btn--ghost ep-btn--sm is-active" data-filter="new">Novos</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="contacted">Contatados</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="all">Todos</button>
+      </div>
+
+      <div id="countLine" class="ep-text-sm ep-text-muted" style="margin-bottom: 12px;">—</div>
+
+      <div id="list" style="display: flex; flex-direction: column; gap: 12px;">
+        <div class="ep-skeleton">Carregando…</div>
+      </div>
+    </section>
+
+    <section id="forbiddenPanel" class="ep-hide" style="max-width: 460px; margin: 60px auto; text-align: center;">
+      <div class="ep-auth__panel">
+        <h2 class="ep-auth__title">Acesso negado.</h2>
+        <p class="ep-auth__sub">Sua conta não está na allowlist de admin.</p>
+        <button class="ep-btn ep-btn--ghost ep-btn--block ep-mt-16" type="button" id="forbiddenLogout">Sair</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script type="module">
+  import {
+    onAuthStateChanged, signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  const loginPanel     = document.getElementById("loginPanel");
+  const dashboardPanel = document.getElementById("dashboardPanel");
+  const forbiddenPanel = document.getElementById("forbiddenPanel");
+  const adminEmailEl   = document.getElementById("adminEmail");
+  const listEl         = document.getElementById("list");
+  const countEl        = document.getElementById("countLine");
+
+  let idToken = null;
+  let currentFilter = "new";
+
+  function show(panel) {
+    [loginPanel, dashboardPanel, forbiddenPanel].forEach(p => p.classList.add("ep-hide"));
+    panel.classList.remove("ep-hide");
+  }
+  function esc(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  }
+  function fmtDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email    = document.getElementById("email").value.trim().toLowerCase();
+    const password = document.getElementById("password").value;
+    const statusEl = document.getElementById("loginStatus");
+    const loginBtn = document.getElementById("loginBtn");
+    loginBtn.disabled = true;
+    statusEl.textContent = "Autenticando…";
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      statusEl.textContent = err?.message || "Erro de autenticação.";
+      statusEl.className = "ep-status is-err";
+      loginBtn.disabled = false;
+    }
+  });
+  document.getElementById("logoutBtn").addEventListener("click", async () => { await signOut(auth); window.location.reload(); });
+  document.getElementById("forbiddenLogout").addEventListener("click", async () => { await signOut(auth); window.location.reload(); });
+
+  document.querySelectorAll("[data-filter]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentFilter = btn.dataset.filter;
+      document.querySelectorAll("[data-filter]").forEach(b => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      loadLeads();
+    });
+  });
+
+  async function api(path, opts = {}) {
+    const headers = { ...(opts.headers || {}), "Authorization": `Bearer ${idToken}` };
+    if (opts.body) headers["Content-Type"] = "application/json";
+    const res = await fetch(BACKEND_BASE_URL + path, { ...opts, headers });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw Object.assign(new Error(data?.error || ("HTTP_" + res.status)), { status: res.status });
+    return data;
+  }
+
+  async function loadLeads() {
+    listEl.innerHTML = `<div class="ep-skeleton">Carregando…</div>`;
+    try {
+      const data = await api(`/therapy/admin/leads-estudante?status=${currentFilter}`);
+      const items = data.items || [];
+      countEl.textContent = `${items.length} lead${items.length === 1 ? "" : "s"}`;
+
+      if (items.length === 0) {
+        const label = currentFilter === "new" ? "novo" : currentFilter === "contacted" ? "contatado" : "registrado";
+        listEl.innerHTML = `<div style="text-align: center; padding: 40px; color: #2d6a4f; font-size: 15px;">✓ Nenhum lead ${label}.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = items.map(lead => {
+        const isNew = lead.status === "new";
+        const details = [
+          lead.institution ? `<strong>Instituição:</strong> <span>${esc(lead.institution)}</span>` : "",
+          lead.course ? `<strong>Curso:</strong> <span>${esc(lead.course)}</span>` : ""
+        ].filter(Boolean).join("");
+
+        const messageBlock = lead.message
+          ? `<div style="margin: 10px 0; padding: 10px 14px; background: var(--ep-bg-2); border-left: 3px solid var(--ep-accent); border-radius: 6px; font-size: 13.5px; color: var(--ep-ink-2); line-height: 1.5;">
+              <div style="font-size: 11px; font-weight: 600; color: var(--ep-ink-3); margin-bottom: 4px;">Mensagem:</div>
+              "${esc(lead.message)}"
+            </div>`
+          : "";
+
+        return `<article style="padding: 16px 20px; border: 1px solid ${isNew ? "rgba(212,165,83,0.4)" : "var(--ep-line)"}; border-radius: 10px; background: var(--ep-surface); ${isNew ? "border-left: 4px solid var(--ep-gold);" : ""}">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="font-weight: 700; font-size: 14px;">${isNew ? "🟡 Novo" : "✅ Contatado"}</span>
+                <span style="font-size: 12px; color: var(--ep-ink-3);">${fmtDate(lead.createdAt)}</span>
+              </div>
+
+              <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; line-height: 1.6;">
+                <strong>Nome:</strong>
+                <span>${esc(lead.name)}</span>
+                <strong>E-mail:</strong>
+                <span><a href="mailto:${esc(lead.email)}">${esc(lead.email)}</a></span>
+                ${details}
+              </div>
+
+              ${messageBlock}
+
+              ${lead.contactedBy ? `<div style="font-size: 11px; color: var(--ep-ink-3); margin-top: 8px;">Contatado por ${esc(lead.contactedBy)}</div>` : ""}
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
+              ${isNew ? `<button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="contacted" data-id="${esc(lead.leadId)}">Marcar contatado</button>` : `<button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="new" data-id="${esc(lead.leadId)}">Marcar como novo</button>`}
+            </div>
+          </div>
+        </article>`;
+      }).join("");
+
+      listEl.querySelectorAll("[data-action]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const action = btn.dataset.action;
+          const id = btn.dataset.id;
+          btn.disabled = true;
+          try {
+            await api(`/therapy/admin/leads-estudante/${encodeURIComponent(id)}`, {
+              method: "PATCH",
+              body: JSON.stringify({ status: action })
+            });
+            loadLeads();
+          } catch (err) {
+            alert("Erro: " + (err?.message || "desconhecido"));
+            btn.disabled = false;
+          }
+        });
+      });
+
+    } catch (err) {
+      if (err.status === 403) { show(forbiddenPanel); return; }
+      listEl.innerHTML = `<div class="ep-status is-err">Erro: ${esc(err.message)}</div>`;
+    }
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { show(loginPanel); return; }
+    try {
+      idToken = await user.getIdToken();
+      adminEmailEl.textContent = user.email || "";
+      show(dashboardPanel);
+      await loadLeads();
+    } catch (err) {
+      if (err.status === 403 || err.status === 503) show(forbiddenPanel);
+      else show(loginPanel);
+    }
+  });
+</script>
+
+</body>
+</html>
