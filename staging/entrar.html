@@ -345,6 +345,10 @@
 
   startBtn.addEventListener("click", async () => {
     if (!consentEl.checked) return;
+    // iOS Safari mantém o zoom do teclado (foco no input do nome) ao trocar
+    // de tela via JS — tira o foco e realinha o viewport antes de seguir.
+    nameEl.blur();
+    window.scrollTo(0, 0);
     startBtn.disabled = true;
     statusEl.textContent = tr("entrar:status.connecting", "conectando…");
     statusEl.className = "ep-status";
