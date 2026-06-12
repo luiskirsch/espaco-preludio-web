@@ -181,8 +181,8 @@
       <label style="display: flex; gap: 10px; padding: 10px 12px; border: 1px solid var(--ep-line); border-radius: 8px; cursor: pointer; align-items: start;">
         <input type="radio" name="audience" value="${esc(k)}" style="margin-top: 3px;">
         <span style="flex: 1;">
-          <strong>${esc(v.label)}</strong><br>
-          <span class="ep-text-xs ep-text-muted">${esc(v.description)}</span>
+          <strong>${esc(tr(`marketing:audiences.${k}.label`, v.label))}</strong><br>
+          <span class="ep-text-xs ep-text-muted">${esc(tr(`marketing:audiences.${k}.description`, v.description))}</span>
         </span>
       </label>
     `).join("");
@@ -196,8 +196,8 @@
       <label style="display: flex; gap: 10px; padding: 10px 12px; border: 1px solid var(--ep-line); border-radius: 8px; cursor: pointer; align-items: start;">
         <input type="radio" name="template" value="${esc(k)}" style="margin-top: 3px;">
         <span style="flex: 1;">
-          <strong>${esc(v.label)}</strong><br>
-          <span class="ep-text-xs ep-text-muted">${esc(v.bodyHint)}</span>
+          <strong>${esc(tr(`marketing:templates.${k}.label`, v.label))}</strong><br>
+          <span class="ep-text-xs ep-text-muted">${esc(tr(`marketing:templates.${k}.bodyHint`, v.bodyHint))}</span>
         </span>
       </label>
     `).join("");
@@ -254,8 +254,8 @@
   function selectTemplate(key) {
     selectedTemplate = key;
     const t = templates[key];
-    $("campSubject").value = t.subject || "";
-    $("campBody").value = t.bodyMd || "";
+    $("campSubject").value = tr(`marketing:templates.${key}.subject`, t.subject || "");
+    $("campBody").value = tr(`marketing:templates.${key}.bodyMd`, t.bodyMd || "");
   }
 
   $("previewBtn").addEventListener("click", () => {
