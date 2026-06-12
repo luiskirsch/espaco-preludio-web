@@ -25,6 +25,16 @@
   const I18NEXT_CDN = '/i18n/i18next.min.js';
   const BACKEND_CDN = '/i18n/i18nextHttpBackend.min.js';
 
+  // Some pages mark <html class="ep-i18n-pending"> inline (before any CSS/JS
+  // loads) to hide <body> via CSS while a non-default locale is being applied,
+  // avoiding a flash of pt-BR text. Always reveal it once we're done — or after
+  // a timeout, in case bootstrap() fails (e.g. CDN unreachable).
+  const revealTimer = setTimeout(reveal, 2500);
+  function reveal() {
+    clearTimeout(revealTimer);
+    document.documentElement.classList.remove('ep-i18n-pending');
+  }
+
   function detectLocale() {
     try {
       const url = new URLSearchParams(location.search).get('lang');
@@ -215,9 +225,11 @@
     };
 
     document.dispatchEvent(new Event('ep:i18n-ready'));
+    reveal();
   }
 
   bootstrap().catch(err => {
     console.error('[ep-i18n] init failed:', err);
+    reveal();
   });
 })();
