@@ -83,6 +83,7 @@
                 <option value="CRO" data-i18n="cadastro:step1.conselho.cro">CRO — Odontologia</option>
                 <option value="CREF" data-i18n="cadastro:step1.conselho.cref">CREF — Educação Física</option>
                 <option value="SEM_CONSELHO" data-i18n="cadastro:step1.conselho.semConselho">Sem conselho regulamentado (Psicanálise, Terapia integrativa, Hipnoterapia)</option>
+                <option value="INTERNACIONAL" data-i18n="cadastro:step1.conselho.internacional">Registro profissional no exterior (fora do Brasil)</option>
               </select>
             </div>
           </div>
@@ -211,6 +212,31 @@
             </p>
           </div>
 
+          <!-- Campos extras pra INTERNACIONAL — país + órgão de registro no
+               exterior. Substituem o "selo do conselho brasileiro" como
+               referência pro admin revisar manualmente (nenhum validador
+               automático cobre registros fora do Brasil). -->
+          <div id="internacionalFields" class="ep-stack ep-hide ep-mt-12" style="gap: 12px; padding: 16px; border: 1px solid var(--ep-border); border-radius: 8px; background: rgba(255, 244, 220, 0.4);">
+            <div class="ep-alert ep-alert--warning" style="margin: 0;" data-i18n-html="cadastro:step1.internacionalWarning">
+              <strong>Atenção: você se cadastrará com registro profissional no exterior.</strong><br>
+              Sua conta passa por <strong>revisão manual obrigatória</strong> antes do perfil público
+              ficar visível. Atestados e documentos clínicos terão texto genérico — a
+              <strong>validade legal depende da legislação do seu país e do país do
+              paciente</strong>. Emissão de receita não está disponível para registros
+              no exterior.
+            </div>
+            <div class="ep-row">
+              <div class="ep-field">
+                <label class="ep-label" for="paisRegistro" data-i18n="cadastro:step1.paisRegistroLabel">País de registro</label>
+                <input id="paisRegistro" class="ep-input" type="text" maxlength="60" placeholder="Ex.: Portugal" data-i18n-placeholder="cadastro:step1.paisRegistroPlaceholder">
+              </div>
+              <div class="ep-field">
+                <label class="ep-label" for="orgaoRegistro" data-i18n="cadastro:step1.orgaoRegistroLabel">Órgão de registro</label>
+                <input id="orgaoRegistro" class="ep-input" type="text" maxlength="120" placeholder="Ex.: Ordem dos Psicólogos Portugueses" data-i18n-placeholder="cadastro:step1.orgaoRegistroPlaceholder">
+              </div>
+            </div>
+          </div>
+
           <div class="ep-row">
             <div class="ep-field">
               <label class="ep-label" for="password" data-i18n="cadastro:step1.labelPassword">Senha</label>
@@ -321,6 +347,9 @@
   const subtipoCrefitoField = document.getElementById("subtipoCrefitoField");
   const subtipoConselhoEl   = document.getElementById("subtipoConselho");
   const semConselhoFields   = document.getElementById("semConselhoFields");
+  const internacionalFields = document.getElementById("internacionalFields");
+  const paisRegistroEl      = document.getElementById("paisRegistro");
+  const orgaoRegistroEl     = document.getElementById("orgaoRegistro");
   const tipoPraticaEl       = document.getElementById("tipoPratica");
   const formacaoInstituicaoEl = document.getElementById("formacaoInstituicao");
   const formacaoCursoEl       = document.getElementById("formacaoCurso");
@@ -416,6 +445,18 @@
     } else if (!numeroConselho) {
       return setStatus(statusData, tr("cadastro:status.informeNumeroRegistro", "Informe o número de registro no conselho."), "err");
     }
+
+    // INTERNACIONAL exige país + órgão de registro estrangeiro — referência
+    // pro admin revisar manualmente (nenhum validador automático cobre
+    // registros fora do Brasil).
+    let internacionalExtras = null;
+    if (tipoConselho === "INTERNACIONAL") {
+      const paisRegistro  = paisRegistroEl.value.trim().slice(0, 60);
+      const orgaoRegistro = orgaoRegistroEl.value.trim().slice(0, 120);
+      if (!paisRegistro)  return setStatus(statusData, tr("cadastro:status.informePaisRegistro", "Informe o país de registro."), "err");
+      if (!orgaoRegistro) return setStatus(statusData, tr("cadastro:status.informeOrgaoRegistro", "Informe o órgão de registro."), "err");
+      internacionalExtras = { paisRegistro, orgaoRegistro };
+    }
     {
       const planoQS = new URLSearchParams(location.search).get("plano");
       const studentAllowed = new Set(["CRP", "CRM"]);
@@ -424,10 +465,11 @@
           tr("cadastro:status.estudanteOnlyCrpCrm", "Plano Estudante exige cadastro em Psicologia (CRP) ou Medicina (CRM). Volte na landing e escolha Recém-formado ou Profissional."),
           "err");
       }
-      // Recém-formado e estudante exigem conselho regulamentado.
-      if ((planoQS === "recem" || planoQS === "estudante") && tipoConselho === "SEM_CONSELHO") {
+      // Recém-formado e estudante exigem conselho regulamentado nacional —
+      // SEM_CONSELHO e INTERNACIONAL só estão disponíveis no plano Profissional.
+      if ((planoQS === "recem" || planoQS === "estudante") && (tipoConselho === "SEM_CONSELHO" || tipoConselho === "INTERNACIONAL")) {
         return setStatus(statusData,
-          tr("cadastro:status.semConselhoOnlyProfissional", "Profissional não regulamentado só está disponível no plano Profissional (R$ 199/mês). Volte na landing e escolha Profissional."),
+          tr("cadastro:status.semConselhoOnlyProfissional", "Esse tipo de cadastro só está disponível no plano Profissional (R$ 199/mês). Volte na landing e escolha Profissional."),
           "err");
       }
     }
@@ -458,7 +500,7 @@
         wrappedDEK,
         wrappedDEKIv,
         recoveryPhrase: recovery,
-        form: { displayName, email, especialidade, tipoConselho, numeroConselho, subtipoConselho, semConselhoExtras }
+        form: { displayName, email, especialidade, tipoConselho, numeroConselho, subtipoConselho, semConselhoExtras, internacionalExtras }
       };
 
       recoveryEl.textContent = recovery;
@@ -548,6 +590,11 @@
             formacaoCurso:         pending.form.semConselhoExtras.formacaoCurso,
             formacaoAnoConclusao:  pending.form.semConselhoExtras.formacaoAnoConclusao,
             anosExperiencia:       pending.form.semConselhoExtras.anosExperiencia
+          } : {}),
+          // Campos extras pra INTERNACIONAL (país + órgão de registro estrangeiro).
+          ...(pending.form.internacionalExtras ? {
+            paisRegistro:  pending.form.internacionalExtras.paisRegistro,
+            orgaoRegistro: pending.form.internacionalExtras.orgaoRegistro
           } : {})
         })
       });
@@ -598,20 +645,24 @@
     "CRFA":    "Ex.: CRFa 1-12345",
     "CRN":     "Ex.: CRN-2 12345",
     "CRO":     "Ex.: CRO-SC 12345",
-    "CREF":    "Ex.: 012345-G/SC"
+    "CREF":    "Ex.: 012345-G/SC",
+    "INTERNACIONAL": "Número de registro no órgão de classe do seu país"
   };
   // Tier estudante (clínica-escola/internato) só faz sentido em Psico/Medicina.
   // Outros conselhos não têm essa estrutura — bloqueamos com aviso na UI.
   const STUDENT_TIER_ALLOWED = new Set(["CRP", "CRM"]);
   tipoConselhoEl?.addEventListener("change", () => {
     const sigla = tipoConselhoEl.value.trim().toUpperCase();
-    const isSemConselho = sigla === "SEM_CONSELHO";
-    const isCrefito     = sigla === "CREFITO";
+    const isSemConselho   = sigla === "SEM_CONSELHO";
+    const isCrefito       = sigla === "CREFITO";
+    const isInternacional = sigla === "INTERNACIONAL";
 
     // SEM_CONSELHO esconde o número de registro e revela campos de formação.
     numeroConselhoField.classList.toggle("ep-hide", isSemConselho);
     numeroConselhoHint.classList.toggle("ep-hide", isSemConselho);
     semConselhoFields.classList.toggle("ep-hide", !isSemConselho);
+    // INTERNACIONAL mantém o número de registro e revela país/órgão.
+    internacionalFields.classList.toggle("ep-hide", !isInternacional);
     // CREFITO revela o sub-dropdown fisio/TO. Outros conselhos escondem.
     subtipoCrefitoField.classList.toggle("ep-hide", !isCrefito);
     if (!isCrefito) subtipoConselhoEl.value = "";
@@ -629,9 +680,9 @@
       setStatus(statusData,
         tr("cadastro:status.estudanteIneligible", "O plano Estudante (gratuito) só é elegível para Psicologia ou Medicina cursando clínica-escola/internato. Use Recém-formado ou Profissional."),
         "err");
-    } else if ((planoQS === "recem" || planoQS === "estudante") && isSemConselho) {
+    } else if ((planoQS === "recem" || planoQS === "estudante") && (isSemConselho || isInternacional)) {
       setStatus(statusData,
-        tr("cadastro:status.semConselhoIneligible", "Profissional não regulamentado só está disponível no plano Profissional (R$ 199/mês)."),
+        tr("cadastro:status.semConselhoIneligible", "Esse tipo de cadastro só está disponível no plano Profissional (R$ 199/mês)."),
         "err");
     } else {
       setStatus(statusData, "");

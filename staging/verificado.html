@@ -59,6 +59,9 @@
           <p class="ep-text-muted ep-mt-0 ep-hide" id="profSemConselhoNote" style="font-style: italic; font-size: 14px;" data-i18n="verificado:hero.noCouncilNote">
             Profissional não regulamentado por conselho oficial.
           </p>
+          <p class="ep-text-muted ep-mt-0 ep-hide" id="profInternacionalNote" style="font-style: italic; font-size: 14px;" data-i18n="verificado:hero.internacionalNote">
+            Registro profissional no exterior (fora do Brasil).
+          </p>
         </div>
       </div>
 
@@ -162,7 +165,12 @@
         "terapia-integrativa": tr("verificado:practice.terapiaIntegrativa", "Terapia integrativa"),
         "hipnoterapia":        tr("verificado:practice.hipnoterapia", "Hipnoterapia")
       };
-      if (p.isRegulamentado === false) {
+      if (p.isInternacional && p.tipoConselho && p.numeroConselho) {
+        const orgao = p.orgaoRegistro ? `${p.orgaoRegistro} ` : "";
+        const pais  = p.paisRegistro ? ` (${p.paisRegistro})` : "";
+        ids.push(`${orgao}${p.numeroConselho}${pais}`);
+        document.getElementById("profInternacionalNote").classList.remove("ep-hide");
+      } else if (p.isRegulamentado === false) {
         if (p.tipoPratica) ids.push(PRACTICE_LABELS[p.tipoPratica] || p.tipoPratica);
         document.getElementById("profSemConselhoNote").classList.remove("ep-hide");
       } else if (p.tipoConselho && p.numeroConselho) {

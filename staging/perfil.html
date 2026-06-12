@@ -175,6 +175,29 @@
           </div>
         </div>
 
+        <!-- Registro profissional no exterior — visível só pra INTERNACIONAL.
+             numeroConselho/país/órgão são enviados juntos no PATCH (backend
+             exige tipoConselho+numeroConselho pra atualizar país/órgão). -->
+        <div id="internacionalRegistroFields" class="ep-stack ep-hide ep-mt-12" style="gap: 12px; padding: 16px; border: 1px solid var(--ep-border); border-radius: 8px; background: rgba(255, 244, 220, 0.4);">
+          <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="perfil:ident.internacionalHint">
+            Registro profissional no exterior. Alterações passam por nova revisão manual antes do selo de verificação ser renovado.
+          </p>
+          <div class="ep-field">
+            <label class="ep-label" for="numeroConselhoIntl" data-i18n="perfil:ident.numeroRegistroLabel">Número de registro</label>
+            <input id="numeroConselhoIntl" class="ep-input" type="text" maxlength="30">
+          </div>
+          <div class="ep-row">
+            <div class="ep-field">
+              <label class="ep-label" for="paisRegistro" data-i18n="perfil:ident.paisRegistroLabel">País de registro</label>
+              <input id="paisRegistro" class="ep-input" type="text" maxlength="60">
+            </div>
+            <div class="ep-field">
+              <label class="ep-label" for="orgaoRegistro" data-i18n="perfil:ident.orgaoRegistroLabel">Órgão de registro</label>
+              <input id="orgaoRegistro" class="ep-input" type="text" maxlength="120">
+            </div>
+          </div>
+        </div>
+
         <div class="ep-field">
           <label class="ep-label" for="cnpj" data-i18n="perfil:ident.cnpj">CNPJ (opcional, se atua como PJ)</label>
           <input id="cnpj" class="ep-input" type="text" maxlength="20" placeholder="00.000.000/0001-00">
@@ -901,6 +924,12 @@
     $("cnpj").value          = t.cnpj || "";
     $("bio").value           = t.bio || "";
 
+    if (String(t.tipoConselho || "").toUpperCase() === "INTERNACIONAL") {
+      $("numeroConselhoIntl").value = t.numeroConselho || "";
+      $("paisRegistro").value       = t.paisRegistro   || "";
+      $("orgaoRegistro").value      = t.orgaoRegistro  || "";
+    }
+
     const c = t.consultorio || {};
     $("endereco").value     = c.endereco    || "";
     $("numero").value       = c.numero      || "";
@@ -957,11 +986,23 @@
   // Esconde campos/secoes irrelevantes pra profissionais SEM_CONSELHO.
   // capabilities base do SEM_CONSELHO no backend: consulta, anotacoes,
   // atestado-comparecimento. Sem receita, sem documentos clinicos formais.
-  if (String(therapist.tipoConselho || "").toUpperCase() === "SEM_CONSELHO") {
+  const tipoConselhoAtual = String(therapist.tipoConselho || "").toUpperCase();
+  if (tipoConselhoAtual === "SEM_CONSELHO") {
     const hide = (id) => { const el = document.getElementById(id); if (el) el.style.display = "none"; };
     hide("logoSection");     // logo so aparece no PDF da receita
     hide("conselhoRow");     // CRP + CRM (nao tem registro em conselho)
     hide("rqeField");        // RQE eh registro de especialista regulamentado
+  }
+
+  // INTERNACIONAL: CRP/CRM e RQE sao registros brasileiros (nao se aplicam);
+  // logo de receita tambem nao (sem capability "receita"). Revela campos
+  // de registro estrangeiro (numero/pais/orgao).
+  if (tipoConselhoAtual === "INTERNACIONAL") {
+    const hide = (id) => { const el = document.getElementById(id); if (el) el.style.display = "none"; };
+    hide("logoSection");
+    hide("conselhoRow");
+    hide("rqeField");
+    document.getElementById("internacionalRegistroFields")?.classList.remove("ep-hide");
   }
 
   // ─── Push notifications ──────────────────────────────────────────────
@@ -2016,6 +2057,12 @@ Direito de portabilidade — LGPD Art. 18, V.
       especialidade: $("especialidade").value,
       cnpj:          $("cnpj").value.trim(),
       bio:           $("bio").value.trim(),
+      ...(String(therapist.tipoConselho || "").toUpperCase() === "INTERNACIONAL" ? {
+        tipoConselho:   "INTERNACIONAL",
+        numeroConselho: $("numeroConselhoIntl").value.trim().toUpperCase(),
+        paisRegistro:   $("paisRegistro").value.trim(),
+        orgaoRegistro:  $("orgaoRegistro").value.trim()
+      } : {}),
       consultorio: {
         endereco:    $("endereco").value.trim(),
         numero:      $("numero").value.trim(),
@@ -2069,6 +2116,24 @@ Direito de portabilidade — LGPD Art. 18, V.
       setStatus("Nome é obrigatório.", "err");
       $("saveBtn").disabled = false;
       return;
+    }
+
+    if (body.tipoConselho === "INTERNACIONAL") {
+      if (!body.numeroConselho) {
+        setStatus(tr("perfil:ident.numeroRegistroRequired", "Informe o número de registro."), "err");
+        $("saveBtn").disabled = false;
+        return;
+      }
+      if (!body.paisRegistro) {
+        setStatus(tr("perfil:ident.paisRegistroRequired", "Informe o país de registro."), "err");
+        $("saveBtn").disabled = false;
+        return;
+      }
+      if (!body.orgaoRegistro) {
+        setStatus(tr("perfil:ident.orgaoRegistroRequired", "Informe o órgão de registro."), "err");
+        $("saveBtn").disabled = false;
+        return;
+      }
     }
 
     try {

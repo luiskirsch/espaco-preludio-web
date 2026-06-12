@@ -253,7 +253,11 @@
   }
   const metaParts = [];
   if (profile.especialidade) metaParts.push(prettyEspecialidade(profile.especialidade));
-  if (profile.numeroConselho && profile.conselhoLabel) {
+  if (profile.isInternacional && profile.numeroConselho) {
+    const orgao = profile.orgaoRegistro ? `${profile.orgaoRegistro} ` : "";
+    const pais  = profile.paisRegistro ? ` (${profile.paisRegistro})` : "";
+    metaParts.push(`${orgao}${profile.numeroConselho}${pais}`);
+  } else if (profile.numeroConselho && profile.conselhoLabel) {
     metaParts.push(`${profile.conselhoLabel} ${profile.numeroConselho}`);
   } else if (profile.numeroConselho) {
     metaParts.push(profile.numeroConselho);

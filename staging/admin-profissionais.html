@@ -222,6 +222,12 @@
     }
   }
 
+  function formatConselho(it) {
+    if (it.tipoConselho === "INTERNACIONAL" && it.numeroConselho) {
+      return `INTERNACIONAL: ${it.orgaoRegistro ? it.orgaoRegistro + " " : ""}${it.numeroConselho}${it.paisRegistro ? ` (${it.paisRegistro})` : ""}`;
+    }
+    return it.tipoConselho && it.numeroConselho ? `${it.tipoConselho} ${it.numeroConselho}` : (it.numeroConselho || "Sem conselho");
+  }
   function statusPill(item) {
     const now = Date.now();
     if (item.verificado) return `<span class="ep-badge ep-badge--ok">Verificado</span>`;
@@ -250,7 +256,7 @@
     for (const it of items) {
       const card = document.createElement("article");
       card.className = "ep-admin-card";
-      const conselho = it.tipoConselho && it.numeroConselho ? `${it.tipoConselho} ${it.numeroConselho}` : (it.numeroConselho || "Sem conselho");
+      const conselho = formatConselho(it);
       card.innerHTML = `
         <div class="ep-flex" style="justify-content: space-between; align-items: flex-start; gap: 12px;">
           <div style="min-width: 0; flex: 1;">
@@ -304,7 +310,8 @@
         <strong>Plano atual:</strong> ${escapeHtml(planoLabel(it.plano))}<br>
         <strong>Trial até:</strong> ${fmtDate(it.trialUntil)}${it.trialActive ? " <span class='ep-badge ep-badge--ok'>ativo</span>" : ""}<br>
         <strong>Cortesia admin até:</strong> ${fmtDate(it.adminGrantedUntil)}${it.adminGrantActive ? " <span class='ep-badge ep-badge--ok'>ativa</span>" : ""}<br>
-        <strong>Verificado:</strong> ${it.verificado ? "✓ sim" : "✗ não"} ${it.verifiedAt ? "(" + fmtDate(it.verifiedAt) + ")" : ""}
+        <strong>Verificado:</strong> ${it.verificado ? "✓ sim" : "✗ não"} ${it.verifiedAt ? "(" + fmtDate(it.verifiedAt) + ")" : ""}<br>
+        <strong>Conselho:</strong> ${escapeHtml(formatConselho(it))}
       </div>
 
       <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">

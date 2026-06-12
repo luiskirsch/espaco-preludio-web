@@ -177,8 +177,9 @@
     const badge = `<span class="ep-verified-badge ep-verified-badge--inline" title="${escapeHtml(verifiedTitle)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
     const espLabelStr = espLabel(item.especialidade);
     const cityLine = [item.cidade, item.uf].filter(Boolean).join("/");
-    const conselhoLine = item.conselhoLabel && item.numeroConselho
-      ? `${item.conselhoLabel} ${item.numeroConselho}` : "";
+    const conselhoLine = item.isInternacional && item.numeroConselho
+      ? `${item.orgaoRegistro ? item.orgaoRegistro + " " : ""}${item.numeroConselho}${item.paisRegistro ? ` (${item.paisRegistro})` : ""}`
+      : (item.conselhoLabel && item.numeroConselho ? `${item.conselhoLabel} ${item.numeroConselho}` : "");
     const scheduleBtn = tr("profissionais:card.scheduleBtn", "Agendar consulta →");
 
     return `
