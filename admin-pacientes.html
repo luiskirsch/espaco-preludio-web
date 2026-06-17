@@ -147,11 +147,11 @@
 
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     await signOut(auth);
-    location.href = "./login.html";
+    location.href = "./admin-login.html";
   });
 
   onAuthStateChanged(auth, async user => {
-    if (!user) { location.href = "./login.html"; return; }
+    if (!user) { location.href = "./admin-login.html"; return; }
     idToken = await user.getIdToken();
     document.getElementById("adminEmail").textContent = user.email || "";
     try {

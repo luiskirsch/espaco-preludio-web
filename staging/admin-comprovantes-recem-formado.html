@@ -384,7 +384,7 @@
   });
 
   onAuthStateChanged(auth, async (user) => {
-    if (!user) { show(loginPanel); adminEmailEl.textContent = ""; return; }
+    if (!user) { window.location.href = "./admin-login.html"; return; }
     try {
       idToken = await user.getIdToken();
       adminEmailEl.textContent = user.email || "";

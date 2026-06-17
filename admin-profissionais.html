@@ -432,7 +432,7 @@
   }
 
   onAuthStateChanged(auth, async (user) => {
-    if (!user) { show(loginPanel); return; }
+    if (!user) { window.location.href = "./admin-login.html"; return; }
     try {
       idToken = await user.getIdToken();
       adminEmailEl.textContent = user.email || "";
@@ -441,7 +441,7 @@
       await loadList();
     } catch (err) {
       if (err.status === 403 || err.status === 503) show(forbiddenPanel);
-      else show(loginPanel);
+      else window.location.href = "./admin-login.html";
     }
   });
 </script>
