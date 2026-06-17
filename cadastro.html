@@ -16,6 +16,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <style>
+    .is-student-mode #heroProfissional { display: none !important; }
+    .is-student-mode #heroStudent { display: flex !important; flex-direction: column; }
+    .is-student-mode #especialidadeField { display: none !important; }
+  </style>
+  <script>(function(){if(new URLSearchParams(location.search).get("plano")==="estudante")document.body.classList.add("is-student-mode");})();</script>
   <script src="./i18n/init.js?v=1-3" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
@@ -33,22 +39,59 @@
         </span>
       </a>
 
-      <h1 class="ep-auth__title ep-mt-32" data-i18n="cadastro:hero.title">Crie seu consultório.</h1>
-      <p class="ep-auth__sub" data-i18n="cadastro:hero.sub">
-        Em menos de dois minutos você terá um ambiente clínico cifrado de ponta a ponta,
-        com link único para enviar ao paciente.
-      </p>
+      <div id="heroProfissional">
+        <h1 class="ep-auth__title ep-mt-32" data-i18n="cadastro:hero.title">Crie seu consultório.</h1>
+        <p class="ep-auth__sub" data-i18n="cadastro:hero.sub">
+          Em menos de dois minutos você terá um ambiente clínico cifrado de ponta a ponta,
+          com link único para enviar ao paciente.
+        </p>
 
-      <div class="ep-stack ep-mt-24">
-        <div class="ep-alert ep-alert--info">
-          <strong data-i18n="cadastro:hero.alertTitle">Por que pedimos seu registro profissional?</strong><br>
-          <span data-i18n="cadastro:hero.alertBody">Aceitamos profissionais regulamentados em qualquer conselho de saúde
-          (CRP, CRM, CRESS, CREFITO, CRFa, CRN, CRO, CREF). O número fica visível
-          na sua página pública para que o paciente confirme sua atuação.</span>
+        <div class="ep-stack ep-mt-24">
+          <div class="ep-alert ep-alert--info">
+            <strong data-i18n="cadastro:hero.alertTitle">Por que pedimos seu registro profissional?</strong><br>
+            <span data-i18n="cadastro:hero.alertBody">Aceitamos profissionais regulamentados em qualquer conselho de saúde
+            (CRP, CRM, CRESS, CREFITO, CRFa, CRN, CRO, CREF). O número fica visível
+            na sua página pública para que o paciente confirme sua atuação.</span>
+          </div>
+          <div class="ep-lock">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+            <span data-i18n="cadastro:hero.lock">Cifragem ativada antes do envio.</span>
+          </div>
         </div>
-        <div class="ep-lock">
+      </div>
+
+      <div id="heroStudent" style="display:none;flex-direction:column;gap:0;margin-top:32px;">
+        <div class="ep-eyebrow" style="color:var(--ep-gold);">Plano Estudante · Gratuito</div>
+        <h1 class="ep-auth__title" style="margin-top:8px;">Seu primeiro consultório, sem pagar nada.</h1>
+        <p class="ep-auth__sub" style="margin-top:8px;">Para estudantes de Psicologia e Medicina em clínica-escola ou internato.</p>
+
+        <div style="display:flex;flex-direction:column;gap:18px;margin-top:28px;">
+          <div style="display:flex;align-items:flex-start;gap:14px;">
+            <span style="flex-shrink:0;width:28px;height:28px;border-radius:50%;background:#d7b06b;color:#fff8ee;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">1</span>
+            <div>
+              <div style="font-weight:600;font-size:14px;color:var(--ep-ink);">Crie sua conta</div>
+              <div style="font-size:13px;color:var(--ep-ink-3);margin-top:2px;">Leva menos de dois minutos.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:14px;">
+            <span style="flex-shrink:0;width:28px;height:28px;border-radius:50%;background:#d7b06b;color:#fff8ee;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">2</span>
+            <div>
+              <div style="font-weight:600;font-size:14px;color:var(--ep-ink);">Envie a declaração de matrícula</div>
+              <div style="font-size:13px;color:var(--ep-ink-3);margin-top:2px;">PDF ou foto emitida pela sua faculdade.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:14px;">
+            <span style="flex-shrink:0;width:28px;height:28px;border-radius:50%;background:#d7b06b;color:#fff8ee;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">3</span>
+            <div>
+              <div style="font-weight:600;font-size:14px;color:var(--ep-ink);">A IA valida em segundos</div>
+              <div style="font-size:13px;color:var(--ep-ink-3);margin-top:2px;">Acesso liberado automaticamente — gratuito enquanto for estudante.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ep-lock" style="margin-top:28px;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-          <span data-i18n="cadastro:hero.lock">Cifragem ativada antes do envio.</span>
+          <span>Cifragem ativada antes do envio.</span>
         </div>
       </div>
     </aside>
@@ -89,7 +132,7 @@
           </div>
 
           <div class="ep-row">
-            <div class="ep-field">
+            <div class="ep-field" id="especialidadeField">
               <label class="ep-label" for="especialidade" data-i18n="cadastro:step1.labelEspecialidade">Especialidade</label>
               <select id="especialidade" class="ep-select">
                 <option value="" data-i18n="cadastro:step1.selectPlaceholder">Selecione…</option>
@@ -368,6 +411,47 @@
   const finishRegister   = document.getElementById("finishRegister");
   const statusRecovery   = document.getElementById("statusRecovery");
 
+  // ─── Student mode ───────────────────────────────────────────
+  const _isStudentMode = new URLSearchParams(location.search).get("plano") === "estudante";
+  if (_isStudentMode) {
+    const applyStudent = () => {
+      // Restrict conselho dropdown to CRP/CRM only
+      [...tipoConselhoEl.options].forEach(opt => {
+        if (opt.value && !["CRP", "CRM"].includes(opt.value)) opt.remove();
+      });
+      const crpOpt = tipoConselhoEl.querySelector('[value="CRP"]');
+      if (crpOpt) crpOpt.textContent = "Psicologia (CRP)";
+      const crmOpt = tipoConselhoEl.querySelector('[value="CRM"]');
+      if (crmOpt) crmOpt.textContent = "Medicina (CRM)";
+      const conselhoLabel = document.querySelector('label[for="tipoConselho"]');
+      if (conselhoLabel) { conselhoLabel.removeAttribute("data-i18n"); conselhoLabel.textContent = "Você está cursando"; }
+
+      // Rename numero conselho → matrícula
+      const numLabel = document.querySelector('label[for="numeroConselho"]');
+      if (numLabel) { numLabel.removeAttribute("data-i18n"); numLabel.textContent = "Número de matrícula (RA)"; }
+      if (numeroConselhoEl) { numeroConselhoEl.removeAttribute("data-i18n-placeholder"); numeroConselhoEl.placeholder = "Ex.: 202312345"; }
+      if (numeroConselhoHint) { numeroConselhoHint.removeAttribute("data-i18n"); numeroConselhoHint.textContent = "Use o RA (Registro Acadêmico) da sua faculdade ou número de estágio."; }
+
+      // Form heading
+      const h2 = stepData.querySelector("h2");
+      if (h2) { h2.removeAttribute("data-i18n"); h2.textContent = "Crie seu acesso"; }
+      const sub = stepData.querySelector(".ep-auth__sub");
+      if (sub) { sub.removeAttribute("data-i18n"); sub.textContent = "Use seu nome completo e e-mail. Editável depois."; }
+
+      // Consent text for students
+      const consentSpan = consentLgpdEl?.parentElement?.querySelector("span");
+      if (consentSpan) {
+        consentSpan.removeAttribute("data-i18n-html");
+        consentSpan.innerHTML = `Declaro ser estudante regularmente matriculado(a), aceito a <a href="./termos.html" target="_blank">Política de Uso</a> e o <a href="./politica.html" target="_blank">Tratamento de Dados (LGPD)</a> e me comprometo a usar a plataforma sob supervisão docente.`;
+      }
+    };
+    if (window.EP_I18N?.t) { applyStudent(); }
+    else {
+      document.addEventListener("ep:i18n-ready", applyStudent, { once: true });
+      setTimeout(applyStudent, 400);
+    }
+  }
+
   // ─── State ──────────────────────────────────────────────────
   let pending = null; // { user, idToken, password, dekBytes, salt, wrappedDEK, wrappedDEKIv, recoveryPhrase, formData }
   let busy = false;
@@ -411,7 +495,7 @@
 
     if (!displayName) return setStatus(statusData, tr("cadastro:status.informeName", "Informe seu nome completo."), "err");
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setStatus(statusData, tr("cadastro:status.invalidEmail", "E-mail inválido."), "err");
-    if (!tipoConselho) return setStatus(statusData, tr("cadastro:status.selectConselho", "Selecione o conselho profissional."), "err");
+    if (!tipoConselho) return setStatus(statusData, _isStudentMode ? "Selecione seu curso." : tr("cadastro:status.selectConselho", "Selecione o conselho profissional."), "err");
 
     // CREFITO exige subtipo (fisio vs TO) — define quais tipos de receita
     // o profissional pode emitir.
@@ -443,7 +527,7 @@
       }
       semConselhoExtras = { tipoPratica, formacaoInstituicao, formacaoCurso, formacaoAnoConclusao, anosExperiencia };
     } else if (!numeroConselho) {
-      return setStatus(statusData, tr("cadastro:status.informeNumeroRegistro", "Informe o número de registro no conselho."), "err");
+      return setStatus(statusData, _isStudentMode ? "Informe o número de matrícula (RA) da sua faculdade." : tr("cadastro:status.informeNumeroRegistro", "Informe o número de registro no conselho."), "err");
     }
 
     // INTERNACIONAL exige país + órgão de registro estrangeiro — referência
