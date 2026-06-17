@@ -629,6 +629,10 @@
         <input id="studentLeadEmail" class="ep-input" type="email" maxlength="120" required>
       </div>
       <div class="ep-field">
+        <label class="ep-label" for="studentLeadPhone" data-i18n="index:studentLeadModal.labelPhone">Telefone / WhatsApp</label>
+        <input id="studentLeadPhone" class="ep-input" type="tel" maxlength="30" required>
+      </div>
+      <div class="ep-field">
         <label class="ep-label" for="studentLeadInstitution" data-i18n="index:studentLeadModal.labelInstitution">Instituição de ensino</label>
         <input id="studentLeadInstitution" class="ep-input" type="text" maxlength="120">
       </div>
@@ -926,8 +930,9 @@
     submitBtn.addEventListener("click", async () => {
       const name  = $("studentLeadName").value.trim();
       const email = $("studentLeadEmail").value.trim();
-      if (!name || !email) {
-        statusEl.textContent = tr("studentLeadModal.errorRequired", "Preencha nome e e-mail.");
+      const phone = $("studentLeadPhone").value.trim();
+      if (!name || !email || !phone) {
+        statusEl.textContent = tr("studentLeadModal.errorRequired", "Preencha nome, e-mail e telefone.");
         statusEl.className = "ep-status is-err";
         return;
       }
@@ -940,6 +945,7 @@
       const payload = {
         name,
         email,
+        phone,
         institution: $("studentLeadInstitution").value.trim(),
         course: $("studentLeadCourse").value,
         message: $("studentLeadMessage").value.trim()
