@@ -613,41 +613,53 @@
 
 </main>
 
+<style>
+  /* student lead modal — compacto no desktop, scroll ok no mobile */
+  #studentLeadForm { gap: 10px; }
+  #studentLeadForm .ep-input,
+  #studentLeadForm select.ep-select { padding: 7px 12px; }
+  .ep-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .ep-field-row { grid-template-columns: 1fr; } }
+</style>
 <!-- Modal: solicitar acesso ao plano Estudante -->
 <div class="ep-modal" id="studentLeadModal" role="dialog" aria-modal="true" aria-labelledby="studentLeadModalTitle">
   <div class="ep-modal__panel">
     <h3 class="ep-modal__title" id="studentLeadModalTitle" data-i18n="index:studentLeadModal.title">Solicitar acesso ao plano Estudante</h3>
     <p class="ep-modal__sub" data-i18n="index:studentLeadModal.sub">Conte pra gente um pouco sobre você. Depois do cadastro, você envia sua declaração de matrícula e a IA valida em segundos.</p>
 
-    <form id="studentLeadForm" class="ep-stack" style="padding: 0 28px; margin-top: 16px;">
+    <form id="studentLeadForm" class="ep-stack" style="padding: 0 28px; margin-top: 10px;">
       <div class="ep-field">
         <label class="ep-label" for="studentLeadName" data-i18n="index:studentLeadModal.labelName">Nome completo</label>
         <input id="studentLeadName" class="ep-input" type="text" maxlength="80" required>
       </div>
-      <div class="ep-field">
-        <label class="ep-label" for="studentLeadEmail" data-i18n="index:studentLeadModal.labelEmail">E-mail</label>
-        <input id="studentLeadEmail" class="ep-input" type="email" maxlength="120" required>
+      <div class="ep-field-row">
+        <div class="ep-field">
+          <label class="ep-label" for="studentLeadEmail" data-i18n="index:studentLeadModal.labelEmail">E-mail</label>
+          <input id="studentLeadEmail" class="ep-input" type="email" maxlength="120" required>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="studentLeadPhone" data-i18n="index:studentLeadModal.labelPhone">Telefone / WhatsApp</label>
+          <input id="studentLeadPhone" class="ep-input" type="tel" maxlength="30" required>
+        </div>
       </div>
-      <div class="ep-field">
-        <label class="ep-label" for="studentLeadPhone" data-i18n="index:studentLeadModal.labelPhone">Telefone / WhatsApp</label>
-        <input id="studentLeadPhone" class="ep-input" type="tel" maxlength="30" required>
-      </div>
-      <div class="ep-field">
-        <label class="ep-label" for="studentLeadInstitution" data-i18n="index:studentLeadModal.labelInstitution">Instituição de ensino</label>
-        <input id="studentLeadInstitution" class="ep-input" type="text" maxlength="120">
-      </div>
-      <div class="ep-field">
-        <label class="ep-label" for="studentLeadCourse" data-i18n="index:studentLeadModal.labelCourse">Curso</label>
-        <select id="studentLeadCourse" class="ep-select">
-          <option value="" data-i18n="index:studentLeadModal.courseSelect">Selecione</option>
-          <option value="Psicologia" data-i18n="index:studentLeadModal.coursePsicologia">Psicologia</option>
-          <option value="Medicina" data-i18n="index:studentLeadModal.courseMedicina">Medicina</option>
-          <option value="Outro" data-i18n="index:studentLeadModal.courseOutro">Outro</option>
-        </select>
+      <div class="ep-field-row">
+        <div class="ep-field">
+          <label class="ep-label" for="studentLeadInstitution" data-i18n="index:studentLeadModal.labelInstitution">Instituição de ensino</label>
+          <input id="studentLeadInstitution" class="ep-input" type="text" maxlength="120">
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="studentLeadCourse" data-i18n="index:studentLeadModal.labelCourse">Curso</label>
+          <select id="studentLeadCourse" class="ep-select">
+            <option value="" data-i18n="index:studentLeadModal.courseSelect">Selecione</option>
+            <option value="Psicologia" data-i18n="index:studentLeadModal.coursePsicologia">Psicologia</option>
+            <option value="Medicina" data-i18n="index:studentLeadModal.courseMedicina">Medicina</option>
+            <option value="Outro" data-i18n="index:studentLeadModal.courseOutro">Outro</option>
+          </select>
+        </div>
       </div>
       <div class="ep-field">
         <label class="ep-label" for="studentLeadMessage" data-i18n="index:studentLeadModal.labelMessage">Mensagem (opcional)</label>
-        <textarea id="studentLeadMessage" class="ep-input" rows="3" maxlength="500" data-i18n-placeholder="index:studentLeadModal.placeholderMessage" placeholder="Em que ano/período você está? Algo mais que queira contar."></textarea>
+        <textarea id="studentLeadMessage" class="ep-input" rows="2" maxlength="500" data-i18n-placeholder="index:studentLeadModal.placeholderMessage" placeholder="Em que ano/período você está? Algo mais que queira contar."></textarea>
       </div>
       <div class="ep-status" id="studentLeadStatus"></div>
     </form>
