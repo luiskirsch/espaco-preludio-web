@@ -21,11 +21,11 @@
     .is-student-mode #heroStudent { display: flex !important; flex-direction: column; }
     .is-student-mode #especialidadeField { display: none !important; }
   </style>
-  <script>(function(){if(new URLSearchParams(location.search).get("plano")==="estudante")document.body.classList.add("is-student-mode");})();</script>
   <script src="./i18n/init.js?v=1-3" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
 <body>
+<script>(function(){if(new URLSearchParams(location.search).get("plano")==="estudante")document.body.classList.add("is-student-mode");})();</script>
 <div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
 
 <main class="ep-auth">
@@ -416,6 +416,13 @@
   const _isStudentMode = new URLSearchParams(location.search).get("plano") === "estudante";
   if (_isStudentMode) {
     const applyStudent = () => {
+      const heroProfEl = document.getElementById("heroProfissional");
+      const heroStudEl = document.getElementById("heroStudent");
+      const especField = document.getElementById("especialidadeField");
+      if (heroProfEl) heroProfEl.style.display = "none";
+      if (heroStudEl) { heroStudEl.style.display = "flex"; heroStudEl.style.flexDirection = "column"; }
+      if (especField) especField.style.display = "none";
+
       [...tipoConselhoEl.options].forEach(opt => {
         if (opt.value && !["CRP", "CRM"].includes(opt.value)) opt.remove();
       });
