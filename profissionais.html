@@ -97,8 +97,8 @@
     <!-- Grid -->
     <div id="hintBox" class="ep-mt-24">
       <div class="ep-empty">
-        <h3 class="ep-h3" data-i18n="profissionais:hint.title">Informe sua UF pra ver os profissionais.</h3>
-        <p class="ep-text-muted ep-mt-8" data-i18n="profissionais:hint.sub">A lista filtra por estado pra você encontrar quem atende perto.</p>
+        <h3 class="ep-h3" data-i18n="profissionais:hint.title">Use os filtros pra encontrar profissionais.</h3>
+        <p class="ep-text-muted ep-mt-8" data-i18n="profissionais:hint.sub">Filtre por especialidade, cidade ou UF — ou combine os três.</p>
       </div>
     </div>
     <div id="loadingBox" class="ep-skeleton ep-hide ep-mt-24" data-i18n="profissionais:loading">Carregando profissionais…</div>
@@ -207,10 +207,8 @@
     const cidade        = $("filterCidade").value.trim();
     const uf            = $("filterUf").value.trim().toUpperCase();
 
-    // UF é gate obrigatório — sem UF, mostra só o hint, não chama backend.
-    // Evita usuário ver TODOS os profissionais do BR de cara (ruim pra
-    // descoberta local + carga gratuita no backend).
-    if (uf.length < 2) {
+    // Precisa de ao menos um filtro para chamar o backend.
+    if (!especialidade && !cidade && uf.length < 2) {
       $("hintBox").classList.remove("ep-hide");
       $("loadingBox").classList.add("ep-hide");
       $("emptyBox").classList.add("ep-hide");
