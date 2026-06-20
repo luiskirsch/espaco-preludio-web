@@ -582,7 +582,7 @@
       // SEM_CONSELHO e INTERNACIONAL só estão disponíveis no plano Profissional.
       if ((planoQS === "recem" || planoQS === "estudante") && (tipoConselho === "SEM_CONSELHO" || tipoConselho === "INTERNACIONAL")) {
         return setStatus(statusData,
-          tr("cadastro:status.semConselhoOnlyProfissional", "Esse tipo de cadastro só está disponível no plano Profissional (R$ 199/mês). Volte na landing e escolha Profissional."),
+          tr("cadastro:status.semConselhoOnlyProfissional", "Esse tipo de cadastro só está disponível no plano Profissional (R$ 99/mês). Volte na landing e escolha Profissional."),
           "err");
       }
     }
@@ -795,7 +795,7 @@
         "err");
     } else if ((planoQS === "recem" || planoQS === "estudante") && (isSemConselho || isInternacional)) {
       setStatus(statusData,
-        tr("cadastro:status.semConselhoIneligible", "Esse tipo de cadastro só está disponível no plano Profissional (R$ 199/mês)."),
+        tr("cadastro:status.semConselhoIneligible", "Esse tipo de cadastro só está disponível no plano Profissional (R$ 99/mês)."),
         "err");
     } else {
       setStatus(statusData, "");
@@ -820,12 +820,16 @@
           sub: tr("cadastro:planBanner.estudanteSub", "Após cadastrar, você envia sua declaração de matrícula. A IA valida em segundos.")
         },
         "recem": {
-          title: tr("cadastro:planBanner.recemTitle", "Plano Recém-formado (R$ 99,50/mês)"),
-          sub: tr("cadastro:planBanner.recemSub", "30 dias grátis. Após cadastrar, você envia o comprovante de inscrição CRP/CRM (<12 meses).")
+          title: tr("cadastro:planBanner.recemTitle", "Plano Profissional (R$ 99,00/mês)"),
+          sub: tr("cadastro:planBanner.recemSub", "30 dias grátis para experimentar. Você decide quando contratar — direto pelo perfil.")
         },
         "profissional": {
-          title: tr("cadastro:planBanner.profissionalTitle", "Plano Profissional (R$ 199,00/mês)"),
+          title: tr("cadastro:planBanner.profissionalTitle", "Plano Profissional (R$ 99,00/mês)"),
           sub: tr("cadastro:planBanner.profissionalSub", "30 dias grátis para experimentar. Você decide quando contratar — direto pelo perfil.")
+        },
+        "empresa": {
+          title: tr("cadastro:planBanner.empresaTitle", "Plano Atendimento a Empresas (gratuito)"),
+          sub: tr("cadastro:planBanner.empresaSub", "Plataforma gratuita para o profissional. Consultas tabeladas a R$ 60,00 por sessão para o paciente.")
         }
       };
       const c = config[plano];
