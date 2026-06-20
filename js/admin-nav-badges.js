@@ -20,7 +20,8 @@ const ENDPOINTS = [
   { url: "/therapy/admin/verificacoes?status=pending",                     badgeId: "navBadgeCrpCrm" },
   { url: "/therapy/admin/comprovantes-estudante?status=pending-review",    badgeId: "navBadgeEstudante" },
   { url: "/therapy/admin/comprovantes-recem-formado?status=pending-review", badgeId: "navBadgeRecemFormado" },
-  { url: "/therapy/admin/comprovantes-formacao?status=pending-review",      badgeId: "navBadgeSemConselho" }
+  { url: "/therapy/admin/comprovantes-formacao?status=pending-review",      badgeId: "navBadgeSemConselho" },
+  { url: "/therapy/admin/empresa-pendentes?status=pending-review",          badgeId: "navBadgeEmpresa" }
 ];
 
 async function fetchCount(url, idToken) {

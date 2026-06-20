@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+  <link rel="preconnect" href="https://firestore.googleapis.com">
+  <link rel="dns-prefetch" href="https://www.gstatic.com">
+  <title>Admin · Empresa · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <script src="./js/monitoring.js?v=3" defer></script>
+</head>
+<body>
+
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio · Admin</span>
+      </span>
+    </a>
+    <nav class="ep-nav">
+      <a href="./admin-painel.html" class="ep-text-sm">Painel</a>
+      <a href="./admin-profissionais.html" class="ep-text-sm">Profissionais</a>
+      <a href="./admin-pacientes.html" class="ep-text-sm">Pacientes</a>
+      <a href="./admin-denuncias.html" class="ep-text-sm">Denúncias</a>
+      <a href="./admin-verificacoes.html" class="ep-text-sm">CRP/CRM<span id="navBadgeCrpCrm" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-comprovantes.html" class="ep-text-sm">Estudante<span id="navBadgeEstudante" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm">Recém-formado<span id="navBadgeRecemFormado" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-comprovantes-formacao.html" class="ep-text-sm">Sem conselho<span id="navBadgeSemConselho" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-leads-estudante.html" class="ep-text-sm">Leads Estudante<span id="navBadgeLeadsEstudante" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-empresa.html" class="ep-text-sm is-active">Empresa<span id="navBadgeEmpresa" class="ep-nav-badge ep-hide">0</span></a>
+      <span id="adminEmail" class="ep-text-sm ep-text-muted">…</span>
+      <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Sair</button>
+    </nav>
+  </header>
+
+  <main class="ep-main">
+
+    <section id="loginPanel" class="ep-hide" style="max-width: 400px; margin: 40px auto;">
+      <div class="ep-auth__panel">
+        <h2 class="ep-auth__title">Acesso Admin</h2>
+        <form id="loginForm" class="ep-stack ep-mt-16" novalidate>
+          <div class="ep-field">
+            <label class="ep-label" for="loginEmail">E-mail</label>
+            <input id="loginEmail" class="ep-input" type="email" autocomplete="email" required>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="loginPassword">Senha</label>
+            <input id="loginPassword" class="ep-input" type="password" autocomplete="current-password" required>
+          </div>
+          <p id="loginStatus" class="ep-text-sm ep-text-muted"></p>
+          <button class="ep-btn ep-btn--primary ep-btn--block" type="submit">Entrar</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="forbiddenPanel" class="ep-hide" style="max-width: 460px; margin: 60px auto; text-align: center;">
+      <div class="ep-auth__panel">
+        <h2 class="ep-auth__title">Acesso negado.</h2>
+        <p class="ep-auth__sub">Sua conta não está na allowlist de admin.</p>
+        <button class="ep-btn ep-btn--ghost ep-btn--block ep-mt-16" type="button" id="forbiddenLogout">Sair</button>
+      </div>
+    </section>
+
+    <section id="mainPanel" class="ep-hide">
+      <div class="ep-eyebrow">Plano Empresa</div>
+      <h1 class="ep-h1 ep-mt-12">Aprovação de Profissionais</h1>
+      <p class="ep-text-muted ep-mt-8">Profissionais que solicitaram o plano <strong>Atendimento a Empresas</strong> aguardando autorização manual.</p>
+
+      <!-- Filtros de status -->
+      <div class="ep-flex ep-mt-16" style="gap: 8px; flex-wrap: wrap;">
+        <button class="ep-btn ep-btn--primary ep-btn--sm" id="filterPending" data-status="pending-review">Pendentes</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" id="filterAprovado" data-status="aprovado">Aprovados</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" id="filterAll" data-status="all">Todos</button>
+      </div>
+
+      <div id="listLoading" class="ep-mt-24 ep-text-muted">Carregando…</div>
+      <div id="listEmpty" class="ep-hide ep-mt-24">
+        <div class="ep-empty"><p class="ep-h3">Nenhum profissional encontrado.</p></div>
+      </div>
+      <div id="list" class="ep-mt-24" style="display: flex; flex-direction: column; gap: 16px;"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Modal de revisão -->
+<div class="ep-modal" id="reviewModal" role="dialog" aria-modal="true" style="display:none;">
+  <div class="ep-modal__panel" style="max-width: 560px;">
+    <h3 class="ep-modal__title" id="modalTitle">Revisar profissional</h3>
+    <div id="modalBody" class="ep-modal__sub" style="padding: 0 28px 8px;"></div>
+    <div class="ep-modal__actions">
+      <button class="ep-btn ep-btn--ghost" type="button" id="modalClose">Fechar</button>
+      <button class="ep-btn ep-btn--err" type="button" id="modalReject">Rejeitar</button>
+      <button class="ep-btn ep-btn--primary" type="button" id="modalApprove">Aprovar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import {
+    onAuthStateChanged, signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { refreshNavBadges } from "./js/admin-nav-badges.js";
+
+  let idToken = null;
+  let currentUid = null;
+  let currentStatus = "pending-review";
+
+  const loginPanel    = document.getElementById("loginPanel");
+  const forbiddenPanel= document.getElementById("forbiddenPanel");
+  const mainPanel     = document.getElementById("mainPanel");
+  const adminEmailEl  = document.getElementById("adminEmail");
+  const logoutBtn     = document.getElementById("logoutBtn");
+
+  function showPanel(name) {
+    loginPanel.classList.toggle("ep-hide", name !== "login");
+    forbiddenPanel.classList.toggle("ep-hide", name !== "forbidden");
+    mainPanel.classList.toggle("ep-hide", name !== "main");
+  }
+
+  logoutBtn.addEventListener("click", () => signOut(auth));
+  document.getElementById("forbiddenLogout").addEventListener("click", () => signOut(auth));
+
+  // Login
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const status = document.getElementById("loginStatus");
+    status.textContent = "Entrando…";
+    try {
+      await signInWithEmailAndPassword(auth,
+        document.getElementById("loginEmail").value.trim(),
+        document.getElementById("loginPassword").value
+      );
+    } catch {
+      status.textContent = "E-mail ou senha inválidos.";
+    }
+  });
+
+  // Auth state
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { showPanel("login"); return; }
+    idToken = await user.getIdToken();
+    adminEmailEl.textContent = user.email || "?";
+    // Verifica se é admin
+    const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/dashboard`, {
+      headers: { Authorization: `Bearer ${idToken}` }
+    }).catch(() => null);
+    if (!r || r.status === 403) { showPanel("forbidden"); return; }
+    showPanel("main");
+    refreshNavBadges(idToken);
+    loadList("pending-review");
+  });
+
+  // Filtros
+  document.querySelectorAll("[data-status]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("[data-status]").forEach(b => {
+        b.className = b === btn ? "ep-btn ep-btn--primary ep-btn--sm" : "ep-btn ep-btn--ghost ep-btn--sm";
+      });
+      currentStatus = btn.dataset.status;
+      loadList(currentStatus);
+    });
+  });
+
+  function fmtDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  function statusBadge(plano) {
+    if (plano === "empresa") return '<span class="ep-badge" style="background:rgba(80,160,100,.15);color:#2d6a3e;">Aprovado</span>';
+    if (plano === "empresa-pending-review") return '<span class="ep-badge" style="background:rgba(200,155,74,.15);color:#8a5b1a;">Pendente</span>';
+    return `<span class="ep-badge">${plano || "—"}</span>`;
+  }
+
+  async function loadList(status) {
+    const loading = document.getElementById("listLoading");
+    const empty   = document.getElementById("listEmpty");
+    const list    = document.getElementById("list");
+    loading.classList.remove("ep-hide");
+    empty.classList.add("ep-hide");
+    list.innerHTML = "";
+
+    try {
+      idToken = await auth.currentUser?.getIdToken(true);
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/empresa-pendentes?status=${status}`, {
+        headers: { Authorization: `Bearer ${idToken}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      loading.classList.add("ep-hide");
+      if (!d.ok || !d.items?.length) { empty.classList.remove("ep-hide"); return; }
+
+      list.innerHTML = d.items.map(item => `
+        <div class="ep-card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;" data-uid="${item.therapistUid}">
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong style="font-size:15px;">${escapeHtml(item.displayName)}</strong>
+              ${statusBadge(item.plano)}
+            </div>
+            <span class="ep-text-xs ep-text-muted">Cadastrado em ${fmtDate(item.createdAt)}</span>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 16px; font-size:13px; color:var(--ep-ink-2);">
+            <span>📧 ${escapeHtml(item.email || "—")}</span>
+            <span>🏛️ ${escapeHtml(item.tipoConselho || "—")}${item.numeroConselho ? " " + escapeHtml(item.numeroConselho) : ""}</span>
+            <span>🎓 ${escapeHtml(item.especialidade || "—")}</span>
+            ${item.empresaReviewedBy ? `<span>✅ por ${escapeHtml(item.empresaReviewedBy)}</span>` : ""}
+          </div>
+          ${item.bio ? `<p class="ep-text-sm ep-text-muted" style="margin:0;">${escapeHtml(item.bio)}</p>` : ""}
+          ${item.plano === "empresa-pending-review" ? `
+          <div style="display:flex; gap:8px; margin-top:4px;">
+            <button class="ep-btn ep-btn--primary ep-btn--sm" onclick="openReview('${item.therapistUid}','${escapeHtml(item.displayName)}')">Revisar e aprovar</button>
+          </div>` : ""}
+        </div>
+      `).join("");
+    } catch (e) {
+      loading.classList.add("ep-hide");
+      list.innerHTML = `<p class="ep-text-sm ep-text-muted">Erro ao carregar: ${e.message}</p>`;
+    }
+  }
+
+  // Modal de revisão
+  const modal      = document.getElementById("reviewModal");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalBody  = document.getElementById("modalBody");
+  const modalClose = document.getElementById("modalClose");
+  const modalApprove = document.getElementById("modalApprove");
+  const modalReject  = document.getElementById("modalReject");
+
+  window.openReview = function(uid, name) {
+    currentUid = uid;
+    modalTitle.textContent = `Revisar: ${name}`;
+    modalBody.innerHTML = `
+      <p>Você confirma a <strong>aprovação</strong> deste profissional para o plano Empresas?</p>
+      <p class="ep-text-sm ep-text-muted">Após aprovação, ele terá acesso completo às ferramentas da plataforma.</p>
+      <div class="ep-field ep-mt-12">
+        <label class="ep-label" for="approveNotes">Observações (opcional)</label>
+        <input id="approveNotes" class="ep-input" type="text" placeholder="Ex.: parceria com empresa XYZ">
+      </div>
+    `;
+    modal.style.display = "grid";
+  };
+
+  modalClose.addEventListener("click", () => { modal.style.display = "none"; });
+  modal.addEventListener("click", (e) => { if (e.target === modal) modal.style.display = "none"; });
+
+  modalApprove.addEventListener("click", async () => {
+    if (!currentUid) return;
+    const notes = document.getElementById("approveNotes")?.value?.trim() || "";
+    modalApprove.disabled = true;
+    modalApprove.textContent = "Aprovando…";
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/empresa-pendentes/${currentUid}/aprovar`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ notes })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) throw new Error(d.error || "Erro");
+      modal.style.display = "none";
+      loadList(currentStatus);
+      refreshNavBadges(idToken);
+    } catch (e) {
+      alert("Erro ao aprovar: " + e.message);
+    } finally {
+      modalApprove.disabled = false;
+      modalApprove.textContent = "Aprovar";
+    }
+  });
+
+  modalReject.addEventListener("click", async () => {
+    if (!currentUid) return;
+    const reason = prompt("Motivo da rejeição (obrigatório):");
+    if (!reason?.trim()) return;
+    modalReject.disabled = true;
+    modalReject.textContent = "Rejeitando…";
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/empresa-pendentes/${currentUid}/rejeitar`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ reason })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) throw new Error(d.error || "Erro");
+      modal.style.display = "none";
+      loadList(currentStatus);
+      refreshNavBadges(idToken);
+    } catch (e) {
+      alert("Erro ao rejeitar: " + e.message);
+    } finally {
+      modalReject.disabled = false;
+      modalReject.textContent = "Rejeitar";
+    }
+  });
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+  }
+</script>
+
+
+</body>
+</html>

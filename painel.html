@@ -429,6 +429,11 @@
         return setBanner("ep-alert--warn", `${tr("painel:studentBanner.rejected", "<strong>Comprovante de matrícula não aprovado.</strong>")} ${reasons ? `<ul style="margin: 6px 0 8px 18px; padding: 0;">${reasons}</ul>` : ""} <a href="./comprovante-estudante.html">${tr("painel:studentBanner.sendAnother", "Enviar outro →")}</a>`);
       }
 
+      // Plano empresa — aguardando aprovação manual da equipe
+      if (plano === "empresa-pending-review" || therapist?.plano === "empresa-pending-review") {
+        return setBanner("ep-alert--info", "<strong>Cadastro recebido — aguardando aprovação.</strong> Nossa equipe está revisando seu perfil para o plano Atendimento a Empresas. Você será notificado por e-mail assim que for liberado.");
+      }
+
       // Tier recém-formado
       if (plano === "recem-formado-pending-review") {
         return setBanner("ep-alert--info", tr("painel:studentBanner.recemPending", "<strong>Comprovante de inscrição em revisão.</strong> Recebemos sua carteira/print do conselho. Nossa equipe revisa em até 48h."));
