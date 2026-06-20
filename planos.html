@@ -134,30 +134,27 @@
     <span class="ep-text-xs ep-text-muted" data-i18n="planos:currency.usdNote">USD · Stripe · Cartão internacional</span>
   </div>
 
-  <!-- Cards lado-a-lado: recém-formado + profissional -->
+  <!-- Cards lado-a-lado: empresa + profissional -->
   <div id="tiersGrid" style="display: none; grid-template-columns: 1fr 1fr; gap: 16px;" class="ep-mt-16">
 
-    <!-- Tier Recém-formado -->
-    <section id="recemCard" class="ep-plan-card" style="position: relative;">
+    <!-- Tier Atendimento a Empresas -->
+    <section id="empresaCard" class="ep-plan-card" style="position: relative;">
       <div class="ep-plan-card__head">
-        <h2 class="ep-h2 ep-mt-0" data-i18n="planos:recem.h2">Recém-formado</h2>
+        <h2 class="ep-h2 ep-mt-0" data-i18n="planos:empresa.h2">Atendimento a Empresas</h2>
         <div class="ep-plan-card__price">
-          <span class="ep-plan-card__currency" data-i18n="planos:recem.currency">R$</span>
-          <span class="ep-plan-card__amount" data-i18n="planos:recem.amount">99,50</span>
-          <span class="ep-plan-card__per" data-i18n="planos:recem.per">/mês</span>
+          <span class="ep-plan-card__amount" style="font-size: 28px; font-family: 'Fraunces', serif;" data-i18n="planos:empresa.amount">Gratuito</span>
         </div>
       </div>
-      <p class="ep-text-sm ep-text-muted ep-mt-8" id="recemEligibilityNote">—</p>
+      <p class="ep-text-sm ep-text-muted ep-mt-8" data-i18n="planos:empresa.sub">Para profissionais que atendem colaboradores via programa de saúde corporativo.</p>
       <ul class="ep-plan-card__features ep-mt-12">
-        <li data-i18n="planos:recem.f1">✓ Tudo do plano Profissional</li>
-        <li data-i18n-html="planos:recem.f2Html">✓ Desconto válido enquanto inscrição no conselho &lt; 12 meses</li>
-        <li data-i18n="planos:recem.f3">✓ Após 12 meses migra automaticamente para Profissional</li>
+        <li data-i18n="planos:empresa.f1">✓ Sem mensalidade — plataforma gratuita para o profissional</li>
+        <li data-i18n="planos:empresa.f2">✓ Consultas tabeladas a R$ 60,00 por sessão (cobrado ao paciente)</li>
+        <li data-i18n="planos:empresa.f3">✓ Vídeo cifrado E2EE + prontuário completo + documentos clínicos</li>
+        <li data-i18n="planos:empresa.f4">✓ Relatórios e laudos para RH corporativo</li>
+        <li data-i18n="planos:empresa.f5">✓ Agendamento direto pelo link do profissional</li>
       </ul>
-      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16 ep-btn-brl" id="subscribeRecemBtn" data-i18n="planos:recem.subscribeBtn">
-        Assinar como Recém-formado
-      </button>
-      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-8 ep-btn-usd ep-hide" id="subscribeRecemUsdBtn">
-        Subscribe — $29 / month
+      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16" id="subscribeEmpresaBtn" data-i18n="planos:empresa.subscribeBtn">
+        Ativar plano Empresas
       </button>
     </section>
 
@@ -167,7 +164,7 @@
         <h2 class="ep-h2 ep-mt-0" data-i18n="planos:prof.h2">Profissional</h2>
         <div class="ep-plan-card__price">
           <span class="ep-plan-card__currency" data-i18n="planos:prof.currency">R$</span>
-          <span class="ep-plan-card__amount" data-i18n="planos:prof.amount">199,00</span>
+          <span class="ep-plan-card__amount" data-i18n="planos:prof.amount">99,00</span>
           <span class="ep-plan-card__per" data-i18n="planos:prof.per">/mês</span>
         </div>
       </div>
@@ -193,11 +190,6 @@
     </section>
 
   </div>
-
-  <p id="recemHint" class="ep-text-sm ep-text-muted ep-mt-16 ep-text-center ep-hide">
-    <span data-i18n="planos:recemHint.questionHtml">Inscrito em um conselho regulamentado (CRP, CRM, CRESS, CREFITO, CRFa, CRN, CRO, CREF) nos últimos 12 meses?</span>
-    <a href="./comprovante-recem-formado.html" data-i18n="planos:recemHint.linkHtml">Validar inscrição para o desconto de R$ 99,50/mês →</a>
-  </p>
 
   <p class="ep-text-xs ep-text-muted ep-mt-24" style="text-align: center;" data-i18n-html="planos:footer.noteHtml">
     Pagamento processado pelo Mercado Pago. Cobrança recorrente mensal ou anual.
@@ -254,23 +246,19 @@
   const manageCardSub    = document.getElementById("manageCardSub");
   const cancelBtn        = document.getElementById("cancelBtn");
   const tiersGrid        = document.getElementById("tiersGrid");
-  const recemCard        = document.getElementById("recemCard");
-  const recemEligibilityNote = document.getElementById("recemEligibilityNote");
-  const subscribeRecemBtn = document.getElementById("subscribeRecemBtn");
+  const empresaCard      = document.getElementById("empresaCard");
+  const subscribeEmpresaBtn = document.getElementById("subscribeEmpresaBtn");
   const subscribeProfBtn  = document.getElementById("subscribeProfBtn");
-  const recemHint         = document.getElementById("recemHint");
   const billingToggle     = document.getElementById("billingToggle");
-  const recemAmountEl     = document.querySelector("[data-i18n='planos:recem.amount']");
-  const recemPerEl        = document.querySelector("[data-i18n='planos:recem.per']");
   const profAmountEl      = document.querySelector("[data-i18n='planos:prof.amount']");
   const profPerEl         = document.querySelector("[data-i18n='planos:prof.per']");
 
   let billingCycle = "month";
 
-  // Preços USD (Stripe) — anual = mensal x 12 x 0.84 (16% off, mesmo desconto do BRL)
+  // Preços USD (Stripe) — anual = mensal x 12 x 0.84 (16% off)
   const USD_PRICES = {
-    month: { recem: "29.00",  prof: "49.00" },
-    year:  { recem: "292.00", prof: "494.00" }
+    month: { prof: "49.00" },
+    year:  { prof: "494.00" }
   };
 
   function updatePricing() {
@@ -279,21 +267,14 @@
       const per = billingCycle === "year"
         ? t("currency.perYear", null, "/ano")
         : t("currency.perMonth", null, "/mês");
-      recemAmountEl.textContent = p.recem;
       profAmountEl.textContent  = p.prof;
-      recemPerEl.textContent    = per;
       profPerEl.textContent     = per;
-      subscribeRecemUsdBtn.textContent = `${t("recem.subscribeBtn", null, "Assinar como Recém-formado")} — $${parseFloat(p.recem)}${per}`;
-      subscribeProfUsdBtn.textContent  = `${t("prof.subscribeBtn", null, "Assinar Profissional")} — $${parseFloat(p.prof)}${per}`;
+      subscribeProfUsdBtn.textContent = `${t("prof.subscribeBtn", null, "Assinar Profissional")} — $${parseFloat(p.prof)}${per}`;
     } else if (billingCycle === "year") {
-      recemAmountEl.textContent = t("recem.amountYearly", null, "1.002,96");
-      recemPerEl.textContent    = t("recem.perYearly", null, "/Anual");
-      profAmountEl.textContent  = t("prof.amountYearly", null, "2.005,92");
+      profAmountEl.textContent  = t("prof.amountYearly", null, "997,92");
       profPerEl.textContent     = t("prof.perYearly", null, "/Anual");
     } else {
-      recemAmountEl.textContent = t("recem.amount", null, "99,50");
-      recemPerEl.textContent    = t("recem.per", null, "/mês");
-      profAmountEl.textContent  = t("prof.amount", null, "199,00");
+      profAmountEl.textContent  = t("prof.amount", null, "99,00");
       profPerEl.textContent     = t("prof.per", null, "/mês");
     }
   }
@@ -339,11 +320,9 @@
 
   // ─── Status banner + which tier cards to show ───────────────────
   if (plano === "pro") {
-    const proTitle = therapist.proTier === "recem-formado"
-      ? t("status.proTitleRecem", null, "Você está no plano Pro (Recém-formado)")
-      : therapist.proTier === "profissional"
-        ? t("status.proTitleProf", null, "Você está no plano Pro (Profissional)")
-        : t("status.proTitle", null, "Você está no plano Pro");
+    const proTitle = therapist.proTier === "empresa"
+      ? t("status.proTitleEmpresa", null, "Você está no plano Atendimento a Empresas")
+      : t("status.proTitleProf", null, "Você está no plano Pro (Profissional)");
     showStatus(
       "ep-status-card--ok",
       ICON_OK,
@@ -353,7 +332,9 @@
         : t("status.proActive", null, "Assinatura ativa.")
     );
     manageCard.style.display = "block";
-    if (therapist.proPriceCents) {
+    if (therapist.proTier === "empresa") {
+      manageCardSub.textContent = t("status.empresaActiveSub", null, "Consultas tabeladas a R$ 60,00 por sessão.");
+    } else if (therapist.proPriceCents) {
       const lc = getLocale();
       const isStripe = therapist.planSource === "stripe";
       const amount = (therapist.proPriceCents / 100).toFixed(2);
@@ -366,6 +347,16 @@
       manageCardSub.textContent = t("manage.subDefault", null, "Cobrança mensal recorrente.");
     }
 
+  } else if (plano === "empresa") {
+    showStatus(
+      "ep-status-card--ok",
+      ICON_OK,
+      t("status.proTitleEmpresa", null, "Você está no plano Atendimento a Empresas"),
+      t("status.empresaActiveSub", null, "Consultas tabeladas a R$ 60,00 por sessão.")
+    );
+    manageCard.style.display = "block";
+    manageCardSub.textContent = t("status.empresaActiveSub", null, "Consultas tabeladas a R$ 60,00 por sessão.");
+
   } else if (plano === "student-active") {
     showStatus(
       "ep-status-card--ok",
@@ -375,29 +366,6 @@
         ? t("status.studentVerifiedUntil", { date: fmtDate(therapist.studentVerifiedUntil?.toMillis?.() || therapist.studentVerifiedUntil) }, "Validado até " + fmtDate(therapist.studentVerifiedUntil?.toMillis?.() || therapist.studentVerifiedUntil))
         : t("status.studentActive", null, "Acesso ativo.")
     );
-
-  } else if (plano === "recem-formado-eligible") {
-    showStatus(
-      "ep-status-card--ok",
-      ICON_OK,
-      t("status.recemEligibleTitle", null, "Você está habilitado para o plano Recém-formado"),
-      t("status.recemEligibleSub", null, "Contrate por R$ 99,50/mês ou assine como Profissional.")
-    );
-    tiersGrid.style.display = "grid";
-    recemCard.style.borderColor = "var(--ep-accent)";
-    recemEligibilityNote.textContent = t("status.recemEligibleNote", null, "Validado pela nossa equipe. Você pode contratar este plano.");
-
-  } else if (plano === "recem-formado-pending-review") {
-    showStatus(
-      "ep-status-card--pending",
-      ICON_PENDING,
-      t("status.recemPendingTitle", null, "Comprovante de inscrição em revisão"),
-      t("status.recemPendingSub", null, "Avisamos por e-mail em até 48h. Enquanto isso, você pode assinar como Profissional.")
-    );
-    tiersGrid.style.display = "grid";
-    subscribeRecemBtn.disabled = true;
-    subscribeRecemBtn.textContent = t("status.recemPendingBtn", null, "Aguardando revisão");
-    recemEligibilityNote.textContent = t("status.recemPendingNote", null, "Em análise — disponível assim que a equipe aprovar.");
 
   } else if (plano === "trial") {
     const daysLeft = trialUntil ? Math.max(0, Math.ceil((trialUntil - Date.now()) / 86_400_000)) : null;
@@ -417,12 +385,6 @@
       trialUntil ? t("status.trialExpiresAt", { date: fmtDate(trialUntil) }, "Expira em " + fmtDate(trialUntil)) : "—"
     );
     tiersGrid.style.display = "grid";
-    subscribeRecemBtn.classList.remove("ep-btn--primary");
-    subscribeRecemBtn.classList.add("ep-btn--ghost");
-    subscribeRecemBtn.textContent = t("status.validateFirstBtn", null, "Validar inscrição primeiro");
-    recemEligibilityNote.textContent = t("status.trialEligibilityNote", null, "Para liberar este plano, envie um comprovante de inscrição no conselho.");
-    recemHint.classList.remove("ep-hide");
-    subscribeRecemBtn.addEventListener("click", () => { window.location.href = "./comprovante-recem-formado.html"; });
 
   } else if (plano === "expired") {
     showStatus(
@@ -432,12 +394,6 @@
       t("status.expiredSub", null, "Assine para continuar usando todas as funcionalidades.")
     );
     tiersGrid.style.display = "grid";
-    subscribeRecemBtn.classList.remove("ep-btn--primary");
-    subscribeRecemBtn.classList.add("ep-btn--ghost");
-    subscribeRecemBtn.textContent = t("status.validateFirstBtn", null, "Validar inscrição primeiro");
-    recemEligibilityNote.textContent = t("status.expiredEligibilityNote", null, "Para liberar este plano, envie um comprovante de inscrição.");
-    recemHint.classList.remove("ep-hide");
-    subscribeRecemBtn.addEventListener("click", () => { window.location.href = "./comprovante-recem-formado.html"; });
 
   } else if (plano === "canceled") {
     showStatus(
@@ -447,18 +403,10 @@
       t("status.canceledSub", null, "Reative quando quiser.")
     );
     tiersGrid.style.display = "grid";
-    subscribeRecemBtn.classList.remove("ep-btn--primary");
-    subscribeRecemBtn.classList.add("ep-btn--ghost");
-    subscribeRecemBtn.textContent = t("status.validateFirstBtn", null, "Validar inscrição primeiro");
-    subscribeRecemBtn.addEventListener("click", () => { window.location.href = "./comprovante-recem-formado.html"; });
 
   } else {
-    // student-pending-review, student-rejected (continua trial efetivo): mostra cards de assinatura
+    // recem-formado-eligible/pending (legado), student-pending-review, etc.
     tiersGrid.style.display = "grid";
-    subscribeRecemBtn.classList.remove("ep-btn--primary");
-    subscribeRecemBtn.classList.add("ep-btn--ghost");
-    subscribeRecemBtn.textContent = t("status.validateFirstBtn", null, "Validar inscrição primeiro");
-    subscribeRecemBtn.addEventListener("click", () => { window.location.href = "./comprovante-recem-formado.html"; });
   }
 
   // Aviso de retorno do MP
@@ -504,19 +452,14 @@
     }
   }
 
-  // Só plugamos o handler de assinatura se estiver elegível (caso recém-formado).
-  // Pra trial/expired, o handler já redireciona pra validar antes (acima).
-  if (plano === "recem-formado-eligible") {
-    subscribeRecemBtn.addEventListener("click", () =>
-      startSubscription("recem-formado", subscribeRecemBtn, t("recem.subscribeBtn", null, "Assinar como Recém-formado"))
-    );
-  }
+  subscribeEmpresaBtn.addEventListener("click", () =>
+    startSubscription("empresa", subscribeEmpresaBtn, t("empresa.subscribeBtn", null, "Ativar plano Empresas"))
+  );
   subscribeProfBtn.addEventListener("click", () =>
     startSubscription("profissional", subscribeProfBtn, t("prof.subscribeBtn", null, "Assinar Profissional"))
   );
 
   // ─── Stripe USD checkout ─────────────────────────────────────────────────
-  const subscribeRecemUsdBtn = document.getElementById("subscribeRecemUsdBtn");
   const subscribeProfUsdBtn  = document.getElementById("subscribeProfUsdBtn");
   const currencyToggle = document.getElementById("currencyToggle");
   const btnBRL = document.getElementById("btnBRL");
@@ -527,8 +470,8 @@
   function setCurrency(usd) {
     isUSD = usd;
     if (tiersGrid.style.display !== "none") billingToggle.style.display = "flex";
-    // Preços
-    document.querySelectorAll(".ep-plan-card__currency").forEach(el => { el.textContent = usd ? "$" : "R$"; });
+    // Preços — só o card profissional tem moeda dinâmica; empresa sempre "Gratuito"
+    document.querySelectorAll("#profCard .ep-plan-card__currency").forEach(el => { el.textContent = usd ? "$" : "R$"; });
     updatePricing();
     // Botões
     document.querySelectorAll(".ep-btn-brl").forEach(el => el.classList.toggle("ep-hide", usd));
@@ -589,9 +532,6 @@
     }
   }
 
-  subscribeRecemUsdBtn.addEventListener("click", () =>
-    startStripeCheckout("recem_formado", subscribeRecemUsdBtn, subscribeRecemUsdBtn.textContent)
-  );
   subscribeProfUsdBtn.addEventListener("click", () =>
     startStripeCheckout("profissional", subscribeProfUsdBtn, subscribeProfUsdBtn.textContent)
   );
