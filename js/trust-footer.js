@@ -19,16 +19,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 14l2 2 4-4"/></svg>
         <span data-i18n="index:trust.icp">Suporte a Assinatura Digital ICP-Brasil</span>
       </span>
-      <span class="ep-trust-lang" id="ep-trust-lang-slot"></span>
     </div>
   `;
   document.body.appendChild(el);
-
-  function moveLang() {
-    const slot     = document.getElementById("ep-trust-lang-slot");
-    const switcher = document.getElementById("ep-lang-switcher");
-    if (slot && switcher && !slot.contains(switcher)) slot.appendChild(switcher);
-  }
-  document.addEventListener("ep:i18n-ready", moveLang);
-  setTimeout(moveLang, 800);
 })();
