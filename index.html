@@ -247,6 +247,10 @@
       border: none;
       box-shadow: 0 1px 3px rgba(0,0,0,.2);
     }
+    /* Language switcher dentro do trust footer */
+    .ep-trust-lang { margin-left: auto; display: flex; align-items: center; }
+    .ep-trust-lang #ep-lang-switcher { position: static !important; }
+    .ep-trust-lang #ep-lang-btn { font-size: 11px !important; padding: 3px 9px !important; }
   </style>
 </head>
 <body>
@@ -983,72 +987,6 @@
   }
 </script>
 
-<!-- Trust bar fixa no rodapé -->
-<div id="trust-bar">
-  <div class="trust-bar__items">
-    <span class="trust-bar__item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      <span data-i18n="index:trust.security">Ambiente Seguro: Criptografia AES-256 &amp; TLS 1.3</span>
-    </span>
-    <span class="trust-bar__item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      <span data-i18n="index:trust.lgpd">Em conformidade com a LGPD e Marco Civil da Internet</span>
-    </span>
-    <span class="trust-bar__item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
-      <span data-i18n="index:trust.icp">Suporte a Assinatura Digital ICP-Brasil</span>
-    </span>
-  </div>
-  <div id="trust-bar-lang"></div>
-</div>
-
-<style>
-  #trust-bar {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 90;
-    display: flex; align-items: center; justify-content: center;
-    gap: 16px; padding: 0 20px; height: 42px;
-    background: rgba(12, 8, 4, 0.92);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(215,176,107,0.15);
-  }
-  .trust-bar__items {
-    display: flex; align-items: center; gap: 28px; flex: 1; justify-content: center;
-    flex-wrap: nowrap;
-  }
-  .trust-bar__item {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 11.5px; font-family: 'Inter', sans-serif;
-    color: rgba(215,190,140,0.55); white-space: nowrap;
-  }
-  .trust-bar__item svg { width: 13px; height: 13px; flex-shrink: 0; opacity: 0.75; }
-  #trust-bar-lang { flex-shrink: 0; }
-  #trust-bar-lang #ep-lang-switcher { position: static !important; }
-  #trust-bar-lang #ep-lang-btn {
-    font-size: 11px !important; padding: 3px 8px !important;
-    background: rgba(215,176,107,0.08) !important;
-    border-color: rgba(215,176,107,0.2) !important;
-    color: rgba(215,190,140,0.7) !important;
-  }
-  body { padding-bottom: 42px; }
-  @media (max-width: 720px) {
-    .trust-bar__item:not(:first-child) { display: none; }
-    .trust-bar__items { justify-content: flex-start; }
-  }
-</style>
-
-<script>
-  (function moveLangToTrustBar() {
-    function tryMove() {
-      const switcher = document.getElementById("ep-lang-switcher");
-      const slot     = document.getElementById("trust-bar-lang");
-      if (switcher && slot && !slot.contains(switcher)) {
-        slot.appendChild(switcher);
-      }
-    }
-    document.addEventListener("ep:i18n-ready", tryMove);
-    setTimeout(tryMove, 800);
-  })();
-</script>
 
 </body>
 </html>
