@@ -24,12 +24,74 @@
       .ep-auth { padding: 0 !important; background: var(--ep-surface) !important; }
       .ep-auth__panel--wide { max-height: none !important; border: none !important; box-shadow: none !important; }
     }
+    /* Seletor de plano */
+    #planPicker { display: flex; gap: 10px; margin-bottom: 24px; }
+    .ep-plan-pill {
+      flex: 1; display: flex; flex-direction: column; align-items: flex-start;
+      gap: 2px; padding: 12px 14px; border-radius: 10px; cursor: pointer;
+      border: 2px solid var(--ep-line); background: var(--ep-bg-2);
+      text-align: left; transition: border-color 150ms, background 150ms;
+      font-family: 'Inter', sans-serif;
+    }
+    .ep-plan-pill:hover { border-color: var(--ep-accent); background: var(--ep-surface); }
+    .ep-plan-pill.is-selected { border-color: var(--ep-accent); background: var(--ep-surface); box-shadow: 0 0 0 3px rgba(45,74,62,.12); }
+    .ep-plan-pill__name { font-size: 14px; font-weight: 600; color: var(--ep-ink); }
+    .ep-plan-pill__price { font-size: 12px; color: var(--ep-ink-2); }
+    #formBody { transition: opacity 200ms; }
+    #formBody.is-locked { opacity: 0.35; pointer-events: none; user-select: none; }
   </style>
   <script src="./i18n/init.js?v=1-3" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
 <body>
-<script>(function(){if(new URLSearchParams(location.search).get("plano")==="estudante")document.body.classList.add("is-student-mode");})();</script>
+<script>(function(){
+  const p = new URLSearchParams(location.search).get("plano");
+  if (p === "estudante") document.body.classList.add("is-student-mode");
+})();</script>
+<script>
+(function initPlanPicker() {
+  const p = new URLSearchParams(location.search).get("plano");
+  const isEstudante = p === "estudante";
+  const picker  = document.getElementById("planPicker");
+  const formBody = document.getElementById("formBody");
+  if (!picker || !formBody || isEstudante) return;
+
+  // Mostra o seletor sempre que não for estudante
+  picker.classList.remove("ep-hide");
+
+  function selectPlan(plan) {
+    picker.querySelectorAll(".ep-plan-pill").forEach(btn => {
+      btn.classList.toggle("is-selected", btn.dataset.plan === plan);
+    });
+    formBody.classList.remove("is-locked");
+    // Atualiza o banner de plano se existir
+    const banner = document.getElementById("planBannerInject");
+    if (banner) {
+      const titles = {
+        profissional: "Plano Profissional (R$ 99,00/mês)",
+        empresa: "Plano Atendimento a Empresas (gratuito)"
+      };
+      const subs = {
+        profissional: "30 dias grátis para experimentar. Você decide quando contratar — direto pelo perfil.",
+        empresa: "Plataforma gratuita para o profissional. Consultas tabeladas a R$ 60,00 por sessão para o paciente."
+      };
+      banner.innerHTML = `<strong>${titles[plan] || plan}</strong><br><span class="ep-text-sm">${subs[plan] || ""}</span>`;
+      banner.style.display = "block";
+    }
+    // Expõe o plano selecionado para o JS de cadastro ler
+    window._selectedPlan = plan;
+  }
+
+  picker.querySelectorAll(".ep-plan-pill").forEach(btn => {
+    btn.addEventListener("click", () => selectPlan(btn.dataset.plan));
+  });
+
+  // Pré-seleciona se vier de link específico
+  if (p === "profissional") selectPlan("profissional");
+  else if (p === "empresa")  selectPlan("empresa");
+  // Sem ?plano= → mantém formulário bloqueado até clicar
+})();
+</script>
 
 <main class="ep-auth">
   <div class="ep-auth__panel ep-auth__panel--wide">
@@ -120,6 +182,21 @@
     <section class="ep-auth__form">
       <!-- Etapa 1: dados profissionais -->
       <div id="stepData">
+
+        <!-- Seletor de plano — oculto no modo estudante -->
+        <div id="planPicker" class="ep-hide">
+          <button type="button" class="ep-plan-pill" data-plan="profissional">
+            <span class="ep-plan-pill__name">Profissional</span>
+            <span class="ep-plan-pill__price">R$ 99,00/mês · 30 dias grátis</span>
+          </button>
+          <button type="button" class="ep-plan-pill" data-plan="empresa">
+            <span class="ep-plan-pill__name">Atendimento a Empresas</span>
+            <span class="ep-plan-pill__price">Gratuito · aprovação manual</span>
+          </button>
+        </div>
+
+        <div id="formBody" class="is-locked">
+        <div id="planBannerInject" class="ep-alert ep-alert--info" style="display:none; margin-bottom:16px;"></div>
         <h2 class="ep-auth__title ep-mt-0" data-i18n="cadastro:step1.h2">Dados do profissional</h2>
         <p class="ep-auth__sub" data-i18n="cadastro:step1.sub">Use seu nome real e seus dados de conselho. Tudo é editável depois.</p>
 
@@ -331,6 +408,7 @@
             <a href="./login.html" class="ep-btn ep-btn--ghost ep-btn--block" data-i18n="cadastro:step1.haveAccount">Já tenho conta</a>
           </div>
         </form>
+        </div><!-- /#formBody -->
       </div>
 
       <!-- Etapa 2: recovery phrase (única vez) -->
@@ -672,7 +750,7 @@
     //   estudante      → 0d (libera só após validar doc, gratuito permanente)
     //   recem-formado  → 30d
     //   profissional   → 7d (default)
-    const planoQS = new URLSearchParams(location.search).get("plano");
+    const planoQS = new URLSearchParams(location.search).get("plano") || window._selectedPlan || "";
     const intendedTier = planoQS === "estudante" ? "estudante"
                        : planoQS === "recem"     ? "recem-formado"
                        : planoQS === "empresa"   ? "empresa"
@@ -835,11 +913,11 @@
       };
       const c = config[plano];
       if (c) {
-        const banner = document.createElement("div");
-        banner.className = "ep-alert ep-alert--info";
-        banner.style.marginBottom = "16px";
-        banner.innerHTML = `<strong>${c.title}</strong><br><span class="ep-text-sm">${c.sub}</span>`;
-        stepData.insertBefore(banner, stepData.firstChild.nextSibling);
+        const banner = document.getElementById("planBannerInject");
+        if (banner) {
+          banner.innerHTML = `<strong>${c.title}</strong><br><span class="ep-text-sm">${c.sub}</span>`;
+          banner.style.display = "block";
+        }
       }
     } catch {}
   })();
