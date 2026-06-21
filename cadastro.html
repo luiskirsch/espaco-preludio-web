@@ -49,14 +49,17 @@
   if (p === "estudante") document.body.classList.add("is-student-mode");
 })();</script>
 <script>
-(function initPlanPicker() {
+document.addEventListener("DOMContentLoaded", function () {
   const p = new URLSearchParams(location.search).get("plano");
   const isEstudante = p === "estudante";
-  const picker  = document.getElementById("planPicker");
+  const picker   = document.getElementById("planPicker");
   const formBody = document.getElementById("formBody");
-  if (!picker || !formBody || isEstudante) return;
+  if (!picker || !formBody || isEstudante) {
+    // Sem picker: desbloqueia sempre (estudante ou outro fluxo)
+    if (formBody) formBody.classList.remove("is-locked");
+    return;
+  }
 
-  // Mostra o seletor sempre que não for estudante
   picker.classList.remove("ep-hide");
 
   function selectPlan(plan) {
@@ -64,7 +67,6 @@
       btn.classList.toggle("is-selected", btn.dataset.plan === plan);
     });
     formBody.classList.remove("is-locked");
-    // Atualiza o banner de plano se existir
     const banner = document.getElementById("planBannerInject");
     if (banner) {
       const titles = {
@@ -78,7 +80,6 @@
       banner.innerHTML = `<strong>${titles[plan] || plan}</strong><br><span class="ep-text-sm">${subs[plan] || ""}</span>`;
       banner.style.display = "block";
     }
-    // Expõe o plano selecionado para o JS de cadastro ler
     window._selectedPlan = plan;
   }
 
@@ -86,11 +87,10 @@
     btn.addEventListener("click", () => selectPlan(btn.dataset.plan));
   });
 
-  // Pré-seleciona se vier de link específico
   if (p === "profissional") selectPlan("profissional");
   else if (p === "empresa")  selectPlan("empresa");
-  // Sem ?plano= → mantém formulário bloqueado até clicar
-})();
+  // Sem ?plano= → formulário fica bloqueado até clicar numa cápsula
+});
 </script>
 
 <main class="ep-auth">
