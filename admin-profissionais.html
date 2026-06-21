@@ -153,9 +153,22 @@
       "student-active": "Estudante",
       "recem-formado-eligible": "Recém-formado (elegível)",
       "recem-formado-active": "Recém-formado",
+      "empresa": "Empresa",
+      "empresa-pending-review": "Empresa (pendente)",
       "canceled": "Cancelado"
     };
     return map[p] || (p || "—");
+  }
+
+  function tierPill(intendedTier) {
+    if (!intendedTier || intendedTier === "profissional") return "";
+    const labels = {
+      "estudante":     ["Veio: Estudante",     "#2d6a3e", "rgba(80,160,100,.12)"],
+      "recem-formado": ["Veio: Recém-formado", "#8a5b1a", "rgba(200,155,74,.15)"],
+      "empresa":       ["Veio: Empresa",        "#1a4a8a", "rgba(60,120,220,.12)"],
+    };
+    const [label, color, bg] = labels[intendedTier] || [`Veio: ${intendedTier}`, "#666", "#eee"];
+    return `<span class="ep-badge" style="background:${bg};color:${color};font-size:10px;">${label}</span>`;
   }
 
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
@@ -265,6 +278,7 @@
               <strong>${escapeHtml(it.displayName || "(sem nome)")}</strong>
               ${statusPill(it)}
               ${accessPill(it)}
+              ${tierPill(it.intendedTier)}
             </div>
             <div class="ep-text-sm ep-text-muted ep-mt-4">
               ${escapeHtml(it.email || "—")} · ${escapeHtml(conselho)}${it.especialidade ? " · " + escapeHtml(it.especialidade) : ""}
@@ -309,6 +323,7 @@
       </div>
       <div class="ep-text-sm">
         <strong>Plano atual:</strong> ${escapeHtml(planoLabel(it.plano))}<br>
+        <strong>Plano intencionado:</strong> ${escapeHtml(it.intendedTier || "profissional")} ${tierPill(it.intendedTier)}<br>
         <strong>Trial até:</strong> ${fmtDate(it.trialUntil)}${it.trialActive ? " <span class='ep-badge ep-badge--ok'>ativo</span>" : ""}<br>
         <strong>Cortesia admin até:</strong> ${fmtDate(it.adminGrantedUntil)}${it.adminGrantActive ? " <span class='ep-badge ep-badge--ok'>ativa</span>" : ""}<br>
         <strong>Verificado:</strong> ${it.verificado ? "✓ sim" : "✗ não"} ${it.verifiedAt ? "(" + fmtDate(it.verifiedAt) + ")" : ""}<br>
