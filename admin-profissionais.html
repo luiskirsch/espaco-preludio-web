@@ -323,7 +323,7 @@
       </div>
       <div class="ep-text-sm">
         <strong>Plano atual:</strong> ${escapeHtml(planoLabel(it.plano))}<br>
-        <strong>Plano intencionado:</strong> ${escapeHtml(it.intendedTier || "profissional")} ${tierPill(it.intendedTier)}<br>
+        ${(it.intendedTier && it.intendedTier !== "profissional") ? `<strong>Plano de origem:</strong> ${escapeHtml(it.intendedTier)} ${tierPill(it.intendedTier)}<br>` : ""}
         <strong>Trial até:</strong> ${fmtDate(it.trialUntil)}${it.trialActive ? " <span class='ep-badge ep-badge--ok'>ativo</span>" : ""}<br>
         <strong>Cortesia admin até:</strong> ${fmtDate(it.adminGrantedUntil)}${it.adminGrantActive ? " <span class='ep-badge ep-badge--ok'>ativa</span>" : ""}<br>
         <strong>Verificado:</strong> ${it.verificado ? "✓ sim" : "✗ não"} ${it.verifiedAt ? "(" + fmtDate(it.verifiedAt) + ")" : ""}<br>
