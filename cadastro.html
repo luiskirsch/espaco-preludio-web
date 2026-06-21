@@ -60,6 +60,14 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
+  // Se veio de link específico de plano → sem picker, entra direto
+  if (p === "profissional" || p === "empresa") {
+    formBody.classList.remove("is-locked");
+    window._selectedPlan = p;
+    return;
+  }
+
+  // Sem ?plano= (botões genéricos "Criar conta") → exibe picker, formulário bloqueado
   picker.classList.remove("ep-hide");
 
   function selectPlan(plan) {
@@ -86,10 +94,7 @@ document.addEventListener("DOMContentLoaded", function () {
   picker.querySelectorAll(".ep-plan-pill").forEach(btn => {
     btn.addEventListener("click", () => selectPlan(btn.dataset.plan));
   });
-
-  if (p === "profissional") selectPlan("profissional");
-  else if (p === "empresa")  selectPlan("empresa");
-  // Sem ?plano= → formulário fica bloqueado até clicar numa cápsula
+  // Sem seleção prévia → formulário fica bloqueado até clicar numa cápsula
 });
 </script>
 
