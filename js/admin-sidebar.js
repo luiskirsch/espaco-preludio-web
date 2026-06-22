@@ -107,8 +107,6 @@
 
     /* Oculta language toggle em páginas admin */
     #ep-lang-switcher, #ep-trust-lang-slot { display: none !important; }
-    /* Oculta o botão Sair do sidebar — o flutuante assume */
-    #epAdminSidebar #logoutBtn { display: none !important; }
 
     /* Cápsula flutuante de Sair — canto inferior direito */
     #epAdminSairFloat {
@@ -233,19 +231,18 @@
     }
     sb.appendChild(nav);
 
-    // Footer
+    // Footer — só exibe o e-mail; o botão Sair é o flutuante
     const foot = document.createElement("div");
     foot.className = "ep-asb__foot";
-    foot.innerHTML = `
-      <div class="ep-asb__email" id="adminEmail">…</div>
-      <button id="logoutBtn" id="epAdminLogoutBtn" type="button">
-        ${icons.logout}
-        <span>Sair</span>
-      </button>
-    `;
-    // Fix: use single id
-    foot.querySelector("button").id = "logoutBtn";
+    foot.innerHTML = `<div class="ep-asb__email" id="adminEmail">…</div>`;
     sb.appendChild(foot);
+
+    // Botão oculto — a página JS e o botão flutuante se ligam a ele
+    const hiddenLogout = document.createElement("button");
+    hiddenLogout.id = "logoutBtn";
+    hiddenLogout.type = "button";
+    hiddenLogout.style.display = "none";
+    sb.appendChild(hiddenLogout);
 
     return sb;
   }
