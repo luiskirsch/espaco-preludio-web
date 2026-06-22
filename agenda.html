@@ -984,7 +984,15 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
       blackoutModal.classList.remove("is-open");
-      await loadAgenda();
+      // Adiciona imediatamente ao array local (sem esperar cache) e re-renderiza.
+      // Depois invalida o cache e recarrega pra sincronizar.
+      if (data.blackoutId && data.from && data.to) {
+        allBlackouts = [...allBlackouts.filter(b => b.blackoutId !== data.blackoutId),
+                        { blackoutId: data.blackoutId, from: data.from, to: data.to, reason: data.reason || null }];
+        showAgenda();
+      }
+      invalidateApi("blackouts", uid);
+      loadAgenda().catch(() => {});
     } catch (e) {
       blackoutStatusEl.textContent = tr("agenda:js.error", "Erro: {{msg}}", { msg: e?.message || tr("agenda:js.unknown", "desconhecido") });
       blackoutStatusEl.className = "ep-status is-err";
