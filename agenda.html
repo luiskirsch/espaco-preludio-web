@@ -22,6 +22,18 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=2" defer></script>
+  <style>
+    .ep-agenda-blackout--red {
+      background: rgba(184,69,61,.15) !important;
+      border-left-color: #b8453d !important;
+      color: #7a2d28 !important;
+    }
+    html[data-theme=dark] .ep-agenda-blackout--red {
+      background: rgba(184,69,61,.25) !important;
+      border-left-color: #e06060 !important;
+      color: #f8b0a8 !important;
+    }
+  </style>
 </head>
 <body class="ep-has-sidebar">
 <script src="./js/sidebar.js?v=19"></script>
@@ -640,14 +652,17 @@
         if (col) {
           const startD = new Date(cursor);
           const endD   = new Date(sliceEnd);
-          const topPx    = Math.max(0, ((startD.getHours() + startD.getMinutes()/60) - START_HOUR) * HOUR_PX);
+          const startHours = startD.getHours() + startD.getMinutes()/60;
+          const topPx    = Math.max(0, (startHours - START_HOUR) * HOUR_PX);
           const endHours = endD.getDate() !== startD.getDate() ? END_HOUR : (endD.getHours() + endD.getMinutes()/60);
-          const heightPx = Math.max(8, (endHours - Math.max(START_HOUR, startD.getHours() + startD.getMinutes()/60)) * HOUR_PX);
+          const visStart = Math.max(startHours, START_HOUR);
+          const visEnd   = Math.min(endHours,   END_HOUR);
+          const heightPx = Math.max(8, (visEnd - visStart) * HOUR_PX);
           // Recorta blackouts inteiramente fora do range visível
           if (topPx < (END_HOUR - START_HOUR) * HOUR_PX && heightPx > 0) {
             const block = document.createElement("button");
             block.type = "button";
-            block.className = "ep-agenda-blackout";
+            block.className = "ep-agenda-blackout ep-agenda-blackout--red";
             block.style.top = `${topPx}px`;
             block.style.height = `${heightPx}px`;
             const blockedLbl = tr("agenda:js.blocked", "Bloqueado");
