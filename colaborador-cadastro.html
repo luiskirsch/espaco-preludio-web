@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <title>Cadastro de Colaborador · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+</head>
+<body>
+
+<main class="ep-auth">
+  <div class="ep-auth__panel" style="max-width:480px;">
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:24px;">
+      <a href="./index.html" class="ep-brand" style="justify-content:center;" aria-label="Espaço Prelúdio">
+        <span class="ep-brand__mark">EP</span>
+        <span class="ep-brand__name">
+          <span class="ep-brand__lead">Espaço</span>
+          <span>Prelúdio</span>
+        </span>
+      </a>
+    </div>
+
+    <!-- Estado: carregando empresa -->
+    <div id="stateLoading" style="text-align:center;padding:32px 0;">
+      <p class="ep-text-muted">Verificando link…</p>
+    </div>
+
+    <!-- Estado: empresa inválida -->
+    <div id="stateInvalid" class="ep-hide" style="text-align:center;padding:32px 0;">
+      <h2 class="ep-auth__title">Link inválido</h2>
+      <p class="ep-text-muted ep-mt-8">Este link de cadastro não é válido ou a empresa está inativa. Solicite um novo link ao RH.</p>
+    </div>
+
+    <!-- Estado: formulário -->
+    <div id="stateForm" class="ep-hide">
+      <div class="ep-alert ep-alert--info" id="empresaBanner" style="margin-bottom:20px;">
+        <strong id="empresaNomeBanner">Empresa</strong><br>
+        <span class="ep-text-sm">Preencha seus dados para acessar o programa de saúde.</span>
+      </div>
+
+      <h2 class="ep-auth__title ep-mt-0">Seus dados</h2>
+      <p class="ep-auth__sub">Consultas de R$ 60,00 por sessão, com o profissional da sua escolha.</p>
+
+      <form id="formColab" class="ep-stack ep-mt-16" novalidate>
+        <div class="ep-field">
+          <label class="ep-label" for="cNome">Nome completo *</label>
+          <input id="cNome" class="ep-input" type="text" maxlength="80" placeholder="Ex.: João Silva" autocomplete="name" required>
+        </div>
+        <div class="ep-row">
+          <div class="ep-field">
+            <label class="ep-label" for="cEmail">E-mail *</label>
+            <input id="cEmail" class="ep-input" type="email" maxlength="120" placeholder="voce@empresa.com" autocomplete="email" required>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="cTelefone">WhatsApp / Celular *</label>
+            <input id="cTelefone" class="ep-input" type="tel" maxlength="20" placeholder="(11) 99999-9999" autocomplete="tel" required>
+          </div>
+        </div>
+        <div class="ep-row">
+          <div class="ep-field">
+            <label class="ep-label" for="cDepartamento">Departamento</label>
+            <input id="cDepartamento" class="ep-input" type="text" maxlength="80" placeholder="Ex.: RH, TI, Vendas">
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="cCargo">Cargo</label>
+            <input id="cCargo" class="ep-input" type="text" maxlength="80" placeholder="Ex.: Analista">
+          </div>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="cCpf">CPF <span class="ep-text-muted" style="font-weight:400;">(opcional)</span></label>
+          <input id="cCpf" class="ep-input" type="text" maxlength="14" placeholder="000.000.000-00" autocomplete="off">
+        </div>
+
+        <p class="ep-text-xs ep-text-muted ep-mt-4">
+          Seus dados são protegidos pela LGPD e não são compartilhados com sua empresa individualmente.
+          A empresa só recebe estatísticas agregadas de saúde.
+        </p>
+
+        <div class="ep-status" id="formStatus"></div>
+
+        <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-8" type="submit" id="submitBtn">
+          Cadastrar e acessar o diretório
+        </button>
+      </form>
+    </div>
+
+    <!-- Estado: sucesso -->
+    <div id="stateSuccess" class="ep-hide" style="text-align:center;padding:16px 0;">
+      <div style="font-size:48px;margin-bottom:16px;">✅</div>
+      <h2 class="ep-auth__title">Cadastro realizado!</h2>
+      <p class="ep-text-muted ep-mt-8" id="successMsg">Bem-vindo(a) ao programa de saúde.</p>
+      <p class="ep-text-muted ep-mt-8">Acesse o diretório, escolha um profissional e agende sua primeira consulta.</p>
+      <a href="./profissionais.html" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-24">
+        Ver profissionais disponíveis →
+      </a>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+  import { BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  const params = new URLSearchParams(location.search);
+  const slug = (params.get("empresa") || "").trim().toLowerCase();
+
+  function showState(id) {
+    ["stateLoading","stateInvalid","stateForm","stateSuccess"].forEach(s => {
+      document.getElementById(s).classList.toggle("ep-hide", s !== id);
+    });
+  }
+
+  // Carrega info da empresa
+  if (!slug) {
+    showState("stateInvalid");
+  } else {
+    fetch(`${BACKEND_BASE_URL}/public/empresa/${slug}`)
+      .then(r => r.json()).catch(() => ({}))
+      .then(d => {
+        if (!d.ok) { showState("stateInvalid"); return; }
+        document.getElementById("empresaNomeBanner").textContent = d.nome;
+        document.title = `Cadastro · ${d.nome} · Espaço Prelúdio`;
+        if (d.limiteColaboradores && d.totalColaboradores >= d.limiteColaboradores) {
+          document.getElementById("stateInvalid").innerHTML = `
+            <h2 class="ep-auth__title">Vagas encerradas</h2>
+            <p class="ep-text-muted ep-mt-8">O programa de ${d.nome} atingiu o limite de vagas. Entre em contato com o RH.</p>`;
+          showState("stateInvalid");
+          return;
+        }
+        showState("stateForm");
+      });
+  }
+
+  // Submit
+  document.getElementById("formColab").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const nome     = document.getElementById("cNome").value.trim();
+    const email    = document.getElementById("cEmail").value.trim();
+    const telefone = document.getElementById("cTelefone").value.trim();
+    const status   = document.getElementById("formStatus");
+
+    if (!nome) { status.textContent = "Informe seu nome."; return; }
+    if (!email || !email.includes("@")) { status.textContent = "Informe um e-mail válido."; return; }
+    if (!telefone || telefone.length < 8) { status.textContent = "Informe seu telefone/WhatsApp."; return; }
+
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.textContent = "Enviando…";
+    status.textContent = "";
+
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/public/colaborador-cadastro`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          empresaSlug: slug,
+          nome,
+          email,
+          telefone,
+          cpf: document.getElementById("cCpf").value.trim() || null,
+          departamento: document.getElementById("cDepartamento").value.trim() || null,
+          cargo: document.getElementById("cCargo").value.trim() || null
+        })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) {
+        const msgs = {
+          EMAIL_JA_CADASTRADO: "Este e-mail já está cadastrado nesta empresa.",
+          LIMITE_COLABORADORES_ATINGIDO: "O programa atingiu o limite de vagas.",
+          EMPRESA_INATIVA: "Este programa não está mais ativo.",
+          EMPRESA_NAO_ENCONTRADA: "Link inválido."
+        };
+        throw new Error(msgs[d.error] || d.error || "Erro ao cadastrar.");
+      }
+      document.getElementById("successMsg").textContent = `Bem-vindo(a) ao programa de saúde de ${d.empresaNome || "sua empresa"}!`;
+      showState("stateSuccess");
+    } catch (err) {
+      status.textContent = err.message;
+      btn.disabled = false;
+      btn.textContent = "Cadastrar e acessar o diretório";
+    }
+  });
+</script>
+
+</body>
+</html>

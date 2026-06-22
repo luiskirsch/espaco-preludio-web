@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <title>Admin · Empresas · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <style>
+    .emp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-top: 20px; }
+    .emp-card { background: var(--ep-surface); border: 1px solid var(--ep-line); border-radius: var(--ep-radius); padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+    .emp-card.is-inativa { opacity: 0.55; }
+    .emp-card__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .emp-card__name { font-size: 15px; font-weight: 600; color: var(--ep-ink); }
+    .emp-card__meta { font-size: 12px; color: var(--ep-ink-2); line-height: 1.6; }
+    .emp-card__link { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--ep-bg-2); border-radius: 6px; padding: 6px 10px; word-break: break-all; color: var(--ep-ink-2); display: flex; align-items: center; gap: 8px; }
+    .emp-card__actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .ep-stat { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--ep-ink-2); }
+  </style>
+</head>
+<body>
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name"><span class="ep-brand__lead">Espaço</span><span>Prelúdio · Admin</span></span>
+    </a>
+    <nav class="ep-nav">
+      <a href="./admin-painel.html" class="ep-text-sm">Painel</a>
+      <a href="./admin-profissionais.html" class="ep-text-sm">Profissionais</a>
+      <a href="./admin-pacientes.html" class="ep-text-sm">Pacientes</a>
+      <a href="./admin-empresas.html" class="ep-text-sm is-active">Empresas</a>
+      <a href="./admin-colaboradores.html" class="ep-text-sm">Colaboradores</a>
+      <a href="./admin-empresa.html" class="ep-text-sm">Aprovações<span id="navBadgeEmpresa" class="ep-nav-badge ep-hide">0</span></a>
+      <span id="adminEmail" class="ep-text-sm ep-text-muted">…</span>
+      <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Sair</button>
+    </nav>
+  </header>
+
+  <main class="ep-main">
+    <section id="loginPanel" class="ep-hide" style="max-width:400px;margin:40px auto;">
+      <div class="ep-auth__panel">
+        <h2 class="ep-auth__title">Acesso Admin</h2>
+        <form id="loginForm" class="ep-stack ep-mt-16" novalidate>
+          <div class="ep-field"><label class="ep-label">E-mail</label><input id="loginEmail" class="ep-input" type="email" required></div>
+          <div class="ep-field"><label class="ep-label">Senha</label><input id="loginPassword" class="ep-input" type="password" required></div>
+          <p id="loginStatus" class="ep-text-sm ep-text-muted"></p>
+          <button class="ep-btn ep-btn--primary ep-btn--block" type="submit">Entrar</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="mainPanel" class="ep-hide">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="ep-eyebrow">Gestão B2B</div>
+          <h1 class="ep-h1 ep-mt-8">Empresas parceiras</h1>
+          <p class="ep-text-muted ep-mt-4">Gerencie empresas e gere links de cadastro para colaboradores.</p>
+        </div>
+        <button class="ep-btn ep-btn--primary" id="btnNova">+ Nova empresa</button>
+      </div>
+
+      <!-- Filtros -->
+      <div class="ep-flex ep-mt-16" style="gap:8px;flex-wrap:wrap;align-items:center;">
+        <input id="searchInput" class="ep-input" type="text" placeholder="Buscar por nome, CNPJ ou e-mail…" style="max-width:300px;">
+        <button class="ep-btn ep-btn--primary ep-btn--sm" id="filterAtiva" data-status="ativa">Ativas</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" id="filterAll" data-status="all">Todas</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" id="filterInativa" data-status="inativa">Inativas</button>
+        <span id="countLabel" class="ep-text-sm ep-text-muted"></span>
+      </div>
+
+      <div id="loadingMsg" class="ep-mt-24 ep-text-muted">Carregando…</div>
+      <div id="emptyMsg" class="ep-hide ep-mt-24"><div class="ep-empty"><p class="ep-h3">Nenhuma empresa encontrada.</p></div></div>
+      <div id="empGrid" class="emp-grid" style="display:none;"></div>
+    </section>
+  </main>
+</div>
+
+<!-- Modal: criar / editar empresa -->
+<div class="ep-modal" id="empModal" role="dialog" aria-modal="true" style="display:none;">
+  <div class="ep-modal__panel" style="max-width:560px;">
+    <h3 class="ep-modal__title" id="empModalTitle">Nova empresa</h3>
+    <div style="padding:0 28px;overflow-y:auto;max-height:65vh;">
+      <div class="ep-stack ep-mt-8" style="gap:12px;">
+        <div class="ep-field"><label class="ep-label">Nome da empresa *</label><input id="fNome" class="ep-input" type="text" maxlength="120" placeholder="Ex.: Grupo Saúde Total"></div>
+        <div class="ep-row">
+          <div class="ep-field"><label class="ep-label">CNPJ</label><input id="fCnpj" class="ep-input" type="text" maxlength="18" placeholder="00.000.000/0001-00"></div>
+          <div class="ep-field"><label class="ep-label">Segmento</label>
+            <select id="fSegmento" class="ep-select">
+              <option value="">Selecione…</option>
+              <option value="saude">Saúde</option>
+              <option value="educacao">Educação</option>
+              <option value="tecnologia">Tecnologia</option>
+              <option value="industria">Indústria</option>
+              <option value="servicos">Serviços</option>
+              <option value="comercio">Comércio</option>
+              <option value="governo">Governo / Público</option>
+              <option value="ong">ONG / Terceiro Setor</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+        </div>
+        <div class="ep-eyebrow" style="margin-top:4px;">Contato</div>
+        <div class="ep-row">
+          <div class="ep-field"><label class="ep-label">Nome do contato</label><input id="fContatoNome" class="ep-input" type="text" maxlength="80"></div>
+          <div class="ep-field"><label class="ep-label">E-mail do contato</label><input id="fContatoEmail" class="ep-input" type="email" maxlength="120"></div>
+        </div>
+        <div class="ep-row">
+          <div class="ep-field"><label class="ep-label">Telefone</label><input id="fContatoPhone" class="ep-input" type="text" maxlength="20" placeholder="(11) 99999-9999"></div>
+          <div class="ep-field"><label class="ep-label">Limite de colaboradores</label><input id="fLimite" class="ep-input" type="number" min="1" placeholder="Ilimitado se vazio"></div>
+        </div>
+        <div class="ep-field"><label class="ep-label">Observações internas</label><textarea id="fObs" class="ep-input" rows="2" maxlength="500" style="resize:vertical;"></textarea></div>
+        <p id="empModalStatus" class="ep-text-sm ep-text-muted" style="min-height:18px;"></p>
+      </div>
+    </div>
+    <div class="ep-modal__actions">
+      <button class="ep-btn ep-btn--ghost" id="empModalCancel">Cancelar</button>
+      <button class="ep-btn ep-btn--primary" id="empModalSave">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: link gerado -->
+<div class="ep-modal" id="linkModal" role="dialog" aria-modal="true" style="display:none;">
+  <div class="ep-modal__panel" style="max-width:500px;">
+    <h3 class="ep-modal__title">Empresa criada · Link de cadastro</h3>
+    <div style="padding:0 28px 16px;">
+      <p class="ep-text-sm ep-text-muted">Compartilhe este link com os colaboradores da empresa para que se cadastrem:</p>
+      <div class="emp-card__link ep-mt-12" id="linkGerado" style="font-size:13px;"></div>
+      <button class="ep-btn ep-btn--ghost ep-btn--sm ep-mt-8" id="btnCopyLink">Copiar link</button>
+    </div>
+    <div class="ep-modal__actions"><button class="ep-btn ep-btn--primary" id="linkModalClose">Fechar</button></div>
+  </div>
+</div>
+
+<script type="module">
+  import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  let idToken = null;
+  let currentStatus = "ativa";
+  let editingId = null;
+  let allItems = [];
+
+  const FRONTEND_BASE = "https://espacopreludio.com.br";
+
+  // Auth
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try { await signInWithEmailAndPassword(auth, document.getElementById("loginEmail").value.trim(), document.getElementById("loginPassword").value); }
+    catch { document.getElementById("loginStatus").textContent = "Credenciais inválidas."; }
+  });
+  document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { show("loginPanel"); return; }
+    idToken = await user.getIdToken();
+    document.getElementById("adminEmail").textContent = user.email || "?";
+    show("mainPanel");
+    loadEmpresas(currentStatus);
+  });
+
+  function show(id) {
+    ["loginPanel","mainPanel"].forEach(x => document.getElementById(x).classList.toggle("ep-hide", x !== id));
+  }
+
+  function fmtDate(ms) { return ms ? new Date(ms).toLocaleDateString("pt-BR", {day:"2-digit",month:"short",year:"numeric"}) : "—"; }
+
+  function statusBadge(s) {
+    return s === "ativa"
+      ? `<span class="ep-badge" style="background:rgba(80,160,100,.15);color:#2d6a3e;">Ativa</span>`
+      : `<span class="ep-badge" style="background:rgba(200,155,74,.12);color:#8a5b1a;">Inativa</span>`;
+  }
+
+  function renderCards(items) {
+    const grid = document.getElementById("empGrid");
+    const empty = document.getElementById("emptyMsg");
+    document.getElementById("countLabel").textContent = `${items.length} empresa${items.length !== 1 ? "s" : ""}`;
+    if (!items.length) { grid.style.display = "none"; empty.classList.remove("ep-hide"); return; }
+    empty.classList.add("ep-hide");
+    grid.style.display = "grid";
+    grid.innerHTML = items.map(e => `
+      <div class="emp-card ${e.status === "inativa" ? "is-inativa" : ""}">
+        <div class="emp-card__header">
+          <div>
+            <div class="emp-card__name">${esc(e.nome)}</div>
+            <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;">
+              ${statusBadge(e.status)}
+              ${e.segmento ? `<span class="ep-badge">${esc(e.segmento)}</span>` : ""}
+            </div>
+          </div>
+          <span class="ep-stat">👥 ${e.totalColaboradores}${e.limiteColaboradores ? "/" + e.limiteColaboradores : ""}</span>
+        </div>
+        <div class="emp-card__meta">
+          ${e.cnpj ? `CNPJ: ${esc(e.cnpj)}<br>` : ""}
+          ${e.contatoNome ? `Contato: ${esc(e.contatoNome)}` : ""}${e.contatoEmail ? ` · ${esc(e.contatoEmail)}` : ""}${e.contatoPhone ? ` · ${esc(e.contatoPhone)}` : ""}<br>
+          Criada em ${fmtDate(e.createdAt)}
+          ${e.obs ? `<br><em>${esc(e.obs)}</em>` : ""}
+        </div>
+        <div class="emp-card__link">
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${FRONTEND_BASE}/colaborador-cadastro.html?empresa=${esc(e.slug)}</span>
+        </div>
+        <div class="emp-card__actions">
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" onclick="copyLink('${esc(e.slug)}')">Copiar link</button>
+          <a href="./admin-colaboradores.html?empresa=${esc(e.id)}&nome=${encodeURIComponent(e.nome)}" class="ep-btn ep-btn--ghost ep-btn--sm">Ver colaboradores</a>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" onclick="openEdit('${esc(e.id)}')">Editar</button>
+          ${e.status === "ativa" ? `<button class="ep-btn ep-btn--ghost ep-btn--sm" style="color:#b8453d;" onclick="toggleStatus('${esc(e.id)}','inativa')">Desativar</button>` : `<button class="ep-btn ep-btn--ghost ep-btn--sm" onclick="toggleStatus('${esc(e.id)}','ativa')">Reativar</button>`}
+        </div>
+      </div>
+    `).join("");
+  }
+
+  async function loadEmpresas(status) {
+    document.getElementById("loadingMsg").textContent = "Carregando…";
+    document.getElementById("empGrid").style.display = "none";
+    document.getElementById("emptyMsg").classList.add("ep-hide");
+    try {
+      idToken = await auth.currentUser?.getIdToken(true);
+      const q = document.getElementById("searchInput").value.trim();
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/empresas?status=${status}&q=${encodeURIComponent(q)}`, { headers: { Authorization: `Bearer ${idToken}` } });
+      const d = await r.json().catch(() => ({}));
+      document.getElementById("loadingMsg").textContent = "";
+      allItems = d.items || [];
+      renderCards(allItems);
+    } catch (e) {
+      document.getElementById("loadingMsg").textContent = "Erro ao carregar: " + e.message;
+    }
+  }
+
+  // Filtros
+  document.querySelectorAll("[data-status]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentStatus = btn.dataset.status;
+      document.querySelectorAll("[data-status]").forEach(b => b.className = b === btn ? "ep-btn ep-btn--primary ep-btn--sm" : "ep-btn ep-btn--ghost ep-btn--sm");
+      loadEmpresas(currentStatus);
+    });
+  });
+
+  let searchTimer;
+  document.getElementById("searchInput").addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => loadEmpresas(currentStatus), 300);
+  });
+
+  // Modal criar/editar
+  const modal = document.getElementById("empModal");
+  function openModal(titulo, item = null) {
+    editingId = item?.id || null;
+    document.getElementById("empModalTitle").textContent = titulo;
+    document.getElementById("fNome").value = item?.nome || "";
+    document.getElementById("fCnpj").value = item?.cnpj || "";
+    document.getElementById("fSegmento").value = item?.segmento || "";
+    document.getElementById("fContatoNome").value = item?.contatoNome || "";
+    document.getElementById("fContatoEmail").value = item?.contatoEmail || "";
+    document.getElementById("fContatoPhone").value = item?.contatoPhone || "";
+    document.getElementById("fLimite").value = item?.limiteColaboradores || "";
+    document.getElementById("fObs").value = item?.obs || "";
+    document.getElementById("empModalStatus").textContent = "";
+    modal.style.display = "grid";
+  }
+  document.getElementById("btnNova").addEventListener("click", () => openModal("Nova empresa"));
+  document.getElementById("empModalCancel").addEventListener("click", () => { modal.style.display = "none"; });
+  modal.addEventListener("click", e => { if (e.target === modal) modal.style.display = "none"; });
+
+  window.openEdit = function(id) {
+    const item = allItems.find(x => x.id === id);
+    if (item) openModal("Editar empresa", item);
+  };
+
+  document.getElementById("empModalSave").addEventListener("click", async () => {
+    const nome = document.getElementById("fNome").value.trim();
+    if (!nome) { document.getElementById("empModalStatus").textContent = "Nome é obrigatório."; return; }
+    const statusEl = document.getElementById("empModalStatus");
+    statusEl.textContent = "Salvando…";
+    const payload = {
+      nome,
+      cnpj: document.getElementById("fCnpj").value.trim() || null,
+      segmento: document.getElementById("fSegmento").value || null,
+      contatoNome: document.getElementById("fContatoNome").value.trim() || null,
+      contatoEmail: document.getElementById("fContatoEmail").value.trim() || null,
+      contatoPhone: document.getElementById("fContatoPhone").value.trim() || null,
+      limiteColaboradores: document.getElementById("fLimite").value || null,
+      obs: document.getElementById("fObs").value.trim() || null
+    };
+    try {
+      idToken = await auth.currentUser?.getIdToken(true);
+      const url = editingId
+        ? `${BACKEND_BASE_URL}/therapy/admin/empresas/${editingId}`
+        : `${BACKEND_BASE_URL}/therapy/admin/empresas`;
+      const r = await fetch(url, {
+        method: editingId ? "PATCH" : "POST",
+        headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) throw new Error(d.error || "Erro");
+      modal.style.display = "none";
+      if (!editingId && d.link) showLinkModal(d.link);
+      else loadEmpresas(currentStatus);
+    } catch (e) { statusEl.textContent = "Erro: " + e.message; }
+  });
+
+  // Link modal
+  function showLinkModal(link) {
+    document.getElementById("linkGerado").textContent = link;
+    document.getElementById("linkModal").style.display = "grid";
+  }
+  document.getElementById("linkModalClose").addEventListener("click", () => {
+    document.getElementById("linkModal").style.display = "none";
+    loadEmpresas(currentStatus);
+  });
+  document.getElementById("btnCopyLink").addEventListener("click", () => {
+    navigator.clipboard.writeText(document.getElementById("linkGerado").textContent)
+      .then(() => document.getElementById("btnCopyLink").textContent = "Copiado!")
+      .catch(() => {});
+  });
+
+  window.copyLink = function(slug) {
+    const link = `${FRONTEND_BASE}/colaborador-cadastro.html?empresa=${slug}`;
+    navigator.clipboard.writeText(link).then(() => alert("Link copiado:\n" + link)).catch(() => alert(link));
+  };
+
+  window.toggleStatus = async function(id, newStatus) {
+    if (!confirm(newStatus === "inativa" ? "Desativar esta empresa?" : "Reativar esta empresa?")) return;
+    try {
+      idToken = await auth.currentUser?.getIdToken(true);
+      await fetch(`${BACKEND_BASE_URL}/therapy/admin/empresas/${id}`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+      loadEmpresas(currentStatus);
+    } catch (e) { alert("Erro: " + e.message); }
+  };
+
+  function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+</script>
+
+</body>
+</html>
