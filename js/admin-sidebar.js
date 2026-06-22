@@ -107,6 +107,8 @@
 
     /* Oculta language toggle em páginas admin */
     #ep-lang-switcher, #ep-trust-lang-slot { display: none !important; }
+    /* Oculta o botão Sair do sidebar — o flutuante assume */
+    #epAdminSidebar #logoutBtn { display: none !important; }
 
     /* Cápsula flutuante de Sair — canto inferior direito */
     #epAdminSairFloat {
