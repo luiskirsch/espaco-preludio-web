@@ -737,8 +737,10 @@
     }
   });
 
-  logoutBtn.addEventListener("click", () => signOut(auth));
-  document.getElementById("forbiddenLogout").addEventListener("click", () => signOut(auth));
+  // Expõe signOut globalmente para o botão flutuante do sidebar
+  window._epAdminSignOut = () => signOut(auth);
+  logoutBtn?.addEventListener("click", () => signOut(auth));
+  document.getElementById("forbiddenLogout")?.addEventListener("click", () => signOut(auth));
 
   // ─── Auth state ─────────────────────────────────────────────────────
   let idTokenCache = null;

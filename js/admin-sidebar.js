@@ -238,31 +238,10 @@
     foot.innerHTML = `<div class="ep-asb__email" id="adminEmail">…</div>`;
     sb.appendChild(foot);
 
-    // Move o logoutBtn (criado imediatamente ao carregar) para dentro do sidebar
-    const existingLogout = document.getElementById("logoutBtn");
-    if (existingLogout) sb.appendChild(existingLogout);
-    else {
-      const hiddenLogout = document.createElement("button");
-      hiddenLogout.id = "logoutBtn";
-      hiddenLogout.type = "button";
-      hiddenLogout.style.cssText = "display:none!important;position:static!important;";
-      sb.appendChild(hiddenLogout);
-    }
 
     return sb;
   }
 
-  // ─── logoutBtn imediato ─────────────────────────────────────────────────
-  // Módulos JS rodam ANTES do DOMContentLoaded — o logoutBtn precisa existir
-  // no DOM agora para que o addEventListener da página não quebre.
-  (function createEarlyLogoutBtn() {
-    if (document.getElementById("logoutBtn")) return;
-    const btn = document.createElement("button");
-    btn.id = "logoutBtn";
-    btn.type = "button";
-    btn.style.cssText = "display:none!important;position:static!important;";
-    document.body.appendChild(btn);
-  })();
 
   // ─── Inject on DOM ready ────────────────────────────────────────────────
   function inject() {
@@ -289,8 +268,8 @@
     sairFloat.type = "button";
     sairFloat.innerHTML = `${icons.logout}<span>Sair</span>`;
     sairFloat.addEventListener("click", () => {
-      // Aciona o logoutBtn do sidebar (que o JS da página já conectou ao signOut)
-      document.getElementById("logoutBtn")?.click();
+      if (typeof window._epAdminSignOut === "function") window._epAdminSignOut();
+      else document.getElementById("logoutBtn")?.click();
     });
     document.body.appendChild(sairFloat);
   }
