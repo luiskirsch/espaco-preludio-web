@@ -250,14 +250,16 @@
 
   // ─── Inject on DOM ready ────────────────────────────────────────────────
   function inject() {
-    // Remove topbar nav (keep topbar element for login panel pages)
+    // Remove topbar nav
     const topbarNav = document.querySelector(".ep-topbar .ep-nav");
     if (topbarNav) topbarNav.remove();
 
-    // Remove existing adminEmail and logoutBtn from topbar to avoid duplicate IDs
-    ["adminEmail", "logoutBtn", "forbiddenLogout"].forEach(id => {
-      const el = document.getElementById(id);
-      if (el && el.closest(".ep-topbar")) el.remove();
+    // Remove todos os ep-logout-fab e qualquer logoutBtn fora do sidebar
+    document.querySelectorAll(".ep-logout-fab").forEach(el => el.remove());
+    ["adminEmail", "logoutBtn"].forEach(id => {
+      document.querySelectorAll(`#${id}`).forEach(el => {
+        if (!el.closest("#epAdminSidebar")) el.remove();
+      });
     });
 
     // Insert sidebar before ep-shell content
