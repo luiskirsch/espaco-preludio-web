@@ -27,14 +27,25 @@
     /* Progressive disclosure */
     .ep-form-step { display: none; }
     .ep-form-step.is-visible { display: contents; }
-    .ep-form-step-block { display: none; }
-    .ep-form-step-block.is-visible {
+    /* Campos sempre visíveis, bloqueados até o anterior ser preenchido */
+    .ep-form-step-block {
       display: block;
-      animation: stepIn 280ms ease forwards;
+      opacity: 0.32;
+      pointer-events: none;
+      user-select: none;
+      transition: opacity 220ms ease;
     }
-    @keyframes stepIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
+    .ep-form-step-block.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+      user-select: auto;
+    }
+    /* Input e select dentro de bloco bloqueado — aparência cinzenta */
+    .ep-form-step-block:not(.is-visible) .ep-input,
+    .ep-form-step-block:not(.is-visible) .ep-select {
+      background: var(--ep-bg-2) !important;
+      color: var(--ep-ink-3) !important;
+      cursor: not-allowed !important;
     }
     /* Seletor de plano */
     #planPicker { display: flex; gap: 10px; margin-bottom: 24px; }
@@ -115,7 +126,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const el = document.getElementById(id);
     if (el && !el.classList.contains("is-visible")) {
       el.classList.add("is-visible");
-      setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
     }
   }
 
