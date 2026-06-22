@@ -267,6 +267,7 @@
     <p class="ep-modal__sub" id="slotActionSub">—</p>
     <div style="padding: 8px 28px 0;">
       <button type="button" class="ep-btn ep-btn--primary ep-btn--block" id="slotCreateSessionBtn" data-i18n="agenda:slot.createSession">📅 Criar consulta</button>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--block ep-mt-8" id="slotBlockBtn" data-i18n="agenda:slot.blockTime">🚫 Bloquear este horário</button>
       <div class="ep-text-xs ep-text-muted ep-text-center ep-mt-12" style="margin-bottom: 12px;" data-i18n="agenda:slot.or">— ou —</div>
       <label class="ep-label" for="slotNoteText" data-i18n="agenda:slot.addNote">Adicionar observação</label>
       <textarea id="slotNoteText" class="ep-input" rows="3" maxlength="300" placeholder="Ex.: almoço, supervisão, ligar pro paciente X…" data-i18n-placeholder="agenda:slot.notePlaceholder"></textarea>
@@ -1138,6 +1139,20 @@
     // Antes redirecionava pro painel; agora abre o modal direto na agenda.
     document.getElementById("slotActionModal").classList.remove("is-open");
     newSessionModalApi.open({ scheduledAt: toISOLocal(pendingSlotDate) });
+  });
+
+  // Bloquear horário direto pelo clique no slot
+  document.getElementById("slotBlockBtn").addEventListener("click", () => {
+    if (!pendingSlotDate) return;
+    document.getElementById("slotActionModal").classList.remove("is-open");
+    // Pré-preenche início = horário clicado, fim = +1h
+    const end = new Date(pendingSlotDate.getTime() + 60 * 60 * 1000);
+    blackoutFromEl.value = toISOLocal(pendingSlotDate);
+    blackoutToEl.value   = toISOLocal(end);
+    blackoutReasonEl.value = "";
+    blackoutStatusEl.textContent = "";
+    blackoutStatusEl.className = "ep-status";
+    blackoutModal.classList.add("is-open");
   });
 
   // "+ Nova consulta" da toolbar — antes era <a href="painel.html">,
