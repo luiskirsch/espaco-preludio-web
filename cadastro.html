@@ -24,6 +24,18 @@
       .ep-auth { padding: 0 !important; background: var(--ep-surface) !important; }
       .ep-auth__panel--wide { max-height: none !important; border: none !important; box-shadow: none !important; }
     }
+    /* Progressive disclosure */
+    .ep-form-step { display: none; }
+    .ep-form-step.is-visible { display: contents; }
+    .ep-form-step-block { display: none; }
+    .ep-form-step-block.is-visible {
+      display: block;
+      animation: stepIn 280ms ease forwards;
+    }
+    @keyframes stepIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
     /* Seletor de plano */
     #planPicker { display: flex; gap: 10px; margin-bottom: 24px; }
     .ep-plan-pill {
@@ -96,6 +108,56 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   // Sem seleção prévia → formulário fica bloqueado até clicar numa cápsula
 });
+
+// ─── Progressive form disclosure ────────────────────────────────────────
+(function() {
+  function reveal(id) {
+    const el = document.getElementById(id);
+    if (el && !el.classList.contains("is-visible")) {
+      el.classList.add("is-visible");
+      setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
+    }
+  }
+
+  // 1 → 2: nome preenchido
+  document.getElementById("displayName")?.addEventListener("input", function() {
+    if (this.value.trim().length >= 2) reveal("fs-email");
+  });
+
+  // 2 → 3: email válido
+  document.getElementById("email")?.addEventListener("input", function() {
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value)) reveal("fs-conselho");
+  });
+
+  // 3 → 4: conselho selecionado
+  document.getElementById("tipoConselho")?.addEventListener("change", function() {
+    if (this.value) reveal("fs-campos");
+  });
+
+  // 4 → 5: campo principal do step 4 preenchido
+  function checkCampos() {
+    const tc = document.getElementById("tipoConselho")?.value || "";
+    let done = false;
+    if (tc === "SEM_CONSELHO") {
+      done = !!document.getElementById("tipoPratica")?.value;
+    } else if (tc === "INTERNACIONAL") {
+      done = (document.getElementById("paisRegistro")?.value.trim().length || 0) > 0;
+    } else {
+      done = (document.getElementById("numeroConselho")?.value.trim().length || 0) > 0;
+    }
+    if (done) reveal("fs-senha");
+  }
+  ["numeroConselho", "tipoPratica", "paisRegistro"].forEach(id => {
+    const el = document.getElementById(id);
+    el?.addEventListener("input", checkCampos);
+    el?.addEventListener("change", checkCampos);
+  });
+
+  // 5 → 6: senha com ≥10 caracteres
+  document.getElementById("password")?.addEventListener("input", function() {
+    if (this.value.length >= 10) reveal("fs-consent");
+  });
+})();
 </script>
 
 <main class="ep-auth">
@@ -206,19 +268,25 @@ document.addEventListener("DOMContentLoaded", function () {
         <p class="ep-auth__sub" data-i18n="cadastro:step1.sub">Use seu nome real e seus dados de conselho. Tudo é editável depois.</p>
 
         <form id="formData" class="ep-stack" novalidate>
+          <!-- CAMPO 1: Nome — sempre visível -->
           <div class="ep-field">
             <label class="ep-label" for="displayName" data-i18n="cadastro:step1.labelName">Nome completo</label>
             <input id="displayName" class="ep-input" type="text" maxlength="80" autocomplete="name" placeholder="Ex.: Dra. Ana Souza" data-i18n-placeholder="cadastro:step1.placeholderName" required>
           </div>
 
-          <div class="ep-row">
-            <div class="ep-field">
-              <label class="ep-label" for="email" data-i18n="cadastro:step1.labelEmail">E-mail profissional</label>
-              <input id="email" class="ep-input" type="email" maxlength="160" autocomplete="email" placeholder="voce@exemplo.com" data-i18n-placeholder="cadastro:step1.placeholderEmail" required>
-            </div>
-            <div class="ep-field">
-              <label class="ep-label" for="tipoConselho" data-i18n="cadastro:step1.labelConselho">Conselho profissional</label>
-              <select id="tipoConselho" class="ep-select" required>
+          <!-- CAMPO 2: E-mail -->
+          <div class="ep-form-step-block" id="fs-email">
+          <div class="ep-field">
+            <label class="ep-label" for="email" data-i18n="cadastro:step1.labelEmail">E-mail profissional</label>
+            <input id="email" class="ep-input" type="email" maxlength="160" autocomplete="email" placeholder="voce@exemplo.com" data-i18n-placeholder="cadastro:step1.placeholderEmail" required>
+          </div>
+          </div>
+
+          <!-- CAMPO 3: Conselho -->
+          <div class="ep-form-step-block" id="fs-conselho">
+          <div class="ep-field">
+            <label class="ep-label" for="tipoConselho" data-i18n="cadastro:step1.labelConselho">Conselho profissional</label>
+            <select id="tipoConselho" class="ep-select" required>
                 <option value="" data-i18n="cadastro:step1.selectPlaceholder">Selecione…</option>
                 <option value="CRP" data-i18n="cadastro:step1.conselho.crp">CRP — Psicologia</option>
                 <option value="CRM" data-i18n="cadastro:step1.conselho.crm">CRM — Medicina / Psiquiatria</option>
@@ -231,9 +299,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 <option value="SEM_CONSELHO" data-i18n="cadastro:step1.conselho.semConselho">Sem conselho regulamentado (Psicanálise, Terapia integrativa, Hipnoterapia)</option>
                 <option value="INTERNACIONAL" data-i18n="cadastro:step1.conselho.internacional">Registro profissional no exterior (fora do Brasil)</option>
               </select>
-            </div>
           </div>
+          </div><!-- /fs-conselho -->
 
+          <!-- CAMPOS 4: Especialidade + Número + condicionais -->
+          <div class="ep-form-step-block" id="fs-campos">
           <div class="ep-row">
             <div class="ep-field" id="especialidadeField">
               <label class="ep-label" for="especialidade" data-i18n="cadastro:step1.labelEspecialidade">Especialidade</label>
@@ -383,6 +453,10 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
           </div>
 
+          </div><!-- /fs-campos -->
+
+          <!-- CAMPO 5: Senha -->
+          <div class="ep-form-step-block" id="fs-senha">
           <div class="ep-row">
             <div class="ep-field">
               <label class="ep-label" for="password" data-i18n="cadastro:step1.labelPassword">Senha</label>
@@ -396,7 +470,10 @@ document.addEventListener("DOMContentLoaded", function () {
           <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n-html="cadastro:step1.passwordHint">
             Sua senha deriva a chave que cifra suas anotações. <strong>Não há recuperação automática</strong> — guarde a chave-semente que mostraremos no próximo passo.
           </p>
+          </div><!-- /fs-senha -->
 
+          <!-- CAMPO 6: Consent + Submit -->
+          <div class="ep-form-step-block" id="fs-consent">
           <label class="ep-checkbox ep-mt-12">
             <input type="checkbox" id="consentLgpd" required>
             <span data-i18n-html="cadastro:step1.consent">
@@ -412,6 +489,7 @@ document.addEventListener("DOMContentLoaded", function () {
             <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="submitData" data-i18n="cadastro:step1.submit">Continuar</button>
             <a href="./login.html" class="ep-btn ep-btn--ghost ep-btn--block" data-i18n="cadastro:step1.haveAccount">Já tenho conta</a>
           </div>
+          </div><!-- /fs-consent -->
         </form>
         </div><!-- /#formBody -->
       </div>
