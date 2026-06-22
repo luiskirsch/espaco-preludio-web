@@ -803,6 +803,11 @@
       sub = t.nextChargeAt
         ? tr("perfil:plano.nextChargeOn","Próxima cobrança em {{date}}",{date: new Date(Number(t.nextChargeAt)).toLocaleDateString(currentLocaleSafe(), dateOpts)})
         : tr("perfil:plano.active","Assinatura ativa.");
+    } else if (plano === "empresa") {
+      eyebrow = tr("perfil:plano.proLabel","Plano · Ativo");
+      title = "Atendimento a Empresas";
+      sub = "Plano gratuito ativo. Consultas tabeladas a R$ 60,00 por sessão.";
+      cta = "";
     } else if (plano === "student-active") {
       eyebrow = tr("perfil:plano.proStudent","Plano · Estudante");
       title = tr("perfil:plano.proStudentTitle","Plano Estudante (gratuito)");
