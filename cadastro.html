@@ -47,6 +47,15 @@
       color: var(--ep-ink-3) !important;
       cursor: not-allowed !important;
     }
+    /* Toggle de visibilidade de senha */
+    .ep-pwd-toggle {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; padding: 4px; cursor: pointer;
+      color: var(--ep-ink-3); display: flex; align-items: center;
+      transition: color 150ms;
+    }
+    .ep-pwd-toggle:hover { color: var(--ep-ink); }
+    .ep-pwd-toggle svg { width: 18px; height: 18px; }
     /* Seletor de plano */
     #planPicker { display: flex; gap: 10px; margin-bottom: 24px; }
     .ep-plan-pill {
@@ -166,6 +175,18 @@ document.addEventListener("DOMContentLoaded", function() {
   // 5 → 6: senha com ≥10 caracteres
   document.getElementById("password")?.addEventListener("input", function() {
     if (this.value.length >= 10) reveal("fs-consent");
+  });
+
+  // Toggle olho — mostrar/ocultar senha
+  document.querySelectorAll(".ep-pwd-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.dataset.target);
+      if (!input) return;
+      const isText = input.type === "text";
+      input.type = isText ? "password" : "text";
+      btn.querySelector(".ep-eye-off").style.display = isText ? "" : "none";
+      btn.querySelector(".ep-eye-on").style.display  = isText ? "none" : "";
+    });
   });
 });
 </script>
@@ -470,11 +491,23 @@ document.addEventListener("DOMContentLoaded", function() {
           <div class="ep-row">
             <div class="ep-field">
               <label class="ep-label" for="password" data-i18n="cadastro:step1.labelPassword">Senha</label>
-              <input id="password" class="ep-input" type="password" minlength="10" autocomplete="new-password" placeholder="Mín. 10 caracteres" data-i18n-placeholder="cadastro:step1.placeholderPassword" required>
+              <div style="position:relative;">
+                <input id="password" class="ep-input" type="password" minlength="10" autocomplete="new-password" placeholder="Mín. 10 caracteres" data-i18n-placeholder="cadastro:step1.placeholderPassword" required style="padding-right:40px;">
+                <button type="button" class="ep-pwd-toggle" data-target="password" aria-label="Mostrar senha" tabindex="-1">
+                  <svg class="ep-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  <svg class="ep-eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
             </div>
             <div class="ep-field">
               <label class="ep-label" for="passwordConfirm" data-i18n="cadastro:step1.labelPasswordConfirm">Confirmar senha</label>
-              <input id="passwordConfirm" class="ep-input" type="password" minlength="10" autocomplete="new-password" placeholder="Repita a senha" data-i18n-placeholder="cadastro:step1.placeholderPasswordConfirm" required>
+              <div style="position:relative;">
+                <input id="passwordConfirm" class="ep-input" type="password" minlength="10" autocomplete="new-password" placeholder="Repita a senha" data-i18n-placeholder="cadastro:step1.placeholderPasswordConfirm" required style="padding-right:40px;">
+                <button type="button" class="ep-pwd-toggle" data-target="passwordConfirm" aria-label="Mostrar senha" tabindex="-1">
+                  <svg class="ep-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  <svg class="ep-eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
             </div>
           </div>
           <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n-html="cadastro:step1.passwordHint">
