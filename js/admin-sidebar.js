@@ -105,8 +105,9 @@
     body.ep-admin-has-sidebar .ep-shell { padding-left: var(--ep-admin-sb-w); min-height: 100vh; }
     body.ep-admin-has-sidebar .ep-main { min-height: 100vh; }
 
-    /* Oculta language toggle em páginas admin */
+    /* Oculta language toggle e ep-logout-fab em páginas admin */
     #ep-lang-switcher, #ep-trust-lang-slot { display: none !important; }
+    body.ep-admin-has-sidebar .ep-logout-fab { display: none !important; }
 
     /* Cápsula flutuante de Sair — canto inferior direito */
     #epAdminSairFloat {
