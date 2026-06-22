@@ -401,6 +401,23 @@
         <button type="button" id="asaasClearBtn" class="ep-btn ep-btn--ghost ep-btn--sm ep-mt-12" data-i18n="perfil:asaas.clearKey">Limpar chave Asaas</button>
       </section>
 
+      <!-- WhatsApp de notificação -->
+      <section class="ep-receita-form">
+        <h2 class="ep-h3 ep-mt-0">Notificações por WhatsApp</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Receba uma mensagem no WhatsApp quando um paciente solicitar agendamento pelo seu link público.
+          Deixe em branco para não receber.
+        </p>
+        <div class="ep-field ep-mt-12">
+          <label class="ep-label" for="notifWhatsapp">Número do WhatsApp</label>
+          <input id="notifWhatsapp" class="ep-input" type="tel" maxlength="20"
+            placeholder="Ex.: (48) 99999-9999" autocomplete="tel">
+          <p class="ep-text-xs ep-text-muted ep-mt-0">Somente notificações — o paciente não vê este número.</p>
+        </div>
+        <div class="ep-status" id="notifWhatsappStatus"></div>
+        <button type="button" class="ep-btn ep-btn--primary ep-btn--sm ep-mt-12" id="notifWhatsappSaveBtn">Salvar</button>
+      </section>
+
       <!-- Notificações push -->
       <section class="ep-receita-form">
         <h2 class="ep-h3 ep-mt-0" data-i18n="perfil:push.h2">Notificações push</h2>
@@ -935,6 +952,7 @@
     $("especialidade").value = t.especialidade || "";
     $("cnpj").value          = t.cnpj || "";
     $("bio").value           = t.bio || "";
+    if ($("notifWhatsapp")) $("notifWhatsapp").value = t.notifWhatsapp || "";
 
     if (String(t.tipoConselho || "").toUpperCase() === "INTERNACIONAL") {
       $("numeroConselhoIntl").value = t.numeroConselho || "";
@@ -1156,6 +1174,36 @@
   $("pushEnableBtn").addEventListener("click", pushEnable);
   $("pushDisableBtn").addEventListener("click", pushDisable);
   pushUiRender().catch(() => {});
+
+  // ─── WhatsApp de notificação ─────────────────────────────────────────
+  if ($("notifWhatsappSaveBtn")) {
+    $("notifWhatsappSaveBtn").addEventListener("click", async () => {
+      const btn = $("notifWhatsappSaveBtn");
+      const statusEl = $("notifWhatsappStatus");
+      const value = $("notifWhatsapp").value.trim();
+      btn.disabled = true;
+      btn.textContent = "Salvando…";
+      statusEl.textContent = "";
+      statusEl.className = "ep-status";
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
+          body: JSON.stringify({ notifWhatsapp: value })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+        statusEl.textContent = value ? "✓ Número salvo. Você receberá notificações neste WhatsApp." : "✓ Notificações WhatsApp desativadas.";
+        statusEl.className = "ep-status is-ok";
+      } catch (e) {
+        statusEl.textContent = "Erro: " + e.message;
+        statusEl.className = "ep-status is-err";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Salvar";
+      }
+    });
+  }
 
   // ─── Exportar dados LGPD ─────────────────────────────────────────────
   // Fetch tudo do backend + decifra client-side (DEK) + empacota ZIP via
