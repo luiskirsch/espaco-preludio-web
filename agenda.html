@@ -655,9 +655,8 @@
           const startHours = startD.getHours() + startD.getMinutes()/60;
           const topPx    = Math.max(0, (startHours - START_HOUR) * HOUR_PX);
           const endHours = endD.getDate() !== startD.getDate() ? END_HOUR : (endD.getHours() + endD.getMinutes()/60);
-          const visStart = Math.max(startHours, START_HOUR);
-          const visEnd   = Math.min(endHours,   END_HOUR);
-          const heightPx = Math.max(8, (visEnd - visStart) * HOUR_PX);
+          // Não clipa por END_HOUR — bloco pode ultrapassar a grade visível
+          const heightPx = Math.max(8, (endHours - Math.max(startHours, START_HOUR)) * HOUR_PX);
           // Recorta blackouts inteiramente fora do range visível
           if (topPx < (END_HOUR - START_HOUR) * HOUR_PX && heightPx > 0) {
             const block = document.createElement("button");
