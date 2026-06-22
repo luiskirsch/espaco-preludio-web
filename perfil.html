@@ -757,7 +757,14 @@
   });
 
   const ctx = await requireTherapist({ requireDek: false });
-  const { idToken, therapist } = ctx;
+  let idToken = ctx.idToken;
+  const { therapist } = ctx;
+
+  // Sempre renova o token antes de chamadas autenticadas (expira em 1h)
+  async function freshToken() {
+    try { idToken = await auth.currentUser.getIdToken(); } catch(_) {}
+    return idToken;
+  }
 
   document.getElementById("topUserName").textContent = therapist.displayName || "";
 
@@ -1080,7 +1087,7 @@
       }
       // Busca chave pública do backend
       const cfgRes = await fetch(`${BACKEND_BASE_URL}/therapy/push/config`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
+        headers: { "Authorization": `Bearer ${await freshToken()}` }
       });
       const cfgData = await cfgRes.json().catch(() => ({}));
       if (!cfgRes.ok || !cfgData.ok || !cfgData.publicKey) {
@@ -1098,7 +1105,7 @@
       });
       const subRes = await fetch(`${BACKEND_BASE_URL}/therapy/push/subscribe`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify({ subscription: sub.toJSON() })
       });
       const subData = await subRes.json().catch(() => ({}));
@@ -1134,7 +1141,7 @@
         await sub.unsubscribe();
         await fetch(`${BACKEND_BASE_URL}/therapy/push/subscribe`, {
           method: "DELETE",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
           body: JSON.stringify({ endpoint })
         }).catch(() => {});
       }
@@ -1191,13 +1198,13 @@
 
       // 1) Perfil (json completo)
       hdr("Baixando perfil…");
-      const meRes = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const meRes = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
       const meData = await meRes.json();
       zip.file("01-perfil.json", JSON.stringify(meData.therapist || {}, null, 2));
 
       // 2) Pacientes (decifrados)
       hdr("Baixando pacientes (decifrando)…");
-      const pacRes = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const pacRes = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
       const pacData = await pacRes.json();
       const decryptedPatients = [];
       const patientNameByPatientId = {};
@@ -1224,7 +1231,7 @@
 
       // 3) Sessões
       hdr("Baixando sessões…");
-      const sessRes = await fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const sessRes = await fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
       const sessData = await sessRes.json();
       const sessions = sessData.sessions || [];
       zip.file("03-sessoes.csv", rowsToCsv(sessions, [
@@ -1248,7 +1255,7 @@
       for (let i = 0; i < sessions.length; i += CONCURRENCY) {
         const batch = sessions.slice(i, i + CONCURRENCY);
         const results = await Promise.allSettled(batch.map(async s => {
-          const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(s.sessionId)}/notas`, { headers: { "Authorization": `Bearer ${idToken}` } });
+          const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(s.sessionId)}/notas`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
           const d = await r.json().catch(() => ({}));
           const noteList = d.notes || [];
           for (const n of noteList) {
@@ -1273,7 +1280,7 @@
 
       // 5) Financeiro
       hdr("Baixando financeiro…");
-      const finRes = await fetch(`${BACKEND_BASE_URL}/therapy/financeiro/transacoes`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const finRes = await fetch(`${BACKEND_BASE_URL}/therapy/financeiro/transacoes`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
       const finData = await finRes.json();
       const txs = finData.transactions || finData.transacoes || [];
       zip.file("05-financeiro.csv", rowsToCsv(txs, [
@@ -1292,7 +1299,7 @@
 
       // 6) Recibos
       hdr("Baixando recibos…");
-      const recRes = await fetch(`${BACKEND_BASE_URL}/therapy/recibos`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const recRes = await fetch(`${BACKEND_BASE_URL}/therapy/recibos`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
       const recData = await recRes.json();
       const recibos = recData.receipts || recData.recibos || [];
       zip.file("06-recibos.csv", rowsToCsv(recibos, [
@@ -1310,7 +1317,7 @@
       // 7) Receitas digitais
       hdr("Baixando receitas…");
       try {
-        const r2 = await fetch(`${BACKEND_BASE_URL}/therapy/receitas`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const r2 = await fetch(`${BACKEND_BASE_URL}/therapy/receitas`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
         const d2 = await r2.json();
         const receitas = d2.receitas || d2.receipts || d2.items || [];
         zip.file("07-receitas.csv", rowsToCsv(receitas, [
@@ -1325,7 +1332,7 @@
       // 8) Documentos
       hdr("Baixando documentos…");
       try {
-        const r3 = await fetch(`${BACKEND_BASE_URL}/therapy/documentos`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const r3 = await fetch(`${BACKEND_BASE_URL}/therapy/documentos`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
         const d3 = await r3.json();
         const documentos = d3.documentos || d3.items || [];
         zip.file("08-documentos.csv", rowsToCsv(documentos, [
@@ -1341,13 +1348,13 @@
       // 9) Anamneses respondidas
       hdr("Baixando anamneses…");
       try {
-        const r4 = await fetch(`${BACKEND_BASE_URL}/therapy/anamneses`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const r4 = await fetch(`${BACKEND_BASE_URL}/therapy/anamneses`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
         const d4 = await r4.json();
         const anam = (d4.anamneses || []).filter(a => a.status === "answered");
         const detailed = [];
         for (const a of anam) {
           try {
-            const dRes = await fetch(`${BACKEND_BASE_URL}/therapy/anamneses/${encodeURIComponent(a.anamneseId)}`, { headers: { "Authorization": `Bearer ${idToken}` } });
+            const dRes = await fetch(`${BACKEND_BASE_URL}/therapy/anamneses/${encodeURIComponent(a.anamneseId)}`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
             const dData = await dRes.json();
             detailed.push({ ...a, formatted: dData.anamnese?.formatted || [] });
           } catch { detailed.push(a); }
@@ -1358,7 +1365,7 @@
       // 10) Audit log
       hdr("Baixando audit…");
       try {
-        const r5 = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/audit?limit=2000`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const r5 = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/audit?limit=2000`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
         const d5 = await r5.json();
         const events = d5.events || d5.items || [];
         zip.file("10-audit.csv", rowsToCsv(events, [
@@ -1376,21 +1383,21 @@
         // Garante que tenho ECDH keypair (se não tiver, não tem chat)
         let myEcdhPriv = null;
         try {
-          const kpRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/keypair`, { headers: { "Authorization": `Bearer ${idToken}` } });
+          const kpRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/keypair`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
           if (kpRes.ok) {
             const kpData = await kpRes.json();
             myEcdhPriv = await unwrapKey(kpData.ecdhPrivateWrapped, dekLocal);
           }
         } catch {}
 
-        const threadsRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const threadsRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
         const threadsData = await threadsRes.json();
         const threads = threadsData.threads || [];
         const allMessages = [];
 
         for (const tMeta of threads) {
           const tRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(tMeta.threadId)}`, {
-            headers: { "Authorization": `Bearer ${idToken}` }
+            headers: { "Authorization": `Bearer ${await freshToken()}` }
           });
           const tData = await tRes.json();
           if (!tData.ok) continue;
@@ -1406,7 +1413,7 @@
           }
 
           const msgsRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(tMeta.threadId)}/messages?limit=500`, {
-            headers: { "Authorization": `Bearer ${idToken}` }
+            headers: { "Authorization": `Bearer ${await freshToken()}` }
           });
           const msgsData = await msgsRes.json();
           for (const m of (msgsData.messages || [])) {
@@ -1513,7 +1520,7 @@ Direito de portabilidade — LGPD Art. 18, V.
 
     try {
       st.textContent = "Baixando dados cifrados…";
-      const headers = { "Authorization": `Bearer ${idToken}` };
+      const headers = { "Authorization": `Bearer ${await freshToken()}` };
 
       const [meRes, pacRes, sessRes] = await Promise.all([
         fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, { headers }),
@@ -1604,7 +1611,7 @@ Direito de portabilidade — LGPD Art. 18, V.
   (async () => {
     try {
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
+        headers: { "Authorization": `Bearer ${await freshToken()}` }
       });
       const d = await r.json().catch(() => ({}));
       const nfse = d.therapist?.nfseConfig || {};
@@ -1649,7 +1656,7 @@ Direito de portabilidade — LGPD Art. 18, V.
 
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify(body)
       });
       const data = await res.json().catch(() => ({}));
@@ -1680,7 +1687,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/nfse/test`, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${idToken}` }
+        headers: { "Authorization": `Bearer ${await freshToken()}` }
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
@@ -1701,7 +1708,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify({ asaasApiKey: "" })
       });
       const data = await res.json().catch(() => ({}));
@@ -1801,7 +1808,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/2fa/setup`, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${idToken}` }
+        headers: { "Authorization": `Bearer ${await freshToken()}` }
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
@@ -1842,7 +1849,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/2fa/enable`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify({ code })
       });
       const data = await res.json();
@@ -1889,7 +1896,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/2fa/disable`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify({ code })
       });
       const data = await res.json();
@@ -2144,7 +2151,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify(body)
       });
       const data = await res.json().catch(() => ({}));
@@ -2181,7 +2188,7 @@ Direito de portabilidade — LGPD Art. 18, V.
 
   // ─── TISS: convênios aceitos pelo profissional ──────────────────────
   const tissApi = async (path, opts = {}) => {
-    const headers = { ...(opts.headers || {}), "Authorization": `Bearer ${idToken}` };
+    const headers = { ...(opts.headers || {}), "Authorization": `Bearer ${await freshToken()}` };
     if (opts.body) headers["Content-Type"] = "application/json";
     const r = await fetch(BACKEND_BASE_URL + path, { ...opts, headers });
     const d = await r.json().catch(() => ({}));
@@ -2326,7 +2333,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify({ smsConfig: { provider: "twilio", enabled, accountSid, authToken, fromNumber } })
       });
       const d = await r.json().catch(() => ({}));
@@ -2351,7 +2358,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/sms/test`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify({ to })
       });
       const d = await r.json().catch(() => ({}));
