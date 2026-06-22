@@ -256,6 +256,8 @@
     // ainda estava no futuro. Agora plano=pro sempre vence trial.
     if (item.adminGrantActive) return `<span class="ep-badge ep-badge--ok" title="Cortesia admin até ${fmtDate(item.adminGrantedUntil)}">Cortesia até ${fmtDateOnly(item.adminGrantedUntil)}</span>`;
     if (item.plano === "pro") return `<span class="ep-badge ep-badge--ok">${item.mpPreapprovalId ? "Pro (MP)" : "Pro (manual)"}</span>`;
+    if (item.plano === "empresa") return `<span class="ep-badge ep-badge--ok">Empresa (ativo)</span>`;
+    if (item.plano === "empresa-pending-review") return `<span class="ep-badge ep-badge--warn">Empresa (pendente)</span>`;
     if (item.plano === "student-active" || item.plano === "recem-formado-active") return `<span class="ep-badge ep-badge--ok">${planoLabel(item.plano)}</span>`;
     if (item.trialActive) return `<span class="ep-badge ep-badge--warn">Trial até ${fmtDateOnly(item.trialUntil)}</span>`;
     return `<span class="ep-badge ep-badge--done">${planoLabel(item.plano)}</span>`;
