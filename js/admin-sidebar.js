@@ -105,6 +105,26 @@
     body.ep-admin-has-sidebar .ep-shell { padding-left: var(--ep-admin-sb-w); min-height: 100vh; }
     body.ep-admin-has-sidebar .ep-main { min-height: 100vh; }
 
+    /* Oculta language toggle em páginas admin */
+    #ep-lang-switcher, #ep-trust-lang-slot { display: none !important; }
+
+    /* Cápsula flutuante de Sair — canto inferior direito */
+    #epAdminSairFloat {
+      position: fixed; bottom: 20px; right: 20px; z-index: 200;
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 999px;
+      background: var(--ep-surface); border: 1px solid var(--ep-line);
+      color: var(--ep-ink-2); font-family: 'Inter', sans-serif;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      box-shadow: 0 2px 12px rgba(0,0,0,.1);
+      transition: background 120ms, color 120ms, box-shadow 120ms;
+    }
+    #epAdminSairFloat:hover {
+      background: var(--ep-bg-2); color: var(--ep-ink);
+      box-shadow: 0 4px 16px rgba(0,0,0,.15);
+    }
+    #epAdminSairFloat svg { width: 13px; height: 13px; opacity: .7; }
+
     @media (max-width: 860px) {
       :root { --ep-admin-sb-w: 48px; }
       .ep-asb__brand-name, .ep-asb__section, .ep-asb__label { display: none; }
@@ -115,6 +135,8 @@
       .ep-asb__email { display: none; }
       #epAdminLogoutBtn { padding: 8px; justify-content: center; }
       #epAdminLogoutBtn span { display: none; }
+      #epAdminSairFloat { bottom: 12px; right: 12px; padding: 7px 10px; }
+      #epAdminSairFloat span { display: none; }
     }
   `;
   document.head.appendChild(style);
@@ -242,6 +264,17 @@
     const sidebar = buildSidebar();
     document.body.appendChild(sidebar);
     document.body.classList.add("ep-admin-has-sidebar");
+
+    // Cápsula flutuante de Sair — canto inferior direito
+    const sairFloat = document.createElement("button");
+    sairFloat.id = "epAdminSairFloat";
+    sairFloat.type = "button";
+    sairFloat.innerHTML = `${icons.logout}<span>Sair</span>`;
+    sairFloat.addEventListener("click", () => {
+      // Aciona o logoutBtn do sidebar (que o JS da página já conectou ao signOut)
+      document.getElementById("logoutBtn")?.click();
+    });
+    document.body.appendChild(sairFloat);
   }
 
   if (document.readyState === "loading") {
