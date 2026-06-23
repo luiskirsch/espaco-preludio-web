@@ -165,24 +165,23 @@
   }
 
   async function loadDependentes() {
-    // Carrega do localStorage (sincroniza com backend quando disponível)
     const key = `ep:dependentes:${currentUser.uid}`;
-    const saved = localStorage.getItem(key);
-    dependentes = saved ? JSON.parse(saved) : [];
-    renderDeps(dependentes);
-    // Tenta sincronizar com backend
     try {
       const token = await currentUser.getIdToken();
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/dependentes`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const d = await r.json().catch(() => ({}));
-      if (d.ok && d.dependentes) {
-        dependentes = d.dependentes;
-        localStorage.setItem(key, JSON.stringify(dependentes));
-        renderDeps(dependentes);
-      }
-    } catch {}
+      if (d.ok) {
+        dependentes = d.dependentes || [];
+        localStorage.setItem(key, JSON.stringify(dependentes)); // cache offline
+      } else throw new Error("api");
+    } catch {
+      // Offline: usa cache local
+      const saved = localStorage.getItem(key);
+      dependentes = saved ? JSON.parse(saved) : [];
+    }
+    renderDeps(dependentes);
   }
 
   document.getElementById("addDepBtn").addEventListener("click", () => {
@@ -213,36 +212,42 @@
     if (!selectedRel) { erro.textContent = "Selecione o parentesco."; erro.classList.remove("a-hide"); return; }
     if (!nasc) { erro.textContent = "Informe a data de nascimento."; erro.classList.remove("a-hide"); return; }
 
-    const dep = { id: Date.now().toString(), nome, parentesco: selectedRel, dataNascimento: nasc, email: email || null };
-
-    // Salva localmente
-    dependentes.push(dep);
-    localStorage.setItem(`ep:dependentes:${currentUser.uid}`, JSON.stringify(dependentes));
-    renderDeps(dependentes);
-    document.getElementById("addModal").style.display = "none";
-
-    // Sincroniza com backend
+    document.getElementById("saveDepBtn").disabled = true;
     try {
       const token = await currentUser.getIdToken();
-      await fetch(`${BACKEND_BASE_URL}/therapy/paciente/dependentes`, {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/dependentes`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify(dep)
+        body: JSON.stringify({ nome, parentesco: selectedRel, dataNascimento: nasc, email: email || null })
       });
-    } catch {}
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) throw new Error("api");
+      // Recarrega do backend para garantir consistência
+      await loadDependentes();
+    } catch {
+      // Fallback offline
+      const dep = { id: Date.now().toString(), nome, parentesco: selectedRel, dataNascimento: nasc, email: email || null };
+      dependentes.push(dep);
+      localStorage.setItem(`ep:dependentes:${currentUser.uid}`, JSON.stringify(dependentes));
+      renderDeps(dependentes);
+    }
+    document.getElementById("saveDepBtn").disabled = false;
+    document.getElementById("addModal").style.display = "none";
   });
 
   window.removeDep = async function(id) {
     if (!confirm("Remover este dependente?")) return;
-    dependentes = dependentes.filter(d => d.id !== id);
-    localStorage.setItem(`ep:dependentes:${currentUser.uid}`, JSON.stringify(dependentes));
-    renderDeps(dependentes);
     try {
       const token = await currentUser.getIdToken();
       await fetch(`${BACKEND_BASE_URL}/therapy/paciente/dependentes/${id}`, {
         method: "DELETE", headers: { Authorization: `Bearer ${token}` }
       });
-    } catch {}
+      await loadDependentes(); // recarrega do backend
+    } catch {
+      dependentes = dependentes.filter(d => d.id !== id);
+      localStorage.setItem(`ep:dependentes:${currentUser.uid}`, JSON.stringify(dependentes));
+      renderDeps(dependentes);
+    }
   };
 </script>
 </body>
