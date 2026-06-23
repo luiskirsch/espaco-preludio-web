@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <title>Painel Corporativo · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <style>
+    body { background: var(--ep-bg); }
+    .corp-login {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: radial-gradient(ellipse 800px 400px at 50% -5%, rgba(45,74,62,.07), transparent 60%), var(--ep-bg);
+    }
+    .corp-login__panel {
+      width: 100%;
+      max-width: 420px;
+      background: var(--ep-surface);
+      border: 1px solid var(--ep-line);
+      border-radius: 20px;
+      padding: 40px 36px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.08);
+    }
+    .corp-login__logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+    .corp-login__mark {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--ep-ink); color: var(--ep-bg);
+      display: grid; place-items: center;
+      font-family: 'Fraunces', serif; font-size: 16px; font-weight: 600;
+    }
+    .corp-login__brand { line-height: 1.2; }
+    .corp-login__brand-lead { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ep-ink-3); display: block; }
+    .corp-login__brand-name { font-size: 15px; font-weight: 600; color: var(--ep-ink); }
+    .corp-login__title { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 500; color: var(--ep-ink); margin-bottom: 6px; }
+    .corp-login__sub { font-size: 13.5px; color: var(--ep-ink-2); margin-bottom: 28px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+<div class="corp-login">
+  <div class="corp-login__panel">
+    <div class="corp-login__logo">
+      <div class="corp-login__mark">EP</div>
+      <div class="corp-login__brand">
+        <span class="corp-login__brand-lead">Espaço Prelúdio</span>
+        <span class="corp-login__brand-name">Painel Corporativo</span>
+      </div>
+    </div>
+
+    <h1 class="corp-login__title">Bem-vindo</h1>
+    <p class="corp-login__sub">Acesse o painel de saúde da sua equipe. Todos os dados são anônimos e agregados.</p>
+
+    <form id="loginForm" class="ep-stack" novalidate>
+      <div class="ep-field">
+        <label class="ep-label" for="email">E-mail corporativo</label>
+        <input id="email" class="ep-input" type="email" placeholder="rh@suaempresa.com.br" autocomplete="email" required>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="senha">Senha</label>
+        <div style="position:relative;">
+          <input id="senha" class="ep-input" type="password" placeholder="••••••••" autocomplete="current-password" required style="padding-right:40px;">
+          <button type="button" id="toggleSenha" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--ep-ink-3);padding:4px;" tabindex="-1">
+            <svg id="eyeIcon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="ep-status" id="loginStatus"></div>
+      <button type="submit" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-4" id="submitBtn">
+        Entrar no painel
+      </button>
+    </form>
+
+    <p class="ep-text-xs ep-text-muted ep-mt-20" style="text-align:center; line-height:1.6;">
+      Acesso exclusivo para gestores RH.<br>
+      Dúvidas? <a href="mailto:contato@espacopreludio.com.br" style="color:var(--ep-accent);">contato@espacopreludio.com.br</a>
+    </p>
+  </div>
+</div>
+
+<script type="module">
+  import { BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  // Se já tem token válido, vai direto pro painel
+  const saved = localStorage.getItem("ep:empresa:token");
+  if (saved) window.location.href = "./empresa-painel.html";
+
+  document.getElementById("toggleSenha").addEventListener("click", () => {
+    const input = document.getElementById("senha");
+    const icon  = document.getElementById("eyeIcon");
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    icon.innerHTML = show
+      ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`
+      : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+  });
+
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value.trim();
+    const senha = document.getElementById("senha").value;
+    const statusEl = document.getElementById("loginStatus");
+    const btn = document.getElementById("submitBtn");
+
+    if (!email || !senha) { statusEl.textContent = "Preencha e-mail e senha."; statusEl.className = "ep-status is-err"; return; }
+
+    btn.disabled = true;
+    btn.textContent = "Entrando…";
+    statusEl.textContent = "";
+    statusEl.className = "ep-status";
+
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/empresa/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, senha })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!data.ok) {
+        const msgs = {
+          CREDENCIAIS_INVALIDAS: "E-mail ou senha incorretos.",
+          SENHA_NAO_CONFIGURADA: "Acesso ainda não configurado. Contate o suporte.",
+          CREDENCIAIS_OBRIGATORIAS: "Preencha todos os campos."
+        };
+        throw new Error(msgs[data.error] || "Erro ao entrar. Tente novamente.");
+      }
+      localStorage.setItem("ep:empresa:token", data.token);
+      localStorage.setItem("ep:empresa:nome", data.empresa?.nome || "");
+      window.location.href = "./empresa-painel.html";
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.className = "ep-status is-err";
+      btn.disabled = false;
+      btn.textContent = "Entrar no painel";
+    }
+  });
+</script>
+</body>
+</html>

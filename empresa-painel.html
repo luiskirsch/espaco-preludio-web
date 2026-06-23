@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <title>Painel de Saúde · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    :root { --corp-accent: #2d6a3e; --corp-gold: #c8963a; }
+    body { background: var(--ep-bg); }
+
+    /* ── Topbar ── */
+    .corp-top {
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px; height: 60px;
+      background: var(--ep-surface); border-bottom: 1px solid var(--ep-line);
+      gap: 16px;
+    }
+    .corp-top__brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .corp-top__mark {
+      width: 34px; height: 34px; border-radius: 9px;
+      background: var(--ep-ink); color: var(--ep-bg);
+      display: grid; place-items: center;
+      font-family: 'Fraunces', serif; font-size: 13px; font-weight: 600; flex-shrink: 0;
+    }
+    .corp-top__name { font-size: 13px; font-weight: 600; color: var(--ep-ink); }
+    .corp-top__nome-empresa { font-size: 12px; color: var(--ep-ink-3); }
+    .corp-top__actions { display: flex; align-items: center; gap: 10px; }
+    .corp-badge-lgpd {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 999px;
+      background: rgba(45,106,62,.1); color: #2d6a3e;
+      font-size: 11px; font-weight: 600; letter-spacing: .03em;
+    }
+
+    /* ── Layout ── */
+    .corp-main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 60px; }
+
+    /* ── Header ── */
+    .corp-header { margin-bottom: 28px; }
+    .corp-header__eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ep-ink-3); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+    .corp-header__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--corp-accent); }
+    .corp-header__title { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 500; color: var(--ep-ink); }
+    .corp-header__sub { font-size: 14px; color: var(--ep-ink-2); margin-top: 4px; }
+
+    /* ── KPI Cards ── */
+    .corp-kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-bottom: 28px; }
+    .corp-kpi {
+      background: var(--ep-surface); border: 1px solid var(--ep-line);
+      border-radius: 14px; padding: 20px 22px;
+      display: flex; flex-direction: column; gap: 8px;
+      transition: box-shadow 150ms;
+    }
+    .corp-kpi:hover { box-shadow: 0 4px 20px rgba(0,0,0,.06); }
+    .corp-kpi__label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ep-ink-3); }
+    .corp-kpi__value { font-family: 'Fraunces', serif; font-size: 40px; font-weight: 500; color: var(--ep-ink); line-height: 1; }
+    .corp-kpi__value--green { color: var(--corp-accent); }
+    .corp-kpi__value--gold  { color: var(--corp-gold); }
+    .corp-kpi__sub { font-size: 12px; color: var(--ep-ink-3); }
+    .corp-kpi__icon { font-size: 22px; margin-bottom: 2px; }
+
+    /* ── Seções ── */
+    .corp-section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+    @media (max-width: 760px) { .corp-section-grid { grid-template-columns: 1fr; } }
+
+    .corp-card {
+      background: var(--ep-surface); border: 1px solid var(--ep-line);
+      border-radius: 14px; padding: 22px 24px;
+    }
+    .corp-card__title { font-size: 13px; font-weight: 700; color: var(--ep-ink); margin-bottom: 4px; }
+    .corp-card__sub { font-size: 12px; color: var(--ep-ink-3); margin-bottom: 18px; }
+    .corp-chart-wrap { position: relative; height: 200px; }
+
+    /* ── Adesão barra ── */
+    .corp-progress { background: var(--ep-bg-2); border-radius: 999px; height: 10px; overflow: hidden; margin: 8px 0; }
+    .corp-progress__fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--corp-accent), #4a9e66); transition: width 800ms ease; }
+
+    /* ── LGPD notice ── */
+    .corp-lgpd-notice {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: rgba(45,106,62,.06); border: 1px solid rgba(45,106,62,.18);
+      border-radius: 10px; padding: 12px 16px;
+      font-size: 12px; color: var(--ep-ink-2); line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .corp-lgpd-notice svg { flex-shrink: 0; color: var(--corp-accent); margin-top: 1px; }
+
+    /* ── Em breve ── */
+    .corp-coming {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px; padding: 32px 16px;
+      color: var(--ep-ink-3); font-size: 13px; text-align: center;
+    }
+    .corp-coming__icon { font-size: 32px; opacity: .4; }
+
+    /* ── Footer ── */
+    .corp-footer { text-align: center; font-size: 11px; color: var(--ep-ink-3); margin-top: 48px; }
+
+    /* Senha modal */
+    .corp-modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;place-items:center; }
+    .corp-modal-overlay.is-open { display:grid; }
+    .corp-modal { background:var(--ep-surface);border-radius:16px;padding:28px 32px;max-width:420px;width:100%;margin:16px; }
+    .corp-modal h2 { font-family:'Fraunces',serif;font-size:20px;margin-bottom:16px; }
+  </style>
+</head>
+<body>
+
+<!-- Topbar -->
+<header class="corp-top">
+  <a href="./empresa-painel.html" class="corp-top__brand">
+    <div class="corp-top__mark">EP</div>
+    <div>
+      <div class="corp-top__name">Espaço Prelúdio</div>
+      <div class="corp-top__nome-empresa" id="nomeEmpresaTop">Painel Corporativo</div>
+    </div>
+  </a>
+  <div class="corp-top__actions">
+    <span class="corp-badge-lgpd">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Dados anônimos · LGPD
+    </span>
+    <button class="ep-btn ep-btn--ghost ep-btn--sm" id="btnTrocarSenha">🔐 Senha</button>
+    <button class="ep-btn ep-btn--ghost ep-btn--sm" id="btnSair">Sair</button>
+  </div>
+</header>
+
+<main class="corp-main">
+
+  <!-- Estado: carregando -->
+  <div id="stateLoading" style="padding:80px 0;text-align:center;color:var(--ep-ink-3);">
+    <div style="font-size:32px;margin-bottom:12px;">⏳</div>
+    <p>Carregando dados da equipe…</p>
+  </div>
+
+  <!-- Estado: dados insuficientes / LGPD -->
+  <div id="stateMascarado" class="ep-hide" style="max-width:520px;margin:80px auto;text-align:center;">
+    <div style="font-size:48px;margin-bottom:16px;">🔒</div>
+    <h2 style="font-family:'Fraunces',serif;font-size:24px;margin-bottom:8px;">Dados em proteção</h2>
+    <p style="color:var(--ep-ink-2);font-size:14px;line-height:1.6;">
+      Para proteger a privacidade individual dos colaboradores, os dados só são exibidos após atingir o número mínimo de registros. Convide mais colaboradores para desbloquear o painel completo.
+    </p>
+  </div>
+
+  <!-- Dashboard principal -->
+  <div id="stateDashboard" class="ep-hide">
+
+    <!-- Header -->
+    <div class="corp-header">
+      <div class="corp-header__eyebrow">
+        <span class="corp-header__dot"></span>
+        Painel de Saúde Corporativa
+      </div>
+      <h1 class="corp-header__title" id="nomeEmpresaH1">Sua Empresa</h1>
+      <p class="corp-header__sub" id="subtituloHeader">Visão geral do bem-estar da equipe. Todos os dados são anônimos e agregados.</p>
+    </div>
+
+    <!-- Aviso LGPD -->
+    <div class="corp-lgpd-notice">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+      <span>Este painel exibe apenas dados estatísticos e agregados. Nenhuma informação individual é compartilhada, conforme a Lei Geral de Proteção de Dados (LGPD). Dados com menos de 5 registros são automaticamente protegidos.</span>
+    </div>
+
+    <!-- KPIs -->
+    <div class="corp-kpi-grid">
+      <div class="corp-kpi">
+        <div class="corp-kpi__icon">👥</div>
+        <div class="corp-kpi__label">Colaboradores cadastrados</div>
+        <div class="corp-kpi__value" id="kpiCadastrados">—</div>
+        <div class="corp-kpi__sub" id="kpiCadastradosSub">no programa</div>
+      </div>
+      <div class="corp-kpi">
+        <div class="corp-kpi__icon">✅</div>
+        <div class="corp-kpi__label">Colaboradores ativos</div>
+        <div class="corp-kpi__value corp-kpi__value--green" id="kpiAtivos">—</div>
+        <div class="corp-kpi__sub">status ativo no sistema</div>
+      </div>
+      <div class="corp-kpi">
+        <div class="corp-kpi__icon">📅</div>
+        <div class="corp-kpi__label">Consultas este mês</div>
+        <div class="corp-kpi__value corp-kpi__value--gold" id="kpiSessoesMes">—</div>
+        <div class="corp-kpi__sub">últimos 30 dias</div>
+      </div>
+      <div class="corp-kpi">
+        <div class="corp-kpi__icon">📊</div>
+        <div class="corp-kpi__label">Taxa de adesão</div>
+        <div class="corp-kpi__value" id="kpiAdesao">—</div>
+        <div class="corp-kpi__sub">realizaram ao menos 1 consulta</div>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="corp-section-grid">
+
+      <!-- Especialidades -->
+      <div class="corp-card">
+        <div class="corp-card__title">Consultas por especialidade</div>
+        <div class="corp-card__sub">Distribuição anônima por área de atendimento</div>
+        <div class="corp-chart-wrap">
+          <canvas id="chartEspecialidades"></canvas>
+        </div>
+        <div id="especialidadesVazia" class="corp-coming ep-hide">
+          <div class="corp-coming__icon">📊</div>
+          <p>Dados disponíveis após as primeiras consultas serem realizadas.</p>
+        </div>
+      </div>
+
+      <!-- Taxa de adesão visual -->
+      <div class="corp-card">
+        <div class="corp-card__title">Engajamento do programa</div>
+        <div class="corp-card__sub">Acompanhe a adoção do benefício pela equipe</div>
+        <div id="adesaoContent" style="margin-top:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;color:var(--ep-ink-2);">Taxa de adesão</span>
+            <span id="adesaoPct" style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:var(--corp-accent);">—%</span>
+          </div>
+          <div class="corp-progress"><div class="corp-progress__fill" id="adesaoBar" style="width:0%"></div></div>
+          <p style="font-size:12px;color:var(--ep-ink-3);margin-top:8px;" id="adesaoDesc">—</p>
+
+          <div style="margin-top:24px;display:flex;flex-direction:column;gap:10px;" id="engajamentoStats"></div>
+        </div>
+
+        <!-- Humor — em breve -->
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--ep-line);">
+          <div class="corp-card__title">Índice de bem-estar semanal</div>
+          <div class="corp-coming">
+            <div class="corp-coming__icon">🌡️</div>
+            <p>Em breve — coletando dados de humor da equipe.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Top motivos — em breve -->
+    <div class="corp-card" style="margin-bottom:20px;">
+      <div class="corp-card__title">Principais motivos de atendimento</div>
+      <div class="corp-card__sub">Ranking anônimo das categorias mais buscadas pela equipe</div>
+      <div class="corp-coming">
+        <div class="corp-coming__icon">🏷️</div>
+        <p>Em breve — os colaboradores poderão classificar anonimamente o motivo da consulta.</p>
+      </div>
+    </div>
+
+    <div class="corp-footer">
+      <p>Dados atualizados em <span id="atualizadoEm">—</span> · Espaço Prelúdio · CNPJ 67.092.881/0001-99</p>
+      <p style="margin-top:4px;">Todos os dados são tratados conforme a LGPD. Dúvidas: <a href="mailto:contato@espacopreludio.com.br" style="color:var(--ep-accent);">contato@espacopreludio.com.br</a></p>
+    </div>
+
+  </div><!-- /stateDashboard -->
+</main>
+
+<!-- Modal trocar senha -->
+<div class="corp-modal-overlay" id="senhaModal">
+  <div class="corp-modal">
+    <h2>Trocar senha</h2>
+    <div class="ep-stack" style="gap:12px;">
+      <div class="ep-field">
+        <label class="ep-label">Senha atual</label>
+        <input id="senhaAtual" class="ep-input" type="password" placeholder="Senha atual">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Nova senha</label>
+        <input id="senhaNova" class="ep-input" type="password" placeholder="Mínimo 8 caracteres">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Confirmar nova senha</label>
+        <input id="senhaConfirmar" class="ep-input" type="password" placeholder="Repita a nova senha">
+      </div>
+      <div class="ep-status" id="senhaStatus"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">
+      <button class="ep-btn ep-btn--ghost" id="btnSenhaCancelar">Cancelar</button>
+      <button class="ep-btn ep-btn--primary" id="btnSenhaSalvar">Salvar nova senha</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  const token = localStorage.getItem("ep:empresa:token");
+  if (!token) { window.location.href = "./empresa-login.html"; }
+
+  const nomeEmpresa = localStorage.getItem("ep:empresa:nome") || "Sua Empresa";
+  document.getElementById("nomeEmpresaTop").textContent = nomeEmpresa;
+  document.getElementById("nomeEmpresaH1").textContent = nomeEmpresa;
+
+  function show(id) {
+    ["stateLoading","stateMascarado","stateDashboard"].forEach(s => {
+      document.getElementById(s).classList.toggle("ep-hide", s !== id);
+    });
+  }
+
+  function fmtTs(ms) {
+    return new Date(ms).toLocaleString("pt-BR", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" });
+  }
+
+  let chartEsp = null;
+
+  async function loadDashboard() {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/empresa/dashboard`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const d = await res.json().catch(() => ({}));
+
+      if (res.status === 401) { localStorage.removeItem("ep:empresa:token"); window.location.href = "./empresa-login.html"; return; }
+      if (!d.ok) { show("stateDashboard"); return; }
+
+      if (d.mascarado) { show("stateMascarado"); return; }
+
+      show("stateDashboard");
+
+      const k = d.kpis || {};
+      document.getElementById("kpiCadastrados").textContent = k.totalCadastrados ?? "—";
+      document.getElementById("kpiAtivos").textContent      = k.totalAtivos ?? "—";
+      document.getElementById("kpiSessoesMes").textContent  = k.sessoesMes ?? "—";
+      document.getElementById("kpiAdesao").textContent      = k.taxaAdesao != null ? k.taxaAdesao + "%" : "—";
+
+      // Barra de adesão
+      const pct = k.taxaAdesao ?? 0;
+      document.getElementById("adesaoPct").textContent = pct + "%";
+      setTimeout(() => { document.getElementById("adesaoBar").style.width = pct + "%"; }, 100);
+      document.getElementById("adesaoDesc").textContent =
+        pct >= 60 ? "✅ Excelente adesão — a equipe está aproveitando o benefício!"
+        : pct >= 30 ? "📈 Adesão moderada — há espaço para engajar mais colaboradores."
+        : "💡 Baixa adesão — incentive os colaboradores a usarem o benefício.";
+
+      // Stats engajamento
+      const stats = document.getElementById("engajamentoStats");
+      stats.innerHTML = [
+        { label: "Cadastrados", val: k.totalCadastrados ?? "—", icon: "👥" },
+        { label: "Ativos", val: k.totalAtivos ?? "—", icon: "✅" },
+        { label: "Consultas totais", val: k.sessoesTotal ?? "—", icon: "📋" }
+      ].map(s => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--ep-bg-2);border-radius:8px;">
+          <span style="font-size:13px;color:var(--ep-ink-2);">${s.icon} ${s.label}</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:var(--ep-ink);">${s.val}</span>
+        </div>
+      `).join("");
+
+      // Gráfico especialidades
+      const esp = d.especialidades || {};
+      const espKeys = Object.keys(esp);
+      if (espKeys.length > 0) {
+        const COLORS = ["#2d6a3e","#4a9e66","#c8963a","#4a72b0","#a05a8a","#6ab0c8","#d96c3a","#888"];
+        const ctx = document.getElementById("chartEspecialidades").getContext("2d");
+        if (chartEsp) chartEsp.destroy();
+        chartEsp = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: espKeys,
+            datasets: [{ data: espKeys.map(k => esp[k]), backgroundColor: COLORS.slice(0, espKeys.length), borderWidth: 0, hoverOffset: 6 }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { position: "bottom", labels: { font: { family: "Inter", size: 11 }, color: "#888", padding: 12, boxWidth: 12 } },
+              tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.raw} consulta${ctx.raw !== 1 ? "s" : ""}` } }
+            },
+            cutout: "62%"
+          }
+        });
+      } else {
+        document.getElementById("chartEspecialidades").style.display = "none";
+        document.getElementById("especialidadesVazia").classList.remove("ep-hide");
+      }
+
+      document.getElementById("atualizadoEm").textContent = fmtTs(d.geradoEm || Date.now());
+    } catch (e) {
+      show("stateDashboard");
+      console.error(e);
+    }
+  }
+
+  loadDashboard();
+
+  // Sair
+  document.getElementById("btnSair").addEventListener("click", () => {
+    localStorage.removeItem("ep:empresa:token");
+    localStorage.removeItem("ep:empresa:nome");
+    window.location.href = "./empresa-login.html";
+  });
+
+  // Modal senha
+  const senhaModal = document.getElementById("senhaModal");
+  document.getElementById("btnTrocarSenha").addEventListener("click", () => { senhaModal.classList.add("is-open"); });
+  document.getElementById("btnSenhaCancelar").addEventListener("click", () => { senhaModal.classList.remove("is-open"); });
+
+  document.getElementById("btnSenhaSalvar").addEventListener("click", async () => {
+    const statusEl = document.getElementById("senhaStatus");
+    const senhaAtual = document.getElementById("senhaAtual").value;
+    const senhaNova  = document.getElementById("senhaNova").value;
+    const senhaConf  = document.getElementById("senhaConfirmar").value;
+    if (senhaNova !== senhaConf) { statusEl.textContent = "As senhas não conferem."; statusEl.className = "ep-status is-err"; return; }
+    if (senhaNova.length < 8) { statusEl.textContent = "A nova senha precisa ter ao menos 8 caracteres."; statusEl.className = "ep-status is-err"; return; }
+    statusEl.textContent = "Salvando…"; statusEl.className = "ep-status";
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/empresa/senha`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ senhaAtual, novaSenha: senhaNova })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!data.ok) throw new Error(data.error === "SENHA_ATUAL_INCORRETA" ? "Senha atual incorreta." : "Erro ao salvar.");
+      statusEl.textContent = "✓ Senha alterada! Faça login novamente.";
+      statusEl.className = "ep-status is-ok";
+      setTimeout(() => { localStorage.removeItem("ep:empresa:token"); window.location.href = "./empresa-login.html"; }, 2000);
+    } catch (e) { statusEl.textContent = e.message; statusEl.className = "ep-status is-err"; }
+  });
+</script>
+</body>
+</html>

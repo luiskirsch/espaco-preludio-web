@@ -210,6 +210,7 @@
           <button class="ep-btn ep-btn--ghost ep-btn--sm" onclick="copyLink('${esc(e.slug)}')">Copiar link</button>
           <a href="./admin-colaboradores.html?empresa=${esc(e.id)}&nome=${encodeURIComponent(e.nome)}" class="ep-btn ep-btn--ghost ep-btn--sm">Ver colaboradores</a>
           <button class="ep-btn ep-btn--ghost ep-btn--sm" onclick="openEdit('${esc(e.id)}')">Editar</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" onclick="openAcesso('${esc(e.id)}','${esc(e.nome)}')">🔐 Acesso painel</button>
           ${e.status === "ativa" ? `<button class="ep-btn ep-btn--ghost ep-btn--sm" style="color:#b8453d;" onclick="toggleStatus('${esc(e.id)}','inativa')">Desativar</button>` : `<button class="ep-btn ep-btn--ghost ep-btn--sm" onclick="toggleStatus('${esc(e.id)}','ativa')">Reativar</button>`}
         </div>
       </div>
@@ -340,7 +341,60 @@
   };
 
   function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+  // Modal: definir acesso ao painel corporativo
+  let acessoEmpresaId = null;
+  window.openAcesso = function(id, nome) {
+    acessoEmpresaId = id;
+    document.getElementById("acessoModalTitle").textContent = `Acesso ao painel — ${nome}`;
+    document.getElementById("acessoEmail").value = "";
+    document.getElementById("acessoSenha").value = "";
+    document.getElementById("acessoStatus").textContent = "";
+    document.getElementById("acessoModal").style.display = "grid";
+  };
+  document.getElementById("acessoModalCancel").addEventListener("click", () => { document.getElementById("acessoModal").style.display = "none"; });
+  document.getElementById("acessoModal").addEventListener("click", e => { if (e.target === document.getElementById("acessoModal")) document.getElementById("acessoModal").style.display = "none"; });
+
+  document.getElementById("acessoModalSave").addEventListener("click", async () => {
+    const email = document.getElementById("acessoEmail").value.trim();
+    const senha = document.getElementById("acessoSenha").value.trim();
+    const statusEl = document.getElementById("acessoStatus");
+    if (!email || !senha) { statusEl.textContent = "Preencha e-mail e senha."; return; }
+    statusEl.textContent = "Salvando…";
+    try {
+      idToken = await auth.currentUser?.getIdToken(true);
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/empresas/${acessoEmpresaId}/definir-acesso`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ loginEmail: email, senhaPadrao: senha })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) throw new Error(d.error || "Erro");
+      statusEl.textContent = `✓ Acesso definido! Login: ${email}`;
+      statusEl.style.color = "#2d6a3e";
+    } catch (e) { statusEl.textContent = "Erro: " + e.message; statusEl.style.color = "#b8453d"; }
+  });
 </script>
+
+<!-- Modal: acesso ao painel corporativo -->
+<div class="ep-modal" id="acessoModal" role="dialog" aria-modal="true" style="display:none;">
+  <div class="ep-modal__panel" style="max-width:440px;">
+    <h3 class="ep-modal__title" id="acessoModalTitle">Definir acesso</h3>
+    <div style="padding:0 28px 8px;">
+      <p class="ep-text-sm ep-text-muted ep-mt-0" style="margin-bottom:14px;">Configure o e-mail e senha inicial para a empresa acessar o painel de saúde corporativo.</p>
+      <div class="ep-stack" style="gap:10px;">
+        <div class="ep-field"><label class="ep-label">E-mail de acesso</label><input id="acessoEmail" class="ep-input" type="email" placeholder="rh@empresa.com.br"></div>
+        <div class="ep-field"><label class="ep-label">Senha inicial</label><input id="acessoSenha" class="ep-input" type="text" placeholder="Ex.: Empresa2026!" autocomplete="off"></div>
+        <p style="font-size:11px;color:var(--ep-ink-3);">A empresa poderá trocar a senha após o primeiro acesso.</p>
+        <p id="acessoStatus" class="ep-text-sm" style="min-height:16px;"></p>
+      </div>
+    </div>
+    <div class="ep-modal__actions">
+      <button class="ep-btn ep-btn--ghost" id="acessoModalCancel">Cancelar</button>
+      <button class="ep-btn ep-btn--primary" id="acessoModalSave">Definir acesso</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
