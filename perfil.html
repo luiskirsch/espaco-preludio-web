@@ -357,6 +357,20 @@
         <p class="ep-text-xs ep-text-muted ep-mt-8" data-i18n="perfil:sched.listSub">
           O diretório lista só profissionais verificados com agendamento ativo. Você pode tirar a qualquer momento.
         </p>
+
+        <!-- Grade de disponibilidade semanal -->
+        <div class="ep-mt-24" style="border-top: 1px solid var(--ep-line); padding-top: 20px;">
+          <div class="ep-label ep-mt-0" style="font-size:13px;font-weight:600;margin-bottom:6px;">Horários disponíveis para agendamento</div>
+          <p class="ep-text-xs ep-text-muted" style="margin-bottom:14px;">Clique nas células para marcar os horários em que você aceita pedidos de consulta. Horários em verde = disponível.</p>
+          <div id="availGrid" style="overflow-x:auto;">
+            <table id="availTable" style="border-collapse:collapse;font-size:12px;min-width:480px;">
+              <thead id="availHead"></thead>
+              <tbody id="availBody"></tbody>
+            </table>
+          </div>
+          <div class="ep-status" id="availStatus" style="margin-top:8px;"></div>
+          <button type="button" class="ep-btn ep-btn--primary ep-btn--sm ep-mt-12" id="availSaveBtn">Salvar disponibilidade</button>
+        </div>
       </section>
 
       <!-- Cobranças online (Asaas) -->
@@ -953,6 +967,8 @@
     $("cnpj").value          = t.cnpj || "";
     $("bio").value           = t.bio || "";
     if ($("notifWhatsapp")) $("notifWhatsapp").value = t.notifWhatsapp || "";
+    // Dispara hook da grade de disponibilidade
+    if (typeof window._applyTherapistData === "function") window._applyTherapistData(t);
 
     if (String(t.tipoConselho || "").toUpperCase() === "INTERNACIONAL") {
       $("numeroConselhoIntl").value = t.numeroConselho || "";
@@ -1204,6 +1220,99 @@
       }
     });
   }
+
+  // ─── Grade de disponibilidade semanal ────────────────────────────────
+  (function initAvailGrid() {
+    const DAYS   = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+    const HOURS  = Array.from({ length: 16 }, (_, i) => i + 6); // 6h-21h
+    const SHOW   = [1,2,3,4,5,6]; // Seg-Sáb (sem Dom por padrão)
+    // weeklyAvailability[dow] = Set<hour>
+    let wa = {}; // dow → Set<hour>
+
+    function buildGrid() {
+      const head = document.getElementById("availHead");
+      const body = document.getElementById("availBody");
+      if (!head || !body) return;
+
+      // Cabeçalho
+      head.innerHTML = `<tr>
+        <th style="padding:4px 8px;font-size:11px;color:var(--ep-ink-3);text-align:right;"></th>
+        ${SHOW.map(d => `<th style="padding:4px 10px;font-size:11px;font-weight:600;color:var(--ep-ink-2);text-align:center;">${DAYS[d]}</th>`).join("")}
+      </tr>`;
+
+      // Linhas por hora
+      body.innerHTML = HOURS.map(h => `
+        <tr>
+          <td style="padding:3px 8px;font-size:11px;color:var(--ep-ink-3);text-align:right;white-space:nowrap;">${String(h).padStart(2,"0")}:00</td>
+          ${SHOW.map(d => {
+            const avail = wa[d]?.has(h);
+            return `<td data-dow="${d}" data-hour="${h}"
+              style="padding:3px 6px;text-align:center;cursor:pointer;border-radius:6px;background:${avail ? "rgba(45,106,79,.15)" : "var(--ep-bg-2)"};color:${avail ? "#2d6a3e" : "var(--ep-ink-3)"};font-size:11px;font-weight:${avail ? "700" : "400"};border:1px solid ${avail ? "rgba(45,106,79,.3)" : "var(--ep-line)"};user-select:none;">
+              ${avail ? "✓" : "—"}
+            </td>`;
+          }).join("")}
+        </tr>
+      `).join("");
+
+      // Click handler
+      document.getElementById("availTable")?.querySelectorAll("td[data-dow]").forEach(td => {
+        td.addEventListener("click", () => {
+          const dow  = Number(td.dataset.dow);
+          const hour = Number(td.dataset.hour);
+          if (!wa[dow]) wa[dow] = new Set();
+          if (wa[dow].has(hour)) wa[dow].delete(hour);
+          else wa[dow].add(hour);
+          buildGrid(); // re-render
+        });
+      });
+    }
+
+    function loadAvail(t) {
+      wa = {};
+      const raw = t?.weeklyAvailability || {};
+      for (const [d, hours] of Object.entries(raw)) {
+        wa[Number(d)] = new Set(hours);
+      }
+      buildGrid();
+    }
+
+    // Pre-fill quando therapist carregar
+    const origApply = window._applyTherapistData;
+    window._applyTherapistData = function(t) {
+      if (origApply) origApply(t);
+      loadAvail(t);
+    };
+
+    const saveBtn = document.getElementById("availSaveBtn");
+    const statusEl = document.getElementById("availStatus");
+    if (saveBtn) {
+      saveBtn.addEventListener("click", async () => {
+        saveBtn.disabled = true; saveBtn.textContent = "Salvando…"; statusEl.textContent = "";
+        const payload = {};
+        for (const [d, hours] of Object.entries(wa)) {
+          payload[d] = [...hours].sort((a,b)=>a-b);
+        }
+        try {
+          const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
+            body: JSON.stringify({ weeklyAvailability: payload })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+          statusEl.textContent = "✓ Disponibilidade salva.";
+          statusEl.className = "ep-status is-ok";
+        } catch (e) {
+          statusEl.textContent = "Erro: " + e.message;
+          statusEl.className = "ep-status is-err";
+        } finally {
+          saveBtn.disabled = false; saveBtn.textContent = "Salvar disponibilidade";
+        }
+      });
+    }
+
+    buildGrid(); // grid vazio inicial
+  })();
 
   // ─── Exportar dados LGPD ─────────────────────────────────────────────
   // Fetch tudo do backend + decifra client-side (DEK) + empacota ZIP via
