@@ -75,12 +75,22 @@
 
   function typeLabel(type) {
     const map = {
-      warning:            "Aviso de conduta",
-      resolved_no_action: "Denúncia revisada",
-      resolved_action:    "Providências tomadas",
-      admin_message:      "Comunicado"
+      scheduling_request:  "Pedido de consulta",
+      warning:             "Aviso de conduta",
+      resolved_no_action:  "Denúncia revisada",
+      resolved_action:     "Providências tomadas",
+      admin_message:       "Comunicado"
     };
     return map[type] || "Notificação";
+  }
+
+  function typeIcon(type) {
+    const map = {
+      scheduling_request: "📅",
+      warning:            "⚠️",
+      admin_message:      "📢"
+    };
+    return map[type] || "🔔";
   }
 
   function esc(s) {
@@ -101,12 +111,12 @@
     }
 
     try {
-      const data = await apiFetch("/therapy/notifications");
+      const data = await apiFetch("/therapy/notificacoes");
       const items = data.items || [];
 
-      // Marca todas como lidas e zera badge
-      if (items.some(n => !n.read)) {
-        apiFetch("/therapy/notifications/read-all", { method: "PATCH" }).catch(() => {});
+      // Marca todas como lidas
+      if (items.some(n => !n.readAt)) {
+        apiFetch("/therapy/notificacoes/ler-todas", { method: "POST" }).catch(() => {});
       }
       if (window.EP_NOTIF) window.EP_NOTIF.setBadge(0);
 
@@ -119,20 +129,23 @@
       }
 
       listEl.innerHTML = items.map(n => {
-        const isUnread = !n.read;
-        return `<article style="padding: 16px 20px; border: 1px solid var(--ep-line); border-radius: 10px; background: var(--ep-surface); ${isUnread ? "border-left: 4px solid var(--ep-accent);" : ""}">
+        const isUnread = !n.readAt;
+        const card = `<article style="padding: 16px 20px; border: 1px solid var(--ep-line); border-radius: 10px; background: var(--ep-surface); ${isUnread ? "border-left: 4px solid var(--ep-accent);" : ""} cursor:${n.link ? "pointer" : "default"};" ${n.link ? `onclick="window.location.href='${esc(n.link)}'"` : ""}>
           <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+            <div style="font-size:28px; flex-shrink:0;">${typeIcon(n.type)}</div>
             <div style="flex:1; min-width:0;">
-              <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
                 ${isUnread ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--ep-accent);flex-shrink:0;display:inline-block;"></span>' : ''}
                 <span style="font-size:11px; font-weight:600; color:var(--ep-ink-3); text-transform:uppercase; letter-spacing:.05em;">${esc(typeLabel(n.type))}</span>
                 <span style="font-size:12px; color:var(--ep-ink-3);">${fmtDate(n.createdAt)}</span>
               </div>
-              <div style="font-size:15px; font-weight:600; color:var(--ep-ink); margin-bottom:8px;">${esc(n.title)}</div>
-              <div style="font-size:13.5px; color:var(--ep-ink-2); line-height:1.6; white-space:pre-wrap;">${esc(n.body)}</div>
+              <div style="font-size:15px; font-weight:600; color:var(--ep-ink); margin-bottom:6px;">${esc(n.title)}</div>
+              <div style="font-size:13.5px; color:var(--ep-ink-2); line-height:1.6;">${esc(n.body)}</div>
+              ${n.link ? `<div style="font-size:12px; color:var(--ep-accent); margin-top:8px; font-weight:500;">Ver no painel →</div>` : ""}
             </div>
           </div>
         </article>`;
+        return card;
       }).join("");
     } catch (err) {
       listEl.innerHTML = `<div class="ep-status is-err">Erro ao carregar notificações: ${esc(err.message)}</div>`;
