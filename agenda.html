@@ -280,6 +280,7 @@
     <div style="padding: 8px 28px 0;">
       <button type="button" class="ep-btn ep-btn--primary ep-btn--block" id="slotCreateSessionBtn" data-i18n="agenda:slot.createSession">📅 Criar consulta</button>
       <button type="button" class="ep-btn ep-btn--ghost ep-btn--block ep-mt-8" id="slotBlockBtn" data-i18n="agenda:slot.blockTime">🚫 Bloquear este horário</button>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--block ep-mt-8 ep-hide" id="slotRemoveBlockBtn" style="color:#b8453d;border-color:rgba(184,69,61,.3);">🔓 Remover bloqueio</button>
       <div class="ep-text-xs ep-text-muted ep-text-center ep-mt-12" style="margin-bottom: 12px;" data-i18n="agenda:slot.or">— ou —</div>
       <label class="ep-label" for="slotNoteText" data-i18n="agenda:slot.addNote">Adicionar observação</label>
       <textarea id="slotNoteText" class="ep-input" rows="3" maxlength="300" placeholder="Ex.: almoço, supervisão, ligar pro paciente X…" data-i18n-placeholder="agenda:slot.notePlaceholder"></textarea>
@@ -673,7 +674,9 @@
             `;
             block.addEventListener("click", (e) => {
               e.stopPropagation();
-              if (confirm(tr("agenda:js.confirmRemoveBlock", "Remover este bloqueio?"))) deleteBlackout(b.blackoutId);
+              const slotDate = new Date(cursor);
+              slotDate.setHours(startD.getHours(), 0, 0, 0);
+              openSlotActionModal(slotDate, b.blackoutId);
             });
             col.appendChild(block);
           }
@@ -1142,9 +1145,11 @@
 
   // ─── Slot action modal (criar consulta OU adicionar nota) ────────────
   let pendingSlotDate = null;
+  let pendingBlackoutId = null;
 
-  function openSlotActionModal(slotDate) {
-    pendingSlotDate = slotDate;
+  function openSlotActionModal(slotDate, blackoutId = null) {
+    pendingSlotDate  = slotDate;
+    pendingBlackoutId = blackoutId;
     const wd = slotDate.toLocaleDateString(currentLocale(), { weekday: "long" });
     const dm = slotDate.toLocaleDateString(currentLocale(), { day: "2-digit", month: "long" });
     const hm = `${pad2(slotDate.getHours())}:${pad2(slotDate.getMinutes())}`;
@@ -1153,6 +1158,10 @@
     document.getElementById("slotNoteText").value = "";
     document.getElementById("slotActionStatus").textContent = "";
     document.getElementById("slotActionStatus").className = "ep-status";
+    // Mostra/esconde botões conforme contexto (bloqueado ou livre)
+    const isBlocked = !!blackoutId;
+    document.getElementById("slotBlockBtn").classList.toggle("ep-hide", isBlocked);
+    document.getElementById("slotRemoveBlockBtn").classList.toggle("ep-hide", !isBlocked);
     document.getElementById("slotActionModal").classList.add("is-open");
   }
 
@@ -1161,6 +1170,18 @@
     // Antes redirecionava pro painel; agora abre o modal direto na agenda.
     document.getElementById("slotActionModal").classList.remove("is-open");
     newSessionModalApi.open({ scheduledAt: toISOLocal(pendingSlotDate) });
+  });
+
+  // Remover bloqueio pelo modal de slot
+  document.getElementById("slotRemoveBlockBtn").addEventListener("click", async () => {
+    if (!pendingBlackoutId) return;
+    const btn = document.getElementById("slotRemoveBlockBtn");
+    btn.disabled = true;
+    btn.textContent = tr("agenda:js.removing", "Removendo…");
+    await deleteBlackout(pendingBlackoutId);
+    document.getElementById("slotActionModal").classList.remove("is-open");
+    btn.disabled = false;
+    btn.textContent = "🔓 Remover bloqueio";
   });
 
   // Bloquear horário direto pelo clique no slot
