@@ -27,8 +27,15 @@
   <script src="./i18n/init.js?v=1-3" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <style>
-    /* Cápsula de idioma inline no topbar da sessão do paciente */
-    #top-lang-slot #ep-lang-switcher { position: static !important; }
+    /* Cápsula de idioma no canto direito do topbar da sessão do paciente */
+    #top-lang-slot {
+      margin-left: auto !important;
+      flex-shrink: 0;
+    }
+    #top-lang-slot #ep-lang-switcher {
+      position: static !important;
+      display: flex !important; /* sobrescreve o display:none do CSS global de sessão */
+    }
     #top-lang-slot #ep-lang-btn {
       background: transparent !important;
       border-color: rgba(255,255,255,.22) !important;
@@ -123,7 +130,7 @@
     </div>
     <!-- Slot da cápsula de idioma — init.js cria #ep-lang-switcher no body;
          movemos via JS para cá assim que aparecer. -->
-    <div id="top-lang-slot" style="position:relative;flex-shrink:0;margin-left:12px;"></div>
+    <div id="top-lang-slot" style="position:relative;flex-shrink:0;"></div>
   </header>
 
   <main class="ep-consult__main ep-consult__main--solo">
