@@ -147,7 +147,7 @@
 
 <script type="module">
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth } from "../js/firebase-config.js";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
 
   const MOODS = {
     1: { emoji:"😞", label:"Mal",     color:"#b8453d" },
@@ -156,46 +156,24 @@
     4: { emoji:"🙂", label:"Bem",     color:"#4a9e66" },
     5: { emoji:"😄", label:"Ótimo",   color:"#2d6a3e" },
   };
-  const DAYS = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+  const DAYS   = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
   const MONTHS = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
 
-  function todayKey(uid) {
-    return `ep:humor:${new Date().toISOString().slice(0,10)}:${uid}`;
-  }
-  function allKeys(uid) {
-    const keys = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith(`ep:humor:`) && k.endsWith(`:${uid}`)) keys.push(k);
-    }
-    return keys.sort().reverse();
-  }
-
   let selectedMood = null;
-  let currentUid   = null;
+  let currentUser  = null;
+  let humorData    = {}; // { "YYYY-MM-DD": mood }
+  let chartInstance = null;
 
-  onAuthStateChanged(auth, user => {
+  const todayStr = () => new Date().toISOString().slice(0, 10);
+
+  onAuthStateChanged(auth, async user => {
     if (!user) { window.location.href = "./login.html"; return; }
-    currentUid = user.uid;
-    init();
-  });
+    currentUser = user;
 
-  function init() {
+    // Mostra data
     const today = new Date();
-    const tKey  = todayKey(currentUid);
-    const saved = localStorage.getItem(tKey);
-
-    // Date display
     document.getElementById("heroDate").textContent =
       `${DAYS[today.getDay()]}, ${today.getDate()} de ${MONTHS[today.getMonth()]}`;
-
-    if (saved) {
-      const m = MOODS[Number(saved)];
-      document.getElementById("heroEmoji").textContent = m.emoji;
-      document.getElementById("heroLabel").textContent = m.label;
-      document.getElementById("savedMsg").classList.remove("a-hide");
-      markBtn(Number(saved));
-    }
 
     // Picker
     document.querySelectorAll(".mood-btn").forEach(btn => {
@@ -210,18 +188,73 @@
       });
     });
 
-    document.getElementById("saveBtn").addEventListener("click", () => {
-      if (!selectedMood) return;
-      localStorage.setItem(todayKey(currentUid), String(selectedMood));
-      document.getElementById("saveBtn").classList.add("a-hide");
-      document.getElementById("savedMsg").classList.remove("a-hide");
-      loadHistory();
-      buildChart();
-    });
+    document.getElementById("saveBtn").addEventListener("click", saveHumor);
 
-    loadHistory();
+    await loadFromBackend();
+  });
+
+  async function loadFromBackend() {
+    try {
+      const token = await currentUser.getIdToken();
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor?days=30`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (d.ok && d.items) {
+        humorData = {};
+        d.items.forEach(item => { humorData[item.date] = item.mood; });
+        // Sincroniza no localStorage como cache offline
+        Object.entries(humorData).forEach(([date, mood]) => {
+          localStorage.setItem(`ep:humor:${date}:${currentUser.uid}`, String(mood));
+        });
+      }
+    } catch {
+      // Offline: usa localStorage como fallback
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith("ep:humor:") && k.endsWith(`:${currentUser.uid}`)) {
+          const date = k.split(":")[2];
+          humorData[date] = Number(localStorage.getItem(k));
+        }
+      }
+    }
+    renderAll();
+  }
+
+  async function saveHumor() {
+    if (!selectedMood) return;
+    const date = todayStr();
+    humorData[date] = selectedMood;
+    // Cache local imediato
+    localStorage.setItem(`ep:humor:${date}:${currentUser.uid}`, String(selectedMood));
+    document.getElementById("saveBtn").classList.add("a-hide");
+    document.getElementById("savedMsg").classList.remove("a-hide");
+    renderAll();
+    // Salva no backend
+    try {
+      const token = await currentUser.getIdToken();
+      await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ mood: selectedMood, date })
+      });
+    } catch {}
+  }
+
+  function renderAll() {
+    const today = todayStr();
+    const todayMood = humorData[today];
+    if (todayMood) {
+      const m = MOODS[todayMood];
+      document.getElementById("heroEmoji").textContent = m.emoji;
+      document.getElementById("heroLabel").textContent = m.label;
+      document.getElementById("savedMsg").classList.remove("a-hide");
+      document.getElementById("saveBtn").classList.add("a-hide");
+      markBtn(todayMood);
+    }
     buildChart();
     buildStreak();
+    loadHistory();
   }
 
   function markBtn(mood) {
@@ -231,33 +264,23 @@
   }
 
   function buildChart() {
-    const keys = allKeys(currentUid).slice(0, 7).reverse();
     const labels = [], data = [], colors = [];
-    for (const k of keys) {
-      const dateStr = k.split(":")[2];
-      const d = new Date(dateStr);
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
       labels.push(DAYS[d.getDay()]);
-      const val = Number(localStorage.getItem(k)) || 0;
+      const val = humorData[dateStr] || 0;
       data.push(val);
-      colors.push(MOODS[val]?.color || "#ccc");
+      colors.push(val ? (MOODS[val]?.color || "#ccc") : "rgba(0,0,0,.06)");
     }
     const ctx = document.getElementById("moodChart").getContext("2d");
-    new Chart(ctx, {
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(ctx, {
       type: "bar",
-      data: {
-        labels,
-        datasets: [{
-          data,
-          backgroundColor: colors,
-          borderRadius: 8,
-          borderSkipped: false,
-        }]
-      },
+      data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 8, borderSkipped: false }] },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: {
-          callbacks: { label: c => MOODS[c.raw]?.label || "" }
-        }},
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => MOODS[c.raw]?.label || "Sem registro" } } },
         scales: {
           y: { min: 0, max: 5, ticks: { display: false }, grid: { color: "rgba(0,0,0,.04)" } },
           x: { ticks: { font: { size: 11, weight: "600" } }, grid: { display: false } }
@@ -267,36 +290,30 @@
   }
 
   function buildStreak() {
-    const keys = allKeys(currentUid);
     let streak = 0;
     const today = new Date();
     for (let i = 0; i < 365; i++) {
       const d = new Date(today); d.setDate(today.getDate() - i);
-      const k = `ep:humor:${d.toISOString().slice(0,10)}:${currentUid}`;
-      if (localStorage.getItem(k)) streak++;
+      if (humorData[d.toISOString().slice(0, 10)]) streak++;
       else if (i > 0) break;
     }
     document.getElementById("streakNum").textContent = streak;
   }
 
   function loadHistory() {
-    const keys = allKeys(currentUid).slice(0, 30);
+    const sorted = Object.entries(humorData).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 30);
     const list = document.getElementById("historyList");
-    if (!keys.length) return;
-    list.innerHTML = keys.map(k => {
-      const dateStr = k.split(":")[2];
-      const d    = new Date(dateStr + "T12:00:00");
-      const val  = Number(localStorage.getItem(k));
-      const m    = MOODS[val] || MOODS[3];
-      const dayName  = DAYS[d.getDay()];
-      const dateLabel = `${d.getDate()} de ${MONTHS[d.getMonth()]}`;
+    if (!sorted.length) return;
+    list.innerHTML = sorted.map(([dateStr, val]) => {
+      const d = new Date(dateStr + "T12:00:00");
+      const m = MOODS[val] || MOODS[3];
       return `<div class="history-item">
         <div class="history-emoji">${m.emoji}</div>
         <div class="history-info">
           <div class="history-day">${m.label}</div>
-          <div class="history-label">${dayName}</div>
+          <div class="history-label">${DAYS[d.getDay()]}</div>
         </div>
-        <div class="history-date">${dateLabel}</div>
+        <div class="history-date">${d.getDate()} de ${MONTHS[d.getMonth()]}</div>
       </div>`;
     }).join("");
   }
