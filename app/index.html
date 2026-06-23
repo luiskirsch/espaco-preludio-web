@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Espaço Prelúdio</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="apple-touch-icon" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%; background: #1c1f1d;
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior: none;
+    }
+    .splash {
+      height: 100dvh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+    }
+    .splash__logo {
+      width: 80px; height: 80px; border-radius: 22px;
+      background: #2d3a30; display: flex; align-items: center; justify-content: center;
+      animation: pop 500ms cubic-bezier(.34,1.56,.64,1) forwards;
+      opacity: 0;
+    }
+    .splash__logo img { width: 52px; height: 52px; object-fit: contain; }
+    .splash__name {
+      font-family: 'Fraunces', serif; font-size: 26px; font-weight: 500;
+      color: #fff; opacity: 0; animation: fadeUp 400ms ease 300ms forwards;
+    }
+    .splash__sub {
+      font-size: 13px; color: rgba(255,255,255,.45);
+      opacity: 0; animation: fadeUp 400ms ease 500ms forwards;
+    }
+    .splash__loader {
+      width: 32px; height: 3px; background: rgba(255,255,255,.15);
+      border-radius: 2px; overflow: hidden; margin-top: 20px;
+      opacity: 0; animation: fadeUp 400ms ease 600ms forwards;
+    }
+    .splash__loader::after {
+      content: ""; display: block; width: 50%; height: 100%;
+      background: #4a9e66; border-radius: 2px;
+      animation: load 1.2s ease 700ms infinite;
+    }
+    @keyframes pop {
+      from { opacity: 0; transform: scale(.6); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes load {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(300%); }
+    }
+  </style>
+</head>
+<body>
+<div class="splash">
+  <div class="splash__logo">
+    <img src="/logo_oficial_fundo_transparente.png?v=2" alt="Espaço Prelúdio">
+  </div>
+  <div class="splash__name">Espaço Prelúdio</div>
+  <div class="splash__sub">Cuide da sua saúde</div>
+  <div class="splash__loader"></div>
+</div>
+
+<script type="module">
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth } from "../js/firebase-config.js";
+
+  // Registra service worker
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("../sw-app.js").catch(() => {});
+  }
+
+  // Redireciona após animação
+  setTimeout(() => {
+    onAuthStateChanged(auth, user => {
+      window.location.href = user ? "./home.html" : "./login.html";
+    });
+  }, 1200);
+</script>
+</body>
+</html>

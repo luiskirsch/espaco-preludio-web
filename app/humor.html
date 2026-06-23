@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Humor · Espaço Prelúdio</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./app.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    .mood-hero {
+      background: linear-gradient(135deg, #1c1f1d 0%, #2d3a30 100%);
+      padding: 28px 20px 32px; text-align: center; color: #fff;
+    }
+    .mood-hero__emoji { font-size: 64px; display: block; margin-bottom: 12px;
+      animation: bounce 600ms cubic-bezier(.34,1.56,.64,1); }
+    @keyframes bounce { from{transform:scale(.5);opacity:0} to{transform:scale(1);opacity:1} }
+    .mood-hero__label { font-family: var(--ff-serif); font-size: 24px; font-weight: 500; }
+    .mood-hero__date  { font-size: 12px; color: rgba(255,255,255,.5); margin-top: 4px; }
+    .mood-picker-card { margin: -16px 16px 0; border-radius: var(--a-radius); background: var(--a-surface); box-shadow: var(--a-shadow-md); padding: 20px 16px; }
+    .mood-picker-label { font-size: 13px; font-weight: 600; color: var(--a-ink2); text-align: center; margin-bottom: 16px; }
+    .mood-picker-row { display: flex; justify-content: center; gap: 10px; }
+    .mood-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      background: none; border: 2px solid var(--a-line); border-radius: 14px;
+      padding: 12px 10px; cursor: pointer; transition: all 150ms; min-width: 56px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mood-btn:active { transform: scale(.94); }
+    .mood-btn.is-selected { border-color: var(--a-accent); background: rgba(45,106,62,.08); }
+    .mood-btn__emoji { font-size: 28px; }
+    .mood-btn__label { font-size: 10px; font-weight: 600; color: var(--a-ink3); }
+    .mood-btn.is-selected .mood-btn__label { color: var(--a-accent); }
+    .save-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 16px; }
+    .chart-card { background: var(--a-surface); border-radius: var(--a-radius); box-shadow: var(--a-shadow); padding: 18px 16px; }
+    .chart-title { font-size: 14px; font-weight: 700; color: var(--a-ink); margin-bottom: 4px; }
+    .chart-sub   { font-size: 12px; color: var(--a-ink3); margin-bottom: 16px; }
+    .chart-wrap  { height: 160px; position: relative; }
+    .history-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--a-line); }
+    .history-item:last-child { border-bottom: none; }
+    .history-emoji { font-size: 28px; flex-shrink: 0; }
+    .history-info  { flex: 1; }
+    .history-day   { font-size: 13px; font-weight: 600; color: var(--a-ink); }
+    .history-label { font-size: 12px; color: var(--a-ink2); }
+    .history-date  { font-family: var(--ff-mono); font-size: 11px; color: var(--a-ink3); }
+    .streak-card {
+      background: linear-gradient(135deg, rgba(45,106,62,.1), rgba(45,106,62,.04));
+      border: 1px solid rgba(45,106,62,.2);
+      border-radius: var(--a-radius); padding: 16px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .streak-num { font-family: var(--ff-serif); font-size: 40px; font-weight: 500; color: var(--a-accent); line-height: 1; }
+  </style>
+</head>
+<body>
+<div class="a-shell">
+
+  <div class="a-header">
+    <button class="a-header__back" onclick="history.back()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="a-header__title">Meu humor</div>
+  </div>
+
+  <div class="a-page a-page--no-nav a-page-enter">
+
+    <!-- Hero humor do dia -->
+    <div class="mood-hero" id="moodHero">
+      <span class="mood-hero__emoji" id="heroEmoji">😐</span>
+      <div class="mood-hero__label" id="heroLabel">Como está você hoje?</div>
+      <div class="mood-hero__date" id="heroDate"></div>
+    </div>
+
+    <!-- Picker -->
+    <div class="a-section">
+      <div class="mood-picker-card">
+        <div class="mood-picker-label">Toque para registrar seu humor</div>
+        <div class="mood-picker-row" id="moodPicker">
+          <button class="mood-btn" data-mood="1" data-emoji="😞" data-label="Mal">
+            <span class="mood-btn__emoji">😞</span>
+            <span class="mood-btn__label">Mal</span>
+          </button>
+          <button class="mood-btn" data-mood="2" data-emoji="😔" data-label="Cansado">
+            <span class="mood-btn__emoji">😔</span>
+            <span class="mood-btn__label">Cansado</span>
+          </button>
+          <button class="mood-btn" data-mood="3" data-emoji="😐" data-label="Ok">
+            <span class="mood-btn__emoji">😐</span>
+            <span class="mood-btn__label">Ok</span>
+          </button>
+          <button class="mood-btn" data-mood="4" data-emoji="🙂" data-label="Bem">
+            <span class="mood-btn__emoji">🙂</span>
+            <span class="mood-btn__label">Bem</span>
+          </button>
+          <button class="mood-btn" data-mood="5" data-emoji="😄" data-label="Ótimo">
+            <span class="mood-btn__emoji">😄</span>
+            <span class="mood-btn__label">Ótimo</span>
+          </button>
+        </div>
+        <div class="save-row">
+          <button class="a-btn a-btn--accent a-hide" id="saveBtn" style="min-width:140px;">Salvar humor</button>
+          <span class="a-hide" id="savedMsg" style="font-size:13px;color:var(--a-accent);font-weight:600;">✓ Registrado hoje!</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Streak -->
+    <div class="a-section" style="padding-top:0;" id="streakSection">
+      <div class="streak-card">
+        <div class="streak-num" id="streakNum">0</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--a-accent);">dias seguidos</div>
+          <div style="font-size:12px;color:var(--a-ink2);margin-top:3px;">registrando seu humor 🌱</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico semanal -->
+    <div class="a-section" style="padding-top:0;">
+      <div class="chart-card">
+        <div class="chart-title">Últimos 7 dias</div>
+        <div class="chart-sub">Seu índice de bem-estar</div>
+        <div class="chart-wrap">
+          <canvas id="moodChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Histórico -->
+    <div class="a-section" style="padding-top:0;">
+      <div style="font-size:15px;font-weight:700;margin-bottom:12px;">Histórico</div>
+      <div class="a-card a-card--pad" id="historyList">
+        <div class="a-empty" style="padding:24px 0;">
+          <div class="a-empty__icon" style="font-size:32px;">📝</div>
+          <div class="a-empty__sub">Seus registros de humor aparecerão aqui.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth } from "../js/firebase-config.js";
+
+  const MOODS = {
+    1: { emoji:"😞", label:"Mal",     color:"#b8453d" },
+    2: { emoji:"😔", label:"Cansado", color:"#d4704a" },
+    3: { emoji:"😐", label:"Ok",      color:"#c8963a" },
+    4: { emoji:"🙂", label:"Bem",     color:"#4a9e66" },
+    5: { emoji:"😄", label:"Ótimo",   color:"#2d6a3e" },
+  };
+  const DAYS = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+  const MONTHS = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+
+  function todayKey(uid) {
+    return `ep:humor:${new Date().toISOString().slice(0,10)}:${uid}`;
+  }
+  function allKeys(uid) {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(`ep:humor:`) && k.endsWith(`:${uid}`)) keys.push(k);
+    }
+    return keys.sort().reverse();
+  }
+
+  let selectedMood = null;
+  let currentUid   = null;
+
+  onAuthStateChanged(auth, user => {
+    if (!user) { window.location.href = "./login.html"; return; }
+    currentUid = user.uid;
+    init();
+  });
+
+  function init() {
+    const today = new Date();
+    const tKey  = todayKey(currentUid);
+    const saved = localStorage.getItem(tKey);
+
+    // Date display
+    document.getElementById("heroDate").textContent =
+      `${DAYS[today.getDay()]}, ${today.getDate()} de ${MONTHS[today.getMonth()]}`;
+
+    if (saved) {
+      const m = MOODS[Number(saved)];
+      document.getElementById("heroEmoji").textContent = m.emoji;
+      document.getElementById("heroLabel").textContent = m.label;
+      document.getElementById("savedMsg").classList.remove("a-hide");
+      markBtn(Number(saved));
+    }
+
+    // Picker
+    document.querySelectorAll(".mood-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        selectedMood = Number(btn.dataset.mood);
+        markBtn(selectedMood);
+        const m = MOODS[selectedMood];
+        document.getElementById("heroEmoji").textContent = m.emoji;
+        document.getElementById("heroLabel").textContent = m.label;
+        document.getElementById("saveBtn").classList.remove("a-hide");
+        document.getElementById("savedMsg").classList.add("a-hide");
+      });
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      if (!selectedMood) return;
+      localStorage.setItem(todayKey(currentUid), String(selectedMood));
+      document.getElementById("saveBtn").classList.add("a-hide");
+      document.getElementById("savedMsg").classList.remove("a-hide");
+      loadHistory();
+      buildChart();
+    });
+
+    loadHistory();
+    buildChart();
+    buildStreak();
+  }
+
+  function markBtn(mood) {
+    document.querySelectorAll(".mood-btn").forEach(b => {
+      b.classList.toggle("is-selected", Number(b.dataset.mood) === mood);
+    });
+  }
+
+  function buildChart() {
+    const keys = allKeys(currentUid).slice(0, 7).reverse();
+    const labels = [], data = [], colors = [];
+    for (const k of keys) {
+      const dateStr = k.split(":")[2];
+      const d = new Date(dateStr);
+      labels.push(DAYS[d.getDay()]);
+      const val = Number(localStorage.getItem(k)) || 0;
+      data.push(val);
+      colors.push(MOODS[val]?.color || "#ccc");
+    }
+    const ctx = document.getElementById("moodChart").getContext("2d");
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: colors,
+          borderRadius: 8,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: {
+          callbacks: { label: c => MOODS[c.raw]?.label || "" }
+        }},
+        scales: {
+          y: { min: 0, max: 5, ticks: { display: false }, grid: { color: "rgba(0,0,0,.04)" } },
+          x: { ticks: { font: { size: 11, weight: "600" } }, grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  function buildStreak() {
+    const keys = allKeys(currentUid);
+    let streak = 0;
+    const today = new Date();
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(today); d.setDate(today.getDate() - i);
+      const k = `ep:humor:${d.toISOString().slice(0,10)}:${currentUid}`;
+      if (localStorage.getItem(k)) streak++;
+      else if (i > 0) break;
+    }
+    document.getElementById("streakNum").textContent = streak;
+  }
+
+  function loadHistory() {
+    const keys = allKeys(currentUid).slice(0, 30);
+    const list = document.getElementById("historyList");
+    if (!keys.length) return;
+    list.innerHTML = keys.map(k => {
+      const dateStr = k.split(":")[2];
+      const d    = new Date(dateStr + "T12:00:00");
+      const val  = Number(localStorage.getItem(k));
+      const m    = MOODS[val] || MOODS[3];
+      const dayName  = DAYS[d.getDay()];
+      const dateLabel = `${d.getDate()} de ${MONTHS[d.getMonth()]}`;
+      return `<div class="history-item">
+        <div class="history-emoji">${m.emoji}</div>
+        <div class="history-info">
+          <div class="history-day">${m.label}</div>
+          <div class="history-label">${dayName}</div>
+        </div>
+        <div class="history-date">${dateLabel}</div>
+      </div>`;
+    }).join("");
+  }
+</script>
+</body>
+</html>
