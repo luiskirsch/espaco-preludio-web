@@ -378,6 +378,23 @@
       </div>
 
       <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
+        <div class="ep-eyebrow">Plano de origem (intendedTier)</div>
+        <div class="ep-flex" style="gap: 8px; align-items: end;">
+          <div class="ep-field" style="flex: 1;">
+            <label class="ep-label" for="newIntendedTier">Plano de origem</label>
+            <select id="newIntendedTier" class="ep-input">
+              <option value="">— atual: ${escapeHtml(it.intendedTier || "profissional")} —</option>
+              <option value="profissional">Profissional</option>
+              <option value="empresa">Empresa</option>
+              <option value="estudante">Estudante</option>
+              <option value="recem-formado">Recém-formado</option>
+            </select>
+          </div>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="intendedTier">Aplicar</button>
+        </div>
+      </div>
+
+      <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
         <div class="ep-eyebrow">Verificação manual</div>
         <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="toggleVerif">${it.verificado ? "Desmarcar verificado" : "Marcar verificado"}</button>
       </div>
@@ -413,6 +430,10 @@
       const v = document.getElementById("newPlano").value;
       if (!v) { statusEl.className = "ep-status is-err"; statusEl.textContent = "Escolha um plano."; return; }
       body.setPlano = v;
+    } else if (action === "intendedTier") {
+      const v = document.getElementById("newIntendedTier").value;
+      if (!v) { statusEl.className = "ep-status is-err"; statusEl.textContent = "Escolha um plano de origem."; return; }
+      body.setIntendedTier = v;
     } else if (action === "toggleVerif") {
       const it = allItems.find(x => x.uid === uid);
       body.toggleVerificado = !it?.verificado;
