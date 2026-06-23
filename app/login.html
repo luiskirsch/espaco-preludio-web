@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Entrar · Espaço Prelúdio</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="apple-touch-icon" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./app.css">
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100dvh; }
+    .login-wrap {
+      flex: 1; display: flex; flex-direction: column;
+      justify-content: center; padding: 32px 24px 48px;
+      max-width: 430px; margin: 0 auto; width: 100%;
+    }
+    .login-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+    .login-brand img { width: 44px; height: 44px; object-fit: contain; }
+    .login-brand__text { display: flex; flex-direction: column; }
+    .login-brand__lead { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--a-ink3); }
+    .login-brand__name { font-family: var(--ff-serif); font-size: 20px; font-weight: 500; color: var(--a-ink); }
+    .login-toggle { display: flex; background: var(--a-bg2); border-radius: 999px; padding: 3px; margin-bottom: 28px; margin-top: 24px; }
+    .login-toggle__btn {
+      flex: 1; height: 38px; border-radius: 999px; border: none;
+      font-family: var(--ff-sans); font-size: 13px; font-weight: 600;
+      cursor: pointer; background: none; color: var(--a-ink3); transition: all 150ms;
+    }
+    .login-toggle__btn.is-active { background: var(--a-surface); color: var(--a-ink); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .login-footer { margin-top: 24px; text-align: center; font-size: 12px; color: var(--a-ink3); line-height: 1.6; }
+    .login-footer a { color: var(--a-accent); text-decoration: none; font-weight: 600; }
+    .pwd-wrap { position: relative; }
+    .pwd-eye { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--a-ink3); padding: 4px; }
+  </style>
+</head>
+<body>
+<div class="a-shell">
+  <div class="login-wrap a-page-enter">
+
+    <div class="login-brand">
+      <img src="/logo_oficial_fundo_transparente.png?v=2" alt="Espaço Prelúdio">
+      <div class="login-brand__text">
+        <span class="login-brand__lead">Espaço</span>
+        <span class="login-brand__name">Prelúdio</span>
+      </div>
+    </div>
+
+    <h1 class="a-h1">Olá 👋</h1>
+    <p class="a-sub a-mt-8">Acesse o programa de saúde da sua empresa ou escola.</p>
+
+    <div class="login-toggle">
+      <button type="button" class="login-toggle__btn is-active" id="tabEntrar">Entrar</button>
+      <button type="button" class="login-toggle__btn" id="tabCadastrar">Criar conta</button>
+    </div>
+
+    <!-- Form Entrar -->
+    <form id="formEntrar" class="a-flex-col a-gap-12" novalidate>
+      <div class="a-field">
+        <label class="a-field__label">E-mail</label>
+        <input id="loginEmail" class="a-input" type="email" placeholder="seu@email.com" autocomplete="email" inputmode="email">
+      </div>
+      <div class="a-field">
+        <label class="a-field__label">Senha</label>
+        <div class="pwd-wrap">
+          <input id="loginSenha" class="a-input" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:44px;">
+          <button type="button" class="pwd-eye" id="eyeEntrar">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <a href="./recuperar.html" style="font-size:12px;color:var(--a-accent);text-decoration:none;font-weight:600;margin-top:4px;display:inline-block;">Esqueceu a senha?</a>
+      </div>
+      <div id="erroEntrar" class="a-alert a-alert--err a-hide"></div>
+      <button type="submit" class="a-btn a-btn--primary a-btn--block a-btn--lg a-mt-8" id="btnEntrar">Entrar</button>
+    </form>
+
+    <!-- Form Cadastrar -->
+    <form id="formCadastrar" class="a-flex-col a-gap-12 a-hide" novalidate>
+      <div class="a-field">
+        <label class="a-field__label">Nome completo</label>
+        <input id="regNome" class="a-input" type="text" placeholder="Seu nome" autocomplete="name">
+      </div>
+      <div class="a-field">
+        <label class="a-field__label">E-mail</label>
+        <input id="regEmail" class="a-input" type="email" placeholder="seu@email.com" autocomplete="email" inputmode="email">
+      </div>
+      <div class="a-field">
+        <label class="a-field__label">Senha</label>
+        <div class="pwd-wrap">
+          <input id="regSenha" class="a-input" type="password" placeholder="Mín. 8 caracteres" autocomplete="new-password" style="padding-right:44px;">
+          <button type="button" class="pwd-eye" id="eyeReg">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="a-field">
+        <label class="a-field__label">Confirmar senha</label>
+        <input id="regSenha2" class="a-input" type="password" placeholder="Repita a senha" autocomplete="new-password">
+      </div>
+      <div id="erroReg" class="a-alert a-alert--err a-hide"></div>
+      <button type="submit" class="a-btn a-btn--primary a-btn--block a-btn--lg a-mt-8" id="btnReg">Criar minha conta</button>
+    </form>
+
+    <div class="login-footer">
+      Ao continuar você aceita nossa <a href="/politica.html">Política de Privacidade</a><br>
+      e os <a href="/termos.html">Termos de Uso</a>.
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth } from "../js/firebase-config.js";
+
+  // Já logado → vai pro home
+  onAuthStateChanged(auth, u => { if (u) window.location.href = "./home.html"; });
+
+  // Tabs
+  const tabE = document.getElementById("tabEntrar");
+  const tabC = document.getElementById("tabCadastrar");
+  const fE   = document.getElementById("formEntrar");
+  const fC   = document.getElementById("formCadastrar");
+  tabE.addEventListener("click", () => { tabE.classList.add("is-active"); tabC.classList.remove("is-active"); fE.classList.remove("a-hide"); fC.classList.add("a-hide"); });
+  tabC.addEventListener("click", () => { tabC.classList.add("is-active"); tabE.classList.remove("is-active"); fC.classList.remove("a-hide"); fE.classList.add("a-hide"); });
+
+  // Olho senha
+  function togglePwd(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    btn.innerHTML = show
+      ? `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+      : `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  }
+  document.getElementById("eyeEntrar").addEventListener("click", () => togglePwd("loginSenha", document.getElementById("eyeEntrar")));
+  document.getElementById("eyeReg").addEventListener("click",    () => togglePwd("regSenha",   document.getElementById("eyeReg")));
+
+  const ERROS = {
+    "auth/user-not-found":  "E-mail não encontrado. Crie uma conta.",
+    "auth/wrong-password":  "Senha incorreta.",
+    "auth/invalid-email":   "E-mail inválido.",
+    "auth/email-already-in-use": "Este e-mail já tem cadastro. Entre com sua senha.",
+    "auth/weak-password":   "Senha fraca — use ao menos 8 caracteres.",
+    "auth/invalid-credential": "E-mail ou senha incorretos.",
+  };
+
+  // Login
+  fE.addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = document.getElementById("btnEntrar");
+    const erro = document.getElementById("erroEntrar");
+    erro.classList.add("a-hide");
+    btn.disabled = true; btn.textContent = "Entrando…";
+    try {
+      await signInWithEmailAndPassword(auth, document.getElementById("loginEmail").value.trim(), document.getElementById("loginSenha").value);
+    } catch (err) {
+      erro.textContent = ERROS[err.code] || "Erro ao entrar. Tente novamente.";
+      erro.classList.remove("a-hide");
+      btn.disabled = false; btn.textContent = "Entrar";
+    }
+  });
+
+  // Cadastro
+  fC.addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn  = document.getElementById("btnReg");
+    const erro = document.getElementById("erroReg");
+    erro.classList.add("a-hide");
+    const nome  = document.getElementById("regNome").value.trim();
+    const email = document.getElementById("regEmail").value.trim();
+    const senha = document.getElementById("regSenha").value;
+    const senha2 = document.getElementById("regSenha2").value;
+    if (!nome)  { erro.textContent = "Informe seu nome."; erro.classList.remove("a-hide"); return; }
+    if (senha !== senha2) { erro.textContent = "As senhas não conferem."; erro.classList.remove("a-hide"); return; }
+    if (senha.length < 8) { erro.textContent = "A senha precisa ter ao menos 8 caracteres."; erro.classList.remove("a-hide"); return; }
+    btn.disabled = true; btn.textContent = "Criando conta…";
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, senha);
+      await updateProfile(cred.user, { displayName: nome });
+    } catch (err) {
+      erro.textContent = ERROS[err.code] || "Erro ao criar conta.";
+      erro.classList.remove("a-hide");
+      btn.disabled = false; btn.textContent = "Criar minha conta";
+    }
+  });
+</script>
+</body>
+</html>

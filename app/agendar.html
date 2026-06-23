@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Agendar · Espaço Prelúdio</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./app.css">
+  <style>
+    .prof-hero { padding: 20px 16px; display: flex; gap: 14px; align-items: center; border-bottom: 1px solid var(--a-line); }
+    .prof-hero__avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--a-bg2); display:flex;align-items:center;justify-content:center; font-family:var(--ff-serif);font-size:22px;color:var(--a-ink2); overflow:hidden; flex-shrink:0; }
+    .prof-hero__avatar img { width:100%;height:100%;object-fit:cover; }
+    .prof-hero__name { font-family: var(--ff-serif); font-size: 20px; font-weight: 500; }
+    .prof-hero__esp  { font-size: 13px; color: var(--a-ink2); margin-top: 3px; }
+    .prof-hero__crp  { font-size: 11px; color: var(--a-ink3); margin-top: 2px; }
+    .step-header { padding: 16px 16px 8px; }
+    .step-header__title { font-size: 16px; font-weight: 700; color: var(--a-ink); }
+    .step-header__sub   { font-size: 12px; color: var(--a-ink3); margin-top: 2px; }
+    .confirm-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--a-line); }
+    .confirm-row:last-child { border-bottom: none; }
+    .confirm-row__label { font-size: 12px; color: var(--a-ink3); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+    .confirm-row__val   { font-size: 14px; color: var(--a-ink); font-weight: 600; text-align: right; }
+    .success-wrap { padding: 48px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .success-icon { font-size: 64px; }
+  </style>
+</head>
+<body>
+<div class="a-shell">
+
+  <!-- Header -->
+  <div class="a-header">
+    <button class="a-header__back" id="btnBack">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="a-header__title">Agendar consulta</div>
+  </div>
+
+  <div class="a-page a-page--no-nav a-page-enter">
+
+    <!-- Perfil do profissional -->
+    <div class="prof-hero" id="profHero">
+      <div class="prof-hero__avatar" id="profAvatar">?</div>
+      <div>
+        <div class="prof-hero__name" id="profNome"><div class="a-skel" style="width:160px;height:20px;"></div></div>
+        <div class="prof-hero__esp"  id="profEsp"><div class="a-skel a-mt-4" style="width:100px;height:14px;"></div></div>
+        <div class="prof-hero__crp"  id="profCrp"></div>
+      </div>
+    </div>
+
+    <!-- Steps -->
+    <div style="padding:14px 16px 6px;display:flex;justify-content:space-between;align-items:center;">
+      <div class="a-steps" id="stepsIndicator">
+        <div class="a-steps__dot is-active" id="dot1"></div>
+        <div class="a-steps__dot" id="dot2"></div>
+        <div class="a-steps__dot" id="dot3"></div>
+        <div class="a-steps__dot" id="dot4"></div>
+      </div>
+      <span id="stepLabel" style="font-size:12px;color:var(--a-ink3);">Passo 1 de 4</span>
+    </div>
+
+    <!-- STEP 1: Escolha o dia -->
+    <div id="step1">
+      <div class="step-header">
+        <div class="step-header__title">📅 Escolha o dia</div>
+        <div class="step-header__sub" id="noticeText"></div>
+      </div>
+      <div class="a-section" style="padding-top:8px;">
+        <div class="a-cal__days" id="calDays"></div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Escolha o horário -->
+    <div id="step2" class="a-hide">
+      <div class="step-header">
+        <div class="step-header__title">🕐 Escolha o horário</div>
+        <div class="step-header__sub" id="step2Sub"></div>
+      </div>
+      <div class="a-section" style="padding-top:8px;">
+        <div id="slotsLoading" class="a-flex-col a-gap-8">
+          <div class="a-skel" style="height:44px;border-radius:10px;"></div>
+          <div class="a-skel" style="height:44px;border-radius:10px;"></div>
+        </div>
+        <div class="a-slots a-hide" id="slotsGrid"></div>
+        <div class="a-empty a-hide" id="slotsEmpty">
+          <div class="a-empty__icon">😔</div>
+          <div class="a-empty__title">Sem horários</div>
+          <div class="a-empty__sub">Não há horários disponíveis neste dia. Tente outro.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Dados e observação -->
+    <div id="step3" class="a-hide">
+      <div class="step-header">
+        <div class="step-header__title">📝 Seus dados</div>
+        <div class="step-header__sub">Informe seus dados para o profissional.</div>
+      </div>
+      <div class="a-section" style="padding-top:8px;">
+        <div class="a-field">
+          <label class="a-field__label">Seu nome *</label>
+          <input id="patName" class="a-input" type="text" placeholder="Nome completo" autocomplete="name">
+        </div>
+        <div class="a-field">
+          <label class="a-field__label">E-mail *</label>
+          <input id="patEmail" class="a-input" type="email" placeholder="seu@email.com" autocomplete="email" inputmode="email">
+        </div>
+        <div class="a-field">
+          <label class="a-field__label">WhatsApp *</label>
+          <input id="patPhone" class="a-input" type="tel" placeholder="(11) 99999-9999" autocomplete="tel" inputmode="tel">
+        </div>
+        <div class="a-field">
+          <label class="a-field__label">Observação (opcional)</label>
+          <textarea id="patNotes" class="a-input a-textarea" rows="3" placeholder="Ex.: primeira consulta, prefiro videochamada…"></textarea>
+        </div>
+        <div id="step3Erro" class="a-alert a-alert--err a-hide a-mt-8"></div>
+      </div>
+    </div>
+
+    <!-- STEP 4: Confirmação -->
+    <div id="step4" class="a-hide">
+      <div class="step-header">
+        <div class="step-header__title">✅ Confirmar pedido</div>
+        <div class="step-header__sub">Revise antes de enviar.</div>
+      </div>
+      <div class="a-section" style="padding-top:8px;">
+        <div class="a-card a-card--pad">
+          <div class="confirm-row"><span class="confirm-row__label">Profissional</span><span class="confirm-row__val" id="confProf">—</span></div>
+          <div class="confirm-row"><span class="confirm-row__label">Data</span><span class="confirm-row__val" id="confData">—</span></div>
+          <div class="confirm-row"><span class="confirm-row__label">Horário</span><span class="confirm-row__val" id="confHora">—</span></div>
+          <div class="confirm-row"><span class="confirm-row__label">Paciente</span><span class="confirm-row__val" id="confPac">—</span></div>
+        </div>
+        <div id="step4Erro" class="a-alert a-alert--err a-hide a-mt-12"></div>
+      </div>
+    </div>
+
+    <!-- Sucesso -->
+    <div id="stepSuccess" class="a-hide">
+      <div class="success-wrap">
+        <div class="success-icon">🎉</div>
+        <h2 class="a-h2">Pedido enviado!</h2>
+        <p class="a-sub" style="max-width:280px;">O profissional vai analisar seu pedido e confirmar em breve. Você receberá uma notificação.</p>
+        <a href="./consultas.html" class="a-btn a-btn--accent a-btn--block a-mt-8">Ver minhas consultas</a>
+        <a href="./home.html" class="a-btn a-btn--ghost a-btn--block">Voltar ao início</a>
+      </div>
+    </div>
+
+    <!-- Botão avançar / confirmar -->
+    <div id="footerBtn" class="a-section" style="padding-top:8px;">
+      <button class="a-btn a-btn--primary a-btn--block a-btn--lg" id="btnNext">Continuar</button>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+
+  const slug = new URLSearchParams(location.search).get("p") || "";
+  if (!slug) window.location.href = "./buscar.html";
+
+  let therapist = null;
+  let currentUser = null;
+  let selectedDate = null;
+  let selectedSlot = null;
+  let step = 1;
+
+  onAuthStateChanged(auth, u => { if (!u) window.location.href = "./login.html"; else currentUser = u; });
+
+  document.getElementById("btnBack").addEventListener("click", () => {
+    if (step === 1) history.back();
+    else goStep(step - 1);
+  });
+
+  // Carrega dados do profissional
+  async function loadProf() {
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/public/profissionais?q=${encodeURIComponent(slug)}`);
+      const d = await r.json().catch(() => ({}));
+      const prof = (d.items||[]).find(p => p.slug === slug || p.publicSchedulingSlug === slug);
+      if (!prof) return;
+      therapist = prof;
+      document.getElementById("profNome").textContent = prof.displayName || "Profissional";
+      document.getElementById("profEsp").textContent  = prof.especialidade || "";
+      document.getElementById("profCrp").textContent  = prof.conselhoLabel && prof.numeroConselho ? `${prof.conselhoLabel} ${prof.numeroConselho}` : "";
+      if (prof.photoBase64) {
+        document.getElementById("profAvatar").innerHTML = `<img src="data:${prof.photoMime||'image/jpeg'};base64,${prof.photoBase64}" alt="">`;
+      } else {
+        document.getElementById("profAvatar").textContent = (prof.displayName||"?").match(/\b\p{L}/gu)?.slice(0,2).join("").toUpperCase()||"?";
+      }
+      document.getElementById("confProf").textContent = prof.displayName;
+      buildCalendar();
+    } catch { }
+  }
+  loadProf();
+
+  // Calendário — próximos 14 dias
+  function buildCalendar() {
+    const container = document.getElementById("calDays");
+    const DAYS = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+    const MONTHS = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+    const today = new Date(); today.setHours(0,0,0,0);
+    const minDate = new Date(today); minDate.setDate(today.getDate() + 1);
+    const maxDate = new Date(today); maxDate.setDate(today.getDate() + 30);
+    container.innerHTML = "";
+    for (let i = 1; i <= 30; i++) {
+      const d = new Date(today); d.setDate(today.getDate() + i);
+      if (d > maxDate) break;
+      const btn = document.createElement("button");
+      btn.className = "a-cal__day";
+      if (d.getTime() === new Date().setHours(0,0,0,0)) btn.classList.add("is-today");
+      btn.innerHTML = `<span class="a-cal__dow">${DAYS[d.getDay()]}</span><span class="a-cal__num">${d.getDate()}</span><span class="a-cal__mon">${MONTHS[d.getMonth()]}</span>`;
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".a-cal__day").forEach(b => b.classList.remove("is-selected"));
+        btn.classList.add("is-selected");
+        selectedDate = d;
+        loadSlots(d);
+        goStep(2);
+      });
+      container.appendChild(btn);
+    }
+  }
+
+  async function loadSlots(date) {
+    document.getElementById("slotsLoading").classList.remove("a-hide");
+    document.getElementById("slotsGrid").classList.add("a-hide");
+    document.getElementById("slotsEmpty").classList.add("a-hide");
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
+    const weekday = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"][date.getDay()];
+    document.getElementById("step2Sub").textContent = `${weekday}, ${date.getDate()} de ${["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"][date.getMonth()]}`;
+    try {
+      const from = date.getTime();
+      const to   = from + 24*3600*1000 - 1;
+      const r = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(slug)}/slots?from=${from}&to=${to}`);
+      const d = await r.json().catch(() => ({}));
+      document.getElementById("slotsLoading").classList.add("a-hide");
+      const avail = (d.slots||[]).filter(s => s.available);
+      if (!avail.length) { document.getElementById("slotsEmpty").classList.remove("a-hide"); document.getElementById("btnNext").disabled = true; return; }
+      const grid = document.getElementById("slotsGrid");
+      grid.innerHTML = avail.map(s => {
+        const t = new Date(Number(s.start));
+        const label = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
+        return `<button class="a-slot" data-start="${s.start}">${label}</button>`;
+      }).join("");
+      grid.querySelectorAll(".a-slot").forEach(btn => {
+        btn.addEventListener("click", () => {
+          grid.querySelectorAll(".a-slot").forEach(b => b.classList.remove("is-selected"));
+          btn.classList.add("is-selected");
+          selectedSlot = { start: Number(btn.dataset.start) };
+          document.getElementById("btnNext").disabled = false;
+        });
+      });
+      grid.classList.remove("a-hide");
+      document.getElementById("btnNext").disabled = true;
+    } catch {
+      document.getElementById("slotsLoading").classList.add("a-hide");
+      document.getElementById("slotsEmpty").classList.remove("a-hide");
+    }
+  }
+
+  function goStep(n) {
+    [1,2,3,4].forEach(i => {
+      document.getElementById(`step${i}`).classList.toggle("a-hide", i !== n);
+      const dot = document.getElementById(`dot${i}`);
+      dot.classList.toggle("is-active", i === n);
+      dot.classList.toggle("is-done", i < n);
+    });
+    document.getElementById("stepSuccess").classList.add("a-hide");
+    document.getElementById("stepLabel").textContent = `Passo ${n} de 4`;
+    document.getElementById("btnNext").textContent = n === 4 ? "Confirmar pedido" : "Continuar";
+    document.getElementById("btnNext").disabled = false;
+    step = n;
+  }
+
+  document.getElementById("btnNext").addEventListener("click", async () => {
+    if (step === 1) { /* seleção de data já avança auto */ return; }
+    if (step === 2) {
+      if (!selectedSlot) return;
+      // Pré-preenche dados do usuário
+      if (currentUser) {
+        document.getElementById("patName").value  = currentUser.displayName || "";
+        document.getElementById("patEmail").value = currentUser.email || "";
+      }
+      goStep(3);
+    } else if (step === 3) {
+      const name  = document.getElementById("patName").value.trim();
+      const email = document.getElementById("patEmail").value.trim();
+      const phone = document.getElementById("patPhone").value.trim();
+      const erro  = document.getElementById("step3Erro");
+      if (!name)  { erro.textContent = "Informe seu nome."; erro.classList.remove("a-hide"); return; }
+      if (!email || !email.includes("@")) { erro.textContent = "Informe um e-mail válido."; erro.classList.remove("a-hide"); return; }
+      if (!phone || phone.length < 8) { erro.textContent = "Informe seu WhatsApp."; erro.classList.remove("a-hide"); return; }
+      erro.classList.add("a-hide");
+      const dt = new Date(Number(selectedSlot.start));
+      const dateStr = dt.toLocaleDateString("pt-BR", { weekday:"long", day:"2-digit", month:"long" });
+      const timeStr = dt.toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" });
+      document.getElementById("confData").textContent = dateStr;
+      document.getElementById("confHora").textContent = timeStr;
+      document.getElementById("confPac").textContent  = name;
+      goStep(4);
+    } else if (step === 4) {
+      await submitRequest();
+    }
+  });
+
+  async function submitRequest() {
+    const btn  = document.getElementById("btnNext");
+    const erro = document.getElementById("step4Erro");
+    btn.disabled = true; btn.textContent = "Enviando…";
+    erro.classList.add("a-hide");
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(slug)}/solicitar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patientName:  document.getElementById("patName").value.trim(),
+          patientEmail: document.getElementById("patEmail").value.trim(),
+          patientPhone: document.getElementById("patPhone").value.trim(),
+          notes:        document.getElementById("patNotes").value.trim() || undefined,
+          requestedSlot: selectedSlot.start
+        })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) throw new Error(d.error || "Erro");
+      [1,2,3,4].forEach(i => document.getElementById(`step${i}`).classList.add("a-hide"));
+      document.getElementById("stepSuccess").classList.remove("a-hide");
+      document.getElementById("footerBtn").classList.add("a-hide");
+      document.getElementById("stepsIndicator").parentElement.style.display = "none";
+    } catch (e) {
+      const msgs = { "SLUG_INVALIDO":"Link inválido.", "AGENDAMENTO_PUBLICO_DESABILITADO":"Profissional não aceita pedidos no momento.", "JANELA_INVALIDA":"Selecione outro horário." };
+      erro.textContent = msgs[e.message] || "Erro ao enviar. Tente novamente.";
+      erro.classList.remove("a-hide");
+      btn.disabled = false; btn.textContent = "Confirmar pedido";
+    }
+  }
+</script>
+</body>
+</html>

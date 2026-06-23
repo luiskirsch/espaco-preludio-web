@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Início · Espaço Prelúdio</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./app.css">
+  <style>
+    .home-hero {
+      background: linear-gradient(135deg, #1c1f1d 0%, #2d3a30 100%);
+      padding: 24px 16px 28px;
+      color: #fff;
+    }
+    .home-hero__greeting { font-size: 13px; color: rgba(255,255,255,.6); }
+    .home-hero__name { font-family: var(--ff-serif); font-size: 26px; font-weight: 500; margin-top: 2px; }
+    .home-hero__btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 20px; padding: 12px 20px; border-radius: 999px;
+      background: var(--a-accent); color: #fff;
+      font-size: 14px; font-weight: 600; text-decoration: none;
+      box-shadow: 0 4px 16px rgba(45,106,62,.4);
+    }
+    .home-hero__btn svg { width: 16px; height: 16px; }
+    .mood-card { background: var(--a-surface); border-radius: var(--a-radius); padding: 18px 16px; box-shadow: var(--a-shadow); }
+    .mood-card__label { font-size: 13px; font-weight: 600; color: var(--a-ink); margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .mood-card__saved { font-size: 12px; color: var(--a-accent); font-weight: 600; display: none; }
+    .section-title { font-size: 17px; font-weight: 700; color: var(--a-ink); margin-bottom: 12px; }
+    .next-session-empty { text-align: center; padding: 20px; background: var(--a-surface); border-radius: var(--a-radius); box-shadow: var(--a-shadow); }
+    .next-session-empty p { font-size: 13px; color: var(--a-ink2); margin: 8px 0 16px; }
+    .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .quick-action {
+      background: var(--a-surface); border-radius: var(--a-radius); padding: 16px;
+      display: flex; flex-direction: column; gap: 8px; cursor: pointer;
+      box-shadow: var(--a-shadow); text-decoration: none; color: inherit;
+      transition: transform 120ms;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .quick-action:active { transform: scale(.97); }
+    .quick-action__icon { font-size: 26px; }
+    .quick-action__label { font-size: 13px; font-weight: 600; color: var(--a-ink); }
+    .quick-action__sub { font-size: 11px; color: var(--a-ink3); }
+    .tips-card { background: linear-gradient(135deg, rgba(45,106,62,.08), rgba(45,106,62,.04)); border: 1px solid rgba(45,106,62,.15); border-radius: var(--a-radius); padding: 16px; }
+    .tips-card__title { font-size: 13px; font-weight: 700; color: var(--a-accent); margin-bottom: 6px; }
+    .tips-card__text { font-size: 13px; color: var(--a-ink2); line-height: 1.5; }
+  </style>
+</head>
+<body>
+<div class="a-shell">
+  <div class="a-page a-page-enter">
+
+    <!-- Hero -->
+    <div class="home-hero">
+      <div class="home-hero__greeting">Bom dia 🌿</div>
+      <div class="home-hero__name" id="heroNome">Carregando…</div>
+      <a href="./buscar.html" class="home-hero__btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Agendar consulta
+      </a>
+    </div>
+
+    <!-- Humor do dia -->
+    <div class="a-section">
+      <div class="mood-card">
+        <div class="mood-card__label">
+          Como você está hoje?
+          <span class="mood-card__saved" id="moodSaved">✓ Registrado</span>
+        </div>
+        <div class="a-mood" id="moodPicker">
+          <button class="a-mood__btn" data-mood="5" title="Ótimo">😄</button>
+          <button class="a-mood__btn" data-mood="4" title="Bem">🙂</button>
+          <button class="a-mood__btn" data-mood="3" title="Ok">😐</button>
+          <button class="a-mood__btn" data-mood="2" title="Cansado">😔</button>
+          <button class="a-mood__btn" data-mood="1" title="Mal">😞</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Próxima consulta -->
+    <div class="a-section" style="padding-top:0;">
+      <div class="section-title">Próxima consulta</div>
+      <div id="nextSessionLoading">
+        <div class="a-skel" style="height:90px;"></div>
+      </div>
+      <div id="nextSessionCard" class="a-hide"></div>
+      <div id="nextSessionEmpty" class="next-session-empty a-hide">
+        <div style="font-size:36px;">📅</div>
+        <p>Você não tem consultas agendadas.</p>
+        <a href="./buscar.html" class="a-btn a-btn--accent">Buscar profissional</a>
+      </div>
+    </div>
+
+    <!-- Ações rápidas -->
+    <div class="a-section" style="padding-top:0;">
+      <div class="section-title">O que você precisa?</div>
+      <div class="quick-actions">
+        <a href="./buscar.html" class="quick-action">
+          <div class="quick-action__icon">🔍</div>
+          <div class="quick-action__label">Buscar profissional</div>
+          <div class="quick-action__sub">Psicólogos, médicos e mais</div>
+        </a>
+        <a href="./consultas.html" class="quick-action">
+          <div class="quick-action__icon">📋</div>
+          <div class="quick-action__label">Minhas consultas</div>
+          <div class="quick-action__sub">Histórico e próximas</div>
+        </a>
+        <a href="./documentos.html" class="quick-action">
+          <div class="quick-action__icon">📄</div>
+          <div class="quick-action__label">Documentos</div>
+          <div class="quick-action__sub">Receitas e recibos</div>
+        </a>
+        <a href="./perfil.html" class="quick-action">
+          <div class="quick-action__icon">👤</div>
+          <div class="quick-action__label">Meu perfil</div>
+          <div class="quick-action__sub">Dados e configurações</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Dica de saúde -->
+    <div class="a-section" style="padding-top:0;">
+      <div class="tips-card">
+        <div class="tips-card__title">💚 Dica de bem-estar</div>
+        <div class="tips-card__text" id="tipText">Consultas regulares com um psicólogo podem reduzir os níveis de estresse em até 40%. Que tal agendar uma sessão essa semana?</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="a-nav">
+    <a href="./home.html" class="a-nav__item is-active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Início</span>
+      <span class="a-nav__dot"></span>
+    </a>
+    <a href="./buscar.html" class="a-nav__item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Buscar</span>
+    </a>
+    <a href="./consultas.html" class="a-nav__item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Consultas</span>
+    </a>
+    <a href="./perfil.html" class="a-nav__item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Perfil</span>
+    </a>
+  </nav>
+</div>
+
+<script type="module">
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+
+  const TIPS = [
+    "Consultas regulares com um psicólogo podem reduzir os níveis de estresse em até 40%. Que tal agendar uma sessão essa semana?",
+    "Dormir bem é fundamental para a saúde mental. Profissionais de saúde podem ajudar com técnicas de higiene do sono.",
+    "Você sabia que terapia cognitivo-comportamental (TCC) é eficaz para ansiedade em mais de 80% dos casos?",
+    "Cuidar da saúde mental é tão importante quanto a física. Não espere a situação piorar para pedir ajuda.",
+    "Um profissional de saúde pode ajudar a identificar padrões de pensamento que estão te impedindo de avançar."
+  ];
+  document.getElementById("tipText").textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = "./login.html"; return; }
+
+    // Saudação
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? "Bom dia 🌅" : hour < 18 ? "Boa tarde ☀️" : "Boa noite 🌙";
+    document.querySelector(".home-hero__greeting").textContent = greeting;
+    document.getElementById("heroNome").textContent = (user.displayName || user.email.split("@")[0]).split(" ")[0];
+
+    // Humor salvo hoje?
+    const todayKey = `ep:humor:${new Date().toISOString().slice(0,10)}:${user.uid}`;
+    const savedMood = localStorage.getItem(todayKey);
+    if (savedMood) {
+      document.querySelectorAll(".a-mood__btn").forEach(b => { if (b.dataset.mood === savedMood) b.classList.add("is-selected"); });
+      document.getElementById("moodSaved").style.display = "block";
+    }
+
+    document.querySelectorAll(".a-mood__btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".a-mood__btn").forEach(b => b.classList.remove("is-selected"));
+        btn.classList.add("is-selected");
+        localStorage.setItem(todayKey, btn.dataset.mood);
+        document.getElementById("moodSaved").style.display = "block";
+      });
+    });
+
+    // Próxima consulta
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      document.getElementById("nextSessionLoading").style.display = "none";
+      const upcoming = (data.sessions || [])
+        .filter(s => s.status === "scheduled" && Number(s.scheduledAt) > Date.now())
+        .sort((a, b) => Number(a.scheduledAt) - Number(b.scheduledAt));
+
+      if (upcoming.length === 0) {
+        document.getElementById("nextSessionEmpty").classList.remove("a-hide");
+      } else {
+        const s = upcoming[0];
+        const dt = new Date(Number(s.scheduledAt));
+        const dateStr = dt.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+        const timeStr = dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+        document.getElementById("nextSessionCard").innerHTML = `
+          <div class="a-card a-card--pad">
+            <div class="a-flex a-items-center a-justify-between">
+              <span class="a-badge a-badge--ok">Confirmada</span>
+              <span style="font-family:var(--ff-mono);font-size:13px;color:var(--a-accent);font-weight:700;">${timeStr}</span>
+            </div>
+            <div class="a-h3 a-mt-8">${s.therapistName || "Profissional"}</div>
+            <div class="a-sub a-mt-4">${dateStr}</div>
+            <a href="./consultas.html" class="a-btn a-btn--ghost a-btn--block a-btn--sm a-mt-12" style="border-radius:10px;">Ver detalhes</a>
+          </div>`;
+        document.getElementById("nextSessionCard").classList.remove("a-hide");
+      }
+    } catch {
+      document.getElementById("nextSessionLoading").style.display = "none";
+      document.getElementById("nextSessionEmpty").classList.remove("a-hide");
+    }
+  });
+</script>
+</body>
+</html>
