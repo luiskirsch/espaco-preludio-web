@@ -668,10 +668,20 @@
             const blockedLbl = tr("agenda:js.blocked", "Bloqueado");
             block.title = b.reason ? tr("agenda:js.blockedWithReason", "Bloqueado: {{reason}}", { reason: b.reason }) : blockedLbl;
             block.dataset.blackoutId = b.blackoutId;
+            // Verifica se existe nota neste slot bloqueado para embutir no bloco
+            const blockHour = startD.getHours();
+            const blockDayStart = new Date(startD); blockDayStart.setHours(0,0,0,0);
+            const noteInSlot = allNotes.find(n => {
+              const nd = new Date(Number(n.at));
+              const nd0 = new Date(nd); nd0.setHours(0,0,0,0);
+              return nd0.getTime() === blockDayStart.getTime() && nd.getHours() === blockHour;
+            });
             block.innerHTML = `
               <div class="ep-agenda-blackout__label">${escapeHtml(blockedLbl)}</div>
               ${b.reason ? `<div class="ep-agenda-blackout__reason">${escapeHtml(b.reason)}</div>` : ""}
+              ${noteInSlot ? `<div class="ep-agenda-blackout__reason" style="margin-top:4px;font-style:italic;opacity:.85;">${escapeHtml(noteInSlot.text || "")}</div>` : ""}
             `;
+            if (noteInSlot) block.dataset.embeddedNoteId = noteInSlot.noteId;
             block.addEventListener("click", (e) => {
               e.stopPropagation();
               const slotDate = new Date(cursor);
@@ -691,7 +701,13 @@
       const nAt = Number(n.at || 0);
       return nAt >= weekStartMs && nAt < weekEndMs;
     });
+    // IDs de notas já embutidas em blocos de blackout — não renderizar novamente
+    const embeddedNoteIds = new Set(
+      [...document.querySelectorAll("[data-embedded-note-id]")].map(el => el.dataset.embeddedNoteId)
+    );
+
     for (const n of notesThisWeek) {
+      if (embeddedNoteIds.has(n.noteId)) continue; // já aparece dentro do bloqueio
       const nAt = Number(n.at);
       const nDate = new Date(nAt);
       const dayIdx = dayIndexFromDate(nDate);
