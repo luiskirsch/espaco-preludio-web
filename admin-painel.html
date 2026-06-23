@@ -1109,6 +1109,69 @@
     }
   }
 
+  const EVENT_LABELS = {
+    // Profissional
+    "therapist_perfil_updated":      "Perfil atualizado",
+    "therapist_registered":          "Novo cadastro",
+    "therapist_password_changed":    "Senha alterada",
+    "therapist_dek_recovered":       "Chave recuperada",
+    // Sessões
+    "session_created":               "Sessão criada",
+    "session_updated":               "Sessão atualizada",
+    "session_canceled":              "Sessão cancelada",
+    "session_started":               "Sessão iniciada",
+    "session_ended":                 "Sessão encerrada",
+    "session_no_show":               "Paciente não compareceu",
+    // Agendamento público
+    "scheduling_request_created":    "Pedido de consulta recebido",
+    "scheduling_request_approved":   "Pedido aprovado",
+    "scheduling_request_rejected":   "Pedido recusado",
+    // Bloqueios
+    "blackout_created":              "Horário bloqueado",
+    "blackout_deleted":              "Bloqueio removido",
+    // Verificações / Comprovantes
+    "verificacao_aprovada":          "Verificação aprovada",
+    "verificacao_rejeitada":         "Verificação rejeitada",
+    "comprovante_estudante_enviado": "Comprovante estudante enviado",
+    "comprovante_estudante_aprovado":"Comprovante estudante aprovado",
+    "comprovante_estudante_rejeitado":"Comprovante estudante rejeitado",
+    "comprovante_formacao_enviado":  "Comprovante formação enviado",
+    "comprovante_formacao_aprovado": "Comprovante formação aprovado",
+    "comprovante_formacao_rejeitado":"Comprovante formação rejeitado",
+    // Planos
+    "plano_ativado":                 "Assinatura ativada",
+    "plano_cancelado":               "Assinatura cancelada",
+    "cortesia_concedida":            "Cortesia concedida",
+    // Empresa
+    "empresa_aprovado":              "Empresa aprovada",
+    "empresa_rejeitado":             "Empresa rejeitada",
+    // Notificações / Push
+    "push_enviado":                  "Notificação push enviada",
+    // Paciente
+    "patient_account_created":       "Conta de paciente criada",
+    "patient_note_saved":            "Nota de sessão salva",
+    "anamnese_enviada":              "Anamnese enviada",
+    // Prontuário / Documentos
+    "documento_gerado":              "Documento gerado",
+    "receita_gerada":                "Receita gerada",
+    "recibo_gerado":                 "Recibo gerado",
+    // Admin
+    "admin_plano_alterado":          "Plano alterado pelo admin",
+    "admin_verificacao_manual":      "Verificação manual",
+    // Agenda
+    "agenda_config_updated":         "Configuração de agenda atualizada",
+    // Financeiro
+    "lancamento_criado":             "Lançamento criado",
+    "lancamento_atualizado":         "Lançamento atualizado",
+  };
+
+  function eventLabel(type) {
+    if (!type) return "Evento desconhecido";
+    if (EVENT_LABELS[type]) return EVENT_LABELS[type];
+    // Formata snake_case → palavras capitalizadas como fallback
+    return type.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  }
+
   function renderEvents(eventos) {
     const list = document.getElementById("eventsList");
     if (!eventos || !eventos.length) {
@@ -1119,7 +1182,7 @@
       <div class="ap-event">
         <div class="ap-event__time">${fmtTime(e.at)}</div>
         <div>
-          <div class="ap-event__type">${escapeHtml(e.type || "?")}</div>
+          <div class="ap-event__type">${escapeHtml(eventLabel(e.type))}</div>
           ${e.therapistUid ? `<div class="ap-event__detail">uid: ${escapeHtml(String(e.therapistUid).substring(0,12))}…</div>` : ""}
           ${e.detail ? `<div class="ap-event__detail">${escapeHtml(String(e.detail).substring(0,80))}</div>` : ""}
         </div>
