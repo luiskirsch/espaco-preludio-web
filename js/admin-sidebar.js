@@ -200,7 +200,7 @@
     // Brand
     sb.innerHTML = `
       <a href="./admin-painel.html" class="ep-asb__brand" aria-label="Admin">
-        <span class="ep-asb__brand-mark">EP</span>
+        <img src="/logo_oficial_fundo_transparente.png?v=2" alt="EP" style="width:32px;height:32px;object-fit:contain;flex-shrink:0;border-radius:6px;">
         <span class="ep-asb__brand-name">
           <span class="ep-asb__brand-lead">Espaço Prelúdio</span>
           <span class="ep-asb__brand-tail">Admin</span>
