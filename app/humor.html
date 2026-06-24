@@ -194,32 +194,52 @@
     await loadFromBackend();
   });
 
+  const HUMOR_CACHE_KEY = () => `ep:humor:cache:${currentUser.uid}`;
+
   async function loadFromBackend() {
+    // Mostra cache local imediatamente enquanto busca do servidor
+    const cached = localStorage.getItem(HUMOR_CACHE_KEY());
+    if (cached) {
+      try { humorData = JSON.parse(cached); renderAll(); } catch {}
+    }
+
     try {
       const token = await currentUser.getIdToken();
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor?days=30`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const d = await r.json().catch(() => ({}));
-      if (d.ok && d.items) {
-        humorData = {};
-        d.items.forEach(item => { humorData[item.date] = item.mood; });
-        // Sincroniza no localStorage como cache offline
-        Object.entries(humorData).forEach(([date, mood]) => {
-          localStorage.setItem(`ep:humor:${date}:${currentUser.uid}`, String(mood));
-        });
-      }
+      if (!d.ok) throw new Error(d.error || "api");
+      humorData = {};
+      d.items.forEach(item => { humorData[item.date] = item.mood; });
+      // Salva cache compacto (1 JSON por usuário, não 1 key por dia)
+      localStorage.setItem(HUMOR_CACHE_KEY(), JSON.stringify(humorData));
+      renderAll();
     } catch {
-      // Offline: usa localStorage como fallback
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith("ep:humor:") && k.endsWith(`:${currentUser.uid}`)) {
-          const date = k.split(":")[2];
-          humorData[date] = Number(localStorage.getItem(k));
-        }
-      }
+      // Offline — já renderizou do cache, mantém o que tem
     }
+  }
+
+  async function saveHumor() {
+    if (!selectedMood) return;
+    const date = todayStr();
+    humorData[date] = selectedMood;
+    localStorage.setItem(HUMOR_CACHE_KEY(), JSON.stringify(humorData));
+    document.getElementById("saveBtn").classList.add("a-hide");
+    document.getElementById("savedMsg").classList.remove("a-hide");
     renderAll();
+    try {
+      const token = await currentUser.getIdToken();
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ mood: selectedMood, date })
+      });
+      if (!r.ok) throw new Error("fail");
+    } catch {
+      // Offline — salvo localmente, sincroniza quando reconectar
+      document.getElementById("savedMsg").textContent = "✓ Salvo localmente";
+    }
   }
 
   async function saveHumor() {

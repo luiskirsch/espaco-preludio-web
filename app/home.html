@@ -195,24 +195,28 @@
 
     // Humor de hoje — busca do backend (fonte da verdade) + cache local
     const todayStr = new Date().toISOString().slice(0, 10);
-    const todayKey = `ep:humor:${todayStr}:${user.uid}`;
+    const HUMOR_CACHE = `ep:humor:cache:${user.uid}`;
 
     async function loadTodayMood() {
-      // Tenta backend primeiro
+      // Tenta backend
       try {
         const tok = await user.getIdToken();
         const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor?days=1`, {
           headers: { Authorization: `Bearer ${tok}` }
         });
         const d = await r.json().catch(() => ({}));
-        const todayEntry = (d.items || []).find(i => i.date === todayStr);
-        if (todayEntry) {
-          localStorage.setItem(todayKey, String(todayEntry.mood));
-          return String(todayEntry.mood);
+        if (d.ok && d.items) {
+          const cache = {};
+          d.items.forEach(i => { cache[i.date] = i.mood; });
+          localStorage.setItem(HUMOR_CACHE, JSON.stringify(cache));
+          return cache[todayStr] ? String(cache[todayStr]) : null;
         }
       } catch {}
-      // Fallback: localStorage
-      return localStorage.getItem(todayKey);
+      // Fallback: cache compacto
+      try {
+        const cache = JSON.parse(localStorage.getItem(HUMOR_CACHE) || "{}");
+        return cache[todayStr] ? String(cache[todayStr]) : null;
+      } catch { return null; }
     }
 
     const savedMood = await loadTodayMood();
@@ -226,7 +230,11 @@
         document.querySelectorAll(".a-mood__btn").forEach(b => b.classList.remove("is-selected"));
         btn.classList.add("is-selected");
         const mood = btn.dataset.mood;
-        localStorage.setItem(todayKey, mood);
+        try {
+          const cache = JSON.parse(localStorage.getItem(HUMOR_CACHE) || "{}");
+          cache[todayStr] = Number(mood);
+          localStorage.setItem(HUMOR_CACHE, JSON.stringify(cache));
+        } catch {}
         document.getElementById("moodSaved").style.display = "block";
         // Salva no backend
         try {

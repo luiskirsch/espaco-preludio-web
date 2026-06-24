@@ -406,18 +406,21 @@
         img.src = URL.createObjectURL(file);
       });
       setAvatar(base64);
-      localStorage.setItem(`ep:foto:${currentUser.uid}`, base64); // cache local
+      localStorage.setItem(`ep:foto:${currentUser.uid}`, base64);
       // Salva no backend
       const token = await currentUser.getIdToken();
-      await fetch(`${BACKEND_BASE_URL}/therapy/paciente/foto`, {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/foto`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ foto: base64 })
       });
-    } catch (err) {
-      console.error(err);
+      const d = await r.json().catch(() => ({}));
+      document.getElementById("photoLoading").textContent = d.ok ? "✓ Foto salva!" : "⚠️ Salvo localmente";
+      setTimeout(() => { document.getElementById("photoLoading").style.display = "none"; document.getElementById("photoLoading").textContent = "Salvando foto…"; }, 2000);
+    } catch {
+      document.getElementById("photoLoading").textContent = "⚠️ Salvo só neste device";
+      setTimeout(() => { document.getElementById("photoLoading").style.display = "none"; document.getElementById("photoLoading").textContent = "Salvando foto…"; }, 2000);
     } finally {
-      document.getElementById("photoLoading").style.display = "none";
       e.target.value = "";
     }
   });
