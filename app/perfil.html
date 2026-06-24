@@ -290,14 +290,24 @@
     el.innerHTML = `<img src="${src}" alt="Foto de perfil">`;
   }
 
+  const FOTO_KEY = () => `ep:foto:${currentUser?.uid}`;
+
   async function loadPhoto(user) {
+    // 1. Mostra do cache local imediatamente (sem delay)
+    const cached = localStorage.getItem(`ep:foto:${user.uid}`);
+    if (cached) setAvatar(cached);
+
+    // 2. Busca do backend em paralelo para atualizar
     try {
       const token = await user.getIdToken();
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/foto`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const d = await r.json().catch(() => ({}));
-      if (d.ok && d.foto) setAvatar(d.foto);
+      if (d.ok && d.foto) {
+        localStorage.setItem(`ep:foto:${user.uid}`, d.foto);
+        setAvatar(d.foto);
+      }
     } catch {}
   }
 
@@ -396,6 +406,7 @@
         img.src = URL.createObjectURL(file);
       });
       setAvatar(base64);
+      localStorage.setItem(`ep:foto:${currentUser.uid}`, base64); // cache local
       // Salva no backend
       const token = await currentUser.getIdToken();
       await fetch(`${BACKEND_BASE_URL}/therapy/paciente/foto`, {
