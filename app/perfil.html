@@ -261,8 +261,14 @@
 </div>
 
 <script type="module">
-  import { onAuthStateChanged, signOut, updateProfile, updatePassword, updatePhotoURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+  import { onAuthStateChanged, signOut, updateProfile, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+  import { auth, BACKEND_BASE_URL, firebaseConfig } from "../js/firebase-config.js";
+  import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+  // Inicializa storage usando a mesma app do auth
+  const _fbApp = getApps().find(a => a.name === "[DEFAULT]") || getApps()[0];
+  const storage = getStorage(_fbApp);
 
   let currentUser = null;
   let deferredInstall = null;
@@ -389,17 +395,11 @@
         img.src = URL.createObjectURL(file);
       });
       setAvatar(base64);
-      // Salva no Firebase Auth (photoURL) — persiste automaticamente em todos os devices
-      await updateProfile(currentUser, { photoURL: base64 });
-      // Salva também no backend Firestore como backup
-      try {
-        const token = await currentUser.getIdToken();
-        await fetch(`${BACKEND_BASE_URL}/therapy/paciente/foto`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ foto: base64 })
-        });
-      } catch {}
+      // Upload para Firebase Storage → URL real → salva em user.photoURL
+      const storageRef = ref(storage, `patient-photos/${currentUser.uid}.jpg`);
+      await uploadString(storageRef, base64, "data_url");
+      const downloadURL = await getDownloadURL(storageRef);
+      await updateProfile(currentUser, { photoURL: downloadURL });
       document.getElementById("photoLoading").textContent = "✓ Foto salva!";
       setTimeout(() => { document.getElementById("photoLoading").style.display = "none"; document.getElementById("photoLoading").textContent = "Salvando foto…"; }, 2000);
     } catch {
