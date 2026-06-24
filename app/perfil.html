@@ -290,14 +290,12 @@
     el.innerHTML = `<img src="${src}" alt="Foto de perfil">`;
   }
 
-  const FOTO_KEY = () => `ep:foto:${currentUser?.uid}`;
+  // Mostra foto IMEDIATAMENTE ao carregar a página (antes de qualquer async)
+  const cachedFoto = localStorage.getItem("ep:foto:current");
+  if (cachedFoto) setAvatar(cachedFoto);
 
   async function loadPhoto(user) {
-    // 1. Mostra do cache local imediatamente (sem delay)
-    const cached = localStorage.getItem(`ep:foto:${user.uid}`);
-    if (cached) setAvatar(cached);
-
-    // 2. Busca do backend em paralelo para atualizar
+    // Busca do backend para garantir atualização
     try {
       const token = await user.getIdToken();
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/foto`, {
@@ -305,7 +303,7 @@
       });
       const d = await r.json().catch(() => ({}));
       if (d.ok && d.foto) {
-        localStorage.setItem(`ep:foto:${user.uid}`, d.foto);
+        localStorage.setItem("ep:foto:current", d.foto);
         setAvatar(d.foto);
       }
     } catch {}
@@ -316,12 +314,15 @@
     currentUser = user;
     const name = user.displayName || user.email.split("@")[0];
     const initials = name.match(/\b\p{L}/gu)?.slice(0,2).join("").toUpperCase() || "?";
-    document.getElementById("profileAvatar").textContent = initials;
     document.getElementById("profileName").textContent = name;
     document.getElementById("profileEmail").textContent = user.email;
     document.getElementById("menuNome").textContent  = name;
     document.getElementById("menuEmail").textContent = user.email;
     document.getElementById("newName").value = name;
+    // Só mostra iniciais se não tiver foto em cache
+    if (!localStorage.getItem("ep:foto:current")) {
+      document.getElementById("profileAvatar").textContent = initials;
+    }
     loadPhoto(user);
 
     // Notificações push — renderiza baseado no suporte do dispositivo
@@ -406,7 +407,7 @@
         img.src = URL.createObjectURL(file);
       });
       setAvatar(base64);
-      localStorage.setItem(`ep:foto:${currentUser.uid}`, base64);
+      localStorage.setItem("ep:foto:current", base64);
       // Salva no backend
       const token = await currentUser.getIdToken();
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/foto`, {
