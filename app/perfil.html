@@ -413,27 +413,48 @@
   };
 
   window.toggleNotif = async function() {
-    const toggle  = document.getElementById("notifToggle");
-    const sub     = document.getElementById("notifSub");
-    const isIOS   = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isPWA   = window.matchMedia("(display-mode: standalone)").matches
-                 || navigator.standalone === true;
+    const toggle = document.getElementById("notifToggle");
+    const sub    = document.getElementById("notifSub");
 
     if (toggle.classList.contains("is-on")) {
       toggle.classList.remove("is-on");
-      sub.textContent = isIOS ? "Ative nas Configurações do iPhone" : "Toque para ativar";
+      sub.textContent = "Toque para ativar";
       return;
     }
 
-    // iOS requer PWA instalada na tela inicial para push
-    if (isIOS && !isPWA) {
-      sub.textContent = "No iPhone: instale o app na tela inicial primeiro";
-      alert('Para ativar notificações no iPhone:\n\n1. Toque em "Compartilhar" (ícone de seta)\n2. Selecione "Adicionar à Tela de Início"\n3. Abra o app pela tela inicial\n4. Ative as notificações');
-      return;
+    const isIOS  = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isPWA  = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+
+    // Detecta versão iOS
+    const iosVer = (() => {
+      const m = navigator.userAgent.match(/OS (\d+)_(\d+)/);
+      return m ? parseFloat(`${m[1]}.${m[2]}`) : 0;
+    })();
+
+    if (isIOS) {
+      if (!isPWA) {
+        sub.textContent = "Instale o app na tela inicial primeiro";
+        alert('Para ativar notificações:\n\n1. Toque em "Compartilhar" (ícone ↑)\n2. "Adicionar à Tela de Início"\n3. Abra pelo ícone criado\n4. Volte aqui e ative');
+        return;
+      }
+      if (iosVer < 16.4) {
+        sub.textContent = `iOS ${Math.floor(iosVer)} não suporta — requer iOS 16.4+`;
+        alert(`Notificações push em PWA requerem iOS 16.4 ou superior.\n\nSeu iOS: ${iosVer}`);
+        return;
+      }
+    }
+
+    // Garante SW ativo antes de pedir permissão
+    if ("serviceWorker" in navigator) {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration("/sw-app.js");
+        if (!reg) await navigator.serviceWorker.register("/sw-app.js");
+        await navigator.serviceWorker.ready;
+      } catch {}
     }
 
     if (!("Notification" in window)) {
-      sub.textContent = "Seu navegador não suporta notificações";
+      sub.textContent = "Navegador não suporta notificações";
       return;
     }
 
@@ -441,14 +462,14 @@
       const perm = await Notification.requestPermission();
       if (perm === "granted") {
         toggle.classList.add("is-on");
-        sub.textContent = "Ativas neste dispositivo ✓";
+        sub.textContent = "✓ Ativas neste dispositivo";
       } else if (perm === "denied") {
-        sub.textContent = "Bloqueado — ative nas configurações do navegador";
+        sub.textContent = "Bloqueado — libere nas configurações";
       } else {
-        sub.textContent = "Toque para ativar";
+        sub.textContent = "Permissão necessária — tente novamente";
       }
-    } catch {
-      sub.textContent = "Não foi possível ativar agora";
+    } catch (e) {
+      sub.textContent = "Erro: " + (e.message || "tente novamente");
     }
   };
 </script>
