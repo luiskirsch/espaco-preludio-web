@@ -167,22 +167,8 @@
     <!-- Notificações -->
     <div class="menu-section a-mt-16">
       <div class="menu-section__title">Notificações</div>
-      <div class="menu-card">
-        <div class="menu-item">
-          <div class="menu-item__icon" style="background:rgba(45,106,62,.1);">🔔</div>
-          <div class="menu-item__text">
-            <div class="menu-item__label">Notificações push</div>
-            <div class="menu-item__sub" id="notifSub">Receba alertas de consultas</div>
-          </div>
-          <button class="toggle-switch" id="notifToggle" onclick="toggleNotif()"></button>
-        </div>
-        <div class="menu-item">
-          <div class="menu-item__icon" style="background:rgba(40,140,180,.1);">📧</div>
-          <div class="menu-item__text">
-            <div class="menu-item__label">E-mail</div>
-            <div class="menu-item__sub" id="menuEmail">—</div>
-          </div>
-        </div>
+      <div class="menu-card" id="notifCard">
+        <!-- Preenchido pelo JS baseado no suporte do dispositivo -->
       </div>
     </div>
 
@@ -328,30 +314,63 @@
     document.getElementById("newName").value = name;
     loadPhoto(user.uid);
 
-    // Notificações push — detecta suporte logo ao carregar
-    (function() {
-      const sub    = document.getElementById("notifSub");
-      const toggle = document.getElementById("notifToggle");
+    // Notificações push — renderiza baseado no suporte do dispositivo
+    (function buildNotifCard() {
+      const card   = document.getElementById("notifCard");
       const isIOS  = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const iosVer = (() => { const m = navigator.userAgent.match(/OS (\d+)_(\d+)/); return m ? parseFloat(`${m[1]}.${m[2]}`) : 0; })();
+      const emailRow = `
+        <div class="menu-item">
+          <div class="menu-item__icon" style="background:rgba(40,140,180,.1);">📧</div>
+          <div class="menu-item__text">
+            <div class="menu-item__label">E-mail</div>
+            <div class="menu-item__sub" id="menuEmail">—</div>
+          </div>
+        </div>`;
 
+      // iOS antigo — sem suporte
       if (isIOS && iosVer > 0 && iosVer < 16.4) {
-        sub.textContent = `Requer iOS 16.4+ (seu: iOS ${Math.floor(iosVer)})`;
-        toggle.disabled = true;
-        toggle.style.opacity = ".4";
+        card.innerHTML = `
+          <div class="menu-item" style="opacity:.5;cursor:default;">
+            <div class="menu-item__icon" style="background:rgba(100,100,100,.08);">🔔</div>
+            <div class="menu-item__text">
+              <div class="menu-item__label">Notificações push</div>
+              <div class="menu-item__sub" style="color:#b8453d;">Não disponível no iOS ${Math.floor(iosVer)} — requer iOS 16.4+</div>
+            </div>
+          </div>
+          <div style="margin:0 16px 12px;padding:10px 12px;background:rgba(184,69,61,.07);border-radius:10px;font-size:12px;color:#b8453d;line-height:1.5;">
+            ⚠️ Seu iPhone 7 (iOS ${iosVer}) não suporta notificações push em apps web. Você receberá avisos por e-mail normalmente.
+          </div>
+          ${emailRow}`;
+        document.getElementById("menuEmail").textContent = currentUser?.email || "—";
         return;
       }
+
+      // Sem API de notificação
       if (!("Notification" in window)) {
-        sub.textContent = "Não suportado neste dispositivo";
-        toggle.disabled = true; toggle.style.opacity = ".4";
+        card.innerHTML = `
+          <div class="menu-item" style="opacity:.5;cursor:default;">
+            <div class="menu-item__icon" style="background:rgba(100,100,100,.08);">🔔</div>
+            <div class="menu-item__text">
+              <div class="menu-item__label">Notificações push</div>
+              <div class="menu-item__sub">Não suportado neste navegador</div>
+            </div>
+          </div>${emailRow}`;
         return;
       }
-      if (Notification.permission === "granted") {
-        toggle.classList.add("is-on");
-        sub.textContent = "✓ Ativas neste dispositivo";
-      } else {
-        sub.textContent = "Toque para ativar";
-      }
+
+      // Suportado — toggle normal
+      const isOn = Notification.permission === "granted";
+      card.innerHTML = `
+        <div class="menu-item">
+          <div class="menu-item__icon" style="background:rgba(45,106,62,.1);">🔔</div>
+          <div class="menu-item__text">
+            <div class="menu-item__label">Notificações push</div>
+            <div class="menu-item__sub" id="notifSub">${isOn ? "✓ Ativas neste dispositivo" : "Toque para ativar"}</div>
+          </div>
+          <button class="toggle-switch ${isOn ? "is-on" : ""}" id="notifToggle" onclick="toggleNotif()"></button>
+        </div>
+        ${emailRow}`;
     })();
   });
 
