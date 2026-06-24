@@ -220,7 +220,7 @@
     if (!user) { window.location.href = "./login.html"; return; }
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessoes?patientEmail=${encodeURIComponent(user.email)}`, {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/sessoes`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const d = await r.json().catch(() => ({}));

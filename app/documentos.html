@@ -161,13 +161,11 @@
     try {
       const token = await user.getIdToken();
       // Busca recibos do paciente
-      const [recibosRes] = await Promise.all([
-        fetch(`${BACKEND_BASE_URL}/therapy/recibos?patientEmail=${encodeURIComponent(user.email)}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => null),
-      ]);
-      const recibos = recibosRes ? (await recibosRes.json().catch(()=>({}))) : {};
-      allDocs = [...(recibos.items||recibos.recibos||[])].map(r => ({ ...r, tipo: r.tipo || "recibo" }));
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/documentos`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).catch(() => null);
+      const data = r ? (await r.json().catch(() => ({}))) : {};
+      allDocs = (data.items || []);
       renderDocs(allDocs);
     } catch {
       document.getElementById("loadingSkel").style.display = "none";
