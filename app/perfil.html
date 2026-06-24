@@ -261,7 +261,7 @@
 </div>
 
 <script type="module">
-  import { onAuthStateChanged, signOut, updateProfile, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { onAuthStateChanged, signOut, updateProfile, updatePassword, updatePhotoURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
 
   let currentUser = null;
@@ -290,25 +290,6 @@
     el.innerHTML = `<img src="${src}" alt="Foto de perfil">`;
   }
 
-  // Mostra foto IMEDIATAMENTE ao carregar a página (antes de qualquer async)
-  const cachedFoto = localStorage.getItem("ep:foto:current");
-  if (cachedFoto) setAvatar(cachedFoto);
-
-  async function loadPhoto(user) {
-    // Busca do backend para garantir atualização
-    try {
-      const token = await user.getIdToken();
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/foto`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const d = await r.json().catch(() => ({}));
-      if (d.ok && d.foto) {
-        localStorage.setItem("ep:foto:current", d.foto);
-        setAvatar(d.foto);
-      }
-    } catch {}
-  }
-
   onAuthStateChanged(auth, user => {
     if (!user) { window.location.href = "./login.html"; return; }
     currentUser = user;
@@ -319,11 +300,12 @@
     document.getElementById("menuNome").textContent  = name;
     document.getElementById("menuEmail").textContent = user.email;
     document.getElementById("newName").value = name;
-    // Só mostra iniciais se não tiver foto em cache
-    if (!localStorage.getItem("ep:foto:current")) {
+    // photoURL do Firebase Auth — disponível imediatamente, persiste em todos os devices
+    if (user.photoURL) {
+      setAvatar(user.photoURL);
+    } else {
       document.getElementById("profileAvatar").textContent = initials;
     }
-    loadPhoto(user);
 
     // Notificações push — renderiza baseado no suporte do dispositivo
     (function buildNotifCard() {
@@ -407,16 +389,18 @@
         img.src = URL.createObjectURL(file);
       });
       setAvatar(base64);
-      localStorage.setItem("ep:foto:current", base64);
-      // Salva no backend
-      const token = await currentUser.getIdToken();
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/foto`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ foto: base64 })
-      });
-      const d = await r.json().catch(() => ({}));
-      document.getElementById("photoLoading").textContent = d.ok ? "✓ Foto salva!" : "⚠️ Salvo localmente";
+      // Salva no Firebase Auth (photoURL) — persiste automaticamente em todos os devices
+      await updateProfile(currentUser, { photoURL: base64 });
+      // Salva também no backend Firestore como backup
+      try {
+        const token = await currentUser.getIdToken();
+        await fetch(`${BACKEND_BASE_URL}/therapy/paciente/foto`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ foto: base64 })
+        });
+      } catch {}
+      document.getElementById("photoLoading").textContent = "✓ Foto salva!";
       setTimeout(() => { document.getElementById("photoLoading").style.display = "none"; document.getElementById("photoLoading").textContent = "Salvando foto…"; }, 2000);
     } catch {
       document.getElementById("photoLoading").textContent = "⚠️ Salvo só neste device";
