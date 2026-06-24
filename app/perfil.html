@@ -328,16 +328,31 @@
     document.getElementById("newName").value = name;
     loadPhoto(user.uid);
 
-    // Notificações push
-    if ("Notification" in window) {
+    // Notificações push — detecta suporte logo ao carregar
+    (function() {
+      const sub    = document.getElementById("notifSub");
       const toggle = document.getElementById("notifToggle");
+      const isIOS  = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const iosVer = (() => { const m = navigator.userAgent.match(/OS (\d+)_(\d+)/); return m ? parseFloat(`${m[1]}.${m[2]}`) : 0; })();
+
+      if (isIOS && iosVer > 0 && iosVer < 16.4) {
+        sub.textContent = `Requer iOS 16.4+ (seu: iOS ${Math.floor(iosVer)})`;
+        toggle.disabled = true;
+        toggle.style.opacity = ".4";
+        return;
+      }
+      if (!("Notification" in window)) {
+        sub.textContent = "Não suportado neste dispositivo";
+        toggle.disabled = true; toggle.style.opacity = ".4";
+        return;
+      }
       if (Notification.permission === "granted") {
         toggle.classList.add("is-on");
-        document.getElementById("notifSub").textContent = "Ativas neste dispositivo";
+        sub.textContent = "✓ Ativas neste dispositivo";
       } else {
-        document.getElementById("notifSub").textContent = "Toque para ativar";
+        sub.textContent = "Toque para ativar";
       }
-    }
+    })();
   });
 
   // Upload de foto
@@ -438,8 +453,8 @@
         return;
       }
       if (iosVer < 16.4) {
-        sub.textContent = `iOS ${Math.floor(iosVer)} não suporta — requer iOS 16.4+`;
-        alert(`Notificações push em PWA requerem iOS 16.4 ou superior.\n\nSeu iOS: ${iosVer}`);
+        sub.textContent = `iOS ${Math.floor(iosVer)} não suporta notificações push`;
+        alert(`Seu iPhone (iOS ${iosVer}) não suporta notificações neste app.\n\nEste recurso requer iOS 16.4 ou superior — disponível no iPhone 8 ou mais recente.\n\nVocê ainda receberá avisos por e-mail normalmente.`);
         return;
       }
     }
