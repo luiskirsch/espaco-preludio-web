@@ -290,9 +290,9 @@
     el.innerHTML = `<img src="${src}" alt="Foto de perfil">`;
   }
 
-  async function loadPhoto(uid) {
+  async function loadPhoto(user) {
     try {
-      const token = await currentUser.getIdToken();
+      const token = await user.getIdToken();
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/foto`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -312,7 +312,7 @@
     document.getElementById("menuNome").textContent  = name;
     document.getElementById("menuEmail").textContent = user.email;
     document.getElementById("newName").value = name;
-    loadPhoto(user.uid);
+    loadPhoto(user);
 
     // Notificações push — renderiza baseado no suporte do dispositivo
     (function buildNotifCard() {

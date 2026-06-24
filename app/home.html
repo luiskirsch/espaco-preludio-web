@@ -193,20 +193,50 @@
     document.querySelector(".home-hero__greeting").textContent = greeting;
     document.getElementById("heroNome").textContent = (user.displayName || user.email.split("@")[0]).split(" ")[0];
 
-    // Humor salvo hoje?
-    const todayKey = `ep:humor:${new Date().toISOString().slice(0,10)}:${user.uid}`;
-    const savedMood = localStorage.getItem(todayKey);
+    // Humor de hoje — busca do backend (fonte da verdade) + cache local
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayKey = `ep:humor:${todayStr}:${user.uid}`;
+
+    async function loadTodayMood() {
+      // Tenta backend primeiro
+      try {
+        const tok = await user.getIdToken();
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor?days=1`, {
+          headers: { Authorization: `Bearer ${tok}` }
+        });
+        const d = await r.json().catch(() => ({}));
+        const todayEntry = (d.items || []).find(i => i.date === todayStr);
+        if (todayEntry) {
+          localStorage.setItem(todayKey, String(todayEntry.mood));
+          return String(todayEntry.mood);
+        }
+      } catch {}
+      // Fallback: localStorage
+      return localStorage.getItem(todayKey);
+    }
+
+    const savedMood = await loadTodayMood();
     if (savedMood) {
       document.querySelectorAll(".a-mood__btn").forEach(b => { if (b.dataset.mood === savedMood) b.classList.add("is-selected"); });
       document.getElementById("moodSaved").style.display = "block";
     }
 
     document.querySelectorAll(".a-mood__btn").forEach(btn => {
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", async () => {
         document.querySelectorAll(".a-mood__btn").forEach(b => b.classList.remove("is-selected"));
         btn.classList.add("is-selected");
-        localStorage.setItem(todayKey, btn.dataset.mood);
+        const mood = btn.dataset.mood;
+        localStorage.setItem(todayKey, mood);
         document.getElementById("moodSaved").style.display = "block";
+        // Salva no backend
+        try {
+          const tok = await user.getIdToken();
+          await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ mood: Number(mood), date: todayStr })
+          });
+        } catch {}
       });
     });
 
