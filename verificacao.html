@@ -126,6 +126,7 @@
 <script type="module">
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist } from "./js/auth-guard.js?v=3-27";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
   function tr(key, fallback) {
     if (window.EP_I18N && window.EP_I18N.t) {
@@ -153,6 +154,11 @@
 
   let idToken = null;
   let pendingFile = null; // { base64, mime, name, sizeKb }
+
+  async function freshToken() {
+    try { idToken = await getAuth().currentUser?.getIdToken() ?? idToken; } catch (_) {}
+    return idToken;
+  }
 
   function setStatus(text, type = "") {
     statusEl.textContent = text;
@@ -295,7 +301,7 @@
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`
+          "Authorization": `Bearer ${await freshToken()}`
         },
         body: JSON.stringify({
           documentBase64: pendingFile.base64,
@@ -325,7 +331,7 @@
 
   async function loadStatus() {
     const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/verificacao/status`, {
-      headers: { "Authorization": `Bearer ${idToken}` }
+      headers: { "Authorization": `Bearer ${await freshToken()}` }
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
