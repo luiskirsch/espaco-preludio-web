@@ -1900,8 +1900,21 @@ Direito de portabilidade — LGPD Art. 18, V.
       box.classList.add("ep-hide");
     }
   }
+  function sanitizeSlug(v) {
+    return v.toLowerCase()
+      .replace(/\s+/g, "-")          // espaços → hífens
+      .replace(/[^a-z0-9-]/g, "")   // remove caracteres inválidos
+      .replace(/-+/g, "-")           // hífens duplos → simples
+      .replace(/^-+|-+$/g, "");      // remove hífens no início/fim
+  }
   $("schedSlug").addEventListener("input", () => {
-    renderSchedActiveLink($("schedSlug").value.trim().toLowerCase(), $("schedEnabled").checked);
+    const clean = sanitizeSlug($("schedSlug").value);
+    if (clean !== $("schedSlug").value) {
+      const pos = $("schedSlug").selectionStart;
+      $("schedSlug").value = clean;
+      $("schedSlug").setSelectionRange(pos, pos);
+    }
+    renderSchedActiveLink(clean, $("schedEnabled").checked);
   });
   $("schedEnabled").addEventListener("change", () => {
     renderSchedActiveLink($("schedSlug").value.trim().toLowerCase(), $("schedEnabled").checked);
@@ -2246,7 +2259,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       },
       sessionTopics:                   customTopics,
       aiSummaryEnabled:                $("aiSummaryEnabledToggle")?.checked || false,
-      publicSchedulingSlug:            $("schedSlug").value.trim().toLowerCase(),
+      publicSchedulingSlug:            sanitizeSlug($("schedSlug").value),
       publicSchedulingEnabled:         $("schedEnabled").checked,
       // Campos obrigatórios quando publicSchedulingEnabled=true (validado
       // antes deste body montar — se enabled+vazio, save é bloqueado).
