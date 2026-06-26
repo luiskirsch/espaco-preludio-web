@@ -668,14 +668,38 @@ function mountMessagesBubble(idTokenGetter) {
   setInterval(refresh, 60_000);
 }
 
+function mountNotifBadge(idTokenGetter) {
+  if (typeof document === "undefined") return;
+
+  async function refresh() {
+    try {
+      const token = await idTokenGetter();
+      if (!token) return;
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/notificacoes?onlyUnread=true&limit=50`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) return;
+      const count = d.unreadCount || 0;
+      // Aguarda sidebar.js injetar o badge (pode ainda não estar pronto)
+      const trySet = () => {
+        if (window.EPSidebar?.setBadge) { window.EPSidebar.setBadge(count); }
+        else { setTimeout(trySet, 300); }
+      };
+      trySet();
+    } catch {}
+  }
+  refresh();
+  setInterval(refresh, 60_000);
+}
+
 (function hydrateChromeFromCache() {
   if (typeof document === "undefined") return;
   mountLogoutFab();
   mountThemeToggle();
-  mountMessagesBubble(async () => {
-    const u = auth.currentUser;
-    return u ? u.getIdToken() : null;
-  });
+  const tokenGetter = async () => { const u = auth.currentUser; return u ? u.getIdToken() : null; };
+  mountMessagesBubble(tokenGetter);
+  mountNotifBadge(tokenGetter);
   let hydratedSync = false;
   try {
     const raw = sessionStorage.getItem(PROFILE_CACHE_KEY);
