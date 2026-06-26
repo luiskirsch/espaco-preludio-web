@@ -127,6 +127,24 @@
             <label class="ep-label" for="notes" data-i18n="agendar:form.notesLabel">Mensagem para o profissional (opcional)</label>
             <textarea id="notes" class="ep-textarea" maxlength="1000" rows="3" data-i18n-placeholder="agendar:form.notesPlaceholder" placeholder="Conte brevemente o motivo da consulta, se desejar."></textarea>
           </div>
+          <!-- TCLE — Res. CFM 2.314/2022 -->
+          <div style="background: rgba(45,106,62,.06); border: 1px solid rgba(45,106,62,.2); border-radius: 10px; padding: 16px; margin-top: 8px;">
+            <p style="font-size: 12px; color: #1c1f1d; margin: 0 0 10px; font-weight: 600;">📋 Termo de Consentimento Livre e Esclarecido (TCLE)</p>
+            <p style="font-size: 11.5px; color: #5a5a56; margin: 0 0 12px; line-height: 1.6;">
+              Ao solicitar este atendimento, declaro que: (1) estou ciente de que a consulta ocorrerá por videoconferência (telessaúde);
+              (2) compreendo que posso encerrar o atendimento a qualquer momento; (3) autorizo o registro das informações clínicas em prontuário
+              pelo(a) profissional, conforme a Res. CFM 2.314/2022 e a Res. CFP 11/2018; (4) fui informado(a) sobre os limites e riscos
+              inerentes ao atendimento remoto; (5) consinto com o tratamento dos meus dados de saúde conforme a LGPD (Lei 13.709/2018).
+            </p>
+            <label class="ep-checkbox" style="align-items: flex-start; gap: 10px;">
+              <input type="checkbox" id="tcleCheck" required style="margin-top: 2px; flex-shrink: 0; accent-color: #2d6a3e;">
+              <span style="font-size: 12px; color: #1c1f1d; line-height: 1.5;">
+                Li e concordo com o <strong>Termo de Consentimento Livre e Esclarecido</strong> acima e com a
+                <a href="./politica.html" target="_blank" style="color: #2d6a3e;">Política de Privacidade</a>.
+              </span>
+            </label>
+          </div>
+
           <div class="ep-status" id="formStatus"></div>
           <div class="ep-flex ep-gap-8 ep-flex--wrap">
             <button type="submit" class="ep-btn ep-btn--primary ep-btn--lg" id="submitBtn" data-i18n="agendar:form.submit">Enviar pedido</button>
@@ -449,6 +467,12 @@
       $("formStatus").classList.add("is-err");
       return;
     }
+    if (!$("tcleCheck")?.checked) {
+      $("formStatus").textContent = "Você precisa aceitar o Termo de Consentimento (TCLE) para continuar.";
+      $("formStatus").classList.add("is-err");
+      $("tcleCheck")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
 
     $("submitBtn").disabled = true;
     $("formStatus").textContent = tr("agendar:formErrors.sending", "Enviando…");
@@ -460,7 +484,8 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           patientName, patientEmail, patientPhone, notes,
-          requestedSlot: selectedSlot.start
+          requestedSlot: selectedSlot.start,
+          tcleSigned: true
         })
       });
       const data = await res.json().catch(() => ({}));
