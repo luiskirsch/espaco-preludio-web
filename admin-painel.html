@@ -770,6 +770,43 @@
             </div>
 
           </div><!-- /notifComposer -->
+
+          <!-- ── MENSAGEM DIRETA NO CHAT ── -->
+          <div style="background:#fff;border-radius:16px;border:1.5px solid rgba(28,31,29,.1);padding:28px;margin-top:20px;box-shadow:0 2px 12px rgba(0,0,0,.06);">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+              <div style="width:42px;height:42px;border-radius:50%;background:#c8963a;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;">EP</div>
+              <div>
+                <div style="font-size:14px;font-weight:700;color:#1c1f1d;">💬 Mensagem direta no chat</div>
+                <div style="font-size:12px;color:#9a9992;">Aparece na caixa de mensagens do profissional como "🏛️ Espaço Prelúdio"</div>
+              </div>
+            </div>
+
+            <div style="display:grid;gap:14px;">
+              <div>
+                <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px;">Destinatário</label>
+                <select id="msgProfSelect" style="width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid rgba(28,31,29,.15);font-size:13px;background:#f5f0e8;color:#1c1f1d;outline:none;">
+                  <option value="">Carregando…</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px;">Assunto (opcional)</label>
+                <input id="msgSubject" type="text" maxlength="100" placeholder="Ex.: Sobre seu perfil" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid rgba(28,31,29,.15);font-size:14px;background:#f5f0e8;color:#1c1f1d;outline:none;">
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px;">Mensagem <span style="color:#b8453d;">*</span></label>
+                <textarea id="msgText" rows="4" maxlength="2000" placeholder="Escreva a mensagem…" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid rgba(28,31,29,.15);font-size:14px;background:#f5f0e8;color:#1c1f1d;outline:none;resize:vertical;font-family:inherit;"></textarea>
+                <div style="font-size:11px;color:#9a9992;margin-top:4px;">O profissional pode responder diretamente no chat.</div>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;margin-top:18px;flex-wrap:wrap;">
+              <button id="msgSendBtn" type="button" style="padding:12px 28px;border-radius:999px;background:#c8963a;color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;">
+                Enviar mensagem
+              </button>
+              <span id="msgSendStatus" style="font-size:13px;"></span>
+            </div>
+          </div>
+
         </div>
 
       </div>
@@ -1298,18 +1335,22 @@
       tip: "#c8963a", admin_message: "#1c1f1d"
     };
 
-    // Carregar profissionais no select
+    // Carregar profissionais nos selects
+    let profsCache = [];
     try {
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/profissionais`, {
         headers: { "Authorization": `Bearer ${idTokenCache}` }
       });
       const d = await r.json().catch(() => ({}));
-      const profs = (d.items || []).sort((a, b) => (a.displayName || "").localeCompare(b.displayName || ""));
-      const sel = $("notifProfSelect");
-      sel.innerHTML = `<option value="">— Selecione o profissional —</option>` +
-        profs.map(p => `<option value="${escapeHtml(p.uid)}">${escapeHtml(p.displayName || p.email || p.uid)}</option>`).join("");
+      profsCache = (d.items || []).sort((a, b) => (a.displayName || "").localeCompare(b.displayName || ""));
+      const opts = `<option value="">— Selecione o profissional —</option>` +
+        profsCache.map(p => `<option value="${escapeHtml(p.uid)}">${escapeHtml(p.displayName || p.email || p.uid)}</option>`).join("");
+      if ($("notifProfSelect")) $("notifProfSelect").innerHTML = opts;
+      if ($("msgProfSelect"))  $("msgProfSelect").innerHTML  = opts;
     } catch {
-      $("notifProfSelect").innerHTML = `<option value="">Erro ao carregar — tente recarregar</option>`;
+      const err = `<option value="">Erro ao carregar</option>`;
+      if ($("notifProfSelect")) $("notifProfSelect").innerHTML = err;
+      if ($("msgProfSelect"))  $("msgProfSelect").innerHTML  = err;
     }
 
     // Alternar destinatário
@@ -1410,6 +1451,38 @@
       } finally {
         btn.disabled = false;
         btn.textContent = "Enviar notificação";
+      }
+    });
+
+    // ── Enviar mensagem de chat ──────────────────────────────────────
+    $("msgSendBtn")?.addEventListener("click", async () => {
+      const recipientUid = $("msgProfSelect")?.value;
+      const text    = $("msgText")?.value?.trim();
+      const subject = $("msgSubject")?.value?.trim() || undefined;
+
+      if (!recipientUid) { $("msgSendStatus").textContent = "⚠️ Selecione um profissional."; $("msgSendStatus").style.color = "#b8453d"; return; }
+      if (!text)         { $("msgSendStatus").textContent = "⚠️ Escreva a mensagem."; $("msgSendStatus").style.color = "#b8453d"; return; }
+
+      const btn = $("msgSendBtn");
+      btn.disabled = true; btn.textContent = "Enviando…";
+      $("msgSendStatus").textContent = "";
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/mensagem`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idTokenCache}` },
+          body: JSON.stringify({ recipientUid, text, subject })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d.error || r.status);
+        $("msgSendStatus").textContent = "✅ Mensagem enviada! Aparece no chat do profissional.";
+        $("msgSendStatus").style.color = "#2d6a3e";
+        if ($("msgText")) $("msgText").value = "";
+        if ($("msgSubject")) $("msgSubject").value = "";
+      } catch (e) {
+        $("msgSendStatus").textContent = "❌ Erro: " + e.message;
+        $("msgSendStatus").style.color = "#b8453d";
+      } finally {
+        btn.disabled = false; btn.textContent = "Enviar mensagem";
       }
     });
   })();

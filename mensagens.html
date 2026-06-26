@@ -627,45 +627,56 @@
     }
   }
   function renderThreads(threads) {
-    // Card horizontal estilo WhatsApp: avatar circular + nome/tempo na linha 1
-    // + preview da ultima msg + badge "novo" na linha 2. Truncate ellipsis no
-    // nome e na preview pra nao quebrar layout em conversas longas.
     $("threadList").innerHTML = threads.map(t => {
-      const peerName = t.patientDisplayName || tr("mensagens:js.peerFallback", "Paciente");
-      const lastTime = t.lastMessageAt ? fmtTime(t.lastMessageAt) : "";
-      const isActive = t.threadId === currentThreadId;
-      const bg = isActive ? "var(--ep-accent-soft)" : "var(--ep-bg-2)";
-      const borderColor = isActive ? "var(--ep-accent)" : "var(--ep-line)";
+      const isSupport = t.isSupportThread === true;
+      const peerName  = isSupport
+        ? "🏛️ Espaço Prelúdio"
+        : (t.patientDisplayName || tr("mensagens:js.peerFallback", "Paciente"));
+      const lastTime    = t.lastMessageAt ? fmtTime(t.lastMessageAt) : "";
+      const isActive    = t.threadId === currentThreadId;
+      const bg          = isActive ? "var(--ep-accent-soft)" : "var(--ep-bg-2)";
+      const borderColor = isActive ? "var(--ep-accent)" : (isSupport ? "rgba(200,150,58,.4)" : "var(--ep-line)");
       const activeClass = isActive ? " is-active" : "";
-      const initials = peerName.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "?";
-      // Bolinha verde com contador estilo WhatsApp. So mostra se tiver msg
-      // nao lida (unreadCount > 0). 99+ pra contadores grandes nao quebrarem.
-      const count = Number(t.unreadCount) || 0;
+
+      const count    = Number(t.unreadCount) || 0;
       const badgeNew = count > 0
-        ? `<span style="background: #25d366; color: #fff; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; padding: 0 6px; flex-shrink: 0;">${count > 99 ? "99+" : count}</span>`
+        ? `<span style="background:#c8963a;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;flex-shrink:0;">${count > 99 ? "99+" : count}</span>`
         : "";
 
-      // Preview da ultima msg (localStorage). Prefixo "Você:" se foi o terapeuta.
-      const preview = getLastMsgPreview(t.threadId);
       let previewLine;
-      if (preview && preview.text) {
-        const meSent = preview.senderRole === "therapist";
-        const prefix = meSent ? '<span style="color: var(--ep-ink-3);">Você: </span>' : "";
-        previewLine = `${prefix}${escapeHtml(preview.text)}`;
+      if (isSupport) {
+        const txt = t.lastMessageText || "";
+        const prefix = t.lastMessageSenderRole === "therapist" ? '<span style="color:var(--ep-ink-3);">Você: </span>' : "";
+        previewLine = txt
+          ? `${prefix}${escapeHtml(txt.slice(0, 60))}`
+          : `<span style="color:var(--ep-ink-3);font-style:italic;">Toque para abrir</span>`;
       } else {
-        previewLine = `<span style="color: var(--ep-ink-3); font-style: italic;">${escapeHtml(tr("mensagens:js.threadNoMessages", "Sem mensagens"))}</span>`;
+        const preview = getLastMsgPreview(t.threadId);
+        if (preview && preview.text) {
+          const meSent = preview.senderRole === "therapist";
+          const prefix = meSent ? '<span style="color:var(--ep-ink-3);">Você: </span>' : "";
+          previewLine = `${prefix}${escapeHtml(preview.text)}`;
+        } else {
+          previewLine = `<span style="color:var(--ep-ink-3);font-style:italic;">${escapeHtml(tr("mensagens:js.threadNoMessages","Sem mensagens"))}</span>`;
+        }
       }
 
+      const initials = isSupport ? "EP" : (peerName.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "?");
+      const avatarBg = isSupport ? "#c8963a" : "var(--ep-accent)";
+
       return `
-        <button type="button" class="ep-thread-card${activeClass}" data-thread-id="${escapeHtml(t.threadId)}" style="text-align: left; padding: 10px 12px; margin: 6px 8px; border: 1px solid ${borderColor}; border-radius: 12px; background: ${bg}; cursor: pointer; display: flex; gap: 10px; align-items: center; width: calc(100% - 16px); transition: background-color 0.15s ease, border-color 0.15s ease;">
-          <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--ep-accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; flex-shrink: 0;">${escapeHtml(initials)}</div>
-          <div style="flex: 1; min-width: 0;">
-            <div class="ep-flex" style="justify-content: space-between; align-items: center; gap: 6px;">
-              <span style="font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(peerName)}</span>
-              <span style="font-size: 11px; color: var(--ep-ink-3); flex-shrink: 0;">${escapeHtml(lastTime)}</span>
+        <button type="button" class="ep-thread-card${activeClass}"
+          data-thread-id="${escapeHtml(t.threadId)}"
+          data-support="${isSupport ? "1" : "0"}"
+          style="text-align:left;padding:10px 12px;margin:6px 8px;border:1px solid ${borderColor};border-radius:12px;background:${bg};cursor:pointer;display:flex;gap:10px;align-items:center;width:calc(100% - 16px);transition:background-color .15s ease,border-color .15s ease;">
+          <div style="width:40px;height:40px;border-radius:50%;background:${avatarBg};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0;">${escapeHtml(initials)}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="ep-flex" style="justify-content:space-between;align-items:center;gap:6px;">
+              <span style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(peerName)}</span>
+              <span style="font-size:11px;color:var(--ep-ink-3);flex-shrink:0;">${escapeHtml(lastTime)}</span>
             </div>
-            <div class="ep-flex" style="gap: 6px; align-items: center; margin-top: 2px;">
-              <span style="font-size: 12.5px; color: var(--ep-ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;">${previewLine}</span>
+            <div class="ep-flex" style="gap:6px;align-items:center;margin-top:2px;">
+              <span style="font-size:12.5px;color:var(--ep-ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;">${previewLine}</span>
               ${badgeNew}
             </div>
           </div>
@@ -673,12 +684,104 @@
       `;
     }).join("");
   }
+
+  // ── Abrir support thread ─────────────────────────────────────────────
+  async function openSupportThread(threadId) {
+    currentThreadId = threadId;
+    renderThreads(threads);
+    const chatArea = $("chatArea") || $("messageArea");
+    if (!chatArea) return;
+    chatArea.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--ep-ink-3);">Carregando mensagens…</div>`;
+
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/support-threads/${encodeURIComponent(threadId)}/messages`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) throw new Error(d.error || r.status);
+
+      const msgs = d.messages || [];
+      chatArea.innerHTML = `
+        <div style="display:flex;flex-direction:column;height:100%;">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--ep-line);display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:#c8963a;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">EP</div>
+            <div>
+              <div style="font-weight:700;font-size:14px;">🏛️ Espaço Prelúdio</div>
+              <div style="font-size:11px;color:var(--ep-ink-3);">${escapeHtml(d.thread?.subject || "Suporte")}</div>
+            </div>
+          </div>
+          <div id="supportMsgList" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;">
+            ${msgs.map(m => {
+              const isMe = m.senderRole === "therapist";
+              const time = m.createdAt ? fmtTime(m.createdAt) : "";
+              return `
+                <div style="display:flex;flex-direction:column;align-items:${isMe ? "flex-end" : "flex-start"};">
+                  ${!isMe ? `<span style="font-size:10px;color:#c8963a;font-weight:700;margin-bottom:3px;">🏛️ ${escapeHtml(m.senderName)}</span>` : ""}
+                  <div style="max-width:75%;padding:10px 14px;border-radius:${isMe ? "16px 16px 4px 16px" : "16px 16px 16px 4px"};background:${isMe ? "var(--ep-accent)" : "#fff"};color:${isMe ? "#fff" : "var(--ep-ink)"};font-size:14px;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+                    ${escapeHtml(m.text)}
+                  </div>
+                  <span style="font-size:10px;color:var(--ep-ink-3);margin-top:3px;">${escapeHtml(time)}</span>
+                </div>
+              `;
+            }).join("")}
+          </div>
+          <div style="padding:12px 16px;border-top:1px solid var(--ep-line);display:flex;gap:10px;">
+            <textarea id="supportReplyInput" placeholder="Escreva sua resposta…" rows="2" style="flex:1;padding:10px 12px;border-radius:10px;border:1.5px solid var(--ep-line);font-size:14px;font-family:inherit;resize:none;background:var(--ep-bg-2);color:var(--ep-ink);outline:none;"></textarea>
+            <button id="supportReplyBtn" style="padding:10px 18px;border-radius:10px;background:var(--ep-ink);color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;align-self:flex-end;">Enviar</button>
+          </div>
+        </div>
+      `;
+
+      // Scroll to bottom
+      const list = $("supportMsgList");
+      if (list) list.scrollTop = list.scrollHeight;
+
+      // Reply handler
+      $("supportReplyBtn")?.addEventListener("click", async () => {
+        const text = $("supportReplyInput")?.value?.trim();
+        if (!text) return;
+        const btn = $("supportReplyBtn");
+        btn.disabled = true;
+        try {
+          const rr = await fetch(`${BACKEND_BASE_URL}/therapy/support-threads/${encodeURIComponent(threadId)}/messages`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+            body: JSON.stringify({ text })
+          });
+          const dd = await rr.json().catch(() => ({}));
+          if (!rr.ok || !dd.ok) throw new Error(dd.error || rr.status);
+          $("supportReplyInput").value = "";
+          await openSupportThread(threadId); // recarrega
+        } catch (e) {
+          alert("Erro ao enviar: " + e.message);
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      // Atualiza badge no sidebar
+      if (window.EPSidebar?.setBadge) {
+        const nr = await fetch(`${BACKEND_BASE_URL}/therapy/notificacoes?onlyUnread=true&limit=50`, {
+          headers: { "Authorization": `Bearer ${idToken}` }
+        });
+        const nd = await nr.json().catch(() => ({}));
+        window.EPSidebar.setBadge(nd.unreadCount || 0);
+      }
+    } catch (e) {
+      chatArea.innerHTML = `<div style="padding:32px;text-align:center;color:var(--ep-danger);">Erro ao carregar: ${escapeHtml(e.message)}</div>`;
+    }
+  }
   if (ecdhReady) await loadThreads();
 
   $("threadList").addEventListener("click", async (e) => {
     const btn = e.target.closest("button[data-thread-id]");
     if (!btn) return;
     const threadId = btn.getAttribute("data-thread-id");
+    // Support threads têm renderização própria
+    if (btn.dataset.support === "1") {
+      await openSupportThread(threadId);
+      return;
+    }
     await openThread(threadId);
   });
 
