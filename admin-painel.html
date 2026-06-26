@@ -686,6 +686,95 @@
       </div>
     </section>
 
+    <!-- ── COMUNICAR COM PROFISSIONAL ───────────────────────────────── -->
+    <section class="ap-section-wrap" id="sectionComunicar">
+      <div class="ap-section-inner">
+
+        <div class="ap-section" style="margin-top:0;">
+          <h2 class="ap-section__title">📣 Comunicar com Profissional</h2>
+          <p class="ap-section__sub">Envie uma notificação estilizada para um profissional específico ou para todos de uma vez.</p>
+
+          <div id="notifComposer" style="background:#fff;border-radius:16px;border:1.5px solid rgba(28,31,29,.1);padding:28px;margin-top:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);">
+
+            <!-- Destinatário -->
+            <div style="margin-bottom:20px;">
+              <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:8px;">Destinatário</label>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;border:1.5px solid rgba(28,31,29,.15);background:#f5f0e8;">
+                  <input type="radio" name="notifTarget" value="one" id="notifTargetOne" checked style="accent-color:#2d6a3e;">
+                  Profissional específico
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;border:1.5px solid rgba(28,31,29,.15);background:#f5f0e8;">
+                  <input type="radio" name="notifTarget" value="all" id="notifTargetAll" style="accent-color:#2d6a3e;">
+                  📢 Todos os profissionais
+                </label>
+              </div>
+              <div id="notifProfRow" style="margin-top:12px;">
+                <select id="notifProfSelect" style="width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid rgba(28,31,29,.15);font-size:13px;background:#f5f0e8;color:#1c1f1d;outline:none;">
+                  <option value="">Carregando profissionais…</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Tipo / Emoji -->
+            <div style="margin-bottom:20px;">
+              <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:8px;">Tipo</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;" id="notifTypeRow">
+                <button type="button" class="notif-type-btn notif-type-active" data-type="info" data-emoji="ℹ️" data-color="#2a3d5c" style="padding:8px 16px;border-radius:999px;border:2px solid #2a3d5c;background:#2a3d5c;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">ℹ️ Informação</button>
+                <button type="button" class="notif-type-btn" data-type="success" data-emoji="🎉" data-color="#2d6a3e" style="padding:8px 16px;border-radius:999px;border:2px solid rgba(28,31,29,.15);background:#f5f0e8;color:#1c1f1d;font-size:12px;font-weight:700;cursor:pointer;">🎉 Parabéns</button>
+                <button type="button" class="notif-type-btn" data-type="warning" data-emoji="⚠️" data-color="#b8453d" style="padding:8px 16px;border-radius:999px;border:2px solid rgba(28,31,29,.15);background:#f5f0e8;color:#1c1f1d;font-size:12px;font-weight:700;cursor:pointer;">⚠️ Aviso</button>
+                <button type="button" class="notif-type-btn" data-type="tip" data-emoji="💡" data-color="#c8963a" style="padding:8px 16px;border-radius:999px;border:2px solid rgba(28,31,29,.15);background:#f5f0e8;color:#1c1f1d;font-size:12px;font-weight:700;cursor:pointer;">💡 Dica</button>
+                <button type="button" class="notif-type-btn" data-type="admin_message" data-emoji="📨" data-color="#1c1f1d" style="padding:8px 16px;border-radius:999px;border:2px solid rgba(28,31,29,.15);background:#f5f0e8;color:#1c1f1d;font-size:12px;font-weight:700;cursor:pointer;">📨 Mensagem</button>
+              </div>
+            </div>
+
+            <!-- Título + Corpo -->
+            <div style="display:grid;gap:14px;margin-bottom:20px;">
+              <div>
+                <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px;">Título <span style="color:#b8453d;">*</span></label>
+                <input id="notifTitle" type="text" maxlength="100" placeholder="Ex.: Sua agenda está atualizada 🎯" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid rgba(28,31,29,.15);font-size:14px;background:#f5f0e8;color:#1c1f1d;outline:none;">
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px;">Mensagem <span style="color:#b8453d;">*</span></label>
+                <textarea id="notifBody" rows="3" maxlength="500" placeholder="Escreva a mensagem que o profissional vai ver…" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid rgba(28,31,29,.15);font-size:14px;background:#f5f0e8;color:#1c1f1d;outline:none;resize:vertical;font-family:inherit;"></textarea>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px;">Link (opcional)</label>
+                <input id="notifLink" type="url" placeholder="https://espacopreludio.com.br/…" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid rgba(28,31,29,.15);font-size:14px;background:#f5f0e8;color:#1c1f1d;outline:none;">
+              </div>
+            </div>
+
+            <!-- Preview -->
+            <div style="margin-bottom:20px;">
+              <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:8px;">Preview (como o profissional vai ver)</label>
+              <div id="notifPreview" style="border-radius:12px;padding:16px 18px;display:flex;align-items:flex-start;gap:14px;border:1.5px solid rgba(28,31,29,.1);background:#f5f0e8;">
+                <div id="notifPreviewEmoji" style="font-size:28px;flex-shrink:0;line-height:1;">ℹ️</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+                    <span style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9a9992;">Espaço Prelúdio</span>
+                    <span style="font-size:10px;color:#9a9992;">· agora</span>
+                  </div>
+                  <div id="notifPreviewTitle" style="font-size:14px;font-weight:700;color:#1c1f1d;margin-bottom:4px;">Título da notificação</div>
+                  <div id="notifPreviewBody" style="font-size:13px;color:#5a5a56;line-height:1.5;">Corpo da mensagem aqui…</div>
+                  <div id="notifPreviewLink" style="display:none;margin-top:8px;"><span style="font-size:12px;font-weight:600;color:#2d6a3e;">→ Ver mais</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botão -->
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+              <button id="notifSendBtn" type="button" style="padding:12px 28px;border-radius:999px;background:#1c1f1d;color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;">
+                Enviar notificação
+              </button>
+              <span id="notifSendStatus" style="font-size:13px;"></span>
+            </div>
+
+          </div><!-- /notifComposer -->
+        </div>
+
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -757,6 +846,7 @@
     showDashboard();
     fetchDashboard();
     startAutoRefresh();
+    initNotifComposer();
   });
 
   // ─── Fetch dashboard ────────────────────────────────────────────────
@@ -1195,6 +1285,134 @@
       "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
     }[c]));
   }
+
+  // ── COMUNICAR COM PROFISSIONAL ─────────────────────────────────────────
+  async function initNotifComposer() {
+    const $ = id => document.getElementById(id);
+    if (!$("notifComposer")) return;
+
+    let selectedType = "info";
+    let selectedEmoji = "ℹ️";
+    const TYPE_COLORS = {
+      info: "#2a3d5c", success: "#2d6a3e", warning: "#b8453d",
+      tip: "#c8963a", admin_message: "#1c1f1d"
+    };
+
+    // Carregar profissionais no select
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/profissionais`, {
+        headers: { "Authorization": `Bearer ${idTokenCache}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      const profs = (d.items || []).sort((a, b) => (a.displayName || "").localeCompare(b.displayName || ""));
+      const sel = $("notifProfSelect");
+      sel.innerHTML = `<option value="">— Selecione o profissional —</option>` +
+        profs.map(p => `<option value="${escapeHtml(p.uid)}">${escapeHtml(p.displayName || p.email || p.uid)}</option>`).join("");
+    } catch {
+      $("notifProfSelect").innerHTML = `<option value="">Erro ao carregar — tente recarregar</option>`;
+    }
+
+    // Alternar destinatário
+    document.querySelectorAll("input[name='notifTarget']").forEach(r => {
+      r.addEventListener("change", () => {
+        $("notifProfRow").style.display = r.value === "one" ? "block" : "none";
+      });
+    });
+
+    // Tipo buttons
+    document.querySelectorAll(".notif-type-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".notif-type-btn").forEach(b => {
+          b.style.background = "#f5f0e8";
+          b.style.color = "#1c1f1d";
+          b.style.borderColor = "rgba(28,31,29,.15)";
+          b.classList.remove("notif-type-active");
+        });
+        const color = btn.dataset.color;
+        btn.style.background = color;
+        btn.style.color = "#fff";
+        btn.style.borderColor = color;
+        btn.classList.add("notif-type-active");
+        selectedType = btn.dataset.type;
+        selectedEmoji = btn.dataset.emoji;
+        $("notifPreviewEmoji").textContent = selectedEmoji;
+        updatePreview();
+      });
+    });
+
+    // Preview em tempo real
+    function updatePreview() {
+      const title = $("notifTitle").value.trim() || "Título da notificação";
+      const body  = $("notifBody").value.trim()  || "Corpo da mensagem aqui…";
+      const link  = $("notifLink").value.trim();
+      const color = TYPE_COLORS[selectedType] || "#1c1f1d";
+      $("notifPreviewTitle").textContent = title;
+      $("notifPreviewBody").textContent  = body;
+      $("notifPreview").style.borderLeftColor = color;
+      $("notifPreview").style.borderLeftWidth = "4px";
+      if (link) { $("notifPreviewLink").style.display = "block"; }
+      else       { $("notifPreviewLink").style.display = "none"; }
+    }
+    ["notifTitle","notifBody","notifLink"].forEach(id => {
+      $(id)?.addEventListener("input", updatePreview);
+    });
+    updatePreview();
+
+    // Enviar
+    $("notifSendBtn").addEventListener("click", async () => {
+      const broadcast = document.querySelector("input[name='notifTarget']:checked")?.value === "all";
+      const recipientUid = $("notifProfSelect").value;
+      const title = $("notifTitle").value.trim();
+      const body  = $("notifBody").value.trim();
+      const link  = $("notifLink").value.trim() || null;
+
+      if (!title || !body) {
+        $("notifSendStatus").textContent = "⚠️ Preencha título e mensagem.";
+        $("notifSendStatus").style.color = "#b8453d";
+        return;
+      }
+      if (!broadcast && !recipientUid) {
+        $("notifSendStatus").textContent = "⚠️ Selecione um profissional.";
+        $("notifSendStatus").style.color = "#b8453d";
+        return;
+      }
+
+      const btn = $("notifSendBtn");
+      btn.disabled = true;
+      btn.textContent = broadcast ? "Enviando para todos…" : "Enviando…";
+      $("notifSendStatus").textContent = "";
+
+      try {
+        const payload = { title, body, type: selectedType, emoji: selectedEmoji, link };
+        if (broadcast) payload.broadcast = true;
+        else payload.recipientUid = recipientUid;
+
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/notificacoes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idTokenCache}` },
+          body: JSON.stringify(payload)
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d.error || r.status);
+
+        const msg = broadcast
+          ? `✅ Enviado para ${d.sent} profissionais!`
+          : "✅ Notificação enviada!";
+        $("notifSendStatus").textContent = msg;
+        $("notifSendStatus").style.color = "#2d6a3e";
+        $("notifTitle").value = "";
+        $("notifBody").value  = "";
+        $("notifLink").value  = "";
+        updatePreview();
+      } catch (e) {
+        $("notifSendStatus").textContent = "❌ Erro: " + e.message;
+        $("notifSendStatus").style.color = "#b8453d";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Enviar notificação";
+      }
+    });
+  })();
 </script>
 
 
