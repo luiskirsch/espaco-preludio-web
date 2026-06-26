@@ -881,8 +881,8 @@
     }
     idTokenCache = await user.getIdToken();
     adminEmail.textContent = user.email || "?";
-    showDashboard();
-    fetchDashboard();
+    // Não mostra o dashboard antes de confirmar acesso admin no backend
+    await fetchDashboard();
     startAutoRefresh();
     initNotifComposer();
   });
@@ -901,12 +901,15 @@
       }
       const d = await r.json();
       if (!d.ok) {
+        showDashboard();
         document.getElementById("serverStatusText").textContent = tr("admin-painel:status.offline", "OFFLINE");
         setServerPill("err");
         return;
       }
+      showDashboard();
       render(d);
     } catch (err) {
+      showDashboard();
       document.getElementById("serverStatusText").textContent = tr("admin-painel:status.offline", "OFFLINE");
       setServerPill("err");
     } finally {
