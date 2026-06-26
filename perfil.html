@@ -1311,7 +1311,9 @@
       });
     }
 
-    buildGrid(); // grid vazio inicial
+    // applyTherapist() é chamado antes deste IIFE, então _applyTherapistData
+    // ainda não existia. Carregamos a disponibilidade diretamente via closure.
+    loadAvail(therapist);
   })();
 
   // ─── Exportar dados LGPD ─────────────────────────────────────────────
