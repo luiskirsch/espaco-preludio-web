@@ -799,9 +799,46 @@ document.addEventListener("DOMContentLoaded", function() {
     setStatus(statusData, tr("cadastro:status.creatingAccount", "Criando sua conta…"));
 
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(cred.user, { displayName });
-      const idToken = await cred.user.getIdToken();
+      let credUser;
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        credUser = cred.user;
+        await updateProfile(credUser, { displayName });
+      } catch (createErr) {
+        if (createErr.code !== "auth/email-already-in-use") throw createErr;
+
+        // Conta Firebase já existe mas o registro no Firestore pode estar incompleto.
+        // Tenta login com as credenciais fornecidas para continuar o cadastro.
+        setStatus(statusData, "E-mail já existe. Verificando se o cadastro está incompleto…");
+        let loginCred;
+        try {
+          const { signInWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
+          loginCred = await signInWithEmailAndPassword(auth, email, password);
+        } catch {
+          // Senha errada ou outro erro → mostra mensagem padrão
+          setStatus(statusData, tr("cadastro:status.emailAlreadyInUse", "Este e-mail já está cadastrado. Use o login."), "err");
+          setBusy(false);
+          return;
+        }
+        credUser = loginCred.user;
+
+        // Verifica se já tem documento no Firestore
+        const checkToken = await credUser.getIdToken();
+        const checkRes = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, {
+          headers: { "Authorization": `Bearer ${checkToken}` }
+        });
+        if (checkRes.ok) {
+          // Já registrado — redireciona para o painel
+          setStatus(statusData, "Cadastro já concluído. Redirecionando para o painel…", "ok");
+          setBusy(false);
+          setTimeout(() => { window.location.href = "./painel.html"; }, 1500);
+          return;
+        }
+        // 404 = conta Auth existe mas sem doc no Firestore — continua o cadastro normalmente
+        await updateProfile(credUser, { displayName });
+      }
+
+      const idToken = await credUser.getIdToken();
 
       setStatus(statusData, tr("cadastro:status.generatingKey", "Gerando sua chave de cifragem…"));
       const salt     = generateSalt();
@@ -810,7 +847,7 @@ document.addEventListener("DOMContentLoaded", function() {
       const recovery = dekToRecoveryPhrase(dekBytes);
 
       pending = {
-        user: cred.user,
+        user: credUser,
         idToken,
         password,
         dekBytes,
