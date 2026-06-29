@@ -461,7 +461,8 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           patientName, patientEmail, patientPhone, notes,
-          requestedSlot: selectedSlot.start
+          requestedSlot: selectedSlot.start,
+          tcleSigned: true
         })
       });
       const data = await res.json().catch(() => ({}));
