@@ -386,14 +386,13 @@
         </div>
 
         <div class="ep-field ep-mt-8">
-          <label class="ep-label" for="valorConsulta">Valor da consulta (R$)</label>
-          <input id="valorConsulta" class="ep-input" type="number" min="10" max="100000" step="1" placeholder="ex: 60">
-          <p class="ep-text-xs ep-text-muted ep-mt-0">Padrão: R$60. Informe o valor que o paciente deve pagar ao agendar.</p>
+          <label class="ep-label">Valor da consulta</label>
+          <div style="padding: 10px 14px; background: var(--ep-bg-2); border-radius: 8px; font-size: 15px; font-weight: 600; color: var(--ep-accent);">R$ 60,00 <span style="font-size:12px;font-weight:400;color:var(--ep-ink-3);">(valor fixo da plataforma)</span></div>
         </div>
       </section>
 
-      <!-- Cobranças online (Asaas) -->
-      <section class="ep-receita-form">
+      <!-- Cobranças online (Asaas) — visível só para planos pagos (pro, empresa, recém-formado) -->
+      <section class="ep-receita-form ep-hide" id="asaasSection">
         <h2 class="ep-h3 ep-mt-0" data-i18n="perfil:asaas.h2">Cobranças online (Asaas)</h2>
         <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n-html="perfil:asaas.subHtml">
           Conecte sua conta <a href="https://www.asaas.com" target="_blank" rel="noopener">Asaas</a> pra gerar
@@ -1004,6 +1003,12 @@
     // Tópicos personalizados da sessão.
     customTopics = Array.isArray(t.sessionTopics) ? t.sessionTopics.map(x => ({ ...x })) : [];
     renderTopicsList();
+
+    // Asaas só aparece para planos pagos (pro, empresa, recém-formado).
+    const PLANOS_PAGOS = ["pro", "empresa", "recem-formado-active", "profissional"];
+    if (PLANOS_PAGOS.includes(t.plano)) {
+      $("asaasSection").classList.remove("ep-hide");
+    }
 
     $("asaasEnv").value = t.asaasEnv === "production" ? "production" : "sandbox";
     $("asaasEnabled").checked = !!t.asaasEnabled;
@@ -2142,16 +2147,8 @@ Direito de portabilidade — LGPD Art. 18, V.
       body.pixKey     = pixKeyTyped;
       body.pixKeyType = pixKeyTypeVal;
     }
-    const valorConsultaRaw = $("valorConsulta").value.trim();
-    if (valorConsultaRaw) {
-      const valorReais = Number(valorConsultaRaw);
-      if (!Number.isFinite(valorReais) || valorReais < 10) {
-        setStatus("Valor da consulta inválido. Mínimo R$10.", "err");
-        $("saveBtn").disabled = false;
-        return;
-      }
-      body.valorConsulta = Math.round(valorReais * 100);
-    }
+    // Valor fixo: R$60 — sem campo editável.
+    body.valorConsulta = 6000;
 
     if (pendingLogo && pendingLogo.dirty) {
       if (pendingLogo.removed) {
