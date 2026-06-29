@@ -27,6 +27,17 @@
     .confirm-row__val   { font-size: 14px; color: var(--a-ink); font-weight: 600; text-align: right; }
     .success-wrap { padding: 48px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
     .success-icon { font-size: 64px; }
+
+    /* PIX step */
+    .pix-qr-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 8px 0; }
+    .pix-qr-img  { width: 200px; height: 200px; border-radius: 12px; border: 1px solid var(--a-line); }
+    .pix-valor   { font-family: var(--ff-serif); font-size: 28px; font-weight: 600; color: var(--a-ink); }
+    .pix-copy-box { width: 100%; background: var(--a-bg2); border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 8px; }
+    .pix-copy-code { font-family: var(--ff-mono,monospace); font-size: 11px; color: var(--a-ink2); word-break: break-all; flex: 1; line-height: 1.4; }
+    .pix-timer   { font-size: 13px; color: var(--a-ink3); }
+    .pix-timer span { color: var(--a-accent); font-weight: 700; }
+    .pix-paid-badge { display: flex; align-items: center; gap: 8px; background: #e6f9f0; color: #1a7a4a; border-radius: 10px; padding: 12px 16px; font-weight: 600; font-size: 14px; }
+    .pix-paid-badge svg { flex-shrink: 0; }
   </style>
   <script src="./sw-register.js" defer></script>
 </head>
@@ -53,13 +64,14 @@
       </div>
     </div>
 
-    <!-- Steps -->
-    <div style="padding:14px 16px 6px;display:flex;justify-content:space-between;align-items:center;">
+    <!-- Steps indicator -->
+    <div style="padding:14px 16px 6px;display:flex;justify-content:space-between;align-items:center;" id="stepsRow">
       <div class="a-steps" id="stepsIndicator">
         <div class="a-steps__dot is-active" id="dot1"></div>
         <div class="a-steps__dot" id="dot2"></div>
         <div class="a-steps__dot" id="dot3"></div>
         <div class="a-steps__dot" id="dot4"></div>
+        <div class="a-steps__dot" id="dot5"></div>
       </div>
       <span id="stepLabel" style="font-size:12px;color:var(--a-ink3);">Passo 1 de 4</span>
     </div>
@@ -134,12 +146,54 @@
           <div class="confirm-row"><span class="confirm-row__label">Data</span><span class="confirm-row__val" id="confData">—</span></div>
           <div class="confirm-row"><span class="confirm-row__label">Horário</span><span class="confirm-row__val" id="confHora">—</span></div>
           <div class="confirm-row"><span class="confirm-row__label">Paciente</span><span class="confirm-row__val" id="confPac">—</span></div>
+          <div class="confirm-row" id="confValorRow" style="display:none;"><span class="confirm-row__label">Valor</span><span class="confirm-row__val" id="confValor" style="color:#1a7a4a;">—</span></div>
         </div>
         <div id="step4Erro" class="a-alert a-alert--err a-hide a-mt-12"></div>
       </div>
     </div>
 
-    <!-- Sucesso -->
+    <!-- STEP 5: Pagamento PIX -->
+    <div id="step5" class="a-hide">
+      <div class="step-header">
+        <div class="step-header__title">💚 Pagamento via PIX</div>
+        <div class="step-header__sub">Escaneie o QR code ou copie o código para pagar.</div>
+      </div>
+      <div class="a-section" style="padding-top:8px;">
+
+        <!-- Estado: aguardando pagamento -->
+        <div id="pixPendente">
+          <div class="pix-qr-wrap">
+            <div class="pix-valor" id="pixValorText">R$ —</div>
+            <img class="pix-qr-img" id="pixQrImg" src="" alt="QR Code PIX">
+            <p class="pix-timer">Expira em <span id="pixTimerText">30:00</span></p>
+          </div>
+          <div class="pix-copy-box a-mt-8">
+            <div class="pix-copy-code" id="pixCopiaCola"></div>
+            <button class="a-btn a-btn--ghost" style="padding:6px 12px;font-size:12px;flex-shrink:0;" id="btnCopiar">Copiar</button>
+          </div>
+          <p class="a-sub a-mt-12" style="text-align:center;font-size:12px;">O pagamento vai <strong>diretamente</strong> para o profissional. Assim que confirmado, seu pedido é registrado automaticamente.</p>
+        </div>
+
+        <!-- Estado: pago -->
+        <div id="pixConfirmado" class="a-hide">
+          <div class="pix-paid-badge a-mt-8">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a7a4a" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            Pagamento confirmado!
+          </div>
+          <p class="a-sub a-mt-12" style="text-align:center;">Pedido registrado com sucesso. O profissional vai confirmar em breve.</p>
+          <a href="./consultas.html" class="a-btn a-btn--accent a-btn--block a-mt-16">Ver minhas consultas</a>
+          <a href="./home.html" class="a-btn a-btn--ghost a-btn--block a-mt-8">Voltar ao início</a>
+        </div>
+
+        <!-- Opção de pular para depois -->
+        <div id="pixPularWrap" class="a-mt-16" style="text-align:center;">
+          <button class="a-btn a-btn--ghost" style="font-size:13px;color:var(--a-ink3);" id="btnPagarDepois">Pagar antes da consulta</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Sucesso sem PIX (modo legado) -->
     <div id="stepSuccess" class="a-hide">
       <div class="success-wrap">
         <div class="success-icon">🎉</div>
@@ -165,16 +219,22 @@
   const slug = new URLSearchParams(location.search).get("p") || "";
   if (!slug) window.location.href = "./buscar.html";
 
-  let therapist = null;
-  let currentUser = null;
+  let therapist    = null;
+  let currentUser  = null;
   let selectedDate = null;
   let selectedSlot = null;
-  let step = 1;
+  let step         = 1;
+  let pixPollTimer = null;
+  let pixCountdown = null;
+
+  const TOTAL_STEPS_PIX    = 5;
+  const TOTAL_STEPS_LEGACY = 4;
 
   onAuthStateChanged(auth, u => { if (!u) window.location.href = "./login.html"; else currentUser = u; });
 
   document.getElementById("btnBack").addEventListener("click", () => {
     if (step === 1) history.back();
+    else if (step === 5) { /* não volta do step de pagamento */ }
     else goStep(step - 1);
   });
 
@@ -195,26 +255,29 @@
         document.getElementById("profAvatar").textContent = (prof.displayName||"?").match(/\b\p{L}/gu)?.slice(0,2).join("").toUpperCase()||"?";
       }
       document.getElementById("confProf").textContent = prof.displayName;
+
+      if (prof.pixConfigured && prof.valorConsulta) {
+        const valorFmt = (prof.valorConsulta / 100).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+        document.getElementById("confValorRow").style.display = "";
+        document.getElementById("confValor").textContent = valorFmt;
+      }
+
       buildCalendar();
     } catch { }
   }
   loadProf();
 
-  // Calendário — próximos 14 dias
+  // Calendário — próximos 30 dias
   function buildCalendar() {
     const container = document.getElementById("calDays");
-    const DAYS = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+    const DAYS   = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
     const MONTHS = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-    const today = new Date(); today.setHours(0,0,0,0);
-    const minDate = new Date(today); minDate.setDate(today.getDate() + 1);
-    const maxDate = new Date(today); maxDate.setDate(today.getDate() + 30);
+    const today  = new Date(); today.setHours(0,0,0,0);
     container.innerHTML = "";
     for (let i = 1; i <= 30; i++) {
       const d = new Date(today); d.setDate(today.getDate() + i);
-      if (d > maxDate) break;
       const btn = document.createElement("button");
       btn.className = "a-cal__day";
-      if (d.getTime() === new Date().setHours(0,0,0,0)) btn.classList.add("is-today");
       btn.innerHTML = `<span class="a-cal__dow">${DAYS[d.getDay()]}</span><span class="a-cal__num">${d.getDate()}</span><span class="a-cal__mon">${MONTHS[d.getMonth()]}</span>`;
       btn.addEventListener("click", () => {
         document.querySelectorAll(".a-cal__day").forEach(b => b.classList.remove("is-selected"));
@@ -231,7 +294,6 @@
     document.getElementById("slotsLoading").classList.remove("a-hide");
     document.getElementById("slotsGrid").classList.add("a-hide");
     document.getElementById("slotsEmpty").classList.add("a-hide");
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
     const weekday = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"][date.getDay()];
     document.getElementById("step2Sub").textContent = `${weekday}, ${date.getDate()} de ${["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"][date.getMonth()]}`;
     try {
@@ -264,25 +326,35 @@
     }
   }
 
+  function totalSteps() {
+    return therapist?.pixConfigured ? TOTAL_STEPS_PIX : TOTAL_STEPS_LEGACY;
+  }
+
   function goStep(n) {
-    [1,2,3,4].forEach(i => {
+    const total = totalSteps();
+    [1,2,3,4,5].forEach(i => {
       document.getElementById(`step${i}`).classList.toggle("a-hide", i !== n);
       const dot = document.getElementById(`dot${i}`);
-      dot.classList.toggle("is-active", i === n);
-      dot.classList.toggle("is-done", i < n);
+      if (i <= total) {
+        dot.style.display = "";
+        dot.classList.toggle("is-active", i === n);
+        dot.classList.toggle("is-done", i < n);
+      } else {
+        dot.style.display = "none";
+      }
     });
     document.getElementById("stepSuccess").classList.add("a-hide");
-    document.getElementById("stepLabel").textContent = `Passo ${n} de 4`;
-    document.getElementById("btnNext").textContent = n === 4 ? "Confirmar pedido" : "Continuar";
+    document.getElementById("stepLabel").textContent = `Passo ${n} de ${total}`;
+    document.getElementById("btnNext").textContent = n === total ? "Confirmar pedido" : "Continuar";
     document.getElementById("btnNext").disabled = false;
+    document.getElementById("footerBtn").classList.toggle("a-hide", n === 5);
     step = n;
   }
 
   document.getElementById("btnNext").addEventListener("click", async () => {
-    if (step === 1) { /* seleção de data já avança auto */ return; }
+    if (step === 1) return;
     if (step === 2) {
       if (!selectedSlot) return;
-      // Pré-preenche dados do usuário
       if (currentUser) {
         document.getElementById("patName").value  = currentUser.displayName || "";
         document.getElementById("patEmail").value = currentUser.email || "";
@@ -298,10 +370,8 @@
       if (!phone || phone.length < 8) { erro.textContent = "Informe seu WhatsApp."; erro.classList.remove("a-hide"); return; }
       erro.classList.add("a-hide");
       const dt = new Date(Number(selectedSlot.start));
-      const dateStr = dt.toLocaleDateString("pt-BR", { weekday:"long", day:"2-digit", month:"long" });
-      const timeStr = dt.toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" });
-      document.getElementById("confData").textContent = dateStr;
-      document.getElementById("confHora").textContent = timeStr;
+      document.getElementById("confData").textContent = dt.toLocaleDateString("pt-BR", { weekday:"long", day:"2-digit", month:"long" });
+      document.getElementById("confHora").textContent = dt.toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" });
       document.getElementById("confPac").textContent  = name;
       goStep(4);
     } else if (step === 4) {
@@ -319,26 +389,119 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          patientName:  document.getElementById("patName").value.trim(),
-          patientEmail: document.getElementById("patEmail").value.trim(),
-          patientPhone: document.getElementById("patPhone").value.trim(),
-          notes:        document.getElementById("patNotes").value.trim() || undefined,
-          requestedSlot: selectedSlot.start
+          patientName:   document.getElementById("patName").value.trim(),
+          patientEmail:  document.getElementById("patEmail").value.trim(),
+          patientPhone:  document.getElementById("patPhone").value.trim(),
+          notes:         document.getElementById("patNotes").value.trim() || undefined,
+          requestedSlot: selectedSlot.start,
+          tcleSigned:    true
         })
       });
       const d = await r.json().catch(() => ({}));
       if (!d.ok) throw new Error(d.error || "Erro");
-      [1,2,3,4].forEach(i => document.getElementById(`step${i}`).classList.add("a-hide"));
-      document.getElementById("stepSuccess").classList.remove("a-hide");
-      document.getElementById("footerBtn").classList.add("a-hide");
-      document.getElementById("stepsIndicator").parentElement.style.display = "none";
+
+      if (therapist?.pixConfigured) {
+        // Tem PIX configurado — avança para step de pagamento
+        await iniciarPagamentoPix(d.requestId);
+      } else {
+        // Modo legado — sem pagamento
+        [1,2,3,4,5].forEach(i => document.getElementById(`step${i}`).classList.add("a-hide"));
+        document.getElementById("stepSuccess").classList.remove("a-hide");
+        document.getElementById("footerBtn").classList.add("a-hide");
+        document.getElementById("stepsRow").style.display = "none";
+      }
     } catch (e) {
-      const msgs = { "SLUG_INVALIDO":"Link inválido.", "AGENDAMENTO_PUBLICO_DESABILITADO":"Profissional não aceita pedidos no momento.", "JANELA_INVALIDA":"Selecione outro horário." };
+      const msgs = {
+        "SLUG_INVALIDO": "Link inválido.",
+        "AGENDAMENTO_PUBLICO_DESABILITADO": "Profissional não aceita pedidos no momento.",
+        "JANELA_INVALIDA": "Selecione outro horário.",
+        "HORARIO_INDISPONIVEL": "Esse horário acabou de ser ocupado. Escolha outro.",
+        "TCLE_OBRIGATORIO": "Aceite os termos para continuar."
+      };
       erro.textContent = msgs[e.message] || "Erro ao enviar. Tente novamente.";
       erro.classList.remove("a-hide");
       btn.disabled = false; btn.textContent = "Confirmar pedido";
     }
   }
+
+  async function iniciarPagamentoPix(requestId) {
+    goStep(5);
+    document.getElementById("pixPendente").classList.remove("a-hide");
+    document.getElementById("pixConfirmado").classList.add("a-hide");
+
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(slug)}/criar-pix`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestId })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) throw new Error(d.error || "Erro ao gerar PIX");
+
+      const valorFmt = (d.valor || 0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+      document.getElementById("pixValorText").textContent = valorFmt;
+      document.getElementById("pixQrImg").src = `data:image/png;base64,${d.qrBase64}`;
+      document.getElementById("pixCopiaCola").textContent = d.qrCode || "";
+
+      iniciarTimerPix(d.expiresAt);
+      iniciarPollingPix(requestId);
+    } catch (e) {
+      document.getElementById("pixPendente").innerHTML = `
+        <div class="a-alert a-alert--err">Erro ao gerar QR code PIX. Tente recarregar a página.</div>
+      `;
+    }
+  }
+
+  function iniciarTimerPix(expiresAt) {
+    if (pixCountdown) clearInterval(pixCountdown);
+    pixCountdown = setInterval(() => {
+      const remaining = expiresAt - Date.now();
+      if (remaining <= 0) {
+        clearInterval(pixCountdown);
+        document.getElementById("pixTimerText").textContent = "expirado";
+        return;
+      }
+      const m = Math.floor(remaining / 60000);
+      const s = Math.floor((remaining % 60000) / 1000);
+      document.getElementById("pixTimerText").textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+    }, 1000);
+  }
+
+  function iniciarPollingPix(requestId) {
+    if (pixPollTimer) clearInterval(pixPollTimer);
+    pixPollTimer = setInterval(async () => {
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(requestId)}/status-pagamento`);
+        const d = await r.json().catch(() => ({}));
+        if (d.paid) {
+          clearInterval(pixPollTimer);
+          clearInterval(pixCountdown);
+          document.getElementById("pixPendente").classList.add("a-hide");
+          document.getElementById("pixPularWrap").classList.add("a-hide");
+          document.getElementById("pixConfirmado").classList.remove("a-hide");
+        }
+      } catch { /* silencioso — continua polling */ }
+    }, 3000);
+  }
+
+  document.getElementById("btnCopiar").addEventListener("click", () => {
+    const code = document.getElementById("pixCopiaCola").textContent;
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.getElementById("btnCopiar");
+      btn.textContent = "Copiado!";
+      setTimeout(() => { btn.textContent = "Copiar"; }, 2000);
+    });
+  });
+
+  document.getElementById("btnPagarDepois").addEventListener("click", () => {
+    clearInterval(pixPollTimer);
+    clearInterval(pixCountdown);
+    [1,2,3,4,5].forEach(i => document.getElementById(`step${i}`).classList.add("a-hide"));
+    document.getElementById("stepSuccess").classList.remove("a-hide");
+    document.getElementById("footerBtn").classList.add("a-hide");
+    document.getElementById("stepsRow").style.display = "none";
+  });
 </script>
 </body>
 </html>
