@@ -971,7 +971,7 @@
       const pdflibAddPlaceholder = placeholderMod?.pdflibAddPlaceholder || placeholderMod?.default;
       setStatus(signA1Status, tr("documento:sign.addingPlaceholder", "Adicionando placeholder…"));
       const pdfDoc = await pdfLib.PDFDocument.load(pendingPdfBytes);
-      pdflibAddPlaceholder({ pdfDoc, reason: TIPO_META[tipo].titulo, contactInfo: "espaco.preludio@preludiojogos.com", name: therapist.displayName || "Profissional", location: "Brasil", signatureLength: 16384 });
+      pdflibAddPlaceholder({ pdfDoc, reason: TIPO_META[tipo].titulo, contactInfo: "contato@espacopreludio.com.br", name: therapist.displayName || "Profissional", location: "Brasil", signatureLength: 16384 });
       const placeholderBytes = await pdfDoc.save({ useObjectStreams: false });
       setStatus(signA1Status, tr("documento:sign.signing", "Assinando…"));
       const pfxBytes = new Uint8Array(await file.arrayBuffer());
