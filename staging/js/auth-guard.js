@@ -754,6 +754,15 @@ export async function requireTherapist({ requireDek = true } = {}) {
   // Botão flutuante de suporte (canto inferior direito).
   mountHelpBubble();
 
+  // Badge do sino de notificações — busca contador real ao carregar a
+  // página. Sem isso, o sino só zera (ao abrir notificacoes.html) mas
+  // nunca mostra o número de não-lidas (ex.: nova solicitação de agendamento).
+  fetch(`${BACKEND_BASE_URL}/therapy/notifications/unread-count`, {
+    headers: { "Authorization": `Bearer ${idToken}` }
+  }).then(r => r.json()).then(d => {
+    if (d?.ok && window.EP_NOTIF) window.EP_NOTIF.setBadge(d.count || 0);
+  }).catch(() => { /* badge é melhoria, não bloqueia carregamento */ });
+
   // Realtime: conecta Socket.io (singleton — seguro chamar N vezes).
   connectRealtime(user.uid, idToken).catch(() => {});
 
