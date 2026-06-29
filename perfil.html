@@ -373,6 +373,39 @@
         </div>
       </section>
 
+      <!-- PIX para agendamento público -->
+      <section class="ep-receita-form">
+        <h2 class="ep-h3 ep-mt-0">Pagamento via PIX no agendamento</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Configure sua chave PIX para receber o pagamento da consulta direto na sua conta. O paciente paga ao marcar ou antes de entrar — você recebe sem intermediário.
+        </p>
+
+        <div class="ep-row ep-mt-16">
+          <div class="ep-field" style="flex: 1;">
+            <label class="ep-label" for="pixKeyType">Tipo de chave PIX</label>
+            <select id="pixKeyType" class="ep-select">
+              <option value="">— Selecione —</option>
+              <option value="cpf">CPF</option>
+              <option value="cnpj">CNPJ</option>
+              <option value="email">E-mail</option>
+              <option value="telefone">Telefone</option>
+              <option value="aleatoria">Chave aleatória</option>
+            </select>
+          </div>
+          <div class="ep-field" style="flex: 2;">
+            <label class="ep-label" for="pixKey">Chave PIX <span id="pixKeyConfigured" class="ep-text-xs ep-text-muted" style="margin-left:6px;"></span></label>
+            <input id="pixKey" class="ep-input" type="text" maxlength="150" placeholder="Sua chave PIX" autocomplete="off">
+            <p class="ep-text-xs ep-text-muted ep-mt-0">Deixe em branco para manter a chave salva. O dinheiro vai direto para essa conta.</p>
+          </div>
+        </div>
+
+        <div class="ep-field ep-mt-8">
+          <label class="ep-label" for="valorConsulta">Valor da consulta (R$)</label>
+          <input id="valorConsulta" class="ep-input" type="number" min="10" max="100000" step="1" placeholder="ex: 60">
+          <p class="ep-text-xs ep-text-muted ep-mt-0">Padrão: R$60. Informe o valor que o paciente deve pagar ao agendar.</p>
+        </div>
+      </section>
+
       <!-- Cobranças online (Asaas) -->
       <section class="ep-receita-form">
         <h2 class="ep-h3 ep-mt-0" data-i18n="perfil:asaas.h2">Cobranças online (Asaas)</h2>
@@ -1007,6 +1040,11 @@
     $("schedMaxAdvance").value  = t.publicSchedulingMaxAdvanceDays ?? "";
     $("listPublicly").checked   = !!t.listPublicly;
     renderSchedActiveLink(t.publicSchedulingSlug || "", !!t.publicSchedulingEnabled);
+
+    // PIX para agendamento público.
+    if (t.pixKeyType) $("pixKeyType").value = t.pixKeyType;
+    $("pixKeyConfigured").textContent = t.pixKey ? "✓ configurada" : "";
+    $("valorConsulta").value = t.valorConsulta ? (t.valorConsulta / 100).toFixed(0) : "";
 
     // Asaas.
     // Tópicos personalizados da sessão.
@@ -2275,6 +2313,29 @@ Direito de portabilidade — LGPD Art. 18, V.
     // asaasApiKey só é enviado se o user digitou alguma coisa (campo vazio mantém a key salva).
     const asaasKeyTyped = $("asaasApiKey").value;
     if (asaasKeyTyped) body.asaasApiKey = asaasKeyTyped;
+
+    // PIX — só envia pixKey se user digitou algo (preserva a chave salva).
+    const pixKeyTyped = ($("pixKey").value || "").trim();
+    if (pixKeyTyped) {
+      const pixKeyTypeVal = $("pixKeyType").value;
+      if (!pixKeyTypeVal) {
+        setStatus("Selecione o tipo de chave PIX antes de salvar.", "err");
+        $("saveBtn").disabled = false;
+        return;
+      }
+      body.pixKey     = pixKeyTyped;
+      body.pixKeyType = pixKeyTypeVal;
+    }
+    const valorConsultaRaw = $("valorConsulta").value.trim();
+    if (valorConsultaRaw) {
+      const valorReais = Number(valorConsultaRaw);
+      if (!Number.isFinite(valorReais) || valorReais < 10) {
+        setStatus("Valor da consulta inválido. Mínimo R$10.", "err");
+        $("saveBtn").disabled = false;
+        return;
+      }
+      body.valorConsulta = Math.round(valorReais * 100);
+    }
 
     if (pendingLogo && pendingLogo.dirty) {
       if (pendingLogo.removed) {
