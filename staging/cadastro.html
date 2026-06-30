@@ -20,6 +20,75 @@
     .is-student-mode #heroProfissional { display: none !important; }
     .is-student-mode #heroStudent { display: flex !important; flex-direction: column; }
     .is-student-mode #especialidadeField { display: none !important; }
+
+    /* ─── Hero premium "amanhecer" — só no fluxo padrão (não estudante) ─── */
+    :root {
+      --cd-ink:    #15100a;
+      --cd-umber:  #3c2a16;
+      --cd-bronze: #7a5328;
+      --cd-amber:  #d4a553;
+      --cd-glow:   #f7dca0;
+    }
+    body:not(.is-student-mode) .ep-auth__hero {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      border-color: rgba(212,165,83,.35);
+      background:
+        radial-gradient(120% 65% at 16% 102%, var(--cd-glow) 0%, rgba(212,165,83,.5) 22%, rgba(122,83,40,0) 52%),
+        linear-gradient(200deg, var(--cd-ink) 0%, var(--cd-umber) 42%, var(--cd-bronze) 74%, var(--cd-amber) 100%);
+    }
+    body:not(.is-student-mode) .ep-auth__hero::before {
+      content: "";
+      position: absolute; inset: 0;
+      pointer-events: none;
+      opacity: .65;
+      background-image:
+        radial-gradient(1.4px 1.4px at 18% 14%, #fff, transparent),
+        radial-gradient(1px 1px at 32% 24%, rgba(255,255,255,.85), transparent),
+        radial-gradient(1.2px 1.2px at 50% 10%, #fff, transparent),
+        radial-gradient(1px 1px at 70% 20%, rgba(255,255,255,.8), transparent),
+        radial-gradient(1.5px 1.5px at 85% 16%, #fff, transparent),
+        radial-gradient(1px 1px at 60% 32%, rgba(255,255,255,.7), transparent),
+        radial-gradient(1px 1px at 22% 38%, rgba(255,255,255,.6), transparent);
+      -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 85%);
+      mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 85%);
+    }
+    body:not(.is-student-mode) .ep-auth__hero::after {
+      content: "";
+      position: absolute; inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(1.6px 1.6px at 40% 16%, #fff, transparent),
+        radial-gradient(1.3px 1.3px at 76% 26%, #fff, transparent);
+      animation: cd-twinkle 4.5s ease-in-out infinite alternate;
+    }
+    @keyframes cd-twinkle { from { opacity: .25; } to { opacity: .9; } }
+
+    body:not(.is-student-mode) .ep-auth__hero #heroProfissional { position: relative; z-index: 1; }
+    body:not(.is-student-mode) .ep-auth__hero .ep-brand { color: #f8f1de; }
+    body:not(.is-student-mode) .ep-auth__hero .ep-brand__lead { color: var(--cd-glow); }
+    body:not(.is-student-mode) .ep-auth__hero .ep-auth__title { color: #fff; text-shadow: 0 2px 22px rgba(0,0,0,.4); }
+    body:not(.is-student-mode) .ep-auth__hero .ep-auth__sub { color: rgba(248,241,222,.82); }
+    body:not(.is-student-mode) .ep-auth__hero .ep-alert--info {
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,255,255,.22);
+      color: #f8f1de;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    body:not(.is-student-mode) .ep-auth__hero .ep-lock { color: var(--cd-glow); }
+
+    body:not(.is-student-mode) .ep-auth__hero #heroProfissional > * { animation: cd-rise .9s cubic-bezier(.16,.4,.2,1) both; }
+    body:not(.is-student-mode) .ep-auth__hero #heroProfissional > *:nth-child(2) { animation-delay: .08s; }
+    body:not(.is-student-mode) .ep-auth__hero #heroProfissional > *:nth-child(3) { animation-delay: .16s; }
+    @keyframes cd-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) {
+      body:not(.is-student-mode) .ep-auth__hero #heroProfissional > *,
+      body:not(.is-student-mode) .ep-auth__hero::after { animation: none; }
+    }
+
+    body:not(.is-student-mode) .ep-auth__panel--wide { box-shadow: 0 40px 90px -30px rgba(20,14,8,.35), var(--ep-shadow-card); }
   </style>
   <script src="./i18n/init.js?v=1-3" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
