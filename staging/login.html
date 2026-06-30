@@ -14,56 +14,159 @@
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <style>
+    :root {
+      --lh-night:  #0a1626;
+      --lh-indigo: #1f3a5c;
+      --lh-plum:   #7d3f63;
+      --lh-coral:  #e0815f;
+      --lh-amber:  #f4ad6e;
+      --lh-glow:   #ffd79a;
+      --lh-silver: #eef3f8;
+    }
+
+    .ep-login-layout { min-height: 100vh; display: flex; }
+
+    .ep-login-hero {
+      position: relative;
+      flex: 1 1 auto;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        radial-gradient(115% 80% at 14% 96%, var(--lh-glow) 0%, rgba(244,173,110,.55) 20%, rgba(224,129,95,0) 46%),
+        linear-gradient(168deg, #f6b079 0%, var(--lh-coral) 24%, var(--lh-plum) 52%, var(--lh-indigo) 78%, var(--lh-night) 100%);
+    }
+    .ep-login-hero::before {
+      content: "";
+      position: absolute; inset: 0;
+      pointer-events: none;
+      opacity: .6;
+      background-image:
+        radial-gradient(1.4px 1.4px at 78% 12%, rgba(238,243,248,.9), transparent),
+        radial-gradient(1.2px 1.2px at 88% 22%, rgba(238,243,248,.8), transparent),
+        radial-gradient(1px 1px   at 66% 8%,  rgba(238,243,248,.7), transparent),
+        radial-gradient(1.5px 1.5px at 92% 9%, rgba(238,243,248,.85), transparent),
+        radial-gradient(1px 1px   at 72% 24%, rgba(238,243,248,.6), transparent);
+    }
+    .ep-login-hero__scrim {
+      position: absolute; inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(105deg, rgba(8,14,24,.62) 0%, rgba(8,14,24,.30) 38%, rgba(8,14,24,0) 66%),
+        linear-gradient(0deg, rgba(8,14,24,.45) 0%, rgba(8,14,24,0) 40%);
+    }
+    .ep-login-hero__caption {
+      position: relative;
+      z-index: 2;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(28px, 6vw, 96px);
+    }
+    .ep-login-hero__title {
+      margin: 0;
+      color: var(--lh-silver);
+      font-family: 'Fraunces', Georgia, serif;
+      font-weight: 500;
+      font-size: clamp(1.8rem, 4vw, 3.4rem);
+      line-height: 1.16;
+      letter-spacing: -.01em;
+      text-shadow: 0 2px 24px rgba(8,14,24,.45);
+      max-width: 16ch;
+    }
+    .ep-login-hero__title b { font-weight: 700; color: #fff; }
+    .ep-login-hero__caption > * { animation: ep-lh-rise .9s cubic-bezier(.2,.7,.2,1) both; }
+    @keyframes ep-lh-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .ep-login-hero__caption > * { animation: none; } }
+
+    /* Card ancorado à direita — sobrescreve o centro padrão de .ep-auth só nesta página */
+    .ep-login-layout .ep-auth {
+      flex: 0 0 clamp(380px, 36vw, 520px);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      background: var(--ep-bg);
+    }
+    .ep-login-layout .ep-auth__panel {
+      box-shadow: 0 30px 80px -30px rgba(10,22,38,.35), var(--ep-shadow-card);
+    }
+
+    @media (max-width: 880px) {
+      .ep-login-hero { display: none; }
+      .ep-login-layout { display: block; }
+      .ep-login-layout .ep-auth {
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+    }
+  </style>
   <script src="./i18n/init.js?v=1-3" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
 <body>
 <div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
 
-<main class="ep-auth">
-  <div class="ep-auth__panel">
-    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
-      <span class="ep-brand__mark">EP</span>
-      <span class="ep-brand__name">
-        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
-        <span data-i18n="common:brand.tail">Prelúdio</span>
-      </span>
-    </a>
-
-    <h2 class="ep-auth__title ep-mt-32" data-i18n="login:h2">Entrar no consultório</h2>
-    <p class="ep-auth__sub" data-i18n="login:sub">
-      Use seu e-mail profissional. Sua senha desbloqueia também a chave que cifra suas anotações.
-    </p>
-
-    <div id="reauthAlert" class="ep-alert ep-alert--info ep-mt-12 ep-hide" data-i18n="login:reauthAlert">
-      Sua sessão de cifragem expirou. Confirme sua senha para continuar.
-    </div>
-
-    <form id="loginForm" class="ep-stack ep-mt-16" novalidate>
-      <div class="ep-field">
-        <label class="ep-label" for="email" data-i18n="login:labelEmail">E-mail</label>
-        <input id="email" class="ep-input" type="email" autocomplete="email" maxlength="160" required>
-      </div>
-      <div class="ep-field">
-        <label class="ep-label" for="password" data-i18n="login:labelPassword">Senha</label>
-        <input id="password" class="ep-input" type="password" autocomplete="current-password" required>
-      </div>
-
-      <div class="ep-status" id="status"></div>
-
-      <div class="ep-stack" style="gap: 8px;">
-        <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="submitBtn" data-i18n="login:btnSubmit">Entrar</button>
-        <a href="./cadastro.html" class="ep-btn ep-btn--ghost ep-btn--block" data-i18n="login:btnCreate">Criar consultório</a>
-      </div>
-    </form>
-
-    <div class="ep-auth__bottom">
-      <a href="./recuperar.html" data-i18n="login:forgot">Esqueci minha senha · usar chave-semente</a>
+<div class="ep-login-layout">
+  <div class="ep-login-hero">
+    <div class="ep-login-hero__scrim" aria-hidden="true"></div>
+    <div class="ep-login-hero__caption">
+      <h1 class="ep-login-hero__title">
+        Você <b>livre</b> pra <b>cuidar.</b><br>
+        <b>Livre</b> pra <b>viver.</b>
+      </h1>
     </div>
   </div>
-</main>
+
+  <main class="ep-auth">
+    <div class="ep-auth__panel">
+      <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+        <span class="ep-brand__mark">EP</span>
+        <span class="ep-brand__name">
+          <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+          <span data-i18n="common:brand.tail">Prelúdio</span>
+        </span>
+      </a>
+
+      <h2 class="ep-auth__title ep-mt-32" data-i18n="login:h2">Entrar no consultório</h2>
+      <p class="ep-auth__sub" data-i18n="login:sub">
+        Use seu e-mail profissional. Sua senha desbloqueia também a chave que cifra suas anotações.
+      </p>
+
+      <div id="reauthAlert" class="ep-alert ep-alert--info ep-mt-12 ep-hide" data-i18n="login:reauthAlert">
+        Sua sessão de cifragem expirou. Confirme sua senha para continuar.
+      </div>
+
+      <form id="loginForm" class="ep-stack ep-mt-16" novalidate>
+        <div class="ep-field">
+          <label class="ep-label" for="email" data-i18n="login:labelEmail">E-mail</label>
+          <input id="email" class="ep-input" type="email" autocomplete="email" maxlength="160" required>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="password" data-i18n="login:labelPassword">Senha</label>
+          <input id="password" class="ep-input" type="password" autocomplete="current-password" required>
+        </div>
+
+        <div class="ep-status" id="status"></div>
+
+        <div class="ep-stack" style="gap: 8px;">
+          <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="submitBtn" data-i18n="login:btnSubmit">Entrar</button>
+          <a href="./cadastro.html" class="ep-btn ep-btn--ghost ep-btn--block" data-i18n="login:btnCreate">Criar consultório</a>
+        </div>
+      </form>
+
+      <div class="ep-auth__bottom">
+        <a href="./recuperar.html" data-i18n="login:forgot">Esqueci minha senha · usar chave-semente</a>
+      </div>
+    </div>
+  </main>
+</div>
 
 <script type="module">
   import {
