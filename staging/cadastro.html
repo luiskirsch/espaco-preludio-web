@@ -20,6 +20,57 @@
     .is-student-mode #heroProfissional { display: none !important; }
     .is-student-mode #heroStudent { display: flex !important; flex-direction: column; }
     .is-student-mode #especialidadeField { display: none !important; }
+    @media (max-width: 480px) {
+      .ep-auth { padding: 0 !important; background: var(--ep-surface) !important; }
+      .ep-auth__panel--wide { max-height: none !important; border: none !important; box-shadow: none !important; }
+    }
+    /* Progressive disclosure */
+    .ep-form-step { display: none; }
+    .ep-form-step.is-visible { display: contents; }
+    /* Campos sempre visíveis, bloqueados até o anterior ser preenchido */
+    .ep-form-step-block {
+      display: block;
+      opacity: 0.32;
+      pointer-events: none;
+      user-select: none;
+      transition: opacity 220ms ease;
+    }
+    .ep-form-step-block.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+      user-select: auto;
+    }
+    /* Input e select dentro de bloco bloqueado — aparência cinzenta */
+    .ep-form-step-block:not(.is-visible) .ep-input,
+    .ep-form-step-block:not(.is-visible) .ep-select {
+      background: var(--ep-bg-2) !important;
+      color: var(--ep-ink-3) !important;
+      cursor: not-allowed !important;
+    }
+    /* Toggle de visibilidade de senha */
+    .ep-pwd-toggle {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; padding: 4px; cursor: pointer;
+      color: var(--ep-ink-3); display: flex; align-items: center;
+      transition: color 150ms;
+    }
+    .ep-pwd-toggle:hover { color: var(--ep-ink); }
+    .ep-pwd-toggle svg { width: 18px; height: 18px; }
+    /* Seletor de plano */
+    #planPicker { display: flex; gap: 10px; margin-bottom: 24px; }
+    .ep-plan-pill {
+      flex: 1; display: flex; flex-direction: column; align-items: flex-start;
+      gap: 2px; padding: 12px 14px; border-radius: 10px; cursor: pointer;
+      border: 2px solid var(--ep-line); background: var(--ep-bg-2);
+      text-align: left; transition: border-color 150ms, background 150ms;
+      font-family: 'Inter', sans-serif;
+    }
+    .ep-plan-pill:hover { border-color: var(--ep-accent); background: var(--ep-surface); }
+    .ep-plan-pill.is-selected { border-color: var(--ep-accent); background: var(--ep-surface); box-shadow: 0 0 0 3px rgba(45,74,62,.12); }
+    .ep-plan-pill__name { font-size: 14px; font-weight: 600; color: var(--ep-ink); }
+    .ep-plan-pill__price { font-size: 12px; color: var(--ep-ink-2); }
+    #formBody { transition: opacity 200ms; }
+    #formBody.is-locked { opacity: 0.35; pointer-events: none; user-select: none; }
 
     /* ─── Hero premium "amanhecer" — só no fluxo padrão (não estudante) ─── */
     :root {
@@ -94,8 +145,121 @@
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
 <body>
-<script>(function(){if(new URLSearchParams(location.search).get("plano")==="estudante")document.body.classList.add("is-student-mode");})();</script>
 <div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
+<script>(function(){
+  const p = new URLSearchParams(location.search).get("plano");
+  if (p === "estudante") document.body.classList.add("is-student-mode");
+})();</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const p = new URLSearchParams(location.search).get("plano");
+  const isEstudante = p === "estudante";
+  const picker   = document.getElementById("planPicker");
+  const formBody = document.getElementById("formBody");
+  if (!picker || !formBody || isEstudante) {
+    // Sem picker: desbloqueia sempre (estudante ou outro fluxo)
+    if (formBody) formBody.classList.remove("is-locked");
+    return;
+  }
+
+  // Se veio de link específico de plano → sem picker, entra direto
+  if (p === "profissional" || p === "empresa") {
+    formBody.classList.remove("is-locked");
+    window._selectedPlan = p;
+    return;
+  }
+
+  // Sem ?plano= (botões genéricos "Criar conta") → exibe picker, formulário bloqueado
+  picker.classList.remove("ep-hide");
+
+  function selectPlan(plan) {
+    picker.querySelectorAll(".ep-plan-pill").forEach(btn => {
+      btn.classList.toggle("is-selected", btn.dataset.plan === plan);
+    });
+    formBody.classList.remove("is-locked");
+    const banner = document.getElementById("planBannerInject");
+    if (banner) {
+      const titles = {
+        profissional: "Plano Profissional (R$ 99,00/mês)",
+        empresa: "Plano Atendimento a Empresas (gratuito)"
+      };
+      const subs = {
+        profissional: "30 dias grátis para experimentar. Você decide quando contratar — direto pelo perfil.",
+        empresa: "Plataforma gratuita para o profissional. Consultas tabeladas a R$ 60,00 por sessão para o paciente."
+      };
+      banner.innerHTML = `<strong>${titles[plan] || plan}</strong><br><span class="ep-text-sm">${subs[plan] || ""}</span>`;
+      banner.style.display = "block";
+    }
+    window._selectedPlan = plan;
+  }
+
+  picker.querySelectorAll(".ep-plan-pill").forEach(btn => {
+    btn.addEventListener("click", () => selectPlan(btn.dataset.plan));
+  });
+  // Sem seleção prévia → formulário fica bloqueado até clicar numa cápsula
+});
+
+// ─── Progressive form disclosure ────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", function() {
+  function reveal(id) {
+    const el = document.getElementById(id);
+    if (el && !el.classList.contains("is-visible")) {
+      el.classList.add("is-visible");
+    }
+  }
+
+  // 1 → 2: nome preenchido
+  document.getElementById("displayName")?.addEventListener("input", function() {
+    if (this.value.trim().length >= 2) reveal("fs-email");
+  });
+
+  // 2 → 3: email válido
+  document.getElementById("email")?.addEventListener("input", function() {
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value)) reveal("fs-conselho");
+  });
+
+  // 3 → 4: conselho selecionado
+  document.getElementById("tipoConselho")?.addEventListener("change", function() {
+    if (this.value) reveal("fs-campos");
+  });
+
+  // 4 → 5: campo principal do step 4 preenchido
+  function checkCampos() {
+    const tc = document.getElementById("tipoConselho")?.value || "";
+    let done = false;
+    if (tc === "SEM_CONSELHO") {
+      done = !!document.getElementById("tipoPratica")?.value;
+    } else if (tc === "INTERNACIONAL") {
+      done = (document.getElementById("paisRegistro")?.value.trim().length || 0) > 0;
+    } else {
+      done = (document.getElementById("numeroConselho")?.value.trim().length || 0) > 0;
+    }
+    if (done) reveal("fs-senha");
+  }
+  ["numeroConselho", "tipoPratica", "paisRegistro"].forEach(id => {
+    const el = document.getElementById(id);
+    el?.addEventListener("input", checkCampos);
+    el?.addEventListener("change", checkCampos);
+  });
+
+  // 5 → 6: senha com ≥10 caracteres
+  document.getElementById("password")?.addEventListener("input", function() {
+    if (this.value.length >= 10) reveal("fs-consent");
+  });
+
+  // Toggle olho — mostrar/ocultar senha
+  document.querySelectorAll(".ep-pwd-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.dataset.target);
+      if (!input) return;
+      const isText = input.type === "text";
+      input.type = isText ? "password" : "text";
+      btn.querySelector(".ep-eye-off").style.display = isText ? "" : "none";
+      btn.querySelector(".ep-eye-on").style.display  = isText ? "none" : "";
+    });
+  });
+});
+</script>
 
 <main class="ep-auth">
   <div class="ep-auth__panel ep-auth__panel--wide">
@@ -186,23 +350,44 @@
     <section class="ep-auth__form">
       <!-- Etapa 1: dados profissionais -->
       <div id="stepData">
+
+        <!-- Seletor de plano — oculto no modo estudante -->
+        <div id="planPicker" class="ep-hide">
+          <button type="button" class="ep-plan-pill" data-plan="profissional">
+            <span class="ep-plan-pill__name">Profissional</span>
+            <span class="ep-plan-pill__price">R$ 99,00/mês · 30 dias grátis</span>
+          </button>
+          <button type="button" class="ep-plan-pill" data-plan="empresa">
+            <span class="ep-plan-pill__name">Atendimento a Empresas</span>
+            <span class="ep-plan-pill__price">Gratuito · aprovação manual</span>
+          </button>
+        </div>
+
+        <div id="formBody" class="is-locked">
+        <div id="planBannerInject" class="ep-alert ep-alert--info" style="display:none; margin-bottom:16px;"></div>
         <h2 class="ep-auth__title ep-mt-0" data-i18n="cadastro:step1.h2">Dados do profissional</h2>
         <p class="ep-auth__sub" data-i18n="cadastro:step1.sub">Use seu nome real e seus dados de conselho. Tudo é editável depois.</p>
 
         <form id="formData" class="ep-stack" novalidate>
+          <!-- CAMPO 1: Nome — sempre visível -->
           <div class="ep-field">
             <label class="ep-label" for="displayName" data-i18n="cadastro:step1.labelName">Nome completo</label>
             <input id="displayName" class="ep-input" type="text" maxlength="80" autocomplete="name" placeholder="Ex.: Dra. Ana Souza" data-i18n-placeholder="cadastro:step1.placeholderName" required>
           </div>
 
-          <div class="ep-row">
-            <div class="ep-field">
-              <label class="ep-label" for="email" data-i18n="cadastro:step1.labelEmail">E-mail profissional</label>
-              <input id="email" class="ep-input" type="email" maxlength="160" autocomplete="email" placeholder="voce@exemplo.com" data-i18n-placeholder="cadastro:step1.placeholderEmail" required>
-            </div>
-            <div class="ep-field">
-              <label class="ep-label" for="tipoConselho" data-i18n="cadastro:step1.labelConselho">Conselho profissional</label>
-              <select id="tipoConselho" class="ep-select" required>
+          <!-- CAMPO 2: E-mail -->
+          <div class="ep-form-step-block" id="fs-email">
+          <div class="ep-field">
+            <label class="ep-label" for="email" data-i18n="cadastro:step1.labelEmail">E-mail profissional</label>
+            <input id="email" class="ep-input" type="email" maxlength="160" autocomplete="email" placeholder="voce@exemplo.com" data-i18n-placeholder="cadastro:step1.placeholderEmail" required>
+          </div>
+          </div>
+
+          <!-- CAMPO 3: Conselho -->
+          <div class="ep-form-step-block" id="fs-conselho">
+          <div class="ep-field">
+            <label class="ep-label" for="tipoConselho" data-i18n="cadastro:step1.labelConselho">Conselho profissional</label>
+            <select id="tipoConselho" class="ep-select" required>
                 <option value="" data-i18n="cadastro:step1.selectPlaceholder">Selecione…</option>
                 <option value="CRP" data-i18n="cadastro:step1.conselho.crp">CRP — Psicologia</option>
                 <option value="CRM" data-i18n="cadastro:step1.conselho.crm">CRM — Medicina / Psiquiatria</option>
@@ -215,9 +400,11 @@
                 <option value="SEM_CONSELHO" data-i18n="cadastro:step1.conselho.semConselho">Sem conselho regulamentado (Psicanálise, Terapia integrativa, Hipnoterapia)</option>
                 <option value="INTERNACIONAL" data-i18n="cadastro:step1.conselho.internacional">Registro profissional no exterior (fora do Brasil)</option>
               </select>
-            </div>
           </div>
+          </div><!-- /fs-conselho -->
 
+          <!-- CAMPOS 4: Especialidade + Número + condicionais -->
+          <div class="ep-form-step-block" id="fs-campos">
           <div class="ep-row">
             <div class="ep-field" id="especialidadeField">
               <label class="ep-label" for="especialidade" data-i18n="cadastro:step1.labelEspecialidade">Especialidade</label>
@@ -367,26 +554,46 @@
             </div>
           </div>
 
+          </div><!-- /fs-campos -->
+
+          <!-- CAMPO 5: Senha -->
+          <div class="ep-form-step-block" id="fs-senha">
           <div class="ep-row">
             <div class="ep-field">
               <label class="ep-label" for="password" data-i18n="cadastro:step1.labelPassword">Senha</label>
-              <input id="password" class="ep-input" type="password" minlength="10" autocomplete="new-password" placeholder="Mín. 10 caracteres" data-i18n-placeholder="cadastro:step1.placeholderPassword" required>
+              <div style="position:relative;">
+                <input id="password" class="ep-input" type="password" minlength="10" autocomplete="new-password" placeholder="Mín. 10 caracteres" data-i18n-placeholder="cadastro:step1.placeholderPassword" required style="padding-right:40px;">
+                <button type="button" class="ep-pwd-toggle" data-target="password" aria-label="Mostrar senha" tabindex="-1">
+                  <svg class="ep-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  <svg class="ep-eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
             </div>
             <div class="ep-field">
               <label class="ep-label" for="passwordConfirm" data-i18n="cadastro:step1.labelPasswordConfirm">Confirmar senha</label>
-              <input id="passwordConfirm" class="ep-input" type="password" minlength="10" autocomplete="new-password" placeholder="Repita a senha" data-i18n-placeholder="cadastro:step1.placeholderPasswordConfirm" required>
+              <div style="position:relative;">
+                <input id="passwordConfirm" class="ep-input" type="password" minlength="10" autocomplete="new-password" placeholder="Repita a senha" data-i18n-placeholder="cadastro:step1.placeholderPasswordConfirm" required style="padding-right:40px;">
+                <button type="button" class="ep-pwd-toggle" data-target="passwordConfirm" aria-label="Mostrar senha" tabindex="-1">
+                  <svg class="ep-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  <svg class="ep-eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
             </div>
           </div>
           <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n-html="cadastro:step1.passwordHint">
             Sua senha deriva a chave que cifra suas anotações. <strong>Não há recuperação automática</strong> — guarde a chave-semente que mostraremos no próximo passo.
           </p>
+          </div><!-- /fs-senha -->
 
+          <!-- CAMPO 6: Consent + Submit -->
+          <div class="ep-form-step-block" id="fs-consent">
           <label class="ep-checkbox ep-mt-12">
             <input type="checkbox" id="consentLgpd" required>
             <span data-i18n-html="cadastro:step1.consent">
-              Declaro ser profissional habilitado(a), aceito a <a href="./termos.html" target="_blank">Política de Uso</a>
-              e o <a href="./politica.html" target="_blank">Tratamento de Dados (LGPD)</a> e me responsabilizo pelo
-              prontuário dos meus pacientes conforme a Resolução CFP nº 11/2018.
+              Declaro ser profissional habilitado(a) e regularmente inscrito(a) no meu conselho profissional (CFM, CFP, CREFITO ou equivalente), aceito a <a href="./termos.html" target="_blank">Política de Uso</a>
+              e o <a href="./politica.html" target="_blank">Tratamento de Dados (LGPD)</a>, e assumo integral responsabilidade pela
+              manutenção dos prontuários dos meus pacientes e pelo cumprimento das normas do meu conselho profissional
+              relativas a telessaúde (Res. CFM 2.314/2022, Res. CFP 11/2018 e equivalentes), incluindo a obtenção de TCLE dos pacientes e o registro clínico adequado.
             </span>
           </label>
 
@@ -396,7 +603,9 @@
             <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="submitData" data-i18n="cadastro:step1.submit">Continuar</button>
             <a href="./login.html" class="ep-btn ep-btn--ghost ep-btn--block" data-i18n="cadastro:step1.haveAccount">Já tenho conta</a>
           </div>
+          </div><!-- /fs-consent -->
         </form>
+        </div><!-- /#formBody -->
       </div>
 
       <!-- Etapa 2: recovery phrase (única vez) -->
@@ -502,6 +711,7 @@
   const _isStudentMode = new URLSearchParams(location.search).get("plano") === "estudante";
   if (_isStudentMode) {
     const applyStudent = () => {
+      // Ensure visibility (fallback for CSS class timing)
       const heroProfEl = document.getElementById("heroProfissional");
       const heroStudEl = document.getElementById("heroStudent");
       const especField = document.getElementById("especialidadeField");
@@ -509,6 +719,7 @@
       if (heroStudEl) { heroStudEl.style.display = "flex"; heroStudEl.style.flexDirection = "column"; }
       if (especField) especField.style.display = "none";
 
+      // Restrict conselho dropdown to CRP/CRM only
       [...tipoConselhoEl.options].forEach(opt => {
         if (opt.value && !["CRP", "CRM"].includes(opt.value)) opt.remove();
       });
@@ -518,14 +729,20 @@
       if (crmOpt) crmOpt.textContent = "Medicina (CRM)";
       const conselhoLabel = document.querySelector('label[for="tipoConselho"]');
       if (conselhoLabel) { conselhoLabel.removeAttribute("data-i18n"); conselhoLabel.textContent = "Você está cursando"; }
+
+      // Rename numero conselho → matrícula
       const numLabel = document.querySelector('label[for="numeroConselho"]');
       if (numLabel) { numLabel.removeAttribute("data-i18n"); numLabel.textContent = "Número de matrícula (RA)"; }
       if (numeroConselhoEl) { numeroConselhoEl.removeAttribute("data-i18n-placeholder"); numeroConselhoEl.placeholder = "Ex.: 202312345"; }
       if (numeroConselhoHint) { numeroConselhoHint.removeAttribute("data-i18n"); numeroConselhoHint.textContent = "Use o RA (Registro Acadêmico) da sua faculdade ou número de estágio."; }
+
+      // Form heading
       const h2 = stepData.querySelector("h2");
       if (h2) { h2.removeAttribute("data-i18n"); h2.textContent = "Crie seu acesso"; }
       const sub = stepData.querySelector(".ep-auth__sub");
       if (sub) { sub.removeAttribute("data-i18n"); sub.textContent = "Use seu nome completo e e-mail. Editável depois."; }
+
+      // Consent text for students
       const consentSpan = consentLgpdEl?.parentElement?.querySelector("span");
       if (consentSpan) {
         consentSpan.removeAttribute("data-i18n-html");
@@ -640,7 +857,7 @@
       // SEM_CONSELHO e INTERNACIONAL só estão disponíveis no plano Profissional.
       if ((planoQS === "recem" || planoQS === "estudante") && (tipoConselho === "SEM_CONSELHO" || tipoConselho === "INTERNACIONAL")) {
         return setStatus(statusData,
-          tr("cadastro:status.semConselhoOnlyProfissional", "Esse tipo de cadastro só está disponível no plano Profissional (R$ 199/mês). Volte na landing e escolha Profissional."),
+          tr("cadastro:status.semConselhoOnlyProfissional", "Esse tipo de cadastro só está disponível no plano Profissional (R$ 99/mês). Volte na landing e escolha Profissional."),
           "err");
       }
     }
@@ -652,9 +869,46 @@
     setStatus(statusData, tr("cadastro:status.creatingAccount", "Criando sua conta…"));
 
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(cred.user, { displayName });
-      const idToken = await cred.user.getIdToken();
+      let credUser;
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        credUser = cred.user;
+        await updateProfile(credUser, { displayName });
+      } catch (createErr) {
+        if (createErr.code !== "auth/email-already-in-use") throw createErr;
+
+        // Conta Firebase já existe mas o registro no Firestore pode estar incompleto.
+        // Tenta login com as credenciais fornecidas para continuar o cadastro.
+        setStatus(statusData, "E-mail já existe. Verificando se o cadastro está incompleto…");
+        let loginCred;
+        try {
+          const { signInWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
+          loginCred = await signInWithEmailAndPassword(auth, email, password);
+        } catch {
+          // Senha errada ou outro erro → mostra mensagem padrão
+          setStatus(statusData, tr("cadastro:status.emailAlreadyInUse", "Este e-mail já está cadastrado. Use o login."), "err");
+          setBusy(false);
+          return;
+        }
+        credUser = loginCred.user;
+
+        // Verifica se já tem documento no Firestore
+        const checkToken = await credUser.getIdToken();
+        const checkRes = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, {
+          headers: { "Authorization": `Bearer ${checkToken}` }
+        });
+        if (checkRes.ok) {
+          // Já registrado — redireciona para o painel
+          setStatus(statusData, "Cadastro já concluído. Redirecionando para o painel…", "ok");
+          setBusy(false);
+          setTimeout(() => { window.location.href = "./painel.html"; }, 1500);
+          return;
+        }
+        // 404 = conta Auth existe mas sem doc no Firestore — continua o cadastro normalmente
+        await updateProfile(credUser, { displayName });
+      }
+
+      const idToken = await credUser.getIdToken();
 
       setStatus(statusData, tr("cadastro:status.generatingKey", "Gerando sua chave de cifragem…"));
       const salt     = generateSalt();
@@ -663,7 +917,7 @@
       const recovery = dekToRecoveryPhrase(dekBytes);
 
       pending = {
-        user: cred.user,
+        user: credUser,
         idToken,
         password,
         dekBytes,
@@ -730,9 +984,10 @@
     //   estudante      → 0d (libera só após validar doc, gratuito permanente)
     //   recem-formado  → 30d
     //   profissional   → 7d (default)
-    const planoQS = new URLSearchParams(location.search).get("plano");
+    const planoQS = new URLSearchParams(location.search).get("plano") || window._selectedPlan || "";
     const intendedTier = planoQS === "estudante" ? "estudante"
                        : planoQS === "recem"     ? "recem-formado"
+                       : planoQS === "empresa"   ? "empresa"
                        : "profissional";
 
     try {
@@ -853,7 +1108,7 @@
         "err");
     } else if ((planoQS === "recem" || planoQS === "estudante") && (isSemConselho || isInternacional)) {
       setStatus(statusData,
-        tr("cadastro:status.semConselhoIneligible", "Esse tipo de cadastro só está disponível no plano Profissional (R$ 199/mês)."),
+        tr("cadastro:status.semConselhoIneligible", "Esse tipo de cadastro só está disponível no plano Profissional (R$ 99/mês)."),
         "err");
     } else {
       setStatus(statusData, "");
@@ -878,21 +1133,25 @@
           sub: tr("cadastro:planBanner.estudanteSub", "Após cadastrar, você envia sua declaração de matrícula. A IA valida em segundos.")
         },
         "recem": {
-          title: tr("cadastro:planBanner.recemTitle", "Plano Recém-formado (R$ 99,50/mês)"),
-          sub: tr("cadastro:planBanner.recemSub", "30 dias grátis. Após cadastrar, você envia o comprovante de inscrição CRP/CRM (<12 meses).")
+          title: tr("cadastro:planBanner.recemTitle", "Plano Profissional (R$ 99,00/mês)"),
+          sub: tr("cadastro:planBanner.recemSub", "30 dias grátis para experimentar. Você decide quando contratar — direto pelo perfil.")
         },
         "profissional": {
-          title: tr("cadastro:planBanner.profissionalTitle", "Plano Profissional (R$ 199,00/mês)"),
+          title: tr("cadastro:planBanner.profissionalTitle", "Plano Profissional (R$ 99,00/mês)"),
           sub: tr("cadastro:planBanner.profissionalSub", "30 dias grátis para experimentar. Você decide quando contratar — direto pelo perfil.")
+        },
+        "empresa": {
+          title: tr("cadastro:planBanner.empresaTitle", "Plano Atendimento a Empresas (gratuito)"),
+          sub: tr("cadastro:planBanner.empresaSub", "Plataforma gratuita para o profissional. Consultas tabeladas a R$ 60,00 por sessão para o paciente.")
         }
       };
       const c = config[plano];
       if (c) {
-        const banner = document.createElement("div");
-        banner.className = "ep-alert ep-alert--info";
-        banner.style.marginBottom = "16px";
-        banner.innerHTML = `<strong>${c.title}</strong><br><span class="ep-text-sm">${c.sub}</span>`;
-        stepData.insertBefore(banner, stepData.firstChild.nextSibling);
+        const banner = document.getElementById("planBannerInject");
+        if (banner) {
+          banner.innerHTML = `<strong>${c.title}</strong><br><span class="ep-text-sm">${c.sub}</span>`;
+          banner.style.display = "block";
+        }
       }
     } catch {}
   })();
