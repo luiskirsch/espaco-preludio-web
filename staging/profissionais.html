@@ -81,6 +81,20 @@
     #grid .ep-card { transition: transform 180ms ease, box-shadow 180ms ease; }
     #grid .ep-card:hover { transform: translateY(-3px); box-shadow: 0 18px 34px -20px rgba(20,12,4,.28); }
 
+    /* Estado vazio — toque premium consistente com o hero dourado */
+    #emptyBox .ep-empty--prof {
+      border: 1px dashed rgba(217,143,63,.4);
+      background: linear-gradient(180deg, rgba(217,143,63,.08), var(--ep-bg-2));
+    }
+    #emptyBox .ep-empty__icon {
+      width: 46px; height: 46px; margin: 0 auto 14px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      background: rgba(217,143,63,.14);
+      color: var(--pf-terra);
+    }
+    #emptyBox .ep-empty__icon svg { width: 22px; height: 22px; }
+
     @media (max-width: 640px) {
       .ep-prof-hero { border-radius: 16px; padding: 22px 20px 40px; }
       .ep-prof-search { margin-top: -24px; padding: 16px; }
@@ -173,9 +187,12 @@
     </div>
     <div id="loadingBox" class="ep-skeleton ep-hide ep-mt-24" data-i18n="profissionais:loading">Carregando profissionais…</div>
     <div id="emptyBox" class="ep-hide ep-mt-24">
-      <div class="ep-empty">
-        <h3 class="ep-h3" data-i18n="profissionais:empty.title">Nenhum profissional encontrado.</h3>
-        <p class="ep-text-muted ep-mt-8" data-i18n="profissionais:empty.sub">Tente outros filtros ou volte mais tarde — o diretório cresce conforme novos profissionais entram.</p>
+      <div class="ep-empty ep-empty--prof">
+        <div class="ep-empty__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.47 5.18 5.53.62-4.1 3.92 1.1 5.78L12 16.1l-4.99 2.9 1.1-5.78-4.1-3.92 5.53-.62L12 3.5z"/></svg>
+        </div>
+        <h3 class="ep-h3" id="emptyTitle">Ainda não encontramos esse profissional.</h3>
+        <p class="ep-text-muted ep-mt-8" id="emptySub">O diretório cresce toda semana — tente outra especialidade, amplie a busca ou volte em breve.</p>
       </div>
     </div>
     <div id="grid" class="ep-mt-24 ep-hide" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px;"></div>
@@ -201,6 +218,9 @@
     if (window.EP_I18N && window.EP_I18N.t) {
       const v = window.EP_I18N.t(key, opts);
       if (v && v !== key) return v;
+    }
+    if (opts && typeof fallback === "string") {
+      return fallback.replace(/\{\{(\w+)\}\}/g, (m, k) => opts[k] != null ? opts[k] : m);
     }
     return fallback;
   }
@@ -270,6 +290,31 @@
     `;
   }
 
+  // Mensagem do estado vazio é personalizada conforme o filtro aplicado —
+  // bem mais acolhedor que um "nenhum resultado" genérico.
+  function showEmpty(especialidade, cidade, uf) {
+    const espLabelStr = espLabel(especialidade);
+    const local = [cidade, uf].filter(Boolean).join("/");
+    let title;
+    if (espLabelStr && local) {
+      title = tr("profissionais:empty.titleEspecialidadeLocal", `Ainda não temos profissionais de ${espLabelStr} em ${local}.`, { especialidade: espLabelStr, local });
+    } else if (espLabelStr) {
+      title = tr("profissionais:empty.titleEspecialidade", `Ainda não temos profissionais de ${espLabelStr} por aqui.`, { especialidade: espLabelStr });
+    } else if (local) {
+      title = tr("profissionais:empty.titleLocal", `Ainda não chegamos até ${local}.`, { local });
+    } else {
+      title = tr("profissionais:empty.title", "Ainda não encontramos esse profissional.");
+    }
+    $("emptyTitle").textContent = title;
+    $("emptySub").textContent = tr("profissionais:empty.sub", "O diretório cresce toda semana — tente outra especialidade, amplie a busca ou volte em breve.");
+    $("emptyBox").classList.remove("ep-hide");
+  }
+  function showLoadError() {
+    $("emptyTitle").textContent = tr("profissionais:error.title", "Não foi possível carregar agora.");
+    $("emptySub").textContent = tr("profissionais:error.sub", "Verifique sua conexão e tente novamente em instantes.");
+    $("emptyBox").classList.remove("ep-hide");
+  }
+
   let lastReq = null;
   let debounce = null;
   async function loadList() {
@@ -306,13 +351,13 @@
       const data = await res.json();
       if (reqId !== lastReq) return; // stale, ignora
       $("loadingBox").classList.add("ep-hide");
-      if (!res.ok || !data.ok) { $("emptyBox").classList.remove("ep-hide"); return; }
-      if (!data.items.length) { $("emptyBox").classList.remove("ep-hide"); return; }
+      if (!res.ok || !data.ok) { showLoadError(); return; }
+      if (!data.items.length) { showEmpty(especialidade, cidade, uf); return; }
       $("grid").innerHTML = data.items.map(renderItem).join("");
       $("grid").classList.remove("ep-hide");
     } catch (e) {
       $("loadingBox").classList.add("ep-hide");
-      $("emptyBox").classList.remove("ep-hide");
+      showLoadError();
     }
   }
 
@@ -330,7 +375,7 @@
   // Re-renderiza grid quando i18n carrega (labels dinâmicos como especialidade
   // e botão "Agendar consulta" estão dentro do HTML gerado por JS).
   document.addEventListener("ep:i18n-ready", () => {
-    if (!$("grid").classList.contains("ep-hide")) loadList();
+    if (!$("grid").classList.contains("ep-hide") || !$("emptyBox").classList.contains("ep-hide")) loadList();
   });
 
   // Estado inicial = hint visível. Não chama loadList no boot — sem UF
