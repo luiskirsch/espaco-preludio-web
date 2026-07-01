@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(!l){var n=(navigator.language||"").toLowerCase();if(n.indexOf("en")===0)l="en-US";else if(n.indexOf("es")===0)l="es-ES";}if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+  <link rel="preconnect" href="https://firestore.googleapis.com">
+  <link rel="dns-prefetch" href="https://www.gstatic.com">
+  <title>Admin · Sessões · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <script src="./i18n/init.js?v=1-3" defer></script>
+  <script src="./js/monitoring.js?v=3" defer></script>
+  <style>
+    .ses-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .ses-table th { text-align: left; padding: 8px 12px; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ep-muted, #888); border-bottom: 1px solid var(--ep-line, #e8e0d4); }
+    .ses-table td { padding: 10px 12px; border-bottom: 1px solid var(--ep-line, #e8e0d4); vertical-align: middle; }
+    .ses-table tr:last-child td { border-bottom: none; }
+    .ses-table tr:hover td { background: rgba(0,0,0,.025); }
+    .ses-status { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .ses-status--completed  { background: rgba(45,106,62,.12); color: #2d6a3e; }
+    .ses-status--scheduled  { background: rgba(74,114,176,.12); color: #2a5ea8; }
+    .ses-status--in_progress{ background: rgba(200,150,58,.15); color: #8a5b1a; }
+    .ses-status--canceled   { background: rgba(180,70,60,.12);  color: #b8453d; }
+    .ses-dur { font-variant-numeric: tabular-nums; color: var(--ep-muted, #888); }
+    .ses-wrap { overflow-x: auto; border: 1px solid var(--ep-line, #e8e0d4); border-radius: 10px; }
+  </style>
+</head>
+<body>
+<script src="./js/admin-sidebar.js?v=1"></script>
+
+<div class="ep-shell">
+  <header class="ep-topbar">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio · Admin</span>
+      </span>
+    </a>
+    <nav class="ep-nav">
+      <a href="./admin-painel.html" class="ep-text-sm">Painel</a>
+      <a href="./admin-sessoes.html" class="ep-text-sm is-active">Sessões</a>
+      <a href="./admin-profissionais.html" class="ep-text-sm">Profissionais</a>
+      <a href="./admin-pacientes.html" class="ep-text-sm">Pacientes</a>
+      <a href="./admin-denuncias.html" class="ep-text-sm">Denúncias</a>
+      <a href="./admin-verificacoes.html" class="ep-text-sm">CRP/CRM</a>
+      <a href="./admin-comprovantes.html" class="ep-text-sm">Estudante</a>
+      <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm">Recém-formado</a>
+      <a href="./admin-comprovantes-formacao.html" class="ep-text-sm">Sem conselho</a>
+      <span id="adminEmail" class="ep-text-sm ep-text-muted">…</span>
+      <button id="logoutBtn" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Sair</button>
+    </nav>
+  </header>
+
+  <main class="ep-main">
+
+    <section id="loginPanel" class="ep-hide" style="max-width: 400px; margin: 40px auto;">
+      <div class="ep-auth__panel">
+        <h2 class="ep-auth__title">Acesso Admin</h2>
+        <p class="ep-auth__sub">Login restrito a e-mails na allowlist do servidor.</p>
+        <form id="loginForm" class="ep-stack ep-mt-16" novalidate>
+          <div class="ep-field">
+            <label class="ep-label" for="email">E-mail</label>
+            <input id="email" class="ep-input" type="email" autocomplete="email" required>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="password">Senha</label>
+            <input id="password" class="ep-input" type="password" autocomplete="current-password" required>
+          </div>
+          <div class="ep-status" id="loginStatus"></div>
+          <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="loginBtn">Entrar</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="dashboardPanel" class="ep-hide">
+      <div style="margin-bottom: 20px;">
+        <div class="ep-eyebrow">Painel administrativo</div>
+        <h1 class="ep-h1 ep-mt-12">Sessões</h1>
+        <p class="ep-text-muted ep-mt-8">Histórico de sessões com profissional, paciente e duração.</p>
+      </div>
+
+      <div class="ep-flex ep-flex--end-wrap" style="gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+        <input id="searchBox" class="ep-input" type="search" placeholder="Buscar por profissional ou paciente…" style="flex: 1; min-width: 240px;">
+        <button class="ep-btn ep-btn--ghost ep-btn--sm is-active-filter" data-filter="all">Todas</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="completed">Realizadas</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="scheduled">Agendadas</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="in_progress">Ao vivo</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="canceled">Canceladas</button>
+      </div>
+
+      <div id="countLine" class="ep-text-sm ep-text-muted" style="margin-bottom: 12px;">—</div>
+
+      <div class="ses-wrap">
+        <table class="ses-table">
+          <thead>
+            <tr>
+              <th>Data/Hora</th>
+              <th>Profissional</th>
+              <th>Especialidade</th>
+              <th>Paciente</th>
+              <th>Duração</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="6" style="color:#888;padding:24px;text-align:center;">Carregando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="forbiddenPanel" class="ep-hide" style="max-width: 460px; margin: 60px auto; text-align: center;">
+      <div class="ep-auth__panel">
+        <h2 class="ep-auth__title">Acesso negado.</h2>
+        <p class="ep-auth__sub">Sua conta não está na allowlist de admin.</p>
+        <button class="ep-btn ep-btn--ghost ep-btn--block ep-mt-16" type="button" id="forbiddenLogout">Sair</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script type="module">
+  import {
+    onAuthStateChanged, signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  const loginPanel     = document.getElementById("loginPanel");
+  const dashboardPanel = document.getElementById("dashboardPanel");
+  const forbiddenPanel = document.getElementById("forbiddenPanel");
+  const adminEmailEl   = document.getElementById("adminEmail");
+  const tbody          = document.getElementById("tbody");
+  const countEl        = document.getElementById("countLine");
+  const searchBox      = document.getElementById("searchBox");
+
+  let idToken = null;
+  let currentFilter = "all";
+  let allItems = [];
+
+  function show(panel) {
+    [loginPanel, dashboardPanel, forbiddenPanel].forEach(p => p.classList.add("ep-hide"));
+    panel.classList.remove("ep-hide");
+  }
+  function esc(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
+  }
+  function fmtDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+  function fmtDur(min) {
+    if (min === null || min === undefined) return "—";
+    if (min < 1) return "<1 min";
+    if (min < 60) return `${min} min`;
+    const h = Math.floor(min / 60), m = min % 60;
+    return m > 0 ? `${h}h ${m}min` : `${h}h`;
+  }
+  function statusLabel(s) {
+    const map = { completed: "Realizada", scheduled: "Agendada", in_progress: "Ao vivo", canceled: "Cancelada" };
+    return map[s] || s;
+  }
+
+  function renderRows(items) {
+    const search = searchBox.value.trim().toLowerCase();
+    let filtered = search
+      ? items.filter(i =>
+          (i.therapistDisplayName || "").toLowerCase().includes(search) ||
+          (i.patientName          || "").toLowerCase().includes(search) ||
+          (i.therapistEmail       || "").toLowerCase().includes(search) ||
+          (i.patientEmail         || "").toLowerCase().includes(search)
+        )
+      : items;
+
+    if (currentFilter !== "all") filtered = filtered.filter(i => i.status === currentFilter);
+
+    countEl.textContent = `${filtered.length} sessão${filtered.length !== 1 ? "ões" : ""}`;
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="color:#888;padding:24px;text-align:center;">Nenhuma sessão neste filtro.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(i => `
+      <tr>
+        <td style="white-space:nowrap;">${esc(fmtDate(i.scheduledAt))}</td>
+        <td>
+          <div style="font-weight:500;">${esc(i.therapistDisplayName || "—")}</div>
+          ${i.therapistEmail ? `<div style="font-size:11px;color:#888;">${esc(i.therapistEmail)}</div>` : ""}
+        </td>
+        <td style="color:#888;">${esc(i.therapistEspecialidade || "—")}</td>
+        <td>
+          <div style="font-weight:500;">${esc(i.patientName || "—")}</div>
+          ${i.patientEmail ? `<div style="font-size:11px;color:#888;">${esc(i.patientEmail)}</div>` : ""}
+        </td>
+        <td class="ses-dur">${esc(fmtDur(i.duracaoMin))}</td>
+        <td><span class="ses-status ses-status--${esc(i.status)}">${esc(statusLabel(i.status))}</span></td>
+      </tr>
+    `).join("");
+  }
+
+  async function loadSessoes() {
+    if (!idToken) return;
+    tbody.innerHTML = `<tr><td colspan="6" style="color:#888;padding:24px;text-align:center;">Carregando…</td></tr>`;
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/sessoes?limit=200`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      if (r.status === 403) { show(forbiddenPanel); return; }
+      const d = await r.json();
+      if (!d.ok) throw new Error(d.error || "Erro");
+      allItems = d.items || [];
+      renderRows(allItems);
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="6" style="color:#b8453d;padding:24px;text-align:center;">${esc(e.message)}</td></tr>`;
+    }
+  }
+
+  // Filtros
+  document.querySelectorAll("[data-filter]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("[data-filter]").forEach(b => b.classList.remove("is-active-filter"));
+      btn.classList.add("is-active-filter");
+      currentFilter = btn.dataset.filter;
+      renderRows(allItems);
+    });
+  });
+
+  searchBox.addEventListener("input", () => renderRows(allItems));
+
+  // Auth
+  onAuthStateChanged(auth, async user => {
+    if (!user) { show(loginPanel); return; }
+    adminEmailEl.textContent = user.email;
+    idToken = await user.getIdToken();
+    show(dashboardPanel);
+    await loadSessoes();
+  });
+
+  document.getElementById("loginForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const statusEl = document.getElementById("loginStatus");
+    statusEl.textContent = "";
+    try {
+      await signInWithEmailAndPassword(auth,
+        document.getElementById("email").value.trim(),
+        document.getElementById("password").value
+      );
+    } catch (err) {
+      statusEl.textContent = "Credenciais inválidas.";
+      statusEl.className = "ep-status is-err";
+    }
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
+  document.getElementById("forbiddenLogout").addEventListener("click", () => signOut(auth));
+</script>
+</body>
+</html>
