@@ -101,6 +101,52 @@
     }
     .corp-coming__icon { font-size: 32px; opacity: .4; }
 
+    /* ── Bem-estar semanal ── */
+    .corp-humor-score {
+      display: flex; align-items: baseline; gap: 6px;
+      font-family: 'Fraunces', serif; font-size: 48px; font-weight: 600;
+      color: var(--ep-ink-1); line-height: 1; margin: 8px 0 4px;
+    }
+    .corp-humor-score span { font-size: 18px; color: var(--ep-ink-3); }
+    .corp-humor-trend {
+      font-size: 12px; color: #2d6a3e; font-weight: 500; margin-bottom: 16px;
+    }
+    .corp-humor-bars {
+      display: flex; align-items: flex-end; gap: 6px; height: 56px; margin: 12px 0 6px;
+    }
+    .corp-humor-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+    .corp-humor-bar {
+      width: 100%; border-radius: 4px 4px 0 0;
+      background: var(--corp-accent); opacity: .75; min-height: 4px;
+      transition: opacity .2s;
+    }
+    .corp-humor-bar:hover { opacity: 1; }
+    .corp-humor-bar-label { font-size: 10px; color: var(--ep-ink-3); }
+    .corp-humor-dist { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .corp-humor-chip {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; color: var(--ep-ink-2);
+    }
+    .corp-humor-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Motivos ── */
+    .corp-motivos-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    .corp-motivo-row { display: flex; flex-direction: column; gap: 4px; }
+    .corp-motivo-label {
+      display: flex; justify-content: space-between;
+      font-size: 13px; color: var(--ep-ink-1);
+    }
+    .corp-motivo-pct { font-size: 12px; color: var(--ep-ink-3); font-weight: 500; }
+    .corp-motivo-track {
+      height: 7px; border-radius: 99px;
+      background: var(--ep-line);
+    }
+    .corp-motivo-fill {
+      height: 100%; border-radius: 99px;
+      background: var(--corp-accent); opacity: .8;
+      transition: width .6s cubic-bezier(.4,0,.2,1);
+    }
+
     /* ── Footer ── */
     .corp-footer { text-align: center; font-size: 11px; color: var(--ep-ink-3); margin-top: 48px; }
 
@@ -227,26 +273,56 @@
           <div style="margin-top:24px;display:flex;flex-direction:column;gap:10px;" id="engajamentoStats"></div>
         </div>
 
-        <!-- Humor — em breve -->
+        <!-- Humor — demo -->
         <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--ep-line);">
           <div class="corp-card__title">Índice de bem-estar semanal</div>
-          <div class="corp-coming">
-            <div class="corp-coming__icon">🌡️</div>
-            <p>Em breve — coletando dados de humor da equipe.</p>
+          <div class="corp-humor-score">7,4 <span>/ 10</span></div>
+          <div class="corp-humor-trend">↑ +0,3 em relação à semana passada</div>
+          <div class="corp-humor-bars">
+            <div class="corp-humor-bar-wrap"><div class="corp-humor-bar" style="height:58%"></div><div class="corp-humor-bar-label">Seg</div></div>
+            <div class="corp-humor-bar-wrap"><div class="corp-humor-bar" style="height:72%"></div><div class="corp-humor-bar-label">Ter</div></div>
+            <div class="corp-humor-bar-wrap"><div class="corp-humor-bar" style="height:65%"></div><div class="corp-humor-bar-label">Qua</div></div>
+            <div class="corp-humor-bar-wrap"><div class="corp-humor-bar" style="height:80%"></div><div class="corp-humor-bar-label">Qui</div></div>
+            <div class="corp-humor-bar-wrap"><div class="corp-humor-bar" style="height:74%"></div><div class="corp-humor-bar-label">Sex</div></div>
+          </div>
+          <div class="corp-humor-dist">
+            <div class="corp-humor-chip"><div class="corp-humor-dot" style="background:#2d6a3e"></div>Ótimo 33%</div>
+            <div class="corp-humor-chip"><div class="corp-humor-dot" style="background:#5a9e6f"></div>Bem 42%</div>
+            <div class="corp-humor-chip"><div class="corp-humor-dot" style="background:#c8963a"></div>Regular 17%</div>
+            <div class="corp-humor-chip"><div class="corp-humor-dot" style="background:#b8453d"></div>Estressado 8%</div>
           </div>
         </div>
       </div>
 
     </div>
 
-    <!-- Top motivos — em breve -->
+    <!-- Top motivos — demo -->
     <div class="corp-card" style="margin-bottom:20px;">
       <div class="corp-card__title">Principais motivos de atendimento</div>
       <div class="corp-card__sub">Ranking anônimo das categorias mais buscadas pela equipe</div>
-      <div class="corp-coming">
-        <div class="corp-coming__icon">🏷️</div>
-        <p>Em breve — os colaboradores poderão classificar anonimamente o motivo da consulta.</p>
+      <div class="corp-motivos-list">
+        <div class="corp-motivo-row">
+          <div class="corp-motivo-label"><span>Ansiedade e estresse</span><span class="corp-motivo-pct">38%</span></div>
+          <div class="corp-motivo-track"><div class="corp-motivo-fill" style="width:38%"></div></div>
+        </div>
+        <div class="corp-motivo-row">
+          <div class="corp-motivo-label"><span>Equilíbrio vida-trabalho</span><span class="corp-motivo-pct">24%</span></div>
+          <div class="corp-motivo-track"><div class="corp-motivo-fill" style="width:24%"></div></div>
+        </div>
+        <div class="corp-motivo-row">
+          <div class="corp-motivo-label"><span>Autoestima e autoconfiança</span><span class="corp-motivo-pct">18%</span></div>
+          <div class="corp-motivo-track"><div class="corp-motivo-fill" style="width:18%"></div></div>
+        </div>
+        <div class="corp-motivo-row">
+          <div class="corp-motivo-label"><span>Relacionamentos interpessoais</span><span class="corp-motivo-pct">12%</span></div>
+          <div class="corp-motivo-track"><div class="corp-motivo-fill" style="width:12%"></div></div>
+        </div>
+        <div class="corp-motivo-row">
+          <div class="corp-motivo-label"><span>Outros</span><span class="corp-motivo-pct">8%</span></div>
+          <div class="corp-motivo-track"><div class="corp-motivo-fill" style="width:8%"></div></div>
+        </div>
       </div>
+      <p style="margin-top:14px;font-size:11px;color:var(--ep-ink-3);">Baseado em 22 sessões · dados anonimizados · LGPD</p>
     </div>
 
     <div class="corp-footer">
