@@ -112,7 +112,7 @@
       font-size: 12px; color: #2d6a3e; font-weight: 500; margin-bottom: 16px;
     }
     .corp-humor-bars {
-      display: flex; align-items: flex-end; gap: 6px; height: 56px; margin: 12px 0 6px;
+      display: flex; align-items: stretch; gap: 6px; height: 72px; margin: 12px 0 6px;
     }
     .corp-humor-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
     .corp-humor-bar {
@@ -122,6 +122,17 @@
     }
     .corp-humor-bar:hover { opacity: 1; }
     .corp-humor-bar-label { font-size: 10px; color: var(--ep-ink-3); }
+    .corp-humor-tooltip {
+      position: fixed;
+      background: #fff;
+      border: 1px solid var(--ep-line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.10);
+      pointer-events: none;
+      z-index: 9999;
+      min-width: 140px;
+    }
     .corp-humor-dist { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
     .corp-humor-chip {
       display: flex; align-items: center; gap: 5px;
@@ -278,19 +289,83 @@
           <div class="corp-card__title">Índice de bem-estar semanal</div>
           <div class="corp-humor-score">7,4 <span>/ 10</span></div>
           <div class="corp-humor-trend">↑ +0,3 em relação à semana passada</div>
-          <div class="corp-humor-bars">
-            <div class="corp-humor-bar-wrap"><div class="corp-humor-bar" style="height:58%"></div><div class="corp-humor-bar-label">Seg</div></div>
-            <div class="corp-humor-bar-wrap"><div class="corp-humor-bar" style="height:72%"></div><div class="corp-humor-bar-label">Ter</div></div>
-            <div class="corp-humor-bar-wrap"><div class="corp-humor-bar" style="height:65%"></div><div class="corp-humor-bar-label">Qua</div></div>
-            <div class="corp-humor-bar-wrap"><div class="corp-humor-bar" style="height:80%"></div><div class="corp-humor-bar-label">Qui</div></div>
-            <div class="corp-humor-bar-wrap"><div class="corp-humor-bar" style="height:74%"></div><div class="corp-humor-bar-label">Sex</div></div>
-          </div>
+
+          <!-- Barras empilhadas por dia -->
+          <div class="corp-humor-bars" id="humorBars"></div>
+
           <div class="corp-humor-dist">
             <div class="corp-humor-chip"><div class="corp-humor-dot" style="background:#2d6a3e"></div>Ótimo 33%</div>
             <div class="corp-humor-chip"><div class="corp-humor-dot" style="background:#5a9e6f"></div>Bem 42%</div>
             <div class="corp-humor-chip"><div class="corp-humor-dot" style="background:#c8963a"></div>Regular 17%</div>
             <div class="corp-humor-chip"><div class="corp-humor-dot" style="background:#b8453d"></div>Estressado 8%</div>
           </div>
+
+          <script>
+          (function() {
+            // Dados por dia: [ótimo%, bem%, regular%, estressado%]
+            const DIAS = [
+              { label: "Seg", d: [25, 42, 25, 8]  },
+              { label: "Ter", d: [38, 46, 12, 4]  },
+              { label: "Qua", d: [29, 38, 21, 12] },
+              { label: "Qui", d: [42, 46, 8,  4]  },
+              { label: "Sex", d: [33, 38, 17, 12] },
+            ];
+            const COLORS = ["#2d6a3e","#5a9e6f","#c8963a","#b8453d"];
+            const LABELS = ["Ótimo","Bem","Regular","Estressado"];
+
+            const container = document.getElementById("humorBars");
+            const tooltip   = document.getElementById("humorTooltip");
+
+            DIAS.forEach(({ label, d }) => {
+              const wrap = document.createElement("div");
+              wrap.className = "corp-humor-bar-wrap";
+              wrap.style.position = "relative";
+
+              // Barra empilhada
+              const stack = document.createElement("div");
+              stack.style.cssText = "width:100%;flex:1;display:flex;flex-direction:column-reverse;border-radius:4px;overflow:hidden;cursor:pointer;";
+              d.forEach((pct, i) => {
+                const seg = document.createElement("div");
+                seg.style.cssText = `height:${pct}%;background:${COLORS[i]};min-height:${pct > 0 ? 3 : 0}px;`;
+                stack.appendChild(seg);
+              });
+
+              // Label
+              const lbl = document.createElement("div");
+              lbl.className = "corp-humor-bar-label";
+              lbl.textContent = label;
+
+              // Hover
+              stack.addEventListener("mouseenter", (e) => {
+                const rows = d.map((pct, i) =>
+                  `<div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:${COLORS[i]};flex-shrink:0;"></div>
+                    <span style="color:#444;">${LABELS[i]}</span>
+                    <span style="margin-left:auto;font-weight:600;color:#222;">${pct}%</span>
+                  </div>`
+                ).join("");
+                tooltip.innerHTML = `<strong style="font-size:12px;display:block;margin-bottom:6px;">${label}</strong>${rows}`;
+                tooltip.style.display = "block";
+                positionTooltip(e);
+              });
+              stack.addEventListener("mousemove", (e) => positionTooltip(e));
+              stack.addEventListener("mouseleave", () => { tooltip.style.display = "none"; });
+
+              wrap.appendChild(stack);
+              wrap.appendChild(lbl);
+              container.appendChild(wrap);
+            });
+
+            function positionTooltip(e) {
+              let left = e.clientX - tooltip.offsetWidth / 2;
+              let top  = e.clientY - tooltip.offsetHeight - 12;
+              if (left < 8) left = 8;
+              if (top < 8)  top  = e.clientY + 16;
+              tooltip.style.left = left + "px";
+              tooltip.style.top  = top  + "px";
+            }
+          })();
+          </script>
         </div>
       </div>
 
@@ -493,5 +568,9 @@
     } catch (e) { statusEl.textContent = e.message; statusEl.className = "ep-status is-err"; }
   });
 </script>
+
+<!-- Tooltip global do gráfico de bem-estar (position:fixed, fora do card) -->
+<div class="corp-humor-tooltip" id="humorTooltip" style="display:none;"></div>
+
 </body>
 </html>
