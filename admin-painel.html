@@ -875,9 +875,8 @@
     if (!user) {
       idTokenCache = null;
       adminEmail.textContent = "…";
-      window.location.href = "./admin-login.html"; return;
       stopAutoRefresh();
-      return;
+      window.location.href = "./admin-login.html"; return;
     }
     idTokenCache = await user.getIdToken();
     adminEmail.textContent = user.email || "?";
