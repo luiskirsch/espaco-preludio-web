@@ -26,9 +26,12 @@
     .ses-status--completed  { background: rgba(45,106,62,.12); color: #2d6a3e; }
     .ses-status--scheduled  { background: rgba(74,114,176,.12); color: #2a5ea8; }
     .ses-status--in_progress{ background: rgba(200,150,58,.15); color: #8a5b1a; }
+    .ses-status--in_progress.is-orphan { background: rgba(180,70,60,.12); color: #b8453d; }
     .ses-status--canceled   { background: rgba(180,70,60,.12);  color: #b8453d; }
     .ses-dur { font-variant-numeric: tabular-nums; color: var(--ep-muted, #888); }
     .ses-wrap { overflow-x: auto; border: 1px solid var(--ep-line, #e8e0d4); border-radius: 10px; }
+    .ses-btn-close { font-size: 11px; padding: 2px 8px; border: 1px solid #d9534f; color: #b8453d; background: none; border-radius: 4px; cursor: pointer; margin-left: 6px; }
+    .ses-btn-close:hover { background: rgba(180,70,60,.08); }
   </style>
 </head>
 <body>
@@ -188,7 +191,14 @@
       return;
     }
 
-    tbody.innerHTML = filtered.map(i => `
+    const FOUR_HOURS = 4 * 60 * 60 * 1000;
+    tbody.innerHTML = filtered.map(i => {
+      const orphan = i.status === "in_progress" && i.scheduledAt && (Date.now() - i.scheduledAt) > FOUR_HOURS;
+      const statusEl = orphan
+        ? `<span class="ses-status ses-status--in_progress is-orphan">Órfã</span>
+           <button class="ses-btn-close" data-id="${esc(i.id)}">Encerrar</button>`
+        : `<span class="ses-status ses-status--${esc(i.status)}">${esc(statusLabel(i.status))}</span>`;
+      return `
       <tr>
         <td style="white-space:nowrap;">${esc(fmtDate(i.scheduledAt))}</td>
         <td>
@@ -201,9 +211,9 @@
           ${i.patientEmail ? `<div style="font-size:11px;color:#888;">${esc(i.patientEmail)}</div>` : ""}
         </td>
         <td class="ses-dur">${esc(fmtDur(i.duracaoMin))}</td>
-        <td><span class="ses-status ses-status--${esc(i.status)}">${esc(statusLabel(i.status))}</span></td>
-      </tr>
-    `).join("");
+        <td>${statusEl}</td>
+      </tr>`;
+    }).join("");
   }
 
   async function loadSessoes() {
@@ -222,6 +232,29 @@
       tbody.innerHTML = `<tr><td colspan="6" style="color:#b8453d;padding:24px;text-align:center;">${esc(e.message)}</td></tr>`;
     }
   }
+
+  // Encerrar sessão órfã
+  tbody.addEventListener("click", async e => {
+    const btn = e.target.closest(".ses-btn-close");
+    if (!btn) return;
+    const sessionId = btn.dataset.id;
+    if (!confirm(`Encerrar sessão ${sessionId} forçadamente?`)) return;
+    btn.disabled = true;
+    btn.textContent = "…";
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/sessoes/${sessionId}/encerrar`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const d = await r.json();
+      if (!d.ok) throw new Error(d.error || "Erro");
+      await loadSessoes();
+    } catch (err) {
+      alert("Erro: " + err.message);
+      btn.disabled = false;
+      btn.textContent = "Encerrar";
+    }
+  });
 
   // Filtros
   document.querySelectorAll("[data-filter]").forEach(btn => {
