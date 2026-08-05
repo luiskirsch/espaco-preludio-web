@@ -49,18 +49,20 @@ const PRODUCTION_FIREBASE = {
 
 export const firebaseConfig = IS_STAGING ? STAGING_FIREBASE : PRODUCTION_FIREBASE;
 
-// Backend URL — default = Railway (staging ou prod). Override via:
-//   1. ?backend=URL na querystring (precedência máxima, salva em localStorage)
-//   2. localStorage 'ep_backend_url_override' (persiste entre navegações)
-//   3. window.EP_BACKEND_BASE_URL_OVERRIDE (setado inline antes do módulo)
-// Útil pra apontar pra backend local (notebook) ou tunnel cloudflared sem
-// precisar editar este arquivo.
+// Backend URL — default = Railway (staging ou prod).
+// Override APENAS em staging: ?backend=URL ou localStorage 'ep_backend_url_override'.
+// Em produção o override está DESABILITADO — qualquer URL arbitrária seria
+// phishing: link com ?backend=servidor-atacante recebe o Firebase ID token do prof.
 function _detectBackendOverride() {
   if (typeof window === "undefined") return null;
+  if (!IS_STAGING) {
+    // Limpa qualquer override que possa ter ficado no localStorage de sessões anteriores
+    try { localStorage.removeItem("ep_backend_url_override"); } catch (_) {}
+    return null;
+  }
   try {
     const qs = new URLSearchParams(location.search).get("backend");
     if (qs) {
-      // Salva pra persistir entre navegações dentro do site
       try { localStorage.setItem("ep_backend_url_override", qs); } catch (_) {}
       return qs;
     }
