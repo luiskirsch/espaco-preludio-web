@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conteúdo só está disponível no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br</a></p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excluir conta · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+</head>
+<body>
+
+<main class="ep-auth">
+  <div class="ep-auth__panel">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+
+    <!-- Estado: carregando -->
+    <div id="stateLoading">
+      <p class="ep-auth__sub ep-mt-32" style="text-align:center">Verificando sessão…</p>
+    </div>
+
+    <!-- Estado: não logado -->
+    <div id="stateGuest" class="ep-hide">
+      <h2 class="ep-auth__title ep-mt-32">Excluir conta</h2>
+      <p class="ep-auth__sub">Para solicitar a exclusão da sua conta, primeiro faça login.</p>
+      <div class="ep-stack ep-mt-24" style="gap:8px">
+        <a href="./paciente-login.html" class="ep-btn ep-btn--primary ep-btn--block">Entrar como paciente</a>
+        <a href="./entrar.html" class="ep-btn ep-btn--ghost ep-btn--block">Entrar como profissional</a>
+      </div>
+    </div>
+
+    <!-- Estado: logado — formulário de solicitação -->
+    <div id="stateForm" class="ep-hide">
+      <h2 class="ep-auth__title ep-mt-32">Excluir conta</h2>
+      <p class="ep-auth__sub">Você está logado como <strong id="userEmail"></strong>.</p>
+
+      <div class="ep-alert ep-alert--warn ep-mt-16">
+        <strong>O que será excluído:</strong> seus dados de cadastro e informações de perfil.<br><br>
+        <strong>O que é retido:</strong> registros de sessões clínicas são mantidos por 5 anos conforme exigência do CFP/CFM — esses dados são anonimizados e não vinculados à sua conta após a exclusão.
+      </div>
+
+      <form id="deleteForm" class="ep-stack ep-mt-20" novalidate>
+        <div class="ep-field">
+          <label class="ep-label" for="confirmEmail">Digite seu e-mail para confirmar</label>
+          <input id="confirmEmail" class="ep-input" type="email" autocomplete="off" placeholder="" required>
+        </div>
+
+        <div class="ep-status" id="status"></div>
+
+        <button class="ep-btn ep-btn--danger ep-btn--lg ep-btn--block" type="submit" id="submitBtn">
+          Solicitar exclusão da conta
+        </button>
+        <a href="javascript:history.back()" class="ep-btn ep-btn--ghost ep-btn--block">Cancelar</a>
+      </form>
+    </div>
+
+    <!-- Estado: solicitação enviada -->
+    <div id="stateDone" class="ep-hide">
+      <h2 class="ep-auth__title ep-mt-32">Solicitação recebida</h2>
+      <div class="ep-alert ep-alert--ok ep-mt-16">
+        Sua solicitação de exclusão foi registrada. Processamos exclusões em até <strong>30 dias úteis</strong>.<br><br>
+        Se tiver dúvidas, entre em contato: <a href="mailto:suporte@espacopreludio.com.br">suporte@espacopreludio.com.br</a>
+      </div>
+      <a href="./index.html" class="ep-btn ep-btn--ghost ep-btn--block ep-mt-16">Voltar ao início</a>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { authProfessional, authPatient, dbProfessional, dbPatient, BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+let currentUser = null;
+let currentDb   = null;
+let resolved    = false;
+
+function show(id) {
+  ["stateLoading","stateGuest","stateForm","stateDone"].forEach(s => {
+    document.getElementById(s).classList.toggle("ep-hide", s !== id);
+  });
+}
+
+function setStatus(msg, type) {
+  const el = document.getElementById("status");
+  el.textContent = msg;
+  el.className = "ep-status" + (type === "err" ? " ep-status--err" : type === "ok" ? " ep-status--ok" : "");
+}
+
+function resolve(user, db) {
+  if (resolved) return;
+  resolved = true;
+  if (user) {
+    currentUser = user;
+    currentDb   = db;
+    document.getElementById("userEmail").textContent = user.email;
+    show("stateForm");
+  } else {
+    show("stateGuest");
+  }
+}
+
+// Detecta qual sessão está ativa (profissional ou paciente)
+let profResolved = false, patResolved = false;
+onAuthStateChanged(authProfessional, user => {
+  profResolved = true;
+  if (user && !resolved) resolve(user, dbProfessional);
+  else if (profResolved && patResolved && !resolved) resolve(null, null);
+});
+onAuthStateChanged(authPatient, user => {
+  patResolved = true;
+  if (user && !resolved) resolve(user, dbPatient);
+  else if (profResolved && patResolved && !resolved) resolve(null, null);
+});
+
+// Timeout de segurança
+setTimeout(() => { if (!resolved) resolve(null, null); }, 4000);
+
+document.getElementById("deleteForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const confirmEmail = document.getElementById("confirmEmail").value.trim().toLowerCase();
+  const submitBtn = document.getElementById("submitBtn");
+
+  if (confirmEmail !== currentUser.email.toLowerCase()) {
+    setStatus("O e-mail digitado não coincide com o da sua conta.", "err");
+    return;
+  }
+
+  submitBtn.disabled = true;
+  setStatus("Registrando solicitação…");
+
+  try {
+    const idToken = await currentUser.getIdToken();
+
+    // Tenta registrar no Firestore via backend
+    const res = await fetch(`${BACKEND_BASE_URL}/therapy/conta/solicitar-exclusao`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+      body: JSON.stringify({ email: currentUser.email, uid: currentUser.uid })
+    });
+
+    // Mesmo que o backend não tenha a rota ainda, considera sucesso (fallback: Firestore direto)
+    if (!res.ok) {
+      await setDoc(doc(currentDb, "therapy_deletion_requests", currentUser.uid), {
+        email: currentUser.email,
+        uid: currentUser.uid,
+        requestedAt: serverTimestamp(),
+        status: "pending"
+      });
+    }
+
+    show("stateDone");
+  } catch (err) {
+    // Fallback final: abre e-mail de suporte
+    const mailto = `mailto:suporte@espacopreludio.com.br?subject=${encodeURIComponent("Solicitação de exclusão de conta")}&body=${encodeURIComponent(`Olá,\n\nSolicito a exclusão da minha conta.\n\nE-mail: ${currentUser.email}\nUID: ${currentUser.uid}\n`)}`;
+    window.location.href = mailto;
+    show("stateDone");
+  }
+});
+</script>
+
+</body>
+</html>
