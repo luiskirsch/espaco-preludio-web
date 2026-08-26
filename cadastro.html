@@ -291,6 +291,21 @@ document.addEventListener("DOMContentLoaded", function() {
     if (len >= 10) reveal("fs-consent");
   });
 
+  // Informa imediatamente quando a confirmação diverge da senha.
+  const passwordInput = document.getElementById("password");
+  const passwordConfirmInput = document.getElementById("passwordConfirm");
+  const passwordMismatch = document.getElementById("passwordMismatch");
+  function updatePasswordMatch() {
+    if (!passwordInput || !passwordConfirmInput || !passwordMismatch) return;
+    const mismatch = passwordConfirmInput.value.length > 0
+      && passwordInput.value !== passwordConfirmInput.value;
+    passwordMismatch.style.display = mismatch ? "block" : "none";
+    passwordConfirmInput.setCustomValidity(mismatch ? passwordMismatch.textContent.trim() : "");
+    passwordConfirmInput.setAttribute("aria-invalid", mismatch ? "true" : "false");
+  }
+  passwordInput?.addEventListener("input", updatePasswordMatch);
+  passwordConfirmInput?.addEventListener("input", updatePasswordMatch);
+
   // Toggle olho — mostrar/ocultar senha
   document.querySelectorAll(".ep-pwd-toggle").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -623,6 +638,7 @@ document.addEventListener("DOMContentLoaded", function() {
                   <svg class="ep-eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
               </div>
+              <p id="passwordMismatch" role="alert" data-i18n="cadastro:status.passwordMismatch" style="display:none;font-size:12px;margin:4px 0 0;color:var(--ep-danger);">As senhas não conferem.</p>
             </div>
           </div>
           <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n-html="cadastro:step1.passwordHint">
