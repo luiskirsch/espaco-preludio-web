@@ -22,11 +22,33 @@
     .is-student-mode #heroStudent { display: flex !important; flex-direction: column; }
     .is-student-mode #especialidadeField { display: none !important; }
     @media (min-width: 921px) {
+      html { scrollbar-gutter: auto; }
       body { overflow: hidden; }
       .ep-auth__panel--wide { height: calc(100vh - 80px) !important; overflow: hidden !important; }
       .ep-auth__panel--wide .ep-auth__hero { height: calc(100vh - 80px) !important; overflow: hidden !important; }
-      .ep-auth__panel--wide .ep-auth__form { height: calc(100vh - 80px) !important; overflow-y: auto !important; scrollbar-width: none !important; }
-      .ep-auth__panel--wide .ep-auth__form::-webkit-scrollbar { display: none !important; }
+      .ep-auth__panel--wide .ep-auth__form {
+        height: calc(100vh - 80px) !important;
+        overflow-y: auto !important;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(90, 74, 53, .45) transparent;
+      }
+      .ep-auth__panel--wide .ep-auth__form::-webkit-scrollbar {
+        display: block;
+        width: 10px;
+      }
+      .ep-auth__panel--wide .ep-auth__form::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .ep-auth__panel--wide .ep-auth__form::-webkit-scrollbar-thumb {
+        background: rgba(90, 74, 53, .45);
+        border: 2px solid transparent;
+        border-radius: 999px;
+        background-clip: content-box;
+      }
+      .ep-auth__panel--wide .ep-auth__form::-webkit-scrollbar-thumb:hover {
+        background: rgba(90, 74, 53, .7);
+        background-clip: content-box;
+      }
     }
     @media (max-width: 480px) {
       .ep-auth { padding: 0 !important; background: var(--ep-surface) !important; }
