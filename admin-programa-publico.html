@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin · Programa Público · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <style>
+    .pp-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.pp-tab.is-active{background:var(--ep-ink);color:var(--ep-bg)}
+    .pp-panel{display:none}.pp-panel.is-active{display:block}.pp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .pp-grid .wide{grid-column:1/-1}.pp-card{border:1px solid var(--ep-line);border-radius:12px;padding:16px;background:var(--ep-surface);margin-bottom:12px}
+    .pp-row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}.pp-badge{font-size:10px;padding:3px 8px;border-radius:99px;background:var(--ep-bg-2)}
+    .pp-code{font-family:monospace;font-size:12px;word-break:break-all;background:var(--ep-bg-2);padding:10px;border-radius:8px}.pp-alert{padding:12px;border-radius:8px;margin:12px 0;background:rgba(181,69,61,.1);color:#8b2924}
+    textarea.ep-input{min-height:84px;resize:vertical}select[multiple]{min-height:150px}
+    @media(max-width:760px){.pp-grid{grid-template-columns:1fr}.pp-grid .wide{grid-column:auto}}
+  </style>
+</head>
+<body>
+<script src="./js/admin-sidebar.js?v=2"></script>
+<div class="ep-shell"><main class="ep-main">
+  <section id="loginPanel" class="ep-hide" style="max-width:400px;margin:40px auto"><div class="ep-auth__panel">
+    <h2 class="ep-auth__title">Acesso Admin</h2><form id="loginForm" class="ep-stack ep-mt-16">
+      <div class="ep-field"><label class="ep-label">E-mail</label><input id="loginEmail" class="ep-input" type="email" required></div>
+      <div class="ep-field"><label class="ep-label">Senha</label><input id="loginPassword" class="ep-input" type="password" required></div>
+      <p id="loginStatus" class="ep-text-sm ep-text-muted"></p><button class="ep-btn ep-btn--primary" type="submit">Entrar</button>
+    </form></div></section>
+
+  <section id="mainPanel" class="ep-hide">
+    <div class="pp-row"><div><div class="ep-eyebrow">Prestação privada ao poder público</div><h1 class="ep-h1 ep-mt-8">Programa Público</h1><p class="ep-text-muted ep-mt-4">Configuração da prestadora, contratos, equipes, escolas e convites.</p></div><span id="adminEmail" class="ep-text-sm ep-text-muted"></span></div>
+    <div class="pp-tabs">
+      <button class="ep-btn ep-btn--ghost pp-tab is-active" data-tab="provider">Prestadora</button>
+      <button class="ep-btn ep-btn--ghost pp-tab" data-tab="programs">Contratos e programas</button>
+      <button class="ep-btn ep-btn--ghost pp-tab" data-tab="schools">Escolas e convites</button>
+    </div>
+    <div id="globalStatus" class="ep-status"></div>
+
+    <section id="tab-provider" class="pp-panel is-active">
+      <div id="providerGate" class="pp-alert ep-hide"></div>
+      <form id="providerForm" class="pp-card pp-grid">
+        <div class="ep-field"><label class="ep-label">Razão social *</label><input name="legalName" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Nome fantasia *</label><input name="tradeName" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">CNPJ *</label><input name="cnpj" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Registro da PJ no CRP *</label><input name="crpPjRegistration" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Responsável técnico *</label><input name="technicalResponsibleName" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">CRP do responsável técnico *</label><input name="technicalResponsibleCrp" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Coordenador(a) clínico(a) *</label><input name="clinicalCoordinatorName" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">E-mail da coordenação *</label><input name="clinicalCoordinatorEmail" class="ep-input" type="email" required></div>
+        <div class="ep-field"><label class="ep-label">Telefone da coordenação *</label><input name="clinicalCoordinatorPhone" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Encarregado/DPO *</label><input name="dpoName" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">E-mail do DPO *</label><input name="dpoEmail" class="ep-input" type="email" required></div>
+        <div class="ep-field"><label class="ep-label">E-mail de incidentes *</label><input name="incidentEmail" class="ep-input" type="email" required></div>
+        <div class="ep-field"><label class="ep-label">Responsável por segurança *</label><input name="securityOfficerName" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">E-mail de segurança *</label><input name="securityOfficerEmail" class="ep-input" type="email" required></div>
+        <div class="ep-field wide"><label class="ep-label">Endereço do estabelecimento/serviço *</label><input name="serviceAddress" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Licença sanitária</label><input name="healthLicense" class="ep-input"></div>
+        <div class="ep-field"><label class="ep-label">CNES</label><input name="cnes" class="ep-input"></div>
+        <div class="ep-field"><label class="ep-label">Seguro de responsabilidade</label><input name="liabilityInsurance" class="ep-input"></div>
+        <div class="ep-field"><label class="ep-label">Versão do aviso de privacidade *</label><input name="privacyNoticeVersion" class="ep-input" placeholder="2026-08-v1" required></div>
+        <div class="ep-field"><label class="ep-label">Versão do protocolo clínico *</label><input name="clinicalProtocolVersion" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Versão do protocolo de emergência *</label><input name="emergencyProtocolVersion" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Plano de continuidade *</label><input name="businessContinuityPlanVersion" class="ep-input" placeholder="Versão/referência" required></div>
+        <div class="ep-field"><label class="ep-label">Plano de resposta a incidentes *</label><input name="incidentResponsePlanVersion" class="ep-input" placeholder="Versão/referência" required></div>
+        <div class="ep-field wide"><label class="ep-label">Responsável pela guarda dos registros clínicos *</label><input name="clinicalRecordCustodian" class="ep-input" required></div>
+        <div class="ep-field wide"><label class="ep-label">Cobertura e resposta a emergências *</label><textarea name="emergencyCoverageDescription" class="ep-input" required></textarea></div>
+        <div class="wide"><button class="ep-btn ep-btn--primary" type="submit">Salvar prestadora</button></div>
+      </form>
+    </section>
+
+    <section id="tab-programs" class="pp-panel">
+      <div class="pp-row"><h2 class="ep-h2">Contrato/programa</h2><button id="newProgram" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Novo</button></div>
+      <form id="programForm" class="pp-card pp-grid">
+        <input type="hidden" name="id">
+        <div class="ep-field"><label class="ep-label">Nome do programa *</label><input name="name" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Órgão/ente contratante *</label><input name="contractingAuthorityName" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">CNPJ do contratante *</label><input name="contractingAuthorityCnpj" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Município *</label><input name="municipality" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">UF *</label><input name="state" class="ep-input" maxlength="2" required></div>
+        <div class="ep-field"><label class="ep-label">Nº do contrato *</label><input name="contractNumber" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Nº do processo *</label><input name="processNumber" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Instrumento *</label><input name="legalInstrument" class="ep-input" placeholder="CPSI / fornecimento / outro" required></div>
+        <div class="ep-field wide"><label class="ep-label">Base legal *</label><input name="legalBasis" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Modelo de contratação *</label><select name="contractingModel" class="ep-select" required><option value="">Selecione</option><option value="CPSI">CPSI</option><option value="Contrato de fornecimento pós-CPSI">Contrato de fornecimento pós-CPSI</option><option value="Outro instrumento">Outro instrumento</option></select></div>
+        <div class="ep-field wide"><label class="ep-label">Desafio público de inovação *</label><textarea name="innovationChallenge" class="ep-input" required></textarea></div>
+        <div class="ep-field wide"><label class="ep-label">Hipótese da solução *</label><textarea name="solutionHypothesis" class="ep-input" required></textarea></div>
+        <div class="ep-field wide"><label class="ep-label">Escopo do experimento/teste *</label><textarea name="experimentScope" class="ep-input" required></textarea></div>
+        <div class="ep-field wide"><label class="ep-label">Métricas objetivas de sucesso *</label><textarea name="successMetrics" class="ep-input" required></textarea></div>
+        <div class="ep-field wide"><label class="ep-label">Marcos e entregas *</label><textarea name="milestones" class="ep-input" required></textarea></div>
+        <div class="ep-field"><label class="ep-label">Início *</label><input name="startDate" class="ep-input" type="date" required></div>
+        <div class="ep-field"><label class="ep-label">Fim *</label><input name="endDate" class="ep-input" type="date" required></div>
+        <div class="ep-field"><label class="ep-label">Idade mínima</label><input name="minAge" class="ep-input" type="number" min="0" max="21" value="6"></div>
+        <div class="ep-field"><label class="ep-label">Idade máxima</label><input name="maxAge" class="ep-input" type="number" min="0" max="25" value="17"></div>
+        <div class="ep-field"><label class="ep-label">Máximo de alunos *</label><input name="maxStudents" class="ep-input" type="number" min="1" required></div>
+        <div class="ep-field"><label class="ep-label">Sessões por aluno *</label><input name="maxSessionsPerStudent" class="ep-input" type="number" min="1" required></div>
+        <div class="ep-field"><label class="ep-label">Sessões mensais do contrato</label><input name="maxMonthlySessions" class="ep-input" type="number" min="1"></div>
+        <div class="ep-field"><label class="ep-label">Duração da sessão (min) *</label><input name="sessionDurationMinutes" class="ep-input" type="number" min="20" max="120" value="50"></div>
+        <div class="ep-field wide"><label class="ep-label">Público e escopo *</label><textarea name="targetDescription" class="ep-input" required></textarea></div>
+        <div class="ep-field"><label class="ep-label">Gestor público *</label><input name="publicManagerName" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">E-mail do gestor *</label><input name="publicManagerEmail" class="ep-input" type="email" required></div>
+        <div class="ep-field"><label class="ep-label">Telefone do gestor</label><input name="publicManagerPhone" class="ep-input"></div>
+        <div class="ep-field"><label class="ep-label">DPO público *</label><input name="publicDpoName" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">E-mail do DPO público *</label><input name="publicDpoEmail" class="ep-input" type="email" required></div>
+        <div class="ep-field wide"><label class="ep-label">Papel do órgão como controlador *</label><textarea name="controllerRoleDescription" class="ep-input" required></textarea></div>
+        <div class="ep-field wide"><label class="ep-label">Papel da prestadora como operadora/controladora conjunta *</label><textarea name="processorRoleDescription" class="ep-input" required></textarea></div>
+        <div class="ep-field"><label class="ep-label">Acordo de compartilhamento de dados *</label><input name="dataSharingAgreementReference" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Política de retenção *</label><input name="retentionPolicyReference" class="ep-input" required></div>
+        <div class="ep-field wide"><label class="ep-label">Níveis de serviço/SLA *</label><textarea name="serviceLevelDescription" class="ep-input" required></textarea></div>
+        <div class="ep-field"><label class="ep-label">Horário de suporte *</label><input name="supportHours" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">SLA de incidente (horas) *</label><input name="incidentSlaHours" class="ep-input" type="number" min="1" max="720" required></div>
+        <div class="ep-field wide"><label class="ep-label">Referência da rede de saúde *</label><textarea name="healthNetworkReference" class="ep-input" required></textarea></div>
+        <div class="ep-field wide"><label class="ep-label">Rede de urgência/proteção *</label><textarea name="emergencyNetworkReference" class="ep-input" required></textarea></div>
+        <div class="ep-field"><label class="ep-label">Aviso de privacidade *</label><input name="privacyNoticeVersion" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Termo de consentimento *</label><input name="consentTermVersion" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Termo de assentimento *</label><input name="assentTermVersion" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Protocolo clínico *</label><input name="clinicalProtocolVersion" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Protocolo de emergência *</label><input name="emergencyProtocolVersion" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Referência do RIPD *</label><input name="ripdReference" class="ep-input" required></div>
+        <div class="ep-field wide"><label class="ep-label">Equipe de psicólogos CRP verificados *</label><select name="therapistUids" class="ep-select" multiple></select><span class="ep-text-xs ep-text-muted">Use Ctrl/Cmd para selecionar mais de um.</span></div>
+        <div class="wide"><button class="ep-btn ep-btn--primary" type="submit">Salvar contrato</button></div>
+      </form>
+      <div id="programList"></div>
+    </section>
+
+    <section id="tab-schools" class="pp-panel">
+      <div class="ep-field" style="max-width:520px"><label class="ep-label">Programa *</label><select id="schoolProgram" class="ep-select"></select></div>
+      <form id="schoolForm" class="pp-card pp-grid ep-mt-16">
+        <div class="ep-field"><label class="ep-label">Nome da escola *</label><input name="name" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Código INEP</label><input name="inepCode" class="ep-input"></div>
+        <div class="ep-field"><label class="ep-label">Rede *</label><select name="network" class="ep-select"><option value="municipal">Municipal</option><option value="estadual">Estadual</option><option value="conveniada">Conveniada</option></select></div>
+        <div class="ep-field"><label class="ep-label">Etapas (separadas por vírgula) *</label><input name="educationStagesText" class="ep-input" placeholder="Fundamental II, Ensino Médio" required></div>
+        <div class="ep-field"><label class="ep-label">Logradouro *</label><input name="addressStreet" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Número *</label><input name="addressNumber" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Complemento</label><input name="addressComplement" class="ep-input"></div>
+        <div class="ep-field"><label class="ep-label">Bairro *</label><input name="addressNeighborhood" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Cidade *</label><input name="addressCity" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">UF *</label><input name="addressState" class="ep-input" maxlength="2" required></div>
+        <div class="ep-field"><label class="ep-label">CEP *</label><input name="addressPostalCode" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Limite de alunos</label><input name="maxStudents" class="ep-input" type="number" min="1"></div>
+        <div class="ep-field"><label class="ep-label">Coordenador(a) *</label><input name="coordinatorName" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">E-mail da coordenação *</label><input name="coordinatorEmail" class="ep-input" type="email" required></div>
+        <div class="ep-field"><label class="ep-label">Telefone da coordenação *</label><input name="coordinatorPhone" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Referência de saúde *</label><input name="healthReferenceName" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Telefone da referência *</label><input name="healthReferencePhone" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Referência de proteção/garantia de direitos *</label><input name="safeguardingContactName" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Telefone da referência de proteção *</label><input name="safeguardingContactPhone" class="ep-input" required></div>
+        <div class="ep-field"><label class="ep-label">Contato de privacidade da escola *</label><input name="privacyContactEmail" class="ep-input" type="email" required></div>
+        <div class="wide"><button class="ep-btn ep-btn--primary" type="submit">Cadastrar escola e gerar convite</button></div>
+      </form>
+      <div id="lastInvite" class="pp-card ep-hide"><strong>Convite gerado — copie agora</strong><div id="lastInviteUrl" class="pp-code ep-mt-8"></div><button id="copyInvite" class="ep-btn ep-btn--ghost ep-btn--sm ep-mt-8">Copiar link</button></div>
+      <div id="schoolList"></div>
+    </section>
+  </section>
+</main></div>
+
+<script type="module">
+  import { onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  let token="", programs=[], psychologists=[], lastInvite="";
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  function showStatus(message,error=false){$("#globalStatus").textContent=message;$("#globalStatus").style.color=error?"#b8453d":""}
+  async function api(path,options={}){token=await auth.currentUser.getIdToken(true);const r=await fetch(BACKEND_BASE_URL+path,{...options,headers:{Authorization:`Bearer ${token}`,...(options.body?{"Content-Type":"application/json"}:{}),...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok){const blockers=(d.blockers||[]).map(x=>`${x.type}: ${(x.fields||[]).join(", ")}`).join(" · ");throw new Error(`${d.error||"Falha"}${d.missing?.length?`: ${d.missing.join(", ")}`:""}${blockers?`: ${blockers}`:""}`)}return d}
+  function formData(form){const data=Object.fromEntries(new FormData(form));form.querySelectorAll('input[type="number"]').forEach(el=>data[el.name]=el.value?Number(el.value):null);return data}
+  function fillForm(form,data){Object.entries(data||{}).forEach(([key,value])=>{const el=form.elements[key];if(!el)return;if(el.multiple){[...el.options].forEach(o=>o.selected=(value||[]).includes(o.value))}else el.value=value??""})}
+  $$(".pp-tab").forEach(btn=>btn.onclick=()=>{$$(".pp-tab").forEach(x=>x.classList.toggle("is-active",x===btn));$$(".pp-panel").forEach(x=>x.classList.toggle("is-active",x.id===`tab-${btn.dataset.tab}`))});
+  $("#loginForm").onsubmit=async e=>{e.preventDefault();try{await signInWithEmailAndPassword(auth,$("#loginEmail").value,$("#loginPassword").value)}catch{$("#loginStatus").textContent="Credenciais inválidas."}};
+  onAuthStateChanged(auth,async user=>{if(!user){$("#loginPanel").classList.remove("ep-hide");$("#mainPanel").classList.add("ep-hide");return}$("#loginPanel").classList.add("ep-hide");$("#mainPanel").classList.remove("ep-hide");$("#adminEmail").textContent=user.email;await boot()});
+  async function boot(){try{const [provider,p,pros]=await Promise.all([api("/therapy/admin/programa-publico/config"),api("/therapy/admin/programa-publico/programas"),api("/therapy/admin/profissionais?status=verified")]);fillForm($("#providerForm"),provider.config);renderProviderGate(provider);programs=p.items||[];psychologists=(pros.items||[]).filter(x=>(x.tipoConselho==="CRP"||x.crp));renderPsychologists();renderPrograms();renderProgramOptions();await loadSchools()}catch(e){showStatus(e.message,true)}}
+  function renderProviderGate(d){const el=$("#providerGate");el.classList.toggle("ep-hide",d.ready);el.textContent=d.ready?"":`Prestadora ainda não apta. Campos pendentes: ${(d.missing||[]).join(", ")}. Nenhum contrato poderá ser ativado.`}
+  $("#providerForm").onsubmit=async e=>{e.preventDefault();try{const d=await api("/therapy/admin/programa-publico/config",{method:"PATCH",body:JSON.stringify(formData(e.currentTarget))});renderProviderGate(d);showStatus(d.ready?"Prestadora pronta para ativação de contratos.":`Salvo com pendências: ${d.missing.join(", ")}`)}catch(err){showStatus(err.message,true)}};
+  function renderPsychologists(){const select=$("#programForm").elements.therapistUids;select.innerHTML=psychologists.map(p=>`<option value="${esc(p.uid||p.id)}">${esc(p.displayName||p.email)} · ${esc(p.numeroConselho||p.crp||"CRP")}</option>`).join("")}
+  $("#newProgram").onclick=()=>{$("#programForm").reset();$("#programForm").elements.id.value=""};
+  $("#programForm").onsubmit=async e=>{e.preventDefault();try{const data=formData(e.currentTarget);data.therapistUids=[...e.currentTarget.elements.therapistUids.selectedOptions].map(o=>o.value);const id=data.id;delete data.id;await api(id?`/therapy/admin/programa-publico/programas/${id}`:"/therapy/admin/programa-publico/programas",{method:id?"PATCH":"POST",body:JSON.stringify(data)});showStatus("Contrato salvo.");await boot()}catch(err){showStatus(err.message,true)}};
+  function renderPrograms(){$("#programList").innerHTML=programs.map(p=>`<article class="pp-card"><div class="pp-row"><div><strong>${esc(p.name)}</strong><div class="ep-text-sm ep-text-muted">${esc(p.contractingAuthorityName)} · ${esc(p.contractNumber)} · ${esc(p.startDate)} a ${esc(p.endDate)}</div></div><span class="pp-badge">${esc(p.status)}</span></div><div class="ep-text-sm ep-mt-8">${p.totalStudents||0}/${p.maxStudents||"—"} alunos · ${p.totalSchools||0} escolas · ${p.totalSessions||0} sessões</div><div class="ep-flex ep-mt-12" style="gap:8px;flex-wrap:wrap"><button class="ep-btn ep-btn--ghost ep-btn--sm" data-edit="${p.id}">Editar</button><button class="ep-btn ep-btn--primary ep-btn--sm" data-activate="${p.id}" ${p.status==='active'?'disabled':''}>Ativar</button><button class="ep-btn ep-btn--ghost ep-btn--sm" data-metrics="${p.id}">Indicadores</button><button class="ep-btn ep-btn--ghost ep-btn--sm" data-suspend="${p.id}" ${p.status!=='active'?'disabled':''}>Suspender</button></div></article>`).join("");$$('[data-edit]').forEach(b=>b.onclick=()=>{const p=programs.find(x=>x.id===b.dataset.edit);fillForm($("#programForm"),p);$("#programForm").elements.id.value=p.id;scrollTo({top:0,behavior:"smooth"})});$$('[data-activate]').forEach(b=>b.onclick=async()=>{try{await api(`/therapy/admin/programa-publico/programas/${b.dataset.activate}/ativar`,{method:"POST"});showStatus("Programa ativado e inscrições abertas.");await boot()}catch(e){showStatus(e.message,true)}});$$('[data-suspend]').forEach(b=>b.onclick=async()=>{const reason=prompt("Motivo da suspensão:");if(!reason)return;try{await api(`/therapy/admin/programa-publico/programas/${b.dataset.suspend}/status`,{method:"POST",body:JSON.stringify({status:"suspended",reason})});await boot()}catch(e){showStatus(e.message,true)}});$$('[data-metrics]').forEach(b=>b.onclick=async()=>{try{const d=await api(`/therapy/admin/programa-publico/programas/${b.dataset.metrics}/indicadores`);alert(JSON.stringify(d,null,2))}catch(e){showStatus(e.message,true)}})}
+  function renderProgramOptions(){const active=programs.filter(p=>p.status!=="closed");$("#schoolProgram").innerHTML='<option value="">Selecione</option>'+active.map(p=>`<option value="${p.id}">${esc(p.name)} · ${esc(p.status)}</option>`).join("")}
+  $("#schoolProgram").onchange=loadSchools;
+  $("#schoolForm").onsubmit=async e=>{e.preventDefault();try{const data=formData(e.currentTarget);data.programId=$("#schoolProgram").value;if(!data.programId)throw new Error("Selecione um programa.");data.educationStages=String(data.educationStagesText||"").split(",").map(x=>x.trim()).filter(Boolean);delete data.educationStagesText;const d=await api("/therapy/admin/programa-publico/escolas",{method:"POST",body:JSON.stringify(data)});lastInvite=d.registrationUrl;$("#lastInviteUrl").textContent=lastInvite;$("#lastInvite").classList.remove("ep-hide");e.currentTarget.reset();showStatus("Escola cadastrada. Copie o convite agora; o código não será exibido novamente.");await loadSchools()}catch(err){showStatus(err.message,true)}};
+  $("#copyInvite").onclick=()=>navigator.clipboard.writeText(lastInvite);
+  async function loadSchools(){const programId=$("#schoolProgram").value;try{const d=await api(`/therapy/admin/programa-publico/escolas${programId?`?programId=${encodeURIComponent(programId)}`:""}`);$("#schoolList").innerHTML=(d.items||[]).map(s=>`<article class="pp-card"><div class="pp-row"><div><strong>${esc(s.name)}</strong><div class="ep-text-sm ep-text-muted">${esc(s.programName)} · INEP ${esc(s.inepCode||"não informado")}</div></div><span class="pp-badge">${esc(s.status)}</span></div><div class="ep-text-sm ep-mt-8">${s.totalStudents||0}/${s.maxStudents||"—"} alunos · convite final ${esc(s.registrationCodeLast4||"—")}</div><button class="ep-btn ep-btn--ghost ep-btn--sm ep-mt-12" data-rotate="${s.id}">Rotacionar convite</button></article>`).join("")||'<p class="ep-text-muted ep-mt-16">Nenhuma escola.</p>';$$('[data-rotate]').forEach(b=>b.onclick=async()=>{if(!confirm("O convite anterior deixará de funcionar. Continuar?"))return;try{const r=await api(`/therapy/admin/programa-publico/escolas/${b.dataset.rotate}/rotacionar-convite`,{method:"POST"});lastInvite=r.registrationUrl;$("#lastInviteUrl").textContent=lastInvite;$("#lastInvite").classList.remove("ep-hide");showStatus("Convite rotacionado. Copie o novo link.");await loadSchools()}catch(e){showStatus(e.message,true)}})}catch(e){showStatus(e.message,true)}}
+</script>
+</body></html>

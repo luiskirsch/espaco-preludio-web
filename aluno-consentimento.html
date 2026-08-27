@@ -1,124 +1,145 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conte\u00fado s\u00f3 est\u00e1 dispon\u00edvel no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
-  <title>Confirmação de Consentimento · Espaço Prelúdio</title>
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Consentimento de participação · Espaço Prelúdio</title>
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <style>
+    .consent-shell{max-width:760px;margin:0 auto;padding:32px 18px 56px}.consent-card{background:var(--ep-surface,#fff);border:1px solid var(--ep-border,#e7e1d8);border-radius:18px;padding:24px;margin-top:18px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.full{grid-column:1/-1}.field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #cfc8bd;border-radius:10px;background:transparent;color:inherit;font:inherit}.field textarea{min-height:84px;resize:vertical}.checks label{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:13px;line-height:1.5}.checks input{margin-top:3px}.actions{display:flex;gap:12px;flex-wrap:wrap}.hidden{display:none!important}.context{font-size:13px;line-height:1.65;padding:14px;border-radius:12px;background:#f5f2ec}.status{min-height:24px;margin-top:10px;font-size:13px}.danger{color:#9c2f2f}@media(max-width:640px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.consent-card{padding:18px}}
+  </style>
 </head>
 <body>
-<main class="ep-auth">
-  <div class="ep-auth__panel" style="max-width:460px;text-align:center;">
-    <a href="./index.html" class="ep-brand" style="justify-content:center;margin-bottom:24px;" aria-label="Espaço Prelúdio">
-      <span class="ep-brand__mark">EP</span>
-      <span class="ep-brand__name"><span class="ep-brand__lead">Espaço</span><span>Prelúdio</span></span>
-    </a>
+<main class="consent-shell">
+  <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio"><span class="ep-brand__mark">EP</span><span class="ep-brand__name"><span class="ep-brand__lead">Espaço</span><span>Prelúdio</span></span></a>
 
-    <div id="stateLoading" style="padding:32px 0;">
-      <p class="ep-text-muted">Verificando link…</p>
+  <section id="loading" class="consent-card"><p>Validando o convite de consentimento…</p></section>
+  <section id="invalid" class="consent-card hidden"><h1>Link indisponível</h1><p>Este link é inválido, expirou ou já foi utilizado. Solicite um novo envio à equipe do programa.</p></section>
+
+  <section id="review" class="hidden">
+    <div class="consent-card">
+      <h1>Decisão de participação</h1>
+      <p id="intro"></p>
+      <div class="context" id="programContext"></div>
+      <p>O atendimento será custeado pelo contrato público indicado acima e prestado pelo Espaço Prelúdio. Confirmar não agenda consulta automaticamente: primeiro haverá triagem com psicólogo(a), análise da viabilidade do atendimento remoto e assentimento da criança ou adolescente quando aplicável.</p>
+      <p>Dados clínicos e conteúdo das sessões não são compartilhados com a escola. Informações identificáveis só são acessadas pela equipe assistencial autorizada, salvo dever legal ou situação de proteção/emergência. O contratante recebe apenas indicadores administrativos e agregados.</p>
+      <p>Leia a <a href="./politica.html" target="_blank" rel="noopener noreferrer">Política de Privacidade</a> e os <a href="./termos.html" target="_blank" rel="noopener noreferrer">Termos de Uso</a>.</p>
     </div>
 
-    <div id="stateReview" class="ep-hide" style="padding:16px 0;text-align:left;">
-      <h2 class="ep-auth__title">Revise antes de decidir</h2>
-      <p class="ep-text-muted ep-mt-8" id="reviewMsg"></p>
-      <div class="ep-card ep-mt-16" style="padding:16px;">
-        <p style="font-size:13px;line-height:1.6;margin:0;">
-          O programa utilizará dados de identificação, contato, escola e informações necessárias ao atendimento psicológico remoto. O atendimento depende de avaliação de viabilidade pelo(a) psicólogo(a), preserva o sigilo da criança ou adolescente e deve prever encaminhamento à rede presencial quando indicado. A participação pode ser recusada e o consentimento pode ser revogado pelos canais do programa, sem prejuízo do acesso aos serviços públicos disponíveis.
-        </p>
-        <p style="font-size:12px;line-height:1.6;margin:12px 0 0;">
-          Leia também os <a href="./termos.html" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="./politica.html" target="_blank" rel="noopener">Política de Privacidade</a>.
-        </p>
+    <form id="consentForm" class="consent-card">
+      <h2>Dados para cuidado e emergência</h2>
+      <div class="grid">
+        <div class="field"><label for="guardianRelationship">Seu vínculo com o estudante *</label><input id="guardianRelationship" name="guardianRelationship" required maxlength="60"></div>
+        <div class="field"><label for="preferredContactChannel">Canal de contato preferido *</label><select id="preferredContactChannel" name="preferredContactChannel" required><option value="">Selecione</option><option value="email">E-mail</option><option value="phone">Telefone</option><option value="whatsapp">WhatsApp</option></select></div>
+        <div class="field"><label for="studentEmail">E-mail do estudante (se houver)</label><input id="studentEmail" name="studentEmail" type="email" maxlength="160" autocomplete="email"></div>
+        <div class="field"><label for="studentPhone">Telefone do estudante (se houver)</label><input id="studentPhone" name="studentPhone" maxlength="24" autocomplete="tel"></div>
+        <div class="field"><label for="emergencyContactName">Contato de emergência *</label><input id="emergencyContactName" name="emergencyContactName" required maxlength="120" autocomplete="name"></div>
+        <div class="field"><label for="emergencyContactRelationship">Vínculo do contato *</label><input id="emergencyContactRelationship" name="emergencyContactRelationship" required maxlength="60"></div>
+        <div class="field"><label for="emergencyContactPhone">Telefone de emergência *</label><input id="emergencyContactPhone" name="emergencyContactPhone" required maxlength="24" autocomplete="tel"></div>
+        <div></div>
+        <div class="field"><label for="addressStreet">Logradouro da residência *</label><input id="addressStreet" name="addressStreet" required maxlength="140" autocomplete="street-address"></div>
+        <div class="field"><label for="addressNumber">Número *</label><input id="addressNumber" name="addressNumber" required maxlength="20"></div>
+        <div class="field"><label for="addressComplement">Complemento</label><input id="addressComplement" name="addressComplement" maxlength="80"></div>
+        <div class="field"><label for="addressNeighborhood">Bairro *</label><input id="addressNeighborhood" name="addressNeighborhood" required maxlength="100"></div>
+        <div class="field"><label for="addressCity">Cidade *</label><input id="addressCity" name="addressCity" required maxlength="100" autocomplete="address-level2"></div>
+        <div class="field"><label for="addressState">UF *</label><input id="addressState" name="addressState" required maxlength="2" pattern="[A-Za-z]{2}" autocomplete="address-level1"></div>
+        <div class="field"><label for="addressPostalCode">CEP *</label><input id="addressPostalCode" name="addressPostalCode" required maxlength="10" autocomplete="postal-code"></div>
+        <div class="field full"><label for="accessibilityNeeds">Necessidades de acessibilidade</label><textarea id="accessibilityNeeds" name="accessibilityNeeds" maxlength="600" placeholder="Informe recursos necessários ou escreva 'não se aplica'."></textarea></div>
+        <div class="field full"><label for="communicationNeeds">Necessidades de comunicação</label><textarea id="communicationNeeds" name="communicationNeeds" maxlength="600" placeholder="Idioma, apoio de comunicação ou outra observação relevante."></textarea></div>
       </div>
-      <label class="ep-checkbox ep-mt-16">
-        <input type="checkbox" id="confirmCheck">
-        <span style="font-size:13px;line-height:1.5;">Declaro ser responsável legal e autorizo expressamente a participação no programa e o tratamento dos dados necessários ao atendimento, conforme as informações acima.</span>
-      </label>
-      <div class="ep-status ep-mt-8" id="confirmStatus"></div>
-      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16" id="confirmBtn">Confirmar consentimento</button>
-    </div>
+      <div class="checks">
+        <label><input type="checkbox" name="privacyConfirmed" required> <span>Li as informações de privacidade, compreendi as finalidades e autorizo o tratamento dos dados necessários à triagem e ao atendimento psicológico.</span></label>
+        <label><input type="checkbox" name="telehealthConfirmed" required> <span>Compreendi as características e limitações do atendimento psicológico online, inclusive que a modalidade poderá ser recusada pela equipe clínica.</span></label>
+        <label><input type="checkbox" name="emergencyProtocolConfirmed" required> <span>Compreendi que este serviço não é canal de emergência e autorizo o acionamento do contato e da rede local de proteção quando necessário.</span></label>
+      </div>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+      <div class="actions">
+        <button class="ep-btn ep-btn--primary" type="submit" id="confirmBtn">Confirmar participação</button>
+        <button class="ep-btn ep-btn--ghost" type="button" id="declineBtn">Não autorizar</button>
+      </div>
+    </form>
+  </section>
 
-    <div id="stateOk" class="ep-hide" style="padding:16px 0;">
-      <div style="font-size:56px;margin-bottom:16px;">✅</div>
-      <h2 class="ep-auth__title">Consentimento confirmado!</h2>
-      <p class="ep-text-muted ep-mt-8" id="okMsg">O acesso do aluno foi liberado.</p>
-      <p class="ep-text-muted ep-mt-8">Agora o aluno pode acessar o diretório, escolher um profissional e agendar consultas.</p>
-      <a href="./profissionais.html" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-24">Ver profissionais disponíveis →</a>
-    </div>
-
-    <div id="stateAlready" class="ep-hide" style="padding:16px 0;">
-      <div style="font-size:56px;margin-bottom:16px;">👍</div>
-      <h2 class="ep-auth__title">Já confirmado anteriormente</h2>
-      <p class="ep-text-muted ep-mt-8" id="alreadyMsg">O consentimento para este aluno já foi confirmado.</p>
-      <a href="./profissionais.html" class="ep-btn ep-btn--ghost ep-btn--lg ep-btn--block ep-mt-24">Ver profissionais disponíveis →</a>
-    </div>
-
-    <div id="stateInvalid" class="ep-hide" style="padding:16px 0;">
-      <div style="font-size:56px;margin-bottom:16px;">❌</div>
-      <h2 class="ep-auth__title">Link inválido</h2>
-      <p class="ep-text-muted ep-mt-8">Este link de confirmação não é válido ou já expirou. Solicite um novo link ao responsável pelo programa.</p>
-    </div>
-  </div>
+  <section id="done" class="consent-card hidden"><h1 id="doneTitle">Decisão registrada</h1><p id="doneText"></p><p>Guarde as mensagens enviadas ao e-mail do responsável. Se a participação foi autorizada, a próxima etapa é a triagem — não é necessário escolher profissional ou pagar consulta.</p></section>
 </main>
 
 <script type="module">
-  import { BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { BACKEND_BASE_URL } from './js/firebase-config.js';
+  const token = new URLSearchParams(location.search).get('token') || '';
+  let isMinor = true;
+  const ids = ['loading','invalid','review','done'];
+  const show = id => ids.forEach(item => document.getElementById(item).classList.toggle('hidden', item !== id));
+  const status = document.getElementById('status');
 
-  const token = new URLSearchParams(location.search).get("token") || "";
-
-  function showState(id) {
-    ["stateLoading","stateReview","stateOk","stateAlready","stateInvalid"].forEach(s => {
-      document.getElementById(s).classList.toggle("ep-hide", s !== id);
+  async function api(method, body) {
+    const response = await fetch(`${BACKEND_BASE_URL}/public/aluno-consentimento/${encodeURIComponent(token)}`, {
+      method, headers: body ? {'Content-Type':'application/json'} : {}, body: body ? JSON.stringify(body) : undefined
     });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) throw new Error(data.error || 'Não foi possível registrar a decisão.');
+    return data;
   }
 
-  if (!token) {
-    showState("stateInvalid");
-  } else {
-    fetch(`${BACKEND_BASE_URL}/public/aluno-consentimento/${encodeURIComponent(token)}`)
-      .then(r => r.json()).catch(() => ({}))
-      .then(d => {
-        if (!d.ok) { showState("stateInvalid"); return; }
-        if (d.alreadyConfirmed) {
-          if (d.nome) document.getElementById("alreadyMsg").textContent = `O consentimento para ${d.nome} já foi confirmado anteriormente.`;
-          showState("stateAlready");
-        } else {
-          document.getElementById("reviewMsg").textContent = `Solicitação para ${d.nome || "o(a) estudante"}${d.escola ? " · " + d.escola : ""}. Abrir esta página ainda não confirmou nada.`;
-          showState("stateReview");
-        }
-      });
-  }
-
-  document.getElementById("confirmBtn").addEventListener("click", async () => {
-    const btn = document.getElementById("confirmBtn");
-    const status = document.getElementById("confirmStatus");
-    if (!document.getElementById("confirmCheck").checked) {
-      status.textContent = "Marque a declaração para registrar sua decisão.";
-      return;
-    }
-    btn.disabled = true;
-    status.textContent = "Registrando…";
+  async function boot() {
+    if (!token) return show('invalid');
     try {
-      const r = await fetch(`${BACKEND_BASE_URL}/public/aluno-consentimento/${encodeURIComponent(token)}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ confirm: true })
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!d.ok) throw new Error(d.error === "TOKEN_EXPIRADO" ? "Este convite expirou. Solicite um novo envio." : "Não foi possível registrar o consentimento.");
-      if (d.nome) document.getElementById("okMsg").textContent = `O acesso de ${d.nome} foi liberado${d.escola ? " · " + d.escola : ""}.`;
-      showState(d.alreadyConfirmed ? "stateAlready" : "stateOk");
+      const data = await api('GET');
+      if (data.alreadyConfirmed) {
+        document.getElementById('doneText').textContent = 'Este consentimento já havia sido registrado.';
+        return show('done');
+      }
+      isMinor = data.isMenor !== false;
+      const relationship = document.getElementById('guardianRelationship');
+      if (!isMinor) {
+        relationship.value = 'Próprio estudante';
+        relationship.readOnly = true;
+        relationship.previousElementSibling.textContent = 'Manifestante *';
+      }
+      document.getElementById('intro').textContent = isMinor
+        ? `Você recebeu uma solicitação referente a ${data.nome || 'um(a) estudante'}${data.escola ? `, da escola ${data.escola}` : ''}. Abrir esta página não registra concordância.`
+        : `Esta solicitação é referente à sua própria participação${data.escola ? `, como estudante da escola ${data.escola}` : ''}. Abrir esta página não registra concordância.`;
+      document.getElementById('programContext').textContent = `${data.programa || 'Programa de atendimento psicológico'} · Contratante: ${data.contratante || 'órgão público informado no convite'} · Aviso de privacidade ${data.privacyNoticeVersion || 'vigente'} · Termo de consentimento ${data.consentTermVersion || 'vigente'}`;
+      show('review');
+    } catch (_) { show('invalid'); }
+  }
+
+  document.getElementById('consentForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!event.currentTarget.reportValidity()) return;
+    const values = Object.fromEntries(new FormData(event.currentTarget));
+    const body = {...values, decision:'confirmed', privacyConfirmed:true, telehealthConfirmed:true, emergencyProtocolConfirmed:true};
+    document.getElementById('confirmBtn').disabled = true;
+    document.getElementById('declineBtn').disabled = true;
+    status.textContent = 'Registrando consentimento…';
+    try {
+      const data = await api('POST', body);
+      document.getElementById('doneTitle').textContent = 'Participação autorizada';
+      document.getElementById('doneText').textContent = `${data.nome || 'O(A) estudante'} seguirá para triagem da equipe clínica. Um canal seguro de gestão do consentimento foi enviado ao responsável.`;
+      show('done');
     } catch (error) {
       status.textContent = error.message;
-      btn.disabled = false;
+      document.getElementById('confirmBtn').disabled = false;
+      document.getElementById('declineBtn').disabled = false;
     }
   });
-</script>
 
+  document.getElementById('declineBtn').addEventListener('click', async () => {
+    if (!confirm('Confirma que não autoriza a participação no programa?')) return;
+    status.textContent = 'Registrando recusa…';
+    try {
+      const data = await api('POST', {decision:'declined'});
+      document.getElementById('doneTitle').textContent = 'Participação não autorizada';
+      document.getElementById('doneText').textContent = `${data.nome || 'O cadastro'} foi encerrado sem liberação para atendimento.`;
+      show('done');
+    } catch (error) { status.textContent = error.message; }
+  });
+  boot();
+</script>
 </body>
 </html>

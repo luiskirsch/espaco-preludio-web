@@ -184,6 +184,7 @@
     { href: "admin-empresa.html",       label: "Aprovações",     icon: "check",     badgeId: "navBadgeEmpresa" },
 
     { section: "Municipal" },
+    { href: "admin-programa-publico.html", label: "Programa Público", icon: "building" },
     { href: "admin-estudantes.html",    label: "Estudantes",     icon: "grad"       },
 
     { section: "Financeiro" },

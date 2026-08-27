@@ -1,294 +1,71 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conte\u00fado s\u00f3 est\u00e1 dispon\u00edvel no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
-  <title>Cadastro de Aluno · Espaço Prelúdio</title>
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Cadastro no programa escolar · Espaço Prelúdio</title>
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
   <style>
-    .age-toggle { display:flex; gap:10px; margin:16px 0; }
-    .age-pill { flex:1; padding:14px 12px; border-radius:10px; border:2px solid var(--ep-line); background:var(--ep-bg-2); text-align:center; cursor:pointer; font-family:'Inter',sans-serif; transition:border-color 150ms,background 150ms; }
-    .age-pill:hover { border-color:var(--ep-accent); background:var(--ep-surface); }
-    .age-pill.is-selected { border-color:var(--ep-accent); background:var(--ep-surface); box-shadow:0 0 0 3px rgba(45,74,62,.12); }
-    .age-pill__title { font-size:14px; font-weight:600; color:var(--ep-ink); }
-    .age-pill__sub { font-size:11px; color:var(--ep-ink-2); margin-top:2px; }
-    .section-divider { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--ep-ink-3); margin:8px 0 4px; padding-top:12px; border-top:1px solid var(--ep-line); }
-    .ep-form-step-block { display:none; }
-    .ep-form-step-block.is-visible { display:block; animation:stepIn 280ms ease forwards; }
-    @keyframes stepIn { from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)} }
+    .reg-wrap{max-width:680px;margin:0 auto}.reg-card{border:1px solid var(--ep-line);border-radius:12px;padding:16px;background:var(--ep-bg-2)}
+    .reg-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.reg-wide{grid-column:1/-1}.reg-section{border-top:1px solid var(--ep-line);padding-top:18px;margin-top:8px}
+    .reg-loading{text-align:center;padding:48px 0}.reg-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}.reg-summary strong{display:block;font-size:10px;text-transform:uppercase;color:var(--ep-ink-3);margin-bottom:3px}
+    @media(max-width:620px){.reg-grid,.reg-summary{grid-template-columns:1fr}.reg-wide{grid-column:auto}}
   </style>
 </head>
 <body>
-<main class="ep-auth">
-  <div class="ep-auth__panel" style="max-width:520px;">
-    <div style="text-align:center;margin-bottom:20px;">
-      <a href="./index.html" class="ep-brand" style="justify-content:center;">
-        <span class="ep-brand__mark">EP</span>
-        <span class="ep-brand__name"><span class="ep-brand__lead">Espaço</span><span>Prelúdio</span></span>
-      </a>
-    </div>
-
-    <!-- Estado: formulário -->
-    <div id="stateForm">
-      <h2 class="ep-auth__title ep-mt-0">Cadastro de aluno</h2>
-      <p class="ep-auth__sub">Programa de saúde mental escolar. Após o cadastro, o aluno escolhe um profissional e agenda sua consulta.</p>
-
-      <!-- Seletor menor/maior -->
-      <div class="section-divider" style="border-top:none;padding-top:0;">O aluno é menor de 18 anos?</div>
-      <div class="age-toggle">
-        <button type="button" class="age-pill" id="pillMenor" data-tipo="menor">
-          <div class="age-pill__title">Sim, menor de idade</div>
-          <div class="age-pill__sub">Pais ou responsável preenche e confirma por e-mail</div>
-        </button>
-        <button type="button" class="age-pill" id="pillMaior" data-tipo="maior">
-          <div class="age-pill__title">Não, maior de 18 anos</div>
-          <div class="age-pill__sub">O próprio aluno preenche os dados</div>
-        </button>
+<main class="ep-auth"><div class="ep-auth__panel reg-wrap">
+  <a href="./index.html" class="ep-brand" style="justify-content:center;margin-bottom:24px"><span class="ep-brand__mark">EP</span><span class="ep-brand__name"><span class="ep-brand__lead">Espaço</span><span>Prelúdio</span></span></a>
+  <section id="loadingState" class="reg-loading"><p class="ep-text-muted">Validando o convite da escola…</p></section>
+  <section id="invalidState" class="ep-hide" style="text-align:center;padding:32px 0"><div style="font-size:48px">🔒</div><h1 class="ep-h2 ep-mt-12">Convite inválido</h1><p id="invalidMessage" class="ep-text-muted ep-mt-8">Use o link individual fornecido pela escola ou pela equipe do programa.</p></section>
+  <section id="formState" class="ep-hide">
+    <div class="ep-eyebrow">Programa público de atenção psicológica</div><h1 class="ep-h1 ep-mt-8">Cadastro do estudante</h1>
+    <div class="reg-card ep-mt-16"><div class="reg-summary"><div><strong>Programa</strong><span id="programName"></span></div><div><strong>Escola</strong><span id="schoolName"></span></div><div><strong>Contratante</strong><span id="authorityName"></span></div><div><strong>Município</strong><span id="municipality"></span></div></div></div>
+    <p class="ep-text-sm ep-text-muted ep-mt-12">Este cadastro solicita entrada no programa. Ele não garante atendimento remoto: um(a) psicólogo(a) avaliará a viabilidade, o assentimento e a necessidade de encaminhamento presencial.</p>
+    <form id="studentForm" class="ep-stack ep-mt-20" novalidate>
+      <div class="reg-grid">
+        <div class="ep-field"><label class="ep-label" for="nome">Nome civil completo *</label><input id="nome" class="ep-input" maxlength="120" autocomplete="name" required></div>
+        <div class="ep-field"><label class="ep-label" for="nomeSocial">Nome social/preferido</label><input id="nomeSocial" class="ep-input" maxlength="120"></div>
+        <div class="ep-field"><label class="ep-label" for="dataNascimento">Data de nascimento *</label><input id="dataNascimento" class="ep-input" type="date" required></div>
+        <div class="ep-field"><label class="ep-label" for="schoolStudentCode">Identificador de matrícula da escola *</label><input id="schoolStudentCode" class="ep-input" maxlength="60" required><span class="ep-text-xs ep-text-muted">Use o código escolar; não informe CPF.</span></div>
+        <div class="ep-field"><label class="ep-label" for="preferredLanguage">Idioma preferido</label><input id="preferredLanguage" class="ep-input" maxlength="60" value="Português (Brasil)"></div>
+        <div class="ep-field"><label class="ep-label" for="anoSerie">Ano/série *</label><input id="anoSerie" class="ep-input" maxlength="40" placeholder="Ex.: 8º ano" required></div>
+        <div class="ep-field"><label class="ep-label" for="turma">Turma</label><input id="turma" class="ep-input" maxlength="40"></div>
+        <div class="ep-field"><label class="ep-label" for="turno">Turno *</label><select id="turno" class="ep-select" required><option value="">Selecione</option><option value="manha">Manhã</option><option value="tarde">Tarde</option><option value="noite">Noite</option><option value="integral">Integral</option></select></div>
       </div>
 
-      <form id="formAluno" class="ep-stack" novalidate style="display:none;">
+      <section id="agePending" class="reg-card"><p class="ep-text-sm">Informe a data de nascimento para exibirmos os campos corretos.</p></section>
+      <section id="minorFields" class="ep-hide reg-section">
+        <h2 class="ep-h3">Contato do estudante e responsável</h2><p class="ep-text-sm ep-text-muted ep-mt-4">O contato do estudante é opcional. A autorização será solicitada diretamente ao responsável.</p>
+        <div class="reg-grid ep-mt-12"><div class="ep-field"><label class="ep-label" for="studentEmail">E-mail do estudante</label><input id="studentEmail" class="ep-input" type="email" autocomplete="email"></div><div class="ep-field"><label class="ep-label" for="studentPhone">Celular do estudante</label><input id="studentPhone" class="ep-input" type="tel"></div></div>
+        <div class="reg-grid ep-mt-12"><div class="ep-field"><label class="ep-label" for="guardianName">Nome do responsável legal *</label><input id="guardianName" class="ep-input" maxlength="120"></div><div class="ep-field"><label class="ep-label" for="guardianRelationship">Vínculo *</label><select id="guardianRelationship" class="ep-select"><option value="">Selecione</option><option>Mãe</option><option>Pai</option><option>Responsável legal</option><option>Tutor(a)</option><option>Guardião(ã)</option><option>Outro vínculo legal</option></select></div><div class="ep-field"><label class="ep-label" for="guardianEmail">E-mail do responsável *</label><input id="guardianEmail" class="ep-input" type="email" autocomplete="email"></div><div class="ep-field"><label class="ep-label" for="guardianPhone">Telefone do responsável *</label><input id="guardianPhone" class="ep-input" type="tel" autocomplete="tel"></div></div>
+        <label class="ep-checkbox ep-mt-16"><input id="guardianDeclaration" type="checkbox"><span>Declaro ser responsável legal e solicito o envio do convite para ler as informações e decidir sobre a participação. Esta marcação ainda não é o consentimento para atendimento.</span></label>
+      </section>
 
-        <!-- DADOS DO ALUNO -->
-        <div class="section-divider">Dados do aluno</div>
-
-        <div class="ep-field">
-          <label class="ep-label" for="aNome">Nome completo do aluno *</label>
-          <input id="aNome" class="ep-input" type="text" maxlength="80" placeholder="Ex.: Ana Silva" autocomplete="name" required>
-        </div>
-
-        <div class="ep-row">
-          <div class="ep-field">
-            <label class="ep-label" for="aNascimento">Data de nascimento *</label>
-            <input id="aNascimento" class="ep-input" type="date" required>
-          </div>
-          <div class="ep-field">
-            <label class="ep-label" for="aTurma">Turma / Série</label>
-            <input id="aTurma" class="ep-input" type="text" maxlength="30" placeholder="Ex.: 8º ano, 3ª série">
-          </div>
-        </div>
-
-        <div class="ep-field">
-          <label class="ep-label" for="aEscola">Nome da escola *</label>
-          <input id="aEscola" class="ep-input" type="text" maxlength="120" placeholder="Ex.: E.M. Professor José Santos" required>
-        </div>
-
-        <div class="ep-row">
-          <div class="ep-field">
-            <label class="ep-label" for="aCidade">Cidade *</label>
-            <input id="aCidade" class="ep-input" type="text" maxlength="80" placeholder="Ex.: São Paulo" required>
-          </div>
-          <div class="ep-field">
-            <label class="ep-label" for="aMunicipio">Município (se diferente)</label>
-            <input id="aMunicipio" class="ep-input" type="text" maxlength="80" placeholder="Opcional">
-          </div>
-        </div>
-
-        <div class="ep-field" style="max-width:100px;">
-          <label class="ep-label" for="aEstado">UF *</label>
-          <input id="aEstado" class="ep-input" type="text" maxlength="2" placeholder="SP" style="text-transform:uppercase;" required>
-        </div>
-
-        <!-- CAMPOS PARA MAIOR: contato do próprio aluno -->
-        <div id="camposMaior" class="ep-form-step-block">
-          <div class="section-divider">Seu contato</div>
-          <div class="ep-row">
-            <div class="ep-field">
-              <label class="ep-label" for="aEmail">E-mail *</label>
-              <input id="aEmail" class="ep-input" type="email" maxlength="120" placeholder="voce@email.com" autocomplete="email">
-            </div>
-            <div class="ep-field">
-              <label class="ep-label" for="aTelefone">WhatsApp / Celular *</label>
-              <input id="aTelefone" class="ep-input" type="tel" maxlength="20" placeholder="(11) 99999-9999" autocomplete="tel">
-            </div>
-          </div>
-        </div>
-
-        <!-- CAMPOS PARA MENOR: dados do responsável -->
-        <div id="camposResponsavel" class="ep-form-step-block">
-          <div class="section-divider">Dados do responsável legal</div>
-          <p class="ep-text-xs ep-text-muted" style="margin-bottom:8px;">O responsável receberá um convite individual para ler as informações e manifestar expressamente sua decisão antes do acesso ser liberado.</p>
-          <div class="ep-field">
-            <label class="ep-label" for="rNome">Nome do responsável *</label>
-            <input id="rNome" class="ep-input" type="text" maxlength="80" placeholder="Ex.: Maria Silva (mãe/pai/responsável)" autocomplete="name">
-          </div>
-          <div class="ep-row" style="margin-top:8px;">
-            <div class="ep-field">
-              <label class="ep-label" for="rEmail">E-mail do responsável *</label>
-              <input id="rEmail" class="ep-input" type="email" maxlength="120" placeholder="responsavel@email.com" autocomplete="email">
-            </div>
-            <div class="ep-field">
-              <label class="ep-label" for="rTelefone">Telefone *</label>
-              <input id="rTelefone" class="ep-input" type="tel" maxlength="20" placeholder="(11) 99999-9999" autocomplete="tel">
-            </div>
-          </div>
-          <label class="ep-checkbox ep-mt-12" id="consentBlock">
-            <input type="checkbox" id="consentCheck">
-            <span style="font-size:13px;line-height:1.5;">
-              Declaro ser responsável legal pelo aluno acima e solicito o envio do convite para revisar e decidir sobre sua participação no programa de saúde mental escolar do Espaço Prelúdio, conforme os
-              <a href="./termos.html" target="_blank">Termos de Uso</a> e a
-              <a href="./politica.html" target="_blank">Política de Privacidade (LGPD)</a>.
-            </span>
-          </label>
-        </div>
-
-        <div class="ep-status" id="formStatus" style="margin-top:8px;"></div>
-
-        <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-8" type="submit" id="submitBtn" style="display:none;">
-          Cadastrar aluno
-        </button>
-      </form>
-    </div>
-
-    <!-- Estado: sucesso menor -->
-    <div id="stateMenorOk" class="ep-hide" style="text-align:center;padding:16px 0;">
-      <div style="font-size:48px;margin-bottom:16px;">📧</div>
-      <h2 class="ep-auth__title">Cadastro enviado!</h2>
-      <p class="ep-text-muted ep-mt-8">
-        Enviamos um e-mail para <strong id="respEmailConfirm"></strong> com o link de confirmação de consentimento.
-      </p>
-      <p class="ep-text-muted ep-mt-8">Assim que o responsável confirmar, o aluno estará habilitado para escolher um profissional e agendar consultas.</p>
-      <a href="./profissionais.html" class="ep-btn ep-btn--ghost ep-btn--lg ep-btn--block ep-mt-24">Ver profissionais disponíveis →</a>
-    </div>
-
-    <!-- Estado: sucesso maior -->
-    <div id="stateMaiorOk" class="ep-hide" style="text-align:center;padding:16px 0;">
-      <div style="font-size:48px;margin-bottom:16px;">✅</div>
-      <h2 class="ep-auth__title">Cadastro realizado!</h2>
-      <p class="ep-text-muted ep-mt-8">Você está cadastrado no programa de saúde mental escolar.</p>
-      <p class="ep-text-muted ep-mt-8">Escolha um profissional e agende sua primeira consulta.</p>
-      <a href="./profissionais.html" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-24">Ver profissionais disponíveis →</a>
-    </div>
-  </div>
-</main>
-
+      <section id="adultFields" class="ep-hide reg-section">
+        <h2 class="ep-h3">Contato e ciência do estudante</h2>
+        <div class="reg-grid ep-mt-12"><div class="ep-field"><label class="ep-label" for="adultEmail">E-mail *</label><input id="adultEmail" class="ep-input" type="email" autocomplete="email"></div><div class="ep-field"><label class="ep-label" for="adultPhone">Celular *</label><input id="adultPhone" class="ep-input" type="tel" autocomplete="tel"></div></div>
+        <label class="ep-checkbox ep-mt-16"><input id="selfConsent" type="checkbox"><span>Confirmo que solicito o envio do convite para ler as informações completas, preencher os dados de segurança e decidir sobre minha participação. Esta marcação ainda não é o consentimento para atendimento.</span></label>
+      </section>
+      <div id="formStatus" class="ep-status"></div><button id="submitBtn" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" disabled>Enviar cadastro</button>
+    </form>
+  </section>
+  <section id="successState" class="ep-hide" style="text-align:center;padding:24px 0"><div style="font-size:52px">✅</div><h1 class="ep-h2 ep-mt-12">Cadastro recebido</h1><p id="successText" class="ep-text-muted ep-mt-8"></p><p class="ep-text-sm ep-text-muted ep-mt-12">Guarde o código do caso: <strong id="caseCode"></strong></p></section>
+</div></main>
 <script type="module">
   import { BACKEND_BASE_URL } from "./js/firebase-config.js";
-
-  let tipoSelecionado = null; // "menor" | "maior"
-
-  const form      = document.getElementById("formAluno");
-  const submitBtn = document.getElementById("submitBtn");
-
-  // Seletor menor/maior
-  document.querySelectorAll(".age-pill").forEach(pill => {
-    pill.addEventListener("click", () => {
-      tipoSelecionado = pill.dataset.tipo;
-      document.querySelectorAll(".age-pill").forEach(p => p.classList.toggle("is-selected", p === pill));
-      form.style.display = "flex";
-      submitBtn.style.display = "block";
-
-      const camposMaior = document.getElementById("camposMaior");
-      const camposResp  = document.getElementById("camposResponsavel");
-
-      if (tipoSelecionado === "menor") {
-        camposResp.classList.add("is-visible");
-        camposMaior.classList.remove("is-visible");
-        document.getElementById("aEmail").removeAttribute("required");
-        document.getElementById("aTelefone").removeAttribute("required");
-        submitBtn.textContent = "Cadastrar e enviar consentimento";
-      } else {
-        camposMaior.classList.add("is-visible");
-        camposResp.classList.remove("is-visible");
-        document.getElementById("aEmail").setAttribute("required", "");
-        document.getElementById("aTelefone").setAttribute("required", "");
-        submitBtn.textContent = "Cadastrar aluno";
-      }
-    });
-  });
-
-  // Submit
-  form.addEventListener("submit", async e => {
-    e.preventDefault();
-    const status = document.getElementById("formStatus");
-    status.textContent = "";
-
-    const nome         = document.getElementById("aNome").value.trim();
-    const dataNascimento = document.getElementById("aNascimento").value;
-    const escola       = document.getElementById("aEscola").value.trim();
-    const turma        = document.getElementById("aTurma").value.trim();
-    const cidade       = document.getElementById("aCidade").value.trim();
-    const municipio    = document.getElementById("aMunicipio").value.trim();
-    const estado       = document.getElementById("aEstado").value.trim().toUpperCase();
-
-    if (!nome)          { status.textContent = "Informe o nome do aluno."; return; }
-    if (!dataNascimento){ status.textContent = "Informe a data de nascimento."; return; }
-    if (!escola)        { status.textContent = "Informe o nome da escola."; return; }
-    if (!cidade)        { status.textContent = "Informe a cidade."; return; }
-    if (!estado || estado.length !== 2) { status.textContent = "Informe a UF (2 letras)."; return; }
-
-    const payload = { nome, dataNascimento, escola, turma: turma || null, cidade, municipio: municipio || null, estado };
-
-    if (tipoSelecionado === "menor") {
-      const rNome     = document.getElementById("rNome").value.trim();
-      const rEmail    = document.getElementById("rEmail").value.trim();
-      const rTelefone = document.getElementById("rTelefone").value.trim();
-      const consent   = document.getElementById("consentCheck").checked;
-
-      if (!rNome)    { status.textContent = "Informe o nome do responsável."; return; }
-      if (!rEmail || !rEmail.includes("@")) { status.textContent = "Informe o e-mail do responsável."; return; }
-      if (!rTelefone){ status.textContent = "Informe o telefone do responsável."; return; }
-      if (!consent)  { status.textContent = "O responsável precisa marcar a declaração para solicitar o convite."; return; }
-
-      Object.assign(payload, {
-        responsavelNome: rNome,
-        responsavelEmail: rEmail,
-        responsavelTelefone: rTelefone,
-        consentimentoResponsavel: true
-      });
-    } else {
-      const email    = document.getElementById("aEmail").value.trim();
-      const telefone = document.getElementById("aTelefone").value.trim();
-      if (!email || !email.includes("@")) { status.textContent = "Informe um e-mail válido."; return; }
-      if (!telefone){ status.textContent = "Informe seu telefone/WhatsApp."; return; }
-      Object.assign(payload, { email, telefone });
-    }
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Enviando…";
-
-    try {
-      const r = await fetch(`${BACKEND_BASE_URL}/public/aluno-cadastro`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!d.ok) {
-        const msgs = {
-          NOME_OBRIGATORIO: "Informe o nome do aluno.",
-          DATA_NASCIMENTO_OBRIGATORIA: "Informe a data de nascimento.",
-          ESCOLA_OBRIGATORIA: "Informe a escola.",
-          CIDADE_OBRIGATORIA: "Informe a cidade.",
-          DATA_NASCIMENTO_INVALIDA: "Informe uma data de nascimento válida.",
-          ESTADO_OBRIGATORIO: "Informe a UF.",
-          EMAIL_INVALIDO: "E-mail inválido.",
-          TELEFONE_OBRIGATORIO: "Informe o telefone.",
-          RESPONSAVEL_EMAIL_INVALIDO: "E-mail do responsável inválido.",
-          CONSENTIMENTO_OBRIGATORIO: "Marque a declaração de consentimento."
-        };
-        throw new Error(msgs[d.error] || d.error || "Erro ao cadastrar.");
-      }
-      // Sucesso
-      document.getElementById("stateForm").classList.add("ep-hide");
-      if (d.isMenor) {
-        document.getElementById("respEmailConfirm").textContent = payload.responsavelEmail;
-        document.getElementById("stateMenorOk").classList.remove("ep-hide");
-      } else {
-        document.getElementById("stateMaiorOk").classList.remove("ep-hide");
-      }
-    } catch (err) {
-      status.textContent = err.message;
-      submitBtn.disabled = false;
-      submitBtn.textContent = tipoSelecionado === "menor" ? "Cadastrar e enviar consentimento" : "Cadastrar aluno";
-    }
-  });
+  const $=id=>document.getElementById(id), params=new URLSearchParams(location.search);
+  const invitation={programSlug:params.get("programa")||"",schoolId:params.get("escola")||"",schoolCode:params.get("convite")||""};
+  let context=null,isMinor=null;
+  function show(id){["loadingState","invalidState","formState","successState"].forEach(x=>$(x).classList.toggle("ep-hide",x!==id))}
+  function ageFromDate(value){if(!value)return null;const birth=new Date(`${value}T12:00:00`),today=new Date();if(Number.isNaN(birth.getTime())||birth>today)return null;let age=today.getFullYear()-birth.getFullYear();if(today.getMonth()<birth.getMonth()||(today.getMonth()===birth.getMonth()&&today.getDate()<birth.getDate()))age--;return age}
+  async function loadInvitation(){try{if(!invitation.programSlug||!invitation.schoolId||!invitation.schoolCode)throw new Error("Convite incompleto.");const q=new URLSearchParams({escola:invitation.schoolId,convite:invitation.schoolCode});const r=await fetch(`${BACKEND_BASE_URL}/public/programa-escolar/${encodeURIComponent(invitation.programSlug)}?${q}`);const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error==="PROGRAMA_SEM_VAGAS"?"As vagas deste programa estão preenchidas.":"O convite não existe, expirou ou o programa não está aberto.");context=d;$("programName").textContent=d.program.name;$("schoolName").textContent=d.school.name;$("authorityName").textContent=d.program.contractingAuthorityName;$("municipality").textContent=`${d.program.municipality}/${d.program.state}`;show("formState")}catch(e){$("invalidMessage").textContent=e.message;show("invalidState")}}
+  $("dataNascimento").addEventListener("change",()=>{const age=ageFromDate($("dataNascimento").value);isMinor=age===null?null:age<18;$("agePending").classList.toggle("ep-hide",age!==null);$("minorFields").classList.toggle("ep-hide",isMinor!==true);$("adultFields").classList.toggle("ep-hide",isMinor!==false);$("submitBtn").disabled=age===null});
+  $("studentForm").addEventListener("submit",async e=>{e.preventDefault();const status=$("formStatus");status.textContent="";const payload={...invitation,nome:$("nome").value.trim(),nomeSocial:$("nomeSocial").value.trim()||null,dataNascimento:$("dataNascimento").value,schoolStudentCode:$("schoolStudentCode").value.trim(),preferredLanguage:$("preferredLanguage").value.trim()||"Português (Brasil)",anoSerie:$("anoSerie").value.trim(),turma:$("turma").value.trim()||null,turno:$("turno").value};if(!payload.nome||!payload.dataNascimento||!payload.schoolStudentCode||!payload.anoSerie||!payload.turno){status.textContent="Preencha os campos obrigatórios do estudante.";return}if(isMinor){Object.assign(payload,{studentEmail:$("studentEmail").value.trim()||null,studentPhone:$("studentPhone").value.trim()||null,responsavelNome:$("guardianName").value.trim(),responsavelVinculo:$("guardianRelationship").value,responsavelEmail:$("guardianEmail").value.trim(),responsavelTelefone:$("guardianPhone").value.trim(),consentimentoResponsavel:$("guardianDeclaration").checked});if(!payload.responsavelNome||!payload.responsavelVinculo||!payload.responsavelEmail||!payload.responsavelTelefone||!payload.consentimentoResponsavel){status.textContent="Complete os dados e a declaração do responsável.";return}}else{Object.assign(payload,{email:$("adultEmail").value.trim(),telefone:$("adultPhone").value.trim(),selfConsent:$("selfConsent").checked});if(!payload.email||!payload.telefone||!payload.selfConsent){status.textContent="Complete seu contato e confirme a solicitação.";return}}$("submitBtn").disabled=true;$("submitBtn").textContent="Enviando…";try{const r=await fetch(`${BACKEND_BASE_URL}/public/aluno-cadastro`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok){const messages={ALUNO_JA_CADASTRADO_NESTA_ESCOLA:"Este estudante já possui cadastro nesta escola.",IDADE_FORA_DO_ESCOPO_DO_PROGRAMA:"A idade informada está fora do público deste programa.",PROGRAMA_SEM_VAGAS:"As vagas do programa foram preenchidas.",CONVITE_ESCOLAR_INVALIDO:"O convite escolar não é mais válido."};throw new Error(messages[d.error]||d.error||"Não foi possível cadastrar.")}$("caseCode").textContent=d.caseCode||"—";$("successText").textContent=d.isMenor?"Enviamos ao responsável um convite para revisar as informações, completar os dados de segurança e decidir. Depois da autorização, o caso seguirá para triagem.":"Enviamos ao seu e-mail um convite para completar os dados de segurança e decidir sobre a participação. Depois da confirmação, o caso seguirá para triagem.";show("successState")}catch(err){status.textContent=err.message;$("submitBtn").disabled=false;$("submitBtn").textContent="Enviar cadastro"}});
+  loadInvitation();
 </script>
-
-</body>
-</html>
+</body></html>

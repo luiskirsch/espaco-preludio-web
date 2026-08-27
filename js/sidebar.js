@@ -85,6 +85,7 @@
     { labelKey: 'common:sidebar.groupClinico', label: 'Clínico', items: [
       ['painel.html', 'video', 'Consultas', 'common:sidebar.consultas'],
       ['agenda.html', 'calendar', 'Agenda', 'common:sidebar.agenda'],
+      ['casos-publicos.html', 'users', 'Programas públicos', 'common:sidebar.programasPublicos'],
       ['pacientes.html', 'users', 'Pacientes', 'common:sidebar.pacientes'],
       ['tiss.html', 'fileText', 'TISS', 'common:sidebar.tiss', tissExtra]
     ]},

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
+  <title>Participação e privacidade · Espaço Prelúdio</title>
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <style>.shell{max-width:650px;margin:0 auto;padding:36px 18px}.card{padding:24px;border:1px solid #ddd5ca;border-radius:18px;margin-top:20px;background:#fff}.context{padding:14px;background:#f5f2ec;border-radius:12px;line-height:1.65}.hidden{display:none!important}textarea{width:100%;min-height:90px;padding:11px;box-sizing:border-box;border:1px solid #cfc8bd;border-radius:10px;font:inherit}.danger{border-color:#d8a5a5;background:#fffafa}.status{min-height:24px;margin-top:10px;font-size:13px}</style>
+</head>
+<body><main class="shell">
+  <a href="./index.html" class="ep-brand"><span class="ep-brand__mark">EP</span><span class="ep-brand__name"><span class="ep-brand__lead">Espaço</span><span>Prelúdio</span></span></a>
+  <section id="loading" class="card"><p>Consultando a participação…</p></section>
+  <section id="invalid" class="card hidden"><h1>Link indisponível</h1><p>Este canal de gestão não foi encontrado. Entre em contato com a equipe do programa.</p></section>
+  <section id="content" class="hidden">
+    <div class="card"><h1>Participação e privacidade</h1><div id="context" class="context"></div><p>Este canal permite consultar a autorização e retirá-la. Para correção, acesso a dados, dúvidas sobre retenção ou outros direitos, use os contatos de privacidade apresentados na Política de Privacidade.</p><p><a href="./politica.html" target="_blank" rel="noopener noreferrer">Abrir Política de Privacidade</a></p></div>
+    <div id="revokeCard" class="card danger"><h2>Retirar autorização</h2><p>A retirada encerra a participação e cancela consultas futuras. Registros cuja guarda seja exigida por normas profissionais ou legais não são apagados automaticamente.</p><label for="reason">Motivo (opcional)</label><textarea id="reason" maxlength="1000" placeholder="Se desejar, informe o motivo."></textarea><label style="display:flex;gap:9px;margin:14px 0"><input id="confirm" type="checkbox"> <span>Confirmo que desejo retirar a autorização de participação.</span></label><button id="revoke" class="ep-btn ep-btn--ghost" type="button">Retirar autorização</button><div id="status" class="status" role="status"></div></div>
+    <div id="revoked" class="card hidden"><h2>Autorização retirada</h2><p>A participação foi encerrada e consultas futuras vinculadas ao programa foram canceladas. Procure a rede pública local em caso de necessidade de continuidade do cuidado.</p></div>
+  </section>
+</main>
+<script type="module">
+  import { BACKEND_BASE_URL } from './js/firebase-config.js';
+  const token = new URLSearchParams(location.search).get('token') || '';
+  const show = id => ['loading','invalid','content'].forEach(x => document.getElementById(x).classList.toggle('hidden',x!==id));
+  async function request(path='', options={}) { const r=await fetch(`${BACKEND_BASE_URL}/public/aluno-privacidade/${encodeURIComponent(token)}${path}`,options); const d=await r.json().catch(()=>({})); if(!r.ok||!d.ok) throw new Error(d.error||'Não foi possível concluir.'); return d; }
+  async function boot(){if(!token)return show('invalid');try{const d=await request();document.getElementById('context').textContent=`Estudante: ${d.nome} · Programa: ${d.programa||'não informado'} · Escola: ${d.escola||'não informada'} · Situação: ${d.participationConsentStatus==='revoked'?'autorização retirada':'autorização vigente'} · Termo: ${d.consentimentoVersion||'vigente'}`;show('content');if(d.participationConsentStatus==='revoked'){document.getElementById('revokeCard').classList.add('hidden');document.getElementById('revoked').classList.remove('hidden');}}catch(_){show('invalid')}}
+  document.getElementById('revoke').addEventListener('click',async()=>{const status=document.getElementById('status');if(!document.getElementById('confirm').checked){status.textContent='Marque a confirmação explícita.';return}if(!confirm('Esta ação encerrará a participação e cancelará consultas futuras. Continuar?'))return;document.getElementById('revoke').disabled=true;status.textContent='Registrando…';try{await request('/revogar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({confirm:true,reason:document.getElementById('reason').value})});document.getElementById('revokeCard').classList.add('hidden');document.getElementById('revoked').classList.remove('hidden');}catch(e){status.textContent=e.message;document.getElementById('revoke').disabled=false}});
+  boot();
+</script></body></html>
