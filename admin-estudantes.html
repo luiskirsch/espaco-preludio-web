@@ -329,11 +329,6 @@
       btnRe.textContent = "Reenviar e-mail de consentimento";
       btnRe.onclick = () => reenviarConsentimento(e.id);
       foot.appendChild(btnRe);
-      const btnAp = document.createElement("button");
-      btnAp.className = "ep-btn ep-btn--primary ep-btn--sm";
-      btnAp.textContent = "Aprovar manualmente";
-      btnAp.onclick = () => aprovarManualmente(e.id);
-      foot.appendChild(btnAp);
     }
     if (e.status === "ativo") {
       const btnIn = document.createElement("button");
@@ -360,20 +355,6 @@
       const d = await r.json().catch(() => ({}));
       if (d.ok) alert("E-mail reenviado!");
       else alert("Erro: " + (d.error || "Falha"));
-    } catch (e) { alert("Erro: " + e.message); }
-  }
-
-  async function aprovarManualmente(id) {
-    if (!confirm("Aprovar este estudante manualmente (sem confirmação do responsável)?")) return;
-    try {
-      idToken = await auth.currentUser?.getIdToken(true);
-      await fetch(`${BACKEND_BASE_URL}/therapy/admin/estudantes/${id}`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ consentimentoParental: true })
-      });
-      closeDrawer();
-      loadEstudantes();
     } catch (e) { alert("Erro: " + e.message); }
   }
 

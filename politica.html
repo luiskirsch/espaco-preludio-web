@@ -41,7 +41,7 @@
     <article class="ep-doc">
       <div class="ep-eyebrow" data-i18n="politica:eyebrow">Documento legal · LGPD</div>
       <h1 class="ep-h1" data-i18n="politica:h1">Política de Tratamento de Dados</h1>
-      <p class="ep-doc__meta" data-i18n="politica:meta">Última atualização: 28 de junho de 2026 · Versão 1.1</p>
+      <p class="ep-doc__meta" data-i18n="politica:meta">Última atualização: 27 de agosto de 2026 · Versão 1.2</p>
 
       <section class="ep-doc__section">
         <h2 class="ep-h2" data-i18n="politica:summary.h">Resumo em uma página</h2>
@@ -49,7 +49,7 @@
           <li data-i18n-html="politica:summary.li1"><strong>Áudio e vídeo das consultas:</strong> cifrados ponta a ponta. Nem nós nem o LiveKit Cloud (provedor de mídia) conseguem ouvir ou ver.</li>
           <li data-i18n-html="politica:summary.li2"><strong>Anotações clínicas:</strong> cifradas no seu navegador antes de subir. A chave deriva da sua senha. <em>Não temos cópia da chave</em>.</li>
           <li data-i18n-html="politica:summary.li3"><strong>Anotações pessoais do paciente</strong> (quando há conta): cifradas com a chave do paciente. Profissional não vê. Servidor não vê.</li>
-          <li data-i18n-html="politica:summary.li4"><strong>Não gravamos consultas</strong>, não usamos seus dados para treinar IA, não vendemos dados a terceiros.</li>
+          <li data-i18n-html="politica:summary.li4">A consulta não é gravada por padrão. O recurso opcional de resumo por IA captura áudio somente com habilitação do profissional e consentimento específico do paciente; não vendemos dados a terceiros.</li>
           <li data-i18n="politica:summary.li5">Você pode pedir acesso, correção ou exclusão dos seus dados a qualquer tempo.</li>
         </ul>
         <p class="ep-text-sm ep-text-muted ep-mt-12" data-i18n="politica:summary.note">
@@ -65,7 +65,7 @@
           Torres/RS, atuando como <strong>controlador</strong>
           dos dados de cadastro de profissionais e pacientes, e como <strong>operador</strong>
           dos dados clínicos inseridos por profissionais (que são controladores de seus
-          próprios prontuários, conforme a Resolução CFP nº 1/2019 e equivalentes).
+          próprios registros e prontuários, conforme a Resolução CFP nº 1/2009 e normas equivalentes).
         </p>
         <p data-i18n-html="politica:s1.p2">
           <strong>Encarregado de Dados (DPO):</strong> Luis Henrique T. Kirsch —
@@ -77,7 +77,7 @@
           sensíveis de saúde (Art. 5º, II e Art. 11), pelo <strong>Marco Civil da
           Internet (Lei nº 12.965/2014)</strong>, pelo <strong>Código de Defesa do
           Consumidor (Lei nº 8.078/1990)</strong> quando aplicável, e pelas resoluções
-          dos conselhos profissionais (CFP nº 11/2018, CFM nº 2.314/2022, etc.).
+          dos conselhos profissionais (CFP nº 9/2024, CFM nº 2.314/2022, etc.).
         </p>
       </section>
 
@@ -110,7 +110,7 @@
         <h3 class="ep-h3" data-i18n="politica:s2.h4">2.4. Áudio e vídeo das consultas</h3>
         <ul class="ep-doc__list">
           <li data-i18n-html="politica:s2.li4a">Trafegam em tempo real via LiveKit Cloud com <strong>cifragem ponta a ponta (E2EE)</strong>.</li>
-          <li data-i18n-html="politica:s2.li4b"><strong>Não são gravados</strong> nem por nós, nem pelo LiveKit, nem armazenados em qualquer mídia. A chave de E2EE é gerada por consulta, conhecida apenas pelos clientes (profissional e paciente) e descartada ao fim da sessão.</li>
+          <li data-i18n-html="politica:s2.li4b"><strong>Por padrão, não são gravados.</strong> Se o recurso opcional de resumo por IA for habilitado pelo profissional e consentido pelo paciente, o navegador captura e envia áudio ao backend para transcrição. O áudio é processado temporariamente; a transcrição e o resumo ficam associados à sessão até a implementação da política de retenção configurável.</li>
         </ul>
 
         <h3 class="ep-h3" data-i18n="politica:s2.h5">2.5. Dados técnicos e operacionais</h3>
@@ -131,8 +131,8 @@
         <h2 class="ep-h2" data-i18n-html="politica:s3.h">3. O que <em>não</em> fazemos com seus dados</h2>
         <ul class="ep-doc__list">
           <li data-i18n="politica:s3.li1">Não acessamos o conteúdo de anotações clínicas. Por desenho criptográfico, não podemos.</li>
-          <li data-i18n="politica:s3.li2">Não gravamos áudio, vídeo, tela ou texto digitado durante consultas.</li>
-          <li data-i18n="politica:s3.li3">Não usamos dados de saúde para treinar modelos de inteligência artificial.</li>
+          <li data-i18n="politica:s3.li2">Não gravamos áudio, vídeo ou tela por padrão; a captura de áudio para resumo por IA depende de habilitação e consentimento específicos.</li>
+          <li data-i18n="politica:s3.li3">Não autorizamos o uso de dados de saúde para treinamento de modelos. No recurso opcional de resumo, a transcrição é processada por provedor de IA contratado para gerar o resultado solicitado.</li>
           <li data-i18n="politica:s3.li4">Não vendemos, alugamos ou cedemos dados pessoais para terceiros com finalidade publicitária.</li>
           <li data-i18n="politica:s3.li5">Não usamos cookies de rastreamento publicitário ou pixels de redes sociais nas páginas autenticadas.</li>
         </ul>
@@ -145,7 +145,7 @@
           <li data-i18n-html="politica:s4.li2"><strong>Cifragem em repouso (dados clínicos):</strong> AES-GCM 256 bits com chave derivada por PBKDF2 (200.000 iterações, SHA-256). Chave nunca trafega.</li>
           <li data-i18n-html="politica:s4.li3"><strong>E2EE para mídia:</strong> Encoded Transforms via LiveKit, com chave de sala gerada por consulta.</li>
           <li data-i18n-html="politica:s4.li4"><strong>Autenticação:</strong> Firebase Authentication com senha mínima de 10 caracteres; rate limiting contra brute-force.</li>
-          <li data-i18n-html="politica:s4.li5"><strong>Segregação de ambiente:</strong> banco de dados de teste isolado do banco de produção.</li>
+          <li data-i18n-html="politica:s4.li5"><strong>Ambientes:</strong> acesso administrativo restrito e plano de segregação operacional. Dados pessoais reais não devem ser usados em testes destrutivos.</li>
           <li data-i18n-html="politica:s4.li6"><strong>Auditoria:</strong> log de eventos sensíveis (login, criação/encerramento de consulta, acesso a prontuário).</li>
           <li data-i18n-html="politica:s4.li7"><strong>Princípio da minimização:</strong> coletamos apenas o necessário para o serviço.</li>
         </ul>
@@ -166,8 +166,9 @@
           contratuais padrão de proteção:
         </p>
         <ul class="ep-doc__list">
-          <li data-i18n-html="politica:s5.li1"><strong>Firebase / Google Cloud</strong> — autenticação e banco de dados (Firestore). Servidores em região <em>southamerica-east1 (São Paulo)</em> ou equivalente. Dados clínicos chegam apenas cifrados.</li>
+          <li data-i18n-html="politica:s5.li1"><strong>Firebase / Google Cloud</strong> — autenticação e banco de dados (Firestore). A região e os fluxos efetivos devem constar do inventário técnico e do contrato aplicável; os módulos clínicos E2EE armazenam conteúdo cifrado.</li>
           <li data-i18n-html="politica:s5.li2"><strong>LiveKit Cloud</strong> — encaminhamento de mídia em tempo real com E2EE. Não armazena gravações.</li>
+          <li><strong>Anthropic</strong> — processamento da transcrição para gerar o resumo estruturado, apenas quando o recurso opcional de IA estiver habilitado e consentido.</li>
           <li data-i18n-html="politica:s5.li3"><strong>Railway</strong> — hospedagem do backend.</li>
           <li data-i18n-html="politica:s5.li4"><strong>GitHub Pages</strong> — hospedagem da interface estática.</li>
           <li data-i18n-html="politica:s5.li5"><strong>Gateway de pagamento</strong> (quando aplicável) — processamento de transações financeiras.</li>
@@ -187,7 +188,7 @@
           fora do Brasil. Quando isso ocorre, o transferimos com base em uma das hipóteses
           do Art. 33 da LGPD — preferencialmente para país com nível adequado de proteção,
           ou mediante cláusulas contratuais padrão. Dados clínicos sensíveis trafegam
-          sempre cifrados, e em hipótese alguma plaintext.
+          com salvaguardas adequadas. Alguns dados operacionais podem ser tratados em texto legível pelo serviço; o conteúdo abrangido pelos módulos E2EE permanece cifrado.
         </p>
       </section>
 
@@ -195,11 +196,11 @@
         <h2 class="ep-h2" data-i18n="politica:s7.h">7. Por quanto tempo guardamos</h2>
         <ul class="ep-doc__list">
           <li data-i18n-html="politica:s7.li1"><strong>Dados de cadastro:</strong> enquanto a conta estiver ativa + período mínimo de retenção fiscal/regulatória aplicável após encerramento.</li>
-          <li data-i18n-html="politica:s7.li2"><strong>Prontuários (sob titularidade do profissional):</strong> 20 anos após o último atendimento, conforme Resolução CFP nº 1/2019 e correspondentes.</li>
+          <li data-i18n-html="politica:s7.li2"><strong>Registros psicológicos (sob responsabilidade do profissional ou instituição):</strong> mínimo de 5 anos, conforme Resolução CFP nº 1/2009, admitida ampliação por determinação legal ou judicial ou em casos específicos.</li>
           <li data-i18n-html="politica:s7.li3"><strong>Anotações pessoais do paciente:</strong> enquanto a conta do paciente existir; deletadas no encerramento.</li>
           <li data-i18n-html="politica:s7.li4"><strong>Logs de conexão:</strong> 6 meses, conforme Marco Civil (Art. 15).</li>
           <li data-i18n-html="politica:s7.li5"><strong>Logs de auditoria de acesso a prontuário:</strong> retidos pelo mesmo prazo do prontuário ao qual se referem.</li>
-          <li data-i18n-html="politica:s7.li6"><strong>Áudio/vídeo:</strong> não retidos (não são gravados).</li>
+          <li data-i18n-html="politica:s7.li6"><strong>Áudio/vídeo:</strong> não retidos por padrão. No resumo por IA, o áudio é temporário; transcrição e resumo exigem prazo de retenção definido no contrato e controles de exclusão.</li>
         </ul>
       </section>
 
@@ -245,9 +246,11 @@
       <section class="ep-doc__section">
         <h2 class="ep-h2" data-i18n="politica:s10.h">10. Crianças e adolescentes</h2>
         <p data-i18n="politica:s10.p">
-          O atendimento de menores na Plataforma exige autorização e participação ativa
-          de responsável legal, sob critério clínico do(a) profissional. O cadastro de
-          conta na Plataforma é restrito a maiores de 18 anos.
+          O atendimento de crianças e adolescentes exige autorização do responsável legal,
+          consideração da autonomia progressiva e avaliação de viabilidade pelo(a) profissional.
+          Aplicamos o melhor interesse, privacidade por padrão e proteção integral previstos na
+          LGPD, no ECA e na Lei nº 15.211/2025. O fluxo municipal deve manter registro auditável
+          do consentimento e meios de encaminhamento à rede de proteção territorial.
         </p>
       </section>
 

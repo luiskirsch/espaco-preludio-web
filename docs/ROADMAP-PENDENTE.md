@@ -39,8 +39,9 @@ upload de blobs para storage cifrado, decifragem só para o profissional.
 **Por que não está pronto:**
 - LGPD Art. 11: dados sensíveis exigem consentimento específico + finalidade
   explícita + base legal documentada.
-- CFP/CFM: registros clínicos têm regras de retenção (mín 20 anos psicologia,
-  20 anos medicina). Gravação vira documento clínico permanente.
+- CFP/CFM: registros clínicos têm regras profissionais de guarda (na Psicologia,
+  mínimo de 5 anos pela Resolução CFP nº 1/2009, ressalvadas outras exigências).
+  Gravação amplia substancialmente o risco e o escopo documental.
 - LiveKit não tem E2EE recording nativo (E2EE on-call ≠ E2EE-at-rest).
 - Custo de storage cifrado escala rápido (~500MB/h em HD; ~2GB/sessão típica).
 

@@ -112,7 +112,7 @@
         <!-- CAMPOS PARA MENOR: dados do responsável -->
         <div id="camposResponsavel" class="ep-form-step-block">
           <div class="section-divider">Dados do responsável legal</div>
-          <p class="ep-text-xs ep-text-muted" style="margin-bottom:8px;">O responsável receberá um e-mail para confirmar o consentimento antes do acesso ser liberado.</p>
+          <p class="ep-text-xs ep-text-muted" style="margin-bottom:8px;">O responsável receberá um convite individual para ler as informações e manifestar expressamente sua decisão antes do acesso ser liberado.</p>
           <div class="ep-field">
             <label class="ep-label" for="rNome">Nome do responsável *</label>
             <input id="rNome" class="ep-input" type="text" maxlength="80" placeholder="Ex.: Maria Silva (mãe/pai/responsável)" autocomplete="name">
@@ -127,15 +127,10 @@
               <input id="rTelefone" class="ep-input" type="tel" maxlength="20" placeholder="(11) 99999-9999" autocomplete="tel">
             </div>
           </div>
-          <div class="ep-field" style="margin-top:8px;">
-            <label class="ep-label" for="rCpf">CPF do responsável <span class="ep-text-muted" style="font-weight:400;">(opcional)</span></label>
-            <input id="rCpf" class="ep-input" type="text" maxlength="14" placeholder="000.000.000-00">
-          </div>
-
           <label class="ep-checkbox ep-mt-12" id="consentBlock">
             <input type="checkbox" id="consentCheck">
             <span style="font-size:13px;line-height:1.5;">
-              Declaro ser responsável legal pelo aluno acima e autorizo sua participação no programa de saúde mental escolar do Espaço Prelúdio, conforme os
+              Declaro ser responsável legal pelo aluno acima e solicito o envio do convite para revisar e decidir sobre sua participação no programa de saúde mental escolar do Espaço Prelúdio, conforme os
               <a href="./termos.html" target="_blank">Termos de Uso</a> e a
               <a href="./politica.html" target="_blank">Política de Privacidade (LGPD)</a>.
             </span>
@@ -233,19 +228,17 @@
       const rNome     = document.getElementById("rNome").value.trim();
       const rEmail    = document.getElementById("rEmail").value.trim();
       const rTelefone = document.getElementById("rTelefone").value.trim();
-      const rCpf      = document.getElementById("rCpf").value.trim();
       const consent   = document.getElementById("consentCheck").checked;
 
       if (!rNome)    { status.textContent = "Informe o nome do responsável."; return; }
       if (!rEmail || !rEmail.includes("@")) { status.textContent = "Informe o e-mail do responsável."; return; }
       if (!rTelefone){ status.textContent = "Informe o telefone do responsável."; return; }
-      if (!consent)  { status.textContent = "O responsável precisa marcar a declaração de consentimento."; return; }
+      if (!consent)  { status.textContent = "O responsável precisa marcar a declaração para solicitar o convite."; return; }
 
       Object.assign(payload, {
         responsavelNome: rNome,
         responsavelEmail: rEmail,
         responsavelTelefone: rTelefone,
-        responsavelCpf: rCpf || null,
         consentimentoResponsavel: true
       });
     } else {
@@ -272,6 +265,7 @@
           DATA_NASCIMENTO_OBRIGATORIA: "Informe a data de nascimento.",
           ESCOLA_OBRIGATORIA: "Informe a escola.",
           CIDADE_OBRIGATORIA: "Informe a cidade.",
+          DATA_NASCIMENTO_INVALIDA: "Informe uma data de nascimento válida.",
           ESTADO_OBRIGATORIO: "Informe a UF.",
           EMAIL_INVALIDO: "E-mail inválido.",
           TELEFONE_OBRIGATORIO: "Informe o telefone.",

@@ -24,6 +24,25 @@
       <p class="ep-text-muted">Verificando link…</p>
     </div>
 
+    <div id="stateReview" class="ep-hide" style="padding:16px 0;text-align:left;">
+      <h2 class="ep-auth__title">Revise antes de decidir</h2>
+      <p class="ep-text-muted ep-mt-8" id="reviewMsg"></p>
+      <div class="ep-card ep-mt-16" style="padding:16px;">
+        <p style="font-size:13px;line-height:1.6;margin:0;">
+          O programa utilizará dados de identificação, contato, escola e informações necessárias ao atendimento psicológico remoto. O atendimento depende de avaliação de viabilidade pelo(a) psicólogo(a), preserva o sigilo da criança ou adolescente e deve prever encaminhamento à rede presencial quando indicado. A participação pode ser recusada e o consentimento pode ser revogado pelos canais do programa, sem prejuízo do acesso aos serviços públicos disponíveis.
+        </p>
+        <p style="font-size:12px;line-height:1.6;margin:12px 0 0;">
+          Leia também os <a href="./termos.html" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="./politica.html" target="_blank" rel="noopener">Política de Privacidade</a>.
+        </p>
+      </div>
+      <label class="ep-checkbox ep-mt-16">
+        <input type="checkbox" id="confirmCheck">
+        <span style="font-size:13px;line-height:1.5;">Declaro ser responsável legal e autorizo expressamente a participação no programa e o tratamento dos dados necessários ao atendimento, conforme as informações acima.</span>
+      </label>
+      <div class="ep-status ep-mt-8" id="confirmStatus"></div>
+      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16" id="confirmBtn">Confirmar consentimento</button>
+    </div>
+
     <div id="stateOk" class="ep-hide" style="padding:16px 0;">
       <div style="font-size:56px;margin-bottom:16px;">✅</div>
       <h2 class="ep-auth__title">Consentimento confirmado!</h2>
@@ -53,7 +72,7 @@
   const token = new URLSearchParams(location.search).get("token") || "";
 
   function showState(id) {
-    ["stateLoading","stateOk","stateAlready","stateInvalid"].forEach(s => {
+    ["stateLoading","stateReview","stateOk","stateAlready","stateInvalid"].forEach(s => {
       document.getElementById(s).classList.toggle("ep-hide", s !== id);
     });
   }
@@ -61,7 +80,7 @@
   if (!token) {
     showState("stateInvalid");
   } else {
-    fetch(`${BACKEND_BASE_URL}/public/aluno-consentimento/${token}`)
+    fetch(`${BACKEND_BASE_URL}/public/aluno-consentimento/${encodeURIComponent(token)}`)
       .then(r => r.json()).catch(() => ({}))
       .then(d => {
         if (!d.ok) { showState("stateInvalid"); return; }
@@ -69,11 +88,36 @@
           if (d.nome) document.getElementById("alreadyMsg").textContent = `O consentimento para ${d.nome} já foi confirmado anteriormente.`;
           showState("stateAlready");
         } else {
-          if (d.nome) document.getElementById("okMsg").textContent = `O acesso de ${d.nome} foi liberado${d.escola ? " · " + d.escola : ""}.`;
-          showState("stateOk");
+          document.getElementById("reviewMsg").textContent = `Solicitação para ${d.nome || "o(a) estudante"}${d.escola ? " · " + d.escola : ""}. Abrir esta página ainda não confirmou nada.`;
+          showState("stateReview");
         }
       });
   }
+
+  document.getElementById("confirmBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("confirmBtn");
+    const status = document.getElementById("confirmStatus");
+    if (!document.getElementById("confirmCheck").checked) {
+      status.textContent = "Marque a declaração para registrar sua decisão.";
+      return;
+    }
+    btn.disabled = true;
+    status.textContent = "Registrando…";
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/public/aluno-consentimento/${encodeURIComponent(token)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: true })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) throw new Error(d.error === "TOKEN_EXPIRADO" ? "Este convite expirou. Solicite um novo envio." : "Não foi possível registrar o consentimento.");
+      if (d.nome) document.getElementById("okMsg").textContent = `O acesso de ${d.nome} foi liberado${d.escola ? " · " + d.escola : ""}.`;
+      showState(d.alreadyConfirmed ? "stateAlready" : "stateOk");
+    } catch (error) {
+      status.textContent = error.message;
+      btn.disabled = false;
+    }
+  });
 </script>
 
 </body>

@@ -1506,7 +1506,7 @@
   })();
 
 
-  // ─── Export PDF do prontuário (CFP Res. 1/2019 — retenção 20 anos) ──
+  // ─── Export PDF do prontuário (CFP Res. 1/2009 — mínimo de 5 anos) ──
   // Estado em memória pra o exportador usar (preenchido por boot/receitas)
   const exportState = {
     patient: null,
@@ -1594,7 +1594,7 @@
     }
     function drawPageFooter() {
       const total = pdfDoc.getPageCount();
-      page.drawText(tr("prontuario:pdf.docHeader", "Documento gerado pelo Espaço Prelúdio — retenção exigida pela Resolução CFP nº 1/2019 (mínimo 20 anos)."), {
+      page.drawText(tr("prontuario:pdf.docHeader", "Documento gerado pelo Espaço Prelúdio — guarda mínima de 5 anos conforme Resolução CFP nº 1/2009, ressalvadas outras exigências."), {
         x: MARGIN, y: 30, font: fontReg, size: 7.5, color: rgb(0.55,0.55,0.55)
       });
       page.drawText(tr("prontuario:pdf.pageNo", "Página {{n}}", { n: total }), {
@@ -1661,7 +1661,7 @@
 
     y -= 30;
     txt(tr("prontuario:pdf.confidential", "Documento confidencial — uso clínico restrito."), { size: 9, color: rgb(0.55,0.55,0.55), font: fontBold });
-    txt(tr("prontuario:pdf.retentionNote", "Mantenha em local seguro pelo prazo legal de retenção (mínimo 20 anos após o último atendimento, conforme Resolução CFP nº 1/2019)."), {
+    txt(tr("prontuario:pdf.retentionNote", "Mantenha em local seguro pelo prazo aplicável (mínimo de 5 anos para registros psicológicos, conforme Resolução CFP nº 1/2009, ressalvadas outras exigências)."), {
       size: 9, color: rgb(0.50,0.50,0.50)
     });
 

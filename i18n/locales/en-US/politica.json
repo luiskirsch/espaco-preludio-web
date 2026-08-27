@@ -12,15 +12,15 @@
     "li1": "<strong>Audio and video of consultations:</strong> end-to-end encrypted. Neither we nor LiveKit Cloud (media provider) can hear or see them.",
     "li2": "<strong>Clinical notes:</strong> encrypted in your browser before upload. The key derives from your password. <em>We do not have a copy of the key</em>.",
     "li3": "<strong>Patient's personal notes</strong> (when an account exists): encrypted with the patient's key. The professional does not see them. The server does not see them.",
-    "li4": "<strong>We do not record consultations</strong>, we do not use your data to train AI, we do not sell data to third parties.",
+    "li4": "Consultations are not recorded by default. The optional AI summary captures audio only when enabled by the professional and specifically consented to by the patient; we do not sell data to third parties.",
     "li5": "You may request access, correction or deletion of your data at any time.",
     "note": "The legal and technical details are in the sections below."
   },
   "s1": {
     "h": "1. Controller, officer and legal framework",
-    "p1": "<strong>Espaço Prelúdio</strong> (\"Platform\") is operated by <strong>Prelúdio Software Systems LTDA</strong>, CNPJ <strong>67.092.881/0001-99</strong>, Torres/RS, Brazil, acting as <strong>controller</strong> of the registration data of professionals and patients, and as <strong>processor</strong> of the clinical data entered by professionals (who are controllers of their own records, under CFP Resolution no. 1/2019 and equivalents).",
+    "p1": "<strong>Espaço Prelúdio</strong> is operated by <strong>Prelúdio Software Systems LTDA</strong>, CNPJ <strong>67.092.881/0001-99</strong>, Torres/RS. Controller and processor roles depend on the decisions actually made for each processing activity and must be defined contractually.",
     "p2": "<strong>Data Protection Officer (DPO):</strong> Luis Henrique T. Kirsch — <a href=\"mailto:contato@espacopreludio.com.br\">contato@espacopreludio.com.br</a>.",
-    "p3": "This Policy is governed by the <strong>Brazilian General Data Protection Law (LGPD — Law no. 13,709/2018)</strong>, with special attention to sensitive personal health data (Art. 5, II and Art. 11), by the <strong>Brazilian Internet Civil Framework (Law no. 12,965/2014)</strong>, by the <strong>Consumer Protection Code (Law no. 8,078/1990)</strong> when applicable, and by the resolutions of professional councils (CFP no. 11/2018, CFM no. 2.314/2022, etc.)."
+    "p3": "This Policy is governed by the <strong>Brazilian General Data Protection Law (LGPD — Law no. 13,709/2018)</strong>, the Brazilian Internet Civil Framework, the Child and Adolescent Statute, the Digital Child and Adolescent Statute (Law no. 15,211/2025), consumer law when applicable, and professional rules including CFP Resolution no. 9/2024."
   },
   "s2": {
     "h": "2. What data we collect and why",
@@ -40,7 +40,7 @@
     "li3d": "<strong>Technical treatment:</strong> this data is <em>encrypted in the browser</em> with a key derived from the holder's password (PBKDF2/AES-GCM). The server stores only the ciphertext and the initialization vector. <strong>We have no way to decrypt it.</strong>",
     "h4": "2.4. Audio and video of consultations",
     "li4a": "They travel in real time via LiveKit Cloud with <strong>end-to-end encryption (E2EE)</strong>.",
-    "li4b": "<strong>They are not recorded</strong> by us, by LiveKit, or stored in any media. The E2EE key is generated per consultation, known only to the clients (professional and patient) and discarded at the end of the session.",
+    "li4b": "<strong>They are not recorded by default.</strong> If the optional AI summary is enabled and consented to, the browser captures and sends audio to the backend for transcription; the transcript and summary are associated with the session pending a configurable retention policy.",
     "h5": "2.5. Technical and operational data",
     "li5a": "IP address, browser agent, timestamps of login and start/end of consultation.",
     "li5b": "<strong>Legal basis:</strong> legitimate interest (Art. 7, IX, LGPD) and compliance with legal obligation (Art. 7, II) regarding connection logs (Internet Civil Framework, Art. 15: 6 months).",
@@ -52,8 +52,8 @@
   "s3": {
     "h": "3. What we <em>do not</em> do with your data",
     "li1": "We do not access the content of clinical notes. By cryptographic design, we cannot.",
-    "li2": "We do not record audio, video, screen or text typed during consultations.",
-    "li3": "We do not use health data to train artificial intelligence models.",
+    "li2": "We do not record audio, video, or screen by default; audio capture for an AI summary requires specific enablement and consent.",
+    "li3": "We do not authorize health data for model training. In the optional summary feature, a contracted AI provider processes the transcript to generate the requested result.",
     "li4": "We do not sell, rent or assign personal data to third parties for advertising purposes.",
     "li5": "We do not use advertising tracking cookies or social network pixels on authenticated pages."
   },
@@ -63,7 +63,7 @@
     "li2": "<strong>Encryption at rest (clinical data):</strong> AES-GCM 256-bit with key derived by PBKDF2 (200,000 iterations, SHA-256). The key never travels.",
     "li3": "<strong>E2EE for media:</strong> Encoded Transforms via LiveKit, with a room key generated per consultation.",
     "li4": "<strong>Authentication:</strong> Firebase Authentication with a minimum password of 10 characters; rate limiting against brute-force.",
-    "li5": "<strong>Environment segregation:</strong> test database isolated from production database.",
+    "li5": "<strong>Environments:</strong> access and configuration controls apply per environment; full database segregation remains a requirement before any public pilot.",
     "li6": "<strong>Audit:</strong> logging of sensitive events (login, creation/closing of consultation, access to records).",
     "li7": "<strong>Minimization principle:</strong> we collect only what is necessary for the service.",
     "p": "Although we employ recognized security practices, no system is absolutely impenetrable. In the event of a security incident that may pose relevant risk to data subjects, we will notify those affected and the ANPD within a reasonable period, in accordance with Art. 48 of the LGPD."
@@ -71,25 +71,26 @@
   "s5": {
     "h": "5. Sharing with processors and third parties",
     "p1": "To operate the Platform, we contract third-party services that process data on our behalf (\"processors\"). We select partners based in jurisdictions with an adequate level of data protection or with standard contractual protection clauses:",
-    "li1": "<strong>Firebase / Google Cloud</strong> — authentication and database (Firestore). Servers in region <em>southamerica-east1 (São Paulo)</em> or equivalent. Clinical data arrives only encrypted.",
+    "li1": "<strong>Firebase / Google Cloud</strong> — authentication and database (Firestore). The actual region depends on project configuration. Notes covered by E2EE arrive encrypted; registration and operational data do not use the same end-to-end encryption.",
     "li2": "<strong>LiveKit Cloud</strong> — real-time media forwarding with E2EE. Does not store recordings.",
     "li3": "<strong>Railway</strong> — backend hosting.",
     "li4": "<strong>GitHub Pages</strong> — static interface hosting.",
     "li5": "<strong>Payment gateway</strong> (when applicable) — processing of financial transactions.",
+    "li6": "<strong>Anthropic</strong> — when the optional AI summary is enabled and consented to, receives the transcript needed to generate the summary.",
     "p2": "We do not share personal data with third parties for marketing, advertising or profiling purposes. We share with public authorities only when required by court order or formal administrative request, within legal limits."
   },
   "s6": {
     "h": "6. International transfer",
-    "p": "Some processors (LiveKit Cloud, Firebase) may process data on servers outside Brazil. When that happens, we transfer it based on one of the hypotheses of Art. 33 of the LGPD — preferably to a country with an adequate level of protection, or under standard contractual clauses. Sensitive clinical data always travels encrypted, and in no case in plaintext."
+    "p": "Some processors may process data outside Brazil. Any international transfer must comply with Art. 33 of the LGPD and applicable safeguards. Notes covered by E2EE travel encrypted; registration, operational data and transcripts from the optional AI summary may be processed in readable form by processors strictly necessary for the stated purpose."
   },
   "s7": {
     "h": "7. How long we keep it",
     "li1": "<strong>Registration data:</strong> while the account is active + minimum tax/regulatory retention period applicable after termination.",
-    "li2": "<strong>Records (under professional ownership):</strong> 20 years after the last consultation, in accordance with CFP Resolution no. 1/2019 and counterparts.",
+    "li2": "<strong>Psychological records under professional custody:</strong> a minimum of 5 years under CFP Resolution no. 1/2009, subject to other applicable requirements.",
     "li3": "<strong>Patient's personal notes:</strong> while the patient's account exists; deleted upon termination.",
     "li4": "<strong>Connection logs:</strong> 6 months, in accordance with the Internet Civil Framework (Art. 15).",
     "li5": "<strong>Record access audit logs:</strong> retained for the same period as the record to which they refer.",
-    "li6": "<strong>Audio/video:</strong> not retained (they are not recorded)."
+    "li6": "<strong>Audio/video:</strong> not retained by default; for the optional AI summary, audio is temporary and transcript/summary retention must be defined before use with children or adolescents."
   },
   "s8": {
     "h": "8. Your rights as a data subject",
@@ -111,7 +112,7 @@
   },
   "s10": {
     "h": "10. Children and adolescents",
-    "p": "Care for minors on the Platform requires authorization and active participation of a legal guardian, under the clinical judgment of the professional. Account registration on the Platform is restricted to those aged 18 or older."
+    "p": "Processing children's and adolescents' data must observe their best interests, privacy and safety by design, age-appropriate information, guardian involvement when applicable, and Digital Child and Adolescent Statute rights. Remote psychological care requires guardian authorization, an individual viability assessment, progressive autonomy, privacy and an available in-person/protection network. AI summaries are excluded from the youth pilot until a specific impact assessment and controls are approved."
   },
   "s11": {
     "h": "11. Changes to this policy",
