@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="";}else{document.documentElement.classList.add("guard-ok");}})();</script>
+<style>html:not(.guard-ok) body{visibility:hidden!important}</style>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Meu atendimento escolar · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <style>
+    .student-topbar{position:sticky;top:0;z-index:20;background:rgba(255,250,239,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--ep-line)}.student-topbar__inner{height:72px;display:flex;align-items:center;justify-content:space-between;gap:16px}.student-brand{display:flex;align-items:center;gap:10px;color:var(--ep-ink)}.student-brand img{width:42px;height:42px}.student-brand__text{display:flex;flex-direction:column;line-height:1.05}.student-brand__text small{text-transform:uppercase;letter-spacing:.12em;color:var(--ep-ink-3);font-size:9px;font-weight:700}.student-brand__text strong{font-family:'Fraunces',serif;font-size:18px;font-weight:500}
+    .student-hero{padding:52px 0 28px}.student-hero__row{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}.student-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;padding-bottom:52px}.student-case{background:var(--ep-surface);border:1px solid var(--ep-line);border-radius:16px;padding:22px;box-shadow:var(--ep-shadow-soft)}.student-case__head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.student-pill{display:inline-flex;padding:5px 9px;border-radius:999px;background:var(--ep-gold-soft);color:var(--ep-gold-ink);font-size:11px;font-weight:700;white-space:nowrap}.student-meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}.student-meta>div{padding:12px;background:var(--ep-bg-2);border-radius:10px}.student-meta small{display:block;color:var(--ep-ink-3);font-size:10px;text-transform:uppercase;letter-spacing:.08em}.student-meta strong{display:block;margin-top:3px;font-size:13px}.session-list{display:grid;gap:8px;margin-top:10px}.session{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid var(--ep-line);font-size:13px}.student-safety{background:#1a130a;color:#f7ecd4;border-radius:14px;padding:18px 20px;margin:0 0 24px}.student-safety strong{color:#e2b76a}.student-empty{grid-column:1/-1;text-align:center;padding:42px;background:var(--ep-surface);border:1px solid var(--ep-line);border-radius:16px}
+    @media(max-width:760px){.student-grid{grid-template-columns:1fr}.student-topbar__inner{height:64px}.student-hero{padding-top:34px}.student-case{padding:18px}.student-meta{grid-template-columns:1fr}.student-topbar .ep-btn{min-height:38px}}
+  </style>
+</head>
+<body>
+<header class="student-topbar"><div class="ep-container student-topbar__inner"><a href="./index.html" class="student-brand"><img src="/logo_oficial_fundo_transparente.png?v=2" alt=""><span class="student-brand__text"><small>Espaço</small><strong>Prelúdio</strong></span></a><button id="logoutButton" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Sair</button></div></header>
+<main class="ep-container">
+  <section class="student-hero"><div class="student-hero__row"><div><div class="ep-eyebrow">Atendimento ao Aluno</div><h1 class="ep-h1 ep-mt-8">Meu acompanhamento</h1><p class="ep-text-muted ep-mt-8">Consulte a situação do programa e seus próximos atendimentos.</p></div><span id="accountEmail" class="ep-text-sm ep-text-muted"></span></div></section>
+  <aside class="student-safety"><strong>Precisa de ajuda imediata?</strong> Este portal não é um serviço de emergência. Em risco imediato, procure um responsável e acione o SAMU pelo 192, a emergência policial pelo 190 ou o serviço local indicado pela sua escola.</aside>
+  <div id="pageStatus" class="ep-status">Carregando seu atendimento…</div>
+  <section id="caseList" class="student-grid"></section>
+</main>
+
+<script type="module">
+  import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  const $=id=>document.getElementById(id),esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+  const statusLabels={pending_guardian_consent:"Consentimento do responsável pendente",pending_participant_consent:"Consentimento pendente",pending_triage:"Aguardando triagem",triage_in_progress:"Triagem em andamento",waiting_assignment:"Aguardando psicólogo",assigned:"Psicólogo definido",care_active:"Atendimento em andamento",referral_required:"Encaminhamento necessário",referred_in_person:"Encaminhado para atendimento presencial",referred_network:"Encaminhado para a rede pública",discharged:"Atendimento encerrado",declined:"Participação recusada",consent_revoked:"Autorização retirada",suspended:"Atendimento suspenso",scheduled:"Agendada",completed:"Realizada",canceled:"Cancelada",pending:"Pendente"};
+  const label=value=>statusLabels[value]||"Em acompanhamento";
+  const formatDate=value=>value?new Intl.DateTimeFormat("pt-BR",{dateStyle:"short",timeStyle:"short",timeZone:"America/Sao_Paulo"}).format(new Date(value)):"Ainda não agendada";
+  async function load(user){$("accountEmail").textContent=user.email||"";try{const token=await user.getIdToken(true);const response=await fetch(`${BACKEND_BASE_URL}/therapy/aluno/me`,{headers:{Authorization:`Bearer ${token}`}});const data=await response.json().catch(()=>({}));if(!response.ok||!data.ok)throw new Error(data.error||"ACESSO_NEGADO");render(data.items||[]);$("pageStatus").textContent=""}catch{location.replace("./aluno-login.html")}}
+  function render(items){$("caseList").innerHTML=items.map(item=>{const future=(item.sessions||[]).filter(session=>session.scheduledAt>Date.now()&&!["canceled","completed"].includes(session.status)).sort((a,b)=>a.scheduledAt-b.scheduledAt);const sessions=(item.sessions||[]).slice(0,6);return `<article class="student-case"><div class="student-case__head"><div><div class="ep-text-xs ep-text-muted">${esc(item.caseCode||"Programa escolar")}</div><h2 class="ep-h2 ep-mt-4">${esc(item.name)}</h2></div><span class="student-pill">${esc(label(item.status))}</span></div><div class="student-meta"><div><small>Programa</small><strong>${esc(item.programName||"Programa público")}</strong></div><div><small>Escola</small><strong>${esc(item.schoolName||"Não informada")}</strong></div><div><small>Psicólogo</small><strong>${esc(item.therapistName||"Aguardando definição")}</strong></div><div><small>Próximo atendimento</small><strong>${esc(formatDate(future[0]?.scheduledAt||item.nextSessionAt))}</strong></div></div><h3 class="ep-h3">Atendimentos</h3><div class="session-list">${sessions.length?sessions.map(session=>`<div class="session"><span>${esc(formatDate(session.scheduledAt))}<br><span class="ep-text-xs ep-text-muted">${esc(session.therapistName||"Equipe clínica")}</span></span><strong>${esc(label(session.status))}</strong></div>`).join(""):'<p class="ep-text-sm ep-text-muted">Nenhum atendimento agendado até o momento.</p>'}</div><p class="ep-text-xs ep-text-muted ep-mt-16">Quando houver uma consulta, o link seguro de entrada será enviado ao e-mail cadastrado.</p></article>`}).join("")||'<div class="student-empty"><h2 class="ep-h2">Nenhum atendimento ativo</h2><p class="ep-text-muted ep-mt-8">Fale com a coordenação da sua escola se acredita que isso está incorreto.</p></div>'}
+  onAuthStateChanged(auth,user=>user?load(user):location.replace("./aluno-login.html"));
+  $("logoutButton").onclick=async()=>{await signOut(auth);location.replace("./aluno-login.html")};
+</script>
+</body>
+</html>
