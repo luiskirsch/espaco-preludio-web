@@ -7,34 +7,74 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Atendimento ao Aluno · Espaço Prelúdio</title>
-  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="icon" type="image/png" href="./logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
   <style>
-    body{min-height:100vh;background:#0d0d0d;color:#fff}.student-auth{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(420px,.95fr)}
-    .student-auth__intro{position:relative;overflow:hidden;padding:clamp(40px,7vw,110px);display:flex;flex-direction:column;justify-content:center;background:radial-gradient(circle at 76% 22%,rgba(226,183,106,.18),transparent 26%),linear-gradient(145deg,#0d0d0d 0%,#17130d 58%,#2b2112 100%)}
-    .student-auth__intro:after{content:"";position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle at 18% 20%,#e2b76a 0 1px,transparent 1.6px),radial-gradient(circle at 74% 34%,#fff 0 1px,transparent 1.5px),radial-gradient(circle at 44% 76%,#e2b76a 0 1px,transparent 1.6px);background-size:210px 180px,260px 230px,310px 270px;opacity:.45}
-    .student-auth__intro>*{position:relative;z-index:1}.student-auth__brand{display:flex;align-items:center;gap:12px;color:#fff}.student-auth__brand img{width:52px;height:52px}.student-auth__brand span{font-family:'Fraunces',serif;font-size:22px}
-    .student-auth__eyebrow{margin-top:70px;color:#e2b76a;text-transform:uppercase;letter-spacing:.16em;font-size:12px;font-weight:700}.student-auth__title{font-family:'Fraunces',serif;font-size:clamp(42px,5vw,74px);font-weight:500;line-height:1.02;max-width:680px;margin:18px 0}.student-auth__lead{color:rgba(255,255,255,.72);font-size:17px;line-height:1.7;max-width:590px}
-    .student-auth__side{background:var(--ep-bg);color:var(--ep-ink);display:flex;align-items:center;justify-content:center;padding:40px}.student-card{width:100%;max-width:500px;background:var(--ep-surface);border:1px solid var(--ep-line);border-radius:18px;padding:32px;box-shadow:var(--ep-shadow-card)}
-    .student-tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--ep-bg-2);border-radius:10px;padding:4px;margin:22px 0}.student-tab{border:0;background:transparent;border-radius:8px;padding:10px;font:600 13px 'Inter',sans-serif;color:var(--ep-ink-2);cursor:pointer}.student-tab.is-active{background:var(--ep-surface);color:var(--ep-ink);box-shadow:0 2px 8px rgba(0,0,0,.08)}
-    .student-note{padding:12px 14px;border-radius:10px;background:var(--ep-gold-soft);border:1px solid var(--ep-gold-line);font-size:12px;line-height:1.55;color:var(--ep-ink-2)}.student-actions{display:flex;gap:8px;flex-wrap:wrap}.student-actions>*{flex:1 1 160px}.text-button{border:0;background:none;color:var(--ep-gold-ink);font:600 12px 'Inter',sans-serif;cursor:pointer;padding:4px 0;text-align:left}.ep-status:empty{display:none}
-    @media(max-width:900px){.student-auth{grid-template-columns:1fr}.student-auth__intro{display:none}.student-auth__side{min-height:100vh;padding:20px}.student-card{padding:24px 20px}}
+    :root{--school-deep:#123a45;--school-blue:#2c6670;--school-mint:#91b9aa;--school-sun:#e0ad4f;--school-coral:#d67a62;--school-paper:#f5edd9}
+    html,body{height:100%;overflow:hidden;scrollbar-gutter:auto!important}html{background:var(--school-deep)}body{min-height:0;background:var(--school-deep);color:#fff}.student-auth{height:100vh;min-height:0;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(430px,.92fr)}
+    .student-auth__intro{position:relative;isolation:isolate;overflow:hidden;padding:clamp(28px,4vw,64px) clamp(36px,5.5vw,88px);display:grid;grid-template-rows:auto 1fr auto;background:radial-gradient(circle at 80% 16%,rgba(224,173,79,.18),transparent 24%),radial-gradient(circle at 15% 88%,rgba(145,185,170,.14),transparent 28%),linear-gradient(145deg,#0d2d37 0%,var(--school-deep) 52%,#184a50 100%)}
+    .student-auth__intro:before{content:"";position:absolute;inset:0;z-index:-2;opacity:.16;background-image:linear-gradient(rgba(255,255,255,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.16) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(120deg,#000,transparent 76%)}
+    .student-auth__intro:after{content:"";position:absolute;width:560px;height:560px;border:1px solid rgba(224,173,79,.18);border-radius:50%;right:-230px;bottom:-270px;box-shadow:0 0 0 70px rgba(224,173,79,.035),0 0 0 145px rgba(224,173,79,.025);z-index:-1}
+    .student-auth__brand{display:flex;align-items:center;gap:12px;color:#fff;width:max-content}.student-auth__brand img{width:46px;height:46px}.student-auth__brand span{font-family:'Fraunces',serif;font-size:20px}.student-auth__content{align-self:center;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(250px,.72fr);gap:clamp(20px,3vw,54px);align-items:center}.student-auth__copy{min-width:0}
+    .student-auth__eyebrow{color:#f2c56d;text-transform:uppercase;letter-spacing:.17em;font-size:11px;font-weight:700}.student-auth__title{font-family:'Fraunces',serif;font-size:clamp(40px,4.4vw,68px);font-weight:500;line-height:1.02;max-width:620px;margin:16px 0}.student-auth__lead{color:rgba(255,255,255,.76);font-size:clamp(14px,1.2vw,17px);line-height:1.7;max-width:590px}
+    .school-emblem{position:relative;width:min(100%,330px);aspect-ratio:1;margin:auto;filter:drop-shadow(0 22px 36px rgba(2,19,23,.32))}.school-emblem:before{content:"";position:absolute;inset:12%;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.09),transparent 68%)}.school-emblem svg{position:relative;width:100%;height:100%;overflow:visible}.school-emblem__orbit{transform-origin:160px 160px;animation:school-orbit 28s linear infinite}.school-emblem__spark{transform-origin:center;animation:school-pulse 3.2s ease-in-out infinite}.school-emblem__pencil{transform-origin:160px 160px;animation:school-float 5s ease-in-out infinite}
+    @keyframes school-orbit{to{transform:rotate(360deg)}}@keyframes school-pulse{50%{opacity:.45;transform:scale(.88)}}@keyframes school-float{50%{transform:translateY(-5px) rotate(1.5deg)}}@media(prefers-reduced-motion:reduce){.school-emblem__orbit,.school-emblem__spark,.school-emblem__pencil{animation:none}}
+    .student-promises{display:flex;gap:10px;flex-wrap:wrap}.student-promise{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(255,255,255,.055);color:rgba(255,255,255,.78);font-size:11px;font-weight:600}.student-promise:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--school-sun);box-shadow:0 0 0 3px rgba(224,173,79,.12)}
+    .student-auth__side{position:relative;isolation:isolate;background-color:var(--school-paper);background-image:linear-gradient(rgba(44,102,112,.075) 1px,transparent 1px);background-size:100% 32px;color:var(--ep-ink);display:flex;align-items:center;justify-content:center;padding:clamp(24px,4vw,58px)}.student-auth__side:before{content:"";position:absolute;z-index:-1;top:0;bottom:0;left:74px;width:2px;background:rgba(214,122,98,.22);box-shadow:7px 0 0 rgba(214,122,98,.07)}
+    .student-card{position:relative;width:100%;max-width:530px;max-height:calc(100vh - 48px);overflow-y:auto;scrollbar-width:none;color:#1a2b2d;background:rgba(255,251,241,.97);border:1px solid rgba(18,58,69,.13);border-radius:22px;padding:34px 36px 30px;box-shadow:0 30px 70px -38px rgba(18,58,69,.48),0 8px 24px -18px rgba(18,58,69,.32)}.student-card::-webkit-scrollbar{display:none}.student-card:before{content:"";position:absolute;top:14px;left:50%;width:62px;height:6px;transform:translateX(-50%);border-top:2px dotted rgba(18,58,69,.18);border-bottom:2px dotted rgba(18,58,69,.18)}
+    .student-card .ep-hide{display:none!important}.student-card .ep-mt-8{margin-top:8px}.student-card .ep-mt-24{margin-top:24px}.student-card .ep-stack{display:grid;gap:16px}.student-card .ep-field{display:grid;gap:7px}.student-card .ep-label{color:#33484a;font-size:12px;font-weight:600}.student-card .ep-input{width:100%;min-height:44px;border:1px solid rgba(18,58,69,.2);border-radius:10px;padding:10px 12px;background:#fffdf7;color:#1a2b2d;font:inherit;outline:none}.student-card .ep-input:focus{border-color:var(--school-blue);box-shadow:0 0 0 3px rgba(44,102,112,.12)}.student-card .ep-btn{min-height:42px;border:1px solid rgba(18,58,69,.2);border-radius:10px;padding:10px 16px;background:transparent;color:#1a2b2d;font:600 13px 'Inter',sans-serif;cursor:pointer}.student-card .ep-btn--block{width:100%}.student-card .ep-btn--lg{min-height:48px}.student-card .ep-auth__sub,.student-card .ep-text-muted{color:#617174}.student-card .ep-alert{padding:14px;border:1px solid rgba(224,173,79,.42);border-radius:11px;background:rgba(224,173,79,.1);color:#59431c}.student-card .ep-auth__bottom{text-align:center;border-top:1px solid rgba(18,58,69,.1)}
+    .student-card__identity{display:flex;align-items:center;gap:11px;margin-bottom:24px}.student-card__seal{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--school-deep);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}.student-card__seal svg{width:24px;height:24px}.student-card__identity strong{display:block;font-family:'Fraunces',serif;font-size:16px}.student-card__identity small{display:block;color:var(--ep-ink-3);font-size:10px;text-transform:uppercase;letter-spacing:.12em;margin-top:2px}.student-card .ep-eyebrow{color:var(--school-blue)}.student-card .ep-auth__title{font-size:clamp(27px,2.2vw,34px)}.student-card .ep-btn--primary{background:var(--school-deep);border-color:var(--school-deep);color:#fff}.student-card .ep-btn--primary:hover{background:#0b2d35;border-color:#0b2d35}.student-card .ep-auth__bottom{margin-top:22px;padding-top:18px}.student-card .ep-auth__bottom a,.text-button{color:var(--school-blue)}
+    .student-tabs{display:grid;grid-template-columns:1fr 1fr;background:#ebe4d3;border-radius:12px;padding:4px;margin:22px 0}.student-tab{border:0;background:transparent;border-radius:9px;padding:10px;font:600 13px 'Inter',sans-serif;color:var(--ep-ink-2);cursor:pointer}.student-tab.is-active{background:#fffaf0;color:var(--school-deep);box-shadow:0 2px 8px rgba(18,58,69,.1)}
+    .student-note{padding:12px 14px;border-radius:10px;background:rgba(145,185,170,.13);border:1px solid rgba(44,102,112,.22);font-size:12px;line-height:1.55;color:var(--ep-ink-2)}.student-actions{display:flex;gap:8px;flex-wrap:wrap}.student-actions>*{flex:1 1 160px}.text-button{border:0;background:none;font:600 12px 'Inter',sans-serif;cursor:pointer;padding:4px 0;text-align:left}.ep-status:empty{display:none}
+    @media(max-width:1500px){.student-auth__content{grid-template-columns:1fr}.school-emblem{position:absolute;width:230px;right:20px;top:50%;transform:translateY(-46%);opacity:.5}.student-auth__copy{position:relative;z-index:1}.student-auth__title{max-width:510px}.student-auth__lead{max-width:470px}.student-promises{position:relative;z-index:1;max-width:560px}}
+    @media(max-width:900px){html,body{height:auto;min-height:100%;overflow:auto;background:var(--school-paper)}.student-auth{height:auto;min-height:100vh;grid-template-columns:1fr}.student-auth__intro{display:none}.student-auth__side{min-height:100vh;padding:18px}.student-auth__side:before{left:30px}.student-card{max-height:none;padding:30px 22px 24px}.student-card__identity{margin-bottom:20px}}
   </style>
 </head>
 <body>
 <main class="student-auth">
   <section class="student-auth__intro">
-    <a class="student-auth__brand" href="./index.html"><img src="/logo_oficial_fundo_transparente.png?v=2" alt=""><span>Espaço Prelúdio</span></a>
-    <div class="student-auth__eyebrow">Programa público de atenção psicológica</div>
-    <h1 class="student-auth__title">Um espaço seguro para ser ouvido.</h1>
-    <p class="student-auth__lead">Acompanhe seu atendimento psicológico escolar com privacidade. Nenhum dado clínico individual é compartilhado com a escola ou com a prefeitura.</p>
+    <a class="student-auth__brand" href="./index.html"><img src="./logo_oficial_fundo_transparente.png?v=2" alt=""><span>Espaço Prelúdio</span></a>
+    <div class="student-auth__content">
+      <div class="student-auth__copy">
+        <div class="student-auth__eyebrow">Rede pública · cuidado que acolhe</div>
+        <h1 class="student-auth__title">Cuidar também faz parte da jornada de aprender.</h1>
+        <p class="student-auth__lead">Um lugar protegido para acompanhar o atendimento psicológico escolar, com respeito à história de cada aluno e privacidade em todas as etapas.</p>
+      </div>
+      <div class="school-emblem" aria-hidden="true">
+        <svg viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="160" cy="160" r="132" stroke="#E0AD4F" stroke-opacity=".32"/>
+          <circle cx="160" cy="160" r="112" fill="#0E3039" stroke="#91B9AA" stroke-opacity=".42"/>
+          <g class="school-emblem__orbit">
+            <circle cx="160" cy="28" r="4" fill="#F4CF81"/>
+            <circle cx="276" cy="103" r="3" fill="#91B9AA"/>
+            <circle cx="62" cy="248" r="3" fill="#D67A62"/>
+          </g>
+          <path d="M78 183C106 169 133 170 160 187V238C133 220 106 219 78 231V183Z" fill="#F8EBCB" stroke="#F4CF81" stroke-width="3"/>
+          <path d="M242 183C214 169 187 170 160 187V238C187 220 214 219 242 231V183Z" fill="#FFF8E8" stroke="#F4CF81" stroke-width="3"/>
+          <path d="M160 187V238" stroke="#D67A62" stroke-width="3" stroke-linecap="round"/>
+          <path d="M160 184C160 155 160 138 160 112" stroke="#F4CF81" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 8"/>
+          <g class="school-emblem__spark">
+            <path d="M160 79L168 101L190 109L168 117L160 139L152 117L130 109L152 101L160 79Z" fill="#F4CF81"/>
+            <circle cx="160" cy="109" r="4" fill="#FFF8E8"/>
+          </g>
+          <g class="school-emblem__pencil">
+            <path d="M79 120L115 84L126 95L90 131L76 134L79 120Z" fill="#D67A62" stroke="#F8EBCB" stroke-width="2"/>
+            <path d="M115 84L121 78L132 89L126 95" fill="#F4CF81"/>
+          </g>
+          <path d="M210 104C223 106 232 115 234 128" stroke="#91B9AA" stroke-width="3" stroke-linecap="round"/>
+          <path d="M86 158C83 148 85 138 91 130" stroke="#91B9AA" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="student-promises"><span class="student-promise">Sem custo para a família</span><span class="student-promise">Privacidade protegida</span><span class="student-promise">Acompanhamento seguro</span></div>
   </section>
 
   <section class="student-auth__side">
     <div class="student-card">
+      <div class="student-card__identity"><span class="student-card__seal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 6.5c3.4-1.6 6.4-1.2 9 1.1 2.6-2.3 5.6-2.7 9-1.1v12c-3.4-1.6-6.4-1.2-9 1.1-2.6-2.3-5.6-2.7-9-1.1v-12Z"/><path d="M12 7.6v12"/></svg></span><span><strong>Espaço Prelúdio</strong><small>Portal de cuidado escolar</small></span></div>
       <div class="ep-eyebrow">Acesso protegido</div>
       <h2 class="ep-auth__title ep-mt-8">Atendimento ao Aluno</h2>
       <p class="ep-auth__sub ep-mt-8">Para aluno maior de idade ou responsável por aluno menor.</p>
