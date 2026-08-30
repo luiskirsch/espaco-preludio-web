@@ -77,6 +77,25 @@ async function connectCdp(url) {
   return { socket, send, evaluate };
 }
 
+async function reloadPreview(cdp) {
+  let resolveDialog;
+  const dialogOpened = new Promise(resolve => { resolveDialog = resolve; });
+  const onMessage = event => {
+    const message = JSON.parse(event.data);
+    if (message.method === 'Page.javascriptDialogOpening') resolveDialog(true);
+  };
+  cdp.socket.addEventListener('message', onMessage);
+  const reload = cdp.send('Page.reload', { ignoreCache: true });
+  const hasDialog = await Promise.race([
+    dialogOpened,
+    new Promise(resolve => setTimeout(() => resolve(false), 500))
+  ]);
+  if (hasDialog) await cdp.send('Page.handleJavaScriptDialog', { accept: true });
+  await reload;
+  cdp.socket.removeEventListener('message', onMessage);
+  await poll(() => cdp.evaluate("document.querySelector('[data-card-activity=course_emotional_literacy]')?.textContent.includes('Revisar')"));
+}
+
 test('atividades novas exigem conclusão e atividades feitas abrem em revisão', { timeout: 30000, skip: chromePath ? false : 'Chrome ou Edge não encontrado' }, async () => {
   const server = await startServer();
   const userData = await mkdtemp(join(tmpdir(), 'ep-activity-browser-'));
@@ -95,11 +114,12 @@ test('atividades novas exigem conclusão e atividades feitas abrem em revisão',
     });
     cdp = await connectCdp(page.webSocketDebuggerUrl);
     await cdp.send('Runtime.enable');
+    await cdp.send('Page.enable');
     await poll(() => cdp.evaluate("document.querySelector('[data-card-activity=course_emotional_literacy]')?.textContent.includes('Revisar')"));
 
     await cdp.evaluate("document.querySelector('[data-card-activity=course_emotional_literacy]').click()");
-    assert.deepEqual(await cdp.evaluate("({eyebrow:modalEyebrow.textContent,button:modalComplete.textContent,disabled:modalComplete.disabled,correct:document.querySelectorAll('.quiz-option.is-correct').length,inputsDisabled:[...document.querySelectorAll('input[name=quizAnswer]')].every(input=>input.disabled)})"), {
-      eyebrow: 'Revisão concluída', button: 'Fechar revisão', disabled: false, correct: 1, inputsDisabled: true
+    assert.deepEqual(await cdp.evaluate("({eyebrow:modalEyebrow.textContent,button:modalComplete.textContent,disabled:modalComplete.disabled,closeHidden:modalClose.hidden,correct:document.querySelectorAll('.quiz-option.is-correct').length,inputsDisabled:[...document.querySelectorAll('input[name=quizAnswer]')].every(input=>input.disabled)})"), {
+      eyebrow: 'Revisão concluída', button: 'Fechar revisão', disabled: false, closeHidden: false, correct: 1, inputsDisabled: true
     });
     await cdp.evaluate('modalComplete.click()');
     assert.equal(await cdp.evaluate("lessonModal.classList.contains('is-open')"), false);
@@ -107,19 +127,25 @@ test('atividades novas exigem conclusão e atividades feitas abrem em revisão',
     await cdp.evaluate("document.querySelector('[data-card-activity=course_peer_support]').click()");
     assert.equal(await cdp.evaluate('modalComplete.disabled'), true);
     await cdp.evaluate("document.querySelectorAll('input[name=quizAnswer]')[0].click();document.getElementById('quizCheck').click()");
-    assert.deepEqual(await cdp.evaluate("({disabled:modalComplete.disabled,wrong:document.querySelectorAll('.quiz-option.is-wrong').length,correct:document.querySelectorAll('.quiz-option.is-correct').length})"), { disabled: true, wrong: 1, correct: 1 });
+    assert.deepEqual(await cdp.evaluate("({disabled:modalComplete.disabled,closeHidden:modalClose.hidden,wrong:document.querySelectorAll('.quiz-option.is-wrong').length,correct:document.querySelectorAll('.quiz-option.is-correct').length})"), { disabled: true, closeHidden: true, wrong: 1, correct: 1 });
     await cdp.evaluate("document.querySelectorAll('input[name=quizAnswer]')[2].click();document.getElementById('quizCheck').click()");
     assert.deepEqual(await cdp.evaluate("({disabled:modalComplete.disabled,label:modalComplete.textContent,verified:document.getElementById('quizCheck').disabled})"), { disabled: false, label: 'Concluir atividade', verified: true });
-    await cdp.evaluate('modalClose.click()');
+    await cdp.evaluate("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
+    assert.equal(await cdp.evaluate("lessonModal.classList.contains('is-open')"), true);
+    await reloadPreview(cdp);
 
     await cdp.evaluate("document.querySelector('[data-card-activity=emotion_checkin]').click()");
     assert.equal(await cdp.evaluate('modalComplete.disabled'), true);
     await cdp.evaluate("document.getElementById('activityConfirm').click()");
-    assert.equal(await cdp.evaluate('modalComplete.disabled'), false);
-    await cdp.evaluate('modalClose.click()');
+    assert.deepEqual(await cdp.evaluate("({disabled:modalComplete.disabled,closeHidden:modalClose.hidden})"), { disabled: false, closeHidden: true });
+    await reloadPreview(cdp);
 
     await cdp.evaluate("document.querySelector('[data-card-activity=focus_5]').click()");
-    assert.equal(await cdp.evaluate('modalComplete.disabled'), true);
+    assert.deepEqual(await cdp.evaluate("({disabled:modalComplete.disabled,closeHidden:modalClose.hidden})"), { disabled: true, closeHidden: false });
+    await cdp.evaluate("document.getElementById('timerStart').click()");
+    assert.deepEqual(await cdp.evaluate("({disabled:modalComplete.disabled,closeHidden:modalClose.hidden})"), { disabled: true, closeHidden: true });
+    await cdp.evaluate("lessonModal.dispatchEvent(new MouseEvent('click',{bubbles:true}))");
+    assert.equal(await cdp.evaluate("lessonModal.classList.contains('is-open')"), true);
   } finally {
     cdp?.socket.close();
     if (browser.exitCode === null) {
