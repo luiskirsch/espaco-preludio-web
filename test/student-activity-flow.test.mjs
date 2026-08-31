@@ -122,6 +122,11 @@ test('atividades novas exigem conclusão e atividades feitas abrem em revisão',
       title: 'Projeto Lemniscata',
       subtitle: 'Programa Municipal de Telepsicologia e Acompanhamento Emocional Estudantil'
     });
+    assert.deepEqual(await cdp.evaluate("({href:document.querySelector('.appointment__join')?.getAttribute('href'),label:document.querySelector('.appointment__join')?.textContent.trim(),notice:document.querySelector('.demo-note--room')?.textContent.trim()})"), {
+      href: './entrar.html?c=DEMO2026',
+      label: 'Abrir sala de demonstração ↗',
+      notice: 'Ambiente demonstrativo: a sala de vídeo funciona de ponta a ponta para apresentação, sem constituir atendimento clínico ou gerar cobrança.'
+    });
     const dailyCards = await cdp.evaluate("[...document.querySelectorAll('#sideDailyStack .side-daily-card')].map(card=>card.textContent.trim())");
     assert.equal(dailyCards.length, 8);
     assert.equal(new Set(dailyCards).size, 8);
@@ -136,6 +141,9 @@ test('atividades novas exigem conclusão e atividades feitas abrem em revisão',
     assert.equal(await cdp.evaluate("getComputedStyle(document.querySelector('#view-safety .emergency-card .eyebrow')).color"), 'rgb(255, 111, 111)');
     assert.deepEqual(await cdp.evaluate("[...document.querySelectorAll('#view-safety .emergency-card a[href^=tel]')].map(link=>link.getAttribute('href'))"), ['tel:192', 'tel:190', 'tel:188']);
     assert.deepEqual(await cdp.evaluate("({href:document.querySelector('#view-care .safety-strip a')?.getAttribute('href'),label:document.querySelector('#view-care .safety-strip a')?.textContent,copy:document.querySelector('#view-care .safety-strip p')?.textContent})"), { href: 'tel:188', label: 'CVV 188', copy: 'Precisa conversar agora? O CVV oferece apoio emocional gratuito e sigiloso, 24 horas por dia, por telefone ou chat.' });
+    await cdp.evaluate("document.querySelector('#desktopNav [data-view=care]').click()");
+    assert.equal(await cdp.evaluate("document.querySelector('#view-care .session__join')?.getAttribute('href')"), './entrar.html?c=DEMO2026');
+    await cdp.evaluate("document.querySelector('#desktopNav [data-view=safety]').click()");
     assert.equal(await cdp.evaluate("document.querySelector('#view-safety .source-link[href=\"https://cvv.org.br/\"]')?.textContent.includes('CVV 188')"), true);
     assert.equal(await cdp.evaluate("document.querySelector('#view-safety .source-link[href=\"https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/s/saude-mental\"]')?.textContent.includes('Saúde Mental')"), true);
     assert.equal(await cdp.evaluate("Boolean(document.querySelector('#view-safety .source-link[href*=\"bvsms.saude.gov.br\"]'))"), false);

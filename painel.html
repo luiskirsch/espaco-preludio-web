@@ -887,6 +887,9 @@
     const confirmedTag = (s.confirmedAt && s.status === "scheduled")
       ? `<span class="ep-badge ep-badge--ok" title="${tr("painel:list.confirmedTitle","Paciente clicou no link de confirmação do e-mail de lembrete")}">${tr("painel:list.confirmedTag","✓ Confirmada pelo paciente")}</span>`
       : "";
+    const demoTag = s.demoTechnicalRoom
+      ? `<span class="ep-badge" style="border-color:#b78a2f;color:#8a6418;background:#fff5d8">DEMONSTRAÇÃO · SALA TÉCNICA</span>`
+      : "";
     const preNote = readPreNote(s.sessionId);
     const preNoteBlock = preNote
       ? `<div class="ep-prenote" title="${tr("painel:list.preNoteSavedTitle","Sua nota pré-sessão (salva só neste navegador)")}">📝 ${escapeHtml(preNote.length > 110 ? preNote.slice(0, 110) + "…" : preNote)}</div>`
@@ -896,6 +899,7 @@
         <div class="ep-session__name">${escapeHtml(s.patientName)}</div>
         <div class="ep-session__meta">
           ${statusBadge(s.status)}
+          ${demoTag}
           ${confirmedTag}
           <span>${tr("painel:list.createdAt","Criada {{date}}",{date:fmtDate(s.createdAt)})}</span>
           ${s.scheduledAt ? `<span>${tr("painel:list.scheduledAt","· Agendada {{date}}",{date:fmtDate(s.scheduledAt)})}</span>` : ""}
@@ -905,7 +909,7 @@
       </div>
       <div class="ep-session__actions">
         ${s.status !== "completed" ? `
-          <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="enter" data-id="${s.sessionId}">${tr("painel:list.enter","Entrar")}</button>
+          <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="enter" data-id="${s.sessionId}">${s.demoTechnicalRoom?'Abrir sala demo':tr("painel:list.enter","Entrar")}</button>
         ` : ""}
         ${s.status !== "completed" ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="prenote" data-id="${s.sessionId}" title="${tr("painel:list.preNoteTitle","Nota pré-sessão (só neste navegador)")}">${preNote ? tr("painel:list.preNoteSet","📝 Nota") : tr("painel:list.preNoteEmpty","Nota")}</button>
@@ -913,10 +917,10 @@
         ${s.status !== "completed" ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="encerrar" data-id="${s.sessionId}">${tr("painel:list.encerrar","Encerrar")}</button>
         ` : ""}
-        ${s.status !== "canceled" ? `
+        ${s.status !== "canceled" && !s.demoTechnicalRoom ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="recibo" data-id="${s.sessionId}" title="${tr("painel:list.reciboTitle","Enviar recibo ao paciente")}">${tr("painel:list.recibo","Recibo")}</button>
         ` : ""}
-        ${!s.patientAccountUid ? `
+        ${!s.patientAccountUid && !s.demoTechnicalRoom ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="vincular" data-id="${s.sessionId}" title="${tr("painel:list.vincularTitle","Vincular conta de paciente pra abrir chat E2EE")}">${tr("painel:list.vincular","Vincular conta")}</button>
         ` : ""}
         ${(s.status === "completed" || s.status === "canceled") ? `
