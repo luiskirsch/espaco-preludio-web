@@ -117,6 +117,13 @@ test('atividades novas exigem conclusão e atividades feitas abrem em revisão',
     await cdp.send('Page.enable');
     await poll(() => cdp.evaluate("document.querySelector('[data-card-activity=course_emotional_literacy]')?.textContent.includes('Revisar')"));
     assert.equal(await cdp.evaluate('studentSwitch.hidden'), true);
+    assert.deepEqual(await cdp.evaluate("({title:document.querySelector('.project-identity strong').textContent,subtitle:document.querySelector('.project-identity span').textContent})"), {
+      title: 'Projeto Lemniscata',
+      subtitle: 'Programa Municipal de Telepsicologia e Acompanhamento Emocional Estudantil'
+    });
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+    assert.deepEqual(await cdp.evaluate("({subtitleHidden:getComputedStyle(document.querySelector('.project-identity span')).display==='none',ordered:(()=>{const brand=document.querySelector('.brand').getBoundingClientRect(),project=document.querySelector('.project-identity').getBoundingClientRect(),actions=document.querySelector('.top-actions').getBoundingClientRect();return brand.right<=project.left&&project.right<=actions.left})()})"), { subtitleHidden: true, ordered: true });
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
 
     await cdp.evaluate("document.querySelector('[data-card-activity=course_emotional_literacy]').click()");
     assert.deepEqual(await cdp.evaluate("({eyebrow:modalEyebrow.textContent,button:modalComplete.textContent,disabled:modalComplete.disabled,closeHidden:modalClose.hidden,correct:document.querySelectorAll('.quiz-option.is-correct').length,inputsDisabled:[...document.querySelectorAll('input[name=quizAnswer]')].every(input=>input.disabled)})"), {
