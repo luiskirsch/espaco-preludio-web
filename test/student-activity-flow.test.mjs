@@ -122,9 +122,9 @@ test('atividades novas exigem conclusão e atividades feitas abrem em revisão',
       subtitle: 'Programa Municipal de Telepsicologia e Acompanhamento Emocional Estudantil'
     });
     const dailyCards = await cdp.evaluate("[...document.querySelectorAll('#sideDailyStack .side-daily-card')].map(card=>card.textContent.trim())");
-    assert.equal(dailyCards.length, 2);
-    assert.match(dailyCards[0], /Inspiração do dia/);
-    assert.match(dailyCards[1], /Pequeno passo de hoje/);
+    assert.equal(dailyCards.length, 3);
+    assert.equal(new Set(dailyCards).size, 3);
+    assert.equal(await cdp.evaluate("document.querySelectorAll('#sideDailyStack .side-daily-card :is(small,p,footer)').length"), 0);
     await cdp.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
     assert.deepEqual(await cdp.evaluate("({subtitleHidden:getComputedStyle(document.querySelector('.project-identity span')).display==='none',centered:(()=>{const bar=document.querySelector('.topbar').getBoundingClientRect(),project=document.querySelector('.project-identity').getBoundingClientRect();return Math.abs((project.left+project.width/2)-(bar.left+bar.width/2))<.5})(),ordered:(()=>{const brand=document.querySelector('.brand').getBoundingClientRect(),project=document.querySelector('.project-identity').getBoundingClientRect(),actions=document.querySelector('.top-actions').getBoundingClientRect();return brand.right<=project.left&&project.right<=actions.left})()})"), { subtitleHidden: true, centered: true, ordered: true });
     await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
