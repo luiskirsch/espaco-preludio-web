@@ -360,9 +360,9 @@ function mountHelpBubble() {
   inputEl.addEventListener("keypress", (e) => { if (e.key === "Enter") sendQ(); });
 }
 
-// Preenche o slot de perfil no topbar — avatar circular + nome clicável.
-// O <a id="topProfileLink"> é o link pra perfil.html. Se a página não tiver
-// o markup (ex.: páginas públicas), no-op silencioso.
+// Preenche os slots de perfil do topbar e da sidebar. Algumas páginas
+// operacionais (como Escolas) não possuem topbar visível; por isso a sidebar
+// precisa receber os dados diretamente, sem depender do espelhamento do topo.
 //
 // Foto: vem como data URL construída a partir de therapist.photoBase64 +
 // therapist.photoMime (armazenamento inline no Firestore). Fallback pra
@@ -372,25 +372,36 @@ export function applyTopUserSlot(therapist) {
   const elName   = document.getElementById("topUserName");
   const elAvatar = document.getElementById("topUserAvatar");
   if (elName) elName.textContent = name || "Perfil";
-  if (elAvatar) {
+  const sidebarName = document.getElementById("sidebarUserName");
+  if (sidebarName) {
+    const parts = (name || "Perfil").split(/\s+/).filter(Boolean);
+    const visibleParts = parts.length > 1 ? [parts[0], parts[parts.length - 1]] : [parts[0]];
+    sidebarName.replaceChildren(...visibleParts.map(part => {
+      const span = document.createElement("span");
+      span.textContent = part;
+      return span;
+    }));
+  }
+  const avatars = [elAvatar, document.getElementById("sidebarUserAvatar")].filter(Boolean);
+  avatars.forEach(avatar => {
     const photoBase64 = therapist?.photoBase64 || "";
     const photoMime   = therapist?.photoMime   || "image/jpeg";
     if (photoBase64) {
-      elAvatar.style.backgroundImage = `url(data:${photoMime};base64,${photoBase64})`;
-      elAvatar.style.backgroundSize = "cover";
-      elAvatar.style.backgroundPosition = "center";
-      elAvatar.textContent = "";
+      avatar.style.backgroundImage = `url(data:${photoMime};base64,${photoBase64})`;
+      avatar.style.backgroundSize = "cover";
+      avatar.style.backgroundPosition = "center";
+      avatar.textContent = "";
     } else {
-      elAvatar.style.backgroundImage = "";
+      avatar.style.backgroundImage = "";
       const initials = (name.match(/\b\p{L}/gu) || []).slice(0, 2).join("").toUpperCase() || "·";
-      elAvatar.textContent = initials;
+      avatar.textContent = initials;
     }
     // Selo de verificado — só se status === "verified". Idempotente: remove
     // anteriores antes de adicionar. Garante avatar tenha class .ep-avatar-wrap.
     // O #topUserAvatar é o próprio span da imagem, então o badge fica como
     // filho dele com position:absolute.
-    elAvatar.classList.add("ep-avatar-wrap");
-    const old = elAvatar.querySelector(".ep-verified-badge");
+    avatar.classList.add("ep-avatar-wrap");
+    const old = avatar.querySelector(".ep-verified-badge");
     if (old) old.remove();
     if (therapist?.verificationStatus === "verified") {
       const badge = document.createElement("span");
@@ -398,9 +409,9 @@ export function applyTopUserSlot(therapist) {
       badge.setAttribute("title", "Profissional verificado · inscrição no conselho confirmada");
       badge.setAttribute("aria-label", "Profissional verificado");
       badge.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-      elAvatar.appendChild(badge);
+      avatar.appendChild(badge);
     }
-  }
+  });
 }
 
 // Helper exportado: cria HTML do selo (string) pra páginas usarem inline.
