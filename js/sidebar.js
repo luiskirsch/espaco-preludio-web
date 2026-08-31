@@ -83,9 +83,9 @@
   // outras páginas (i18next devolve key parcial e o init substitui textContent).
   const NAV = [
     { labelKey: 'common:sidebar.groupClinico', label: 'Clínico', items: [
+      ['casos-publicos.html', 'users', 'Escolas', 'common:sidebar.programasPublicos'],
       ['painel.html', 'video', 'Consultas', 'common:sidebar.consultas'],
       ['agenda.html', 'calendar', 'Agenda', 'common:sidebar.agenda'],
-      ['casos-publicos.html', 'users', 'Programas públicos', 'common:sidebar.programasPublicos'],
       ['pacientes.html', 'users', 'Pacientes', 'common:sidebar.pacientes'],
       ['tiss.html', 'fileText', 'TISS', 'common:sidebar.tiss', tissExtra]
     ]},
