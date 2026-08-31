@@ -30,7 +30,8 @@
       'body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools:active{transform:scale(.97);box-shadow:inset 0 0 0 2px rgba(255,235,190,.2),0 5px 14px -8px rgba(226,183,106,.8);}',
       '@keyframes ep-schools-breathe{0%,100%{border-color:rgba(226,183,106,.38);box-shadow:inset 0 1px 0 rgba(255,244,220,.07),0 8px 22px -16px rgba(226,183,106,.58)}50%{border-color:rgba(226,183,106,.62);box-shadow:inset 0 1px 0 rgba(255,244,220,.11),0 12px 30px -13px rgba(226,183,106,.82),0 0 15px -10px rgba(226,183,106,.7)}}',
       '@keyframes ep-schools-shine{0%,58%{left:-42%;opacity:0}68%{opacity:1}84%,100%{left:118%;opacity:0}}',
-      '@media (prefers-reduced-motion:reduce){body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools,body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools::before{animation:none;}}'
+      '@media (prefers-reduced-motion:reduce){body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools,body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools::before{animation:none;}}',
+      'body.ep-has-sidebar .ep-sidebar__brand .ep-brand__name{row-gap:4px;line-height:1;}'
     ].join('');
     document.head.appendChild(styleEl);
   }
