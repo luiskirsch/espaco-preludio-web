@@ -132,6 +132,7 @@ test('atividades novas exigem conclusão e atividades feitas abrem em revisão',
     await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
     assert.deepEqual(await cdp.evaluate("({subtitleVisible:getComputedStyle(document.querySelector('.project-identity span')).display!=='none',centered:(()=>{const bar=document.querySelector('.topbar').getBoundingClientRect(),project=document.querySelector('.project-identity').getBoundingClientRect();return Math.abs((project.left+project.width/2)-(bar.left+bar.width/2))<.5})()})"), { subtitleVisible: true, centered: true });
     await cdp.evaluate("document.querySelector('#desktopNav [data-view=safety]').click()");
+    assert.equal(await cdp.evaluate("getComputedStyle(document.querySelector('#view-safety .emergency-card .eyebrow')).color"), 'rgb(255, 111, 111)');
     assert.deepEqual(await cdp.evaluate("[...document.querySelectorAll('#view-safety .emergency-card a[href^=tel]')].map(link=>link.getAttribute('href'))"), ['tel:192', 'tel:190', 'tel:188']);
     assert.equal(await cdp.evaluate("document.querySelector('#view-safety .source-link[href=\"https://cvv.org.br/\"]')?.textContent.includes('CVV 188')"), true);
     assert.equal(await cdp.evaluate("document.querySelector('#view-safety .source-link[href=\"https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/s/saude-mental\"]')?.textContent.includes('Saúde Mental')"), true);
