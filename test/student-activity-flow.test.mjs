@@ -116,6 +116,7 @@ test('atividades novas exigem conclusão e atividades feitas abrem em revisão',
     await cdp.send('Runtime.enable');
     await cdp.send('Page.enable');
     await poll(() => cdp.evaluate("document.querySelector('[data-card-activity=course_emotional_literacy]')?.textContent.includes('Revisar')"));
+    assert.equal(await cdp.evaluate('studentSwitch.hidden'), true);
 
     await cdp.evaluate("document.querySelector('[data-card-activity=course_emotional_literacy]').click()");
     assert.deepEqual(await cdp.evaluate("({eyebrow:modalEyebrow.textContent,button:modalComplete.textContent,disabled:modalComplete.disabled,closeHidden:modalClose.hidden,correct:document.querySelectorAll('.quiz-option.is-correct').length,inputsDisabled:[...document.querySelectorAll('input[name=quizAnswer]')].every(input=>input.disabled)})"), {
