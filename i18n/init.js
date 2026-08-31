@@ -204,7 +204,9 @@
       fallbackLng: 'pt-BR',
       ns: namespaces,
       defaultNS: namespaces.find(n => n !== 'common') || 'common',
-      backend: { loadPath: `${basePath}/locales/{{lng}}/{{ns}}.json` },
+      // Versão explícita evita que o navegador reaplique traduções antigas
+      // depois de uma mudança de nomenclatura na navegação.
+      backend: { loadPath: `${basePath}/locales/{{lng}}/{{ns}}.json?v=1-4` },
       interpolation: { escapeValue: false },
       load: 'currentOnly',
       partialBundledLanguages: false,
