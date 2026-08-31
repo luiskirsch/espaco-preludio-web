@@ -21,7 +21,16 @@
       '.ep-notif-fab__badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#c0392b;color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center;border:2px solid #f5f0e8;box-shadow:0 2px 6px rgba(28,31,29,.20);}',
       'body:has(.ep-logout-fab) .ep-notif-fab{bottom:288px;}',
       'body.ep-has-sidebar .ep-fab-stack>.ep-notif-fab{position:relative!important;top:auto!important;right:auto!important;bottom:auto!important;margin:0!important;}',
-      '@media print{.ep-notif-fab{display:none!important;}}'
+      '@media print{.ep-notif-fab{display:none!important;}}',
+      'body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools{position:relative;isolation:isolate;min-height:58px;margin:2px 0 7px;padding:15px 14px;overflow:hidden;color:#fff4dc;font-size:15.5px;font-weight:700;letter-spacing:.01em;background:radial-gradient(circle at 16% 50%,rgba(226,183,106,.22),transparent 42%),linear-gradient(115deg,rgba(226,183,106,.22),rgba(111,82,31,.12));border:1px solid rgba(226,183,106,.48);box-shadow:inset 0 1px 0 rgba(255,244,220,.08),0 10px 26px -15px rgba(226,183,106,.72),0 0 0 1px rgba(226,183,106,.06);animation:ep-schools-breathe 3.4s ease-in-out infinite;}',
+      'body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools::before{content:"";position:absolute;z-index:0;pointer-events:none;inset:-60% auto -60% -42%;width:34%;transform:skewX(-18deg);background:linear-gradient(90deg,transparent,rgba(255,239,198,.18),transparent);animation:ep-schools-shine 4.8s ease-in-out infinite;}',
+      'body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools>svg,body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools>span{position:relative;z-index:1;}',
+      'body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools svg{width:21px;height:21px;color:#e2b76a;filter:drop-shadow(0 0 7px rgba(226,183,106,.42));}',
+      'body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools:hover,body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools.is-active{color:#fff;border-color:rgba(241,202,128,.78);background:radial-gradient(circle at 16% 50%,rgba(226,183,106,.32),transparent 45%),linear-gradient(115deg,rgba(226,183,106,.3),rgba(111,82,31,.18));box-shadow:inset 0 1px 0 rgba(255,244,220,.12),0 13px 32px -14px rgba(226,183,106,.88),0 0 18px -9px rgba(226,183,106,.78);transform:translateY(-1px);}',
+      'body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools:active{transform:scale(.97);box-shadow:inset 0 0 0 2px rgba(255,235,190,.2),0 5px 14px -8px rgba(226,183,106,.8);}',
+      '@keyframes ep-schools-breathe{0%,100%{border-color:rgba(226,183,106,.38);box-shadow:inset 0 1px 0 rgba(255,244,220,.07),0 8px 22px -16px rgba(226,183,106,.58)}50%{border-color:rgba(226,183,106,.62);box-shadow:inset 0 1px 0 rgba(255,244,220,.11),0 12px 30px -13px rgba(226,183,106,.82),0 0 15px -10px rgba(226,183,106,.7)}}',
+      '@keyframes ep-schools-shine{0%,58%{left:-42%;opacity:0}68%{opacity:1}84%,100%{left:118%;opacity:0}}',
+      '@media (prefers-reduced-motion:reduce){body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools,body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools::before{animation:none;}}'
     ].join('');
     document.head.appendChild(styleEl);
   }
@@ -83,7 +92,7 @@
   // outras páginas (i18next devolve key parcial e o init substitui textContent).
   const NAV = [
     { labelKey: 'common:sidebar.groupClinico', label: 'Clínico', items: [
-      ['casos-publicos.html', 'users', 'Escolas', 'common:sidebar.programasPublicos'],
+      ['casos-publicos.html', 'users', 'Escolas', 'common:sidebar.programasPublicos', 'class="ep-sidebar__schools"'],
       ['painel.html', 'video', 'Consultas', 'common:sidebar.consultas'],
       ['agenda.html', 'calendar', 'Agenda', 'common:sidebar.agenda'],
       ['pacientes.html', 'users', 'Pacientes', 'common:sidebar.pacientes'],
