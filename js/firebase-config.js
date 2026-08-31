@@ -4,9 +4,9 @@
 //     /staging/* → STAGING (Firebase sextolugar-staging + backend staging)
 //     resto      → PRODUCTION (Firebase osextolugar-game + backend production)
 //
-// (2) Perfil (paciente vs profissional) — por path:
-//     /paciente-* ou /entrar.html → PACIENTE (Firebase app "patient")
-//     resto                       → PROFISSIONAL (Firebase app "[DEFAULT]")
+// (2) Perfil (paciente/aluno vs profissional) — por path:
+//     /paciente-*, /aluno-* ou /entrar.html → app isolado "patient"
+//     resto                                 → PROFISSIONAL (app "[DEFAULT]")
 //
 // (2) RESOLVE bug critico: sem isso, ambos perfis compartilham a MESMA
 // instancia Firebase Auth, e login do paciente em outra aba derruba a
@@ -25,6 +25,7 @@ const _path = typeof location !== "undefined" ? location.pathname : "";
 const IS_STAGING = _path.startsWith("/staging/");
 const IS_PATIENT_PAGE =
   _path.includes("/paciente-") ||
+  _path.includes("/aluno-") ||
   _path.endsWith("/entrar.html");
 
 // ─── Configs por ambiente ─────────────────────────────────────────────────
