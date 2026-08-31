@@ -134,6 +134,8 @@ test('atividades novas exigem conclusão e atividades feitas abrem em revisão',
     await cdp.evaluate("document.querySelector('#desktopNav [data-view=safety]').click()");
     assert.deepEqual(await cdp.evaluate("[...document.querySelectorAll('#view-safety .emergency-card a[href^=tel]')].map(link=>link.getAttribute('href'))"), ['tel:192', 'tel:190', 'tel:188']);
     assert.equal(await cdp.evaluate("document.querySelector('#view-safety .source-link[href=\"https://cvv.org.br/\"]')?.textContent.includes('CVV 188')"), true);
+    assert.equal(await cdp.evaluate("document.querySelector('#view-safety .source-link[href=\"https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/s/saude-mental\"]')?.textContent.includes('Saúde Mental')"), true);
+    assert.equal(await cdp.evaluate("Boolean(document.querySelector('#view-safety .source-link[href*=\"bvsms.saude.gov.br\"]'))"), false);
     await cdp.evaluate("document.querySelector('#view-safety .emergency-card a[href=\"tel:188\"]').click()");
     assert.deepEqual(await cdp.evaluate("({open:emergencyCallModal.classList.contains('is-open'),service:emergencyCallModal.dataset.service,title:emergencyCallTitle.textContent})"), { open: true, service: 'emotional', title: 'Conversar com o CVV 188' });
     await cdp.evaluate('emergencyCallClose.click()');
