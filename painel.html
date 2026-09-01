@@ -18,7 +18,177 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
-  <script src="./i18n/init.js?v=1-4" defer></script>
+  <style>
+    #heroNextSession.ep-next-session {
+      position: relative;
+      isolation: isolate;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      overflow: hidden;
+      padding: 16px 20px;
+      border: 1px solid var(--ep-gold-line);
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--ep-accent-soft) 0%, rgba(200, 155, 74, .10) 100%);
+      transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+    .ep-next-session__content {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      min-width: 240px;
+    }
+    #heroNextSession.is-public-school {
+      color: #fffaf0;
+      border-color: rgba(226, 183, 106, .72);
+      background:
+        radial-gradient(circle at 86% -20%, rgba(244, 203, 106, .24), transparent 42%),
+        linear-gradient(125deg, #073c47 0%, #0b5961 62%, #174f4d 100%);
+      box-shadow: 0 18px 38px -26px rgba(4, 49, 58, .85), inset 0 1px 0 rgba(255, 255, 255, .10);
+    }
+    #heroNextSession.is-public-school::before,
+    #heroNextSession.is-public-school::after {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      pointer-events: none;
+    }
+    #heroNextSession.is-public-school::before {
+      inset: 0;
+      opacity: .13;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, .24) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .24) 1px, transparent 1px);
+      background-size: 34px 34px;
+      -webkit-mask-image: linear-gradient(90deg, transparent 38%, #000 100%);
+      mask-image: linear-gradient(90deg, transparent 38%, #000 100%);
+    }
+    #heroNextSession.is-public-school::after {
+      width: 190px;
+      height: 190px;
+      right: -54px;
+      top: -82px;
+      border: 1px solid rgba(244, 203, 106, .30);
+      border-radius: 50%;
+      box-shadow: 0 0 0 28px rgba(255, 255, 255, .035), 0 0 0 62px rgba(244, 203, 106, .035);
+    }
+    #heroNextSession.is-public-school #heroNextLabel { color: #f4cb6a; }
+    #heroNextSession.is-public-school #heroNextWhen { color: rgba(255, 250, 240, .82); }
+    #heroNextSession.is-public-school #heroEnterBtn {
+      position: relative;
+      z-index: 1;
+      color: #172c2d;
+      border-color: #f4cb6a;
+      background: linear-gradient(135deg, #f4cb6a, #dfaa46);
+      box-shadow: 0 10px 24px -14px rgba(0, 0, 0, .8);
+    }
+    .ep-school-origin {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      max-width: 100%;
+      padding: 7px 11px 7px 7px;
+      color: #fffaf0;
+      border: 1px solid rgba(226, 183, 106, .58);
+      border-radius: 11px;
+      background: linear-gradient(135deg, #0b5360, #0b434b);
+      box-shadow: 0 7px 18px -14px rgba(5, 55, 63, .9);
+      vertical-align: middle;
+    }
+    .ep-school-origin__icon {
+      display: grid;
+      place-items: center;
+      flex: 0 0 30px;
+      width: 30px;
+      height: 30px;
+      color: #172c2d;
+      border-radius: 8px;
+      background: linear-gradient(145deg, #f4cb6a, #dfa43d);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .42);
+    }
+    .ep-school-origin__icon svg { width: 18px; height: 18px; }
+    .ep-school-origin__copy {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      gap: 2px;
+      text-align: left;
+    }
+    .ep-school-origin__copy strong {
+      font-size: 10.5px;
+      line-height: 1;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    .ep-school-origin__copy small {
+      overflow: hidden;
+      color: rgba(255, 250, 240, .78);
+      font-size: 10.5px;
+      line-height: 1.25;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .ep-school-origin--hero {
+      border-color: rgba(255, 255, 255, .19);
+      background: rgba(255, 255, 255, .09);
+      box-shadow: none;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+    .ep-session.ep-session--public-school {
+      overflow: hidden;
+      padding-left: 15px;
+      border-color: rgba(11, 83, 96, .34);
+      border-left: 5px solid #0b5961;
+      background:
+        radial-gradient(circle at 94% 0%, rgba(226, 183, 106, .16), transparent 24%),
+        linear-gradient(100deg, rgba(11, 89, 97, .095), var(--ep-surface) 38%);
+      box-shadow: -1px 0 0 rgba(11, 89, 97, .16), 0 8px 26px -24px rgba(5, 55, 63, .7);
+    }
+    .ep-session.ep-session--public-school::before {
+      content: "";
+      position: absolute;
+      left: -5px;
+      top: 14px;
+      width: 5px;
+      height: 28px;
+      border-radius: 0 4px 4px 0;
+      background: #e2b76a;
+    }
+    .ep-session.ep-session--public-school::after {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      right: -38px;
+      top: -54px;
+      width: 150px;
+      height: 150px;
+      pointer-events: none;
+      border: 1px solid rgba(11, 89, 97, .11);
+      border-radius: 50%;
+      box-shadow: 0 0 0 24px rgba(11, 89, 97, .025);
+    }
+    .ep-session.ep-session--public-school > * { position: relative; z-index: 1; }
+    .ep-session.ep-session--public-school:hover {
+      border-color: rgba(11, 83, 96, .52);
+      box-shadow: -1px 0 0 rgba(11, 89, 97, .20), 0 12px 30px -24px rgba(5, 55, 63, .82);
+    }
+    .ep-session--public-school .ep-school-origin { margin-bottom: 9px; }
+    html[data-theme="dark"] .ep-session.ep-session--public-school {
+      background:
+        radial-gradient(circle at 94% 0%, rgba(226, 183, 106, .12), transparent 24%),
+        linear-gradient(100deg, rgba(24, 125, 134, .18), var(--ep-surface) 42%);
+    }
+    @media (max-width: 680px) {
+      #heroNextSession.ep-next-session { align-items: stretch; padding: 16px; }
+      #heroNextSession #heroEnterBtn { width: 100%; }
+      #sessionList .ep-session { grid-template-columns: 1fr; }
+      #sessionList .ep-session__actions { justify-content: flex-start; }
+      .ep-school-origin__copy small { white-space: normal; }
+    }
+  </style>
+  <script src="./i18n/init.js?v=1-5" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
@@ -85,8 +255,8 @@
 
     <!-- Hero: próxima consulta + KPIs do mês (só aparece quando carrega) -->
     <section id="painelHero" class="ep-hide ep-mt-16" aria-label="Resumo do dia" data-i18n-aria-label="painel:hero.ariaSummary">
-      <div id="heroNextSession" class="ep-hide" style="padding: 16px 20px; background: linear-gradient(135deg, var(--ep-accent-soft) 0%, rgba(200,155,74,0.10) 100%); border-radius: 12px; border: 1px solid var(--ep-gold-line); display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 240px;">
+      <div id="heroNextSession" class="ep-next-session ep-hide">
+        <div class="ep-next-session__content">
           <div class="ep-eyebrow" id="heroNextLabel" data-i18n="painel:hero.nextLabel">Próxima consulta</div>
           <div style="font-size: 18px; font-weight: 600; margin-top: 4px;" id="heroNextPatient">—</div>
           <div class="ep-text-sm" style="margin-top: 2px;" id="heroNextWhen">—</div>
@@ -702,9 +872,19 @@
     // Próxima consulta
     if (data.nextSession) {
       const s = data.nextSession;
+      const sessionDetail = allSessions.find(item => item.sessionId === s.sessionId) || s;
+      const publicSchool = isPublicSchoolSession(sessionDetail);
+      const nextLabel = document.getElementById("heroNextLabel");
+      nextLabel.dataset.i18n = publicSchool ? "painel:hero.publicNextLabel" : "painel:hero.nextLabel";
+      nextLabel.textContent = publicSchool
+        ? tr("painel:hero.publicNextLabel", "Próxima consulta escolar")
+        : tr("painel:hero.nextLabel", "Próxima consulta");
+      nextBlock.classList.toggle("is-public-school", publicSchool);
+      nextBlock.dataset.careOrigin = publicSchool ? "public-school" : "private";
       document.getElementById("heroNextPatient").textContent = s.patientName || tr("painel:hero.patientFallback","Paciente");
       document.getElementById("heroNextWhen").textContent = fmtSessionWhen(s.scheduledAt);
       const badges = [];
+      if (publicSchool) badges.push(publicSchoolOriginTag("hero"));
       if (s.confirmedAt) badges.push(`<span class="ep-badge ep-badge--ok">${tr("painel:hero.confirmed","✓ Confirmada")}</span>`);
       const diffMin = (s.scheduledAt - Date.now()) / 60000;
       if (diffMin <= 0) badges.push(`<span class="ep-badge ep-badge--warn">${tr("painel:hero.alreadyNow","Já no horário")}</span>`);
@@ -729,6 +909,8 @@
       };
       nextBlock.classList.remove("ep-hide");
     } else {
+      nextBlock.classList.remove("is-public-school");
+      delete nextBlock.dataset.careOrigin;
       nextBlock.classList.add("ep-hide");
     }
 
@@ -819,6 +1001,29 @@
     if (status === "canceled")    return `<span class="ep-badge ep-badge--done">${tr("painel:badge.canceled","Cancelada")}</span>`;
     return `<span class="ep-badge ep-badge--warn">${tr("painel:badge.scheduled","Agendada")}</span>`;
   }
+  function isPublicSchoolSession(session) {
+    if (!session) return false;
+    if (session.careOrigin === "public_school" || session.isPublicSchoolSession === true) return true;
+    if (session.fundingSource === "public_contract") return true;
+    return session.fundingSource === "synthetic_demo" && session.demoTechnicalRoom === true;
+  }
+  function publicSchoolOriginTag(variant = "list") {
+    const network = tr("painel:school.publicNetwork", "Rede pública");
+    const context = tr("painel:school.careContext", "Projeto Lemniscata · atendimento escolar");
+    const title = tr("painel:school.originTitle", "Consulta de aluno vinculada à rede pública");
+    return `
+      <span class="ep-school-origin${variant === "hero" ? " ep-school-origin--hero" : ""}" title="${escapeHtml(title)}" aria-label="${escapeHtml(`${network}. ${context}`)}">
+        <span class="ep-school-origin__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6M8 11h.01M12 11h.01M16 11h.01"/>
+          </svg>
+        </span>
+        <span class="ep-school-origin__copy">
+          <strong>${escapeHtml(network)}</strong>
+          <small>${escapeHtml(context)}</small>
+        </span>
+      </span>`;
+  }
   // Aceita short code (~8 chars) OU joinToken JWT legado. Heurística pelo
   // tamanho: códigos curtos ficam <= 16 chars; JWTs sempre passam disso.
   function buildPatientLink(codeOrToken) {
@@ -873,6 +1078,7 @@
 
   function renderSession(s) {
     const div = document.createElement("article");
+    const publicSchool = isPublicSchoolSession(s);
     // Marca lateral colorida — espelha o badge: ouro pra agendada/em-sessão,
     // terracota pra encerrada. Identifica o status sem ler o badge.
     let sideClass = "";
@@ -883,7 +1089,8 @@
     } else {
       sideClass = " ep-session--active";
     }
-    div.className = "ep-session" + sideClass;
+    div.className = "ep-session" + sideClass + (publicSchool ? " ep-session--public-school" : "");
+    if (publicSchool) div.dataset.careOrigin = "public-school";
     const confirmedTag = (s.confirmedAt && s.status === "scheduled")
       ? `<span class="ep-badge ep-badge--ok" title="${tr("painel:list.confirmedTitle","Paciente clicou no link de confirmação do e-mail de lembrete")}">${tr("painel:list.confirmedTag","✓ Confirmada pelo paciente")}</span>`
       : "";
@@ -895,7 +1102,8 @@
       ? `<div class="ep-prenote" title="${tr("painel:list.preNoteSavedTitle","Sua nota pré-sessão (salva só neste navegador)")}">📝 ${escapeHtml(preNote.length > 110 ? preNote.slice(0, 110) + "…" : preNote)}</div>`
       : "";
     div.innerHTML = `
-      <div>
+      <div class="ep-session__main">
+        ${publicSchool ? publicSchoolOriginTag() : ""}
         <div class="ep-session__name">${escapeHtml(s.patientName)}</div>
         <div class="ep-session__meta">
           ${statusBadge(s.status)}
@@ -917,10 +1125,10 @@
         ${s.status !== "completed" ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="encerrar" data-id="${s.sessionId}">${tr("painel:list.encerrar","Encerrar")}</button>
         ` : ""}
-        ${s.status !== "canceled" && !s.demoTechnicalRoom ? `
+        ${s.status !== "canceled" && !s.demoTechnicalRoom && !publicSchool ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="recibo" data-id="${s.sessionId}" title="${tr("painel:list.reciboTitle","Enviar recibo ao paciente")}">${tr("painel:list.recibo","Recibo")}</button>
         ` : ""}
-        ${!s.patientAccountUid && !s.demoTechnicalRoom ? `
+        ${!s.patientAccountUid && !s.demoTechnicalRoom && !publicSchool ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="vincular" data-id="${s.sessionId}" title="${tr("painel:list.vincularTitle","Vincular conta de paciente pra abrir chat E2EE")}">${tr("painel:list.vincular","Vincular conta")}</button>
         ` : ""}
         ${(s.status === "completed" || s.status === "canceled") ? `

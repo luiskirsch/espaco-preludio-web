@@ -206,7 +206,7 @@
       defaultNS: namespaces.find(n => n !== 'common') || 'common',
       // Versão explícita evita que o navegador reaplique traduções antigas
       // depois de uma mudança de nomenclatura na navegação.
-      backend: { loadPath: `${basePath}/locales/{{lng}}/{{ns}}.json?v=1-4` },
+      backend: { loadPath: `${basePath}/locales/{{lng}}/{{ns}}.json?v=1-5` },
       interpolation: { escapeValue: false },
       load: 'currentOnly',
       partialBundledLanguages: false,
