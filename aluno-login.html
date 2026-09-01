@@ -34,8 +34,8 @@
     @media(max-width:900px){html,body{height:auto;min-height:100%;overflow:auto;background:var(--school-paper)}.student-auth{height:auto;min-height:100vh;grid-template-columns:1fr}.student-auth__intro{display:none}.student-auth__side{min-height:100vh;padding:18px}.student-auth__side:before{left:30px}.student-card{max-height:none;padding:30px 22px 24px}.student-card__identity{margin-bottom:20px}}
     .student-auth__side{display:grid;grid-template-columns:minmax(0,530px);grid-template-rows:auto minmax(0,1fr);align-content:stretch;gap:clamp(14px,2.2vh,24px)}
     .student-auth__program{position:relative;align-self:start;width:100%;box-sizing:border-box;padding:0 14px;color:#294f54;font-family:'Caveat',cursive;font-size:clamp(22px,1.55vw,26px);font-weight:600;line-height:32px;transform:rotate(-.45deg);filter:drop-shadow(0 1px 0 rgba(255,255,255,.72));overflow:visible}
-    .program-note__line{position:relative;display:block;width:max-content;max-width:100%;white-space:nowrap}.program-note__line:nth-child(2){margin-left:5px}.program-note__line:nth-child(3){margin-left:1px}
-    .program-note__text{display:block;clip-path:inset(0 100% 0 0);opacity:.96;text-shadow:.35px .35px 0 rgba(20,55,59,.22)}
+    .program-note__line{position:relative;top:7px;display:block;width:max-content;max-width:100%;white-space:nowrap}.program-note__line:nth-child(2){margin-left:5px}.program-note__line:nth-child(3){margin-left:1px}
+    .program-note__text{display:block;padding-right:8px;clip-path:inset(0 100% 0 0);opacity:.96;text-shadow:.35px .35px 0 rgba(20,55,59,.22)}
     .student-auth__program.is-writing .program-note__text{animation:program-write var(--write-time) linear var(--write-delay) forwards}
     .program-note__pencil{position:absolute;z-index:5;left:0;top:0;width:52px;height:20px;opacity:0;pointer-events:none;transform-origin:1px 10px;filter:drop-shadow(0 5px 3px rgba(54,43,25,.2));will-change:transform,opacity}
     .program-note__pencil svg{display:block;width:100%;height:100%;overflow:visible;transform-origin:7px 10px;animation:program-pencil-pressure .2s ease-in-out infinite alternate}
@@ -172,7 +172,7 @@
     const note=document.querySelector(".student-auth__program"),pencil=note?.querySelector(".program-note__pencil"),flourish=note?.querySelector(".program-note__flourish"),lines=note?[...note.querySelectorAll(".program-note__line")]:[];
     if(!note||!pencil||lines.length!==3)return;
     const reduce=matchMedia("(prefers-reduced-motion: reduce)");let resizeTimer;
-    const measure=()=>{const root=note.getBoundingClientRect(),pencilHeight=pencil.getBoundingClientRect().height||20,points=lines.map(line=>{const box=line.getBoundingClientRect(),baseline=box.top-root.top+box.height*.72;return{start:{x:box.left-root.left-2,y:baseline-pencilHeight/2},end:{x:box.right-root.left-1,y:baseline-pencilHeight/2},baseline}});const three=points[2];flourish.style.left=`${three.end.x}px`;flourish.style.top=`${three.baseline-9}px`;return points};
+    const measure=()=>{const root=note.getBoundingClientRect(),pencilHeight=pencil.getBoundingClientRect().height||20,points=lines.map(line=>{const box=line.getBoundingClientRect(),text=line.querySelector(".program-note__text"),rightSpace=parseFloat(getComputedStyle(text).paddingRight)||0,baseline=box.top-root.top+box.height*.72;return{start:{x:box.left-root.left-2,y:baseline-pencilHeight/2},end:{x:box.right-root.left-rightSpace+1,y:baseline-pencilHeight/2},baseline}});const three=points[2];flourish.style.left=`${three.end.x}px`;flourish.style.top=`${three.baseline-9}px`;return points};
     const start=()=>{
       if(note.classList.contains("is-writing"))return;
       if(reduce.matches){note.classList.add("is-writing");return}
