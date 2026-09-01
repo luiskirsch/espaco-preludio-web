@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" href="./logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
   <style>
     :root{--school-deep:#123a45;--school-blue:#2c6670;--school-mint:#91b9aa;--school-sun:#e0ad4f;--school-coral:#d67a62;--school-paper:#f5edd9}
@@ -32,6 +32,16 @@
     @media(max-width:1500px){.student-auth__content{grid-template-columns:1fr}.school-emblem{position:absolute;width:230px;right:20px;top:50%;transform:translateY(-46%);opacity:.5}.student-auth__copy{position:relative;z-index:1}.student-auth__title{max-width:510px}.student-auth__lead{max-width:470px}.student-promises{position:relative;z-index:1;max-width:620px}}
     @media(min-width:901px){.student-card.is-registering{padding:25px 32px 21px}.student-card.is-registering .student-card__identity{margin-bottom:13px}.student-card.is-registering .ep-auth__title{font-size:29px}.student-card.is-registering .ep-auth__sub{margin-top:4px}.student-card.is-registering .student-tabs{margin:13px 0}.student-card.is-registering #registerForm{grid-template-columns:1fr 1fr;gap:9px 10px}.student-card.is-registering #registerForm>*{min-width:0}.student-card.is-registering #registerForm .student-note,.student-card.is-registering #registerForm .ep-field:nth-child(2),.student-card.is-registering #registerForm .ep-field:nth-child(3),.student-card.is-registering #registerStatus,.student-card.is-registering #registerButton{grid-column:1/-1}.student-card.is-registering #registerForm .student-note{padding:9px 12px;line-height:1.4}.student-card.is-registering #registerForm .ep-field{gap:4px}.student-card.is-registering #registerForm .ep-input{min-height:39px;padding:7px 11px}.student-card.is-registering #registerForm .ep-btn--lg{min-height:44px}.student-card.is-registering .ep-auth__bottom{margin-top:13px;padding-top:11px}}
     @media(max-width:900px){html,body{height:auto;min-height:100%;overflow:auto;background:var(--school-paper)}.student-auth{height:auto;min-height:100vh;grid-template-columns:1fr}.student-auth__intro{display:none}.student-auth__side{min-height:100vh;padding:18px}.student-auth__side:before{left:30px}.student-card{max-height:none;padding:30px 22px 24px}.student-card__identity{margin-bottom:20px}}
+    .student-auth__side{display:grid;grid-template-columns:minmax(0,530px);grid-template-rows:auto minmax(0,1fr);align-content:stretch;gap:clamp(14px,2.2vh,24px)}
+    .student-auth__program{align-self:start;width:100%;box-sizing:border-box;padding:0 14px;color:#315d62;font-family:'Caveat',cursive;font-size:clamp(22px,1.55vw,26px);font-weight:600;line-height:32px;transform:rotate(-.65deg);filter:drop-shadow(0 1px 0 rgba(255,255,255,.6))}
+    .program-note__line{position:relative;display:block;width:max-content;max-width:100%;white-space:nowrap}
+    .program-note__text{display:block;clip-path:inset(0 100% 0 0);animation:program-write var(--write-time) steps(var(--characters),end) var(--write-delay) forwards}
+    .program-note__pencil{position:absolute;z-index:2;top:17px;left:-12px;width:31px;height:9px;border-radius:1px;background:linear-gradient(90deg,#25383a 0 9%,#ead8af 9% 20%,#e0ad4f 20% 80%,#cf765f 80%);clip-path:polygon(0 50%,20% 0,100% 0,100% 100%,20% 100%);opacity:0;transform:translate(-2px,-50%) rotate(-7deg);filter:drop-shadow(0 3px 2px rgba(52,44,31,.18));animation:program-pencil var(--write-time) steps(var(--characters),end) var(--write-delay) forwards}
+    @keyframes program-write{to{clip-path:inset(0 0 0 0)}}
+    @keyframes program-pencil{0%{left:-12px;opacity:0}4%{opacity:1}92%{opacity:1}100%{left:calc(100% - 3px);opacity:0}}
+    @media(min-width:901px){.student-auth__side>.student-card{max-height:100%}}
+    @media(max-width:900px){.student-auth__side{grid-template-rows:auto auto;align-content:start;gap:16px}.student-auth__program{margin-top:8px;padding-left:28px;font-size:22px}.student-auth__side>.student-card{max-height:none}}
+    @media(prefers-reduced-motion:reduce){.program-note__text{clip-path:none;animation:none}.program-note__pencil{display:none}}
   </style>
 </head>
 <body>
@@ -74,6 +84,11 @@
   </section>
 
   <section class="student-auth__side">
+    <div class="student-auth__program" aria-label="Programa Municipal de Telepsicologia e Acompanhamento Emocional Estudantil">
+      <span class="program-note__line" style="--characters:21;--write-time:1.65s;--write-delay:.4s"><span class="program-note__text" aria-hidden="true">Programa Municipal de</span><i class="program-note__pencil" aria-hidden="true"></i></span>
+      <span class="program-note__line" style="--characters:32;--write-time:2.35s;--write-delay:2.05s"><span class="program-note__text" aria-hidden="true">Telepsicologia e Acompanhamento</span><i class="program-note__pencil" aria-hidden="true"></i></span>
+      <span class="program-note__line" style="--characters:20;--write-time:1.65s;--write-delay:4.4s"><span class="program-note__text" aria-hidden="true">Emocional Estudantil</span><i class="program-note__pencil" aria-hidden="true"></i></span>
+    </div>
     <div id="studentCard" class="student-card">
       <div class="student-card__identity"><span class="student-card__seal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 6.5c3.4-1.6 6.4-1.2 9 1.1 2.6-2.3 5.6-2.7 9-1.1v12c-3.4-1.6-6.4-1.2-9 1.1-2.6-2.3-5.6-2.7-9-1.1v-12Z"/><path d="M12 7.6v12"/></svg></span><span><strong>Espaço Prelúdio</strong><small>Portal de cuidado escolar</small></span></div>
       <div class="ep-eyebrow">Acesso protegido</div>
