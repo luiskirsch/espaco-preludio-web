@@ -875,10 +875,8 @@
       const sessionDetail = allSessions.find(item => item.sessionId === s.sessionId) || s;
       const publicSchool = isPublicSchoolSession(sessionDetail);
       const nextLabel = document.getElementById("heroNextLabel");
-      nextLabel.dataset.i18n = publicSchool ? "painel:hero.publicNextLabel" : "painel:hero.nextLabel";
-      nextLabel.textContent = publicSchool
-        ? tr("painel:hero.publicNextLabel", "Próxima consulta escolar")
-        : tr("painel:hero.nextLabel", "Próxima consulta");
+      nextLabel.dataset.i18n = "painel:hero.nextLabel";
+      nextLabel.textContent = tr("painel:hero.nextLabel", "Próxima consulta");
       nextBlock.classList.toggle("is-public-school", publicSchool);
       nextBlock.dataset.careOrigin = publicSchool ? "public-school" : "private";
       document.getElementById("heroNextPatient").textContent = s.patientName || tr("painel:hero.patientFallback","Paciente");
