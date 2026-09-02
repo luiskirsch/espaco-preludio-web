@@ -348,6 +348,16 @@
       <div id="heroKpis" class="ep-mt-12" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;"></div>
     </section>
 
+    <!-- Solicitações de nova consulta — alunos do programa escolar -->
+    <section id="studentRequestsSection" class="ep-hide ep-mt-16">
+      <div>
+        <div class="ep-eyebrow">Solicitações de alunos</div>
+        <h2 class="ep-h3 ep-mt-12" style="margin:0;"><span id="studentRequestsCount">0</span> aluno(s) pediram nova consulta</h2>
+        <p class="ep-text-muted ep-text-sm ep-mt-8">Acesse o caso e agende a sessão pelo fluxo de cuidado.</p>
+      </div>
+      <div id="studentRequestsList" class="ep-session-list ep-mt-12"></div>
+    </section>
+
     <!-- Solicitações pendentes (agendamento público) — só aparece com itens -->
     <section id="schedRequestsSection" class="ep-hide ep-mt-16">
       <div class="ep-flex--end-wrap ep-flex ep-mt-0">
@@ -770,6 +780,61 @@
   }
   loadClinicInvites();
 
+  // ─── Solicitações de nova consulta (alunos do programa escolar) ─────────
+  async function loadStudentSessionRequests() {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/agendamentos/solicitacoes-estudante`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) return;
+      const pending = data.requests || [];
+      const section = document.getElementById("studentRequestsSection");
+      const list    = document.getElementById("studentRequestsList");
+      document.getElementById("studentRequestsCount").textContent = String(pending.length);
+      if (!pending.length) { section.classList.add("ep-hide"); return; }
+      section.classList.remove("ep-hide");
+      list.innerHTML = "";
+      pending.forEach(r => list.appendChild(renderStudentRequestCard(r)));
+    } catch (e) { console.error("student_requests_load_failed", e); }
+  }
+  function renderStudentRequestCard(r) {
+    const div = document.createElement("article");
+    div.className = "ep-session ep-session--patient";
+    div.dataset.studentReqId = r.id;
+    const when = r.createdAtMs ? new Date(r.createdAtMs).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) : "—";
+    div.innerHTML = `
+      <div>
+        <div class="ep-session__name">${escapeHtmlBasic(r.studentName)}</div>
+        <div class="ep-session__meta"><span>${escapeHtmlBasic(r.schoolName || r.programName || "Programa escolar")} · solicitado em ${when}</span></div>
+        <div class="ep-text-xs ep-text-muted ep-mt-8">${escapeHtmlBasic(r.studentEmail || "")}</div>
+      </div>
+      <div class="ep-session__actions">
+        <a class="ep-btn ep-btn--primary ep-btn--sm" href="./casos-publicos.html?id=${encodeURIComponent(r.studentId || '')}" target="_blank">Abrir caso</a>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-student-req-action="handle">Marcar como atendido</button>
+      </div>`;
+    return div;
+  }
+  document.getElementById("studentRequestsList").addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-student-req-action]");
+    if (!btn || btn.dataset.studentReqAction !== "handle") return;
+    const card = btn.closest(".ep-session");
+    const id = card?.dataset?.studentReqId;
+    if (!id) return;
+    btn.disabled = true;
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/agendamentos/solicitacoes-estudante/${encodeURIComponent(id)}/atender`, {
+        method: "POST", headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) { alert("Erro: " + (data?.error || res.status)); btn.disabled = false; return; }
+      card.remove();
+      const remaining = document.querySelectorAll("#studentRequestsList .ep-session").length;
+      document.getElementById("studentRequestsCount").textContent = String(remaining);
+      if (!remaining) document.getElementById("studentRequestsSection").classList.add("ep-hide");
+    } catch (e) { alert("Erro de rede."); btn.disabled = false; }
+  });
+
   // ─── Solicitações de agendamento público ────────────────────
   // Lista pedidos pendentes do link público do terapeuta. Renderiza só
   // se houver pelo menos 1 — caso contrário, seção fica oculta.
@@ -883,6 +948,7 @@
   });
   // Boot: carrega na mesma hora que carrega as sessões.
   loadSchedulingRequests().catch(() => {});
+  loadStudentSessionRequests().catch(() => {});
 
   // ─── Dashboard "Hoje" ────────────────────────────────────────
   // Carrega agregação leve + renderiza hero. Falha silenciosa.
