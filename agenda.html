@@ -18,7 +18,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
-  <script src="./i18n/init.js?v=1-4" defer></script>
+  <script src="./i18n/init.js?v=1-6" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
@@ -33,6 +33,54 @@
       background: rgba(184,69,61,.25) !important;
       border-left-color: #e06060 !important;
       color: #f8b0a8 !important;
+    }
+    .ep-agenda-legend__item.is-overdue .ep-agenda-legend__dot {
+      background: #b45f45;
+    }
+    .ep-agenda-session.is-overdue {
+      --ep-sess-bg: rgba(180,95,69,.18);
+      --ep-sess-accent: #b45f45;
+      border-color: rgba(180,95,69,.52) !important;
+      background-image: repeating-linear-gradient(
+        135deg,
+        transparent 0,
+        transparent 8px,
+        rgba(180,95,69,.07) 8px,
+        rgba(180,95,69,.07) 12px
+      );
+    }
+    .ep-agenda-session.is-overdue::after {
+      content: "!";
+      position: absolute;
+      top: 4px;
+      right: 5px;
+      width: 17px;
+      height: 17px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #b45f45;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+    }
+    .ep-pop-status.is-overdue {
+      background: rgba(180,95,69,.11);
+      color: #9b4934;
+      border-color: rgba(180,95,69,.38);
+    }
+    html[data-theme=dark] .ep-agenda-legend__item.is-overdue .ep-agenda-legend__dot {
+      background: #ee9277;
+    }
+    html[data-theme=dark] .ep-agenda-session.is-overdue {
+      --ep-sess-bg: rgba(180,95,69,.28);
+      --ep-sess-accent: #ee9277;
+      border-color: rgba(238,146,119,.54) !important;
+    }
+    html[data-theme=dark] .ep-pop-status.is-overdue {
+      background: rgba(238,146,119,.13);
+      color: #f2aa95;
+      border-color: rgba(238,146,119,.38);
     }
   </style>
 </head>
@@ -122,6 +170,7 @@
     <div class="ep-agenda-legend" aria-label="Legenda" data-i18n-aria-label="agenda:legend.aria">
       <span class="ep-agenda-legend__item is-scheduled"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.scheduled">Agendada</span></span>
       <span class="ep-agenda-legend__item is-progress"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.progress">Em sessão</span></span>
+      <span class="ep-agenda-legend__item is-overdue"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.overdue">Pendente</span></span>
       <span class="ep-agenda-legend__item is-done"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.done">Encerrada</span></span>
       <span class="ep-agenda-legend__item is-canceled"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.canceled">Cancelada</span></span>
       <span class="ep-agenda-legend__item is-note"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.note">Anotação</span></span>
@@ -494,13 +543,44 @@
       endDay: end.getDate(), endMonth: mn[end.getMonth()], year: end.getFullYear()
     });
   }
-  function statusToClass(s) {
+  const SESSION_OVERDUE_GRACE_MINUTES = 30;
+  let serverClockOffsetMs = 0;
+  function syncServerClock(serverNow) {
+    const value = Number(serverNow);
+    if (Number.isFinite(value) && value > 0) serverClockOffsetMs = value - Date.now();
+  }
+  function currentServerTime() { return Date.now() + serverClockOffsetMs; }
+  function sessionDurationMinutes(session = {}) {
+    const raw = session.durationMinutes;
+    if (raw == null || raw === "") return 60;
+    const duration = Number(raw);
+    if (!Number.isFinite(duration) || duration <= 0) return 60;
+    return Math.min(240, Math.max(15, duration));
+  }
+  function sessionOverdueAt(session = {}) {
+    const scheduledAt = Number(session.scheduledAt);
+    if (!Number.isFinite(scheduledAt) || scheduledAt <= 0) return null;
+    const explicit = Number(session.overdueAt);
+    if (Number.isFinite(explicit) && explicit > 0) return explicit;
+    return scheduledAt + (sessionDurationMinutes(session) + SESSION_OVERDUE_GRACE_MINUTES) * 60_000;
+  }
+  function isSessionOverdue(session = {}, now = currentServerTime()) {
+    if (!session || !["scheduled", "in_progress"].includes(session.status)) return false;
+    if (session.timingState === "overdue") return true;
+    const overdueAt = sessionOverdueAt(session);
+    return overdueAt != null && now >= overdueAt;
+  }
+  function statusToClass(session) {
+    if (isSessionOverdue(session)) return "is-overdue";
+    const s = session?.status;
     if (s === "completed")   return "is-done";
     if (s === "in_progress") return "is-progress";
     if (s === "canceled")    return "is-canceled";
     return "is-scheduled";
   }
-  function statusLabel(s) {
+  function statusLabel(session) {
+    if (isSessionOverdue(session)) return tr("agenda:legend.overdue", "Pendente");
+    const s = session?.status;
     if (s === "completed")   return tr("agenda:legend.done", "Encerrada");
     if (s === "in_progress") return tr("agenda:legend.progress", "Em sessão");
     if (s === "canceled")    return tr("agenda:legend.canceled", "Cancelada");
@@ -531,7 +611,7 @@
           // diferente do painel pra não conflitar dados entre as 2 views.
           url: `${BACKEND_BASE_URL}/therapy/sessoes?includeHidden=true`,
           idToken, uid, key: "sessoes:all", ttl: 30_000, getFreshToken,
-          onData: (data) => { allSessions = data.sessions || []; showAgenda(); }
+          onData: (data) => { syncServerClock(data.serverNow); allSessions = data.sessions || []; showAgenda(); }
         }),
         cachedGet({
           url: `${BACKEND_BASE_URL}/therapy/agenda/blackouts`,
@@ -758,14 +838,15 @@
       const startMinutesFromTop = (sessionStartHour - START_HOUR) * 60;
       const topPx = Math.max(0, (startMinutesFromTop / 60) * HOUR_PX);
       // Clamp ao tamanho do slot inteiro — bloco sempre preenche o horário.
-      const heightPx = Math.max(HOUR_PX, (SESSION_DEFAULT_MIN / 60) * HOUR_PX);
+      const heightPx = Math.max(HOUR_PX, (sessionDurationMinutes(s) / 60) * HOUR_PX);
 
       const block = document.createElement("button");
       block.type = "button";
-      block.className = `ep-agenda-session ${statusToClass(s.status)}`;
+      block.className = `ep-agenda-session ${statusToClass(s)}`;
       block.style.top = `${topPx}px`;
       block.style.height = `${heightPx}px`;
       block.dataset.patientName = s.patientName || "";
+      block.title = `${s.patientName || "—"} · ${statusLabel(s)}`;
       block.innerHTML = `
         <div class="ep-agenda-session__time">${pad2(sd.getHours())}:${pad2(sd.getMinutes())}</div>
         <div class="ep-agenda-session__name">${escapeHtml(s.patientName || "—")}</div>
@@ -823,11 +904,15 @@
     document.getElementById("popDateTime").textContent =
       sd.toLocaleString(currentLocale(), { weekday: "long", day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" });
     const statusEl = document.getElementById("popStatus");
-    statusEl.textContent = statusLabel(s.status);
+    const overdue = isSessionOverdue(s);
+    statusEl.textContent = overdue
+      ? tr("agenda:pop.overdue", "Horário encerrado · atualização pendente")
+      : statusLabel(s);
     statusEl.className = "ep-pop-status";
     if (s.status === "completed")   statusEl.classList.add("is-ok");
-    if (s.status === "in_progress") statusEl.classList.add("is-ok");
+    if (s.status === "in_progress" && !overdue) statusEl.classList.add("is-ok");
     if (s.status === "canceled")    statusEl.classList.add("is-err");
+    if (overdue) statusEl.classList.add("is-overdue");
 
     // Indicador de recorrência
     const recEl = document.getElementById("popRecurrence");
@@ -847,7 +932,8 @@
     opLinkBox.classList.add("ep-hide");
     opLinkBox.textContent = "";
 
-    const canEnter = s.status !== "completed" && s.status !== "canceled";
+    const canManage = s.status !== "completed" && s.status !== "canceled";
+    const canEnter = canManage && !overdue;
     opEnterBtn.classList.toggle("ep-hide", !canEnter);
     if (canEnter) opEnterBtn.href = `./consultorio.html?session=${encodeURIComponent(s.sessionId)}`;
 
@@ -855,7 +941,7 @@
     if (s.patientId) opProntBtn.href = `./prontuario.html?p=${encodeURIComponent(s.patientId)}`;
 
     opCopyBtn.classList.toggle("ep-hide", !canEnter);
-    opCancelBtn.classList.toggle("ep-hide", !canEnter);
+    opCancelBtn.classList.toggle("ep-hide", !canManage);
 
     popover.classList.add("is-open");
   }
@@ -1393,6 +1479,20 @@
 
   // ─── Boot ───────────────────────────────────────────────────────────
   await loadAgenda();
+
+  // Atualiza apenas a classificação temporal: uma sessão que atravessa a
+  // janela de duração + tolerância muda para "Pendente" sem recarregar a aba.
+  let overdueStateSnapshot = new Map(allSessions.map(session => [session.sessionId, isSessionOverdue(session)]));
+  const overdueRenderTimer = window.setInterval(() => {
+    if (document.visibilityState !== "visible" || !allSessions.length) return;
+    const changed = allSessions.some(session =>
+      overdueStateSnapshot.get(session.sessionId) !== isSessionOverdue(session)
+    );
+    if (!changed) return;
+    overdueStateSnapshot = new Map(allSessions.map(session => [session.sessionId, isSessionOverdue(session)]));
+    renderWeek();
+  }, 60_000);
+  window.addEventListener("pagehide", () => window.clearInterval(overdueRenderTimer), { once: true });
 
   // Aba voltou a ficar visível: alguém pode ter cancelado/encerrado/criado
   // consulta no painel em outra aba, ou o token expirou (>1h). Refresh

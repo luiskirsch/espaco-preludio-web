@@ -18,7 +18,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
-  <script src="./i18n/init.js?v=1-4" defer></script>
+  <script src="./i18n/init.js?v=1-6" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
@@ -180,6 +180,29 @@
       line-height: 1.6;
       color: var(--ep-ink);
       white-space: pre-wrap;
+    }
+    .ep-session-card.is-overdue {
+      border-color: rgba(180,95,69,.38);
+      box-shadow: inset 4px 0 #b45f45, var(--ep-shadow-soft);
+    }
+    .ep-badge.ep-badge--overdue {
+      background: rgba(180,95,69,.11);
+      color: #984a35;
+      border: 1px solid rgba(180,95,69,.32);
+    }
+    .ep-session-card__overdue {
+      margin-top: 4px;
+      color: #984a35;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    html[data-theme=dark] .ep-session-card.is-overdue {
+      border-color: rgba(238,146,119,.38);
+      box-shadow: inset 4px 0 #ee9277, var(--ep-shadow-soft);
+    }
+    html[data-theme=dark] .ep-badge.ep-badge--overdue,
+    html[data-theme=dark] .ep-session-card__overdue {
+      color: #f2aa95;
     }
   </style>
 </head>
@@ -526,6 +549,34 @@
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
+  const SESSION_OVERDUE_GRACE_MINUTES = 30;
+  let serverClockOffsetMs = 0;
+  function syncServerClock(serverNow) {
+    const value = Number(serverNow);
+    if (Number.isFinite(value) && value > 0) serverClockOffsetMs = value - Date.now();
+  }
+  function currentServerTime() { return Date.now() + serverClockOffsetMs; }
+  function sessionDurationMinutes(session = {}) {
+    const raw = session.durationMinutes;
+    if (raw == null || raw === "") return 60;
+    const duration = Number(raw);
+    if (!Number.isFinite(duration) || duration <= 0) return 60;
+    return Math.min(240, Math.max(15, duration));
+  }
+  function sessionOverdueAt(session = {}) {
+    const scheduledAt = Number(session.scheduledAt);
+    if (!Number.isFinite(scheduledAt) || scheduledAt <= 0) return null;
+    const explicit = Number(session.overdueAt);
+    if (Number.isFinite(explicit) && explicit > 0) return explicit;
+    return scheduledAt + (sessionDurationMinutes(session) + SESSION_OVERDUE_GRACE_MINUTES) * 60_000;
+  }
+  function isSessionOverdue(session = {}, now = currentServerTime()) {
+    if (!session || !["scheduled", "in_progress"].includes(session.status)) return false;
+    if (session.timingState === "overdue") return true;
+    const overdueAt = sessionOverdueAt(session);
+    return overdueAt != null && now >= overdueAt;
+  }
+  let sessionTimingRenderTimer = null;
 
   // ─── Loaders ────────────────────────────────────────────────
   async function loadPatient() {
@@ -546,6 +597,7 @@
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
+    syncServerClock(data.serverNow);
     return data.sessions || [];
   }
 
@@ -655,14 +707,32 @@
       wrap.appendChild(month);
     }
     wrap.classList.remove("ep-hide");
+    let timingSnapshot = new Map(sessions.map(session => [session.sessionId, isSessionOverdue(session)]));
+    if (!sessionTimingRenderTimer) {
+      sessionTimingRenderTimer = window.setInterval(() => {
+        if (document.visibilityState !== "visible") return;
+        const changed = sessions.some(session =>
+          timingSnapshot.get(session.sessionId) !== isSessionOverdue(session)
+        );
+        if (!changed) return;
+        timingSnapshot = new Map(sessions.map(session => [session.sessionId, isSessionOverdue(session)]));
+        renderTimeline(sessions, notesBySession);
+      }, 60_000);
+      window.addEventListener("pagehide", () => window.clearInterval(sessionTimingRenderTimer), { once: true });
+    }
   }
 
   function buildSessionCard(s, notes) {
     const card = document.createElement("article");
-    card.className = "ep-session-card";
+    const overdue = isSessionOverdue(s);
+    card.className = `ep-session-card${overdue ? " is-overdue" : ""}`;
 
     const statusBadge = s.status === "completed"
       ? `<span class="ep-badge ep-badge--muted">${escapeHtml(tr("prontuario:sessionCard.completed", "Encerrada"))}</span>`
+      : s.status === "canceled"
+        ? `<span class="ep-badge ep-badge--muted">${escapeHtml(tr("prontuario:sessionCard.canceled", "Cancelada"))}</span>`
+      : overdue
+        ? `<span class="ep-badge ep-badge--overdue">${escapeHtml(tr("prontuario:sessionCard.overdue", "Pendente"))}</span>`
       : s.status === "in_progress"
         ? `<span class="ep-badge ep-badge--ok">${escapeHtml(tr("prontuario:sessionCard.inProgress", "Em sessão"))}</span>`
         : `<span class="ep-badge">${escapeHtml(tr("prontuario:sessionCard.scheduled", "Agendada"))}</span>`;
@@ -680,6 +750,7 @@
         <div>
           <div class="ep-session-card__date">${escapeHtml(fmtDateLong(s.createdAt))}</div>
           <div class="ep-session-card__time">${escapeHtml(timeRange)}</div>
+          ${overdue ? `<div class="ep-session-card__overdue">${escapeHtml(tr("prontuario:sessionCard.overdueDetail", "Horário encerrado · status ainda não atualizado"))}</div>` : ""}
         </div>
         ${statusBadge}
         <span class="ep-session-card__count" title="${escapeHtml(tr("prontuario:sessionCard.encryptedNotes", "Notas cifradas"))}">
@@ -1700,9 +1771,13 @@
         const statusMap = {
           completed: tr("prontuario:sessionCard.completed", "Encerrada"),
           in_progress: tr("prontuario:sessionCard.inProgress", "Em sessão"),
-          scheduled: tr("prontuario:sessionCard.scheduled", "Agendada")
+          scheduled: tr("prontuario:sessionCard.scheduled", "Agendada"),
+          canceled: tr("prontuario:sessionCard.canceled", "Cancelada")
         };
-        txt(tr("prontuario:pdf.statusLabel", "Status: ") + (statusMap[s.status] || s.status), { size: 10, color: rgb(0.40,0.40,0.40) });
+        const statusLabel = isSessionOverdue(s)
+          ? tr("prontuario:sessionCard.overdue", "Pendente")
+          : (statusMap[s.status] || s.status);
+        txt(tr("prontuario:pdf.statusLabel", "Status: ") + statusLabel, { size: 10, color: rgb(0.40,0.40,0.40) });
         if (s.scheduledAt) txt(tr("prontuario:pdf.scheduledFor", "Agendada para: ") + fmtDate(s.scheduledAt), { size: 10, color: rgb(0.40,0.40,0.40) });
         if (s.completedAt) txt(tr("prontuario:pdf.completedAt", "Encerrada em: ") + fmtDate(s.completedAt) + " " + fmtTime(s.completedAt), { size: 10, color: rgb(0.40,0.40,0.40) });
 

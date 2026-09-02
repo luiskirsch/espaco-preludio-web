@@ -83,6 +83,20 @@
       background: linear-gradient(135deg, #f4cb6a, #dfaa46);
       box-shadow: 0 10px 24px -14px rgba(0, 0, 0, .8);
     }
+    #heroNextSession.is-overdue {
+      border-color: rgba(218, 134, 88, .78);
+      background:
+        radial-gradient(circle at 86% -20%, rgba(255, 193, 119, .20), transparent 42%),
+        linear-gradient(125deg, #432b27 0%, #31494a 58%, #265653 100%);
+      box-shadow: 0 18px 38px -26px rgba(63, 31, 24, .88), inset 0 1px 0 rgba(255, 255, 255, .09);
+    }
+    #heroNextSession.is-overdue #heroNextLabel { color: #ffd09b; }
+    #heroNextSession.is-overdue #heroNextWhen { color: rgba(255, 247, 235, .82); }
+    #heroNextSession.is-overdue #heroEnterBtn {
+      color: #4b2c23;
+      border-color: #f2c07d;
+      background: linear-gradient(135deg, #fff0d8, #eec27d);
+    }
     .ep-school-origin {
       display: inline-flex;
       align-items: center;
@@ -175,20 +189,86 @@
       box-shadow: -1px 0 0 rgba(11, 89, 97, .20), 0 12px 30px -24px rgba(5, 55, 63, .82);
     }
     .ep-session--public-school .ep-school-origin { margin-bottom: 9px; }
+    .ep-badge.ep-badge--overdue {
+      color: #7f351f;
+      border-color: rgba(188, 87, 51, .42);
+      background: rgba(224, 133, 91, .14);
+    }
+    #heroNextSession .ep-badge--overdue {
+      color: #ffe4c5;
+      border-color: rgba(255, 203, 147, .44);
+      background: rgba(84, 35, 25, .34);
+    }
+    .ep-session.ep-session--overdue {
+      border-color: rgba(188, 87, 51, .46);
+      border-left-color: #bc5733;
+      background:
+        radial-gradient(circle at 94% 0%, rgba(224, 133, 91, .13), transparent 24%),
+        linear-gradient(100deg, rgba(188, 87, 51, .09), var(--ep-surface) 40%);
+      box-shadow: -1px 0 0 rgba(188, 87, 51, .18), 0 8px 26px -24px rgba(91, 39, 28, .72);
+    }
+    .ep-session.ep-session--overdue::before { background: #f0b766; }
+    .ep-session.ep-session--overdue:hover {
+      border-color: rgba(188, 87, 51, .64);
+      box-shadow: -1px 0 0 rgba(188, 87, 51, .22), 0 12px 30px -24px rgba(91, 39, 28, .82);
+    }
+    .ep-overdue-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      max-width: 620px;
+      margin-top: 10px;
+      padding: 9px 11px;
+      color: #673321;
+      border: 1px solid rgba(188, 87, 51, .24);
+      border-radius: 9px;
+      background: rgba(255, 237, 218, .66);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .ep-overdue-note svg { flex: 0 0 16px; width: 16px; height: 16px; margin-top: 1px; }
+    .ep-overdue-note strong { display: block; color: #5c2b1d; }
+    .ep-btn.ep-resolution-btn { background: transparent; box-shadow: none; }
+    .ep-btn.ep-resolution-btn--held { color: #1e6558; border-color: rgba(30, 101, 88, .48); }
+    .ep-btn.ep-resolution-btn--not-held { color: #8b3d29; border-color: rgba(188, 87, 51, .48); }
+    .ep-btn.ep-resolution-btn--held:hover { background: rgba(30, 101, 88, .10); }
+    .ep-btn.ep-resolution-btn--not-held:hover { background: rgba(188, 87, 51, .10); }
+    .ep-session.is-focus-pulse { animation: ep-pending-focus 900ms ease both; }
+    @keyframes ep-pending-focus {
+      0%, 100% { box-shadow: -1px 0 0 rgba(188, 87, 51, .18), 0 8px 26px -24px rgba(91, 39, 28, .72); }
+      45% { box-shadow: 0 0 0 4px rgba(224, 133, 91, .22), 0 14px 34px -20px rgba(91, 39, 28, .82); }
+    }
     html[data-theme="dark"] .ep-session.ep-session--public-school {
       background:
         radial-gradient(circle at 94% 0%, rgba(226, 183, 106, .12), transparent 24%),
         linear-gradient(100deg, rgba(24, 125, 134, .18), var(--ep-surface) 42%);
     }
+    html[data-theme="dark"] .ep-session.ep-session--overdue {
+      background:
+        radial-gradient(circle at 94% 0%, rgba(224, 133, 91, .13), transparent 24%),
+        linear-gradient(100deg, rgba(188, 87, 51, .17), var(--ep-surface) 42%);
+    }
+    html[data-theme="dark"] .ep-overdue-note {
+      color: #f0c7ad;
+      border-color: rgba(224, 133, 91, .30);
+      background: rgba(120, 53, 34, .22);
+    }
+    html[data-theme="dark"] .ep-overdue-note strong { color: #ffd2b5; }
+    html[data-theme="dark"] .ep-btn.ep-resolution-btn--held { color: #a7d8ca; border-color: rgba(117, 190, 170, .52); }
+    html[data-theme="dark"] .ep-btn.ep-resolution-btn--not-held { color: #f1b99d; border-color: rgba(224, 133, 91, .52); }
+    @media (prefers-reduced-motion: reduce) {
+      .ep-session.is-focus-pulse { animation: none; outline: 3px solid rgba(224, 133, 91, .34); }
+    }
     @media (max-width: 680px) {
       #heroNextSession.ep-next-session { align-items: stretch; padding: 16px; }
       #heroNextSession #heroEnterBtn { width: 100%; }
+      #heroNextBadges { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
       #sessionList .ep-session { grid-template-columns: 1fr; }
       #sessionList .ep-session__actions { justify-content: flex-start; }
       .ep-school-origin__copy small { white-space: normal; }
     }
   </style>
-  <script src="./i18n/init.js?v=1-5" defer></script>
+  <script src="./i18n/init.js?v=1-6" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
@@ -813,10 +893,18 @@
   let lastHeroData = null;
   let nextSessionScheduledAt = null;
   let countdownInterval = null;
+  let serverClockOffsetMs = 0;
+  function syncServerClock(serverNow) {
+    const value = Number(serverNow);
+    if (Number.isFinite(value) && value > 0) serverClockOffsetMs = value - Date.now();
+  }
+  function currentServerTime() {
+    return Date.now() + serverClockOffsetMs;
+  }
   function tickCountdown() {
     const el = document.getElementById("heroCountdownBadge");
     if (!el || !nextSessionScheduledAt) { clearInterval(countdownInterval); countdownInterval = null; return; }
-    const diffMin = (nextSessionScheduledAt - Date.now()) / 60000;
+    const diffMin = (nextSessionScheduledAt - currentServerTime()) / 60000;
     if (diffMin <= 0) {
       el.textContent = tr("painel:hero.alreadyNow", "Já no horário");
       clearInterval(countdownInterval);
@@ -864,51 +952,115 @@
     }
     return d.toLocaleString(loc, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
   }
+  const DEFAULT_SESSION_DURATION_MINUTES = 60;
+  const SESSION_OVERDUE_GRACE_MINUTES = 30;
+  function sessionDurationMinutes(session = {}) {
+    const raw = session.durationMinutes;
+    if (raw == null || raw === "") return DEFAULT_SESSION_DURATION_MINUTES;
+    const duration = Number(raw);
+    if (!Number.isFinite(duration) || duration <= 0) return DEFAULT_SESSION_DURATION_MINUTES;
+    return Math.min(240, Math.max(15, duration));
+  }
+  function sessionOverdueAt(session = {}) {
+    const explicit = Number(session.overdueAt);
+    if (Number.isFinite(explicit) && explicit > 0) return explicit;
+    const scheduledAt = Number(session.scheduledAt);
+    if (!Number.isFinite(scheduledAt) || scheduledAt <= 0) return null;
+    return scheduledAt + (sessionDurationMinutes(session) + SESSION_OVERDUE_GRACE_MINUTES) * 60 * 1000;
+  }
+  function isSessionOverdue(session = {}, now = currentServerTime()) {
+    if (!["scheduled", "in_progress"].includes(session.status)) return false;
+    const overdueAt = sessionOverdueAt(session);
+    return overdueAt !== null && now >= overdueAt;
+  }
   function renderHero(data) {
+    syncServerClock(data?.serverNow);
     const hero = document.getElementById("painelHero");
     const nextBlock = document.getElementById("heroNextSession");
     const kpisBlock = document.getElementById("heroKpis");
 
-    // Próxima consulta
-    if (data.nextSession) {
-      const s = data.nextSession;
+    // Pendências vencidas têm prioridade visual; uma consulta não finalizada
+    // nunca continua se apresentando como "próxima" ou "já no horário".
+    const staleNext = isSessionOverdue(data.nextSession || {}) ? data.nextSession : null;
+    const activeNext = staleNext ? null : data.nextSession;
+    const s = activeNext || data.overdueSession || staleNext;
+    if (s) {
       const sessionDetail = allSessions.find(item => item.sessionId === s.sessionId) || s;
+      const overdue = isSessionOverdue(sessionDetail);
       const publicSchool = isPublicSchoolSession(sessionDetail);
       const nextLabel = document.getElementById("heroNextLabel");
-      nextLabel.dataset.i18n = "painel:hero.nextLabel";
-      nextLabel.textContent = tr("painel:hero.nextLabel", "Próxima consulta");
+      nextLabel.dataset.i18n = overdue ? "painel:hero.pendingLabel" : "painel:hero.nextLabel";
+      nextLabel.textContent = overdue
+        ? tr("painel:hero.pendingLabel", "Consulta não finalizada")
+        : tr("painel:hero.nextLabel", "Próxima consulta");
       nextBlock.classList.toggle("is-public-school", publicSchool);
+      nextBlock.classList.toggle("is-overdue", overdue);
       nextBlock.dataset.careOrigin = publicSchool ? "public-school" : "private";
+      nextBlock.dataset.timingState = overdue ? "overdue" : "current";
       document.getElementById("heroNextPatient").textContent = s.patientName || tr("painel:hero.patientFallback","Paciente");
       document.getElementById("heroNextWhen").textContent = fmtSessionWhen(s.scheduledAt);
       const badges = [];
       if (publicSchool) badges.push(publicSchoolOriginTag("hero"));
       if (s.confirmedAt) badges.push(`<span class="ep-badge ep-badge--ok">${tr("painel:hero.confirmed","✓ Confirmada")}</span>`);
-      const diffMin = (s.scheduledAt - Date.now()) / 60000;
-      if (diffMin <= 0) badges.push(`<span class="ep-badge ep-badge--warn">${tr("painel:hero.alreadyNow","Já no horário")}</span>`);
-      else if (diffMin < 60) badges.push(`<span id="heroCountdownBadge" class="ep-badge ep-badge--warn">${tr("painel:hero.inMin","Em {{min}}min",{min:Math.round(diffMin)})}</span>`);
+      const diffMin = (s.scheduledAt - currentServerTime()) / 60000;
+      if (overdue) {
+        badges.push(`<span class="ep-badge ep-badge--overdue">${tr("painel:hero.timeClosed","Horário encerrado")}</span>`);
+      } else if (diffMin <= 0) {
+        badges.push(`<span class="ep-badge ep-badge--warn">${tr("painel:hero.alreadyNow","Já no horário")}</span>`);
+      } else if (diffMin < 60) {
+        badges.push(`<span id="heroCountdownBadge" class="ep-badge ep-badge--warn">${tr("painel:hero.inMin","Em {{min}}min",{min:Math.round(diffMin)})}</span>`);
+      }
       document.getElementById("heroNextBadges").innerHTML = badges.join(" ");
       // Real-time countdown — atualiza a cada 10s sem recarregar a página
       clearInterval(countdownInterval);
       countdownInterval = null;
-      if (diffMin > 0 && diffMin < 60) {
+      nextSessionScheduledAt = null;
+      if (!overdue && diffMin > 0 && diffMin < 60) {
         nextSessionScheduledAt = s.scheduledAt;
         countdownInterval = setInterval(tickCountdown, 10000);
       }
       const btn = document.getElementById("heroEnterBtn");
       btn.dataset.sessionId = s.sessionId;
-      // Reaproveita o handler de "Entrar" da lista — dispara o mesmo data-action="enter" virtualmente
-      btn.onclick = () => {
-        sessionList.dispatchEvent(new CustomEvent("synthetic-enter", { detail: { sessionId: s.sessionId } }));
-        // Fallback: encontra na lista e clica
-        const target = sessionList.querySelector(`button[data-action="enter"][data-id="${s.sessionId}"]`);
-        if (target) target.click();
-        else window.location.href = `./consultorio.html?session=${encodeURIComponent(s.sessionId)}`;
-      };
+      btn.dataset.i18n = overdue ? "painel:hero.reviewPending" : "painel:hero.enter";
+      btn.textContent = overdue
+        ? tr("painel:hero.reviewPending", "Revisar pendência")
+        : tr("painel:hero.enter", "Entrar na consulta");
+      if (overdue) {
+        btn.onclick = async () => {
+          let target = [...sessionList.querySelectorAll(".ep-session")]
+            .find(item => item.dataset.sessionId === s.sessionId);
+          if (!target) {
+            await loadSessions();
+            target = [...sessionList.querySelectorAll(".ep-session")]
+              .find(item => item.dataset.sessionId === s.sessionId);
+          }
+          if (!target) {
+            const pendingFallback = { ...s, timingState: "overdue" };
+            if (!allSessions.some(item => item.sessionId === s.sessionId)) {
+              allSessions.unshift(pendingFallback);
+            }
+            emptyState.classList.add("ep-hide");
+            sessionList.classList.remove("ep-hide");
+            sessionList.prepend(renderSession(pendingFallback));
+            target = sessionList.firstElementChild;
+          }
+          const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+          target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+          target.classList.remove("is-focus-pulse");
+          requestAnimationFrame(() => target.classList.add("is-focus-pulse"));
+        };
+      } else {
+        btn.onclick = () => {
+          const target = sessionList.querySelector(`button[data-action="enter"][data-id="${s.sessionId}"]`);
+          if (target) target.click();
+          else window.location.href = `./consultorio.html?session=${encodeURIComponent(s.sessionId)}`;
+        };
+      }
       nextBlock.classList.remove("ep-hide");
     } else {
-      nextBlock.classList.remove("is-public-school");
+      nextBlock.classList.remove("is-public-school", "is-overdue");
       delete nextBlock.dataset.careOrigin;
+      delete nextBlock.dataset.timingState;
       nextBlock.classList.add("ep-hide");
     }
 
@@ -993,10 +1145,14 @@
       day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
     });
   }
-  function statusBadge(status) {
-    if (status === "completed")   return `<span class="ep-badge ep-badge--done">${tr("painel:badge.completed","Encerrada")}</span>`;
-    if (status === "in_progress") return `<span class="ep-badge ep-badge--ok">${tr("painel:badge.inProgress","Em sessão")}</span>`;
-    if (status === "canceled")    return `<span class="ep-badge ep-badge--done">${tr("painel:badge.canceled","Cancelada")}</span>`;
+  function statusBadge(session) {
+    if (session.status === "completed") return `<span class="ep-badge ep-badge--done">${tr("painel:badge.completed","Encerrada")}</span>`;
+    if (session.status === "canceled" && session.cancellationKind === "not_held") {
+      return `<span class="ep-badge ep-badge--done">${tr("painel:list.notHeldStatus","Não realizada")}</span>`;
+    }
+    if (session.status === "canceled") return `<span class="ep-badge ep-badge--done">${tr("painel:badge.canceled","Cancelada")}</span>`;
+    if (isSessionOverdue(session)) return `<span class="ep-badge ep-badge--overdue">${tr("painel:list.pendingStatus","Pendente")}</span>`;
+    if (session.status === "in_progress") return `<span class="ep-badge ep-badge--ok">${tr("painel:badge.inProgress","Em sessão")}</span>`;
     return `<span class="ep-badge ep-badge--warn">${tr("painel:badge.scheduled","Agendada")}</span>`;
   }
   function isPublicSchoolSession(session) {
@@ -1038,9 +1194,12 @@
   // Cache global das sessões — usado tanto pra render quanto pra extrair
   // pacientes "atendidos antes" (avulsos sem patientId) no select de nova consulta.
   let allSessions = [];
+  let timingRefreshInterval = null;
+  let timingStateSnapshot = new Map();
 
   function renderSessionsFromData(data) {
     loadingBanner.classList.add("ep-hide");
+    syncServerClock(data.serverNow);
     allSessions = data.sessions || [];
     // Re-renderiza o hero — card "Esta semana" precisa de allSessions atualizado.
     if (lastHeroData) renderHero(lastHeroData);
@@ -1053,6 +1212,20 @@
     sessionList.innerHTML = "";
     allSessions.forEach(s => sessionList.appendChild(renderSession(s)));
     sessionList.classList.remove("ep-hide");
+    timingStateSnapshot = new Map(allSessions.map(session => [session.sessionId, isSessionOverdue(session)]));
+    if (!timingRefreshInterval) {
+      timingRefreshInterval = setInterval(() => {
+        const listTimingChanged = allSessions.some(session =>
+          timingStateSnapshot.get(session.sessionId) !== isSessionOverdue(session)
+        );
+        const heroSource = lastHeroData?.nextSession || lastHeroData?.overdueSession;
+        const heroTimingChanged = heroSource
+          ? isSessionOverdue(heroSource) !== document.getElementById("heroNextSession").classList.contains("is-overdue")
+          : false;
+        if (listTimingChanged) renderSessionsFromData({ sessions: allSessions });
+        else if (heroTimingChanged && lastHeroData) renderHero(lastHeroData);
+      }, 60 * 1000);
+    }
   }
 
   async function loadSessions() {
@@ -1077,6 +1250,8 @@
   function renderSession(s) {
     const div = document.createElement("article");
     const publicSchool = isPublicSchoolSession(s);
+    const overdue = isSessionOverdue(s);
+    const isOpen = s.status !== "completed" && s.status !== "canceled";
     // Marca lateral colorida — espelha o badge: ouro pra agendada/em-sessão,
     // terracota pra encerrada. Identifica o status sem ler o badge.
     let sideClass = "";
@@ -1084,10 +1259,14 @@
       sideClass = " ep-session--done";
     } else if (s.status === "canceled") {
       sideClass = " ep-session--canceled";
-    } else {
+    } else if (!overdue) {
       sideClass = " ep-session--active";
     }
-    div.className = "ep-session" + sideClass + (publicSchool ? " ep-session--public-school" : "");
+    div.className = "ep-session" + sideClass
+      + (publicSchool ? " ep-session--public-school" : "")
+      + (overdue ? " ep-session--overdue" : "");
+    div.dataset.sessionId = s.sessionId;
+    div.dataset.timingState = overdue ? "overdue" : "current";
     if (publicSchool) div.dataset.careOrigin = "public-school";
     const confirmedTag = (s.confirmedAt && s.status === "scheduled")
       ? `<span class="ep-badge ep-badge--ok" title="${tr("painel:list.confirmedTitle","Paciente clicou no link de confirmação do e-mail de lembrete")}">${tr("painel:list.confirmedTag","✓ Confirmada pelo paciente")}</span>`
@@ -1099,34 +1278,52 @@
     const preNoteBlock = preNote
       ? `<div class="ep-prenote" title="${tr("painel:list.preNoteSavedTitle","Sua nota pré-sessão (salva só neste navegador)")}">📝 ${escapeHtml(preNote.length > 110 ? preNote.slice(0, 110) + "…" : preNote)}</div>`
       : "";
+    const overdueBlock = overdue
+      ? `<div class="ep-overdue-note" role="note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/>
+          </svg>
+          <span>
+            <strong>${tr("painel:list.overdueTitle","Horário encerrado")}</strong>
+            ${tr("painel:list.overdueBody","Esta consulta ainda não teve o status final atualizado.")}
+          </span>
+        </div>`
+      : "";
     div.innerHTML = `
       <div class="ep-session__main">
         ${publicSchool ? publicSchoolOriginTag() : ""}
         <div class="ep-session__name">${escapeHtml(s.patientName)}</div>
         <div class="ep-session__meta">
-          ${statusBadge(s.status)}
+          ${statusBadge(s)}
           ${demoTag}
           ${confirmedTag}
           <span>${tr("painel:list.createdAt","Criada {{date}}",{date:fmtDate(s.createdAt)})}</span>
           ${s.scheduledAt ? `<span>${tr("painel:list.scheduledAt","· Agendada {{date}}",{date:fmtDate(s.scheduledAt)})}</span>` : ""}
           ${s.completedAt ? `<span>${tr("painel:list.completedAt","· Encerrada {{date}}",{date:fmtDate(s.completedAt)})}</span>` : ""}
         </div>
+        ${overdueBlock}
         ${preNoteBlock}
       </div>
       <div class="ep-session__actions">
-        ${s.status !== "completed" ? `
+        ${isOpen && !overdue ? `
           <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="enter" data-id="${s.sessionId}">${s.demoTechnicalRoom?'Abrir sala demo':tr("painel:list.enter","Entrar")}</button>
         ` : ""}
-        ${s.status !== "completed" ? `
+        ${isOpen && overdue ? `
+          <button class="ep-btn ep-btn--ghost ep-btn--sm ep-resolution-btn ep-resolution-btn--held" data-action="encerrar" data-id="${s.sessionId}">${tr("painel:list.markHeld","Marcar realizada")}</button>
+        ` : ""}
+        ${isOpen && overdue ? `
+          <button class="ep-btn ep-btn--ghost ep-btn--sm ep-resolution-btn ep-resolution-btn--not-held" data-action="not-held" data-id="${s.sessionId}">${tr("painel:list.markNotHeld","Não realizada")}</button>
+        ` : ""}
+        ${isOpen ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="prenote" data-id="${s.sessionId}" title="${tr("painel:list.preNoteTitle","Nota pré-sessão (só neste navegador)")}">${preNote ? tr("painel:list.preNoteSet","📝 Nota") : tr("painel:list.preNoteEmpty","Nota")}</button>
         ` : ""}
-        ${s.status !== "completed" ? `
+        ${isOpen && !overdue ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="encerrar" data-id="${s.sessionId}">${tr("painel:list.encerrar","Encerrar")}</button>
         ` : ""}
-        ${s.status !== "canceled" && !s.demoTechnicalRoom && !publicSchool ? `
+        ${isOpen && !s.demoTechnicalRoom && !publicSchool ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="recibo" data-id="${s.sessionId}" title="${tr("painel:list.reciboTitle","Enviar recibo ao paciente")}">${tr("painel:list.recibo","Recibo")}</button>
         ` : ""}
-        ${!s.patientAccountUid && !s.demoTechnicalRoom && !publicSchool ? `
+        ${isOpen && !s.patientAccountUid && !s.demoTechnicalRoom && !publicSchool ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="vincular" data-id="${s.sessionId}" title="${tr("painel:list.vincularTitle","Vincular conta de paciente pra abrir chat E2EE")}">${tr("painel:list.vincular","Vincular conta")}</button>
         ` : ""}
         ${(s.status === "completed" || s.status === "canceled") ? `
@@ -1154,18 +1351,53 @@
     if (action === "enter") {
       window.location.href = `./consultorio.html?session=${encodeURIComponent(id)}`;
     } else if (action === "encerrar") {
-      if (!confirmOnce("encerrar_consulta", tr("painel:list.confirmEncerrar","Encerrar esta consulta? Ela ficará marcada como concluída."))) return;
-      btn.disabled = true;
+      const selectedSession = allSessions.find(item => item.sessionId === id);
+      const overdue = isSessionOverdue(selectedSession || {});
+      const confirmed = overdue
+        ? confirm(tr("painel:list.confirmMarkHeld","Confirmar que esta consulta foi realizada? Ela será contabilizada como concluída."))
+        : confirmOnce("encerrar_consulta", tr("painel:list.confirmEncerrar","Encerrar esta consulta? Ela ficará marcada como concluída."));
+      if (!confirmed) return;
+      const decisionButtons = overdue
+        ? [...btn.closest(".ep-session__actions").querySelectorAll('button[data-action="encerrar"], button[data-action="not-held"]')]
+        : [btn];
+      decisionButtons.forEach(item => { item.disabled = true; });
       try {
-        await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/encerrar`, {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/encerrar`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${idToken}` }
         });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
         invalidatePrefix("sessoes", uid);
-        await loadSessions();
+        await Promise.all([loadSessions(), loadHero()]);
       } catch {
-        btn.disabled = false;
+        decisionButtons.forEach(item => { item.disabled = false; });
         alert(tr("painel:list.encerrarErr","Erro ao encerrar."));
+      }
+    } else if (action === "not-held") {
+      if (!confirm(tr("painel:list.confirmMarkNotHeld","Confirmar que esta consulta não foi realizada? Ela será encerrada sem contar como atendimento concluído."))) return;
+      const decisionButtons = [...btn.closest(".ep-session__actions").querySelectorAll('button[data-action="encerrar"], button[data-action="not-held"]')];
+      decisionButtons.forEach(item => { item.disabled = true; });
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/cancelar`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${idToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            scope: "this",
+            cancellationKind: "not_held",
+            reason: "Consulta não realizada após o encerramento do horário."
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
+        invalidatePrefix("sessoes", uid);
+        await Promise.all([loadSessions(), loadHero()]);
+      } catch {
+        decisionButtons.forEach(item => { item.disabled = false; });
+        alert(tr("painel:list.markNotHeldErr","Erro ao marcar a consulta como não realizada."));
       }
     } else if (action === "ocultar") {
       if (!confirmOnce("ocultar_consulta", tr("painel:list.confirmOcultar","Remover esta consulta da lista? O registro permanece no prontuário do paciente — só some daqui."))) return;
