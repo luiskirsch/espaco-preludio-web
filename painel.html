@@ -802,6 +802,7 @@
     const div = document.createElement("article");
     div.className = "ep-session ep-session--patient";
     div.dataset.studentReqId = r.id;
+    div.dataset.studentReqStudentId = r.studentId || "";
     const when = r.createdAtMs ? new Date(r.createdAtMs).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) : "—";
     div.innerHTML = `
       <div>
@@ -810,29 +811,44 @@
         <div class="ep-text-xs ep-text-muted ep-mt-8">${escapeHtmlBasic(r.studentEmail || "")}</div>
       </div>
       <div class="ep-session__actions">
-        <a class="ep-btn ep-btn--primary ep-btn--sm" href="./casos-publicos.html?id=${encodeURIComponent(r.studentId || '')}" target="_blank">Abrir caso</a>
-        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-student-req-action="handle">Marcar como atendido</button>
+        <button class="ep-btn ep-btn--primary ep-btn--sm" data-student-req-action="claim">Pegar e abrir caso</button>
       </div>`;
     return div;
   }
   document.getElementById("studentRequestsList").addEventListener("click", async (e) => {
-    const btn = e.target.closest("button[data-student-req-action]");
-    if (!btn || btn.dataset.studentReqAction !== "handle") return;
+    const btn = e.target.closest("button[data-student-req-action='claim']");
+    if (!btn) return;
     const card = btn.closest(".ep-session");
     const id = card?.dataset?.studentReqId;
+    const studentId = card?.dataset?.studentReqStudentId;
     if (!id) return;
     btn.disabled = true;
+    btn.textContent = "Reservando…";
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/agendamentos/solicitacoes-estudante/${encodeURIComponent(id)}/atender`, {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/agendamentos/solicitacoes-estudante/${encodeURIComponent(id)}/pegar`, {
         method: "POST", headers: { "Authorization": `Bearer ${idToken}` }
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) { alert("Erro: " + (data?.error || res.status)); btn.disabled = false; return; }
+      if (!res.ok || !data.ok) {
+        if (data?.error === "JA_PEGO") {
+          card.remove();
+          const remaining = document.querySelectorAll("#studentRequestsList .ep-session").length;
+          document.getElementById("studentRequestsCount").textContent = String(remaining);
+          if (!remaining) document.getElementById("studentRequestsSection").classList.add("ep-hide");
+          alert("Outro profissional já pegou essa solicitação.");
+        } else {
+          alert("Erro: " + (data?.error || res.status));
+          btn.disabled = false;
+          btn.textContent = "Pegar e abrir caso";
+        }
+        return;
+      }
       card.remove();
       const remaining = document.querySelectorAll("#studentRequestsList .ep-session").length;
       document.getElementById("studentRequestsCount").textContent = String(remaining);
       if (!remaining) document.getElementById("studentRequestsSection").classList.add("ep-hide");
-    } catch (e) { alert("Erro de rede."); btn.disabled = false; }
+      if (studentId) window.open(`./casos-publicos.html?id=${encodeURIComponent(studentId)}`, "_blank");
+    } catch (e) { alert("Erro de rede."); btn.disabled = false; btn.textContent = "Pegar e abrir caso"; }
   });
 
   // ─── Solicitações de agendamento público ────────────────────
