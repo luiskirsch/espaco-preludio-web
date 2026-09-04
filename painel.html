@@ -358,6 +358,22 @@
       <div id="studentRequestsList" class="ep-session-list ep-mt-12"></div>
     </section>
 
+    <!-- Horários escolhidos diretamente por alunos no app Lemniscata -->
+    <section id="publicSchoolSchedRequestsSection" class="ep-hide ep-mt-16">
+      <div class="ep-flex--end-wrap ep-flex ep-mt-0">
+        <div>
+          <div class="ep-eyebrow" data-i18n="painel:school.requestEyebrow">Rede pública · Projeto Lemniscata</div>
+          <h2 class="ep-h3 ep-mt-12" style="margin: 0;" data-i18n-html="painel:school.requestH2">
+            <span id="publicSchoolSchedRequestsCount">0</span> pedido(s) de aluno aguardando aprovação
+          </h2>
+          <p class="ep-text-muted ep-text-sm ep-mt-8" data-i18n="painel:school.requestSub">
+            Solicitações feitas pelo app do aluno. Aprove para criar a consulta no fluxo da Rede Pública e enviar a confirmação.
+          </p>
+        </div>
+      </div>
+      <div id="publicSchoolSchedRequestsList" class="ep-session-list ep-mt-12"></div>
+    </section>
+
     <!-- Solicitações pendentes (agendamento público) — só aparece com itens -->
     <section id="schedRequestsSection" class="ep-hide ep-mt-16">
       <div class="ep-flex--end-wrap ep-flex ep-mt-0">
@@ -873,34 +889,52 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) return;
       const pending = (data.requests || []).filter(r => r.status === "pending");
-      const section = document.getElementById("schedRequestsSection");
-      const list    = document.getElementById("schedRequestsList");
-      document.getElementById("schedRequestsCount").textContent = String(pending.length);
-      if (!pending.length) {
-        section.classList.add("ep-hide");
-        return;
-      }
-      section.classList.remove("ep-hide");
-      list.innerHTML = "";
-      pending.forEach(r => list.appendChild(renderSchedRequestCard(r)));
+      const publicSchoolPending = pending.filter(isPublicSchoolSession);
+      const publicLinkPending = pending.filter(r => !isPublicSchoolSession(r));
+      renderSchedulingRequestGroup({
+        requests: publicSchoolPending,
+        sectionId: "publicSchoolSchedRequestsSection",
+        listId: "publicSchoolSchedRequestsList",
+        countId: "publicSchoolSchedRequestsCount"
+      });
+      renderSchedulingRequestGroup({
+        requests: publicLinkPending,
+        sectionId: "schedRequestsSection",
+        listId: "schedRequestsList",
+        countId: "schedRequestsCount"
+      });
     } catch (e) {
       console.error("scheduling_requests_load_failed", e);
     }
   }
+  function renderSchedulingRequestGroup({ requests, sectionId, listId, countId }) {
+    const section = document.getElementById(sectionId);
+    const list = document.getElementById(listId);
+    document.getElementById(countId).textContent = String(requests.length);
+    section.classList.toggle("ep-hide", !requests.length);
+    list.innerHTML = "";
+    requests.forEach(r => list.appendChild(renderSchedRequestCard(r)));
+  }
   function renderSchedRequestCard(r) {
     const div = document.createElement("article");
-    div.className = "ep-session ep-session--patient";
+    const publicSchool = isPublicSchoolSession(r);
+    div.className = `ep-session ep-session--patient${publicSchool ? " ep-session--public-school" : ""}`;
     div.dataset.requestId = r.requestId;
     const phoneLine = r.patientPhone ? ` · ${escapeHtmlBasic(r.patientPhone)}` : "";
+    const schoolDetails = [r.schoolName, r.programName].filter(Boolean).map(escapeHtmlBasic).join(" · ");
+    const originLine = publicSchool
+      ? `<div class="ep-mt-8">${publicSchoolOriginTag()}</div>${schoolDetails ? `<div class="ep-text-xs ep-text-muted ep-mt-8">${schoolDetails}</div>` : ""}`
+      : "";
     const notesLine = r.notes
       ? `<div class="ep-text-sm ep-mt-8" style="padding: 8px 10px; background: var(--ep-bg-2); border-radius: 6px; color: var(--ep-ink-2);">${escapeHtmlBasic(r.notes)}</div>`
       : "";
     div.innerHTML = `
       <div>
-        <div class="ep-session__name">${escapeHtmlBasic(r.patientName)}</div>
+        <div class="ep-session__name">${escapeHtmlBasic(r.studentName || r.patientName)}</div>
         <div class="ep-session__meta">
           <span>${tr("painel:sched.askedFor","Pediu para")} <strong>${escapeHtmlBasic(fmtSchedRequestSlot(r.requestedSlot))}</strong></span>
         </div>
+        ${originLine}
         <div class="ep-text-xs ep-text-muted ep-mt-8">${escapeHtmlBasic(r.patientEmail)}${phoneLine}</div>
         ${notesLine}
       </div>
@@ -911,7 +945,7 @@
     `;
     return div;
   }
-  document.getElementById("schedRequestsList").addEventListener("click", async (e) => {
+  async function handleSchedulingRequestAction(e) {
     const btn = e.target.closest("button[data-sched-action]");
     if (!btn) return;
     const card = btn.closest(".ep-session");
@@ -961,6 +995,9 @@
         btn.disabled = false;
       }
     }
+  }
+  ["publicSchoolSchedRequestsList", "schedRequestsList"].forEach(listId => {
+    document.getElementById(listId).addEventListener("click", handleSchedulingRequestAction);
   });
   // Boot: carrega na mesma hora que carrega as sessões.
   loadSchedulingRequests().catch(() => {});
