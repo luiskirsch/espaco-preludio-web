@@ -1081,6 +1081,7 @@
   let slidesData    = [];
   let slidesIdx     = 0;
   let slidesSharing = false;
+  let slidesBusy    = false;
   let slidesInputMode = "start";
 
   async function slidesCompress(file) {
@@ -1148,13 +1149,13 @@
 
   function slidesRefreshPresenter() {
     slidesCounter.textContent = `${slidesIdx + 1} / ${slidesData.length}`;
-    slidesPrev.disabled = slidesIdx === 0;
-    slidesNext.disabled = slidesIdx === slidesData.length - 1;
+    slidesPrev.disabled = slidesBusy || slidesIdx === 0;
+    slidesNext.disabled = slidesBusy || slidesIdx === slidesData.length - 1;
     slidesPrev.style.opacity = slidesPrev.disabled ? ".4" : "1";
     slidesNext.style.opacity = slidesNext.disabled ? ".4" : "1";
     slidesPrev.style.cursor = slidesPrev.disabled ? "not-allowed" : "pointer";
     slidesNext.style.cursor = slidesNext.disabled ? "not-allowed" : "pointer";
-    slidesAdd.disabled = slidesData.length >= 20;
+    slidesAdd.disabled = slidesBusy || slidesData.length >= 20;
     slidesAdd.style.opacity = slidesAdd.disabled ? ".4" : "1";
   }
 
@@ -1169,43 +1170,69 @@
 
   async function slidesSyncAll() {
     await slidesPublish({ t: "slides:start", count: slidesData.length, idx: slidesIdx });
-    for (let i = 0; i < slidesData.length; i++) await slidesSendOne(i);
+    // O slide visível vai primeiro. Assim o paciente não espera as páginas
+    // anteriores antes de enxergar a página atual.
+    const order = [slidesIdx, ...slidesData.map((_, i) => i).filter(i => i !== slidesIdx)];
+    for (const i of order) await slidesSendOne(i);
     await slidesPublish({ t: "slides:nav", idx: slidesIdx });
   }
 
   async function slidesStart(files) {
+    const selected = Array.from(files).slice(0, 20);
+    if (!selected.length) return;
     ctrlSlides.disabled = true;
-    const compressed = await slidesCompressMany(files, 20);
-    ctrlSlides.disabled = false;
-    if (!compressed.length) return;
+    slidesBusy = true;
+    try {
+      // Prepara e envia a primeira página imediatamente. As demais são
+      // comprimidas em paralelo enquanto ela já segue para o paciente.
+      const first = await slidesCompress(selected[0]);
+      if (!first) return;
+      const remainingPromise = slidesCompressMany(selected.slice(1), 19);
 
-    slidesData    = compressed;
-    slidesIdx     = 0;
-    slidesSharing = true;
-    ctrlSlides.classList.add("is-active");
-    slidesPresenter.style.display = "flex";
-    slidesLocalImg.src = slidesData[0];
-    slidesLocalImg.alt = "Slide 1";
-    slidesLocalOverlay.style.display = "flex";
-    slidesLocalOverlay.setAttribute("aria-hidden", "false");
-    slidesRefreshPresenter();
+      slidesData    = [first];
+      slidesIdx     = 0;
+      slidesSharing = true;
+      ctrlSlides.classList.add("is-active");
+      slidesPresenter.style.display = "flex";
+      slidesLocalImg.src = first;
+      slidesLocalImg.alt = "Slide 1";
+      slidesLocalOverlay.style.display = "flex";
+      slidesLocalOverlay.setAttribute("aria-hidden", "false");
+      slidesRefreshPresenter();
 
-    await slidesSyncAll();
+      await slidesPublish({ t: "slides:start", count: selected.length, idx: 0 });
+      await slidesSendOne(0);
+      await slidesPublish({ t: "slides:nav", idx: 0 });
+
+      const remaining = await remainingPromise;
+      slidesData.push(...remaining);
+      await slidesPublish({ t: "slides:update", count: slidesData.length, idx: 0 });
+      for (let i = 1; i < slidesData.length; i++) await slidesSendOne(i);
+    } finally {
+      ctrlSlides.disabled = false;
+      slidesBusy = false;
+      slidesRefreshPresenter();
+    }
   }
 
   async function slidesAppend(files) {
     const available = 20 - slidesData.length;
     if (available <= 0) return;
     ctrlSlides.disabled = true;
-    slidesAdd.disabled = true;
+    slidesBusy = true;
+    slidesRefreshPresenter();
     try {
       const compressed = await slidesCompressMany(files, available);
       if (!compressed.length) return;
+      const firstNewIndex = slidesData.length;
       slidesData.push(...compressed);
-      slidesRefreshPresenter();
-      await slidesSyncAll();
+      // Atualização incremental: não apaga nem reenvia o slide que já está
+      // aparecendo no celular.
+      await slidesPublish({ t: "slides:update", count: slidesData.length, idx: slidesIdx });
+      for (let i = firstNewIndex; i < slidesData.length; i++) await slidesSendOne(i);
     } finally {
       ctrlSlides.disabled = false;
+      slidesBusy = false;
       slidesRefreshPresenter();
     }
   }
