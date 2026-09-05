@@ -514,7 +514,7 @@
 
   async function joinRoom(data) {
     const livekitMod = await import(`https://esm.sh/livekit-client@${LIVEKIT_VERSION}`);
-    const { Room, RoomEvent, Track, ExternalE2EEKeyProvider } = livekitMod;
+    const { Room, RoomEvent, Track, ExternalE2EEKeyProvider, DisconnectReason } = livekitMod;
 
     const connStatus = document.getElementById("connectionStatus");
     const e2eeBadge  = document.getElementById("e2eeBadge");
@@ -702,12 +702,19 @@
     // Timer de encerramento — aguarda 8s antes de redirecionar.
     // Se o profissional reconectar (queda de rede), o timer é cancelado.
     let sessionEndTimer = null;
+    let sessionEndHandled = false;
+    function showSessionEnded() {
+      if (sessionEndHandled) return;
+      sessionEndHandled = true;
+      clearTimeout(sessionEndTimer);
+      document.getElementById("sessionEndedOverlay")?.classList.remove("ep-hide");
+      try { room.disconnect(); } catch {}
+      const destination = (authMode === "logged") ? "./paciente-painel.html" : "./index.html";
+      setTimeout(() => { window.location.href = destination; }, 4000);
+    }
     function scheduleSessionEnd() {
       clearTimeout(sessionEndTimer);
-      sessionEndTimer = setTimeout(() => {
-        document.getElementById("sessionEndedOverlay")?.classList.remove("ep-hide");
-        setTimeout(() => { window.location.href = "/"; }, 4000);
-      }, 8000);
+      sessionEndTimer = setTimeout(showSessionEnded, 8000);
     }
     function cancelSessionEnd() {
       clearTimeout(sessionEndTimer);
@@ -744,7 +751,16 @@
       .on(RoomEvent.LocalTrackPublished, (pub) => console.info("[lk] localPublished", { kind: pub?.kind, sid: pub?.trackSid }))
       .on(RoomEvent.TrackPublished, (pub, p) => console.info("[lk] trackPublished", { kind: pub?.kind, sid: pub?.trackSid, participant: p?.identity }))
       .on(RoomEvent.EncryptionError, (err) => console.error("[lk] encryptionError", err))
-      .on(RoomEvent.Disconnected, () => setStatus(tr("entrar:session.statusDisconnected", "desconectado")));
+      .on(RoomEvent.DataReceived, (payload) => {
+        try {
+          const message = JSON.parse(new TextDecoder().decode(payload));
+          if (message?.t === "therapy:session-ended" && message.sessionId === sessionId) showSessionEnded();
+        } catch {}
+      })
+      .on(RoomEvent.Disconnected, (reason) => {
+        setStatus(tr("entrar:session.statusDisconnected", "desconectado"));
+        if (reason === DisconnectReason?.ROOM_DELETED) showSessionEnded();
+      });
 
     try {
       // Ordem canônica do LiveKit 2.x: setKey + setE2EEEnabled ANTES do connect.
@@ -779,10 +795,11 @@
       // Cronometro da sessao — comeca quando paciente entra (sessao do
       // paciente comeca aqui, antes do terapeuta conectar). Mesmo formato
       // do lado profissional: "Xmin YYs", monospace, atualiza a cada 1s.
-      const sessionStartTs = Date.now();
+      const sessionClockOffsetMs = Number(data.serverNow || Date.now()) - Date.now();
+      const sessionStartTs = Number(data.sessionStartedAt) || (Date.now() + sessionClockOffsetMs);
       const infoDuration = document.getElementById("infoDuration");
       setInterval(() => {
-        const ms = Date.now() - sessionStartTs;
+        const ms = Math.max(0, Date.now() + sessionClockOffsetMs - sessionStartTs);
         const m = Math.floor(ms / 60000);
         const s = Math.floor((ms % 60000) / 1000);
         infoDuration.textContent = `${m}min ${String(s).padStart(2,"0")}s`;

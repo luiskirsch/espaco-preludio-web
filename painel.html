@@ -1483,7 +1483,7 @@
       try {
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/encerrar`, {
           method: "POST",
-          headers: { "Authorization": `Bearer ${idToken}` }
+          headers: { "Authorization": `Bearer ${await getFreshToken()}` }
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");

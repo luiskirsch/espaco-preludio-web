@@ -291,7 +291,8 @@
   }
 
   const sess = await requireTherapist({ requireDek: true });
-  const { idToken, therapist, dek } = sess;
+  const { user, idToken, therapist, dek } = sess;
+  const getFreshToken = () => user.getIdToken();
 
   // ─── Pega token LiveKit + e2eeKey ───────────────────────────
   const tokenRes = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/livekit-token`, {
@@ -750,15 +751,30 @@
     // /encerrar e stopAndUpload rodam em PARALELO — são independentes.
     // stopAndUpload precisa terminar ANTES de room.disconnect (tracks
     // do LiveKit são destruídas no disconnect e o último chunk ficaria vazio).
-    await Promise.all([
-      fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/encerrar`, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${idToken}` }
-      }).catch(() => {}),
+    const [endResult] = await Promise.allSettled([
+      (async () => {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/encerrar`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${await getFreshToken()}` }
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
+        return data;
+      })(),
       (aiCapture && aiCapture.state() === "recording")
         ? aiCapture.stopAndUpload().catch(() => {})
         : Promise.resolve()
     ]);
+
+    if (endResult.status === "rejected") {
+      console.error("end_session_error", endResult.reason);
+      _endingSession = false;
+      ctrlLeave.disabled = false;
+      endSessionBtn.disabled = false;
+      setStatus(tr("consultorio:status.inSession", "em sessão"));
+      alert(tr("consultorio:alerts.endError", "Não foi possível encerrar a consulta. Tente novamente."));
+      return;
+    }
 
     try { await room?.disconnect(); } catch {}
     window.location.href = "./painel.html";
@@ -850,7 +866,8 @@
   });
 
   // ─── Notas cifradas ─────────────────────────────────────────
-  let sessionStartTs = Date.now();
+  const sessionClockOffsetMs = Number(tokenData.serverNow || Date.now()) - Date.now();
+  let sessionStartTs = Number(tokenData.sessionStartedAt) || (Date.now() + sessionClockOffsetMs);
 
   async function loadNotes() {
     try {
@@ -937,7 +954,7 @@
   const infoDuration = document.getElementById("infoDuration");
 
   setInterval(() => {
-    const ms = Date.now() - sessionStartTs;
+    const ms = Math.max(0, Date.now() + sessionClockOffsetMs - sessionStartTs);
     const m = Math.floor(ms / 60000);
     const s = Math.floor((ms % 60000) / 1000);
     infoDuration.textContent = `${m}min ${String(s).padStart(2,"0")}s`;
