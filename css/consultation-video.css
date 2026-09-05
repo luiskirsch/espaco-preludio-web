@@ -1,0 +1,162 @@
+/* Clip the composited media at its actual boundary, including rounded corners. */
+.ep-consult .ep-tile {
+  position: relative;
+  clip-path: inset(0 round 14px);
+}
+
+.ep-consult .ep-tile video {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  border-radius: 13px;
+}
+
+/* The professional keeps the patient and clinical tools visible while sharing. */
+.ep-consult .ep-slide-preview {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  overflow: hidden;
+  color: #fbf7ec;
+  background:
+    radial-gradient(circle at 50% 0, rgba(215, 176, 107, 0.12), transparent 45%),
+    #0b0907;
+}
+
+.ep-consult .ep-slide-preview__head {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 24px;
+}
+
+.ep-consult .ep-slide-preview__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(251, 247, 236, 0.78);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ep-consult .ep-slide-preview__dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #d7b06b;
+  box-shadow: 0 0 0 4px rgba(215, 176, 107, 0.12);
+}
+
+.ep-consult .ep-slide-preview__counter {
+  flex: 0 0 auto;
+  color: #fbf7ec;
+  font: 600 12px/1 "JetBrains Mono", monospace;
+}
+
+.ep-consult .ep-slide-preview__canvas {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(215, 176, 107, 0.2);
+  border-radius: 9px;
+  background: #050403;
+}
+
+.ep-consult .ep-slide-preview__canvas img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  object-fit: contain;
+}
+
+.ep-consult .ep-slide-preview__controls {
+  position: static;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+}
+
+.ep-consult .ep-slide-preview__controls button {
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(215, 176, 107, 0.45);
+  border-radius: 8px;
+  color: #fbf7ec;
+  background: #292219;
+  font: 600 12px/1 Inter, sans-serif;
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease, opacity 120ms ease;
+}
+
+.ep-consult .ep-slide-preview__controls button:hover:not(:disabled) {
+  border-color: #d7b06b;
+  background: #352b20;
+}
+
+.ep-consult .ep-slide-preview__controls button:focus-visible {
+  outline: 2px solid #d7b06b;
+  outline-offset: 2px;
+}
+
+.ep-consult .ep-slide-preview__controls button:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.4 !important;
+}
+
+.ep-consult .ep-slide-preview__controls .ep-slide-preview__add {
+  border-color: #d7b06b;
+  color: #18120b;
+  background: #d7b06b;
+  font-weight: 700;
+}
+
+.ep-consult .ep-slide-preview__controls .ep-slide-preview__add:hover:not(:disabled) {
+  background: #e2bd79;
+}
+
+.ep-consult .ep-slide-preview__controls .ep-slide-preview__stop {
+  margin-left: auto;
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+  background: rgba(127, 29, 29, 0.18);
+}
+
+@media (max-width: 900px) {
+  .ep-consult .ep-slide-preview {
+    gap: 7px;
+    padding: 8px;
+  }
+
+  .ep-consult .ep-slide-preview__controls {
+    flex-wrap: wrap;
+  }
+
+  .ep-consult .ep-slide-preview__controls button {
+    min-height: 34px;
+    padding: 0 9px;
+    font-size: 11px;
+  }
+
+  .ep-consult .ep-slide-preview__controls .ep-slide-preview__stop {
+    margin-left: 0;
+  }
+}

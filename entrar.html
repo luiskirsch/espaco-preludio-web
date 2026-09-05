@@ -25,6 +25,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <link rel="stylesheet" href="./css/consultation-video.css?v=1">
   <script src="./i18n/init.js?v=1-3" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <style>
@@ -212,7 +213,7 @@
   import { encryptNote, decryptNote } from "./js/crypto.js";
   import { recallPatientDek, recallPatientUser } from "./js/patient-session.js";
 
-  const LIVEKIT_VERSION = "2.5.6";
+  const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack } = await import('./js/consultation-media.js?v=1');
 
   // tr(key, fallback): retorna tradução do i18next (se já carregou) ou
   // fallback PT. Mesmo padrão de paciente-login.html — robusto a status
@@ -443,24 +444,7 @@
     const keyProvider = useE2EE ? new ExternalE2EEKeyProvider() : null;
 
     const room = new Room({
-      adaptiveStream: true,
-      dynacast: true,
-      // Mesma config canonica do consultorio (lado profissional) — telessaude
-      // 1:1 calibrada pra rosto que se mexe naturalmente: 720p@30 + VP9 + 3.5
-      // Mbps + balanced degradation. Ver feedback memory ep-livekit-tuning.
-      videoCaptureDefaults: {
-        resolution: { width: 1280, height: 720, frameRate: 30 },
-        facingMode: "user"
-      },
-      publishDefaults: {
-        dtx: true,
-        red: true,
-        simulcast: false,
-        videoCodec: "vp9",
-        videoEncoding: { maxBitrate: 3_500_000, maxFramerate: 30, priority: "high" },
-        degradationPreference: "balanced",
-        audioPreset: { maxBitrate: 32_000 }
-      },
+      ...consultationRoomOptions(livekitMod),
       e2ee: useE2EE ? { keyProvider, worker: e2eeWorker } : undefined
     });
 
@@ -631,7 +615,7 @@
         }
       })
       .on(RoomEvent.TrackUnsubscribed, (track) => {
-        track.detach().forEach(el => el.remove());
+        detachConsultationTrack(track);
         if (track.kind === Track.Kind.Video) {
           tileRemote.classList.remove("ep-tile--has-video");
         }
@@ -740,71 +724,362 @@
     const _pSlidesBuf   = {};
     const _pSlidesData  = [];
     let _pSlidesIdx = 0;
+    let _pSlidesActive = false;
+    let _pSlidesDeck = "";
+    let _pSlidesLastEndedDeck = "";
+    let _pSlidesGeneration = 0;
+    let _pSlidesRetryTimer = null;
+    let _pSlidesRetryAttempt = 0;
+    let _pSlidesDisplayedIdx = null;
+    let _pSlidesDisplayedUri = "";
+    const _pSlidesStreamControllers = new Map();
+    const _pSlidesAcknowledged = new Set();
+    const SLIDES_STREAM_TOPIC = "ep:slides:image";
 
-    function showPatientSlide(idx) {
+    function patientSlideDeck(value) {
+      return typeof value === "string" && value.length > 0 && value.length <= 96 ? value : "";
+    }
+
+    function patientSlideKey(idx) {
+      return `${_pSlidesGeneration}:${idx}`;
+    }
+
+    function patientSlideMessageMatches(msg) {
+      const deck = patientSlideDeck(msg.deck);
+      return _pSlidesActive && (_pSlidesDeck ? deck === _pSlidesDeck : !deck);
+    }
+
+    function publishPatientSlideControl(message) {
+      const payload = _pSlidesDeck && message.t !== "slides:ready"
+        ? { ...message, deck: _pSlidesDeck }
+        : message;
+      return room.localParticipant.publishData(
+        new TextEncoder().encode(JSON.stringify(payload)),
+        { reliable: true }
+      ).catch(() => {});
+    }
+
+    function clearPatientSlideRetry() {
+      if (_pSlidesRetryTimer) clearTimeout(_pSlidesRetryTimer);
+      _pSlidesRetryTimer = null;
+      _pSlidesRetryAttempt = 0;
+    }
+
+    function abortPatientSlideStreams() {
+      _pSlidesStreamControllers.forEach(controller => controller.abort());
+      _pSlidesStreamControllers.clear();
+    }
+
+    function clearPatientSlideData() {
+      clearPatientSlideRetry();
+      abortPatientSlideStreams();
+      _pSlidesData.length = 0;
+      Object.keys(_pSlidesBuf).forEach(k => delete _pSlidesBuf[k]);
+      _pSlidesAcknowledged.clear();
+      _pSlidesDisplayedIdx = null;
+      _pSlidesDisplayedUri = "";
+    }
+
+    function activatePatientSlides(deck) {
+      const isNew = !_pSlidesActive || deck !== _pSlidesDeck;
+      if (isNew) {
+        if (_pSlidesActive && _pSlidesDeck) _pSlidesLastEndedDeck = _pSlidesDeck;
+        _pSlidesGeneration += 1;
+        clearPatientSlideData();
+        _pSlidesDeck = deck;
+      }
+      _pSlidesActive = true;
+      return isNew;
+    }
+
+    function endPatientSlides(deck, rememberEnded = true) {
+      if (!_pSlidesActive || (_pSlidesDeck ? deck !== _pSlidesDeck : !!deck)) return;
+      if (rememberEnded) _pSlidesLastEndedDeck = _pSlidesDeck;
+      _pSlidesActive = false;
+      _pSlidesGeneration += 1;
+      _pSlidesDeck = "";
+      clearPatientSlideData();
+      _pSlidesIdx = 0;
+      slidesOverlay.style.display = "none";
+      slidesImg.removeAttribute("src");
+    }
+
+    function requestPatientSlide(idx, soon = false, delayOverride = null) {
+      if (!_pSlidesActive || idx !== _pSlidesIdx || _pSlidesData[idx]) return;
+      if (_pSlidesRetryTimer) {
+        if (!soon) return;
+        clearTimeout(_pSlidesRetryTimer);
+        _pSlidesRetryTimer = null;
+      }
+      const generation = _pSlidesGeneration;
+      const attempt = _pSlidesRetryAttempt;
+      const delay = delayOverride ?? (soon ? 150 : Math.min(4000, 400 * (2 ** Math.min(attempt, 4))));
+      _pSlidesRetryTimer = setTimeout(() => {
+        _pSlidesRetryTimer = null;
+        if (generation !== _pSlidesGeneration || !_pSlidesActive || idx !== _pSlidesIdx || _pSlidesData[idx]) {
+          clearPatientSlideRetry();
+          return;
+        }
+        _pSlidesRetryAttempt = attempt + 1;
+        void publishPatientSlideControl({ t: "slides:request", idx, stream: true });
+        requestPatientSlide(idx);
+      }, delay);
+    }
+
+    function postponePatientSlideRetry(idx) {
+      if (idx !== _pSlidesIdx) return;
+      if (_pSlidesRetryTimer) clearTimeout(_pSlidesRetryTimer);
+      _pSlidesRetryTimer = null;
+      _pSlidesRetryAttempt = 2;
+      requestPatientSlide(idx, false, 6000);
+    }
+
+    function showPatientSlide(idx, preservePrevious = true) {
+      if (!Number.isInteger(idx) || idx < 0 || idx >= 20) return;
+      if (idx !== _pSlidesIdx) {
+        clearPatientSlideRetry();
+      }
       _pSlidesIdx = idx;
-      if (!_pSlidesData[idx]) return;
-      slidesImg.src = _pSlidesData[idx];
-      slidesImg.alt = `Slide ${idx + 1}`;
+      slidesOverlay.style.display = "flex";
+      const uri = _pSlidesData[idx] || "";
+      if (uri) {
+        clearPatientSlideRetry();
+        _pSlidesDisplayedIdx = idx;
+        _pSlidesDisplayedUri = uri;
+        slidesImg.src = uri;
+        slidesImg.alt = `Slide ${idx + 1}`;
+      } else {
+        if (!preservePrevious) {
+          _pSlidesDisplayedIdx = null;
+          _pSlidesDisplayedUri = "";
+          slidesImg.removeAttribute("src");
+        }
+        requestPatientSlide(idx);
+      }
     }
 
     const _pSlidesKey = e2eeKeyBytes
       ? await crypto.subtle.importKey("raw", e2eeKeyBytes, { name: "AES-GCM" }, false, ["encrypt", "decrypt"])
       : null;
 
+    function concatSlideChunks(chunks) {
+      const length = chunks.reduce((total, chunk) => total + chunk.byteLength, 0);
+      const bytes = new Uint8Array(length);
+      let offset = 0;
+      chunks.forEach((chunk) => {
+        bytes.set(chunk, offset);
+        offset += chunk.byteLength;
+      });
+      return bytes;
+    }
+
+    function slideBytesToB64(bytes) {
+      let binary = "";
+      for (let start = 0; start < bytes.length; start += 8192) {
+        const end = Math.min(start + 8192, bytes.length);
+        let part = "";
+        for (let i = start; i < end; i++) part += String.fromCharCode(bytes[i]);
+        binary += part;
+      }
+      return btoa(binary);
+    }
+
+    function completePatientSlide(idx, uri, generation) {
+      if (!_pSlidesActive || generation !== _pSlidesGeneration) return;
+      _pSlidesData[idx] = uri;
+      delete _pSlidesBuf[idx];
+      if (idx === _pSlidesIdx) showPatientSlide(idx);
+    }
+
+    room.registerByteStreamHandler(SLIDES_STREAM_TOPIC, async (reader) => {
+      const idx = Number(reader.info.attributes?.idx);
+      const ivB64 = reader.info.attributes?.iv || "";
+      const deck = patientSlideDeck(reader.info.attributes?.deck);
+      const streamSize = reader.info.size;
+      if (
+        !Number.isInteger(idx)
+        || idx < 0
+        || idx >= 20
+        || reader.info.attributes?.format !== "jpeg-bytes-v1"
+        || (typeof streamSize === "number" && (!Number.isFinite(streamSize) || streamSize < 1 || streamSize > 512 * 1024))
+        || !_pSlidesActive
+        || (_pSlidesDeck ? deck !== _pSlidesDeck : !!deck)
+      ) {
+        const discardController = new AbortController();
+        const discardTimeout = setTimeout(() => discardController.abort(), 5000);
+        try {
+          reader.withAbortSignal(discardController.signal);
+          await reader.readAll();
+        } catch {} finally {
+          clearTimeout(discardTimeout);
+        }
+        return;
+      }
+      const generation = _pSlidesGeneration;
+      const streamKey = patientSlideKey(idx);
+      _pSlidesStreamControllers.get(streamKey)?.abort();
+      const controller = new AbortController();
+      _pSlidesStreamControllers.set(streamKey, controller);
+      reader.withAbortSignal(controller.signal);
+      const streamTimeout = setTimeout(() => controller.abort(), 20_000);
+      reader.onProgress = () => {
+        if (
+          generation === _pSlidesGeneration
+          && _pSlidesStreamControllers.get(streamKey) === controller
+        ) {
+          postponePatientSlideRetry(idx);
+        }
+      };
+      postponePatientSlideRetry(idx);
+      try {
+        let imageBytes = concatSlideChunks(await reader.readAll());
+        if (!_pSlidesActive || generation !== _pSlidesGeneration) return;
+        if (ivB64) {
+          if (!_pSlidesKey) throw new Error("missing slide key");
+          const iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
+          imageBytes = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv }, _pSlidesKey, imageBytes));
+        }
+        completePatientSlide(idx, "data:image/jpeg;base64," + slideBytesToB64(imageBytes), generation);
+      } catch (error) {
+        if (
+          generation === _pSlidesGeneration
+          && _pSlidesStreamControllers.get(streamKey) === controller
+        ) {
+          console.warn("[slides] stream failed", error);
+          requestPatientSlide(idx, true);
+        }
+      } finally {
+        clearTimeout(streamTimeout);
+        if (_pSlidesStreamControllers.get(streamKey) === controller) {
+          _pSlidesStreamControllers.delete(streamKey);
+        }
+      }
+    });
+
     room.on(RoomEvent.DataReceived, async (payload) => {
       let msg;
       try { msg = JSON.parse(new TextDecoder().decode(payload)); } catch { return; }
+      if (!msg || typeof msg.t !== "string") return;
+      if (msg.t === "slides:hello") {
+        announcePatientSlideReceiver();
+        return;
+      }
+      if (msg.t === "slides:start") {
+        const deck = patientSlideDeck(msg.deck);
+        if (deck && deck === _pSlidesLastEndedDeck) return;
+        if (_pSlidesActive && _pSlidesDeck && !deck) return;
+        const isNew = activatePatientSlides(deck);
+        const idx = Number.isInteger(msg.idx) && msg.idx >= 0 && msg.idx < 20 ? msg.idx : 0;
+        showPatientSlide(idx, !isNew);
+        return;
+      }
+      if (!msg.t.startsWith("slides:") || !patientSlideMessageMatches(msg)) return;
       switch (msg.t) {
-        case "slides:start":
-          slidesOverlay.style.display = "flex";
-          _pSlidesIdx = Number.isInteger(msg.idx) ? msg.idx : 0;
-          break;
         case "slides:update":
-          slidesOverlay.style.display = "flex";
-          _pSlidesIdx = Number.isInteger(msg.idx) ? msg.idx : _pSlidesIdx;
-          showPatientSlide(_pSlidesIdx);
+          showPatientSlide(Number.isInteger(msg.idx) ? msg.idx : _pSlidesIdx);
           break;
-        case "slides:slide":
-          _pSlidesBuf[msg.idx] = { cn: msg.cn, iv: msg.iv || null, chunks: new Array(msg.cn).fill(null) };
+        case "slides:slide": {
+          const idx = Number(msg.idx);
+          const count = Number(msg.cn);
+          if (!Number.isInteger(idx) || idx < 0 || idx >= 20) break;
+          if (!Number.isInteger(count) || count < 1 || count > 256) {
+            if (idx === _pSlidesIdx) requestPatientSlide(idx, true);
+            break;
+          }
+          _pSlidesBuf[idx] = {
+            generation: _pSlidesGeneration,
+            iv: typeof msg.iv === "string" ? msg.iv : null,
+            chunks: new Array(count).fill(null)
+          };
+          postponePatientSlideRetry(idx);
           break;
+        }
         case "slides:chunk": {
-          const buf = _pSlidesBuf[msg.idx];
-          if (buf) {
-            buf.chunks[msg.ci] = msg.d;
-            if (buf.chunks.every(c => c !== null)) {
-              const assembled = buf.chunks.join("");
-              if (buf.iv && _pSlidesKey) {
-                try {
-                  const iv  = Uint8Array.from(atob(buf.iv),  c => c.charCodeAt(0));
-                  const enc = Uint8Array.from(atob(assembled), c => c.charCodeAt(0));
-                  const dec = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, _pSlidesKey, enc);
-                  _pSlidesData[msg.idx] = "data:image/jpeg;base64," + new TextDecoder().decode(dec);
-                } catch (e) { console.warn("[slides] decrypt failed", e); }
-              } else {
-                _pSlidesData[msg.idx] = "data:image/jpeg;base64," + assembled;
+          const idx = Number(msg.idx);
+          const chunkIndex = Number(msg.ci);
+          const buf = _pSlidesBuf[idx];
+          if (
+            !buf
+            || buf.generation !== _pSlidesGeneration
+            || !Number.isInteger(chunkIndex)
+            || chunkIndex < 0
+            || chunkIndex >= buf.chunks.length
+            || typeof msg.d !== "string"
+            || msg.d.length > 16_000
+          ) {
+            if (idx === _pSlidesIdx) requestPatientSlide(idx, true);
+            break;
+          }
+          buf.chunks[chunkIndex] = msg.d;
+          if (buf.chunks.every(c => c !== null)) {
+            const generation = _pSlidesGeneration;
+            const assembled = buf.chunks.join("");
+            try {
+              let imageB64 = assembled;
+              if (buf.iv) {
+                if (!_pSlidesKey) throw new Error("missing slide key");
+                const iv  = Uint8Array.from(atob(buf.iv), c => c.charCodeAt(0));
+                const enc = Uint8Array.from(atob(assembled), c => c.charCodeAt(0));
+                const dec = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, _pSlidesKey, enc);
+                imageB64 = new TextDecoder().decode(dec);
               }
-              showPatientSlide(_pSlidesIdx);
-              delete _pSlidesBuf[msg.idx];
+              completePatientSlide(idx, "data:image/jpeg;base64," + imageB64, generation);
+            } catch (error) {
+              if (generation === _pSlidesGeneration) {
+                if (_pSlidesBuf[idx] === buf) delete _pSlidesBuf[idx];
+                console.warn("[slides] decrypt failed", error);
+                requestPatientSlide(idx, true);
+              }
             }
+          } else {
+            postponePatientSlideRetry(idx);
           }
           break;
         }
         case "slides:nav":
-          slidesOverlay.style.display = "flex";
-          showPatientSlide(msg.idx);
+          showPatientSlide(Number(msg.idx));
           break;
         case "slides:end":
-          slidesOverlay.style.display = "none";
-          slidesImg.src = "";
-          _pSlidesIdx = 0;
-          _pSlidesData.length = 0;
-          Object.keys(_pSlidesBuf).forEach(k => delete _pSlidesBuf[k]);
+          endPatientSlides(patientSlideDeck(msg.deck));
           break;
       }
     });
 
-    window.addEventListener("beforeunload", () => { try { room.disconnect(); } catch {} });
+    slidesImg.addEventListener("load", () => {
+      const idx = _pSlidesDisplayedIdx;
+      const uri = _pSlidesDisplayedUri;
+      if (!_pSlidesActive || idx === null || _pSlidesData[idx] !== uri) return;
+      const key = patientSlideKey(idx);
+      if (_pSlidesAcknowledged.has(key)) return;
+      _pSlidesAcknowledged.add(key);
+      void publishPatientSlideControl({ t: "slides:ack", idx, stream: true });
+    });
+
+    slidesImg.addEventListener("error", () => {
+      const failedIdx = _pSlidesDisplayedIdx;
+      if (failedIdx !== null) _pSlidesData[failedIdx] = "";
+      _pSlidesDisplayedIdx = null;
+      _pSlidesDisplayedUri = "";
+      slidesImg.removeAttribute("src");
+      if (_pSlidesActive) requestPatientSlide(_pSlidesIdx, true);
+    });
+
+    function announcePatientSlideReceiver() {
+      void publishPatientSlideControl({ t: "slides:ready", stream: true });
+    }
+
+    room.on(RoomEvent.Connected, announcePatientSlideReceiver);
+    room.on(RoomEvent.Reconnected, announcePatientSlideReceiver);
+    room.on(RoomEvent.ParticipantConnected, announcePatientSlideReceiver);
+    room.on(RoomEvent.ParticipantDisconnected, () => endPatientSlides(_pSlidesDeck, false));
+    room.on(RoomEvent.Disconnected, () => endPatientSlides(_pSlidesDeck, false));
+    announcePatientSlideReceiver();
+
+    window.addEventListener("beforeunload", () => {
+      abortPatientSlideStreams();
+      try { room.unregisterByteStreamHandler(SLIDES_STREAM_TOPIC); } catch {}
+      try { room.disconnect(); } catch {}
+    });
   }
 
   // Move #ep-lang-switcher para o slot no topbar assim que for criado pelo init.js
