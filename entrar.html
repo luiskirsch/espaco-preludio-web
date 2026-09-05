@@ -759,6 +759,7 @@
         case "slides:start":
           slidesOverlay.style.display = "flex";
           slidesImg.src = "";
+          _pSlidesIdx = Number.isInteger(msg.idx) ? msg.idx : 0;
           break;
         case "slides:slide":
           _pSlidesBuf[msg.idx] = { cn: msg.cn, iv: msg.iv || null, chunks: new Array(msg.cn).fill(null) };

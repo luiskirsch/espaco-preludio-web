@@ -209,10 +209,11 @@
   </div>
 
   <!-- Barra do apresentador (terapeuta — visível só durante compartilhamento) -->
-  <div id="slidesPresenter" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:250;background:#14110d;border-top:1px solid rgba(215,176,107,0.25);padding:10px 16px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));align-items:center;justify-content:center;gap:10px;flex-wrap:nowrap;">
-    <button id="slidesPrev" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" style="min-width:40px;min-height:40px;font-size:18px;padding:0;" aria-label="Slide anterior">←</button>
+  <div id="slidesPresenter" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:250;background:#14110d;border-top:1px solid rgba(215,176,107,0.35);padding:10px 16px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
+    <button id="slidesPrev" type="button" style="min-width:112px;min-height:42px;padding:0 16px;border:1px solid rgba(215,176,107,.55);border-radius:10px;background:#292219;color:#fff;font:600 14px/1 Inter,sans-serif;cursor:pointer;" aria-label="Slide anterior">← Anterior</button>
     <span id="slidesCounter" style="font-size:14px;font-weight:600;color:#fbf7ec;min-width:68px;text-align:center;">1 / 1</span>
-    <button id="slidesNext" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" style="min-width:40px;min-height:40px;font-size:18px;padding:0;" aria-label="Próximo slide">→</button>
+    <button id="slidesNext" type="button" style="min-width:112px;min-height:42px;padding:0 16px;border:1px solid rgba(215,176,107,.55);border-radius:10px;background:#292219;color:#fff;font:600 14px/1 Inter,sans-serif;cursor:pointer;" aria-label="Próximo slide">Próximo →</button>
+    <button id="slidesAdd" type="button" style="min-height:42px;padding:0 16px;border:1px solid #d7b06b;border-radius:10px;background:#d7b06b;color:#18120b;font:700 14px/1 Inter,sans-serif;cursor:pointer;">+ Adicionar slides</button>
     <button id="slidesStop" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" style="color:#f87171;margin-left:4px;">× Encerrar slides</button>
   </div>
 
@@ -1072,6 +1073,7 @@
   const slidesLocalImg = document.getElementById("slidesLocalImg");
   const slidesPrev      = document.getElementById("slidesPrev");
   const slidesNext      = document.getElementById("slidesNext");
+  const slidesAdd       = document.getElementById("slidesAdd");
   const slidesCounter   = document.getElementById("slidesCounter");
   const slidesStop      = document.getElementById("slidesStop");
 
@@ -1079,6 +1081,7 @@
   let slidesData    = [];
   let slidesIdx     = 0;
   let slidesSharing = false;
+  let slidesInputMode = "start";
 
   async function slidesCompress(file) {
     return new Promise((resolve) => {
@@ -1147,15 +1150,32 @@
     slidesCounter.textContent = `${slidesIdx + 1} / ${slidesData.length}`;
     slidesPrev.disabled = slidesIdx === 0;
     slidesNext.disabled = slidesIdx === slidesData.length - 1;
+    slidesPrev.style.opacity = slidesPrev.disabled ? ".4" : "1";
+    slidesNext.style.opacity = slidesNext.disabled ? ".4" : "1";
+    slidesPrev.style.cursor = slidesPrev.disabled ? "not-allowed" : "pointer";
+    slidesNext.style.cursor = slidesNext.disabled ? "not-allowed" : "pointer";
+    slidesAdd.disabled = slidesData.length >= 20;
+    slidesAdd.style.opacity = slidesAdd.disabled ? ".4" : "1";
+  }
+
+  async function slidesCompressMany(files, limit) {
+    const compressed = [];
+    for (const file of Array.from(files).slice(0, limit)) {
+      const data = await slidesCompress(file);
+      if (data) compressed.push(data);
+    }
+    return compressed;
+  }
+
+  async function slidesSyncAll() {
+    await slidesPublish({ t: "slides:start", count: slidesData.length, idx: slidesIdx });
+    for (let i = 0; i < slidesData.length; i++) await slidesSendOne(i);
+    await slidesPublish({ t: "slides:nav", idx: slidesIdx });
   }
 
   async function slidesStart(files) {
     ctrlSlides.disabled = true;
-    const compressed = [];
-    for (const f of files) {
-      const d = await slidesCompress(f);
-      if (d) compressed.push(d);
-    }
+    const compressed = await slidesCompressMany(files, 20);
     ctrlSlides.disabled = false;
     if (!compressed.length) return;
 
@@ -1170,9 +1190,24 @@
     slidesLocalOverlay.setAttribute("aria-hidden", "false");
     slidesRefreshPresenter();
 
-    await slidesPublish({ t: "slides:start", count: slidesData.length });
-    for (let i = 0; i < slidesData.length; i++) await slidesSendOne(i);
-    await slidesPublish({ t: "slides:nav", idx: 0 });
+    await slidesSyncAll();
+  }
+
+  async function slidesAppend(files) {
+    const available = 20 - slidesData.length;
+    if (available <= 0) return;
+    ctrlSlides.disabled = true;
+    slidesAdd.disabled = true;
+    try {
+      const compressed = await slidesCompressMany(files, available);
+      if (!compressed.length) return;
+      slidesData.push(...compressed);
+      slidesRefreshPresenter();
+      await slidesSyncAll();
+    } finally {
+      ctrlSlides.disabled = false;
+      slidesRefreshPresenter();
+    }
   }
 
   function slidesNavigate(delta) {
@@ -1199,12 +1234,22 @@
 
   ctrlSlides.addEventListener("click", () => {
     if (slidesSharing) { slidesEnd(); return; }
+    slidesInputMode = "start";
+    slidesInput.click();
+  });
+  slidesAdd.addEventListener("click", () => {
+    if (!slidesSharing || slidesData.length >= 20) return;
+    slidesInputMode = "append";
     slidesInput.click();
   });
   slidesInput.addEventListener("change", (e) => {
     const files = Array.from(e.target.files || []).slice(0, 20);
     slidesInput.value = "";
-    if (files.length) slidesStart(files);
+    if (files.length) {
+      if (slidesInputMode === "append" && slidesSharing) slidesAppend(files);
+      else slidesStart(files);
+    }
+    slidesInputMode = "start";
   });
   slidesPrev.addEventListener("click", () => slidesNavigate(-1));
   slidesNext.addEventListener("click", () => slidesNavigate(+1));
@@ -1213,9 +1258,7 @@
   // Re-envia estado atual se paciente reconectar durante compartilhamento
   room.on(RoomEvent.ParticipantConnected, async () => {
     if (!slidesSharing || !slidesData.length) return;
-    await slidesPublish({ t: "slides:start", count: slidesData.length });
-    for (let i = 0; i < slidesData.length; i++) await slidesSendOne(i);
-    await slidesPublish({ t: "slides:nav", idx: slidesIdx });
+    await slidesSyncAll();
   });
 
   // Som ambiente e clima já foram inicializados por initAtmosphere() acima.
