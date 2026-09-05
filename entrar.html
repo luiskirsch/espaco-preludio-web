@@ -739,6 +739,14 @@
     const slidesImg     = document.getElementById("slidesImg");
     const _pSlidesBuf   = {};
     const _pSlidesData  = [];
+    let _pSlidesIdx = 0;
+
+    function showPatientSlide(idx) {
+      _pSlidesIdx = idx;
+      if (!_pSlidesData[idx]) return;
+      slidesImg.src = _pSlidesData[idx];
+      slidesImg.alt = `Slide ${idx + 1}`;
+    }
 
     const _pSlidesKey = e2eeKeyBytes
       ? await crypto.subtle.importKey("raw", e2eeKeyBytes, { name: "AES-GCM" }, false, ["encrypt", "decrypt"])
@@ -771,20 +779,20 @@
               } else {
                 _pSlidesData[msg.idx] = "data:image/jpeg;base64," + assembled;
               }
+              showPatientSlide(_pSlidesIdx);
+              delete _pSlidesBuf[msg.idx];
             }
           }
           break;
         }
         case "slides:nav":
           slidesOverlay.style.display = "flex";
-          if (_pSlidesData[msg.idx]) {
-            slidesImg.src = _pSlidesData[msg.idx];
-            slidesImg.alt = `Slide ${msg.idx + 1}`;
-          }
+          showPatientSlide(msg.idx);
           break;
         case "slides:end":
           slidesOverlay.style.display = "none";
           slidesImg.src = "";
+          _pSlidesIdx = 0;
           _pSlidesData.length = 0;
           Object.keys(_pSlidesBuf).forEach(k => delete _pSlidesBuf[k]);
           break;

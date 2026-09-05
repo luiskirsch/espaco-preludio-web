@@ -202,6 +202,12 @@
     </div>
   </main>
 
+  <!-- Visualização local do material apresentado. Mantém a barra superior e
+       os controles de navegação visíveis para o profissional. -->
+  <div id="slidesLocalOverlay" aria-hidden="true" style="display:none;position:fixed;top:64px;right:0;bottom:61px;left:0;z-index:220;background:#080705;align-items:center;justify-content:center;padding:18px;overflow:hidden;">
+    <img id="slidesLocalImg" src="" alt="" style="display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:6px;box-shadow:0 18px 60px rgba(0,0,0,.55);">
+  </div>
+
   <!-- Barra do apresentador (terapeuta — visível só durante compartilhamento) -->
   <div id="slidesPresenter" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:250;background:#14110d;border-top:1px solid rgba(215,176,107,0.25);padding:10px 16px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));align-items:center;justify-content:center;gap:10px;flex-wrap:nowrap;">
     <button id="slidesPrev" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" style="min-width:40px;min-height:40px;font-size:18px;padding:0;" aria-label="Slide anterior">←</button>
@@ -1062,6 +1068,8 @@
   const slidesInput     = document.getElementById("slidesInput");
   const ctrlSlides      = document.getElementById("ctrlSlides");
   const slidesPresenter = document.getElementById("slidesPresenter");
+  const slidesLocalOverlay = document.getElementById("slidesLocalOverlay");
+  const slidesLocalImg = document.getElementById("slidesLocalImg");
   const slidesPrev      = document.getElementById("slidesPrev");
   const slidesNext      = document.getElementById("slidesNext");
   const slidesCounter   = document.getElementById("slidesCounter");
@@ -1091,8 +1099,8 @@
     });
   }
 
-  function slidesPublish(obj) {
-    room?.localParticipant?.publishData(
+  async function slidesPublish(obj) {
+    await room?.localParticipant?.publishData(
       new TextEncoder().encode(JSON.stringify(obj)),
       { reliable: true }
     );
@@ -1129,10 +1137,9 @@
     }
     const chunks = [];
     for (let i = 0; i < sendB64.length; i += SLIDES_CHUNK) chunks.push(sendB64.slice(i, i + SLIDES_CHUNK));
-    slidesPublish({ t: "slides:slide", idx, cn: chunks.length, iv: ivB64 });
+    await slidesPublish({ t: "slides:slide", idx, cn: chunks.length, iv: ivB64 });
     for (let ci = 0; ci < chunks.length; ci++) {
-      slidesPublish({ t: "slides:chunk", idx, ci, d: chunks[ci] });
-      if (ci % 8 === 7) await new Promise(r => setTimeout(r, 0));
+      await slidesPublish({ t: "slides:chunk", idx, ci, d: chunks[ci] });
     }
   }
 
@@ -1157,17 +1164,23 @@
     slidesSharing = true;
     ctrlSlides.classList.add("is-active");
     slidesPresenter.style.display = "flex";
+    slidesLocalImg.src = slidesData[0];
+    slidesLocalImg.alt = "Slide 1";
+    slidesLocalOverlay.style.display = "flex";
+    slidesLocalOverlay.setAttribute("aria-hidden", "false");
     slidesRefreshPresenter();
 
-    slidesPublish({ t: "slides:start", count: slidesData.length });
+    await slidesPublish({ t: "slides:start", count: slidesData.length });
     for (let i = 0; i < slidesData.length; i++) await slidesSendOne(i);
-    slidesPublish({ t: "slides:nav", idx: 0 });
+    await slidesPublish({ t: "slides:nav", idx: 0 });
   }
 
   function slidesNavigate(delta) {
     const next = slidesIdx + delta;
     if (next < 0 || next >= slidesData.length) return;
     slidesIdx = next;
+    slidesLocalImg.src = slidesData[slidesIdx];
+    slidesLocalImg.alt = `Slide ${slidesIdx + 1}`;
     slidesRefreshPresenter();
     slidesPublish({ t: "slides:nav", idx: slidesIdx });
   }
@@ -1178,6 +1191,9 @@
     slidesIdx     = 0;
     ctrlSlides.classList.remove("is-active");
     slidesPresenter.style.display = "none";
+    slidesLocalOverlay.style.display = "none";
+    slidesLocalOverlay.setAttribute("aria-hidden", "true");
+    slidesLocalImg.src = "";
     slidesPublish({ t: "slides:end" });
   }
 
@@ -1197,9 +1213,9 @@
   // Re-envia estado atual se paciente reconectar durante compartilhamento
   room.on(RoomEvent.ParticipantConnected, async () => {
     if (!slidesSharing || !slidesData.length) return;
-    slidesPublish({ t: "slides:start", count: slidesData.length });
+    await slidesPublish({ t: "slides:start", count: slidesData.length });
     for (let i = 0; i < slidesData.length; i++) await slidesSendOne(i);
-    slidesPublish({ t: "slides:nav", idx: slidesIdx });
+    await slidesPublish({ t: "slides:nav", idx: slidesIdx });
   });
 
   // Som ambiente e clima já foram inicializados por initAtmosphere() acima.
