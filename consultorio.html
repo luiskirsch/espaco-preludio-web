@@ -1123,27 +1123,38 @@
     return btoa(s);
   }
 
+  const slidesInFlight = new Map();
   async function slidesSendOne(idx) {
-    const dataUrl = slidesData[idx] || "";
-    const key = await slidesGetKey();
-    let sendB64, ivB64 = null;
-    if (key) {
-      const iv  = crypto.getRandomValues(new Uint8Array(12));
-      const enc = new Uint8Array(await crypto.subtle.encrypt(
-        { name: "AES-GCM", iv },
-        key,
-        new TextEncoder().encode(dataUrl.split(",")[1] || "")
-      ));
-      sendB64 = slidesB64(enc);
-      ivB64   = slidesB64(iv);
-    } else {
-      sendB64 = dataUrl.split(",")[1] || "";
-    }
-    const chunks = [];
-    for (let i = 0; i < sendB64.length; i += SLIDES_CHUNK) chunks.push(sendB64.slice(i, i + SLIDES_CHUNK));
-    await slidesPublish({ t: "slides:slide", idx, cn: chunks.length, iv: ivB64 });
-    for (let ci = 0; ci < chunks.length; ci++) {
-      await slidesPublish({ t: "slides:chunk", idx, ci, d: chunks[ci] });
+    if (slidesInFlight.has(idx)) return slidesInFlight.get(idx);
+    const transfer = (async () => {
+      const dataUrl = slidesData[idx] || "";
+      if (!dataUrl) return;
+      const key = await slidesGetKey();
+      let sendB64, ivB64 = null;
+      if (key) {
+        const iv  = crypto.getRandomValues(new Uint8Array(12));
+        const enc = new Uint8Array(await crypto.subtle.encrypt(
+          { name: "AES-GCM", iv },
+          key,
+          new TextEncoder().encode(dataUrl.split(",")[1] || "")
+        ));
+        sendB64 = slidesB64(enc);
+        ivB64   = slidesB64(iv);
+      } else {
+        sendB64 = dataUrl.split(",")[1] || "";
+      }
+      const chunks = [];
+      for (let i = 0; i < sendB64.length; i += SLIDES_CHUNK) chunks.push(sendB64.slice(i, i + SLIDES_CHUNK));
+      await slidesPublish({ t: "slides:slide", idx, cn: chunks.length, iv: ivB64 });
+      for (let ci = 0; ci < chunks.length; ci++) {
+        await slidesPublish({ t: "slides:chunk", idx, ci, d: chunks[ci] });
+      }
+    })();
+    slidesInFlight.set(idx, transfer);
+    try {
+      await transfer;
+    } finally {
+      if (slidesInFlight.get(idx) === transfer) slidesInFlight.delete(idx);
     }
   }
 
@@ -1174,6 +1185,18 @@
     // anteriores antes de enxergar a página atual.
     const order = [slidesIdx, ...slidesData.map((_, i) => i).filter(i => i !== slidesIdx)];
     for (const i of order) await slidesSendOne(i);
+    await slidesPublish({ t: "slides:nav", idx: slidesIdx });
+  }
+
+  async function slidesSyncCurrent() {
+    if (!slidesSharing || !slidesData[slidesIdx]) return;
+    const previousTransfer = slidesInFlight.get(slidesIdx);
+    if (previousTransfer) {
+      try { await previousTransfer; } catch {}
+      if (slidesInFlight.get(slidesIdx) === previousTransfer) slidesInFlight.delete(slidesIdx);
+    }
+    await slidesPublish({ t: "slides:start", count: slidesData.length, idx: slidesIdx });
+    await slidesSendOne(slidesIdx);
     await slidesPublish({ t: "slides:nav", idx: slidesIdx });
   }
 
@@ -1286,6 +1309,23 @@
   room.on(RoomEvent.ParticipantConnected, async () => {
     if (!slidesSharing || !slidesData.length) return;
     await slidesSyncAll();
+  });
+
+  // O receptor confirma quando seu listener está pronto e pode pedir de novo
+  // uma página cujo cabeçalho/chunk tenha chegado antes da montagem da tela.
+  room.on(RoomEvent.DataReceived, async (payload) => {
+    let message;
+    try { message = JSON.parse(new TextDecoder().decode(payload)); } catch { return; }
+    if (message?.t === "slides:ready") {
+      await slidesSyncCurrent();
+      return;
+    }
+    if (message?.t === "slides:request") {
+      const idx = Number(message.idx);
+      if (!slidesSharing || !Number.isInteger(idx) || idx < 0 || idx >= slidesData.length) return;
+      await slidesSendOne(idx);
+      if (idx === slidesIdx) await slidesPublish({ t: "slides:nav", idx });
+    }
   });
 
   // Som ambiente e clima já foram inicializados por initAtmosphere() acima.
