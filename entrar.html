@@ -113,7 +113,6 @@
     <div class="ep-flex ep-flex--center ep-gap-14 ep-w-full">
       <span id="connectionStatus" class="ep-consult__status" data-i18n="entrar:session.connecting">conectando…</span>
       <span id="e2eeBadge" class="ep-badge ep-badge--ok ep-hide" data-i18n="entrar:session.e2eeBadge">E2EE ativo</span>
-      <span id="demoRoomBadge" class="ep-badge ep-hide" style="border-color:#d6a944;color:#f4cc70;background:rgba(214,169,68,.12)">DEMONSTRAÇÃO · SEM USO CLÍNICO</span>
       <span class="ep-text-xs ep-text-muted" id="infoDuration" data-i18n="entrar:session.durationInitial">0min 00s</span>
 
       <!-- Controles centrais (mic / cam / leave) ABSOLUTOS no centro da topbar.
@@ -399,7 +398,6 @@
     }
 
     document.getElementById("topTherapistName").textContent = data.therapistDisplayName || tr("entrar:session.defaultTherapist", "Profissional");
-    if (data.demoTechnicalRoom) document.getElementById("demoRoomBadge")?.classList.remove("ep-hide");
     prejoin.classList.add("ep-hide");
     inSession.classList.remove("ep-hide");
     // troca o bg do html de cream (prejoin) pra escuro (sessao) — match
