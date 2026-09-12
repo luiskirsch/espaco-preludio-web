@@ -91,6 +91,13 @@ test('entrada principal aponta para o portal institucional', async () => {
   assert.doesNotMatch(html, /<a href="\.\/entrar\.html" class="nav-login">Entrar<\/a>/);
 });
 
+test('sessão não verificada é limpa sem enviar confirmação ao abrir a página', async () => {
+  const script = await readFile(resolve(root, 'js/instituicao-login.js'), 'utf8');
+  const passiveBootstrap = script.slice(script.lastIndexOf('(async () => {'));
+  assert.match(passiveBootstrap, /if \(!user\.emailVerified\) \{[\s\S]*?signOut\(auth\)[\s\S]*?return;/);
+  assert.doesNotMatch(passiveBootstrap, /ensureVerifiedEmail\(user\)/);
+});
+
 test('login institucional não cria rolagem horizontal em desktop ou celular', { timeout: 30000, skip: chromePath ? false : 'Chrome ou Edge não encontrado' }, async () => {
   const server = await startServer();
   const userData = await mkdtemp(join(tmpdir(), 'ep-institution-browser-'));

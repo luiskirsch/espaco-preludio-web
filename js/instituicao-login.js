@@ -201,8 +201,13 @@ form.addEventListener("submit", async event => {
     await setPersistence(auth, browserSessionPersistence);
     const user = await authReady();
     if (!user) return;
+    // Uma sessão antiga ou incompleta não deve disparar e-mail nem mostrar
+    // aviso assim que a página abre. Confirmação só ocorre após ação explícita.
+    if (!user.emailVerified) {
+      await signOut(auth).catch(() => {});
+      return;
+    }
     setBusy(true, "Abrindo painel…");
-    await ensureVerifiedEmail(user);
     await validateInstitutionAccess(user);
     window.location.replace("./instituicao-painel.html");
   } catch (error) {
