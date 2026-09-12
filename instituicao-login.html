@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <script>
+    (function () {
+      if (window.top !== window.self) {
+        try { window.top.location.replace(location.href); } catch (_) { document.documentElement.innerHTML = ""; }
+        return;
+      }
+      var host = (location.hostname || "").toLowerCase();
+      var allowed = ["espacopreludio.com", "www.espacopreludio.com", "espacopreludio.com.br", "www.espacopreludio.com.br", "localhost", "127.0.0.1"];
+      if (location.protocol === "file:" || (host && allowed.indexOf(host) === -1)) location.replace("https://espacopreludio.com.br/");
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#073b40">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Portal da instituição | Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/instituicao.css?v=1">
+</head>
+<body class="institution-login-page">
+  <main class="login-shell">
+    <section class="login-context" aria-labelledby="loginTitle">
+      <a class="institution-brand institution-brand-light" href="./index.html" aria-label="Espaço Prelúdio — página inicial">
+        <img src="./logo_oficial_fundo_transparente.png" alt="" width="58" height="58">
+        <span><small>ESPAÇO</small><strong>Prelúdio</strong></span>
+      </a>
+
+      <div class="login-context-copy">
+        <p class="institution-eyebrow"><span></span> Gestão institucional</p>
+        <h1 id="loginTitle">A operação de cuidado, reunida em um só lugar.</h1>
+        <p>Acompanhe programas e unidades autorizadas com indicadores atualizados — sem acesso a conversas, prontuários ou conteúdo clínico.</p>
+      </div>
+
+      <div class="privacy-promise">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v10H5V10Z"/></svg>
+        <span><strong>Privacidade por desenho</strong>Dados institucionais e cuidado clínico permanecem separados.</span>
+      </div>
+    </section>
+
+    <section class="login-panel" aria-label="Acesso ao portal institucional">
+      <div class="login-panel-top">
+        <a href="./index.html" class="back-link" aria-label="Voltar ao site"><span aria-hidden="true">←</span> Voltar ao site</a>
+        <span class="secure-label"><i></i> Ambiente protegido</span>
+      </div>
+
+      <div class="login-card">
+        <p class="login-card-kicker">PORTAL DA INSTITUIÇÃO</p>
+        <h2>Bem-vindo</h2>
+        <p class="login-card-lead">Entre com o e-mail autorizado no cadastro do programa.</p>
+
+        <form id="institutionLoginForm" novalidate>
+          <label class="field-label" for="institutionEmail">E-mail institucional</label>
+          <div class="field-control">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5h17v11h-17v-11Z"/><path d="m4 7 8 6 8-6"/></svg>
+            <input id="institutionEmail" type="email" autocomplete="email" placeholder="gestao@instituicao.com.br" required>
+          </div>
+
+          <label class="field-label" for="institutionPassword">Senha</label>
+          <div class="field-control">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v10H5V10Z"/></svg>
+            <input id="institutionPassword" type="password" autocomplete="current-password" placeholder="Sua senha" required>
+            <button type="button" class="password-toggle" id="passwordToggle" aria-label="Mostrar senha">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+            </button>
+          </div>
+
+          <div class="form-utility">
+            <button type="button" id="firstAccess">Primeiro acesso</button>
+            <button type="button" id="forgotPassword">Esqueci minha senha</button>
+          </div>
+
+          <p class="form-message" id="loginMessage" role="status" aria-live="polite"></p>
+          <button class="institution-button" type="submit" id="loginSubmit">
+            <span>Acessar painel</span><span aria-hidden="true">→</span>
+          </button>
+        </form>
+
+        <p class="access-note">O acesso é liberado pelo Espaço Prelúdio após o vínculo da instituição e de suas unidades.</p>
+      </div>
+
+      <p class="login-support">Precisa de ajuda? <a href="mailto:contato@espacopreludio.com.br">Fale com nossa equipe</a></p>
+    </section>
+  </main>
+  <script type="module" src="./js/instituicao-login.js?v=1"></script>
+</body>
+</html>

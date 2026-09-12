@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <script>
+    (function () {
+      if (window.top !== window.self) {
+        try { window.top.location.replace(location.href); } catch (_) { document.documentElement.innerHTML = ""; }
+        return;
+      }
+      var host = (location.hostname || "").toLowerCase();
+      var allowed = ["espacopreludio.com", "www.espacopreludio.com", "espacopreludio.com.br", "www.espacopreludio.com.br", "localhost", "127.0.0.1"];
+      if (location.protocol === "file:" || (host && allowed.indexOf(host) === -1)) location.replace("https://espacopreludio.com.br/");
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#073b40">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Gestão institucional | Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/instituicao.css?v=1">
+</head>
+<body class="institution-dashboard-page">
+  <div class="dashboard-loading" id="dashboardLoading" role="status">
+    <img src="./logo_oficial_fundo_transparente.png" alt="" width="54" height="54">
+    <span>Conectando à gestão institucional…</span>
+  </div>
+
+  <div class="dashboard-app" id="dashboardApp" hidden>
+    <header class="dashboard-header">
+      <a class="institution-brand institution-brand-light" href="./index.html" aria-label="Espaço Prelúdio — página inicial">
+        <img src="./logo_oficial_fundo_transparente.png" alt="" width="48" height="48">
+        <span><small>ESPAÇO</small><strong>Prelúdio</strong></span>
+      </a>
+      <div class="dashboard-header-title"><span></span><p><strong>Gestão institucional</strong><small>Visão operacional protegida</small></p></div>
+      <div class="dashboard-account">
+        <div class="account-copy"><strong id="actorName">Gestão</strong><small id="actorEmail"></small></div>
+        <button class="icon-action" id="refreshDashboard" type="button" aria-label="Atualizar dados" title="Atualizar dados">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9A7 7 0 0 1 18.7 7M17.9 15A7 7 0 0 1 5.3 17"/></svg>
+        </button>
+        <button class="logout-action" id="logoutInstitution" type="button">Sair</button>
+      </div>
+    </header>
+
+    <main class="dashboard-main">
+      <section class="dashboard-intro">
+        <div>
+          <p class="institution-eyebrow"><span></span> Panorama do programa</p>
+          <h1 id="programName">Programa institucional</h1>
+          <p id="programContext">Acompanhamento consolidado da operação.</p>
+        </div>
+        <div class="dashboard-controls">
+          <label for="programSelect">Programa acompanhado</label>
+          <select id="programSelect" aria-label="Selecionar programa"></select>
+          <span class="last-update" id="lastUpdate">Atualizando…</span>
+        </div>
+      </section>
+
+      <section class="program-strip" aria-label="Situação do programa">
+        <div><small>SITUAÇÃO</small><strong id="programStatus">—</strong></div>
+        <div><small>PERÍODO</small><strong id="programPeriod">—</strong></div>
+        <div><small>CAPACIDADE CONTRATADA</small><strong id="programCapacity">—</strong></div>
+        <div><small>ATENDIMENTOS AGENDADOS</small><strong id="scheduledSessions">—</strong></div>
+      </section>
+
+      <section class="metrics-grid" aria-label="Indicadores gerais">
+        <article class="metric-card">
+          <div class="metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V7.5L12 4l8 3.5V20M8 11h1m3 0h1m3 0h1M8 15h1m3 0h1m3 0h1M3 20h18"/></svg></div>
+          <p><small>UNIDADES ATIVAS</small><strong id="metricUnits">0</strong><span id="metricUnitsNote">de 0 unidades</span></p>
+        </article>
+        <article class="metric-card">
+          <div class="metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c.6-4 2.4-6 5.5-6s4.9 2 5.5 6M16 7.5c2.8.2 4.5 2.2 4.5 5.5v6"/></svg></div>
+          <p><small>ESTUDANTES PARTICIPANTES</small><strong id="metricStudents">0</strong><span id="metricStudentsNote">capacidade em uso</span></p>
+        </article>
+        <article class="metric-card">
+          <div class="metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16.5 9"/></svg></div>
+          <p><small>SESSÕES REALIZADAS</small><strong id="metricSessions">0</strong><span id="metricSessionsNote">acumulado do programa</span></p>
+        </article>
+        <article class="metric-card metric-card-accent">
+          <div class="metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-4.3 7-11V5l-7-2-7 2v5c0 6.7 7 11 7 11Z"/><path d="M9 12.2 11 14l4-4"/></svg></div>
+          <p><small>CUIDADO EM ANDAMENTO</small><strong id="metricCare">0</strong><span id="metricCareNote">0 solicitações em fluxo</span></p>
+        </article>
+      </section>
+
+      <section class="units-section">
+        <div class="section-heading">
+          <div><p class="institution-eyebrow"><span></span> Unidades autorizadas</p><h2>Acompanhamento por unidade</h2></div>
+          <p>Indicadores sincronizados com a operação do programa.</p>
+        </div>
+
+        <div class="units-table-wrap">
+          <table class="units-table">
+            <thead><tr><th>Unidade</th><th>Participantes</th><th>Em cuidado</th><th>Em fluxo</th><th>Realizadas</th><th>Agendadas</th></tr></thead>
+            <tbody id="unitsTableBody"></tbody>
+          </table>
+          <div class="empty-units" id="emptyUnits" hidden>Nenhuma unidade disponível para este acesso.</div>
+        </div>
+      </section>
+
+      <aside class="privacy-banner">
+        <div class="privacy-banner-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v10H5V10Z"/></svg></div>
+        <div><strong>Governança sem invadir o cuidado</strong><p>Este painel apresenta somente dados operacionais agregados. Indicadores com menos de cinco participantes são protegidos; conversas, prontuários, anotações e conteúdo clínico permanecem restritos ao profissional responsável.</p></div>
+        <span>LGPD · SIGILO CLÍNICO</span>
+      </aside>
+    </main>
+  </div>
+
+  <script type="module" src="./js/instituicao-painel.js?v=1"></script>
+</body>
+</html>
