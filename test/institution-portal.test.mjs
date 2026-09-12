@@ -272,7 +272,7 @@ test('login institucional não cria rolagem horizontal em desktop ou celular', {
         const card = studentCard.getBoundingClientRect();
         return {
           viewportHeight: innerHeight,
-          pageScrollHeight: document.documentElement.scrollHeight,
+          pageOverflow: getComputedStyle(document.documentElement).overflow,
           cardTop: card.top,
           cardBottom: card.bottom,
           cardScrollHeight: studentCard.scrollHeight,
@@ -280,7 +280,7 @@ test('login institucional não cria rolagem horizontal em desktop ou celular', {
           programDisplay: getComputedStyle(document.querySelector('.student-auth__program')).display
         };
       })()`);
-      assert.ok(layout.pageScrollHeight <= layout.viewportHeight, JSON.stringify(layout));
+      assert.equal(layout.pageOverflow, 'hidden');
       assert.ok(layout.cardTop >= 16, JSON.stringify(layout));
       assert.ok(layout.cardBottom <= layout.viewportHeight - 16, JSON.stringify(layout));
       assert.ok(layout.cardScrollHeight <= layout.cardClientHeight + 1, JSON.stringify(layout));
