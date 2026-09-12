@@ -119,7 +119,7 @@ test('login institucional não cria rolagem horizontal em desktop ou celular', {
     await poll(() => cdp.evaluate("document.querySelector('.login-card') && getComputedStyle(document.body).fontFamily.includes('Inter')"));
 
     for (const viewport of [
-      { width: 1440, height: 900, mobile: false },
+      { width: 1440, height: 800, mobile: false },
       { width: 390, height: 844, mobile: true }
     ]) {
       await cdp.send('Emulation.setDeviceMetricsOverride', { ...viewport, deviceScaleFactor: 1 });
@@ -134,14 +134,27 @@ test('login institucional não cria rolagem horizontal em desktop ou celular', {
         }).map(node => node.className || node.tagName).slice(0, 10);
         return {
           width: innerWidth,
+          height: innerHeight,
           scrollWidth: document.documentElement.scrollWidth,
+          scrollHeight: document.documentElement.scrollHeight,
           overflowing,
-          formVisible: document.querySelector('#institutionLoginForm').getBoundingClientRect().width > 250
+          formVisible: document.querySelector('#institutionLoginForm').getBoundingClientRect().width > 250,
+          cardTop: document.querySelector('.login-card').getBoundingClientRect().top,
+          cardBottom: document.querySelector('.login-card').getBoundingClientRect().bottom,
+          contextTop: document.querySelector('.login-context-top').getBoundingClientRect().top,
+          contextBottom: document.querySelector('.privacy-promise').getBoundingClientRect().bottom
         };
       })()`);
       assert.ok(layout.scrollWidth <= layout.width);
       assert.deepEqual(layout.overflowing, []);
       assert.equal(layout.formVisible, true);
+      if (!viewport.mobile) {
+        assert.ok(layout.scrollHeight <= layout.height);
+        assert.ok(layout.cardTop >= 0);
+        assert.ok(layout.cardBottom <= layout.height);
+        assert.ok(layout.contextTop >= 0);
+        assert.ok(layout.contextBottom <= layout.height);
+      }
     }
 
     await cdp.send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/instituicao-painel-preview.html` });

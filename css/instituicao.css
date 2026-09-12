@@ -69,6 +69,13 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
 /* Login */
 .login-shell { display: grid; min-height: 100vh; grid-template-columns: minmax(560px, 1.08fr) minmax(560px, .92fr); }
 
+@media (min-width: 801px) {
+  body.institution-login-page { height: 100vh; height: 100dvh; overflow: hidden; }
+  .institution-login-page .login-shell,
+  .institution-login-page .login-context,
+  .institution-login-page .login-panel { height: 100vh; height: 100dvh; min-height: 0; }
+}
+
 .login-context {
   position: relative;
   display: flex;
@@ -384,6 +391,41 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
 
 @keyframes institution-pulse { 50% { opacity: .58; transform: scale(.96); } }
 @keyframes institution-spin { to { transform: rotate(360deg); } }
+
+@media (min-width: 801px) and (max-height: 850px) {
+  .login-context { padding-block: 28px; }
+  .login-context .institution-brand img { width: 46px; height: 46px; }
+  .login-context .institution-brand small { margin-bottom: 4px; font-size: .58rem; }
+  .login-context .institution-brand strong { font-size: 1.3rem; }
+  .login-context-copy { padding: 30px 0 22px; }
+  .login-context-copy .institution-eyebrow { margin-bottom: 12px; }
+  .login-context h1 { max-width: 630px; margin-bottom: 16px; font-size: clamp(2.75rem, 4.05vw, 3.7rem); line-height: .98; }
+  .login-context-lead { max-width: 570px; font-size: .9rem; line-height: 1.55; }
+  .portal-capabilities { margin-top: 24px; }
+  .portal-capabilities > div { padding-block: 12px; }
+  .capability-icon { width: 31px; height: 31px; }
+  .privacy-promise { padding-top: 13px; }
+  .privacy-promise-icon { width: 32px; height: 32px; }
+
+  .login-panel { padding: 66px clamp(34px, 5.5vw, 88px) 18px; }
+  .login-panel-top { top: 19px; }
+  .login-card { padding: 27px 34px 24px; border-radius: 22px; }
+  .login-card-heading { padding-bottom: 17px; margin-bottom: 17px; }
+  .login-card-kicker { margin-bottom: 9px; }
+  .login-card h2 { margin-bottom: 7px; font-size: 2.45rem; }
+  .login-card-lead { font-size: .76rem; line-height: 1.5; }
+  .field-label { margin-bottom: 6px; }
+  .field-control { min-height: 52px; margin-bottom: 12px; border-radius: 12px; }
+  .field-control input { padding-block: 13px; }
+  .password-toggle { width: 44px; height: 44px; }
+  .form-utility { margin-bottom: 6px; }
+  .form-message { margin-bottom: 8px; }
+  .form-message:empty { margin-bottom: 3px; }
+  .institution-button { min-height: 54px; }
+  .button-arrow { width: 34px; height: 34px; }
+  .access-note { margin-top: 14px; padding-top: 13px; }
+  .login-support { margin-top: 10px; }
+}
 
 @media (max-width: 1050px) {
   .login-shell { grid-template-columns: minmax(390px, .9fr) minmax(500px, 1.1fr); }
