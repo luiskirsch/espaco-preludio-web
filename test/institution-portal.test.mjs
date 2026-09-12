@@ -32,6 +32,15 @@ function startServer() {
         response.end(html);
         return;
       }
+      if (relative === 'aluno-login-preview.html') {
+        const html = (await readFile(resolve(root, 'aluno-login.html'), 'utf8'))
+          .replace('id="loadingState" class="ep-text-muted ep-mt-24"', 'id="loadingState" class="ep-text-muted ep-mt-24 ep-hide"')
+          .replace('id="authState" class="ep-hide"', 'id="authState"')
+          .replace(/\s*<script type="module">[\s\S]*?<\/script>/, '');
+        response.writeHead(200, { 'content-type': mime['.html'] });
+        response.end(html);
+        return;
+      }
       const file = resolve(root, relative);
       if (!file.startsWith(root)) throw new Error('invalid path');
       const body = await readFile(file);
@@ -249,6 +258,33 @@ test('login institucional não cria rolagem horizontal em desktop ou celular', {
       assert.ok(layout.scrollWidth <= layout.width);
       assert.equal(layout.cardsVisible, true);
       assert.equal(layout.unitRows, 3);
+    }
+
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 760, mobile: false, deviceScaleFactor: 1 });
+    await cdp.send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/aluno-login-preview.html` });
+    await poll(() => cdp.evaluate("location.pathname.endsWith('aluno-login-preview.html') && document.querySelector('#loginForm')?.getBoundingClientRect().height > 0"));
+    for (const registering of [false, true]) {
+      const layout = await cdp.evaluate(`(() => {
+        const registering = ${registering};
+        studentCard.classList.toggle('is-registering', registering);
+        loginForm.classList.toggle('ep-hide', registering);
+        registerForm.classList.toggle('ep-hide', !registering);
+        const card = studentCard.getBoundingClientRect();
+        return {
+          viewportHeight: innerHeight,
+          pageScrollHeight: document.documentElement.scrollHeight,
+          cardTop: card.top,
+          cardBottom: card.bottom,
+          cardScrollHeight: studentCard.scrollHeight,
+          cardClientHeight: studentCard.clientHeight,
+          programDisplay: getComputedStyle(document.querySelector('.student-auth__program')).display
+        };
+      })()`);
+      assert.ok(layout.pageScrollHeight <= layout.viewportHeight, JSON.stringify(layout));
+      assert.ok(layout.cardTop >= 16, JSON.stringify(layout));
+      assert.ok(layout.cardBottom <= layout.viewportHeight - 16, JSON.stringify(layout));
+      assert.ok(layout.cardScrollHeight <= layout.cardClientHeight + 1, JSON.stringify(layout));
+      assert.equal(layout.programDisplay, 'none');
     }
   } finally {
     cdp?.socket.close();
