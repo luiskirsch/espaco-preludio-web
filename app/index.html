@@ -79,11 +79,6 @@
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth } from "../js/firebase-config.js";
 
-  // Registra service worker
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("../sw-app.js").catch(() => {});
-  }
-
   // Redireciona após animação
   setTimeout(() => {
     onAuthStateChanged(auth, user => {

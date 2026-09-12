@@ -1,17 +1,13 @@
 // Service Worker do Espaço Prelúdio
 // Estratégia:
-//   - HTML: STALE-WHILE-REVALIDATE — serve cache imediatamente (paint
-//     instantâneo), revalida em background. Próxima nav já vem fresh.
-//     Trade-off vs network-first: pode mostrar HTML levemente stale por
-//     um ciclo, mas cache-busters em CSS/JS garantem que assets atualizam
-//     normalmente e o ganho de velocidade percebida é enorme.
+//   - HTML: NETWORK-FIRST — garante a versão atual e usa cache como fallback.
 //   - CSS/JS/SVG/font (estáticos): cache-first com revalidação background.
 //   - APIs (backend Railway): NUNCA cacheia — passa direto pelo fetch.
 //   - Push: handler de notificação + click pra abrir o painel.
 //
 // Bump SW_VERSION pra forçar refresh do cache em todas as instalações.
 
-const SW_VERSION = "ep-sw-v16-2026-06-09-perf";
+const SW_VERSION = "ep-sw-v17-2026-09-12-security";
 const PRECACHE   = `precache-${SW_VERSION}`;
 const RUNTIME    = `runtime-${SW_VERSION}`;
 
@@ -143,7 +139,7 @@ self.addEventListener("push", (event) => {
     icon: "/logo_oficial_fundo_transparente.png",
     badge: "/logo_oficial_fundo_transparente.png",
     tag: payload.tag || "ep-default",
-    data: { url: payload.url || "/painel.html" },
+    data: { url: notificationTarget(payload.url) },
     requireInteraction: false,
     renotify: !!payload.tag
   };
@@ -151,9 +147,19 @@ self.addEventListener("push", (event) => {
   event.waitUntil(self.registration.showNotification(payload.title || "Espaço Prelúdio", options));
 });
 
+function notificationTarget(value, fallback = "/painel.html") {
+  try {
+    const target = new URL(String(value || fallback), self.location.origin);
+    if (target.origin !== self.location.origin) return fallback;
+    return `${target.pathname}${target.search}${target.hash}`;
+  } catch {
+    return fallback;
+  }
+}
+
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = event.notification?.data?.url || "/painel.html";
+  const target = notificationTarget(event.notification?.data?.url);
 
   event.waitUntil((async () => {
     const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });

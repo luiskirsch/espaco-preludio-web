@@ -1,77 +1,115 @@
-// Service Worker — Espaço Prelúdio App (PWA)
-const CACHE = "ep-app-v1";
+// Service Worker — Espaço Prelúdio App
+// Documentos usam network-first para nunca prender o app em uma versão antiga.
+// Apenas ativos estáticos do mesmo domínio usam cache com revalidação.
+
+const VERSION = "ep-app-v2-2026-09-12";
+const STATIC_CACHE = `static-${VERSION}`;
+const PAGE_CACHE = `pages-${VERSION}`;
+const OFFLINE_PAGE = "/app/login.html";
 const PRECACHE = [
-  "/app/index.html",
-  "/app/login.html",
-  "/app/home.html",
-  "/app/buscar.html",
-  "/app/agendar.html",
-  "/app/consultas.html",
-  "/app/documentos.html",
-  "/app/perfil.html",
-  "/app/humor.html",
-  "/app/chat.html",
-  "/app/dependentes.html",
+  OFFLINE_PAGE,
   "/app/app.css",
   "/app/manifest.json",
   "/logo_oficial_fundo_transparente.png?v=2",
 ];
 
-self.addEventListener("install", e => {
-  self.skipWaiting();
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(PRECACHE).catch(() => {}))
-  );
+self.addEventListener("install", (event) => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(STATIC_CACHE);
+    await Promise.allSettled(PRECACHE.map((url) => cache.add(url)));
+    self.skipWaiting();
+  })());
 });
 
-self.addEventListener("activate", e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
+self.addEventListener("activate", (event) => {
+  event.waitUntil((async () => {
+    const current = new Set([STATIC_CACHE, PAGE_CACHE]);
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((key) => !current.has(key)).map((key) => caches.delete(key)));
+    await self.clients.claim();
+  })());
 });
 
-self.addEventListener("fetch", e => {
-  // Só intercepta requisições do app (não do backend)
-  if (!e.request.url.includes("/app/") && !e.request.url.endsWith(".css") && !e.request.url.includes("logo_oficial")) return;
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(res => {
-        if (res.ok && e.request.method === "GET") {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
+function isSameOrigin(request) {
+  return new URL(request.url).origin === self.location.origin;
+}
+
+function isStaticAsset(request) {
+  return ["style", "script", "image", "font"].includes(request.destination)
+    || /\.(css|js|svg|png|jpe?g|webp|woff2?|ttf)(\?|$)/i.test(request.url);
+}
+
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  if (request.method !== "GET" || !isSameOrigin(request)) return;
+
+  if (request.mode === "navigate" || request.destination === "document") {
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(request);
+        if (fresh.ok) {
+          const cache = await caches.open(PAGE_CACHE);
+          cache.put(request, fresh.clone()).catch(() => {});
         }
-        return res;
-      }).catch(() => cached);
-    })
-  );
+        return fresh;
+      } catch {
+        return (await caches.match(request))
+          || (await caches.match(OFFLINE_PAGE))
+          || new Response("Offline", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+      }
+    })());
+    return;
+  }
+
+  if (isStaticAsset(request)) {
+    event.respondWith((async () => {
+      const cached = await caches.match(request);
+      const refresh = fetch(request).then((response) => {
+        if (response.ok) {
+          caches.open(STATIC_CACHE).then((cache) => cache.put(request, response.clone())).catch(() => {});
+        }
+        return response;
+      }).catch(() => null);
+      return cached || (await refresh) || new Response("", { status: 504 });
+    })());
+  }
 });
 
-// Push notifications
-self.addEventListener("push", e => {
-  const data = e.data?.json().catch(() => ({})) || {};
-  const title = data.title || "Espaço Prelúdio";
-  const body  = data.body  || "Você tem uma nova mensagem.";
-  e.waitUntil(
-    self.registration.showNotification(title, {
-      body,
-      icon: "/logo_oficial_fundo_transparente.png?v=2",
-      badge: "/logo_oficial_fundo_transparente.png?v=2",
-      data: { url: data.url || "/app/home.html" }
-    })
-  );
+function notificationTarget(value, fallback = "/app/home.html") {
+  try {
+    const target = new URL(String(value || fallback), self.location.origin);
+    if (target.origin !== self.location.origin) return fallback;
+    return `${target.pathname}${target.search}${target.hash}`;
+  } catch {
+    return fallback;
+  }
+}
+
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    if (event.data) data = event.data.json();
+  } catch { /* usa o payload padrão */ }
+
+  event.waitUntil(self.registration.showNotification(data.title || "Espaço Prelúdio", {
+    body: data.body || "Você tem uma nova mensagem.",
+    icon: "/logo_oficial_fundo_transparente.png?v=2",
+    badge: "/logo_oficial_fundo_transparente.png?v=2",
+    data: { url: notificationTarget(data.url) },
+  }));
 });
 
-self.addEventListener("notificationclick", e => {
-  e.notification.close();
-  e.waitUntil(
-    clients.matchAll({ type: "window" }).then(cs => {
-      const url = e.notification.data?.url || "/app/home.html";
-      const c = cs.find(x => x.url.includes("/app/"));
-      if (c) { c.focus(); c.navigate(url); }
-      else clients.openWindow(url);
-    })
-  );
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = notificationTarget(event.notification?.data?.url);
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const existing = windows.find((client) => client.url.startsWith(self.location.origin));
+    if (existing) {
+      await existing.focus();
+      if ("navigate" in existing) await existing.navigate(target);
+      return;
+    }
+    await self.clients.openWindow(target);
+  })());
 });
