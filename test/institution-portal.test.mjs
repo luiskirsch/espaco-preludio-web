@@ -98,6 +98,11 @@ test('sessão não verificada é limpa sem enviar confirmação ao abrir a pági
   assert.doesNotMatch(passiveBootstrap, /ensureVerifiedEmail\(user\)/);
 });
 
+test('login mantém a marca apenas no cabeçalho, sem logo ampliada ao fundo', async () => {
+  const html = await readFile(resolve(root, 'instituicao-login.html'), 'utf8');
+  assert.doesNotMatch(html, /login-context-watermark/);
+});
+
 test('login institucional não cria rolagem horizontal em desktop ou celular', { timeout: 30000, skip: chromePath ? false : 'Chrome ou Edge não encontrado' }, async () => {
   const server = await startServer();
   const userData = await mkdtemp(join(tmpdir(), 'ep-institution-browser-'));
