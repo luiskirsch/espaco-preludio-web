@@ -174,6 +174,6 @@ test('login institucional não cria rolagem horizontal em desktop ou celular', {
       await once(browser, 'exit');
     }
     await new Promise(resolveClose => server.close(resolveClose));
-    await rm(userData, { recursive: true, force: true });
+    await rm(userData, { recursive: true, force: true, maxRetries: 6, retryDelay: 150 });
   }
 });

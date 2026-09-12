@@ -21,25 +21,51 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/instituicao.css?v=1">
+  <link rel="stylesheet" href="./css/instituicao.css?v=2">
 </head>
 <body class="institution-login-page">
   <main class="login-shell">
     <section class="login-context" aria-labelledby="loginTitle">
-      <a class="institution-brand institution-brand-light" href="./index.html" aria-label="Espaço Prelúdio — página inicial">
-        <img src="./logo_oficial_fundo_transparente.png" alt="" width="58" height="58">
-        <span><small>ESPAÇO</small><strong>Prelúdio</strong></span>
-      </a>
+      <img class="login-context-watermark" src="./logo_oficial_fundo_transparente.png" alt="" aria-hidden="true">
+
+      <div class="login-context-top">
+        <a class="institution-brand institution-brand-light" href="./index.html" aria-label="Espaço Prelúdio — página inicial">
+          <img src="./logo_oficial_fundo_transparente.png" alt="" width="58" height="58">
+          <span><small>ESPAÇO</small><strong>Prelúdio</strong></span>
+        </a>
+        <span class="context-portal-label"><i></i> Portal de gestão</span>
+      </div>
 
       <div class="login-context-copy">
-        <p class="institution-eyebrow"><span></span> Gestão institucional</p>
-        <h1 id="loginTitle">A operação de cuidado, reunida em um só lugar.</h1>
-        <p>Acompanhe programas e unidades autorizadas com indicadores atualizados — sem acesso a conversas, prontuários ou conteúdo clínico.</p>
+        <p class="institution-eyebrow"><span></span> Inteligência institucional</p>
+        <h1 id="loginTitle">Uma visão clara para <em>cuidar de cada unidade.</em></h1>
+        <p class="login-context-lead">Acompanhe a operação dos programas com contexto, segurança e a clareza necessária para tomar boas decisões.</p>
+
+        <div class="portal-capabilities" aria-label="Recursos do portal">
+          <div>
+            <span class="capability-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11M8 20v-6h8v6M9 10h.01M15 10h.01"/></svg>
+            </span>
+            <span><strong>Programas</strong><small>Visão consolidada</small></span>
+          </div>
+          <div>
+            <span class="capability-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 20V8h6v12M13 20V4h6v16M3 20h18"/></svg>
+            </span>
+            <span><strong>Unidades</strong><small>Acompanhamento local</small></span>
+          </div>
+          <div>
+            <span class="capability-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 13h4l2-6 4 10 2-4h4"/><path d="M4 5v14h16"/></svg>
+            </span>
+            <span><strong>Indicadores</strong><small>Dados agregados</small></span>
+          </div>
+        </div>
       </div>
 
       <div class="privacy-promise">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v10H5V10Z"/></svg>
-        <span><strong>Privacidade por desenho</strong>Dados institucionais e cuidado clínico permanecem separados.</span>
+        <span class="privacy-promise-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v10H5V10Z"/></svg></span>
+        <span><strong>Privacidade por desenho</strong>Indicadores institucionais e conteúdo clínico permanecem rigorosamente separados.</span>
       </div>
     </section>
 
@@ -49,44 +75,51 @@
         <span class="secure-label"><i></i> Ambiente protegido</span>
       </div>
 
-      <div class="login-card">
-        <p class="login-card-kicker">PORTAL DA INSTITUIÇÃO</p>
-        <h2>Bem-vindo</h2>
-        <p class="login-card-lead">Entre com o e-mail autorizado no cadastro do programa.</p>
-
-        <form id="institutionLoginForm" novalidate>
-          <label class="field-label" for="institutionEmail">E-mail institucional</label>
-          <div class="field-control">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5h17v11h-17v-11Z"/><path d="m4 7 8 6 8-6"/></svg>
-            <input id="institutionEmail" type="email" autocomplete="email" placeholder="gestao@instituicao.com.br" required>
+      <div class="login-panel-content">
+        <div class="login-card">
+          <div class="login-card-heading">
+            <p class="login-card-kicker"><span></span> ACESSO INSTITUCIONAL</p>
+            <h2>Bem-vindo de volta</h2>
+            <p class="login-card-lead">Use o e-mail autorizado para acessar a gestão dos seus programas e unidades.</p>
           </div>
 
-          <label class="field-label" for="institutionPassword">Senha</label>
-          <div class="field-control">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v10H5V10Z"/></svg>
-            <input id="institutionPassword" type="password" autocomplete="current-password" placeholder="Sua senha" required>
-            <button type="button" class="password-toggle" id="passwordToggle" aria-label="Mostrar senha">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+          <form id="institutionLoginForm" novalidate>
+            <label class="field-label" for="institutionEmail">E-mail institucional</label>
+            <div class="field-control">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5h17v11h-17v-11Z"/><path d="m4 7 8 6 8-6"/></svg>
+              <input id="institutionEmail" type="email" autocomplete="email" placeholder="nome@instituicao.com.br" required>
+            </div>
+
+            <label class="field-label" for="institutionPassword">Senha</label>
+            <div class="field-control">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v10H5V10Z"/></svg>
+              <input id="institutionPassword" type="password" autocomplete="current-password" placeholder="Digite sua senha" required>
+              <button type="button" class="password-toggle" id="passwordToggle" aria-label="Mostrar senha">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+              </button>
+            </div>
+
+            <div class="form-utility">
+              <p>Novo por aqui? <button type="button" id="firstAccess">Ativar acesso</button></p>
+              <button type="button" id="forgotPassword">Recuperar senha</button>
+            </div>
+
+            <p class="form-message" id="loginMessage" role="status" aria-live="polite"></p>
+            <button class="institution-button" type="submit" id="loginSubmit">
+              <span>Acessar painel</span><span class="button-arrow" aria-hidden="true">→</span>
             </button>
+          </form>
+
+          <div class="access-note">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.4 3 7.4 7.5 9.5 4.5-2.1 7.5-5.1 7.5-9.5V6L12 3Z"/><path d="m9.5 12 1.7 1.7 3.6-3.8"/></svg>
+            <p><strong>Acesso controlado</strong><span>Liberado após o vínculo da instituição e de suas unidades.</span></p>
           </div>
+        </div>
 
-          <div class="form-utility">
-            <button type="button" id="firstAccess">Primeiro acesso</button>
-            <button type="button" id="forgotPassword">Esqueci minha senha</button>
-          </div>
-
-          <p class="form-message" id="loginMessage" role="status" aria-live="polite"></p>
-          <button class="institution-button" type="submit" id="loginSubmit">
-            <span>Acessar painel</span><span aria-hidden="true">→</span>
-          </button>
-        </form>
-
-        <p class="access-note">O acesso é liberado pelo Espaço Prelúdio após o vínculo da instituição e de suas unidades.</p>
+        <p class="login-support">Precisa de ajuda para acessar? <a href="mailto:contato@espacopreludio.com.br">Fale com nossa equipe <span aria-hidden="true">↗</span></a></p>
       </div>
-
-      <p class="login-support">Precisa de ajuda? <a href="mailto:contato@espacopreludio.com.br">Fale com nossa equipe</a></p>
     </section>
   </main>
-  <script type="module" src="./js/instituicao-login.js?v=1"></script>
+  <script type="module" src="./js/instituicao-login.js?v=2"></script>
 </body>
 </html>
