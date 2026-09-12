@@ -112,6 +112,16 @@ test('saudação de retorno aparece somente depois de um acesso concluído', asy
   assert.match(script, /await validateInstitutionAccess\(credential\.user\);\s*rememberCompletedAccess\(\);/);
 });
 
+test('páginas institucional e profissional usam a mesma régua de cabeçalho', async () => {
+  const institutional = await readFile(resolve(root, 'index.html'), 'utf8');
+  const professional = await readFile(resolve(root, 'profissional.html'), 'utf8');
+  const sharedStyles = await readFile(resolve(root, 'css/public-header.css'), 'utf8');
+  assert.match(institutional, /css\/public-header\.css\?v=1/);
+  assert.match(professional, /css\/public-header\.css\?v=1/);
+  assert.match(sharedStyles, /--public-header-logo-size: 50px/);
+  assert.match(sharedStyles, /\.site-header \.brand img,\s*\.ep-topbar \.ep-brand__mark/);
+});
+
 test('login institucional não cria rolagem horizontal em desktop ou celular', { timeout: 30000, skip: chromePath ? false : 'Chrome ou Edge não encontrado' }, async () => {
   const server = await startServer();
   const userData = await mkdtemp(join(tmpdir(), 'ep-institution-browser-'));
@@ -170,6 +180,52 @@ test('login institucional não cria rolagem horizontal em desktop ou celular', {
         assert.ok(layout.contextBottom <= layout.height);
       }
     }
+
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 800, mobile: false, deviceScaleFactor: 1 });
+    const publicHeaders = [];
+    for (const page of [
+      {
+        path: 'index.html',
+        header: '.site-header',
+        inner: '.header-inner',
+        logo: '.brand img',
+        lead: '.brand-copy small',
+        title: '.brand-copy strong',
+        nav: '.main-nav > a',
+        button: '.button-small'
+      },
+      {
+        path: 'profissional.html',
+        header: '.ep-topbar',
+        inner: '.ep-topbar__inner',
+        logo: '.ep-brand__mark',
+        lead: '.ep-brand__lead',
+        title: '.ep-brand__name > span:not(.ep-brand__lead)',
+        nav: '.ep-nav > a',
+        button: '.ep-btn--sm'
+      }
+    ]) {
+      await cdp.send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/${page.path}` });
+      await poll(() => cdp.evaluate(`document.readyState === 'complete' && document.querySelector('${page.header}')?.getBoundingClientRect().height > 0`));
+      publicHeaders.push(await cdp.evaluate(`(() => {
+        const rect = selector => document.querySelector(selector).getBoundingClientRect();
+        const style = selector => getComputedStyle(document.querySelector(selector));
+        return {
+          headerHeight: rect('${page.header}').height,
+          innerHeight: rect('${page.inner}').height,
+          innerLeft: rect('${page.inner}').left,
+          innerRight: rect('${page.inner}').right,
+          logoSize: rect('${page.logo}').width,
+          leadSize: style('${page.lead}').fontSize,
+          titleSize: style('${page.title}').fontSize,
+          navSize: style('${page.nav}').fontSize,
+          buttonHeight: rect('${page.button}').height,
+          buttonSize: style('${page.button}').fontSize,
+          buttonRadius: style('${page.button}').borderRadius
+        };
+      })()`));
+    }
+    assert.deepEqual(publicHeaders[1], publicHeaders[0]);
 
     await cdp.send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/instituicao-painel-preview.html` });
     await poll(() => cdp.evaluate("location.pathname.endsWith('instituicao-painel-preview.html') && document.readyState === 'complete'"));
