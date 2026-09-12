@@ -112,6 +112,12 @@ test('login mantém a marca apenas no cabeçalho, sem logo ampliada ao fundo', a
   assert.doesNotMatch(html, /login-context-watermark/);
 });
 
+test('login do aluno apresenta a mensagem institucional na animação', async () => {
+  const html = await readFile(resolve(root, 'aluno-login.html'), 'utf8');
+  assert.match(html, /aria-label="Programa institucional de cuidado emocional"/);
+  assert.match(html, />Programa institucional<\/span>[\s\S]*?>de cuidado<\/span>[\s\S]*?>emocional<\/span>/);
+});
+
 test('saudação de retorno aparece somente depois de um acesso concluído', async () => {
   const html = await readFile(resolve(root, 'instituicao-login.html'), 'utf8');
   const script = await readFile(resolve(root, 'js/instituicao-login.js'), 'utf8');
