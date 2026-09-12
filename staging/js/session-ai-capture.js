@@ -1,4 +1,7 @@
 // Espaço Prelúdio — captura de áudio mixado (local + remote) pra resumo IA.
+
+import { recallDek } from "./crypto.js";
+import { createAiSummaryEnvelope } from "./ai-summary-crypto.js";
 //
 // Distinto do session-record.js (gravação cifrada local pro arquivo do
 // terapeuta). Aqui:
@@ -66,7 +69,10 @@ export class SessionAiCapture {
 
     // 4. Configura MediaRecorder no stream mixado
     const mimeType = pickSupportedMime();
-    this.recorder = new MediaRecorder(this.destination.stream, { mimeType });
+    this.recorder = new MediaRecorder(this.destination.stream, {
+      mimeType,
+      audioBitsPerSecond: 48_000,
+    });
     this.startedAt = Date.now();
     this.recorder.ondataavailable = (e) => {
       if (e.data && e.data.size > 0) this.chunks.push(e.data);
@@ -122,18 +128,26 @@ export class SessionAiCapture {
     try {
       const idToken = await this.idTokenGetter();
       if (!idToken) throw new Error("no_id_token");
+      const dek = recallDek();
+      const encryption = await createAiSummaryEnvelope(dek);
 
-      const r = await fetch(
-        `${this.backendBaseUrl}/therapy/session/${encodeURIComponent(this.sessionId)}/ai-summarize`,
-        {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${idToken}`,
-            "Content-Type": mime
-          },
-          body: blob
-        }
-      );
+      let r;
+      try {
+        r = await fetch(
+          `${this.backendBaseUrl}/therapy/session/${encodeURIComponent(this.sessionId)}/ai-summarize`,
+          {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${idToken}`,
+              "Content-Type": mime,
+              ...encryption.headers,
+            },
+            body: blob
+          }
+        );
+      } finally {
+        encryption.key.fill(0);
+      }
       const data = await r.json().catch(() => ({}));
       if (!r.ok || !data.ok) {
         this._setState("error");

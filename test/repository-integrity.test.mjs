@@ -48,3 +48,13 @@ test("app bootstrap registers its service worker once", () => {
   assert.equal((html.match(/serviceWorker\.register/g) || []).length, 0);
   assert.equal((html.match(/sw-register\.js/g) || []).length, 1);
 });
+
+test("AI summaries are encrypted before persistence and decrypted in the record UI", () => {
+  const capture = readFileSync(join(ROOT, "js", "session-ai-capture.js"), "utf8");
+  const cryptoHelper = readFileSync(join(ROOT, "js", "ai-summary-crypto.js"), "utf8");
+  const record = readFileSync(join(ROOT, "prontuario.html"), "utf8");
+  assert.match(capture, /createAiSummaryEnvelope/);
+  assert.match(cryptoHelper, /X-AI-Result-Key/);
+  assert.match(record, /decryptAiSummaryPayload/);
+  assert.match(record, /migrateLegacyAiSummary/);
+});

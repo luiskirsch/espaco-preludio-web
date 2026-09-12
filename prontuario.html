@@ -443,6 +443,7 @@
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist } from "./js/auth-guard.js?v=3-27";
   import { decryptNote, clearDek } from "./js/crypto.js";
+  import { decryptAiSummaryPayload, migrateLegacyAiSummary } from "./js/ai-summary-crypto.js";
 
   // tr(): tenta EP_I18N.t(key); fallback PT-BR se i18n nao carregou ainda.
   function tr(key, fallback, opts) {
@@ -798,8 +799,20 @@
           { headers: { "Authorization": `Bearer ${idToken}` } }
         );
         if (!res.ok) return;
-        const data = await res.json().catch(() => ({}));
+        let data = await res.json().catch(() => ({}));
         if (!data.ok) return;
+        if (data.encryptedPayload) {
+          const payload = await decryptAiSummaryPayload(data.encryptedPayload, dek);
+          data = { ...data, ...payload };
+        } else if (data.status === "completed" && (data.summary || data.signals || data.transcript)) {
+          // Migra registros anteriores à criptografia sem interromper a leitura atual.
+          migrateLegacyAiSummary({
+            backendBaseUrl: BACKEND_BASE_URL,
+            sessionId: s.sessionId,
+            idToken,
+            dek,
+          }).catch((err) => console.warn("ai_summary_legacy_migration_error", err));
+        }
         renderAiSummary(aiBox, data);
       } catch (err) {
         console.warn("ai_summary_load_error", err);

@@ -542,6 +542,36 @@
     e2ee: useE2EE ? { keyProvider, worker: e2eeWorker } : undefined
   });
 
+  let sessionClockOffsetMs = Number(tokenData.serverNow || Date.now()) - Date.now();
+  let sessionStartTs = Number(tokenData.sessionStartedAt) || null;
+  let sessionClockStartPromise = null;
+
+  async function startSharedSessionClock() {
+    if (sessionStartTs) return sessionStartTs;
+    if (sessionClockStartPromise) return sessionClockStartPromise;
+    if (!tokenData.presenceToken) return null;
+
+    sessionClockStartPromise = (async () => {
+      const response = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/iniciar-contador`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ presenceToken: tokenData.presenceToken })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data?.error || `HTTP_${response.status}`);
+      sessionClockOffsetMs = Number(data.serverNow || Date.now()) - Date.now();
+      sessionStartTs = Number(data.sessionStartedAt) || null;
+      return sessionStartTs;
+    })()
+      .catch((error) => {
+        console.warn("session_clock_start_failed", error);
+        return null;
+      })
+      .finally(() => { sessionClockStartPromise = null; });
+
+    return sessionClockStartPromise;
+  }
+
   room
     .on(RoomEvent.ParticipantConnected, onRemoteConnected)
     .on(RoomEvent.ParticipantDisconnected, onRemoteDisconnected)
@@ -552,6 +582,7 @@
 
   let ritualPlayedThisSession = false;
   function onRemoteConnected(p) {
+    void startSharedSessionClock();
     remotePlaceholder.classList.add("ep-hide");
     videoRemote.classList.remove("ep-hide");
     remoteName.classList.remove("ep-hide");
@@ -653,7 +684,7 @@
     // só áudio mixado pro Whisper. Web Audio API consome ~1-2% CPU.
     if (tokenData.aiSummaryReady) {
       try {
-        const { SessionAiCapture } = await import("./js/session-ai-capture.js?v=1");
+        const { SessionAiCapture } = await import("./js/session-ai-capture.js?v=2");
         const aiCaptureBadge = document.getElementById("aiCaptureBadge");
         aiCapture = new SessionAiCapture({
           room,
@@ -850,9 +881,6 @@
   });
 
   // ─── Notas cifradas ─────────────────────────────────────────
-  const sessionClockOffsetMs = Number(tokenData.serverNow || Date.now()) - Date.now();
-  let sessionStartTs = Number(tokenData.sessionStartedAt) || (Date.now() + sessionClockOffsetMs);
-
   async function loadNotes() {
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/notas`, {
@@ -938,7 +966,9 @@
   const infoDuration = document.getElementById("infoDuration");
 
   setInterval(() => {
-    const ms = Math.max(0, Date.now() + sessionClockOffsetMs - sessionStartTs);
+    const ms = sessionStartTs
+      ? Math.max(0, Date.now() + sessionClockOffsetMs - sessionStartTs)
+      : 0;
     const m = Math.floor(ms / 60000);
     const s = Math.floor((ms % 60000) / 1000);
     infoDuration.textContent = `${m}min ${String(s).padStart(2,"0")}s`;

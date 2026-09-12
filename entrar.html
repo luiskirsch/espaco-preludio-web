@@ -571,7 +571,38 @@
 
     loadNotesInitial();
 
+    let sessionClockOffsetMs = Number(data.serverNow || Date.now()) - Date.now();
+    let sessionStartTs = Number(data.sessionStartedAt) || null;
+    let sessionClockStartPromise = null;
+
+    async function startSharedSessionClock() {
+      if (sessionStartTs) return sessionStartTs;
+      if (sessionClockStartPromise) return sessionClockStartPromise;
+      if (!data.presenceToken) return null;
+
+      sessionClockStartPromise = (async () => {
+        const response = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/iniciar-contador`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ presenceToken: data.presenceToken })
+        });
+        const clockData = await response.json().catch(() => ({}));
+        if (!response.ok || !clockData.ok) throw new Error(clockData?.error || `HTTP_${response.status}`);
+        sessionClockOffsetMs = Number(clockData.serverNow || Date.now()) - Date.now();
+        sessionStartTs = Number(clockData.sessionStartedAt) || null;
+        return sessionStartTs;
+      })()
+        .catch((error) => {
+          console.warn("session_clock_start_failed", error);
+          return null;
+        })
+        .finally(() => { sessionClockStartPromise = null; });
+
+      return sessionClockStartPromise;
+    }
+
     function onRemoteConnected(p) {
+      void startSharedSessionClock();
       remotePlaceholder.classList.add("ep-hide");
       videoRemote.classList.remove("ep-hide");
       remoteName.classList.remove("ep-hide");
@@ -674,11 +705,11 @@
       // Cronometro da sessao — comeca quando paciente entra (sessao do
       // paciente comeca aqui, antes do terapeuta conectar). Mesmo formato
       // do lado profissional: "Xmin YYs", monospace, atualiza a cada 1s.
-      const sessionClockOffsetMs = Number(data.serverNow || Date.now()) - Date.now();
-      const sessionStartTs = Number(data.sessionStartedAt) || (Date.now() + sessionClockOffsetMs);
       const infoDuration = document.getElementById("infoDuration");
       setInterval(() => {
-        const ms = Math.max(0, Date.now() + sessionClockOffsetMs - sessionStartTs);
+        const ms = sessionStartTs
+          ? Math.max(0, Date.now() + sessionClockOffsetMs - sessionStartTs)
+          : 0;
         const m = Math.floor(ms / 60000);
         const s = Math.floor((ms % 60000) / 1000);
         infoDuration.textContent = `${m}min ${String(s).padStart(2,"0")}s`;
