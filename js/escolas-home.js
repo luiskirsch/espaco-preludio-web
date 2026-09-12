@@ -5,6 +5,16 @@
   var navigation = document.getElementById("main-navigation");
   var accessMenu = document.querySelector(".access-menu");
 
+  document.querySelectorAll('a.brand[href="#inicio"]').forEach(function (brandLink) {
+    brandLink.addEventListener("click", function (event) {
+      event.preventDefault();
+      window.scrollTo({
+        top: 0,
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+      });
+    });
+  });
+
   function setMenu(open) {
     if (!menuButton || !navigation) return;
     menuButton.setAttribute("aria-expanded", String(open));
