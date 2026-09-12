@@ -284,7 +284,7 @@ test('login institucional não cria rolagem horizontal em desktop ou celular', {
       assert.ok(layout.cardTop >= 16, JSON.stringify(layout));
       assert.ok(layout.cardBottom <= layout.viewportHeight - 16, JSON.stringify(layout));
       assert.ok(layout.cardScrollHeight <= layout.cardClientHeight + 1, JSON.stringify(layout));
-      assert.equal(layout.programDisplay, 'none');
+      assert.equal(layout.programDisplay, 'block');
     }
   } finally {
     cdp?.socket.close();
