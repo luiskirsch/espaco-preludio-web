@@ -103,6 +103,15 @@ test('login mantém a marca apenas no cabeçalho, sem logo ampliada ao fundo', a
   assert.doesNotMatch(html, /login-context-watermark/);
 });
 
+test('saudação de retorno aparece somente depois de um acesso concluído', async () => {
+  const html = await readFile(resolve(root, 'instituicao-login.html'), 'utf8');
+  const script = await readFile(resolve(root, 'js/instituicao-login.js'), 'utf8');
+  assert.match(html, /<h2 id="institutionLoginHeading">Acesse o portal<\/h2>/);
+  assert.doesNotMatch(html, /<h2[^>]*>Bem-vindo de volta<\/h2>/);
+  assert.match(script, /localStorage\.getItem\(RETURNING_ACCESS_KEY\) === "true"[\s\S]*?loginHeading\.textContent = "Bem-vindo de volta"/);
+  assert.match(script, /await validateInstitutionAccess\(credential\.user\);\s*rememberCompletedAccess\(\);/);
+});
+
 test('login institucional não cria rolagem horizontal em desktop ou celular', { timeout: 30000, skip: chromePath ? false : 'Chrome ou Edge não encontrado' }, async () => {
   const server = await startServer();
   const userData = await mkdtemp(join(tmpdir(), 'ep-institution-browser-'));

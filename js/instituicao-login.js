@@ -18,6 +18,22 @@ const message = document.getElementById("loginMessage");
 const passwordToggle = document.getElementById("passwordToggle");
 const firstAccess = document.getElementById("firstAccess");
 const forgotPassword = document.getElementById("forgotPassword");
+const loginHeading = document.getElementById("institutionLoginHeading");
+const RETURNING_ACCESS_KEY = "ep_institution_access_completed";
+
+function rememberCompletedAccess() {
+  try {
+    localStorage.setItem(RETURNING_ACCESS_KEY, "true");
+  } catch (_) {}
+}
+
+function personalizeLoginHeading() {
+  try {
+    if (localStorage.getItem(RETURNING_ACCESS_KEY) === "true") {
+      loginHeading.textContent = "Bem-vindo de volta";
+    }
+  } catch (_) {}
+}
 
 function setMessage(text = "", type = "") {
   message.textContent = text;
@@ -97,6 +113,8 @@ passwordToggle.addEventListener("click", () => {
   passwordToggle.setAttribute("aria-label", showing ? "Mostrar senha" : "Ocultar senha");
   passwordInput.focus();
 });
+
+personalizeLoginHeading();
 
 firstAccess.addEventListener("click", async () => {
   const email = emailInput.value.trim().toLowerCase();
@@ -178,6 +196,7 @@ form.addEventListener("submit", async event => {
     const credential = await signInWithEmailAndPassword(auth, email, password);
     await ensureVerifiedEmail(credential.user);
     await validateInstitutionAccess(credential.user);
+    rememberCompletedAccess();
     setBusy(true, "Abrindo painel…");
     window.location.replace("./instituicao-painel.html");
   } catch (error) {
@@ -209,6 +228,7 @@ form.addEventListener("submit", async event => {
     }
     setBusy(true, "Abrindo painel…");
     await validateInstitutionAccess(user);
+    rememberCompletedAccess();
     window.location.replace("./instituicao-painel.html");
   } catch (error) {
     await signOut(auth).catch(() => {});
