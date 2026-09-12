@@ -161,6 +161,108 @@ p { color: var(--muted); }
 .main-nav > a:not(.button) { color: rgba(255,255,255,.78); transition: color .2s ease; }
 .main-nav > a:not(.button):hover { color: var(--white); }
 .main-nav .nav-login { padding-left: 24px; border-left: 1px solid rgba(255,255,255,.2); color: var(--white); }
+.access-menu { position: relative; flex: 0 0 auto; }
+.access-menu > summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 0;
+  color: rgba(255,255,255,.78);
+  cursor: pointer;
+  list-style: none;
+  transition: color .2s ease;
+}
+.access-menu > summary::-webkit-details-marker { display: none; }
+.access-menu > summary::after {
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  content: "";
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform .2s ease;
+}
+.access-menu[open] > summary,
+.access-menu > summary:hover { color: var(--white); }
+.access-menu[open] > summary::after { transform: rotate(-135deg) translate(-2px, -1px); }
+.access-menu-panel {
+  position: absolute;
+  z-index: 1100;
+  top: calc(100% + 18px);
+  right: -22px;
+  display: grid;
+  width: 380px;
+  padding: 10px;
+  gap: 4px;
+  color: var(--white);
+  background: linear-gradient(150deg, #0d4146, #062d31);
+  border: 1px solid rgba(217,173,69,.3);
+  border-radius: 18px;
+  box-shadow: 0 28px 70px -24px rgba(0,0,0,.72), 0 12px 30px -18px rgba(217,173,69,.24);
+  transform-origin: calc(100% - 34px) top;
+  animation: access-menu-in .18s cubic-bezier(.2,.8,.2,1);
+}
+.access-menu-panel::before {
+  position: absolute;
+  top: -7px;
+  right: 28px;
+  width: 12px;
+  height: 12px;
+  background: #0c3d42;
+  border-top: 1px solid rgba(217,173,69,.3);
+  border-left: 1px solid rgba(217,173,69,.3);
+  content: "";
+  transform: rotate(45deg);
+}
+.access-link {
+  position: relative;
+  display: grid;
+  min-height: 76px;
+  grid-template-columns: 48px 1fr;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 38px 12px 12px;
+  color: var(--white);
+  border: 1px solid transparent;
+  border-radius: 13px;
+  transition: transform .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+.access-link::after {
+  position: absolute;
+  right: 18px;
+  width: 8px;
+  height: 8px;
+  border-top: 1.5px solid var(--gold);
+  border-right: 1.5px solid var(--gold);
+  content: "";
+  opacity: 0;
+  transform: translateX(-5px) rotate(45deg);
+  transition: opacity .16s ease, transform .16s ease;
+}
+.access-link:hover,
+.access-link:focus-visible {
+  color: var(--white);
+  background: rgba(217,173,69,.09);
+  border-color: rgba(217,173,69,.22);
+  box-shadow: inset 3px 0 0 rgba(217,173,69,.72);
+  transform: translateX(2px);
+}
+.access-link:hover::after,
+.access-link:focus-visible::after { opacity: 1; transform: translateX(0) rotate(45deg); }
+.access-link-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  color: var(--gold-light);
+  background: rgba(217,173,69,.12);
+  border: 1px solid rgba(217,173,69,.16);
+  border-radius: 13px;
+}
+.access-link-icon svg { width: 22px; height: 22px; }
+.access-link strong { display: block; font-size: .9rem; line-height: 1.3; }
+.access-link small { display: block; margin-top: 4px; color: rgba(255,255,255,.6); font-size: .72rem; font-weight: 400; line-height: 1.42; }
+@keyframes access-menu-in { from { opacity: 0; transform: translateY(-7px) scale(.98); } to { opacity: 1; transform: none; } }
 .menu-toggle { display: none; width: 46px; height: 46px; padding: 11px; border: 1px solid rgba(255,255,255,.2); color: var(--white); background: transparent; border-radius: 50%; }
 .menu-toggle > span:not(.sr-only) { display: block; width: 100%; height: 2px; margin: 5px 0; background: currentColor; transition: transform .2s ease, opacity .2s ease; }
 
@@ -512,6 +614,10 @@ p { color: var(--muted); }
   .main-nav.is-open { opacity: 1; pointer-events: auto; transform: translateY(0); }
   .main-nav > a:not(.button) { padding: 16px 5px; border-bottom: 1px solid rgba(255,255,255,.1); }
   .main-nav .nav-login { padding-left: 5px; border-left: 0; }
+  .access-menu { width: 100%; }
+  .access-menu > summary { width: 100%; padding: 16px 5px; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .access-menu-panel { position: static; width: 100%; margin: 8px 0 4px; padding: 6px; background: rgba(255,255,255,.035); box-shadow: none; }
+  .access-menu-panel::before { display: none; }
   .main-nav .button { margin-top: 18px; }
   .hero { min-height: 0; padding-top: 68px; }
   #como-funciona { min-height: 0; padding: 80px 0; }

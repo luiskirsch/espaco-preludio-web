@@ -3,12 +3,14 @@
 
   var menuButton = document.querySelector(".menu-toggle");
   var navigation = document.getElementById("main-navigation");
+  var accessMenu = document.querySelector(".access-menu");
 
   function setMenu(open) {
     if (!menuButton || !navigation) return;
     menuButton.setAttribute("aria-expanded", String(open));
     navigation.classList.toggle("is-open", open);
     document.body.classList.toggle("menu-open", open);
+    if (!open && accessMenu) accessMenu.open = false;
     var label = menuButton.querySelector(".sr-only");
     if (label) label.textContent = open ? "Fechar menu" : "Abrir menu";
   }
@@ -23,7 +25,11 @@
     });
 
     document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape" && menuButton.getAttribute("aria-expanded") === "true") {
+      if (event.key !== "Escape") return;
+      if (accessMenu && accessMenu.open) {
+        accessMenu.open = false;
+        accessMenu.querySelector("summary").focus();
+      } else if (menuButton.getAttribute("aria-expanded") === "true") {
         setMenu(false);
         menuButton.focus();
       }
@@ -31,6 +37,12 @@
 
     window.addEventListener("resize", function () {
       if (window.innerWidth > 960) setMenu(false);
+    });
+  }
+
+  if (accessMenu) {
+    document.addEventListener("click", function (event) {
+      if (!accessMenu.contains(event.target)) accessMenu.open = false;
     });
   }
 
