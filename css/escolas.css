@@ -520,6 +520,72 @@ p { color: var(--muted); }
 .footer-grid > div > a:not(.brand):hover { color: var(--white); }
 .footer-bottom { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-top: 22px; color: rgba(255,255,255,.4); border-top: 1px solid rgba(255,255,255,.1); font-size: .68rem; }
 
+/* Resposta visual dos cards em dispositivos com ponteiro preciso. */
+.program-preview,
+.value-card,
+.visibility-card,
+.product-card,
+.institution-models article {
+  transition: transform .28s cubic-bezier(.22,.61,.36,1), border-color .28s ease, box-shadow .28s ease;
+}
+.icon-box,
+.product-icon,
+.visibility-title > span,
+.safety-list article > span {
+  transition: transform .28s cubic-bezier(.22,.61,.36,1), background-color .28s ease, color .28s ease;
+}
+.preview-panels article,
+.journey-grid article,
+.journey-grid h3,
+.safety-list article,
+.safety-list h3,
+.contracting-steps li,
+.pioneer-benefits span {
+  transition: transform .24s ease, background-color .24s ease, border-color .24s ease, color .24s ease, box-shadow .24s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .program-preview:hover,
+  .value-card:not(.featured):hover,
+  .visibility-card:hover,
+  .product-card:hover,
+  .institution-models article:hover {
+    transform: translateY(-7px);
+    border-color: rgba(183,132,25,.42);
+    box-shadow: 0 25px 55px rgba(12,61,66,.13), 0 7px 18px rgba(12,61,66,.08);
+  }
+  .value-card.featured:hover {
+    border-color: rgba(241,216,142,.62);
+    box-shadow: 0 28px 58px rgba(6,45,49,.28), 0 0 0 1px rgba(241,216,142,.16);
+  }
+  .value-card:hover .icon-box,
+  .product-card:hover .product-icon,
+  .visibility-card:hover .visibility-title > span {
+    transform: translateY(-2px) scale(1.07);
+  }
+  .preview-panels article:hover {
+    transform: translateY(-3px);
+    background: #f8f2e4;
+    border-color: rgba(183,132,25,.3);
+    box-shadow: 0 10px 20px rgba(12,61,66,.08);
+  }
+  .journey-grid article:hover {
+    background: rgba(255,255,255,.055);
+    box-shadow: inset 0 0 0 1px rgba(217,173,69,.2);
+  }
+  .journey-grid article:hover h3 { color: var(--gold-light); }
+  .safety-list article:hover { transform: translateX(7px); }
+  .safety-list article:hover > span {
+    transform: scale(1.08);
+    color: var(--ink);
+    background: var(--gold-light);
+  }
+  .safety-list article:hover h3 { color: var(--gold-deep); }
+  .contracting-steps li:hover { background: rgba(255,255,255,.04); }
+  .contracting-steps li:hover > span { box-shadow: 0 0 0 5px rgba(217,173,69,.12); }
+  .pioneer-benefits span:hover { color: var(--white); background: rgba(255,255,255,.11); }
+}
+
 @media (max-width: 1080px) {
   .main-nav { gap: 16px; }
   .main-nav .nav-login { padding-left: 15px; }
