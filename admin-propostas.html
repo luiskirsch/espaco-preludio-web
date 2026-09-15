@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conte\u00fado s\u00f3 est\u00e1 dispon\u00edvel no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script>
+<style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <title>Propostas institucionais · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <style>
+    :root { --proposal-green:#0d4448; --proposal-gold:#c99a3d; --proposal-soft:#f4efe3; }
+    .proposal-page { max-width: 1540px; margin: 0 auto; }
+    .proposal-header { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; flex-wrap:wrap; margin-bottom:20px; }
+    .proposal-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .proposal-actions .ep-select { min-width:220px; }
+    .proposal-grid { display:grid; grid-template-columns:minmax(420px, .9fr) minmax(460px, 1.1fr); gap:18px; align-items:start; }
+    .proposal-panel { background:var(--ep-surface); border:1px solid var(--ep-line); border-radius:16px; overflow:hidden; }
+    .proposal-panel__head { padding:18px 20px 14px; border-bottom:1px solid var(--ep-line); display:flex; justify-content:space-between; gap:12px; align-items:center; }
+    .proposal-panel__head h2 { margin:0; font:500 22px/1.2 'Fraunces', Georgia, serif; color:var(--ep-ink); }
+    .proposal-panel__body { padding:18px 20px 22px; }
+    .proposal-section { border:0; padding:0; margin:0 0 24px; }
+    .proposal-section:last-child { margin-bottom:0; }
+    .proposal-section legend { width:100%; padding:0 0 10px; margin-bottom:12px; border-bottom:1px solid var(--ep-line); font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ep-accent); }
+    .proposal-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; }
+    .proposal-fields .wide { grid-column:1/-1; }
+    .proposal-field label { display:flex; justify-content:space-between; gap:8px; font-size:12px; font-weight:600; color:var(--ep-ink-2); margin-bottom:6px; }
+    .proposal-field label small { font-weight:400; color:var(--ep-ink-3); }
+    .proposal-field input,.proposal-field textarea,.proposal-field select { width:100%; box-sizing:border-box; }
+    .proposal-field textarea { min-height:80px; resize:vertical; }
+    .proposal-presets { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:16px; }
+    .proposal-presets button { border:1px solid var(--ep-line); background:var(--ep-bg-2); color:var(--ep-ink-2); border-radius:999px; padding:6px 10px; font:600 11px/1 'Inter',sans-serif; cursor:pointer; }
+    .proposal-presets button:hover { color:var(--ep-accent); border-color:var(--ep-accent); }
+    .result-sticky { position:sticky; top:18px; }
+    .result-hero { padding:22px; color:#fff; background:linear-gradient(135deg,#0b3d41,#11565b); }
+    .result-hero__eyebrow { color:#e8c36f; font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+    .result-hero__price { font:600 clamp(38px,5vw,58px)/1 'Fraunces',Georgia,serif; margin:8px 0 4px; letter-spacing:-.03em; }
+    .result-hero__sub { color:rgba(255,255,255,.72); font-size:13px; }
+    .result-metrics { display:grid; grid-template-columns:repeat(3,1fr); border-bottom:1px solid var(--ep-line); }
+    .result-metric { padding:15px; border-right:1px solid var(--ep-line); }
+    .result-metric:last-child { border-right:0; }
+    .result-metric span { display:block; font-size:10px; text-transform:uppercase; letter-spacing:.07em; color:var(--ep-ink-3); font-weight:700; }
+    .result-metric strong { display:block; margin-top:6px; font:600 19px/1.2 'JetBrains Mono',monospace; color:var(--ep-ink); }
+    .margin-banner { display:flex; gap:10px; align-items:flex-start; padding:12px 15px; border-radius:10px; font-size:12px; line-height:1.5; margin-bottom:16px; }
+    .margin-banner.on-target { color:#245f3a; background:rgba(62,143,88,.12); }
+    .margin-banner.below-target { color:#855a15; background:rgba(201,154,61,.16); }
+    .margin-banner.loss { color:#a03732; background:rgba(184,69,61,.12); }
+    .breakdown { width:100%; border-collapse:collapse; font-size:12px; }
+    .breakdown th { padding:8px 0; text-align:left; color:var(--ep-ink-3); font-size:10px; text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid var(--ep-line); }
+    .breakdown th:last-child,.breakdown td:last-child { text-align:right; font-family:'JetBrains Mono',monospace; }
+    .breakdown td { padding:9px 0; border-bottom:1px solid var(--ep-line); color:var(--ep-ink-2); }
+    .breakdown tr.total td { font-weight:700; color:var(--ep-ink); border-top:2px solid var(--ep-line); }
+    .breakdown tr.profit td { color:#2d6a3e; font-weight:700; }
+    .capacity-row { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:16px; }
+    .capacity-item { background:var(--ep-bg-2); border-radius:9px; padding:10px; }
+    .capacity-item span { display:block; font-size:9px; text-transform:uppercase; letter-spacing:.06em; color:var(--ep-ink-3); }
+    .capacity-item strong { display:block; margin-top:5px; font:600 15px 'JetBrains Mono',monospace; color:var(--ep-ink); }
+    .proposal-document { margin-top:22px; background:#fff; color:#173f42; border:1px solid #ded8ca; box-shadow:0 18px 50px rgba(20,45,46,.08); }
+    .document-top { background:#0b383b; color:#fff; padding:30px 34px; display:flex; justify-content:space-between; gap:20px; align-items:flex-start; }
+    .document-brand { display:flex; gap:13px; align-items:center; }
+    .document-brand img { width:48px; height:48px; object-fit:contain; border-radius:50%; background:#050505; }
+    .document-brand b { font:600 22px 'Fraunces',Georgia,serif; display:block; }
+    .document-brand span,.document-meta { color:rgba(255,255,255,.65); font-size:10px; letter-spacing:.08em; text-transform:uppercase; }
+    .document-meta { text-align:right; line-height:1.8; }
+    .document-body { padding:34px; }
+    .document-kicker { color:#aa741c; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+    .document-title { font:600 32px/1.12 'Fraunces',Georgia,serif; margin:8px 0 10px; }
+    .document-lead { color:#557072; line-height:1.65; max-width:760px; font-size:13px; }
+    .document-price { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:#ddd6c7; border:1px solid #ddd6c7; margin:24px 0; }
+    .document-price div { background:#f9f6ee; padding:18px; }
+    .document-price span { display:block; font-size:9px; text-transform:uppercase; letter-spacing:.08em; color:#738789; }
+    .document-price strong { display:block; margin-top:6px; font:600 20px 'Fraunces',Georgia,serif; }
+    .clauses { counter-reset:clause; }
+    .clause { counter-increment:clause; display:grid; grid-template-columns:30px 1fr; gap:12px; padding:14px 0; border-top:1px solid #e5dfd2; }
+    .clause::before { content:counter(clause,decimal-leading-zero); color:#bc882e; font:600 11px 'JetBrains Mono',monospace; padding-top:3px; }
+    .clause h3 { margin:0 0 4px; font:600 15px 'Fraunces',Georgia,serif; }
+    .clause p { margin:0; color:#587173; font-size:11px; line-height:1.65; }
+    .document-note { margin-top:20px; padding:12px 14px; background:#f4efe3; color:#6f634e; font-size:10px; line-height:1.55; }
+    .access-state { max-width:560px; margin:80px auto; text-align:center; }
+    .access-state .proposal-panel__body { padding:38px; }
+    @media (max-width:1100px) { .proposal-grid{grid-template-columns:1fr}.result-sticky{position:static} }
+    @media (max-width:680px) { .proposal-fields{grid-template-columns:1fr}.proposal-fields .wide{grid-column:auto}.result-metrics{grid-template-columns:1fr}.result-metric{border-right:0;border-bottom:1px solid var(--ep-line)}.capacity-row{grid-template-columns:repeat(2,1fr)}.document-top{padding:22px}.document-body{padding:22px}.document-price{grid-template-columns:1fr}.proposal-actions .ep-select{min-width:100%} }
+    @media print {
+      @page { size:A4; margin:12mm; }
+      body { background:#fff!important; }
+      #epAdminSidebar,#epAdminSairFloat,.no-print,.proposal-header,.proposal-grid,.ep-topbar { display:none!important; }
+      body.ep-admin-has-sidebar .ep-shell { padding-left:0!important; }
+      .ep-main { padding:0!important; margin:0!important; }
+      .proposal-page { max-width:none; }
+      .proposal-document { display:block!important; margin:0; border:0; box-shadow:none; }
+      .document-top { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      .document-body { padding:24px 28px; }
+      .document-price div,.document-note { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      .clause { break-inside:avoid; }
+    }
+  </style>
+</head>
+<body>
+<script src="./js/admin-sidebar.js?v=2"></script>
+<div class="ep-shell">
+  <header class="ep-topbar"><span id="adminEmail">…</span></header>
+  <main class="ep-main">
+    <section id="loadingState" class="access-state proposal-panel">
+      <div class="proposal-panel__body"><div class="ep-eyebrow">Acesso administrativo</div><h1 class="ep-h2 ep-mt-8">Validando credenciais…</h1></div>
+    </section>
+    <section id="forbiddenState" class="access-state proposal-panel ep-hide">
+      <div class="proposal-panel__body"><div class="ep-eyebrow">Acesso restrito</div><h1 class="ep-h2 ep-mt-8">Esta ferramenta é exclusiva da administração.</h1><p id="accessMessage" class="ep-text-muted ep-mt-8"></p><button id="retryAccess" class="ep-btn ep-btn--primary ep-mt-16">Tentar novamente</button></div>
+    </section>
+
+    <section id="proposalApp" class="proposal-page ep-hide">
+      <div class="proposal-header no-print">
+        <div><div class="ep-eyebrow">Comercial institucional</div><h1 class="ep-h1 ep-mt-8">Propostas e contratos</h1><p class="ep-text-muted ep-mt-4">Simule custos, preserve sua margem e apresente uma proposta transparente.</p></div>
+        <div class="proposal-actions">
+          <select id="savedScenarios" class="ep-select" aria-label="Cenários salvos"><option value="">Cenários salvos</option></select>
+          <button id="newScenario" class="ep-btn ep-btn--ghost">Novo</button>
+          <button id="deleteScenario" class="ep-btn ep-btn--ghost" disabled>Excluir</button>
+          <button id="saveScenario" class="ep-btn ep-btn--ghost">Salvar</button>
+          <button id="copyProposal" class="ep-btn ep-btn--ghost">Copiar resumo</button>
+          <button id="printProposal" class="ep-btn ep-btn--primary">Imprimir / PDF</button>
+        </div>
+      </div>
+
+      <div class="proposal-grid no-print">
+        <section class="proposal-panel">
+          <div class="proposal-panel__head"><h2>Premissas da proposta</h2><span id="saveState" class="ep-text-sm ep-text-muted">Alterações locais</span></div>
+          <div class="proposal-panel__body">
+            <fieldset class="proposal-section">
+              <legend>Instituição e contrato</legend>
+              <div class="proposal-fields">
+                <div class="proposal-field wide"><label for="institutionName">Instituição</label><input class="ep-input js-field" id="institutionName" data-key="institutionName" type="text"></div>
+                <div class="proposal-field"><label for="institutionDocument">CNPJ / identificação</label><input class="ep-input js-field" id="institutionDocument" data-key="institutionDocument" type="text"></div>
+                <div class="proposal-field"><label for="municipality">Município / UF</label><input class="ep-input js-field" id="municipality" data-key="municipality" type="text"></div>
+                <div class="proposal-field"><label for="contactName">Contato responsável</label><input class="ep-input js-field" id="contactName" data-key="contactName" type="text"></div>
+                <div class="proposal-field"><label for="proposalDate">Data da proposta</label><input class="ep-input js-field" id="proposalDate" data-key="proposalDate" type="date"></div>
+                <div class="proposal-field"><label for="contractMonths">Vigência <small>meses</small></label><input class="ep-input js-field" id="contractMonths" data-key="contractMonths" type="number" min="1" step="1"></div>
+                <div class="proposal-field"><label for="validityDays">Validade <small>dias</small></label><input class="ep-input js-field" id="validityDays" data-key="validityDays" type="number" min="1" step="1"></div>
+                <div class="proposal-field"><label for="paymentDay">Vencimento <small>dia</small></label><input class="ep-input js-field" id="paymentDay" data-key="paymentDay" type="number" min="1" max="28" step="1"></div>
+                <div class="proposal-field"><label for="annualAdjustment">Reajuste</label><input class="ep-input js-field" id="annualAdjustment" data-key="annualAdjustment" type="text"></div>
+              </div>
+            </fieldset>
+
+            <fieldset class="proposal-section">
+              <legend>Escala e utilização</legend>
+              <div class="proposal-presets"><button data-students="300">300 alunos</button><button data-students="500">500 alunos</button><button data-students="1000">1.000 alunos</button><button data-students="3000">3.000 alunos</button><button data-students="5000">5.000 alunos</button></div>
+              <div class="proposal-fields">
+                <div class="proposal-field"><label for="students">Alunos elegíveis</label><input class="ep-input js-field" id="students" data-key="students" type="number" min="1" step="1"></div>
+                <div class="proposal-field"><label for="schools">Unidades / escolas</label><input class="ep-input js-field" id="schools" data-key="schools" type="number" min="1" step="1"></div>
+                <div class="proposal-field"><label for="expectedAdherencePct">Adesão mensal estimada <small>%</small></label><input class="ep-input js-field" id="expectedAdherencePct" data-key="expectedAdherencePct" type="number" min="0" max="100" step="0.1"></div>
+                <div class="proposal-field"><label for="sessionsPerActiveStudent">Sessões por usuário ativo</label><input class="ep-input js-field" id="sessionsPerActiveStudent" data-key="sessionsPerActiveStudent" type="number" min="0" step="0.1"></div>
+                <div class="proposal-field"><label for="sessionMinutes">Duração da sessão <small>min</small></label><input class="ep-input js-field" id="sessionMinutes" data-key="sessionMinutes" type="number" min="1" step="5"></div>
+                <div class="proposal-field"><label for="professionalWeeklyCapacity">Capacidade semanal/profissional</label><input class="ep-input js-field" id="professionalWeeklyCapacity" data-key="professionalWeeklyCapacity" type="number" min="1" step="1"></div>
+              </div>
+            </fieldset>
+
+            <fieldset class="proposal-section">
+              <legend>Despesas operacionais mensais</legend>
+              <div class="proposal-fields">
+                <div class="proposal-field"><label for="professionalCostPerSession">Profissional por sessão <small>R$</small></label><input class="ep-input js-field" id="professionalCostPerSession" data-key="professionalCostPerSession" type="number" min="0" step="0.01"></div>
+                <div class="proposal-field"><label for="technologyCostPerStudent">Tecnologia por aluno <small>R$</small></label><input class="ep-input js-field" id="technologyCostPerStudent" data-key="technologyCostPerStudent" type="number" min="0" step="0.01"></div>
+                <div class="proposal-field"><label for="supportCostPerSchool">Suporte por unidade <small>R$</small></label><input class="ep-input js-field" id="supportCostPerSchool" data-key="supportCostPerSchool" type="number" min="0" step="0.01"></div>
+                <div class="proposal-field"><label for="fixedOperationsMonthly">Operação fixa <small>R$</small></label><input class="ep-input js-field" id="fixedOperationsMonthly" data-key="fixedOperationsMonthly" type="number" min="0" step="0.01"></div>
+                <div class="proposal-field"><label for="customerSuccessMonthly">Relacionamento / CS <small>R$</small></label><input class="ep-input js-field" id="customerSuccessMonthly" data-key="customerSuccessMonthly" type="number" min="0" step="0.01"></div>
+                <div class="proposal-field"><label for="administrativeMonthly">Administrativo / contábil <small>R$</small></label><input class="ep-input js-field" id="administrativeMonthly" data-key="administrativeMonthly" type="number" min="0" step="0.01"></div>
+                <div class="proposal-field"><label for="marketingMonthly">Comercial / marketing <small>R$</small></label><input class="ep-input js-field" id="marketingMonthly" data-key="marketingMonthly" type="number" min="0" step="0.01"></div>
+                <div class="proposal-field"><label for="otherMonthlyCosts">Outras despesas <small>R$</small></label><input class="ep-input js-field" id="otherMonthlyCosts" data-key="otherMonthlyCosts" type="number" min="0" step="0.01"></div>
+                <div class="proposal-field"><label for="implementationFee">Implantação única <small>R$</small></label><input class="ep-input js-field" id="implementationFee" data-key="implementationFee" type="number" min="0" step="0.01"></div>
+              </div>
+            </fieldset>
+
+            <fieldset class="proposal-section">
+              <legend>Preço, proteção e lucro</legend>
+              <div class="proposal-fields">
+                <div class="proposal-field"><label for="taxPct">Impostos sobre faturamento <small>%</small></label><input class="ep-input js-field" id="taxPct" data-key="taxPct" type="number" min="0" max="100" step="0.1"></div>
+                <div class="proposal-field"><label for="contingencyPct">Reserva / inadimplência <small>%</small></label><input class="ep-input js-field" id="contingencyPct" data-key="contingencyPct" type="number" min="0" max="100" step="0.1"></div>
+                <div class="proposal-field"><label for="targetProfitMarginPct">Margem líquida desejada <small>% fixa</small></label><input class="ep-input js-field" id="targetProfitMarginPct" data-key="targetProfitMarginPct" type="number" min="0" max="100" step="0.1"></div>
+                <div class="proposal-field"><label for="commercialDiscountPct">Desconto negociado <small>%</small></label><input class="ep-input js-field" id="commercialDiscountPct" data-key="commercialDiscountPct" type="number" min="0" max="100" step="0.1"></div>
+                <div class="proposal-field wide"><label for="minimumMonthlyFee">Piso mensal do contrato <small>R$ · opcional</small></label><input class="ep-input js-field" id="minimumMonthlyFee" data-key="minimumMonthlyFee" type="number" min="0" step="0.01"></div>
+                <div class="proposal-field wide"><label for="scopeNotes">Escopo incluído</label><textarea class="ep-input js-field" id="scopeNotes" data-key="scopeNotes"></textarea></div>
+              </div>
+            </fieldset>
+          </div>
+        </section>
+
+        <aside class="proposal-panel result-sticky">
+          <div class="result-hero"><div class="result-hero__eyebrow">Investimento mensal proposto</div><div id="monthlyRevenue" class="result-hero__price">R$ 0,00</div><div class="result-hero__sub"><span id="perStudent">R$ 0,00</span> por estudante elegível · <span id="contractTotalHero">R$ 0,00</span> no contrato</div></div>
+          <div class="result-metrics">
+            <div class="result-metric"><span>Lucro líquido/mês</span><strong id="netProfit">R$ 0</strong></div>
+            <div class="result-metric"><span>Margem efetiva</span><strong id="effectiveMargin">0%</strong></div>
+            <div class="result-metric"><span>Preço recomendado</span><strong id="targetRevenue">R$ 0</strong></div>
+          </div>
+          <div class="proposal-panel__body">
+            <div id="marginBanner" class="margin-banner on-target"><strong>Margem protegida.</strong><span id="marginMessage"></span></div>
+            <table class="breakdown">
+              <thead><tr><th>Memória mensal interna</th><th>Valor</th></tr></thead>
+              <tbody>
+                <tr><td>Atendimentos profissionais</td><td id="careCost"></td></tr>
+                <tr><td>Tecnologia e infraestrutura</td><td id="technologyCost"></td></tr>
+                <tr><td>Suporte às unidades</td><td id="unitSupportCost"></td></tr>
+                <tr><td>Operação fixa</td><td id="fixedOperationsCost"></td></tr>
+                <tr><td>Relacionamento / sucesso</td><td id="customerSuccessCost"></td></tr>
+                <tr><td>Administrativo / contábil</td><td id="administrativeCost"></td></tr>
+                <tr><td>Comercial / marketing</td><td id="marketingCost"></td></tr>
+                <tr><td>Outras despesas</td><td id="otherCosts"></td></tr>
+                <tr class="total"><td>Custo operacional total</td><td id="operatingCost"></td></tr>
+                <tr><td>Impostos</td><td id="taxes"></td></tr>
+                <tr><td>Reserva / contingência</td><td id="contingency"></td></tr>
+                <tr class="profit"><td>Lucro líquido projetado</td><td id="netProfitTable"></td></tr>
+              </tbody>
+            </table>
+            <div class="capacity-row">
+              <div class="capacity-item"><span>Usuários ativos</span><strong id="activeStudents"></strong></div>
+              <div class="capacity-item"><span>Sessões/mês</span><strong id="monthlySessions"></strong></div>
+              <div class="capacity-item"><span>Horas clínicas</span><strong id="professionalHours"></strong></div>
+              <div class="capacity-item"><span>Profissionais equivalentes</span><strong id="professionalFte"></strong></div>
+            </div>
+            <p id="calculationError" class="ep-text-sm" style="color:#b8453d;margin:14px 0 0;"></p>
+          </div>
+        </aside>
+      </div>
+
+      <article id="proposalDocument" class="proposal-document">
+        <div class="document-top">
+          <div class="document-brand"><img src="/logo_oficial_fundo_transparente.png?v=2" alt=""><div><span>Espaço</span><b>Prelúdio</b></div></div>
+          <div class="document-meta">Proposta <span id="documentDate"></span><br>Validade: <span id="documentValidity"></span> dias</div>
+        </div>
+        <div class="document-body">
+          <div class="document-kicker">Proposta comercial institucional</div>
+          <h2 id="documentInstitution" class="document-title">Instituição parceira</h2>
+          <p id="documentLead" class="document-lead"></p>
+          <div class="document-price">
+            <div><span>Investimento mensal</span><strong id="documentMonthly"></strong></div>
+            <div><span>Referência por aluno</span><strong id="documentPerStudent"></strong></div>
+            <div><span>Valor global do contrato</span><strong id="documentTotal"></strong></div>
+          </div>
+          <div class="clauses">
+            <section class="clause"><div><h3>Objeto e escopo</h3><p id="clauseScope"></p></div></section>
+            <section class="clause"><div><h3>Público e capacidade contratada</h3><p id="clauseCapacity"></p></div></section>
+            <section class="clause"><div><h3>Investimento e composição</h3><p id="clausePrice"></p></div></section>
+            <section class="clause"><div><h3>Implantação</h3><p id="clauseImplementation"></p></div></section>
+            <section class="clause"><div><h3>Faturamento, vencimento e reajuste</h3><p id="clausePayment"></p></div></section>
+            <section class="clause"><div><h3>Vigência e reequilíbrio</h3><p id="clauseTerm"></p></div></section>
+            <section class="clause"><div><h3>Proteção de dados e confidencialidade</h3><p>As partes observarão a LGPD e adotarão controles de segurança compatíveis com a natureza dos dados tratados. A instituição terá acesso somente a indicadores operacionais agregados, sem acesso a prontuários, conteúdo clínico ou conversas individuais.</p></div></section>
+            <section class="clause"><div><h3>Autonomia e responsabilidade técnica</h3><p>Os atendimentos serão conduzidos por profissionais habilitados, com independência técnica, observância às normas dos respectivos conselhos e preservação do sigilo profissional. Esta contratação não garante resultado clínico específico.</p></div></section>
+            <section class="clause"><div><h3>Rescisão e continuidade</h3><p>A minuta definitiva deverá estabelecer aviso prévio, tratamento de valores pendentes, exportação ou retenção legal de dados e plano de continuidade para atendimentos em curso.</p></div></section>
+          </div>
+          <div class="document-note">Documento comercial orientativo gerado a partir das premissas do simulador. Antes da assinatura, a minuta definitiva deve ser revisada pela assessoria jurídica e contábil das partes.</div>
+        </div>
+      </article>
+    </section>
+  </main>
+</div>
+
+<script type="module">
+  import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { DEFAULT_SCENARIO, buildProposalText, calculateInstitutionalPricing } from "./js/institutional-pricing.js";
+
+  const STORAGE_KEY = "ep:institutional-proposals:v1";
+  const DRAFT_KEY = "ep:institutional-proposal-draft:v1";
+  const currency = new Intl.NumberFormat("pt-BR", { style:"currency", currency:"BRL" });
+  const number = new Intl.NumberFormat("pt-BR", { maximumFractionDigits:1 });
+  let currentResult = null;
+  let currentSavedId = null;
+
+  const byId = (id) => document.getElementById(id);
+  const fields = [...document.querySelectorAll(".js-field")];
+  const numericKeys = new Set(fields.filter((field) => field.type === "number").map((field) => field.dataset.key));
+
+  function todayIso() { return new Date().toISOString().slice(0,10); }
+  function displayDate(value) { if (!value) return new Date().toLocaleDateString("pt-BR"); const [y,m,d] = value.split("-"); return `${d}/${m}/${y}`; }
+  function getSaved() { try { const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); return Array.isArray(data) ? data : []; } catch { return []; } }
+  function setSaved(items) { localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0,30))); }
+
+  function collect() {
+    const data = {};
+    for (const field of fields) data[field.dataset.key] = numericKeys.has(field.dataset.key) ? Number(field.value) : field.value;
+    return data;
+  }
+
+  function populate(data) {
+    const scenario = { ...DEFAULT_SCENARIO, ...data, proposalDate: data?.proposalDate || todayIso() };
+    for (const field of fields) field.value = scenario[field.dataset.key] ?? "";
+    calculate();
+  }
+
+  function renderSavedOptions() {
+    const select = byId("savedScenarios");
+    const items = getSaved();
+    select.innerHTML = '<option value="">Cenários salvos</option>' + items.map((item) => `<option value="${item.id}">${escapeHtml(item.name)}</option>`).join("");
+    select.value = currentSavedId || "";
+    byId("deleteScenario").disabled = !currentSavedId;
+  }
+
+  function escapeHtml(value) { const div = document.createElement("div"); div.textContent = String(value || ""); return div.innerHTML; }
+  function setText(id, value) { byId(id).textContent = value; }
+
+  function calculate() {
+    try {
+      const result = calculateInstitutionalPricing(collect());
+      currentResult = result;
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(result.input));
+      byId("calculationError").textContent = "";
+      setText("monthlyRevenue", currency.format(result.monthlyRevenue));
+      setText("perStudent", currency.format(result.monthlyPerStudent));
+      setText("contractTotalHero", currency.format(result.contractTotal));
+      setText("netProfit", currency.format(result.netProfit));
+      setText("effectiveMargin", `${number.format(result.effectiveMarginPct)}%`);
+      setText("targetRevenue", currency.format(result.targetMonthlyRevenue));
+      setText("careCost", currency.format(result.careCost));
+      setText("technologyCost", currency.format(result.technologyCost));
+      setText("unitSupportCost", currency.format(result.unitSupportCost));
+      setText("fixedOperationsCost", currency.format(result.input.fixedOperationsMonthly));
+      setText("customerSuccessCost", currency.format(result.input.customerSuccessMonthly));
+      setText("administrativeCost", currency.format(result.input.administrativeMonthly));
+      setText("marketingCost", currency.format(result.input.marketingMonthly));
+      setText("otherCosts", currency.format(result.input.otherMonthlyCosts));
+      setText("operatingCost", currency.format(result.operatingCost));
+      setText("taxes", currency.format(result.taxes));
+      setText("contingency", currency.format(result.contingency));
+      setText("netProfitTable", currency.format(result.netProfit));
+      setText("activeStudents", number.format(result.activeStudents));
+      setText("monthlySessions", number.format(result.monthlySessions));
+      setText("professionalHours", number.format(result.professionalHours));
+      setText("professionalFte", number.format(result.professionalFte));
+
+      const banner = byId("marginBanner");
+      banner.className = `margin-banner ${result.marginStatus}`;
+      const messages = {
+        "on-target": `A margem líquida de ${number.format(result.effectiveMarginPct)}% está preservada.`,
+        "below-target": `A margem caiu para ${number.format(result.effectiveMarginPct)}%. O desconto máximo antes do prejuízo é ${number.format(result.maximumSafeDiscountPct)}%.`,
+        "loss": `Este cenário gera prejuízo de ${currency.format(Math.abs(result.netProfit))} por mês. Revise desconto, custos ou preço mínimo.`,
+      };
+      byId("marginMessage").textContent = messages[result.marginStatus];
+      renderDocument(result);
+      byId("saveState").textContent = currentSavedId ? "Alterações não salvas" : "Rascunho local";
+    } catch (error) {
+      currentResult = null;
+      byId("calculationError").textContent = error.message;
+    }
+  }
+
+  function renderDocument(result) {
+    const i = result.input;
+    setText("documentDate", displayDate(i.proposalDate));
+    setText("documentValidity", i.validityDays);
+    setText("documentInstitution", i.institutionName);
+    setText("documentLead", `Estrutura de cuidado e tecnologia dimensionada para ${i.students.toLocaleString("pt-BR")} estudantes em ${i.schools} unidade(s)${i.municipality ? `, em ${i.municipality}` : ""}.`);
+    setText("documentMonthly", currency.format(result.monthlyRevenue));
+    setText("documentPerStudent", `${currency.format(result.monthlyPerStudent)}/mês`);
+    setText("documentTotal", currency.format(result.contractTotal));
+    setText("clauseScope", i.scopeNotes);
+    setText("clauseCapacity", `A proposta considera ${i.students.toLocaleString("pt-BR")} estudantes elegíveis, adesão mensal estimada de ${number.format(i.expectedAdherencePct)}% e capacidade projetada de ${result.monthlySessions.toLocaleString("pt-BR")} atendimentos por mês. A demanda será acompanhada por indicadores agregados para adequação de capacidade.`);
+    setText("clausePrice", `Mensalidade de ${currency.format(result.monthlyRevenue)}, equivalente a ${currency.format(result.monthlyPerStudent)} por estudante elegível. O valor compreende operação assistencial, tecnologia, suporte e gestão previstos no escopo.`);
+    setText("clauseImplementation", `Taxa única de ${currency.format(i.implementationFee)} para configuração, parametrização, orientação das equipes e abertura da operação.`);
+    setText("clausePayment", `Faturamento mensal com vencimento no dia ${i.paymentDay}. Reajuste anual pelo ${i.annualAdjustment}, ou índice oficial que venha a substituí-lo, observado o instrumento definitivo.`);
+    setText("clauseTerm", `Vigência inicial de ${i.contractMonths} meses. Mudanças relevantes no número de estudantes, unidades, cobertura ou volume assistencial poderão gerar reequilíbrio econômico mediante acordo entre as partes.`);
+  }
+
+  fields.forEach((field) => field.addEventListener("input", calculate));
+  document.querySelectorAll("[data-students]").forEach((button) => button.addEventListener("click", () => { byId("students").value = button.dataset.students; calculate(); }));
+
+  byId("saveScenario").addEventListener("click", () => {
+    if (!currentResult) return;
+    const items = getSaved();
+    const id = currentSavedId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+    const existingIndex = items.findIndex((item) => item.id === id);
+    const entry = { id, name: currentResult.input.institutionName, data: currentResult.input, updatedAt: Date.now() };
+    if (existingIndex >= 0) items.splice(existingIndex, 1, entry); else items.unshift(entry);
+    currentSavedId = id;
+    setSaved(items);
+    renderSavedOptions();
+    byId("saveState").textContent = "Cenário salvo neste navegador";
+  });
+
+  byId("savedScenarios").addEventListener("change", (event) => {
+    const item = getSaved().find((saved) => saved.id === event.target.value);
+    if (!item) return;
+    currentSavedId = item.id;
+    populate(item.data);
+    renderSavedOptions();
+    byId("saveState").textContent = "Cenário carregado";
+  });
+
+  byId("newScenario").addEventListener("click", () => { currentSavedId = null; populate({ ...DEFAULT_SCENARIO, proposalDate:todayIso() }); renderSavedOptions(); });
+  byId("deleteScenario").addEventListener("click", () => {
+    if (!currentSavedId || !confirm("Excluir este cenário salvo?")) return;
+    setSaved(getSaved().filter((item) => item.id !== currentSavedId));
+    currentSavedId = null;
+    renderSavedOptions();
+    byId("saveState").textContent = "Cenário excluído";
+  });
+
+  byId("copyProposal").addEventListener("click", async () => {
+    if (!currentResult) return;
+    const text = buildProposalText(currentResult, (value) => currency.format(value));
+    await navigator.clipboard.writeText(text);
+    const button = byId("copyProposal");
+    const original = button.textContent;
+    button.textContent = "Resumo copiado";
+    setTimeout(() => { button.textContent = original; }, 1600);
+  });
+  byId("printProposal").addEventListener("click", () => window.print());
+  byId("retryAccess").addEventListener("click", () => verifyAccess(auth.currentUser));
+  window._epAdminSignOut = () => signOut(auth);
+
+  async function verifyAccess(user) {
+    byId("loadingState").classList.remove("ep-hide");
+    byId("forbiddenState").classList.add("ep-hide");
+    byId("proposalApp").classList.add("ep-hide");
+    if (!user) { location.href = "./admin-login.html"; return; }
+    try {
+      const token = await user.getIdToken(true);
+      const response = await fetch(`${BACKEND_BASE_URL}/therapy/admin/dashboard`, { headers:{ Authorization:`Bearer ${token}` } });
+      if (!response.ok) throw new Error(response.status === 403 ? "Sua conta não possui permissão administrativa." : "Não foi possível confirmar o acesso agora.");
+      byId("adminEmail").textContent = user.email || "";
+      byId("loadingState").classList.add("ep-hide");
+      byId("proposalApp").classList.remove("ep-hide");
+    } catch (error) {
+      byId("loadingState").classList.add("ep-hide");
+      byId("forbiddenState").classList.remove("ep-hide");
+      byId("accessMessage").textContent = error.message;
+    }
+  }
+
+  let draft = {};
+  try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || "{}"); } catch { draft = {}; }
+  populate({ ...DEFAULT_SCENARIO, ...draft, proposalDate:draft.proposalDate || todayIso() });
+  renderSavedOptions();
+  onAuthStateChanged(auth, verifyAccess);
+</script>
+</body>
+</html>
