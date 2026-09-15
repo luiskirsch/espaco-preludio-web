@@ -10,6 +10,8 @@ import {
 test("institutional pricing preserves the requested net margin", () => {
   const result = calculateInstitutionalPricing({
     ...DEFAULT_SCENARIO,
+    utilizationMode: "manual",
+    expectedAdherencePct: 12,
     students: 1000,
     schools: 2,
     commercialDiscountPct: 0,
@@ -23,19 +25,52 @@ test("institutional pricing preserves the requested net margin", () => {
   assert.equal(result.contractTotal, result.annualRecurring + DEFAULT_SCENARIO.implementationFee);
 });
 
-test("450 eligible students automatically estimate 54 monthly users", () => {
+test("Brazilian basic education benchmark estimates monthly use from observed annual access", () => {
   const result = calculateInstitutionalPricing({
     ...DEFAULT_SCENARIO,
     students: 450,
-    expectedAdherencePct: 12,
   });
 
-  assert.equal(result.activeStudents, 54);
+  assert.equal(result.evidence.annualBasePct, 3.15);
+  assert.equal(result.evidence.monthlyRatePct, 0.79);
+  assert.equal(result.activeStudents, 4);
+  assert.match(result.evidence.sourceLabel, /Brasil/);
+});
+
+test("higher education benchmark uses observed counseling center utilization", () => {
+  const result = calculateInstitutionalPricing({
+    ...DEFAULT_SCENARIO,
+    students: 450,
+    educationSegment: "higher-education",
+  });
+
+  assert.equal(result.evidence.annualBasePct, 10.2);
+  assert.equal(result.evidence.monthlyRatePct, 2.55);
+  assert.equal(result.activeStudents, 12);
+});
+
+test("operational variables adjust evidence-based use and respect capacity", () => {
+  const result = calculateInstitutionalPricing({
+    ...DEFAULT_SCENARIO,
+    students: 1000,
+    averageActiveMonths: 4,
+    maturityFactor: 1.2,
+    engagementFactor: 1.2,
+    accessFactor: 1.2,
+    capacityMonthlyUsers: 15,
+  });
+
+  assert.equal(result.evidence.monthlyRatePct, 1.81);
+  assert.equal(result.evidence.uncappedActiveStudents, 19);
+  assert.equal(result.activeStudents, 15);
+  assert.equal(result.evidence.capacityApplied, true);
 });
 
 test("commercial discounts expose margin erosion", () => {
   const result = calculateInstitutionalPricing({
     ...DEFAULT_SCENARIO,
+    utilizationMode: "manual",
+    expectedAdherencePct: 12,
     commercialDiscountPct: 10,
   });
 
@@ -47,6 +82,8 @@ test("commercial discounts expose margin erosion", () => {
 test("minimum monthly fee becomes the commercial floor", () => {
   const result = calculateInstitutionalPricing({
     ...DEFAULT_SCENARIO,
+    utilizationMode: "manual",
+    expectedAdherencePct: 12,
     students: 10,
     minimumMonthlyFee: 20000,
   });

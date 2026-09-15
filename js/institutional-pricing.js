@@ -19,7 +19,15 @@ export const DEFAULT_SCENARIO = Object.freeze({
   annualAdjustment: "IPCA/IBGE",
   students: 1000,
   schools: 1,
-  expectedAdherencePct: 12,
+  utilizationMode: "evidence",
+  educationSegment: "basic-br",
+  annualUtilizationPct: 3.15,
+  averageActiveMonths: 3,
+  maturityFactor: 1,
+  engagementFactor: 1,
+  accessFactor: 1,
+  capacityMonthlyUsers: 0,
+  expectedAdherencePct: 0.79,
   sessionsPerActiveStudent: 1.2,
   professionalCostPerSession: 55,
   technologyCostPerStudent: 1.8,
@@ -56,6 +64,16 @@ export function normalizeScenario(source = {}) {
     paymentDay: Math.min(28, Math.max(1, Math.round(nonNegative(source.paymentDay, DEFAULT_SCENARIO.paymentDay)))),
     students: Math.max(1, Math.round(nonNegative(source.students, DEFAULT_SCENARIO.students))),
     schools: Math.max(1, Math.round(nonNegative(source.schools, DEFAULT_SCENARIO.schools))),
+    utilizationMode: source.utilizationMode === "manual" ? "manual" : "evidence",
+    educationSegment: ["basic-br", "higher-education", "custom"].includes(source.educationSegment)
+      ? source.educationSegment
+      : DEFAULT_SCENARIO.educationSegment,
+    annualUtilizationPct: percentage(source.annualUtilizationPct, DEFAULT_SCENARIO.annualUtilizationPct),
+    averageActiveMonths: Math.min(12, Math.max(0.1, nonNegative(source.averageActiveMonths, DEFAULT_SCENARIO.averageActiveMonths))),
+    maturityFactor: Math.min(2, Math.max(0.25, nonNegative(source.maturityFactor, DEFAULT_SCENARIO.maturityFactor))),
+    engagementFactor: Math.min(2, Math.max(0.25, nonNegative(source.engagementFactor, DEFAULT_SCENARIO.engagementFactor))),
+    accessFactor: Math.min(2, Math.max(0.25, nonNegative(source.accessFactor, DEFAULT_SCENARIO.accessFactor))),
+    capacityMonthlyUsers: Math.max(0, Math.round(nonNegative(source.capacityMonthlyUsers, DEFAULT_SCENARIO.capacityMonthlyUsers))),
     expectedAdherencePct: percentage(source.expectedAdherencePct, DEFAULT_SCENARIO.expectedAdherencePct),
     sessionsPerActiveStudent: nonNegative(source.sessionsPerActiveStudent, DEFAULT_SCENARIO.sessionsPerActiveStudent),
     professionalCostPerSession: nonNegative(source.professionalCostPerSession, DEFAULT_SCENARIO.professionalCostPerSession),
@@ -77,8 +95,64 @@ export function normalizeScenario(source = {}) {
   };
 }
 
+export const UTILIZATION_BENCHMARKS = Object.freeze({
+  "basic-br": {
+    annualPct: 3.15,
+    label: "Educação básica · estimativa baseada em prevalência e acesso no Brasil",
+    basis: "14,3% com condição de saúde mental × 22% com uso de algum serviço no ano",
+  },
+  "higher-education": {
+    annualPct: 10.2,
+    label: "Ensino superior · centros de aconselhamento",
+    basis: "Utilização anual média observada em 789 instituições",
+  },
+});
+
+export function estimateEvidenceBasedUtilization(input) {
+  const benchmark = UTILIZATION_BENCHMARKS[input.educationSegment];
+  const annualBasePct = benchmark?.annualPct ?? input.annualUtilizationPct;
+  const monthlyRatePct = Math.min(
+    100,
+    annualBasePct
+      * (input.averageActiveMonths / 12)
+      * input.maturityFactor
+      * input.engagementFactor
+      * input.accessFactor
+  );
+  const uncappedActiveStudents = Math.ceil(input.students * monthlyRatePct / 100);
+  const activeStudents = input.capacityMonthlyUsers > 0
+    ? Math.min(uncappedActiveStudents, input.capacityMonthlyUsers)
+    : uncappedActiveStudents;
+
+  return {
+    annualBasePct: money(annualBasePct),
+    monthlyRatePct: money(monthlyRatePct),
+    uncappedActiveStudents,
+    activeStudents,
+    capacityApplied: activeStudents < uncappedActiveStudents,
+    sourceLabel: benchmark?.label || "Histórico próprio informado",
+    basis: benchmark?.basis || "Percentual anual personalizado",
+  };
+}
+
 export function calculateInstitutionalPricing(source = {}) {
   const input = normalizeScenario(source);
+  const manualUncappedActiveStudents = Math.ceil(input.students * input.expectedAdherencePct / 100);
+  const manualActiveStudents = input.capacityMonthlyUsers > 0
+    ? Math.min(manualUncappedActiveStudents, input.capacityMonthlyUsers)
+    : manualUncappedActiveStudents;
+  const evidence = input.utilizationMode === "evidence"
+    ? estimateEvidenceBasedUtilization(input)
+    : {
+        annualBasePct: null,
+        monthlyRatePct: input.expectedAdherencePct,
+        uncappedActiveStudents: manualUncappedActiveStudents,
+        activeStudents: manualActiveStudents,
+        capacityApplied: manualActiveStudents < manualUncappedActiveStudents,
+        sourceLabel: "Histórico próprio informado",
+        basis: "Taxa mensal manual",
+      };
+  input.expectedAdherencePct = evidence.monthlyRatePct;
   const taxRate = input.taxPct / 100;
   const contingencyRate = input.contingencyPct / 100;
   const targetProfitRate = input.targetProfitMarginPct / 100;
@@ -89,7 +163,7 @@ export function calculateInstitutionalPricing(source = {}) {
     throw new RangeError("A soma de impostos, reserva e margem deve ser inferior a 95%.");
   }
 
-  const activeStudents = Math.ceil(input.students * input.expectedAdherencePct / 100);
+  const activeStudents = evidence.activeStudents;
   const monthlySessions = Math.ceil(activeStudents * input.sessionsPerActiveStudent);
   const professionalHours = monthlySessions * input.sessionMinutes / 60;
   const professionalFte = monthlySessions / (input.professionalWeeklyCapacity * 4.33);
@@ -124,6 +198,7 @@ export function calculateInstitutionalPricing(source = {}) {
 
   return {
     input,
+    evidence,
     activeStudents,
     monthlySessions,
     professionalHours: money(professionalHours),
