@@ -23,6 +23,16 @@ test("institutional pricing preserves the requested net margin", () => {
   assert.equal(result.contractTotal, result.annualRecurring + DEFAULT_SCENARIO.implementationFee);
 });
 
+test("450 eligible students automatically estimate 54 monthly users", () => {
+  const result = calculateInstitutionalPricing({
+    ...DEFAULT_SCENARIO,
+    students: 450,
+    expectedAdherencePct: 12,
+  });
+
+  assert.equal(result.activeStudents, 54);
+});
+
 test("commercial discounts expose margin erosion", () => {
   const result = calculateInstitutionalPricing({
     ...DEFAULT_SCENARIO,
