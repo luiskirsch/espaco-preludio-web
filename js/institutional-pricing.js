@@ -19,7 +19,8 @@ export const DEFAULT_SCENARIO = Object.freeze({
   annualAdjustment: "IPCA/IBGE",
   students: 1000,
   schools: 1,
-  utilizationMode: "evidence",
+  utilizationMode: "profile",
+  serviceProfile: "hybrid",
   educationSegment: "basic-br",
   annualUtilizationPct: 3.15,
   averageActiveMonths: 3,
@@ -27,8 +28,8 @@ export const DEFAULT_SCENARIO = Object.freeze({
   engagementFactor: 1,
   accessFactor: 1,
   capacityMonthlyUsers: 0,
-  expectedAdherencePct: 0.79,
-  sessionsPerActiveStudent: 1.2,
+  expectedAdherencePct: 6,
+  sessionsPerActiveStudent: 1.8,
   professionalCostPerSession: 55,
   technologyCostPerStudent: 1.8,
   supportCostPerSchool: 350,
@@ -64,7 +65,12 @@ export function normalizeScenario(source = {}) {
     paymentDay: Math.min(28, Math.max(1, Math.round(nonNegative(source.paymentDay, DEFAULT_SCENARIO.paymentDay)))),
     students: Math.max(1, Math.round(nonNegative(source.students, DEFAULT_SCENARIO.students))),
     schools: Math.max(1, Math.round(nonNegative(source.schools, DEFAULT_SCENARIO.schools))),
-    utilizationMode: source.utilizationMode === "manual" ? "manual" : "evidence",
+    utilizationMode: ["profile", "evidence", "manual"].includes(source.utilizationMode)
+      ? source.utilizationMode
+      : DEFAULT_SCENARIO.utilizationMode,
+    serviceProfile: ["medical-urgent", "psychology", "hybrid"].includes(source.serviceProfile)
+      ? source.serviceProfile
+      : DEFAULT_SCENARIO.serviceProfile,
     educationSegment: ["basic-br", "higher-education", "custom"].includes(source.educationSegment)
       ? source.educationSegment
       : DEFAULT_SCENARIO.educationSegment,
@@ -108,6 +114,27 @@ export const UTILIZATION_BENCHMARKS = Object.freeze({
   },
 });
 
+export const SERVICE_PROFILES = Object.freeze({
+  "medical-urgent": {
+    adherencePct: 2.5,
+    sessionsPerActiveStudent: 1,
+    label: "Pronto atendimento médico",
+    basis: "Premissa operacional: 2,5% dos alunos ativos no mês, com 1 consulta por usuário",
+  },
+  psychology: {
+    adherencePct: 5,
+    sessionsPerActiveStudent: 2.5,
+    label: "Psicologia e acolhimento continuado",
+    basis: "Premissa operacional: 5% dos alunos ativos no mês, com 2,5 consultas por usuário",
+  },
+  hybrid: {
+    adherencePct: 6,
+    sessionsPerActiveStudent: 1.8,
+    label: "Plataforma híbrida: médico e terapia",
+    basis: "Premissa operacional: 6% dos alunos ativos no mês, com 1,8 consulta por usuário",
+  },
+});
+
 export function estimateEvidenceBasedUtilization(input) {
   const benchmark = UTILIZATION_BENCHMARKS[input.educationSegment];
   const annualBasePct = benchmark?.annualPct ?? input.annualUtilizationPct;
@@ -137,6 +164,11 @@ export function estimateEvidenceBasedUtilization(input) {
 
 export function calculateInstitutionalPricing(source = {}) {
   const input = normalizeScenario(source);
+  const serviceProfile = SERVICE_PROFILES[input.serviceProfile];
+  if (input.utilizationMode === "profile") {
+    input.expectedAdherencePct = serviceProfile.adherencePct;
+    input.sessionsPerActiveStudent = serviceProfile.sessionsPerActiveStudent;
+  }
   const manualUncappedActiveStudents = Math.ceil(input.students * input.expectedAdherencePct / 100);
   const manualActiveStudents = input.capacityMonthlyUsers > 0
     ? Math.min(manualUncappedActiveStudents, input.capacityMonthlyUsers)
@@ -149,8 +181,8 @@ export function calculateInstitutionalPricing(source = {}) {
         uncappedActiveStudents: manualUncappedActiveStudents,
         activeStudents: manualActiveStudents,
         capacityApplied: manualActiveStudents < manualUncappedActiveStudents,
-        sourceLabel: "Histórico próprio informado",
-        basis: "Taxa mensal manual",
+        sourceLabel: input.utilizationMode === "profile" ? serviceProfile.label : "Histórico próprio informado",
+        basis: input.utilizationMode === "profile" ? serviceProfile.basis : "Taxa mensal manual",
       };
   input.expectedAdherencePct = evidence.monthlyRatePct;
   const taxRate = input.taxPct / 100;

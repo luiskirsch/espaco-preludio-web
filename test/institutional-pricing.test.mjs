@@ -12,6 +12,7 @@ test("institutional pricing preserves the requested net margin", () => {
     ...DEFAULT_SCENARIO,
     utilizationMode: "manual",
     expectedAdherencePct: 12,
+    sessionsPerActiveStudent: 1.2,
     students: 1000,
     schools: 2,
     commercialDiscountPct: 0,
@@ -25,9 +26,30 @@ test("institutional pricing preserves the requested net margin", () => {
   assert.equal(result.contractTotal, result.annualRecurring + DEFAULT_SCENARIO.implementationFee);
 });
 
+test("factory service profiles dimension monthly demand for 450 students", () => {
+  const expected = {
+    "medical-urgent": { adherence: 2.5, active: 12, sessions: 12 },
+    psychology: { adherence: 5, active: 23, sessions: 58 },
+    hybrid: { adherence: 6, active: 27, sessions: 49 },
+  };
+
+  for (const [serviceProfile, values] of Object.entries(expected)) {
+    const result = calculateInstitutionalPricing({
+      ...DEFAULT_SCENARIO,
+      utilizationMode: "profile",
+      serviceProfile,
+      students: 450,
+    });
+    assert.equal(result.input.expectedAdherencePct, values.adherence);
+    assert.equal(result.activeStudents, values.active);
+    assert.equal(result.monthlySessions, values.sessions);
+  }
+});
+
 test("Brazilian basic education benchmark estimates monthly use from observed annual access", () => {
   const result = calculateInstitutionalPricing({
     ...DEFAULT_SCENARIO,
+    utilizationMode: "evidence",
     students: 450,
   });
 
@@ -40,6 +62,7 @@ test("Brazilian basic education benchmark estimates monthly use from observed an
 test("higher education benchmark uses observed counseling center utilization", () => {
   const result = calculateInstitutionalPricing({
     ...DEFAULT_SCENARIO,
+    utilizationMode: "evidence",
     students: 450,
     educationSegment: "higher-education",
   });
@@ -52,6 +75,7 @@ test("higher education benchmark uses observed counseling center utilization", (
 test("operational variables adjust evidence-based use and respect capacity", () => {
   const result = calculateInstitutionalPricing({
     ...DEFAULT_SCENARIO,
+    utilizationMode: "evidence",
     students: 1000,
     averageActiveMonths: 4,
     maturityFactor: 1.2,

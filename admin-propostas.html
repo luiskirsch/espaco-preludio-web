@@ -150,11 +150,12 @@
             <fieldset class="proposal-section">
               <legend>Escala e utilização</legend>
               <div class="proposal-presets"><button data-students="300">300 alunos</button><button data-students="500">500 alunos</button><button data-students="1000">1.000 alunos</button><button data-students="3000">3.000 alunos</button><button data-students="5000">5.000 alunos</button></div>
-              <div class="proposal-presets" aria-label="Cenários de utilização"><button data-utilization-preset="conservative">Uso conservador</button><button data-utilization-preset="probable">Uso provável</button><button data-utilization-preset="expanded">Uso ampliado</button></div>
+              <div class="proposal-presets" aria-label="Perfis de serviço"><button data-service-profile="medical-urgent">Pronto atendimento</button><button data-service-profile="psychology">Psicologia continuada</button><button data-service-profile="hybrid">Médico + terapia</button></div>
               <div class="proposal-fields">
                 <div class="proposal-field"><label for="students">Alunos elegíveis</label><input class="ep-input js-field" id="students" data-key="students" type="number" min="1" step="1"></div>
                 <div class="proposal-field"><label for="estimatedMonthlyUsers">Estimativa de alunos usuários/mês <small id="estimatedMonthlyUsersRate"></small></label><input class="ep-input" id="estimatedMonthlyUsers" type="number" readonly aria-live="polite" style="background:var(--ep-bg-2);font-weight:700;color:var(--ep-accent);"></div>
-                <div class="proposal-field"><label for="utilizationMode">Base da estimativa</label><select class="ep-select js-field" id="utilizationMode" data-key="utilizationMode"><option value="evidence">Benchmark + variáveis</option><option value="manual">Histórico próprio mensal</option></select></div>
+                <div class="proposal-field"><label for="utilizationMode">Base da estimativa</label><select class="ep-select js-field" id="utilizationMode" data-key="utilizationMode"><option value="profile">Perfil do serviço</option><option value="evidence">Benchmark + variáveis</option><option value="manual">Histórico próprio mensal</option></select></div>
+                <div class="proposal-field"><label for="serviceProfile">Perfil do serviço</label><select class="ep-select js-field" id="serviceProfile" data-key="serviceProfile"><option value="medical-urgent">Pronto atendimento médico</option><option value="psychology">Psicologia / acolhimento continuado</option><option value="hybrid">Plataforma híbrida · médico + terapia</option></select></div>
                 <div class="proposal-field"><label for="educationSegment">Segmento educacional</label><select class="ep-select js-field" id="educationSegment" data-key="educationSegment"><option value="basic-br">Educação básica · Brasil</option><option value="higher-education">Ensino superior</option><option value="custom">Base anual personalizada</option></select></div>
                 <div class="proposal-field"><label for="annualUtilizationPct">Utilização anual de referência <small>%</small></label><input class="ep-input js-field" id="annualUtilizationPct" data-key="annualUtilizationPct" type="number" min="0" max="100" step="0.01"></div>
                 <div class="proposal-field"><label for="averageActiveMonths">Meses ativos por usuário/ano</label><input class="ep-input js-field" id="averageActiveMonths" data-key="averageActiveMonths" type="number" min="0.1" max="12" step="0.5"></div>
@@ -346,15 +347,22 @@
       byId("estimatedMonthlyUsers").value = result.activeStudents;
       setText("estimatedMonthlyUsersRate", `${number.format(result.input.expectedAdherencePct)}% de ${result.input.students.toLocaleString("pt-BR")}`);
       byId("expectedAdherencePct").value = result.input.expectedAdherencePct;
-      byId("expectedAdherencePct").readOnly = result.input.utilizationMode === "evidence";
-      byId("expectedAdherencePct").style.background = result.input.utilizationMode === "evidence" ? "var(--ep-bg-2)" : "";
+      const calculatedUtilization = result.input.utilizationMode !== "manual";
+      byId("expectedAdherencePct").readOnly = calculatedUtilization;
+      byId("expectedAdherencePct").style.background = calculatedUtilization ? "var(--ep-bg-2)" : "";
+      byId("sessionsPerActiveStudent").value = result.input.sessionsPerActiveStudent;
+      byId("sessionsPerActiveStudent").readOnly = result.input.utilizationMode === "profile";
+      byId("sessionsPerActiveStudent").style.background = result.input.utilizationMode === "profile" ? "var(--ep-bg-2)" : "";
       if (result.evidence.annualBasePct !== null) byId("annualUtilizationPct").value = result.evidence.annualBasePct;
       byId("annualUtilizationPct").readOnly = result.input.utilizationMode === "evidence" && result.input.educationSegment !== "custom";
       byId("annualUtilizationPct").style.background = byId("annualUtilizationPct").readOnly ? "var(--ep-bg-2)" : "";
       setText("utilizationSource", result.evidence.sourceLabel);
-      setText("utilizationFormula", result.input.utilizationMode === "evidence"
-        ? `${result.evidence.basis}. Conversão mensal: ${number.format(result.evidence.annualBasePct)}% ao ano × ${number.format(result.input.averageActiveMonths)} meses ativos ÷ 12 × fatores de implantação, divulgação e acesso = ${number.format(result.evidence.monthlyRatePct)}% ao mês.${result.evidence.capacityApplied ? " O limite de capacidade foi aplicado." : ""}`
-        : `Taxa mensal de ${number.format(result.input.expectedAdherencePct)}% informada a partir do histórico da instituição.`);
+      const utilizationDescriptions = {
+        evidence: `${result.evidence.basis}. Conversão mensal: ${number.format(result.evidence.annualBasePct)}% ao ano × ${number.format(result.input.averageActiveMonths)} meses ativos ÷ 12 × fatores de implantação, divulgação e acesso = ${number.format(result.evidence.monthlyRatePct)}% ao mês.`,
+        profile: `${result.evidence.basis}. Resultado matemático para ${result.input.students.toLocaleString("pt-BR")} alunos: ${result.activeStudents.toLocaleString("pt-BR")} usuários ativos e ${result.monthlySessions.toLocaleString("pt-BR")} consultas por mês. É uma premissa de dimensionamento, não uma garantia de procura.`,
+        manual: `Taxa mensal de ${number.format(result.input.expectedAdherencePct)}% informada a partir do histórico da instituição.`,
+      };
+      setText("utilizationFormula", `${utilizationDescriptions[result.input.utilizationMode]}${result.evidence.capacityApplied ? " O limite de capacidade foi aplicado." : ""}`);
       setText("monthlySessions", number.format(result.monthlySessions));
       setText("professionalHours", number.format(result.professionalHours));
       setText("professionalFte", number.format(result.professionalFte));
@@ -394,15 +402,9 @@
 
   fields.forEach((field) => field.addEventListener("input", calculate));
   document.querySelectorAll("[data-students]").forEach((button) => button.addEventListener("click", () => { byId("students").value = button.dataset.students; calculate(); }));
-  const utilizationPresets = {
-    conservative: { averageActiveMonths:2, maturityFactor:0.75, engagementFactor:0.8, accessFactor:0.8 },
-    probable: { averageActiveMonths:3, maturityFactor:1, engagementFactor:1, accessFactor:1 },
-    expanded: { averageActiveMonths:4, maturityFactor:1.2, engagementFactor:1.2, accessFactor:1.2 },
-  };
-  document.querySelectorAll("[data-utilization-preset]").forEach((button) => button.addEventListener("click", () => {
-    const preset = utilizationPresets[button.dataset.utilizationPreset];
-    byId("utilizationMode").value = "evidence";
-    Object.entries(preset).forEach(([key, value]) => { byId(key).value = value; });
+  document.querySelectorAll("[data-service-profile]").forEach((button) => button.addEventListener("click", () => {
+    byId("utilizationMode").value = "profile";
+    byId("serviceProfile").value = button.dataset.serviceProfile;
     calculate();
   }));
 
