@@ -136,4 +136,6 @@ test("proposal text includes scale and contract values", () => {
   assert.match(text, /Colégio Exemplo/);
   assert.match(text, /1\.000 estudantes/);
   assert.match(text, /Valor global/);
+  assert.match(text, /até 4 sessões mensais por estudante/);
+  assert.match(text, /ampliação previamente autorizada/);
 });
