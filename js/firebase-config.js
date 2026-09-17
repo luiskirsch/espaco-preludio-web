@@ -29,6 +29,7 @@ const IS_PATIENT_PAGE =
   _path.includes("/aluno-") ||
   _path.endsWith("/entrar.html");
 const IS_INSTITUTION_PAGE = _path.includes("/instituicao-");
+const IS_RT_PAGE = _path.includes("/rt-");
 
 // ─── Configs por ambiente ─────────────────────────────────────────────────
 const STAGING_FIREBASE = {
@@ -97,6 +98,7 @@ const professionalApp = (() => {
 })();
 const patientApp = _ensureApp("patient", firebaseConfig);
 const institutionApp = _ensureApp("institution", firebaseConfig);
+const rtApp = _ensureApp("responsavel-tecnico", firebaseConfig);
 
 // Export padrao: aponta pro app correto baseado no perfil da pagina.
 // Codigo existente que faz `import { auth, db } from firebase-config` continua
@@ -105,6 +107,8 @@ export const app  = IS_PATIENT_PAGE
   ? patientApp
   : IS_INSTITUTION_PAGE
     ? institutionApp
+    : IS_RT_PAGE
+      ? rtApp
     : professionalApp;
 export const auth = getAuth(app);
 export const db   = getFirestore(app);
@@ -116,6 +120,8 @@ export const dbProfessional   = getFirestore(professionalApp);
 export const dbPatient        = getFirestore(patientApp);
 export const authInstitution  = getAuth(institutionApp);
 export const dbInstitution    = getFirestore(institutionApp);
+export const authRt           = getAuth(rtApp);
+export const dbRt             = getFirestore(rtApp);
 
 // Expõe na window pra monitoring.js (carregado antes deste módulo como
 // <script defer>) saber o domínio do backend e o ambiente. Também
@@ -129,7 +135,7 @@ if (typeof window !== "undefined") {
 if (typeof console !== "undefined") {
   console.info(
     `[ep] ambiente: ${IS_STAGING ? "STAGING" : "PRODUCTION"} · ` +
-    `perfil: ${IS_PATIENT_PAGE ? "PACIENTE" : IS_INSTITUTION_PAGE ? "INSTITUICAO" : "PROFISSIONAL"} · ` +
+    `perfil: ${IS_PATIENT_PAGE ? "PACIENTE" : IS_INSTITUTION_PAGE ? "INSTITUICAO" : IS_RT_PAGE ? "RT" : "PROFISSIONAL"} · ` +
     `backend: ${BACKEND_BASE_URL} · firebase: ${firebaseConfig.projectId}`
   );
 }

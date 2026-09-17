@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <script>
+    (function () {
+      if (window.top !== window.self) { try { window.top.location.replace(location.href); } catch (_) { document.documentElement.innerHTML = ""; } return; }
+      var host = (location.hostname || "").toLowerCase();
+      var allowed = ["espacopreludio.com", "www.espacopreludio.com", "espacopreludio.com.br", "www.espacopreludio.com.br", "localhost", "127.0.0.1"];
+      if (location.protocol === "file:" || (host && allowed.indexOf(host) === -1)) location.replace("https://espacopreludio.com.br/");
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#143c38">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Painel do RT | Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="./logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/rt.css?v=1">
+</head>
+<body class="rt-dashboard-page">
+  <div class="rt-loader" id="rtLoader"><span></span><p>Preparando ambiente técnico…</p></div>
+  <div class="rt-app" id="rtApp" hidden>
+    <aside class="rt-sidebar">
+      <a class="rt-brand rt-brand-light" href="./index.html"><img src="./logo_oficial_fundo_transparente.png" alt="" width="46" height="46"><span><small>ESPAÇO</small><strong>Prelúdio</strong></span></a>
+      <div class="rt-role-badge"><i></i><span><small>ÁREA RESTRITA</small><strong>Responsável Técnico</strong></span></div>
+      <nav class="rt-nav" aria-label="Navegação do painel">
+        <button class="is-active" data-view="overview"><span>⌂</span>Visão geral</button>
+        <button data-view="professionals"><span>◉</span>Profissionais <b id="navProfessionals">0</b></button>
+        <button data-view="compliance"><span>✓</span>Conformidade <b id="navCompliance">0</b></button>
+        <button data-view="supervisions"><span>≋</span>Supervisões</button>
+        <button data-view="incidents"><span>!</span>Ocorrências <b id="navIncidents">0</b></button>
+      </nav>
+      <div class="rt-privacy-card"><span>▣</span><p><strong>Sigilo protegido</strong>Este painel não exibe conteúdo clínico, prontuários ou nomes de pacientes.</p></div>
+      <button class="rt-logout" id="rtLogout" type="button">Sair com segurança <span>↗</span></button>
+    </aside>
+    <div class="rt-workspace">
+      <header class="rt-topbar">
+        <button class="rt-menu-toggle" id="rtMenuToggle" type="button" aria-label="Abrir menu">☰</button>
+        <div><p id="pageEyebrow">PAINEL TÉCNICO</p><h1 id="pageTitle">Visão geral</h1></div>
+        <div class="rt-topbar-actions"><span class="rt-sync" id="rtSync"><i></i> Atualizado agora</span><button id="rtRefresh" type="button" aria-label="Atualizar">↻</button><div class="rt-account"><span id="rtInitials">RT</span><p><strong id="rtActorName">Responsável Técnico</strong><small id="rtActorCrp">Acesso verificado</small></p></div></div>
+      </header>
+      <main class="rt-content">
+        <section class="rt-view is-active" data-panel="overview">
+          <div class="rt-welcome"><div><p>ACOMPANHAMENTO TÉCNICO</p><h2>Boa governança começa com <em>visibilidade.</em></h2><span>Prioridades, regularidade profissional e histórico de supervisão em uma visão única.</span></div><div class="rt-date" id="todayCard"></div></div>
+          <div class="rt-metrics">
+            <article><span class="rt-metric-icon green">◉</span><p><small>PSICÓLOGOS ATIVOS</small><strong id="metricProfessionals">—</strong><em id="metricProfessionalsNote">carregando</em></p></article>
+            <article><span class="rt-metric-icon blue">✓</span><p><small>CONFORMIDADE</small><strong id="metricCompliance">—</strong><em>cadastros regulares</em></p></article>
+            <article><span class="rt-metric-icon gold">≋</span><p><small>SUPERVISÕES · 30 DIAS</small><strong id="metricSupervisions">—</strong><em>registros concluídos</em></p></article>
+            <article><span class="rt-metric-icon red">!</span><p><small>OCORRÊNCIAS ABERTAS</small><strong id="metricIncidents">—</strong><em id="metricIncidentsNote">sob acompanhamento</em></p></article>
+          </div>
+          <div class="rt-overview-grid">
+            <section class="rt-card rt-attention"><div class="rt-card-head"><div><p>PRIORIDADES</p><h3>Requer sua atenção</h3></div><button data-go="professionals">Ver profissionais →</button></div><div id="attentionList" class="rt-list"></div></section>
+            <section class="rt-card"><div class="rt-card-head"><div><p>ATIVIDADE RECENTE</p><h3>Supervisões registradas</h3></div><button data-go="supervisions">Ver histórico →</button></div><div id="recentSupervisions" class="rt-list"></div></section>
+          </div>
+          <section class="rt-card rt-practice-summary"><div><p>INDICADOR OPERACIONAL</p><h3>Atendimentos nos últimos 30 dias</h3><span>Contagem agregada; nenhum dado clínico é exibido.</span></div><strong id="metricSessions">—</strong><small id="metricSessionsCompleted">— concluídos</small></section>
+        </section>
+        <section class="rt-view" data-panel="professionals">
+          <div class="rt-section-intro"><div><p>EQUIPE ASSISTENCIAL</p><h2>Regularidade dos profissionais</h2><span>Dados profissionais e indicadores operacionais, sem informações de pacientes.</span></div><div class="rt-search"><span>⌕</span><input id="professionalSearch" type="search" placeholder="Buscar por nome, e-mail ou CRP"></div></div>
+          <div class="rt-table-card"><table><thead><tr><th>Profissional</th><th>Registro</th><th>Verificação</th><th>Sessões · 30 dias</th><th>Última atividade</th></tr></thead><tbody id="professionalsBody"></tbody></table><div class="rt-empty" id="professionalsEmpty" hidden>Nenhum profissional encontrado.</div></div>
+        </section>
+        <section class="rt-view" data-panel="compliance">
+          <div class="rt-section-intro"><div><p>ROTINA DE CONFORMIDADE</p><h2>Checklist técnico e ético</h2><span>Registre cada revisão para manter evidência do acompanhamento contínuo.</span></div><div class="rt-progress"><strong id="compliancePercent">0%</strong><span><i id="complianceBar"></i></span><small>itens em conformidade</small></div></div>
+          <div id="complianceGroups" class="rt-checklist-groups"></div>
+        </section>
+        <section class="rt-view" data-panel="supervisions">
+          <div class="rt-section-intro"><div><p>RASTREABILIDADE</p><h2>Registro de supervisões</h2><span>Documente orientações, auditorias, treinamentos e providências.</span></div><button class="rt-primary-button rt-inline-button" id="newSupervision" type="button"><span>Registrar supervisão</span><b>+</b></button></div>
+          <div id="supervisionTimeline" class="rt-timeline"></div>
+        </section>
+        <section class="rt-view" data-panel="incidents">
+          <div class="rt-section-intro"><div><p>GESTÃO DE RISCO</p><h2>Ocorrências e providências</h2><span>Não inclua nome de paciente ou conteúdo clínico no relato.</span></div><button class="rt-primary-button rt-inline-button" id="newIncident" type="button"><span>Nova ocorrência</span><b>+</b></button></div>
+          <div class="rt-filter-row"><button class="is-active" data-incident-filter="all">Todas</button><button data-incident-filter="open">Abertas</button><button data-incident-filter="monitoring">Em acompanhamento</button><button data-incident-filter="resolved">Resolvidas</button></div>
+          <div id="incidentsList" class="rt-incidents"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <dialog class="rt-modal" id="supervisionModal"><form method="dialog" id="supervisionForm"><header><div><p>NOVO REGISTRO</p><h2>Registrar supervisão</h2></div><button value="cancel" aria-label="Fechar">×</button></header><div class="rt-modal-body"><div class="rt-form-grid"><label>Tipo<select name="type" required><option value="routine">Acompanhamento de rotina</option><option value="orientation">Orientação técnica</option><option value="training">Treinamento</option><option value="audit">Auditoria</option><option value="incident-review">Revisão de ocorrência</option><option value="case-process">Revisão de processo assistencial</option></select></label><label>Data<input name="supervisedAt" type="date" required></label><label class="wide">Título<input name="title" maxlength="140" required placeholder="Ex.: Reunião mensal de alinhamento técnico"></label><label>Participantes<input name="participantCount" type="number" min="0" max="500" value="1"></label><label>Duração (minutos)<input name="durationMinutes" type="number" min="1" max="1440" value="60"></label><label class="wide">Resumo<textarea name="summary" maxlength="3000" rows="5" required placeholder="Registre assuntos tratados e orientações gerais, sem identificar pacientes."></textarea></label><label class="wide">Providências <small>Uma por linha</small><textarea name="actions" rows="3" placeholder="Revisar protocolo de consentimento&#10;Realizar nova orientação em 30 dias"></textarea></label></div><p class="rt-form-error" data-error></p></div><footer><button value="cancel" class="rt-secondary-button">Cancelar</button><button value="default" class="rt-primary-button" data-submit><span>Salvar registro</span><b>→</b></button></footer></form></dialog>
+  <dialog class="rt-modal" id="incidentModal"><form method="dialog" id="incidentForm"><header><div><p>NOVA OCORRÊNCIA</p><h2>Registrar para acompanhamento</h2></div><button value="cancel" aria-label="Fechar">×</button></header><div class="rt-modal-body"><div class="rt-warning">Não informe nome, diagnóstico ou qualquer dado que permita identificar o paciente.</div><div class="rt-form-grid"><label>Categoria<select name="category" required><option value="ethics">Questão ética</option><option value="privacy">Privacidade e dados</option><option value="clinical-quality">Qualidade assistencial</option><option value="credential">Regularidade profissional</option><option value="accessibility">Acessibilidade</option><option value="other">Outro</option></select></label><label>Gravidade<select name="severity" required><option value="low">Baixa</option><option value="medium" selected>Média</option><option value="high">Alta</option><option value="critical">Crítica</option></select></label><label class="wide">Título<input name="title" maxlength="140" required placeholder="Descrição objetiva da ocorrência"></label><label class="wide">Relato não identificável<textarea name="description" maxlength="2000" rows="6" required placeholder="O que ocorreu, qual processo foi afetado e quais medidas iniciais foram adotadas."></textarea></label></div><p class="rt-form-error" data-error></p></div><footer><button value="cancel" class="rt-secondary-button">Cancelar</button><button value="default" class="rt-primary-button" data-submit><span>Registrar ocorrência</span><b>→</b></button></footer></form></dialog>
+  <dialog class="rt-modal rt-small-modal" id="checklistModal"><form method="dialog" id="checklistForm"><header><div><p>REVISÃO DE CONFORMIDADE</p><h2 id="checklistModalTitle">Atualizar item</h2></div><button value="cancel" aria-label="Fechar">×</button></header><div class="rt-modal-body"><input type="hidden" name="key"><label>Situação<select name="status"><option value="pending">Pendente</option><option value="review">Em revisão</option><option value="compliant">Em conformidade</option></select></label><label>Observação<textarea name="note" maxlength="1000" rows="5" placeholder="Evidência, providência ou próxima revisão."></textarea></label><p class="rt-form-error" data-error></p></div><footer><button value="cancel" class="rt-secondary-button">Cancelar</button><button value="default" class="rt-primary-button" data-submit><span>Salvar revisão</span><b>→</b></button></footer></form></dialog>
+  <div class="rt-toast" id="rtToast" role="status" aria-live="polite"></div>
+  <script type="module" src="./js/rt-painel.js?v=1"></script>
+</body>
+</html>
