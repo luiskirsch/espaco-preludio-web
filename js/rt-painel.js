@@ -8,7 +8,10 @@ const state = {
   incidents: [],
   supervisions: [],
   checklist: [],
-  incidentFilter: "all"
+  incidentFilter: "all",
+  professionalPage: 1,
+  professionalPageSize: 15,
+  professionalHistory: null
 };
 
 const $ = selector => document.querySelector(selector);
@@ -34,6 +37,12 @@ const statusLabels = { open: "Aberta", monitoring: "Em acompanhamento", resolved
 const severityLabels = { low: "Baixa", medium: "Média", high: "Alta", critical: "Crítica" };
 const typeLabels = { routine: "Rotina", orientation: "Orientação técnica", training: "Treinamento", audit: "Auditoria", "incident-review": "Revisão de ocorrência", "case-process": "Processo assistencial" };
 const cadenceLabels = { monthly: "Mensal", quarterly: "Trimestral", annual: "Anual" };
+const sessionStatusLabels = {
+  scheduled: "Agendada", confirmed: "Confirmada", in_progress: "Em andamento",
+  completed: "Concluída", finished: "Concluída", done: "Concluída",
+  canceled: "Cancelada", cancelled: "Cancelada", rejected: "Recusada", unknown: "Não informado"
+};
+const careOriginLabels = { private: "Atendimento particular", public_school: "Programa institucional" };
 
 async function api(path, options = {}) {
   const user = auth.currentUser;
@@ -90,7 +99,7 @@ function renderDashboard() {
   const data = state.dashboard || { metrics: {}, attention: [], recentSupervisions: [] };
   const m = data.metrics || {};
   $("#metricProfessionals").textContent = m.professionals ?? 0;
-  $("#metricProfessionalsNote").textContent = `${m.verifiedProfessionals || 0} com cadastro regular`;
+  $("#metricProfessionalsNote").textContent = `${m.verifiedProfessionals || 0} regulares · ${m.totalProfessionals ?? m.professionals ?? 0} no histórico`;
   const compliance = m.professionals ? Math.round((m.verifiedProfessionals / m.professionals) * 100) : 100;
   $("#metricCompliance").textContent = `${compliance}%`;
   $("#metricSupervisions").textContent = m.supervisions30d ?? 0;
@@ -98,12 +107,12 @@ function renderDashboard() {
   $("#metricIncidentsNote").textContent = m.criticalIncidents ? `${m.criticalIncidents} crítica(s)` : "sob acompanhamento";
   $("#metricSessions").textContent = m.sessions30d ?? 0;
   $("#metricSessionsCompleted").textContent = `${m.completedSessions30d || 0} concluídos`;
-  $("#navProfessionals").textContent = m.professionals ?? 0;
+  $("#navProfessionals").textContent = m.totalProfessionals ?? m.professionals ?? 0;
   $("#navIncidents").textContent = m.openIncidents ?? 0;
 
   const attention = data.attention || [];
   $("#attentionList").innerHTML = attention.length ? attention.map(item => `
-    <div class="rt-list-item"><span class="rt-list-mark warning">!</span><p><strong>${escapeHtml(item.name)}</strong><small>${!item.councilNumber ? "Registro profissional não informado" : "Verificação cadastral pendente"}</small></p><em>Pendente</em></div>
+    <div class="rt-list-item"><span class="rt-list-mark warning">!</span><p><strong>${escapeHtml(item.name)}</strong><small>${item.duplicate ? `${item.accountCount} cadastros associados; sessões já consolidadas` : !item.councilNumber ? "Registro profissional não informado" : "Verificação cadastral pendente"}</small></p><em>${item.duplicate ? "Duplicidade" : "Pendente"}</em></div>
   `).join("") : `<div class="rt-list-empty"><span>✓</span><p><strong>Nenhuma pendência profissional</strong><small>Todos os cadastros estão regulares.</small></p></div>`;
 
   const recent = data.recentSupervisions || [];
@@ -114,15 +123,59 @@ function renderDashboard() {
 
 function renderProfessionals() {
   const term = $("#professionalSearch").value.trim().toLowerCase();
-  const rows = state.professionals.filter(item => [item.name, item.email, item.councilNumber].join(" ").toLowerCase().includes(term));
+  const filtered = state.professionals.filter(item => [item.name, item.email, item.councilNumber].join(" ").toLowerCase().includes(term));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / state.professionalPageSize));
+  state.professionalPage = Math.min(state.professionalPage, totalPages);
+  const start = (state.professionalPage - 1) * state.professionalPageSize;
+  const rows = filtered.slice(start, start + state.professionalPageSize);
   $("#professionalsBody").innerHTML = rows.map(item => `
     <tr><td><div class="rt-person"><span>${escapeHtml(initials(item.name))}</span><p><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.email || "E-mail não informado")}</small></p></div></td>
     <td><strong>${escapeHtml(item.council)} ${escapeHtml(item.councilNumber || "—")}</strong></td>
-    <td><span class="rt-status ${item.verified && item.councilNumber ? "compliant" : "pending"}"><i></i>${item.verified && item.councilNumber ? "Regular" : "Revisar"}</span></td>
+    <td><span class="rt-status ${item.active && item.verified && item.councilNumber ? "compliant" : "pending"}"><i></i>${!item.active ? "Inativo" : item.verified && item.councilNumber ? "Regular" : "Revisar"}</span>${item.duplicate ? `<small class="rt-duplicate-note">${item.accountCount} contas consolidadas</small>` : ""}</td>
     <td><strong>${item.sessions30d || 0}</strong><small class="rt-cell-note">${item.completedSessions30d || 0} concluídas</small></td>
-    <td>${formatDate(item.lastSessionAt)}</td></tr>
+    <td><strong>${item.sessionsAllTime || 0}</strong><small class="rt-cell-note">${item.completedSessionsAllTime || 0} concluídas</small></td>
+    <td>${formatDate(item.lastSessionAt)}</td><td><button class="rt-detail-button" type="button" data-professional-uid="${escapeHtml(item.uid)}">Ver histórico</button></td></tr>
   `).join("");
-  $("#professionalsEmpty").hidden = rows.length > 0;
+  $("#professionalsEmpty").hidden = filtered.length > 0;
+  const duplicateCount = state.professionals.filter(item => item.duplicate).length;
+  const quality = $("#professionalQuality");
+  quality.hidden = duplicateCount === 0;
+  quality.innerHTML = duplicateCount
+    ? `<strong>${duplicateCount} identidade(s) com cadastros repetidos</strong><span>As contas estão agrupadas e seus atendimentos foram somados, sem exclusão de registros.</span>`
+    : "";
+  $("#professionalsPagination").innerHTML = filtered.length > state.professionalPageSize ? `
+    <button type="button" data-prof-page="${state.professionalPage - 1}" ${state.professionalPage === 1 ? "disabled" : ""}>← Anterior</button>
+    <span>${start + 1}–${Math.min(start + state.professionalPageSize, filtered.length)} de ${filtered.length}</span>
+    <button type="button" data-prof-page="${state.professionalPage + 1}" ${state.professionalPage === totalPages ? "disabled" : ""}>Próxima →</button>` : "";
+}
+
+async function loadProfessionalHistory(uid, page = 1) {
+  const modal = $("#professionalModal");
+  const status = $("#professionalHistoryStatus").value;
+  $("#professionalHistory").innerHTML = `<div class="rt-history-loading">Carregando histórico…</div>`;
+  if (!modal.open) modal.showModal();
+  try {
+    const data = await api(`/rt/profissionais/${encodeURIComponent(uid)}/historico?page=${page}&pageSize=20&status=${encodeURIComponent(status)}`);
+    state.professionalHistory = data;
+    const professional = data.professional;
+    $("#professionalModalTitle").textContent = professional.name;
+    $("#professionalSummary").innerHTML = `
+      <article><small>CRP</small><strong>${escapeHtml(professional.councilNumber || "Não informado")}</strong></article>
+      <article><small>Sessões no histórico</small><strong>${professional.sessionsAllTime || 0}</strong></article>
+      <article><small>Concluídas</small><strong>${professional.completedSessionsAllTime || 0}</strong></article>
+      <article><small>Última atividade</small><strong>${formatDate(professional.lastSessionAt)}</strong></article>
+      ${professional.duplicate ? `<p><strong>Cadastro consolidado:</strong> ${professional.accountCount} contas correspondem a esta profissional. Os atendimentos de todas foram reunidos.</p>` : ""}`;
+    $("#professionalHistory").innerHTML = data.sessions.length ? data.sessions.map(session => `
+      <article class="rt-history-row"><time>${formatDate(session.scheduledAt, true)}</time><span class="rt-session-status ${escapeHtml(session.status)}">${escapeHtml(label(sessionStatusLabels, session.status))}</span><span>${escapeHtml(label(careOriginLabels, session.careOrigin))}</span><strong>${session.durationMinutes ? `${session.durationMinutes} min` : "Duração não registrada"}</strong></article>
+    `).join("") : `<div class="rt-history-empty">Nenhuma sessão encontrada neste filtro.</div>`;
+    const p = data.pagination;
+    $("#professionalHistoryPagination").innerHTML = p.totalPages > 1 ? `
+      <button type="button" data-history-page="${p.page - 1}" ${p.page === 1 ? "disabled" : ""}>← Anterior</button>
+      <span>Página ${p.page} de ${p.totalPages} · ${p.total} registros</span>
+      <button type="button" data-history-page="${p.page + 1}" ${p.page === p.totalPages ? "disabled" : ""}>Próxima →</button>` : `<span>${p.total} registro(s)</span>`;
+  } catch (_) {
+    $("#professionalHistory").innerHTML = `<div class="rt-history-empty">Não foi possível carregar o histórico.</div>`;
+  }
 }
 
 function renderChecklist() {
@@ -156,14 +209,18 @@ function renderAll() {
   $("#rtSync").innerHTML = `<i></i> Atualizado às ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
 }
 
-async function loadAll() {
+async function loadAll(fresh = false) {
   $("#rtRefresh").classList.add("is-loading");
-  const [me, dashboard, professionals, incidents, supervisions, checklist] = await Promise.all([
-    api("/rt/me"), api("/rt/dashboard"), api("/rt/profissionais"), api("/rt/incidentes"), api("/rt/supervisoes"), api("/rt/checklist")
-  ]);
-  Object.assign(state, { actor: me.actor, dashboard, professionals: professionals.professionals || [], incidents: incidents.incidents || [], supervisions: supervisions.supervisions || [], checklist: checklist.items || [] });
-  renderAll();
-  $("#rtRefresh").classList.remove("is-loading");
+  try {
+    const dashboard = await api(`/rt/dashboard${fresh ? "?fresh=1" : ""}`);
+    const [me, professionals, incidents, supervisions, checklist] = await Promise.all([
+      api("/rt/me"), api("/rt/profissionais"), api("/rt/incidentes"), api("/rt/supervisoes"), api("/rt/checklist")
+    ]);
+    Object.assign(state, { actor: me.actor, dashboard, professionals: professionals.professionals || [], incidents: incidents.incidents || [], supervisions: supervisions.supervisions || [], checklist: checklist.items || [] });
+    renderAll();
+  } finally {
+    $("#rtRefresh").classList.remove("is-loading");
+  }
 }
 
 function setupModal(formSelector, modalSelector, buildPayload, endpoint, successText) {
@@ -223,6 +280,21 @@ document.addEventListener("click", async event => {
     try { await api(`/rt/incidentes/${encodeURIComponent(incidentButton.dataset.incidentId)}`, { method: "PATCH", body: JSON.stringify({ status: nextStatus, resolution }) }); showToast("Ocorrência atualizada."); await loadAll(); }
     catch (_) { showToast("Não foi possível atualizar a ocorrência.", true); }
   }
+  const professionalButton = event.target.closest("[data-professional-uid]");
+  if (professionalButton) {
+    $("#professionalHistoryStatus").value = "all";
+    await loadProfessionalHistory(professionalButton.dataset.professionalUid, 1);
+  }
+  const professionalPage = event.target.closest("[data-prof-page]");
+  if (professionalPage && !professionalPage.disabled) {
+    state.professionalPage = Number(professionalPage.dataset.profPage) || 1;
+    renderProfessionals();
+  }
+  const historyPage = event.target.closest("[data-history-page]");
+  if (historyPage && !historyPage.disabled && state.professionalHistory?.professional?.uid) {
+    await loadProfessionalHistory(state.professionalHistory.professional.uid, Number(historyPage.dataset.historyPage) || 1);
+  }
+  if (event.target.closest("[data-close-professional]")) $("#professionalModal").close();
 });
 
 $$('[data-incident-filter]').forEach(button => button.addEventListener("click", () => {
@@ -231,10 +303,13 @@ $$('[data-incident-filter]').forEach(button => button.addEventListener("click", 
   renderIncidents();
 }));
 
-$("#professionalSearch").addEventListener("input", renderProfessionals);
+$("#professionalSearch").addEventListener("input", () => { state.professionalPage = 1; renderProfessionals(); });
+$("#professionalHistoryStatus").addEventListener("change", () => {
+  if (state.professionalHistory?.professional?.uid) loadProfessionalHistory(state.professionalHistory.professional.uid, 1);
+});
 $("#newSupervision").addEventListener("click", () => { $("#supervisionForm").elements.supervisedAt.value = new Date().toISOString().slice(0, 10); $("#supervisionModal").showModal(); });
 $("#newIncident").addEventListener("click", () => $("#incidentModal").showModal());
-$("#rtRefresh").addEventListener("click", () => loadAll().catch(() => showToast("Falha ao atualizar os dados.", true)));
+$("#rtRefresh").addEventListener("click", () => loadAll(true).catch(() => showToast("Falha ao atualizar os dados.", true)));
 $("#rtMenuToggle").addEventListener("click", () => $(".rt-sidebar").classList.toggle("is-open"));
 $("#rtLogout").addEventListener("click", async () => { await signOut(auth); window.location.replace("./rt-login.html"); });
 
@@ -252,4 +327,3 @@ onAuthStateChanged(auth, async user => {
     $("#rtLoader").innerHTML = `<p>Não foi possível carregar o painel.<br><button onclick="location.reload()">Tentar novamente</button></p>`;
   }
 });
-
