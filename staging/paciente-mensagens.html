@@ -206,9 +206,8 @@
       if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
       if (Notification.permission === "denied") return;
       const reg = await navigator.serviceWorker.ready;
-      const existing = await reg.pushManager.getSubscription();
-      if (existing) return; // já subscrito
-      if (Notification.permission !== "granted") {
+      let existing = await reg.pushManager.getSubscription();
+      if (!existing && Notification.permission !== "granted") {
         // pede permissão sem ser invasivo — só na 1ª visita à página de chat
         const flagKey = "ep:paciente:push-prompted";
         if (localStorage.getItem(flagKey)) return;
@@ -221,6 +220,17 @@
       });
       const cfg = await cfgRes.json().catch(() => ({}));
       if (!cfg.ok || !cfg.publicKey) return;
+      if (existing) {
+        if (pushSubscriptionUsesKey(existing, cfg.publicKey)) return;
+        const endpoint = existing.endpoint;
+        await existing.unsubscribe();
+        await fetch(`${BACKEND_BASE_URL}/therapy/paciente/push/subscribe`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+          body: JSON.stringify({ endpoint })
+        }).catch(() => {});
+        existing = null;
+      }
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(cfg.publicKey)
@@ -240,6 +250,13 @@
     const out = new Uint8Array(raw.length);
     for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
     return out;
+  }
+  function pushSubscriptionUsesKey(subscription, publicKey) {
+    const stored = subscription?.options?.applicationServerKey;
+    if (!stored || !publicKey) return false;
+    const current = new Uint8Array(stored);
+    const expected = urlBase64ToUint8Array(publicKey);
+    return current.length === expected.length && current.every((byte, index) => byte === expected[index]);
   }
 
   // ─── Helpers ────────────────────────────────────────────────────

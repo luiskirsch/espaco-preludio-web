@@ -48,3 +48,19 @@ test("sensitive browser caches are tab-scoped or removed", () => {
   assert.match(read("mensagens.html"), /sessionStorage\.setItem\(lastMsgKey/);
   assert.match(read("empresa-login.html"), /sessionStorage\.setItem\("ep:empresa:token"/);
 });
+
+test("VAPID rotation migrates existing browser subscriptions", () => {
+  const files = [
+    "perfil.html",
+    "paciente-mensagens.html",
+    "staging/perfil.html",
+    "staging/paciente-mensagens.html",
+  ];
+  for (const file of files) {
+    const source = read(file);
+    assert.match(source, /pushSubscriptionUsesKey/, file);
+    assert.match(source, /applicationServerKey/, file);
+    assert.match(source, /await .*\.unsubscribe\(\)/, file);
+    assert.match(source, /method: "DELETE"/, file);
+  }
+});

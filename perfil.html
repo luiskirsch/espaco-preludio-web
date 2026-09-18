@@ -1111,6 +1111,13 @@
     for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
     return out;
   }
+  function pushSubscriptionUsesKey(subscription, publicKey) {
+    const stored = subscription?.options?.applicationServerKey;
+    if (!stored || !publicKey) return false;
+    const current = new Uint8Array(stored);
+    const expected = urlBase64ToUint8Array(publicKey);
+    return current.length === expected.length && current.every((byte, index) => byte === expected[index]);
+  }
   async function pushUiRender() {
     const box = $("pushStatusBox");
     const enableBtn = $("pushEnableBtn");
@@ -1138,7 +1145,27 @@
       box.textContent = "Service Worker indisponível neste navegador.";
       return;
     }
-    const sub = await reg.pushManager.getSubscription();
+    let sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      try {
+        const token = await freshToken();
+        const cfgRes = await fetch(`${BACKEND_BASE_URL}/therapy/push/config`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const cfg = await cfgRes.json().catch(() => ({}));
+        if (cfgRes.ok && cfg.ok && cfg.publicKey && !pushSubscriptionUsesKey(sub, cfg.publicKey)) {
+          const endpoint = sub.endpoint;
+          await sub.unsubscribe();
+          await fetch(`${BACKEND_BASE_URL}/therapy/push/subscribe`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ endpoint })
+          }).catch(() => {});
+          sub = null;
+          if (Notification.permission === "granted") return pushEnable();
+        }
+      } catch { /* tenta novamente na prÃ³xima renderizaÃ§Ã£o */ }
+    }
     if (sub) {
       box.innerHTML = "✓ <strong>Habilitadas neste dispositivo.</strong>";
       box.style.color = "var(--ep-ok)";
