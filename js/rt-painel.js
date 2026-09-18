@@ -131,7 +131,7 @@ function renderProfessionals() {
   $("#professionalsBody").innerHTML = rows.map(item => `
     <tr><td><div class="rt-person"><span>${escapeHtml(initials(item.name))}</span><p><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.email || "E-mail não informado")}</small></p></div></td>
     <td><strong>${escapeHtml(item.council)} ${escapeHtml(item.councilNumber || "—")}</strong></td>
-    <td><span class="rt-status ${item.active && item.verified && item.councilNumber ? "compliant" : "pending"}"><i></i>${!item.active ? "Inativo" : item.verified && item.councilNumber ? "Regular" : "Revisar"}</span>${item.duplicate ? `<small class="rt-duplicate-note">${item.accountCount} contas consolidadas</small>` : ""}</td>
+    <td><button type="button" class="rt-status rt-status-action ${item.active && item.verified && item.councilNumber ? "compliant" : "pending"}" data-review-uid="${escapeHtml(item.uid)}" title="Averiguar e ajustar cadastro"><i></i>${!item.active ? "Inativo" : item.verified && item.councilNumber ? "Regular" : "Revisar"}</button>${item.duplicate ? `<small class="rt-duplicate-note">${item.accountCount} contas consolidadas</small>` : ""}</td>
     <td><strong>${item.sessions30d || 0}</strong><small class="rt-cell-note">${item.completedSessions30d || 0} concluídas</small></td>
     <td><strong>${item.sessionsAllTime || 0}</strong><small class="rt-cell-note">${item.completedSessionsAllTime || 0} concluídas</small></td>
     <td>${formatDate(item.lastSessionAt)}</td><td><button class="rt-detail-button" type="button" data-professional-uid="${escapeHtml(item.uid)}">Ver histórico</button></td></tr>
@@ -175,6 +175,36 @@ async function loadProfessionalHistory(uid, page = 1) {
       <button type="button" data-history-page="${p.page + 1}" ${p.page === p.totalPages ? "disabled" : ""}>Próxima →</button>` : `<span>${p.total} registro(s)</span>`;
   } catch (_) {
     $("#professionalHistory").innerHTML = `<div class="rt-history-empty">Não foi possível carregar o histórico.</div>`;
+  }
+}
+
+async function openProfessionalReview(uid) {
+  const modal = $("#professionalReviewModal");
+  const form = $("#professionalReviewForm");
+  form.querySelector("[data-error]").textContent = "";
+  const local = state.professionals.find(item => item.uid === uid);
+  $("#professionalReviewTitle").textContent = local?.name || "Averiguar profissional";
+  $("#professionalReviewReasons").innerHTML = `<span>Carregando informações cadastrais…</span>`;
+  if (!modal.open) modal.showModal();
+  try {
+    const data = await api(`/rt/profissionais/${encodeURIComponent(uid)}/historico?page=1&pageSize=5`);
+    const item = data.professional;
+    form.elements.uid.value = item.uid;
+    form.elements.displayName.value = item.name || "";
+    form.elements.email.value = item.email || "";
+    form.elements.councilNumber.value = item.councilNumber || "";
+    form.elements.verificationStatus.value = item.verified ? "verified" : (item.verificationStatus === "rejected" ? "rejected" : "pending");
+    form.elements.active.value = String(item.active !== false);
+    form.elements.note.value = data.review?.note || "";
+    const reasons = [];
+    if (!item.councilNumber) reasons.push("CRP não informado");
+    if (!item.verified) reasons.push("Verificação cadastral pendente");
+    if (!item.active) reasons.push("Cadastro operacional inativo");
+    if (item.duplicate) reasons.push(`${item.accountCount} contas duplicadas já consolidadas neste painel`);
+    if (!reasons.length) reasons.push("Cadastro regular; você pode registrar uma nova conferência ou corrigir os dados.");
+    $("#professionalReviewReasons").innerHTML = `<strong>Pontos para averiguação</strong>${reasons.map(reason => `<span>• ${escapeHtml(reason)}</span>`).join("")}${data.review?.lastReviewedAt ? `<small>Última revisão: ${formatDate(data.review.lastReviewedAt, true)} por ${escapeHtml(data.review.reviewedByName || "RT")}</small>` : ""}`;
+  } catch (_) {
+    $("#professionalReviewReasons").innerHTML = `<span>Não foi possível carregar o cadastro. Feche e tente novamente.</span>`;
   }
 }
 
@@ -261,6 +291,49 @@ $("#checklistForm").addEventListener("submit", async event => {
   finally { submit.disabled = false; }
 });
 
+$("#professionalReviewForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const modal = $("#professionalReviewModal");
+  if (event.submitter?.value === "cancel") { modal.close(); return; }
+  const form = event.currentTarget;
+  const data = new FormData(form);
+  const submit = form.querySelector("[data-submit]");
+  const error = form.querySelector("[data-error]");
+  const verificationStatus = String(data.get("verificationStatus"));
+  const active = data.get("active") === "true";
+  const note = String(data.get("note") || "").trim();
+  error.textContent = "";
+  if (verificationStatus === "rejected" && !note) {
+    error.textContent = "Informe o motivo ou a providência para marcar o cadastro como irregular.";
+    return;
+  }
+  if ((!active || verificationStatus === "rejected") && !window.confirm("Esta decisão pode retirar o profissional das áreas ativas da plataforma. Deseja continuar?")) return;
+  submit.disabled = true;
+  try {
+    await api(`/rt/profissionais/${encodeURIComponent(data.get("uid"))}/revisao`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        displayName: data.get("displayName"),
+        councilNumber: data.get("councilNumber"),
+        verificationStatus,
+        active,
+        note
+      })
+    });
+    modal.close();
+    showToast("Revisão cadastral salva e registrada na auditoria.");
+    await loadAll(true);
+  } catch (err) {
+    const messages = {
+      CRP_INVALIDO: "Informe um CRP válido.",
+      JUSTIFICATIVA_OBRIGATORIA: "A justificativa é obrigatória para cadastro irregular."
+    };
+    error.textContent = messages[err.message] || "Não foi possível salvar a revisão. Confira os dados e tente novamente.";
+  } finally {
+    submit.disabled = false;
+  }
+});
+
 document.addEventListener("click", async event => {
   const nav = event.target.closest("[data-view], [data-go]");
   if (nav) openView(nav.dataset.view || nav.dataset.go);
@@ -285,6 +358,8 @@ document.addEventListener("click", async event => {
     $("#professionalHistoryStatus").value = "all";
     await loadProfessionalHistory(professionalButton.dataset.professionalUid, 1);
   }
+  const reviewButton = event.target.closest("[data-review-uid]");
+  if (reviewButton) await openProfessionalReview(reviewButton.dataset.reviewUid);
   const professionalPage = event.target.closest("[data-prof-page]");
   if (professionalPage && !professionalPage.disabled) {
     state.professionalPage = Number(professionalPage.dataset.profPage) || 1;
