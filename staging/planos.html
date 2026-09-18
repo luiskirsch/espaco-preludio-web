@@ -229,6 +229,18 @@
   const ctx = await requireTherapist({ requireDek: false });
   const { idToken, therapist } = ctx;
 
+  function trustedCheckoutUrl(value, provider) {
+    try {
+      const url = new URL(String(value || ""));
+      if (url.protocol !== "https:" || url.username || url.password) return "";
+      const host = url.hostname.toLowerCase();
+      const allowed = provider === "stripe"
+        ? host === "stripe.com" || host.endsWith(".stripe.com")
+        : host === "mercadopago.com.br" || host.endsWith(".mercadopago.com.br") || host === "mercadopago.com" || host.endsWith(".mercadopago.com");
+      return allowed ? url.href : "";
+    } catch { return ""; }
+  }
+
   // Aguarda i18n bootstrap (defer + carregamento async); se demorar muito, segue com fallback PT.
   await new Promise(resolve => {
     if (window.EP_I18N && window.i18next) return resolve();
@@ -498,7 +510,9 @@
       if (!res.ok || !data.ok || !data.initPoint) {
         throw new Error(data?.error || ("HTTP_" + res.status));
       }
-      window.location.href = data.initPoint;
+      const checkoutUrl = trustedCheckoutUrl(data.initPoint, "mercadopago");
+      if (!checkoutUrl) throw new Error("CHECKOUT_URL_INVALIDA");
+      window.location.assign(checkoutUrl);
     } catch (e) {
       alert(t("js.subscribeError", null, "Não foi possível iniciar a assinatura: ") + e.message);
       btn.disabled = false;
@@ -583,7 +597,9 @@
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok || !data.url) throw new Error(data?.error || ("HTTP_" + res.status));
-      window.location.href = data.url;
+      const checkoutUrl = trustedCheckoutUrl(data.url, "stripe");
+      if (!checkoutUrl) throw new Error("CHECKOUT_URL_INVALIDA");
+      window.location.assign(checkoutUrl);
     } catch (e) {
       alert("Could not start Stripe checkout: " + e.message);
       btn.disabled = false;

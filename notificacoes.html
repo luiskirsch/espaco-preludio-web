@@ -98,6 +98,14 @@
     return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
   }
 
+  function safeNotificationTarget(value) {
+    try {
+      const target = new URL(String(value || ""), location.origin);
+      if (target.origin !== location.origin || !["http:", "https:"].includes(target.protocol)) return "";
+      return `${target.pathname}${target.search}${target.hash}`;
+    } catch { return ""; }
+  }
+
   async function run() {
     const { idToken } = await requireTherapist();
     let token = idToken;
@@ -129,9 +137,10 @@
         return;
       }
 
-      listEl.innerHTML = items.map(n => {
+      listEl.innerHTML = items.map((n, index) => {
         const isUnread = !n.readAt;
-        const card = `<article style="padding: 16px 20px; border: 1px solid var(--ep-line); border-radius: 10px; background: var(--ep-surface); ${isUnread ? "border-left: 4px solid var(--ep-accent);" : ""} cursor:${n.link ? "pointer" : "default"};" ${n.link ? `onclick="window.location.href='${esc(n.link)}'"` : ""}>
+        const target = safeNotificationTarget(n.link);
+        const card = `<article style="padding: 16px 20px; border: 1px solid var(--ep-line); border-radius: 10px; background: var(--ep-surface); ${isUnread ? "border-left: 4px solid var(--ep-accent);" : ""} cursor:${target ? "pointer" : "default"};" ${target ? `data-notification-index="${index}" tabindex="0" role="link"` : ""}>
           <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
             <div style="font-size:28px; flex-shrink:0;">${typeIcon(n.type)}</div>
             <div style="flex:1; min-width:0;">
@@ -142,12 +151,25 @@
               </div>
               <div style="font-size:15px; font-weight:600; color:var(--ep-ink); margin-bottom:6px;">${esc(n.title)}</div>
               <div style="font-size:13.5px; color:var(--ep-ink-2); line-height:1.6;">${esc(n.body)}</div>
-              ${n.link ? `<div style="font-size:12px; color:var(--ep-accent); margin-top:8px; font-weight:500;">Ver no painel →</div>` : ""}
+              ${target ? `<div style="font-size:12px; color:var(--ep-accent); margin-top:8px; font-weight:500;">Ver no painel →</div>` : ""}
             </div>
           </div>
         </article>`;
         return card;
       }).join("");
+      listEl.querySelectorAll("[data-notification-index]").forEach(card => {
+        const open = () => {
+          const target = safeNotificationTarget(items[Number(card.dataset.notificationIndex)]?.link);
+          if (target) location.assign(target);
+        };
+        card.addEventListener("click", open);
+        card.addEventListener("keydown", event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            open();
+          }
+        });
+      });
     } catch (err) {
       listEl.innerHTML = `<div class="ep-status is-err">Erro ao carregar notificações: ${esc(err.message)}</div>`;
     }

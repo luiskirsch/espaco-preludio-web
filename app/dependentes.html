@@ -120,6 +120,11 @@
 
   const REL_LABELS = { filho:"Filho(a)", conjuge:"Cônjuge", pai_mae:"Pai/Mãe", outro:"Outro" };
   const REL_EMOJI  = { filho:"👧", conjuge:"💑", pai_mae:"👴", outro:"👤" };
+  function esc(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    }[char]));
+  }
 
   let currentUser = null;
   let dependentes = [];
@@ -154,20 +159,29 @@
       return `<div class="dep-card">
         <div class="dep-avatar">${initials}</div>
         <div class="dep-info">
-          <div class="dep-name">${d.nome}</div>
-          <div class="dep-rel">${emoji} ${relLabel}</div>
+          <div class="dep-name">${esc(d.nome)}</div>
+          <div class="dep-rel">${emoji} ${esc(relLabel)}</div>
           ${idade !== null ? `<div class="dep-age">${idade} anos</div>` : ""}
         </div>
         <div class="dep-actions">
           <a href="./buscar.html?dep=${encodeURIComponent(d.id||i)}" class="a-btn a-btn--sm a-btn--accent" style="font-size:11px;padding:0 10px;">Agendar</a>
-          <button class="a-btn a-btn--sm a-btn--ghost" style="font-size:11px;padding:0 10px;color:#b8453d;" onclick="removeDep('${d.id||i}')">✕</button>
+          <button type="button" class="a-btn a-btn--sm a-btn--ghost" style="font-size:11px;padding:0 10px;color:#b8453d;" data-remove-index="${i}">✕</button>
         </div>
       </div>`;
     }).join("");
+    list.querySelectorAll("[data-remove-index]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const item = deps[Number(btn.dataset.removeIndex)];
+        if (item) removeDep(item.id ?? Number(btn.dataset.removeIndex));
+      });
+    });
   }
 
   async function loadDependentes() {
     const key = `ep:dependentes:${currentUser.uid}`;
+    // Remove o cache legado: nomes, vínculos e datas de nascimento não devem
+    // persistir em localStorage após logout ou em dispositivo compartilhado.
+    try { localStorage.removeItem(key); } catch {}
     try {
       const token = await currentUser.getIdToken();
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/dependentes`, {
@@ -176,12 +190,9 @@
       const d = await r.json().catch(() => ({}));
       if (d.ok) {
         dependentes = d.dependentes || [];
-        localStorage.setItem(key, JSON.stringify(dependentes)); // cache offline
       } else throw new Error("api");
     } catch {
-      // Offline: usa cache local
-      const saved = localStorage.getItem(key);
-      dependentes = saved ? JSON.parse(saved) : [];
+      dependentes = [];
     }
     renderDeps(dependentes);
   }
@@ -227,11 +238,10 @@
       // Recarrega do backend para garantir consistência
       await loadDependentes();
     } catch {
-      // Fallback offline
-      const dep = { id: Date.now().toString(), nome, parentesco: selectedRel, dataNascimento: nasc, email: email || null };
-      dependentes.push(dep);
-      localStorage.setItem(`ep:dependentes:${currentUser.uid}`, JSON.stringify(dependentes));
-      renderDeps(dependentes);
+      erro.textContent = "Não foi possível salvar. Verifique a conexão e tente novamente.";
+      erro.classList.remove("a-hide");
+      document.getElementById("saveDepBtn").disabled = false;
+      return;
     }
     document.getElementById("saveDepBtn").disabled = false;
     document.getElementById("addModal").style.display = "none";
@@ -246,9 +256,7 @@
       });
       await loadDependentes(); // recarrega do backend
     } catch {
-      dependentes = dependentes.filter(d => d.id !== id);
-      localStorage.setItem(`ep:dependentes:${currentUser.uid}`, JSON.stringify(dependentes));
-      renderDeps(dependentes);
+      alert("Não foi possível remover. Verifique a conexão e tente novamente.");
     }
   };
 </script>

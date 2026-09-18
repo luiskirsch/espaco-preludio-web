@@ -288,9 +288,16 @@
       $("loadingBanner").classList.add("ep-hide");
       $("contentBlock").classList.remove("ep-hide");
     } catch (e) {
-      $("loadingBanner").innerHTML = `${tr("whatsapp:js.loadError", "Erro ao carregar: {{message}} ", { message: e.message })}<button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" style="margin-left: 12px;" id="retry">${tr("whatsapp:js.retry", "Tentar de novo")}</button>`;
-      $("loadingBanner").className = "ep-alert ep-alert--danger";
-      $("retry")?.addEventListener("click", load);
+      const banner = $("loadingBanner");
+      banner.replaceChildren(document.createTextNode(tr("whatsapp:js.loadError", "Erro ao carregar: {{message}} ", { message: e?.message || "erro desconhecido" })));
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.className = "ep-btn ep-btn--ghost ep-btn--sm";
+      retry.style.marginLeft = "12px";
+      retry.textContent = tr("whatsapp:js.retry", "Tentar de novo");
+      retry.addEventListener("click", load);
+      banner.appendChild(retry);
+      banner.className = "ep-alert ep-alert--danger";
     }
   }
   await load();

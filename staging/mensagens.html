@@ -553,7 +553,8 @@
   function saveLastMsgPreview(threadId, text, senderRole) {
     if (!threadId || !text) return;
     try {
-      localStorage.setItem(lastMsgKey(threadId), JSON.stringify({
+      localStorage.removeItem(lastMsgKey(threadId));
+      sessionStorage.setItem(lastMsgKey(threadId), JSON.stringify({
         text: String(text).slice(0, 200),
         senderRole: senderRole || null,
         at: Date.now()
@@ -562,7 +563,8 @@
   }
   function getLastMsgPreview(threadId) {
     try {
-      const raw = localStorage.getItem(lastMsgKey(threadId));
+      localStorage.removeItem(lastMsgKey(threadId));
+      const raw = sessionStorage.getItem(lastMsgKey(threadId));
       if (!raw) return null;
       return JSON.parse(raw);
     } catch (_) { return null; }

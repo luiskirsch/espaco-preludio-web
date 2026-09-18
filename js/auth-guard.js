@@ -18,19 +18,81 @@ const TWOFA_KEY = "ep:twofa-session";
 const TWOFA_TTL_MS = 8 * 60 * 60 * 1000;
 
 export function hasValid2faSession() {
+  return !!get2faSessionToken();
+}
+
+export function get2faSessionToken() {
   try {
     const raw = sessionStorage.getItem(TWOFA_KEY);
-    if (!raw) return false;
+    if (!raw) return "";
     const entry = JSON.parse(raw);
-    if (!entry?.token || !entry?.savedAt) return false;
-    return (Date.now() - entry.savedAt) < TWOFA_TTL_MS;
-  } catch { return false; }
+    if (!entry?.token || !entry?.savedAt) return "";
+    if ((Date.now() - entry.savedAt) >= TWOFA_TTL_MS) {
+      sessionStorage.removeItem(TWOFA_KEY);
+      return "";
+    }
+    return String(entry.token);
+  } catch { return ""; }
 }
 export function save2faSession(token) {
   try { sessionStorage.setItem(TWOFA_KEY, JSON.stringify({ token, savedAt: Date.now() })); } catch {}
 }
 export function clear2faSession() {
   try { sessionStorage.removeItem(TWOFA_KEY); } catch {}
+}
+
+// Acrescenta a prova de 2FA a toda chamada clínica feita por páginas que
+// usam este guard. A validação real é do backend; sessionStorage é apenas o
+// transporte do token opaco e não uma decisão de autorização do cliente.
+// Centralizar aqui também evita que novas telas esqueçam o header.
+const nativeFetch = globalThis.fetch.bind(globalThis);
+let twofaRedirectStarted = false;
+
+function isTherapyApiRequest(input) {
+  try {
+    const raw = typeof input === "string" || input instanceof URL ? input : input?.url;
+    const url = new URL(raw, location.href);
+    const backend = new URL(BACKEND_BASE_URL);
+    return url.origin === backend.origin && url.pathname.startsWith("/therapy/");
+  } catch {
+    return false;
+  }
+}
+
+async function therapyAuthenticatedFetch(input, init = {}) {
+  if (!isTherapyApiRequest(input)) return nativeFetch(input, init);
+
+  const requestHeaders = typeof Request !== "undefined" && input instanceof Request
+    ? input.headers
+    : undefined;
+  const headers = new Headers(init.headers || requestHeaders || undefined);
+  const twofaToken = get2faSessionToken();
+  if (twofaToken && !headers.has("X-Therapy-2FA")) {
+    headers.set("X-Therapy-2FA", twofaToken);
+  }
+
+  const response = await nativeFetch(input, { ...init, headers });
+  if (response.status === 401 && !location.pathname.endsWith("/2fa-verify.html")) {
+    const data = await response.clone().json().catch(() => ({}));
+    if (data?.error === "TWOFA_REQUIRED" || data?.error === "TWOFA_SESSION_INVALID") {
+      clear2faSession();
+      if (!twofaRedirectStarted) {
+        twofaRedirectStarted = true;
+        const redirect = encodeURIComponent(location.pathname + location.search + location.hash);
+        location.replace("./2fa-verify.html?redirect=" + redirect);
+      }
+    }
+  }
+  return response;
+}
+
+globalThis.fetch = therapyAuthenticatedFetch;
+
+function redirectTo2faVerification() {
+  clear2faSession();
+  if (location.pathname.endsWith("/2fa-verify.html")) return;
+  const redirect = encodeURIComponent(location.pathname + location.search + location.hash);
+  location.replace("./2fa-verify.html?redirect=" + redirect);
 }
 
 export function authReady() {
@@ -384,9 +446,11 @@ export function applyTopUserSlot(therapist) {
   }
   const avatars = [elAvatar, document.getElementById("sidebarUserAvatar")].filter(Boolean);
   avatars.forEach(avatar => {
-    const photoBase64 = therapist?.photoBase64 || "";
-    const photoMime   = therapist?.photoMime   || "image/jpeg";
-    if (photoBase64) {
+    const photoBase64 = String(therapist?.photoBase64 || "");
+    const requestedMime = String(therapist?.photoMime || "image/jpeg");
+    const photoMime = /^(?:image\/)(?:jpeg|png|webp|gif)$/i.test(requestedMime) ? requestedMime : "image/jpeg";
+    const safePhoto = photoBase64.length <= 1_500_000 && /^[A-Za-z0-9+/]+={0,2}$/.test(photoBase64);
+    if (safePhoto) {
       avatar.style.backgroundImage = `url(data:${photoMime};base64,${photoBase64})`;
       avatar.style.backgroundSize = "cover";
       avatar.style.backgroundPosition = "center";
@@ -748,7 +812,9 @@ export async function requireTherapist({ requireDek = true } = {}) {
   const profile = await fetchTherapistProfile(idToken, user.uid);
 
   if (!profile.ok) {
-    if (profile.code === "NAO_REGISTRADO") {
+    if (profile.code === "TWOFA_REQUIRED" || profile.code === "TWOFA_SESSION_INVALID") {
+      redirectTo2faVerification();
+    } else if (profile.code === "NAO_REGISTRADO") {
       window.location.href = "./cadastro.html?step=profissional";
     } else {
       window.location.href = "./login.html?error=" + encodeURIComponent(profile.code);

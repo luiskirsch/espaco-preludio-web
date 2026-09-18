@@ -356,7 +356,10 @@
         renderNotesIntoBody(body, session.sessionId, notes);
       } catch (e) {
         const msg = tr("paciente-painel:history.loadNotesError", "Erro ao carregar suas anotações: {{message}}", { message: e.message });
-        body.innerHTML = `<div class="ep-error-state">${msg}</div>`;
+        const error = document.createElement("div");
+        error.className = "ep-error-state";
+        error.textContent = msg;
+        body.replaceChildren(error);
       }
     });
 

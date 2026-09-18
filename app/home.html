@@ -194,9 +194,11 @@
     document.querySelector(".home-hero__greeting").textContent = greeting;
     document.getElementById("heroNome").textContent = (user.displayName || user.email.split("@")[0]).split(" ")[0];
 
-    // Humor de hoje — busca do backend (fonte da verdade) + cache local
+    // Humor de hoje — o backend é a única fonte persistente. Dados de saúde
+    // não ficam em localStorage em dispositivos compartilhados.
     const todayStr = new Date().toISOString().slice(0, 10);
     const HUMOR_CACHE = `ep:humor:cache:${user.uid}`;
+    try { localStorage.removeItem(HUMOR_CACHE); } catch {}
 
     async function loadTodayMood() {
       // Tenta backend
@@ -206,18 +208,9 @@
           headers: { Authorization: `Bearer ${tok}` }
         });
         const d = await r.json().catch(() => ({}));
-        if (d.ok && d.items) {
-          const cache = {};
-          d.items.forEach(i => { cache[i.date] = i.mood; });
-          localStorage.setItem(HUMOR_CACHE, JSON.stringify(cache));
-          return cache[todayStr] ? String(cache[todayStr]) : null;
-        }
+        if (d.ok && d.items) return d.items[0]?.mood ? String(d.items[0].mood) : null;
       } catch {}
-      // Fallback: cache compacto
-      try {
-        const cache = JSON.parse(localStorage.getItem(HUMOR_CACHE) || "{}");
-        return cache[todayStr] ? String(cache[todayStr]) : null;
-      } catch { return null; }
+      return null;
     }
 
     const savedMood = await loadTodayMood();
@@ -231,11 +224,6 @@
         document.querySelectorAll(".a-mood__btn").forEach(b => b.classList.remove("is-selected"));
         btn.classList.add("is-selected");
         const mood = btn.dataset.mood;
-        try {
-          const cache = JSON.parse(localStorage.getItem(HUMOR_CACHE) || "{}");
-          cache[todayStr] = Number(mood);
-          localStorage.setItem(HUMOR_CACHE, JSON.stringify(cache));
-        } catch {}
         document.getElementById("moodSaved").style.display = "block";
         // Salva no backend
         try {

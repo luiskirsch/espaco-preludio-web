@@ -440,10 +440,12 @@
 <script type="module">
   import { BACKEND_BASE_URL } from "./js/firebase-config.js";
 
-  const token = localStorage.getItem("ep:empresa:token");
+  localStorage.removeItem("ep:empresa:token");
+  localStorage.removeItem("ep:empresa:nome");
+  const token = sessionStorage.getItem("ep:empresa:token");
   if (!token) { window.location.href = "./empresa-login.html"; }
 
-  const nomeEmpresa = localStorage.getItem("ep:empresa:nome") || "Sua Empresa";
+  const nomeEmpresa = sessionStorage.getItem("ep:empresa:nome") || "Sua Empresa";
   document.getElementById("nomeEmpresaTop").textContent = nomeEmpresa;
   document.getElementById("nomeEmpresaH1").textContent = nomeEmpresa;
 
@@ -466,7 +468,7 @@
       });
       const d = await res.json().catch(() => ({}));
 
-      if (res.status === 401) { localStorage.removeItem("ep:empresa:token"); window.location.href = "./empresa-login.html"; return; }
+      if (res.status === 401) { sessionStorage.removeItem("ep:empresa:token"); window.location.href = "./empresa-login.html"; return; }
       if (!d.ok) { show("stateDashboard"); return; }
 
       if (d.mascarado) { show("stateMascarado"); return; }
@@ -539,8 +541,8 @@
 
   // Sair
   document.getElementById("btnSair").addEventListener("click", () => {
-    localStorage.removeItem("ep:empresa:token");
-    localStorage.removeItem("ep:empresa:nome");
+    sessionStorage.removeItem("ep:empresa:token");
+    sessionStorage.removeItem("ep:empresa:nome");
     window.location.href = "./empresa-login.html";
   });
 
@@ -567,7 +569,7 @@
       if (!data.ok) throw new Error(data.error === "SENHA_ATUAL_INCORRETA" ? "Senha atual incorreta." : "Erro ao salvar.");
       statusEl.textContent = "✓ Senha alterada! Faça login novamente.";
       statusEl.className = "ep-status is-ok";
-      setTimeout(() => { localStorage.removeItem("ep:empresa:token"); window.location.href = "./empresa-login.html"; }, 2000);
+      setTimeout(() => { sessionStorage.removeItem("ep:empresa:token"); window.location.href = "./empresa-login.html"; }, 2000);
     } catch (e) { statusEl.textContent = e.message; statusEl.className = "ep-status is-err"; }
   });
 </script>

@@ -223,9 +223,12 @@
         <td>${esc(c.cargo || "—")}</td>
         <td>${c.status === "ativo" ? '<span class="ep-badge" style="background:rgba(80,160,100,.15);color:#2d6a3e;">Ativo</span>' : '<span class="ep-badge">Inativo</span>'}</td>
         <td>${fmtDate(c.createdAt)}</td>
-        <td><button class="ep-btn ep-btn--ghost ep-btn--sm" onclick="openEdit('${esc(c.id)}')">Editar</button></td>
+        <td><button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-edit-id="${esc(c.id)}">Editar</button></td>
       </tr>
     `).join("");
+    tbody.querySelectorAll("[data-edit-id]").forEach(btn => {
+      btn.addEventListener("click", () => openEdit(btn.dataset.editId));
+    });
   }
 
   // Filtros

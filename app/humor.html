@@ -198,11 +198,14 @@
   const HUMOR_CACHE_KEY = () => `ep:humor:cache:${currentUser.uid}`;
 
   async function loadFromBackend() {
-    // Mostra cache local imediatamente enquanto busca do servidor
-    const cached = localStorage.getItem(HUMOR_CACHE_KEY());
-    if (cached) {
-      try { humorData = JSON.parse(cached); renderAll(); } catch {}
-    }
+    // Apaga caches legados que continham dado de saúde em armazenamento
+    // persistente; a fonte da verdade é exclusivamente o backend.
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key?.startsWith("ep:humor:")) localStorage.removeItem(key);
+      }
+    } catch {}
 
     try {
       const token = await currentUser.getIdToken();
@@ -213,11 +216,9 @@
       if (!d.ok) throw new Error(d.error || "api");
       humorData = {};
       d.items.forEach(item => { humorData[item.date] = item.mood; });
-      // Salva cache compacto (1 JSON por usuário, não 1 key por dia)
-      localStorage.setItem(HUMOR_CACHE_KEY(), JSON.stringify(humorData));
       renderAll();
     } catch {
-      // Offline — já renderizou do cache, mantém o que tem
+      document.getElementById("savedMsg").textContent = "Não foi possível carregar o histórico.";
     }
   }
 
@@ -225,7 +226,6 @@
     if (!selectedMood) return;
     const date = todayStr();
     humorData[date] = selectedMood;
-    localStorage.setItem(HUMOR_CACHE_KEY(), JSON.stringify(humorData));
     document.getElementById("saveBtn").classList.add("a-hide");
     document.getElementById("savedMsg").classList.remove("a-hide");
     renderAll();
@@ -238,29 +238,11 @@
       });
       if (!r.ok) throw new Error("fail");
     } catch {
-      // Offline — salvo localmente, sincroniza quando reconectar
-      document.getElementById("savedMsg").textContent = "✓ Salvo localmente";
+      delete humorData[date];
+      document.getElementById("savedMsg").textContent = "Não foi possível salvar. Tente novamente.";
+      document.getElementById("saveBtn").classList.remove("a-hide");
+      renderAll();
     }
-  }
-
-  async function saveHumor() {
-    if (!selectedMood) return;
-    const date = todayStr();
-    humorData[date] = selectedMood;
-    // Cache local imediato
-    localStorage.setItem(`ep:humor:${date}:${currentUser.uid}`, String(selectedMood));
-    document.getElementById("saveBtn").classList.add("a-hide");
-    document.getElementById("savedMsg").classList.remove("a-hide");
-    renderAll();
-    // Salva no backend
-    try {
-      const token = await currentUser.getIdToken();
-      await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ mood: selectedMood, date })
-      });
-    } catch {}
   }
 
   function renderAll() {

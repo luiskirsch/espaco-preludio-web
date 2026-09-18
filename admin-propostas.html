@@ -312,7 +312,7 @@
   function renderSavedOptions() {
     const select = byId("savedScenarios");
     const items = getSaved();
-    select.innerHTML = '<option value="">Cenários salvos</option>' + items.map((item) => `<option value="${item.id}">${escapeHtml(item.name)}</option>`).join("");
+    select.innerHTML = '<option value="">Cenários salvos</option>' + items.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`).join("");
     select.value = currentSavedId || "";
     byId("deleteScenario").disabled = !currentSavedId;
   }

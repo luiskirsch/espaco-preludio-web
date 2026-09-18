@@ -355,10 +355,10 @@
   const proPreviewKey = id => `ep:pro:preview:${id}`;
   function saveProPreview(threadId, text, isMine) {
     if (!threadId || !text) return;
-    try { localStorage.setItem(proPreviewKey(threadId), JSON.stringify({ text: String(text).slice(0, 200), isMine: !!isMine, at: Date.now() })); } catch(_) {}
+    try { localStorage.removeItem(proPreviewKey(threadId)); sessionStorage.setItem(proPreviewKey(threadId), JSON.stringify({ text: String(text).slice(0, 200), isMine: !!isMine, at: Date.now() })); } catch(_) {}
   }
   function getProPreview(threadId) {
-    try { const raw = localStorage.getItem(proPreviewKey(threadId)); if (!raw) return null; return JSON.parse(raw); } catch(_) { return null; }
+    try { localStorage.removeItem(proPreviewKey(threadId)); const raw = sessionStorage.getItem(proPreviewKey(threadId)); if (!raw) return null; return JSON.parse(raw); } catch(_) { return null; }
   }
 
   function renderThreadList() {

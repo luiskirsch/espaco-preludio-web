@@ -204,7 +204,7 @@
       if (!d.ok || !d.items?.length) { empty.classList.remove("ep-hide"); return; }
 
       list.innerHTML = d.items.map(item => `
-        <div class="ep-card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;" data-uid="${item.therapistUid}">
+        <div class="ep-card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;" data-uid="${escapeHtml(item.therapistUid)}">
           <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
             <div>
               <strong style="font-size:15px;">${escapeHtml(item.displayName)}</strong>
@@ -221,13 +221,23 @@
           ${item.bio ? `<p class="ep-text-sm ep-text-muted" style="margin:0;">${escapeHtml(item.bio)}</p>` : ""}
           ${item.plano === "empresa-pending-review" ? `
           <div style="display:flex; gap:8px; margin-top:4px;">
-            <button class="ep-btn ep-btn--primary ep-btn--sm" onclick="openReview('${item.therapistUid}','${escapeHtml(item.displayName)}')">Revisar e aprovar</button>
+            <button type="button" class="ep-btn ep-btn--primary ep-btn--sm" data-review-uid="${escapeHtml(item.therapistUid)}">Revisar e aprovar</button>
           </div>` : ""}
         </div>
       `).join("");
+      list.querySelectorAll("[data-review-uid]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const item = d.items.find(entry => String(entry.therapistUid) === btn.dataset.reviewUid);
+          if (item) openReview(item.therapistUid, item.displayName || "");
+        });
+      });
     } catch (e) {
       loading.classList.add("ep-hide");
-      list.innerHTML = `<p class="ep-text-sm ep-text-muted">Erro ao carregar: ${e.message}</p>`;
+      list.replaceChildren();
+      const error = document.createElement("p");
+      error.className = "ep-text-sm ep-text-muted";
+      error.textContent = `Erro ao carregar: ${e?.message || "erro desconhecido"}`;
+      list.appendChild(error);
     }
   }
 

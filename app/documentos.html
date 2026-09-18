@@ -18,6 +18,7 @@
       box-shadow: var(--a-shadow); padding: 16px;
       display: flex; align-items: center; gap: 14px;
       cursor: pointer; transition: transform 120ms;
+      width: 100%; border: 0; color: inherit; font: inherit; text-align: left;
       -webkit-tap-highlight-color: transparent;
     }
     .doc-card:active { transform: scale(.98); }
@@ -116,13 +117,13 @@
     }
     document.getElementById("emptyDocs").classList.add("a-hide");
     document.getElementById("docList").classList.remove("a-hide");
-    inner.innerHTML = docs.map(d => {
+    inner.innerHTML = docs.map((d, index) => {
       const tipo = d.tipo || d.type || "recibo";
       const icon  = ICONS[tipo]  || "📄";
       const color = COLORS[tipo] || "recibo";
       const prof  = d.therapistName || "Profissional";
       return `
-        <div class="doc-card" onclick="openDoc('${esc(d.id||d.documentId||"")}','${esc(d.titulo||tipo)}','${esc(d.url||"")}')">
+        <button type="button" class="doc-card" data-doc-index="${index}">
           <div class="doc-icon doc-icon--${color}">${icon}</div>
           <div class="doc-info">
             <div class="doc-title">${esc(d.titulo || tipo.charAt(0).toUpperCase()+tipo.slice(1))}</div>
@@ -130,15 +131,31 @@
             <div class="doc-date">${fmtDate(d.createdAt||d.at||Date.now())}</div>
           </div>
           <div class="doc-arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
-        </div>`;
+        </button>`;
     }).join("");
+    inner.querySelectorAll("[data-doc-index]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const doc = docs[Number(btn.dataset.docIndex)];
+        if (doc) openDoc(doc.id || doc.documentId || "", doc.titulo || doc.tipo || doc.type || "Documento", doc.url || "");
+      });
+    });
+  }
+
+  function safeDocumentUrl(value) {
+    try {
+      const url = new URL(String(value || ""), location.origin);
+      const localHttp = url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+      if (url.protocol !== "https:" && !localHttp) return "";
+      return url.href;
+    } catch { return ""; }
   }
 
   window.openDoc = function(id, titulo, url) {
-    if (!url) return;
+    const safeUrl = safeDocumentUrl(url);
+    if (!safeUrl) return;
     document.getElementById("viewerTitle").textContent = titulo;
-    document.getElementById("viewerFrame").src = url;
-    document.getElementById("viewerDownload").href = url;
+    document.getElementById("viewerFrame").src = safeUrl;
+    document.getElementById("viewerDownload").href = safeUrl;
     document.getElementById("viewerDownload").download = titulo + ".pdf";
     document.getElementById("viewerModal").style.display = "flex";
   };

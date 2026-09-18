@@ -64,16 +64,37 @@ function _detectBackendOverride() {
     try { localStorage.removeItem("ep_backend_url_override"); } catch (_) {}
     return null;
   }
+  const normalizeOverride = (value) => {
+    try {
+      const url = new URL(String(value || ""));
+      const localHost = url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
+      const officialStaging = url.origin === "https://osl-video-server-staging.up.railway.app";
+      if (url.username || url.password || (url.protocol !== "https:" && !(localHost && url.protocol === "http:"))) return null;
+      if (!localHost && !officialStaging) return null;
+      return url.origin;
+    } catch {
+      return null;
+    }
+  };
   try {
     const qs = new URLSearchParams(location.search).get("backend");
     if (qs) {
-      try { localStorage.setItem("ep_backend_url_override", qs); } catch (_) {}
-      return qs;
+      const safe = normalizeOverride(qs);
+      if (!safe) {
+        try { localStorage.removeItem("ep_backend_url_override"); } catch (_) {}
+        return null;
+      }
+      try { localStorage.setItem("ep_backend_url_override", safe); } catch (_) {}
+      return safe;
     }
     const ls = localStorage.getItem("ep_backend_url_override");
-    if (ls) return ls;
+    if (ls) {
+      const safe = normalizeOverride(ls);
+      if (safe) return safe;
+      localStorage.removeItem("ep_backend_url_override");
+    }
   } catch (_) { /* localStorage indisponivel */ }
-  if (window.EP_BACKEND_BASE_URL_OVERRIDE) return window.EP_BACKEND_BASE_URL_OVERRIDE;
+  if (window.EP_BACKEND_BASE_URL_OVERRIDE) return normalizeOverride(window.EP_BACKEND_BASE_URL_OVERRIDE);
   return null;
 }
 const _override = _detectBackendOverride();

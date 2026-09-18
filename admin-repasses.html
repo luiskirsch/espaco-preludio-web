@@ -261,7 +261,7 @@
                   >
                   <button
                     class="ep-btn ep-btn--primary ep-btn--sm"
-                    onclick="concluirRepasse('${esc(r.id)}')"
+                    data-complete-id="${esc(r.id)}"
                     id="btn-${esc(r.id)}"
                   >
                     Marcar como repassado
@@ -272,6 +272,9 @@
           </article>
         `;
       }).join("");
+      listEl.querySelectorAll("[data-complete-id]").forEach(btn => {
+        btn.addEventListener("click", () => concluirRepasse(btn.dataset.completeId));
+      });
     } catch (err) {
       listEl.innerHTML = `<div style="color:var(--ep-danger);padding:20px;">Erro ao carregar repasses: ${esc(err.message)}</div>`;
     }

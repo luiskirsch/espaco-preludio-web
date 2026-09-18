@@ -124,15 +124,18 @@
     searchHint.classList.add("a-hide");
     if (!items.length) { resultsList.classList.add("a-hide"); searchEmpty.classList.remove("a-hide"); return; }
     searchEmpty.classList.add("a-hide");
-    resultsList.innerHTML = items.map(p => {
+    resultsList.innerHTML = items.map((p, index) => {
       const espLabel = ESP_LABELS[p.especialidade] || p.especialidade || "Profissional de saúde";
       const loc = [p.cidade, p.uf].filter(Boolean).join("/");
-      const avatar = p.photoBase64
-        ? `<img src="data:${p.photoMime||'image/jpeg'};base64,${p.photoBase64}" alt="">`
+      const photoMime = /^(image\/(?:jpeg|png|webp|gif))$/i.test(String(p.photoMime || "")) ? p.photoMime : "image/jpeg";
+      const photoBase64 = String(p.photoBase64 || "");
+      const safePhoto = photoBase64.length <= 1_500_000 && /^[A-Za-z0-9+/]+={0,2}$/.test(photoBase64);
+      const avatar = safePhoto
+        ? `<img src="data:${photoMime};base64,${photoBase64}" alt="">`
         : initials(p.displayName);
       const verified = p.isVerified ? `<span class="a-verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></span>` : "";
       return `
-        <div class="a-prof-card" onclick="window.location='./agendar.html?p=${encodeURIComponent(p.slug)}'">
+        <button type="button" class="a-prof-card" data-result-index="${index}">
           <div class="a-prof-avatar">${avatar}</div>
           <div class="a-prof-info">
             <div class="a-prof-name">${esc(p.displayName)} ${verified}</div>
@@ -142,8 +145,14 @@
           <div class="a-prof-card__arrow">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-        </div>`;
+        </button>`;
     }).join("");
+    resultsList.querySelectorAll("[data-result-index]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const professional = items[Number(btn.dataset.resultIndex)];
+        if (professional?.slug) location.assign(`./agendar.html?p=${encodeURIComponent(professional.slug)}`);
+      });
+    });
     resultsList.classList.remove("a-hide");
   }
 

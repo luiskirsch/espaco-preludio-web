@@ -162,7 +162,7 @@
           ${isUpcoming ? `
           <div class="sess-card__actions">
             <a href="./agendar.html?p=${encodeURIComponent(s.therapistSlug||"")}" class="a-btn a-btn--ghost a-btn--sm" style="flex:1;">Reagendar</a>
-            <button class="a-btn a-btn--sm" style="flex:1;background:rgba(184,69,61,.1);color:#b8453d;border:none;" onclick="openCancel('${esc(s.sessionId||s.id||"")}')">Cancelar</button>
+            <button type="button" class="a-btn a-btn--sm" style="flex:1;background:rgba(184,69,61,.1);color:#b8453d;border:none;" data-cancel-id="${esc(s.sessionId||s.id||"")}">Cancelar</button>
           </div>` : ""}
           ${s.status === "completed" ? `
           <div class="sess-card__actions">
@@ -192,6 +192,9 @@
       document.getElementById("emptyState").classList.remove("a-hide");
     } else {
       contentEl.innerHTML = filtered.map(renderCard).join("");
+      contentEl.querySelectorAll("[data-cancel-id]").forEach(btn => {
+        btn.addEventListener("click", () => openCancel(btn.dataset.cancelId));
+      });
       contentEl.classList.remove("a-hide");
     }
   };

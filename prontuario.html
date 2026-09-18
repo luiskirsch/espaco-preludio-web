@@ -340,7 +340,7 @@
     </p>
     <div id="gemeoChips" class="ep-mt-16" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
     <div class="ep-mt-12" style="display:flex; gap:8px;">
-      <input type="text" id="gemeoInput" class="ep-input" style="flex:1;" placeholder="Ex: o que mudou desde a última consulta?">
+      <input type="text" id="gemeoInput" class="ep-input" style="flex:1;" maxlength="500" placeholder="Ex: o que mudou desde a última consulta?">
       <button type="button" class="ep-btn ep-btn--primary" id="gemeoAsk">Perguntar</button>
     </div>
     <div id="gemeoAnswer" class="ep-mt-16 ep-hide"></div>
@@ -1086,23 +1086,47 @@
   }
 
   // ─── Sinais clínicos (IA) — fetch compartilhado p/ jornada + mapa ────
-  async function fetchSinaisEntries(patient) {
-    if (!patient || !patient.patientId) return [];
-    const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patient.patientId)}/sinais`, {
-      headers: { "Authorization": `Bearer ${idToken}` }
-    });
-    const data = await res.json();
-    if (!res.ok || !data.ok) return [];
-    return data.entries || [];
+  async function fetchSinaisEntries(patient, sessions) {
+    if (!patient?.patientId || !Array.isArray(sessions)) return [];
+    // O servidor não possui o plaintext E2EE. Descriptografa no navegador
+    // somente os 30 resumos recentes necessários às visualizações e ao
+    // Gêmeo Clínico; transcrição e material criptográfico nunca são enviados.
+    const recent = sessions.filter(session => session?.sessionId).slice(0, 30);
+    const entries = await Promise.all(recent.map(async session => {
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/session/${encodeURIComponent(session.sessionId)}/ai-summary`, {
+          headers: { "Authorization": `Bearer ${idToken}` }
+        });
+        if (!res.ok) return null;
+        const data = await res.json().catch(() => ({}));
+        if (!data.ok || data.status !== "completed") return null;
+        const payload = data.encryptedPayload
+          ? await decryptAiSummaryPayload(data.encryptedPayload, dek)
+          : data;
+        const summary = payload?.summary && typeof payload.summary === "object" ? payload.summary : {};
+        const signals = payload?.signals && typeof payload.signals === "object" ? payload.signals : {};
+        return {
+          sessionId: session.sessionId,
+          completedAt: session.completedAt || data.completedAt || null,
+          summary,
+          signals,
+          topics: (summary.topics || []).map(topic => topic?.title).filter(Boolean)
+        };
+      } catch (error) {
+        console.warn("clinical_summary_decrypt_failed", session.sessionId, error);
+        return null;
+      }
+    }));
+    return entries.filter(Boolean).sort((a, b) => Number(a.completedAt || 0) - Number(b.completedAt || 0));
   }
 
   async function loadAndRenderClinicalSignals(patient, sessions) {
-    const entries = await fetchSinaisEntries(patient);
+    const entries = await fetchSinaisEntries(patient, sessions);
     try { renderRadarRisco(sessions, entries); } catch (e) { console.warn("render_radar_risco_failed", e); }
     if (!entries.length) return;
     try { renderJornada(entries); } catch (e) { console.warn("render_jornada_failed", e); }
     try { await renderMapaEmocional(entries); } catch (e) { console.warn("render_mapa_emocional_failed", e); }
-    try { initGemeoClinico(); } catch (e) { console.warn("init_gemeo_clinico_failed", e); }
+    try { initGemeoClinico(entries); } catch (e) { console.warn("init_gemeo_clinico_failed", e); }
   }
 
   // ─── Radar de risco — classificação 🟢/🟡/🔴 combinando sinais de IA
@@ -1347,7 +1371,7 @@
     "Resuma a evolução geral do paciente."
   ];
 
-  function initGemeoClinico() {
+  function initGemeoClinico(decryptedEntries) {
     const block = document.getElementById("gemeoClinicoBlock");
     const chips = document.getElementById("gemeoChips");
     const input = document.getElementById("gemeoInput");
@@ -1365,7 +1389,7 @@
     }
 
     async function askGemeo() {
-      const question = input.value.trim();
+      const question = input.value.trim().slice(0, 500);
       if (!question) return;
       askBtn.disabled = true;
       askBtn.textContent = "Pensando…";
@@ -1375,7 +1399,7 @@
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patientId)}/gemeo-clinico`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ question })
+          body: JSON.stringify({ question, entries: buildClinicalTwinEntries(decryptedEntries) })
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
@@ -1393,6 +1417,39 @@
     input.addEventListener("keydown", e => { if (e.key === "Enter") askGemeo(); });
 
     block.classList.remove("ep-hide");
+  }
+
+  function buildClinicalTwinEntries(entries) {
+    const clip = (value, max) => String(value || "").trim().slice(0, max);
+    const scale = value => Number.isFinite(Number(value)) ? Math.min(10, Math.max(0, Number(value))) : null;
+    const sanitized = entries.slice(-30).reverse().map(entry => {
+      const summary = entry.summary || {};
+      const signals = entry.signals || {};
+      return {
+        sessionId: clip(entry.sessionId, 128),
+        summary: {
+          summary: clip(summary.summary, 4000),
+          topics: (Array.isArray(summary.topics) ? summary.topics : []).slice(0, 20).map(topic => ({ title: clip(topic?.title, 200), summary: clip(topic?.summary, 1000) })),
+          commitments: (Array.isArray(summary.commitments) ? summary.commitments : []).slice(0, 20).map(item => ({ who: clip(item?.who, 100), what: clip(item?.what, 500) })),
+          followups: (Array.isArray(summary.followups) ? summary.followups : []).slice(0, 20).map(item => clip(item, 500)).filter(Boolean)
+        },
+        signals: {
+          mood: scale(signals.mood), anxiety: scale(signals.anxiety),
+          sleepQuality: scale(signals.sleepQuality), selfEsteem: scale(signals.selfEsteem),
+          riskLevel: ["none", "low", "moderate", "high", "critical"].includes(signals.riskLevel) ? signals.riskLevel : "none",
+          riskFactors: (Array.isArray(signals.riskFactors) ? signals.riskFactors : []).slice(0, 20).map(item => clip(item, 300)).filter(Boolean),
+          notableEvents: (Array.isArray(signals.notableEvents) ? signals.notableEvents : []).slice(0, 20).map(item => ({ title: clip(item?.title, 300) })),
+          keyThemes: (Array.isArray(signals.keyThemes) ? signals.keyThemes : []).slice(0, 30).map(item => clip(item, 200)).filter(Boolean)
+        }
+      };
+    });
+    const selected = [];
+    for (const entry of sanitized) {
+      const candidate = [...selected, entry];
+      if (new TextEncoder().encode(JSON.stringify(candidate)).byteLength > 250 * 1024) break;
+      selected.push(entry);
+    }
+    return selected.reverse();
   }
 
   // ─── Receitas digitais — listagem por paciente ─────────────────────

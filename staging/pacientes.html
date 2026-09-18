@@ -924,6 +924,27 @@
   });
 
   // ─── Modal Escala ──────────────────────────────────────────
+  function renderDeliveryStatus(container, lines, rawUrl) {
+    container.replaceChildren();
+    lines.forEach((line, index) => {
+      if (index) container.appendChild(document.createElement("br"));
+      container.appendChild(document.createTextNode(String(line || "")));
+    });
+    try {
+      const url = new URL(String(rawUrl || ""), location.origin);
+      const localHttp = url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+      if (url.protocol !== "https:" && !localHttp) return;
+      container.appendChild(document.createElement("br"));
+      const link = document.createElement("a");
+      link.href = url.href;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.style.cssText = "font-family:'JetBrains Mono',monospace;font-size:11px;word-break:break-all";
+      link.textContent = url.href;
+      container.appendChild(link);
+    } catch { }
+  }
+
   function openEscalaModal(patient) {
     if (!patient) return;
     const modal = document.getElementById("escalaModal");
@@ -990,7 +1011,7 @@
         else lines.push(tr("pacientes:js.waFailed", "✗ WhatsApp falhou"));
       }
       const st = document.getElementById("escalaStatus");
-      st.innerHTML = lines.join("<br>") + `<br><a href="${data.escalaUrl}" target="_blank" rel="noopener" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; word-break: break-all;">${data.escalaUrl}</a>`;
+      renderDeliveryStatus(st, lines, data.escalaUrl);
       st.className = "ep-status is-ok";
       btn.disabled = false;
       btn.textContent = tr("pacientes:js.sendAnother", "Enviar outra");
@@ -1128,7 +1149,7 @@
         else lines.push(tr("pacientes:js.waFailed", "✗ WhatsApp falhou"));
       }
       const st = document.getElementById("anamneseStatus");
-      st.innerHTML = lines.join("<br>") + `<br><a href="${data.anamneseUrl}" target="_blank" rel="noopener" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; word-break: break-all;">${data.anamneseUrl}</a>`;
+      renderDeliveryStatus(st, lines, data.anamneseUrl);
       st.className = "ep-status is-ok";
       btn.disabled = false;
       btn.textContent = tr("pacientes:js.resendLink", "Reenviar link");

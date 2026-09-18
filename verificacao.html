@@ -335,7 +335,7 @@
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
-      statusBlock.innerHTML = `<div class="ep-error-state">${escapeHtml(tr("verificacao:status.loadErrorPrefix", "Erro ao carregar status: "))}${data?.error || res.status}</div>`;
+      statusBlock.innerHTML = `<div class="ep-error-state">${escapeHtml(tr("verificacao:status.loadErrorPrefix", "Erro ao carregar status: "))}${escapeHtml(data?.error || res.status)}</div>`;
       return;
     }
     renderStatus(data.status, data.lastSubmission, data.verifiedAt);

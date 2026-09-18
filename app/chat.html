@@ -91,6 +91,7 @@
       display: flex; align-items: center; gap: 14px; padding: 14px 16px;
       background: var(--a-surface); cursor: pointer; transition: background 120ms;
       text-decoration: none; color: inherit;
+      width: 100%; border: 0; font: inherit; text-align: left;
       -webkit-tap-highlight-color: transparent;
     }
     .conv-item:active { background: var(--a-bg2); }
@@ -190,13 +191,15 @@
       const convs = d.conversas || d.items || [];
       if (!convs.length) { document.getElementById("convEmpty").classList.remove("a-hide"); return; }
       document.getElementById("convList").style.display = "flex";
-      document.getElementById("convList").innerHTML = convs.map(c => {
+      const convList = document.getElementById("convList");
+      convList.innerHTML = convs.map((c, index) => {
         const initials = (c.therapistName||"?").match(/\b\p{L}/gu)?.slice(0,2).join("").toUpperCase()||"?";
-        const avatar = c.therapistPhoto
-          ? `<img src="data:image/jpeg;base64,${c.therapistPhoto}" alt="">`
+        const safePhoto = /^[A-Za-z0-9+/=]+$/.test(String(c.therapistPhoto || "")) ? String(c.therapistPhoto) : "";
+        const avatar = safePhoto
+          ? `<img src="data:image/jpeg;base64,${safePhoto}" alt="">`
           : initials;
         const badge = c.unread > 0 ? `<div class="conv-item__badge">${c.unread}</div>` : "";
-        return `<div class="conv-item" onclick="openChat('${esc(c.convId||c.therapistUid)}','${esc(c.therapistName)}','${esc(c.especialidade||"")}','${esc(initials)}','${esc(c.therapistPhoto||"")}')">
+        return `<button type="button" class="conv-item" data-conv-index="${index}">
           <div class="conv-item__avatar">${avatar}</div>
           <div class="conv-item__info">
             <div class="conv-item__name">${esc(c.therapistName)}</div>
@@ -206,8 +209,17 @@
             <div class="conv-item__time">${c.lastAt ? fmtTime(c.lastAt) : ""}</div>
             ${badge}
           </div>
-        </div>`;
+        </button>`;
       }).join("");
+      convList.querySelectorAll("[data-conv-index]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const c = convs[Number(btn.dataset.convIndex)];
+          if (!c) return;
+          const initials = (c.therapistName||"?").match(/\b\p{L}/gu)?.slice(0,2).join("").toUpperCase()||"?";
+          const photo = /^[A-Za-z0-9+/=]+$/.test(String(c.therapistPhoto || "")) ? String(c.therapistPhoto) : "";
+          openChat(c.convId || c.therapistUid, c.therapistName || "", c.especialidade || "", initials, photo);
+        });
+      });
     } catch {
       document.getElementById("convLoading").style.display = "none";
       document.getElementById("convEmpty").classList.remove("a-hide");
@@ -220,9 +232,16 @@
     document.getElementById("chatView").style.display = "flex";
     document.getElementById("chatName").textContent = name;
     document.getElementById("chatEsp").textContent  = esp;
-    document.getElementById("chatAvatar").innerHTML = photo
-      ? `<img src="data:image/jpeg;base64,${photo}" alt="">`
-      : initials;
+    const chatAvatar = document.getElementById("chatAvatar");
+    chatAvatar.replaceChildren();
+    if (/^[A-Za-z0-9+/=]+$/.test(String(photo || ""))) {
+      const img = document.createElement("img");
+      img.src = `data:image/jpeg;base64,${photo}`;
+      img.alt = "";
+      chatAvatar.appendChild(img);
+    } else {
+      chatAvatar.textContent = initials;
+    }
     document.getElementById("chatMessages").innerHTML = "";
     await loadMessages();
     pollTimer = setInterval(loadMessages, 4000);

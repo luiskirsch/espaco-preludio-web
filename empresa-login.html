@@ -90,7 +90,9 @@
   import { BACKEND_BASE_URL } from "./js/firebase-config.js";
 
   // Se já tem token válido, vai direto pro painel
-  const saved = localStorage.getItem("ep:empresa:token");
+  localStorage.removeItem("ep:empresa:token");
+  localStorage.removeItem("ep:empresa:nome");
+  const saved = sessionStorage.getItem("ep:empresa:token");
   if (saved) window.location.href = "./empresa-painel.html";
 
   document.getElementById("toggleSenha").addEventListener("click", () => {
@@ -132,8 +134,8 @@
         };
         throw new Error(msgs[data.error] || "Erro ao entrar. Tente novamente.");
       }
-      localStorage.setItem("ep:empresa:token", data.token);
-      localStorage.setItem("ep:empresa:nome", data.empresa?.nome || "");
+      sessionStorage.setItem("ep:empresa:token", data.token);
+      sessionStorage.setItem("ep:empresa:nome", data.empresa?.nome || "");
       window.location.href = "./empresa-painel.html";
     } catch (err) {
       statusEl.textContent = err.message;

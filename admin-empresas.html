@@ -208,14 +208,24 @@
           <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${FRONTEND_BASE}/colaborador-cadastro.html?empresa=${esc(e.slug)}</span>
         </div>
         <div class="emp-card__actions">
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" onclick="copyLink('${esc(e.slug)}')">Copiar link</button>
+          <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-action="copy" data-id="${esc(e.id)}">Copiar link</button>
           <a href="./admin-colaboradores.html?empresa=${esc(e.id)}&nome=${encodeURIComponent(e.nome)}" class="ep-btn ep-btn--ghost ep-btn--sm">Ver colaboradores</a>
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" onclick="openEdit('${esc(e.id)}')">Editar</button>
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" onclick="openAcesso('${esc(e.id)}','${esc(e.nome)}')">🔐 Acesso painel</button>
-          ${e.status === "ativa" ? `<button class="ep-btn ep-btn--ghost ep-btn--sm" style="color:#b8453d;" onclick="toggleStatus('${esc(e.id)}','inativa')">Desativar</button>` : `<button class="ep-btn ep-btn--ghost ep-btn--sm" onclick="toggleStatus('${esc(e.id)}','ativa')">Reativar</button>`}
+          <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-action="edit" data-id="${esc(e.id)}">Editar</button>
+          <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-action="access" data-id="${esc(e.id)}">🔐 Acesso painel</button>
+          ${e.status === "ativa" ? `<button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" style="color:#b8453d;" data-action="status" data-id="${esc(e.id)}" data-status="inativa">Desativar</button>` : `<button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-action="status" data-id="${esc(e.id)}" data-status="ativa">Reativar</button>`}
         </div>
       </div>
     `).join("");
+    grid.querySelectorAll("[data-action][data-id]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const item = items.find(entry => String(entry.id) === btn.dataset.id);
+        if (!item) return;
+        if (btn.dataset.action === "copy") copyLink(item.slug);
+        if (btn.dataset.action === "edit") openEdit(item.id);
+        if (btn.dataset.action === "access") openAcesso(item.id, item.nome);
+        if (btn.dataset.action === "status") toggleStatus(item.id, btn.dataset.status);
+      });
+    });
   }
 
   async function loadEmpresas(status) {

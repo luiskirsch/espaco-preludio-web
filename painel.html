@@ -601,6 +601,15 @@
     return (document.documentElement.lang || "pt-BR");
   }
 
+  function safeWebUrl(value) {
+    try {
+      const url = new URL(String(value || ""), location.origin);
+      const local = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+      if (url.username || url.password || (url.protocol !== "https:" && !(local && url.protocol === "http:"))) return "";
+      return url.href;
+    } catch { return ""; }
+  }
+
   // ─── confirmOnce: first-time confirmation pattern ───────────
   // Mostra confirm() só na primeira vez. Profissional aprende a ação,
   // próximas vezes vai direto sem fricção. Flag persiste no localStorage
@@ -1583,16 +1592,20 @@
     }
   }
 
-  // ─── Notas pré-sessão (local-only, localStorage) ───────────
+  // ─── Notas pré-sessão (somente nesta aba) ──────────────────
   function preNoteKey(sid) { return `ep:prenote:${sid}`; }
   function readPreNote(sid) {
-    try { return localStorage.getItem(preNoteKey(sid)) || ""; }
+    try {
+      localStorage.removeItem(preNoteKey(sid));
+      return sessionStorage.getItem(preNoteKey(sid)) || "";
+    }
     catch { return ""; }
   }
   function writePreNote(sid, text) {
     try {
-      if (text && text.trim()) localStorage.setItem(preNoteKey(sid), text.trim().slice(0, 600));
-      else localStorage.removeItem(preNoteKey(sid));
+      localStorage.removeItem(preNoteKey(sid));
+      if (text && text.trim()) sessionStorage.setItem(preNoteKey(sid), text.trim().slice(0, 600));
+      else sessionStorage.removeItem(preNoteKey(sid));
     } catch {}
   }
   let preNoteSessionId = null;
@@ -1756,8 +1769,11 @@
         else lines.push(tr("painel:recibo.waFail","✗ WhatsApp falhou"));
       }
       document.getElementById("reciboSuccessChannels").innerHTML = lines.map(l => `<li>${l}</li>`).join("");
-      document.getElementById("reciboPublicLink").href = data.reciboUrl;
-      document.getElementById("reciboPublicLink").textContent = data.reciboUrl;
+      const safeReceiptUrl = safeWebUrl(data.reciboUrl);
+      const receiptLink = document.getElementById("reciboPublicLink");
+      receiptLink.href = safeReceiptUrl || "#";
+      receiptLink.textContent = safeReceiptUrl || tr("painel:recibo.linkUnavailable", "Link indisponível");
+      receiptLink.toggleAttribute("aria-disabled", !safeReceiptUrl);
 
       // NFS-e: se o profissional configurou, mostra opção de emitir.
       maybeShowNfseEmit(data.receiptId, sess);
@@ -1854,8 +1870,9 @@
       st.className = "ep-status is-ok";
       btn.classList.add("ep-hide");
 
-      if (data.pdfUrl) {
-        document.getElementById("nfsePdfLink").href = data.pdfUrl;
+      const safePdfUrl = safeWebUrl(data.pdfUrl);
+      if (safePdfUrl) {
+        document.getElementById("nfsePdfLink").href = safePdfUrl;
         document.getElementById("nfseNumberLbl").textContent = data.number ? tr("painel:nfse.numPrefix","Nº {{num}}",{num:data.number}) : "";
         document.getElementById("nfseEmittedBox").classList.remove("ep-hide");
       } else {
@@ -1879,8 +1896,9 @@
         headers: { "Authorization": `Bearer ${idToken}`, "X-Nfse-Token": apiToken }
       });
       const d = await r.json().catch(() => ({}));
-      if (r.ok && d.ok && d.pdfUrl) {
-        document.getElementById("nfsePdfLink").href = d.pdfUrl;
+      const safePdfUrl = safeWebUrl(d.pdfUrl);
+      if (r.ok && d.ok && safePdfUrl) {
+        document.getElementById("nfsePdfLink").href = safePdfUrl;
         document.getElementById("nfseNumberLbl").textContent = d.number ? tr("painel:nfse.numPrefix","Nº {{num}}",{num:d.number}) : "";
         document.getElementById("nfseEmittedBox").classList.remove("ep-hide");
         const st = document.getElementById("nfseEmitStatus");
