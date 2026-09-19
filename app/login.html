@@ -15,66 +15,150 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./app.css">
   <style>
-    body { display: flex; flex-direction: column; min-height: 100dvh; }
-    .login-wrap {
-      flex: 1; display: flex; flex-direction: column;
-      justify-content: center; padding: 32px 24px 48px;
-      max-width: 430px; margin: 0 auto; width: 100%;
+    :root {
+      --staff-deep: #123a45;
+      --staff-blue: #2c6670;
+      --staff-mint: #91b9aa;
+      --staff-gold: #e0ad4f;
+      --staff-coral: #d67a62;
+      --staff-paper: #f5edd9;
     }
-    .login-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
-    .login-brand img { width: 44px; height: 44px; object-fit: contain; }
-    .login-brand__text { display: flex; flex-direction: column; }
-    .login-brand__lead { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--a-ink3); }
-    .login-brand__name { font-family: var(--ff-serif); font-size: 20px; font-weight: 500; color: var(--a-ink); }
-    .login-toggle { display: flex; background: var(--a-bg2); border-radius: 999px; padding: 3px; margin-bottom: 28px; margin-top: 24px; }
+    html, body { min-height: 100%; }
+    body { background: var(--staff-deep); }
+    .a-shell { max-width: none; min-height: 100dvh; background: var(--staff-deep); }
+    .staff-auth { min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(430px, .92fr); }
+    .staff-intro {
+      position: relative; isolation: isolate; overflow: hidden;
+      padding: clamp(28px, 4vw, 64px) clamp(36px, 5.5vw, 88px);
+      display: grid; grid-template-rows: auto 1fr auto;
+      background: radial-gradient(circle at 80% 16%, rgba(224,173,79,.18), transparent 24%), radial-gradient(circle at 15% 88%, rgba(145,185,170,.14), transparent 28%), linear-gradient(145deg, #0d2d37 0%, var(--staff-deep) 52%, #184a50 100%);
+      color: #fff;
+    }
+    .staff-intro::before { content: ""; position: absolute; inset: 0; z-index: -2; opacity: .16; background-image: linear-gradient(rgba(255,255,255,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.16) 1px, transparent 1px); background-size: 44px 44px; mask-image: linear-gradient(120deg, #000, transparent 76%); }
+    .staff-intro::after { content: ""; position: absolute; z-index: -1; width: 560px; height: 560px; right: -230px; bottom: -270px; border: 1px solid rgba(224,173,79,.18); border-radius: 50%; box-shadow: 0 0 0 70px rgba(224,173,79,.035), 0 0 0 145px rgba(224,173,79,.025); }
+    .login-brand { display: flex; align-items: center; gap: 12px; width: max-content; color: #fff; text-decoration: none; }
+    .login-brand:focus-visible { outline: 2px solid var(--staff-gold); outline-offset: 7px; border-radius: 4px; }
+    .login-brand img { width: 46px; height: 46px; object-fit: contain; }
+    .login-brand__text { display: flex; flex-direction: column; gap: 3px; }
+    .login-brand__lead { font-size: 10px; line-height: 1; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #f2c56d; }
+    .login-brand__name { font-family: var(--ff-serif); font-size: 20px; line-height: 1.08; font-weight: 500; color: #fff; }
+    .staff-content { align-self: center; display: grid; grid-template-columns: minmax(0, 1fr) minmax(230px, .62fr); gap: clamp(24px, 3vw, 54px); align-items: center; }
+    .staff-eyebrow { color: #f2c56d; text-transform: uppercase; letter-spacing: .17em; font-size: 11px; font-weight: 700; }
+    .staff-title { max-width: 660px; margin: 16px 0; font-family: var(--ff-serif); font-size: clamp(40px, 4.4vw, 68px); font-weight: 500; line-height: 1.02; }
+    .staff-lead { max-width: 600px; margin: 0; color: rgba(255,255,255,.9); font-size: clamp(14px, 1.2vw, 17px); font-weight: 500; line-height: 1.7; }
+    .staff-emblem { width: min(100%, 290px); aspect-ratio: 1; margin: auto; filter: drop-shadow(0 22px 36px rgba(2,19,23,.32)); }
+    .staff-emblem svg { width: 100%; height: 100%; overflow: visible; }
+    .staff-emblem__orbit { transform-origin: 160px 160px; animation: staff-orbit 28s linear infinite; }
+    .staff-emblem__heart { transform-origin: 160px 154px; animation: staff-pulse 3.2s ease-in-out infinite; }
+    @keyframes staff-orbit { to { transform: rotate(360deg); } }
+    @keyframes staff-pulse { 50% { transform: scale(.94); opacity: .82; } }
+    .staff-promises { display: flex; gap: 10px; flex-wrap: wrap; }
+    .staff-promise { display: inline-flex; align-items: center; gap: 8px; padding: 9px 13px; border: 1px solid rgba(255,255,255,.24); border-radius: 999px; background: rgba(255,255,255,.085); color: rgba(255,255,255,.94); font-size: 12.5px; font-weight: 700; }
+    .staff-promise::before { content: ""; width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--staff-gold); box-shadow: 0 0 0 3px rgba(224,173,79,.16); }
+    .staff-side { position: relative; isolation: isolate; min-width: 0; display: flex; align-items: center; justify-content: center; padding: clamp(24px, 4vw, 58px); background-color: var(--staff-paper); background-image: linear-gradient(rgba(44,102,112,.075) 1px, transparent 1px); background-size: 100% 32px; }
+    .staff-side::before { content: ""; position: absolute; z-index: -1; top: 0; bottom: 0; left: 74px; width: 2px; background: rgba(214,122,98,.22); box-shadow: 7px 0 0 rgba(214,122,98,.07); }
+    .login-card { position: relative; min-width: 0; width: 100%; max-width: 530px; max-height: calc(100dvh - 48px); overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding: 34px 36px 30px; border: 1px solid rgba(18,58,69,.13); border-radius: 22px; background: rgba(255,251,241,.97); color: #1a2b2d; box-shadow: 0 30px 70px -38px rgba(18,58,69,.48), 0 8px 24px -18px rgba(18,58,69,.32); }
+    .login-card::-webkit-scrollbar { display: none; }
+    .login-card::before { content: ""; position: absolute; top: 14px; left: 50%; width: 62px; height: 6px; transform: translateX(-50%); border-top: 2px dotted rgba(18,58,69,.18); border-bottom: 2px dotted rgba(18,58,69,.18); }
+    .login-card__identity { display: flex; align-items: center; gap: 11px; margin-bottom: 24px; }
+    .login-card__seal { width: 42px; height: 42px; flex: 0 0 42px; display: grid; place-items: center; border-radius: 13px; background: var(--staff-deep); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); }
+    .login-card__seal svg { width: 24px; height: 24px; }
+    .login-card__identity strong { display: block; font-family: var(--ff-serif); font-size: 16px; color: #1a2b2d; }
+    .login-card__identity small { display: block; margin-top: 2px; color: #745f3e; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; }
+    .login-kicker { display: flex; align-items: center; gap: 8px; color: #245d67; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .login-kicker::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #a47b25; }
+    .login-card .a-h1 { margin-top: 14px; font-size: clamp(28px, 2.2vw, 34px); color: #1a2b2d; }
+    .login-card .a-sub { margin-top: 8px; color: #455d61; font-size: 14px; }
+    .login-toggle { display: flex; margin: 24px 0 28px; padding: 4px; border-radius: 12px; background: #ebe4d3; }
     .login-toggle__btn {
-      flex: 1; height: 38px; border-radius: 999px; border: none;
+      flex: 1; min-width: 0; height: 40px; border-radius: 9px; border: none;
       font-family: var(--ff-sans); font-size: 13px; font-weight: 600;
-      cursor: pointer; background: none; color: var(--a-ink3); transition: all 150ms;
+      cursor: pointer; background: none; color: #675d4d; transition: all 150ms;
     }
-    .login-toggle__btn.is-active { background: var(--a-surface); color: var(--a-ink); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-    .login-footer { margin-top: 24px; text-align: center; font-size: 12px; color: var(--a-ink3); line-height: 1.6; }
-    .login-footer a { color: var(--a-accent); text-decoration: none; font-weight: 600; }
+    .login-toggle__btn.is-active { background: #fffaf0; color: var(--staff-deep); box-shadow: 0 2px 8px rgba(18,58,69,.1); }
+    .login-card .a-field__label { color: #2a4043; font-weight: 700; }
+    .login-card .a-input { min-height: 50px; border-color: rgba(18,58,69,.28); background: #fffdf7; color: #1a2b2d; }
+    .login-card .a-input:focus { border-color: var(--staff-blue); box-shadow: 0 0 0 3px rgba(44,102,112,.12); }
+    .login-card .a-btn--primary { border-radius: 10px; background: var(--staff-deep); box-shadow: 0 8px 22px -13px rgba(18,58,69,.75); }
+    .login-card .a-btn--primary:hover { background: #0b2d35; }
+    .login-footer { margin-top: 24px; padding-top: 18px; border-top: 1px solid rgba(18,58,69,.14); text-align: center; font-size: 12px; color: #66777a; line-height: 1.6; }
+    .login-footer a, .login-help { color: #245d67; text-decoration: none; font-weight: 700; }
+    .login-back { display: block; margin-top: 12px; color: #245d67; text-align: center; text-decoration: none; font-size: 12px; font-weight: 700; }
     .pwd-wrap { position: relative; }
-    .pwd-eye { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--a-ink3); padding: 4px; }
+    .pwd-eye { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #63777a; padding: 6px; border-radius: 6px; }
+    .pwd-eye:focus-visible { outline: 2px solid var(--staff-blue); outline-offset: 2px; }
+    @media (max-width: 1280px) { .staff-content { grid-template-columns: 1fr; } .staff-emblem { position: absolute; width: 225px; right: 24px; top: 50%; transform: translateY(-42%); opacity: .48; } .staff-copy { position: relative; z-index: 1; } .staff-title { max-width: 520px; } .staff-lead { max-width: 500px; } }
+    @media (max-width: 900px) { body { background: var(--staff-paper); } .staff-auth { grid-template-columns: minmax(0, 1fr); } .staff-intro { display: none; } .staff-side { width: 100%; min-height: 100vh; min-height: 100dvh; padding: 18px; } .staff-side::before { left: 30px; } .login-card { width: calc(100vw - 36px); max-height: none; padding: 30px 22px 24px; } }
+    @media (max-height: 760px) and (min-width: 901px) { .staff-side { padding-top: 18px; padding-bottom: 18px; } .login-card { padding-top: 28px; padding-bottom: 22px; } .login-card__identity { margin-bottom: 16px; } .login-card .a-h1 { margin-top: 10px; } .login-toggle { margin: 18px 0 20px; } .login-footer { margin-top: 18px; padding-top: 14px; } }
+    @media (prefers-reduced-motion: reduce) { .staff-emblem__orbit, .staff-emblem__heart { animation: none; } }
   </style>
   <script src="./sw-register.js" defer></script>
 </head>
 <body>
 <div class="a-shell">
-  <div class="login-wrap a-page-enter">
+  <main class="staff-auth a-page-enter">
+    <section class="staff-intro">
+      <a class="login-brand" href="../index.html" aria-label="Voltar ao site do Espaço Prelúdio">
+        <img src="/logo_oficial_fundo_transparente.png?v=2" alt="">
+        <span class="login-brand__text">
+          <span class="login-brand__lead">Projeto Lemniscata</span>
+          <span class="login-brand__name">Espaço Prelúdio</span>
+        </span>
+      </a>
 
-    <div class="login-brand">
-      <img src="/logo_oficial_fundo_transparente.png?v=2" alt="Espaço Prelúdio">
-      <div class="login-brand__text">
-        <span class="login-brand__lead">Espaço</span>
-        <span class="login-brand__name">Prelúdio</span>
+      <div class="staff-content">
+        <div class="staff-copy">
+          <div class="staff-eyebrow">Cuidado institucional · escuta que acolhe</div>
+          <h1 class="staff-title">Quem cuida também merece ser cuidado.</h1>
+          <p class="staff-lead">Um espaço protegido para colaboradores encontrarem apoio emocional, acompanharem seu cuidado e seguirem com mais equilíbrio.</p>
+        </div>
+        <div class="staff-emblem" aria-hidden="true">
+          <svg viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="160" cy="160" r="132" stroke="#E0AD4F" stroke-opacity=".32"/>
+            <circle cx="160" cy="160" r="112" fill="#0E3039" stroke="#91B9AA" stroke-opacity=".42"/>
+            <g class="staff-emblem__orbit"><circle cx="160" cy="28" r="4" fill="#F4CF81"/><circle cx="276" cy="103" r="3" fill="#91B9AA"/><circle cx="62" cy="248" r="3" fill="#D67A62"/></g>
+            <circle cx="108" cy="157" r="21" fill="#91B9AA"/><circle cx="212" cy="157" r="21" fill="#F4CF81"/>
+            <path d="M72 220c4-33 18-48 36-48s32 15 36 48" stroke="#F8EBCB" stroke-width="8" stroke-linecap="round"/>
+            <path d="M176 220c4-33 18-48 36-48s32 15 36 48" stroke="#F8EBCB" stroke-width="8" stroke-linecap="round"/>
+            <g class="staff-emblem__heart"><path d="M160 191c-7-13-34-31-34-55 0-17 12-29 28-29 10 0 18 5 23 14 5-9 13-14 23-14 16 0 28 12 28 29 0 24-27 42-51 64-6-5-12-10-17-15Z" fill="#D67A62" stroke="#FFF8E8" stroke-width="3"/><path d="M153 151h14l7-15 10 29 7-14h12" stroke="#FFF8E8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g>
+          </svg>
+        </div>
       </div>
-    </div>
 
-    <h1 class="a-h1">Olá 👋</h1>
-    <p class="a-sub a-mt-8">Acesse o programa de saúde contratado pela sua empresa.</p>
+      <div class="staff-promises"><span class="staff-promise">Acesso confidencial</span><span class="staff-promise">Privacidade protegida</span><span class="staff-promise">Acompanhamento seguro</span></div>
+    </section>
 
-    <div class="login-toggle">
-      <button type="button" class="login-toggle__btn is-active" id="tabEntrar">Entrar</button>
-      <button type="button" class="login-toggle__btn" id="tabCadastrar">Criar conta</button>
-    </div>
+    <section class="staff-side">
+      <div class="login-card">
+        <div class="login-card__identity">
+          <span class="login-card__seal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s7-3.8 7-10V5l-7-2-7 2v6c0 6.2 7 10 7 10Z"/><path d="m9 12 2 2 4-5"/></svg></span>
+          <span><strong>Espaço Prelúdio</strong><small>Portal de cuidado institucional</small></span>
+        </div>
+
+        <div class="login-kicker">Acesso protegido</div>
+        <h2 class="a-h1">Portal do Colaborador</h2>
+        <p class="a-sub">Entre para acessar o cuidado disponibilizado pela sua instituição.</p>
+
+        <div class="login-toggle" role="tablist" aria-label="Forma de acesso">
+          <button type="button" class="login-toggle__btn is-active" id="tabEntrar" role="tab" aria-selected="true">Entrar</button>
+          <button type="button" class="login-toggle__btn" id="tabCadastrar" role="tab" aria-selected="false">Primeiro acesso</button>
+        </div>
 
     <!-- Form Entrar -->
     <form id="formEntrar" class="a-flex-col a-gap-12" novalidate>
       <div class="a-field">
-        <label class="a-field__label">E-mail</label>
+        <label class="a-field__label" for="loginEmail">E-mail</label>
         <input id="loginEmail" class="a-input" type="email" placeholder="seu@email.com" autocomplete="email" inputmode="email">
       </div>
       <div class="a-field">
-        <label class="a-field__label">Senha</label>
+        <label class="a-field__label" for="loginSenha">Senha</label>
         <div class="pwd-wrap">
           <input id="loginSenha" class="a-input" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:44px;">
-          <button type="button" class="pwd-eye" id="eyeEntrar">
+          <button type="button" class="pwd-eye" id="eyeEntrar" aria-label="Mostrar ou ocultar senha">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
-        <a href="../recuperar.html" style="font-size:12px;color:var(--a-accent);text-decoration:none;font-weight:600;margin-top:4px;display:inline-block;">Esqueceu a senha?</a>
+        <a href="../recuperar.html" class="login-help" style="font-size:12px;margin-top:4px;display:inline-block;">Esqueceu a senha?</a>
       </div>
       <div id="erroEntrar" class="a-alert a-alert--err a-hide"></div>
       <button type="submit" class="a-btn a-btn--primary a-btn--block a-btn--lg a-mt-8" id="btnEntrar">Entrar</button>
@@ -83,24 +167,24 @@
     <!-- Form Cadastrar -->
     <form id="formCadastrar" class="a-flex-col a-gap-12 a-hide" novalidate>
       <div class="a-field">
-        <label class="a-field__label">Nome completo</label>
+        <label class="a-field__label" for="regNome">Nome completo</label>
         <input id="regNome" class="a-input" type="text" placeholder="Seu nome" autocomplete="name">
       </div>
       <div class="a-field">
-        <label class="a-field__label">E-mail</label>
+        <label class="a-field__label" for="regEmail">E-mail</label>
         <input id="regEmail" class="a-input" type="email" placeholder="seu@email.com" autocomplete="email" inputmode="email">
       </div>
       <div class="a-field">
-        <label class="a-field__label">Senha</label>
+        <label class="a-field__label" for="regSenha">Senha</label>
         <div class="pwd-wrap">
           <input id="regSenha" class="a-input" type="password" placeholder="Mín. 8 caracteres" autocomplete="new-password" style="padding-right:44px;">
-          <button type="button" class="pwd-eye" id="eyeReg">
+          <button type="button" class="pwd-eye" id="eyeReg" aria-label="Mostrar ou ocultar senha">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
       </div>
       <div class="a-field">
-        <label class="a-field__label">Confirmar senha</label>
+        <label class="a-field__label" for="regSenha2">Confirmar senha</label>
         <input id="regSenha2" class="a-input" type="password" placeholder="Repita a senha" autocomplete="new-password">
       </div>
       <div id="erroReg" class="a-alert a-alert--err a-hide"></div>
@@ -111,8 +195,10 @@
       Ao continuar você aceita nossa <a href="/politica.html">Política de Privacidade</a><br>
       e os <a href="/termos.html">Termos de Uso</a>.
     </div>
-
-  </div>
+    <a class="login-back" href="../index.html">Voltar ao site</a>
+      </div>
+    </section>
+  </main>
 </div>
 
 <script type="module">
@@ -128,8 +214,8 @@
   const tabC = document.getElementById("tabCadastrar");
   const fE   = document.getElementById("formEntrar");
   const fC   = document.getElementById("formCadastrar");
-  tabE.addEventListener("click", () => { tabE.classList.add("is-active"); tabC.classList.remove("is-active"); fE.classList.remove("a-hide"); fC.classList.add("a-hide"); });
-  tabC.addEventListener("click", () => { tabC.classList.add("is-active"); tabE.classList.remove("is-active"); fC.classList.remove("a-hide"); fE.classList.add("a-hide"); });
+  tabE.addEventListener("click", () => { tabE.classList.add("is-active"); tabC.classList.remove("is-active"); tabE.setAttribute("aria-selected", "true"); tabC.setAttribute("aria-selected", "false"); fE.classList.remove("a-hide"); fC.classList.add("a-hide"); });
+  tabC.addEventListener("click", () => { tabC.classList.add("is-active"); tabE.classList.remove("is-active"); tabC.setAttribute("aria-selected", "true"); tabE.setAttribute("aria-selected", "false"); fC.classList.remove("a-hide"); fE.classList.add("a-hide"); });
 
   // Olho senha
   function togglePwd(inputId, btn) {
