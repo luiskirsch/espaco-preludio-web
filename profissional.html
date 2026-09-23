@@ -181,44 +181,106 @@
   <script src="./i18n/init.js?v=1-4" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <style>
-    /* ── Refinamento de paleta: seção de planos ─────────────────────────
-       Objetivo: suavizar os pontos de alto contraste sem perder hierarquia.
-       1. Fundo mais quente → menos harshness
-       2. Checkmarks verde-sálvia em vez de ouro sólido
-       3. Badge "ECONOMIZE" translúcido (elimina o ouro saturado hardcoded)
-       4. Borda do card featured semi-transparente + glow sutil
-       5. Badges de plano com borda ouro leve para identidade */
-
-    /* Fundo da seção — um toque mais quente que o #17150f puro */
-    #planos.ep-section--alt { background: #1c1812; border-color: rgba(235,224,200,0.07); }
-
-    /* Cards de plano: fundo levemente mais profundo + borda mais suave */
+    /* Contraste reforçado da seção de planos. As cores locais preservam a
+       identidade verde/dourada sem depender dos tons "muted" globais. */
+    #planos {
+      --plan-ink: #073f42;
+      --plan-copy: #294f51;
+      --plan-border: #8da39b;
+      --plan-check: #287747;
+      background: #eee8d5;
+      border-color: #c9c1aa;
+      color: var(--plan-ink);
+    }
+    #planos .ep-h2,
+    #planos .ep-card__features,
+    #planos .ep-plan-price,
+    #planos strong { color: var(--plan-ink); }
+    #planos .ep-lead,
+    #planos .ep-card__sub,
+    #planos .ep-text-muted { color: var(--plan-copy); }
     #planos .ep-card--strong {
-      background: #231f18;
-      border-color: rgba(235,224,200,0.09);
+      background: #fffaf0;
+      border: 1.5px solid var(--plan-border);
+      box-shadow: 0 18px 36px -24px rgba(7,63,66,.48), 0 2px 6px rgba(7,63,66,.10);
     }
-
-    /* Card featured (Profissional): borda dourada suave + glow sutil */
-    #planos .ep-card--strong[style*="border-color"] {
-      border-color: rgba(212,165,83,0.45) !important;
-      box-shadow:
-        0 0 0 1px rgba(212,165,83,0.18),
-        0 24px 48px -24px rgba(0,0,0,0.65),
-        0 8px 16px -12px rgba(0,0,0,0.45);
+    #planos .ep-plan-card--institutional { border-color: #b58a31; }
+    #planos .ep-plan-card--professional { border-color: #176062; }
+    #planos .ep-plan-stripe {
+      position: absolute;
+      inset: 0 0 auto;
+      height: 4px;
     }
-
-    /* Checkmarks: verde-sálvia suave em vez de ouro sólido */
+    #planos .ep-plan-stripe--institutional { background: #d9a72f; }
+    #planos .ep-plan-stripe--professional { background: #0b5557; }
     #planos .ep-card__features li::before {
-      border-left-color: #7aaa80;
-      border-bottom-color: #7aaa80;
+      border-left-color: var(--plan-check);
+      border-bottom-color: var(--plan-check);
+      border-width: 0 0 3px 3px;
+    }
+    #planos .ep-plan-badge--institutional {
+      padding: 6px 14px;
+      background: #e3ad3d;
+      color: #2d1d00;
+      border: 1.5px solid #956200;
+      font-weight: 700;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.38), 0 2px 5px rgba(91,57,0,.18);
+    }
+    #planos .ep-plan-badge--professional,
+    #planos .ep-plan-popular {
+      background: #e2ecdf;
+      color: #064b4e;
+      border: 1px solid #7caa8a;
+    }
+    #planos .ep-plan-price-note,
+    #planos .ep-plan-note { color: #274d4f; font-weight: 600; }
+    #planos .ep-plan-revenue {
+      background: #e9eee1;
+      border: 1.5px solid #94ae98;
+    }
+    #planos .ep-plan-revenue__title { color: #073f42; }
+    #planos .ep-plan-revenue__note { color: #294f51; font-weight: 600; }
+    #planos .ep-plan-cta {
+      background: #d9a72f;
+      border-color: #a8750b;
+      color: #18130a;
+      font-weight: 700;
+      box-shadow: 0 5px 14px -6px rgba(95,62,0,.55);
+    }
+    #planos .ep-plan-cta:hover {
+      background: #c89118;
+      border-color: #805900;
+      color: #0d0a05;
+    }
+    #planos .ep-plan-cta:focus-visible {
+      outline: 3px solid #075b5e;
+      outline-offset: 3px;
     }
 
-    /* Badge de nome do plano: borda ouro leve para identidade visual */
-    #planos .ep-badge {
-      background: rgba(212,165,83,0.10);
-      color: #c4a060;
-      border-color: rgba(212,165,83,0.22);
+    html[data-theme="dark"] #planos {
+      --plan-ink: #fff9ec;
+      --plan-copy: #dfd3bb;
+      --plan-border: #8f826b;
+      --plan-check: #86c693;
+      background: #17140f;
+      border-color: #4f4738;
     }
+    html[data-theme="dark"] #planos .ep-card--strong { background: #242019; }
+    html[data-theme="dark"] #planos .ep-plan-card--institutional { border-color: #c29a49; }
+    html[data-theme="dark"] #planos .ep-plan-card--professional { border-color: #69a6a0; }
+    html[data-theme="dark"] #planos .ep-plan-badge--institutional {
+      background: #e3ad3d;
+      color: #2d1d00;
+      border-color: #f0c66f;
+      box-shadow: 0 0 0 1px #8d5d00, 0 3px 8px rgba(0,0,0,.35);
+    }
+    html[data-theme="dark"] #planos .ep-plan-badge--professional,
+    html[data-theme="dark"] #planos .ep-plan-popular { background: #203b34; color: #d2f1dc; border-color: #60977a; }
+    html[data-theme="dark"] #planos .ep-plan-revenue { background: #293127; border-color: #66836a; }
+    html[data-theme="dark"] #planos .ep-plan-revenue__title { color: #f8f3e7; }
+    html[data-theme="dark"] #planos .ep-plan-revenue__note,
+    html[data-theme="dark"] #planos .ep-plan-price-note,
+    html[data-theme="dark"] #planos .ep-plan-note { color: #dfd3bb; }
 
     /* Toggle Mensal/Anual: paleta clara, igual ao toggle dentro do perfil
        (planos.html) — não a paleta dark do resto da seção. */
@@ -438,28 +500,28 @@
 
       <div class="ep-grid ep-grid--2 ep-mt-32" style="max-width: 860px; margin-left: auto; margin-right: auto;">
 
-        <article class="ep-card ep-card--strong" style="border-color: var(--ep-gold); position: relative; overflow: hidden;">
+        <article class="ep-card ep-card--strong ep-plan-card--institutional" style="position: relative; overflow: hidden;">
 
           <!-- Faixa decorativa superior -->
-          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--ep-gold),#e8b96a,var(--ep-gold));"></div>
+          <div class="ep-plan-stripe ep-plan-stripe--institutional" aria-hidden="true"></div>
 
           <!-- Badge + Ícone -->
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <span class="ep-badge" data-i18n="index:plans.empresa.badge" style="background:rgba(200,150,58,.15);color:var(--ep-gold);border-color:rgba(200,150,58,.3);">🏢 Programas institucionais</span>
+            <span class="ep-badge ep-plan-badge--institutional" data-i18n="index:plans.empresa.badge">🏢 Programas institucionais</span>
             <span style="font-size:22px;">🤝</span>
           </div>
 
           <!-- Preço -->
           <div style="margin-bottom:6px;">
-            <span style="font-size:28px;font-weight:800;color:var(--ep-text);" data-i18n="index:plans.empresa.price">R$ 10,00 / mês</span>
-            <span style="font-size:13px;color:var(--ep-text-muted);margin-left:6px;" data-i18n="index:plans.empresa.priceNote">após 7 dias grátis</span>
+            <span class="ep-plan-price" style="font-size:28px;font-weight:800;" data-i18n="index:plans.empresa.price">R$ 10,00 / mês</span>
+            <span class="ep-plan-price-note" style="font-size:13px;margin-left:6px;" data-i18n="index:plans.empresa.priceNote">após 7 dias grátis</span>
           </div>
           <p class="ep-card__sub" style="margin-bottom:16px;" data-i18n="index:plans.empresa.sub">Para profissionais que atendem estudantes ou colaboradores por programas contratados por instituições.</p>
 
           <!-- Preço da consulta -->
-          <div style="background:rgba(45,106,62,.08);border:1px solid rgba(45,106,62,.2);border-radius:10px;padding:14px;text-align:center;margin-bottom:20px;">
-            <div style="font-size:20px;font-weight:800;color:var(--ep-accent);">Repasse por atendimento</div>
-            <div style="font-size:11px;color:var(--ep-text-muted);margin-top:2px;" data-i18n="index:plans.empresa.sessionNote">condições definidas em contrato</div>
+          <div class="ep-plan-revenue" style="border-radius:10px;padding:14px;text-align:center;margin-bottom:20px;">
+            <div class="ep-plan-revenue__title" style="font-size:20px;font-weight:800;">Repasse por atendimento</div>
+            <div class="ep-plan-revenue__note" style="font-size:11px;margin-top:2px;" data-i18n="index:plans.empresa.sessionNote">condições definidas em contrato</div>
           </div>
 
           <!-- Features -->
@@ -470,23 +532,23 @@
             <li data-i18n="index:plans.empresa.f5">Agendamento via link público do profissional</li>
           </ul>
 
-          <a href="./cadastro.html?plano=empresa" class="ep-btn ep-btn--primary ep-btn--block" style="background:var(--ep-gold);color:#1c1f1d;border-color:var(--ep-gold);" data-i18n="index:plans.empresa.cta">Criar consultório</a>
+          <a href="./cadastro.html?plano=empresa" class="ep-btn ep-btn--primary ep-btn--block ep-plan-cta" data-i18n="index:plans.empresa.cta">Criar consultório</a>
         </article>
 
-        <article class="ep-card ep-card--strong" style="border-color:var(--ep-accent);position:relative;overflow:hidden;">
+        <article class="ep-card ep-card--strong ep-plan-card--professional" style="position:relative;overflow:hidden;">
 
           <!-- Faixa decorativa superior -->
-          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--ep-accent),#4a9e66,var(--ep-accent));"></div>
+          <div class="ep-plan-stripe ep-plan-stripe--professional" aria-hidden="true"></div>
 
           <!-- Badge + Ícone -->
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <span class="ep-badge" data-i18n="index:plans.pro.badge" style="background:rgba(45,106,62,.15);color:var(--ep-accent);border-color:rgba(45,106,62,.3);">⭐ Profissional</span>
-            <span style="font-size:11px;font-weight:700;color:var(--ep-accent);background:rgba(45,106,62,.12);padding:3px 10px;border-radius:999px;border:1px solid rgba(45,106,62,.25);" data-i18n="index:plans.pro.mostPopular">Mais popular</span>
+            <span class="ep-badge ep-plan-badge--professional" data-i18n="index:plans.pro.badge">⭐ Profissional</span>
+            <span class="ep-plan-popular" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;" data-i18n="index:plans.pro.mostPopular">Mais popular</span>
           </div>
 
           <!-- Preço -->
           <div style="margin-bottom:6px;">
-            <span style="font-size:28px;font-weight:800;color:var(--ep-text);" data-price-monthly-i18n="index:plans.pro.priceMonthly" data-price-yearly-i18n="index:plans.pro.priceYearly" data-price-monthly="R$ 99,00 / mês" data-price-yearly="R$ 997,92 / Anual" data-i18n="index:plans.pro.priceMonthly">R$ 99,00 / mês</span>
+            <span class="ep-plan-price" style="font-size:28px;font-weight:800;" data-price-monthly-i18n="index:plans.pro.priceMonthly" data-price-yearly-i18n="index:plans.pro.priceYearly" data-price-monthly="R$ 99,00 / mês" data-price-yearly="R$ 997,92 / Anual" data-i18n="index:plans.pro.priceMonthly">R$ 99,00 / mês</span>
           </div>
           <p class="ep-card__sub" style="margin-bottom:16px;" data-i18n-html="index:plans.pro.subHtml">Profissionais regulamentados com inscrição ativa em qualquer conselho aceito — ou <strong>Psicanalistas, Terapeutas integrativos e Hipnoterapeutas</strong>.</p>
 
@@ -500,9 +562,9 @@
           </ul>
 
           <!-- Nota cancelamento -->
-          <p style="font-size:11px;color:var(--ep-text-muted);margin-bottom:16px;text-align:center;" data-i18n="index:plans.pro.note">Cancele a qualquer momento sem fidelidade.</p>
+          <p class="ep-plan-note" style="font-size:11px;margin-bottom:16px;text-align:center;" data-i18n="index:plans.pro.note">Cancele a qualquer momento sem fidelidade.</p>
 
-          <a href="./cadastro.html?plano=profissional" class="ep-btn ep-btn--primary ep-btn--block" data-i18n="index:plans.pro.cta">Comece grátis agora</a>
+          <a href="./cadastro.html?plano=profissional" class="ep-btn ep-btn--primary ep-btn--block ep-plan-cta" data-i18n="index:plans.pro.cta">Comece grátis agora</a>
         </article>
 
       </div>
