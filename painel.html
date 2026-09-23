@@ -719,6 +719,10 @@
       if (plano === "empresa-pending-review" || therapist?.plano === "empresa-pending-review") {
         return setBanner("ep-alert--info", "<strong>Cadastro recebido — aguardando aprovação.</strong> Nossa equipe está revisando seu perfil para o plano Atendimento a Empresas. Você será notificado por e-mail assim que for liberado.");
       }
+      if ((plano === "empresa" || therapist?.plano === "empresa")
+          && String(therapist?.mpPreapprovalStatus || "").toLowerCase() !== "authorized") {
+        return setBanner("ep-alert--warn", '<strong>Cadastre o meio de pagamento para realizar consultas.</strong> Você terá 7 dias grátis; depois, R$ 10,00/mês. <a href="./planos.html">Cadastrar agora →</a>');
+      }
 
       // Tier recém-formado
       if (plano === "recem-formado-pending-review") {
