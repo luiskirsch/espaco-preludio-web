@@ -581,7 +581,7 @@
   import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=4";
   import { clearDek, recallUser, decryptNote } from "./js/crypto.js";
   import { createNewSessionModal } from "./js/new-session-modal.js?v=3";
-  import { runOnboarding } from "./js/onboarding.js?v=3-13";
+  import { runOnboarding } from "./js/onboarding.js?v=3-14";
 
   // ─── i18n helper ────────────────────────────────────────────
   function tr(key, fallback, opts) {
@@ -1942,7 +1942,7 @@
 
   // Tour de boas-vindas pro 1º acesso (no-op se já viu — flag em localStorage).
   // Disparado depois do load pra não bloquear a UI inicial.
-  runOnboarding();
+  runOnboarding({ force: new URLSearchParams(window.location.search).get("tour") === "1" });
 
   // Recarrega a lista quando a aba volta a ficar visível. Usa caso comum:
   // profissional encerra sessão em consultorio.html, volta pra cá — sem isso,
