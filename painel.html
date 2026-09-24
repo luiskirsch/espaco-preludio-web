@@ -19,6 +19,54 @@
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
   <style>
+    #studentBanner.ep-payment-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+    }
+    #studentBanner .ep-payment-banner__copy { flex: 1 1 360px; }
+    #studentBanner .ep-payment-banner__cta {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-height: 42px;
+      padding: 10px 16px;
+      border: 1px solid #184648;
+      border-radius: 10px;
+      background: #184648;
+      color: #fffaf0;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.2;
+      text-decoration: none;
+      white-space: nowrap;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+    #studentBanner .ep-payment-banner__cta:hover {
+      border-color: #0d3436;
+      background: #0d3436;
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(13, 52, 54, .22);
+      transform: translateY(-2px);
+    }
+    #studentBanner .ep-payment-banner__cta:active {
+      box-shadow: none;
+      transform: translateY(0) scale(.98);
+    }
+    #studentBanner .ep-payment-banner__cta:focus-visible {
+      outline: 3px solid #b77d1a;
+      outline-offset: 3px;
+    }
+    @media (max-width: 560px) {
+      #studentBanner .ep-payment-banner__cta { width: 100%; }
+    }
     #heroNextSession.ep-next-session {
       position: relative;
       isolation: isolate;
@@ -721,7 +769,8 @@
       }
       if ((plano === "empresa" || therapist?.plano === "empresa")
           && String(therapist?.mpPreapprovalStatus || "").toLowerCase() !== "authorized") {
-        return setBanner("ep-alert--warn", '<strong>Cadastre o meio de pagamento para realizar consultas.</strong> Você terá 7 dias grátis; depois, R$ 10,00/mês. <a href="./planos.html">Cadastrar agora →</a>');
+        setBanner("ep-alert--warn ep-payment-banner", '<span class="ep-payment-banner__copy"><strong>Cadastre o meio de pagamento para realizar consultas.</strong> Você terá 7 dias grátis; depois, R$ 10,00/mês.</span><a class="ep-payment-banner__cta" href="./planos.html" aria-label="Cadastrar meio de pagamento">Cadastrar agora <span aria-hidden="true">→</span></a>');
+        return;
       }
 
       // Tier recém-formado
