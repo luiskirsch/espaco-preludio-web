@@ -109,6 +109,13 @@ test('entrada principal aponta para o portal institucional', async () => {
   assert.doesNotMatch(html, /<a href="\.\/entrar\.html" class="nav-login">Entrar<\/a>/);
 });
 
+test('plano institucional permite informar uma conta Mercado Pago pagadora diferente', async () => {
+  const html = await readFile(resolve(root, 'planos.html'), 'utf8');
+  assert.match(html, /id="empresaPayerEmail"[^>]*type="email"/);
+  assert.match(html, /startSubscription\("empresa",[\s\S]*empresaPayerEmail\.value\.trim\(\)\)/);
+  assert.match(html, /body: JSON\.stringify\(\{ tier, billingCycle, \.\.\.\(payerEmail \? \{ payerEmail \} : \{\}\) \}\)/);
+});
+
 test('sessão não verificada é limpa sem enviar confirmação ao abrir a página', async () => {
   const script = await readFile(resolve(root, 'js/instituicao-login.js'), 'utf8');
   const passiveBootstrap = script.slice(script.lastIndexOf('(async () => {'));

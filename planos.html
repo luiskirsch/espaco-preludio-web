@@ -18,7 +18,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
-  <script src="./i18n/init.js?v=1-4" defer></script>
+  <script src="./i18n/init.js?v=1-7" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
@@ -156,6 +156,9 @@
         <li data-i18n="planos:empresa.f4">✓ Indicadores operacionais agregados, sem conteúdo clínico individual</li>
         <li data-i18n="planos:empresa.f5">✓ Agendamento direto pelo link do profissional</li>
       </ul>
+      <label for="empresaPayerEmail" class="ep-text-sm" style="display:block;margin-top:16px;font-weight:600;" data-i18n="planos:empresa.payerEmailLabel">E-mail da conta Mercado Pago pagadora (opcional)</label>
+      <input id="empresaPayerEmail" class="ep-input ep-mt-8" type="email" inputmode="email" autocomplete="off" maxlength="254" style="width:100%;" data-i18n-placeholder="planos:empresa.payerEmailPlaceholder" placeholder="pagador@exemplo.com">
+      <p class="ep-text-xs ep-text-muted ep-mt-8" data-i18n="planos:empresa.payerEmailHint">Se seu e-mail pertence à conta Mercado Pago que recebe os pagamentos, informe outra conta pagadora sua. Não altera o e-mail de acesso à plataforma.</p>
       <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16" id="subscribeEmpresaBtn" data-i18n="planos:empresa.subscribeBtn">
         Cadastrar meio de pagamento
       </button>
@@ -265,6 +268,7 @@
   const empresaCard      = document.getElementById("empresaCard");
   const profCard         = document.getElementById("profCard");
   const subscribeEmpresaBtn = document.getElementById("subscribeEmpresaBtn");
+  const empresaPayerEmail = document.getElementById("empresaPayerEmail");
   const subscribeProfBtn  = document.getElementById("subscribeProfBtn");
   const billingToggle     = document.getElementById("billingToggle");
   const profAmountEl      = document.querySelector("[data-i18n='planos:prof.amount']");
@@ -479,14 +483,14 @@
   }
 
   // ─── Subscribe handlers ─────────────────────────────────────────
-  async function startSubscription(tier, btn, originalText) {
+  async function startSubscription(tier, btn, originalText, payerEmail = "") {
     btn.disabled = true;
     btn.textContent = t("js.redirecting", null, "Redirecionando…");
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/plano/iniciar`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ tier, billingCycle })
+        body: JSON.stringify({ tier, billingCycle, ...(payerEmail ? { payerEmail } : {}) })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok || !data.initPoint) {
@@ -504,9 +508,13 @@
     }
   }
 
-  subscribeEmpresaBtn.addEventListener("click", () =>
-    startSubscription("empresa", subscribeEmpresaBtn, t("empresa.subscribeBtn", null, "Cadastrar meio de pagamento"))
-  );
+  subscribeEmpresaBtn.addEventListener("click", () => {
+    if (empresaPayerEmail.value.trim() && !empresaPayerEmail.checkValidity()) {
+      empresaPayerEmail.reportValidity();
+      return;
+    }
+    startSubscription("empresa", subscribeEmpresaBtn, t("empresa.subscribeBtn", null, "Cadastrar meio de pagamento"), empresaPayerEmail.value.trim());
+  });
   subscribeProfBtn.addEventListener("click", () =>
     startSubscription("profissional", subscribeProfBtn, t("prof.subscribeBtn", null, "Cadastrar meio de pagamento"))
   );
