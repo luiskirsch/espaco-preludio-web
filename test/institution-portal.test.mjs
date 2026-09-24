@@ -23,6 +23,15 @@ function startServer() {
     try {
       const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
       const relative = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
+      if (relative === 'chat-colegas-preview.html' || relative === 'chat-pacientes-preview.html') {
+        const source = relative === 'chat-colegas-preview.html' ? 'mensagens-pro.html' : 'mensagens.html';
+        const html = (await readFile(resolve(root, source), 'utf8'))
+          .replace('<html lang="pt-BR"', '<html class="guard-ok" lang="pt-BR"')
+          .replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, '');
+        response.writeHead(200, { 'content-type': mime['.html'] });
+        response.end(html);
+        return;
+      }
       if (relative === 'instituicao-painel-preview.html') {
         const html = (await readFile(resolve(root, 'instituicao-painel.html'), 'utf8'))
           .replace('id="dashboardLoading" role="status"', 'id="dashboardLoading" role="status" hidden')
@@ -355,6 +364,52 @@ test('login do RT permanece fixo e sem rolagem em desktop ou celular', { timeout
       assert.ok(layout.formTop >= 0, JSON.stringify(layout));
       assert.ok(layout.formBottom <= layout.height, JSON.stringify(layout));
       assert.deepEqual(layout.overflowing, []);
+    }
+  } finally {
+    cdp?.socket.close();
+    if (browser.exitCode === null) {
+      browser.kill();
+      await once(browser, 'exit');
+    }
+    server.close();
+    await rm(userData, { recursive: true, force: true });
+  }
+});
+
+test('descrições do Chat ficam em uma linha no desktop', { timeout: 30000, skip: chromePath ? false : 'Chrome ou Edge não encontrado' }, async () => {
+  const server = await startServer();
+  const userData = await mkdtemp(join(tmpdir(), 'ep-chat-browser-'));
+  const debugPort = 15000 + Math.floor(Math.random() * 1000);
+  const baseUrl = `http://127.0.0.1:${server.address().port}`;
+  const browser = spawn(chromePath, [
+    '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
+    `--remote-debugging-port=${debugPort}`, `--user-data-dir=${userData}`, `${baseUrl}/chat-colegas-preview.html`
+  ], { stdio: 'ignore' });
+  let cdp;
+  try {
+    const page = await poll(async () => {
+      const pages = await fetch(`http://127.0.0.1:${debugPort}/json/list`).then(response => response.json());
+      return pages.find(item => item.type === 'page' && item.url.includes('chat-colegas-preview.html'));
+    });
+    cdp = await connectCdp(page.webSocketDebuggerUrl);
+    await cdp.send('Runtime.enable');
+    await cdp.send('Page.enable');
+    for (const path of ['chat-colegas-preview.html', 'chat-pacientes-preview.html']) {
+      await cdp.send('Page.navigate', { url: `${baseUrl}/${path}` });
+      await poll(() => cdp.evaluate(`document.readyState === 'complete' && document.querySelector('.ep-chat-hub__intro')?.textContent.trim().length > 20`));
+      await cdp.evaluate('document.fonts.ready');
+      for (const width of [1200, 1440, 1600, 1920]) {
+        await cdp.send('Emulation.setDeviceMetricsOverride', { width, height: 900, mobile: false, deviceScaleFactor: 1 });
+        const layout = await cdp.evaluate(`(() => {
+          const intro = document.querySelector('.ep-chat-hub__intro');
+          const range = document.createRange();
+          range.selectNodeContents(intro);
+          return { width: innerWidth, lines: range.getClientRects().length, text: intro.textContent.trim(),
+            introRight: intro.getBoundingClientRect().right, viewportWidth: document.documentElement.clientWidth };
+        })()`);
+        assert.equal(layout.lines, 1, `${path}: ${JSON.stringify(layout)}`);
+        assert.ok(layout.introRight <= layout.viewportWidth, `${path}: ${JSON.stringify(layout)}`);
+      }
     }
   } finally {
     cdp?.socket.close();
