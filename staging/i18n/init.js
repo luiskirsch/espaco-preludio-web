@@ -204,7 +204,7 @@
       fallbackLng: 'pt-BR',
       ns: namespaces,
       defaultNS: namespaces.find(n => n !== 'common') || 'common',
-      backend: { loadPath: `${basePath}/locales/{{lng}}/{{ns}}.json?v=1-8` },
+      backend: { loadPath: `${basePath}/locales/{{lng}}/{{ns}}.json?v=1-9` },
       interpolation: { escapeValue: false },
       load: 'currentOnly',
       partialBundledLanguages: false,
