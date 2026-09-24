@@ -173,6 +173,7 @@
         </div>
       </div>
       <ul class="ep-plan-card__features ep-mt-12">
+        <li data-i18n="planos:prof.paymentTrial">✓ Meio de pagamento obrigatório; 30 dias grátis antes da primeira cobrança</li>
         <li data-i18n="planos:prof.f1">✓ Consultas ilimitadas com vídeo cifrado E2EE + gravação local</li>
         <li data-i18n="planos:prof.f2">✓ Pacientes ilimitados com prontuário cifrado + tags</li>
         <li data-i18n="planos:prof.f3">✓ Anamnese e escalas validadas (PHQ-9, GAD-7)</li>
@@ -186,7 +187,7 @@
         <li data-i18n="planos:prof.f11">✓ Sem reverificação periódica</li>
       </ul>
       <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16 ep-btn-brl" id="subscribeProfBtn" data-i18n="planos:prof.subscribeBtn">
-        Assinar Profissional
+        Cadastrar meio de pagamento
       </button>
       <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-8 ep-btn-usd ep-hide" id="subscribeProfUsdBtn">
         Subscribe — $49 / month
@@ -286,7 +287,7 @@
         : t("currency.perMonth", null, "/mês");
       profAmountEl.textContent  = p.prof;
       profPerEl.textContent     = per;
-      subscribeProfUsdBtn.textContent = `${t("prof.subscribeBtn", null, "Assinar Profissional")} — $${parseFloat(p.prof)}${per}`;
+      subscribeProfUsdBtn.textContent = `${t("prof.subscribeBtn", null, "Cadastrar meio de pagamento")} — $${parseFloat(p.prof)}${per}`;
     } else if (billingCycle === "year") {
       profAmountEl.textContent  = t("prof.amountYearly", null, "997,92");
       profPerEl.textContent     = t("prof.perYearly", null, "/Anual");
@@ -410,6 +411,8 @@
     );
 
   } else if (plano === "trial") {
+    const professionalPaymentPending = therapist.intendedTier === "profissional"
+      && String(therapist.mpPreapprovalStatus || "").toLowerCase() !== "authorized";
     const daysLeft = trialUntil ? Math.max(0, Math.ceil((trialUntil - Date.now()) / 86_400_000)) : null;
     let trialTitle;
     if (daysLeft != null && daysLeft > 0) {
@@ -423,8 +426,12 @@
     showStatus(
       "ep-status-card--pending",
       ICON_PENDING,
-      trialTitle,
-      trialUntil ? t("status.trialExpiresAt", { date: fmtDate(trialUntil) }, "Expira em " + fmtDate(trialUntil)) : "—"
+      professionalPaymentPending
+        ? t("status.profPaymentTitle", null, "Cadastre o meio de pagamento")
+        : trialTitle,
+      professionalPaymentPending
+        ? t("status.profPaymentSub", null, "Obrigatório para realizar consultas. Você terá 30 dias grátis antes da primeira cobrança.")
+        : (trialUntil ? t("status.trialExpiresAt", { date: fmtDate(trialUntil) }, "Expira em " + fmtDate(trialUntil)) : "—")
     );
     tiersGrid.style.display = "grid";
 
@@ -461,14 +468,14 @@
       t("status.mpBackSub", null, "O Mercado Pago está confirmando sua assinatura. Pode levar alguns minutos. Recarregue esta página em breve.")
     );
   }
-  // Banner welcome — vindo do cadastro recém-criado, ainda em trial
+  // Banner welcome — cadastro recém-criado aguardando meio de pagamento
   else if (params.get("welcome") === "1" && plano === "trial" && trialUntil) {
     const days = Math.max(0, Math.ceil((trialUntil - Date.now()) / 86_400_000));
     showStatus(
       "ep-status-card--ok",
       ICON_OK,
-      t("status.welcomeTitle", { days }, `Bem-vindo ao Espaço Prelúdio! Trial de ${days} dias começou.`),
-      t("status.welcomeSub", { date: fmtDate(trialUntil) }, `Você pode usar tudo até ${fmtDate(trialUntil)}. Quando estiver pronto, contrate aqui ou pelo perfil.`)
+      t("status.welcomeTitle", { days }, "Cadastre o meio de pagamento para começar"),
+      t("status.welcomeSub", { date: fmtDate(trialUntil) }, "O cadastro é obrigatório para realizar consultas. A primeira cobrança será feita somente após 30 dias grátis.")
     );
   }
 
@@ -500,7 +507,7 @@
     startSubscription("empresa", subscribeEmpresaBtn, t("empresa.subscribeBtn", null, "Cadastrar meio de pagamento"))
   );
   subscribeProfBtn.addEventListener("click", () =>
-    startSubscription("profissional", subscribeProfBtn, t("prof.subscribeBtn", null, "Assinar Profissional"))
+    startSubscription("profissional", subscribeProfBtn, t("prof.subscribeBtn", null, "Cadastrar meio de pagamento"))
   );
 
   // ─── Stripe USD checkout ─────────────────────────────────────────────────

@@ -213,7 +213,7 @@ document.addEventListener("DOMContentLoaded", function () {
         empresa: "Programas institucionais (R$ 10,00/mês)"
       };
       const subs = {
-        profissional: "30 dias grátis para experimentar. Você decide quando contratar — direto pelo perfil.",
+        profissional: "Cadastre o meio de pagamento para liberar as consultas. Você terá 30 dias grátis antes da primeira cobrança.",
         empresa: "7 dias grátis. Cadastre o meio de pagamento para liberar as consultas; depois, R$ 10,00/mês."
       };
       banner.innerHTML = `<strong>${titles[plan] || plan}</strong><br><span class="ep-text-sm">${subs[plan] || ""}</span>`;
@@ -1044,7 +1044,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Tier intencionado define a duração do trial:
     //   estudante      → 0d (libera só após validar doc, gratuito permanente)
     //   recem-formado  → 30d
-    //   profissional   → 7d (default)
+    //   profissional   → 30d após cadastrar o meio de pagamento (default)
     const planoQS = new URLSearchParams(location.search).get("plano") || window._selectedPlan || "";
     const intendedTier = planoQS === "estudante" ? "estudante"
                        : planoQS === "recem"     ? "recem-formado"
@@ -1105,7 +1105,7 @@ document.addEventListener("DOMContentLoaded", function() {
       //   SEM_CONSELHO → upload de diploma de formação (sempre, antes do painel)
       //   estudante    → upload de declaração de matrícula
       //   recem        → upload de comprovante de inscrição CRP/CRM (<12 meses)
-      //   default      → painel (trial → contrata profissional depois)
+      //   default      → planos (cadastro do meio de pagamento obrigatório)
       const params = new URLSearchParams(location.search);
       const plano = params.get("plano");
       const isSemConselho = pending.form.tipoConselho === "SEM_CONSELHO";
@@ -1113,7 +1113,7 @@ document.addEventListener("DOMContentLoaded", function() {
       if (isSemConselho) dest = "./comprovante-formacao.html";
       else if (plano === "estudante") dest = "./comprovante-estudante.html";
       else if (plano === "recem") dest = "./comprovante-recem-formado.html";
-      else dest = "./planos.html?welcome=1"; // Profissional ou padrão → resumo do trial + opção de contratar
+      else dest = "./planos.html?welcome=1"; // Profissional ou padrão → cadastro obrigatório do meio de pagamento
       setTimeout(() => { window.location.href = dest; }, 1200);
     } catch (error) {
       console.error("registrar_profissional_error", error);
@@ -1199,7 +1199,7 @@ document.addEventListener("DOMContentLoaded", function() {
         },
         "profissional": {
           title: tr("cadastro:planBanner.profissionalTitle", "Plano Profissional (R$ 99,00/mês)"),
-          sub: tr("cadastro:planBanner.profissionalSub", "30 dias grátis para experimentar. Você decide quando contratar — direto pelo perfil.")
+          sub: tr("cadastro:planBanner.profissionalSub", "Cadastre o meio de pagamento para liberar as consultas. Você terá 30 dias grátis antes da primeira cobrança.")
         },
         "empresa": {
           title: tr("cadastro:planBanner.empresaTitle", "Programas institucionais (R$ 10,00/mês)"),

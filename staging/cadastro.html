@@ -185,7 +185,7 @@ document.addEventListener("DOMContentLoaded", function () {
         empresa: "Plano Atendimento a Empresas (gratuito)"
       };
       const subs = {
-        profissional: "30 dias grátis para experimentar. Você decide quando contratar — direto pelo perfil.",
+        profissional: "Cadastre o meio de pagamento para liberar as consultas. Você terá 30 dias grátis antes da primeira cobrança.",
         empresa: "Plataforma gratuita para o profissional. Consultas tabeladas a R$ 60,00 por sessão para o paciente."
       };
       banner.innerHTML = `<strong>${titles[plan] || plan}</strong><br><span class="ep-text-sm">${subs[plan] || ""}</span>`;
@@ -1045,7 +1045,7 @@ document.addEventListener("DOMContentLoaded", function() {
       //   SEM_CONSELHO → upload de diploma de formação (sempre, antes do painel)
       //   estudante    → upload de declaração de matrícula
       //   recem        → upload de comprovante de inscrição CRP/CRM (<12 meses)
-      //   default      → painel (trial → contrata profissional depois)
+      //   default      → planos (cadastro do meio de pagamento obrigatório)
       const params = new URLSearchParams(location.search);
       const plano = params.get("plano");
       const isSemConselho = pending.form.tipoConselho === "SEM_CONSELHO";
@@ -1053,7 +1053,7 @@ document.addEventListener("DOMContentLoaded", function() {
       if (isSemConselho) dest = "./comprovante-formacao.html";
       else if (plano === "estudante") dest = "./comprovante-estudante.html";
       else if (plano === "recem") dest = "./comprovante-recem-formado.html";
-      else dest = "./planos.html?welcome=1"; // Profissional ou padrão → resumo do trial + opção de contratar
+      else dest = "./planos.html?welcome=1"; // Profissional ou padrão → cadastro obrigatório do meio de pagamento
       setTimeout(() => { window.location.href = dest; }, 1200);
     } catch (error) {
       console.error("registrar_profissional_error", error);
@@ -1139,7 +1139,7 @@ document.addEventListener("DOMContentLoaded", function() {
         },
         "profissional": {
           title: tr("cadastro:planBanner.profissionalTitle", "Plano Profissional (R$ 99,00/mês)"),
-          sub: tr("cadastro:planBanner.profissionalSub", "30 dias grátis para experimentar. Você decide quando contratar — direto pelo perfil.")
+          sub: tr("cadastro:planBanner.profissionalSub", "Cadastre o meio de pagamento para liberar as consultas. Você terá 30 dias grátis antes da primeira cobrança.")
         },
         "empresa": {
           title: tr("cadastro:planBanner.empresaTitle", "Plano Atendimento a Empresas (gratuito)"),
