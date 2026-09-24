@@ -58,7 +58,7 @@
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + ICONS[key] + '</svg>';
   }
   function item(href, icon, label, i18n, extra) {
-    return '<a href="./' + href + '" ' + (extra || '') + '>' + svg(icon) + '<span data-i18n="' + i18n + '">' + label + '</span></a>';
+    return '<a href="./' + href + '" ' + (extra || '') + '>' + svg(icon) + '<span' + (i18n ? ' data-i18n="' + i18n + '"' : '') + '>' + label + '</span></a>';
   }
 
   // Preflight do TISS: lê cache do profile (auth-guard grava sessionStorage
@@ -95,7 +95,7 @@
       ['inventario.html', 'package', 'Estoque', 'common:sidebar.estoque']
     ]},
     { labelKey: 'common:sidebar.groupEngajamento', label: 'Engajamento', items: [
-      ['mensagens-pro.html', 'msg', 'Colegas', 'common:sidebar.colegas'],
+      ['mensagens-pro.html', 'msg', 'Chat', null],
       ['marketing.html', 'megaphone', 'Marketing', 'common:sidebar.marketing'],
       ['whatsapp.html', 'chat', 'WhatsApp', 'common:sidebar.whatsapp']
     ]}
@@ -139,6 +139,7 @@
   // Marca link ativo pelo pathname. Sub-páginas herdam o pai no menu.
   const path = (window.location.pathname.split('/').pop() || 'painel.html').toLowerCase();
   const PARENT_MAP = {
+    'mensagens.html':   'mensagens-pro.html',
     'prontuario.html':   'pacientes.html',
     'aniversarios.html': 'pacientes.html',
     'lista-espera.html': 'pacientes.html',
