@@ -678,21 +678,21 @@ function mountCapabilityFabs(capabilities) {
 // Módulos ES são deferred — quando este IIFE roda, o DOM já está parseado e
 // os elementos #topUserAvatar/#topUserName existem.
 // Botão flutuante de mensagens — empilhado entre help (gold, em baixo) e
-// theme toggle (em cima). Click vai pra mensagens.html, badge de unread
+// theme toggle (em cima). Abre o Chat com escolha entre colegas e pacientes; badge de unread
 // no canto superior direito. Polling 60s.
 function mountMessagesBubble(idTokenGetter) {
   if (typeof document === "undefined") return;
   if (document.getElementById("epMessagesBubble")) return;
   const path = location.pathname.toLowerCase();
   if (path.endsWith("/2fa-verify.html")) return;
-  if (path.endsWith("/mensagens.html")) return; // não mostra na própria página
+  if (path.endsWith("/mensagens.html") || path.endsWith("/mensagens-pro.html")) return; // não mostra dentro do Chat
 
   const a = document.createElement("a");
   a.id = "epMessagesBubble";
-  a.href = "./mensagens.html";
+  a.href = "./mensagens-pro.html";
   a.className = "ep-msg-bubble-fab";
-  a.title = "Mensagens";
-  a.setAttribute("aria-label", "Abrir mensagens");
+  a.title = "Abrir Chat";
+  a.setAttribute("aria-label", "Abrir Chat");
   a.innerHTML = `
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
