@@ -514,7 +514,9 @@
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok || !data.initPoint) {
-        throw new Error(data?.error || ("HTTP_" + res.status));
+        const reason = data?.detail || data?.error || ("HTTP_" + res.status);
+        const code = data?.providerCode || (data?.providerStatus ? "HTTP " + data.providerStatus : "");
+        throw new Error(reason + (code ? " (" + code + ")" : ""));
       }
       const checkoutUrl = trustedCheckoutUrl(data.initPoint, "mercadopago");
       if (!checkoutUrl) throw new Error("CHECKOUT_URL_INVALIDA");
