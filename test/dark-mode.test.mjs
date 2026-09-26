@@ -58,3 +58,10 @@ test('dark conversation surfaces do not retain white incoming bubbles', async ()
   assert.match(source, /\.ep-pro-msg--theirs\{background:#242b27!important/);
   assert.match(source, /\.ep-chat-bubble--theirs\{background:#242b27!important/);
 });
+
+test('pending appointment badges use a legible amber treatment in dark mode', async () => {
+  const source = await read('css/dark-mode.css');
+  assert.match(source, /\.ep-badge\.ep-badge--overdue/);
+  assert.match(source, /color:#f3cf82/);
+  assert.match(source, /background:rgba\(228,184,95,\.13\)/);
+});
