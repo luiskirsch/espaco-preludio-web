@@ -13,7 +13,11 @@ async function api(path, options = {}) {
     ...options, headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || `Erro HTTP ${response.status}`);
+  if (!response.ok) {
+    const error = new Error(data.error || `Erro HTTP ${response.status}`);
+    error.details = data;
+    throw error;
+  }
   return data;
 }
 function element(tag, text = "", cls = "") {
@@ -31,7 +35,7 @@ async function loadCompanies() {
 }
 async function loadCampaigns() {
   const companyId = $("company").value;
-  selected = null; $("details").hidden = true;
+  selected = null; $("details").hidden = true; $("surveyPanel").hidden = true;
   if (!companyId) { $("campaigns").replaceChildren(); return; }
   const data = await api(`/therapy/admin/nr1/campaigns?companyId=${encodeURIComponent(companyId)}`);
   campaigns = data.campaigns;
@@ -51,13 +55,45 @@ async function selectCampaign(id) {
   $("campaignStatus").textContent = `Status: ${selected.status} · ${selected.units.map(u => u.name).join(" / ")}`;
   $("openForm").hidden = selected.status !== "draft";
   $("closeBtn").hidden = selected.status !== "open";
+  $("finalizeForm").hidden = selected.status !== "closed";
+  const missingUnits = selected.units.filter(unit =>
+    !data.observations.some(item => item.unitId === unit.id)).map(unit => unit.name);
+  const pendingReviews = data.risks.filter(item => item.technicalReview !== "reviewed");
+  const withoutAction = data.risks.filter(risk => risk.priority !== "baixa"
+    && !data.actions.some(action => action.riskId === risk.id));
+  const pending = [];
+  if (selected.status === "open") pending.push("encerrar a coleta");
+  if (missingUnits.length) pending.push(`observar as unidades: ${missingUnits.join(", ")}`);
+  if (pendingReviews.length) pending.push(`revisar ${pendingReviews.length} risco(s)`);
+  if (withoutAction.length) pending.push(`definir ações para ${withoutAction.length} risco(s) relevante(s)`);
+  if (!data.communications.length) pending.push("registrar devolutiva aos trabalhadores");
+  if (!selected.integration) pending.push("registrar integração à AEP/PGR pela empresa");
+  if (data.survey?.invalidEncryptedResponses) pending.push(`${data.survey.invalidEncryptedResponses} resposta(s) cifrada(s) inválida(s)`);
+  $("readiness").textContent = selected.status === "finalized"
+    ? "Ciclo finalizado tecnicamente e preservado como evidência."
+    : `${data.responseCount} resposta(s) recebida(s). ${pending.length ? `Pendências: ${pending.join("; ")}.` : "Pronto para conclusão técnica."}`;
+  $("surveyPanel").hidden = !data.survey;
+  $("surveySummary").replaceChildren();
+  if (data.survey) {
+    if (!data.survey.overall.available) {
+      $("surveySummary").append(element("p", `Há ${data.survey.totalResponses} resposta(s), abaixo do mínimo de cinco. Nenhum percentual foi revelado.`, "nr-small"));
+    } else {
+      $("surveySummary").append(element("p", `${data.survey.overall.responseCount} respostas válidas. Resultado exploratório; não converta percentuais automaticamente em grau de risco.`, "nr-small"));
+      for (const domain of Object.values(data.survey.overall.domains)) {
+        $("surveySummary").append(element("div", `${domain.label}: ${domain.unfavorablePercent}% de percepção desfavorável`, "nr-item"));
+      }
+      if (data.survey.unitBreakdownSuppressed) {
+        $("surveySummary").append(element("p", "Recortes por unidade suprimidos para proteger grupos pequenos.", "nr-small"));
+      }
+    }
+  }
   $("risks").replaceChildren();
   $("risks").append(element("h3", "Revisão dos riscos preliminares"));
   if (!data.risks.length) $("risks").append(element("p", "Ainda não há riscos registrados pela empresa.", "nr-small"));
   for (const risk of data.risks) {
     const card = element("div", "", "nr-item");
     card.append(element("strong", `${risk.description} · ${risk.technicalReview === "reviewed" ? "revisto" : "pendente"}`),
-      element("p", `${risk.workActivity} · ${risk.exposure} · Severidade ${risk.severity} / Probabilidade ${risk.likelihood}`, "nr-small"),
+      element("p", `${risk.processEnvironment} · ${risk.workActivity} · ${risk.affectedGroup} · ${risk.possibleHarm} · ${risk.exposure} · Severidade ${risk.severity} / Probabilidade ${risk.likelihood}`, "nr-small"),
       element("p", `Evidência: ${risk.evidence} · Justificativa: ${risk.rationale}`, "nr-small"));
     if (risk.technicalReview !== "reviewed") {
       const form = element("form", "", "nr-no-print");
@@ -99,7 +135,14 @@ $("openForm").addEventListener("submit", async event => {
     await api(`/therapy/admin/nr1/campaigns/${selected.id}`, { method: "PATCH", body: JSON.stringify({
       status: "open", reviewerName: form.elements.reviewerName.value,
       reviewerCredential: form.elements.reviewerCredential.value,
-      methodology: form.elements.methodology.value, reviewedInstrument: form.elements.reviewedInstrument.checked
+      methodology: form.elements.methodology.value,
+      governance: { scope: form.elements.scope.value,
+        workerParticipationPlan: form.elements.workerParticipationPlan.value,
+        privacyContact: form.elements.privacyContact.value,
+        retentionMonths: Number(form.elements.retentionMonths.value),
+        plannedCloseDate: form.elements.plannedCloseDate.value,
+        remoteHybridCovered: form.elements.remoteHybridCovered.checked },
+      reviewedInstrument: form.elements.reviewedInstrument.checked
     }) });
     const id = selected.id; await loadCampaigns(); await selectCampaign(id); say("Coleta aberta.");
   } catch (error) { say(error.message, true); }
@@ -114,6 +157,34 @@ $("closeBtn").addEventListener("click", async () => {
     await loadCampaigns(); await selectCampaign(id); say("Coleta encerrada. Agregados liberados se atingirem o mínimo de respostas.");
   } catch (error) { say(error.message, true); }
   finally { button.disabled = false; }
+});
+$("finalizeForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  if (!form.reportValidity() || !selected) return;
+  if (!confirm("Finalizar tecnicamente este ciclo? O inventário ficará bloqueado para novos registros.")) return;
+  const button = form.querySelector("button"); button.disabled = true;
+  try {
+    const id = selected.id;
+    await api(`/therapy/admin/nr1/campaigns/${id}`, { method: "PATCH", body: JSON.stringify({
+      status: "finalized", reviewerName: form.elements.reviewerName.value,
+      reviewerCredential: form.elements.reviewerCredential.value,
+      technicalConclusion: form.elements.technicalConclusion.value,
+      confirmTechnicalResponsibility: form.elements.confirmTechnicalResponsibility.checked
+    }) });
+    await loadCampaigns(); await selectCampaign(id); say("Ciclo finalizado tecnicamente.");
+  } catch (error) {
+    const details = error.details || {};
+    const parts = [
+      details.missingUnits?.length ? `unidades sem observação: ${details.missingUnits.join(", ")}` : "",
+      details.pendingRiskReviews?.length ? `${details.pendingRiskReviews.length} risco(s) sem revisão` : "",
+      details.risksWithoutAction?.length ? `${details.risksWithoutAction.length} risco(s) sem ação` : "",
+      details.invalidEncryptedResponses ? `${details.invalidEncryptedResponses} resposta(s) cifrada(s) inválida(s)` : "",
+      details.missingCommunication ? "devolutiva ausente" : "",
+      details.missingAepPgrIntegration ? "integração AEP/PGR ausente" : ""
+    ].filter(Boolean);
+    say(parts.length ? `Não foi possível finalizar: ${parts.join("; ")}.` : error.message, true);
+  } finally { button.disabled = false; }
 });
 onAuthStateChanged(auth, async user => {
   if (!user) { location.replace("./admin-empresas.html"); return; }

@@ -40,8 +40,12 @@ function box(title, body) {
   div.append(node("strong", title), node("p", body, "nr-small"));
   return div;
 }
+function timestampText(value) {
+  const millis = value?.seconds ? value.seconds * 1000 : Date.parse(value || "");
+  return Number.isFinite(millis) ? new Date(millis).toLocaleString("pt-BR") : "não registrado";
+}
 function showSurvey(survey, campaign) {
-  $("surveyState").textContent = campaign.status === "closed" ? "Coleta encerrada" : campaign.status === "open" ? "Coleta aberta" : "Preparação";
+  $("surveyState").textContent = ["closed", "finalized"].includes(campaign.status) ? "Coleta encerrada" : campaign.status === "open" ? "Coleta aberta" : "Preparação";
   const results = $("surveyResults");
   const units = $("unitResults");
   results.replaceChildren(); units.replaceChildren();
@@ -53,7 +57,10 @@ function showSurvey(survey, campaign) {
     $("surveyIntro").textContent = "Ainda não há pelo menos cinco respostas válidas. Nenhum percentual será exibido.";
     return;
   }
-  $("surveyIntro").textContent = `${survey.overall.responseCount} respostas válidas. Os percentuais indicam percepção desfavorável sobre condições de trabalho, não diagnóstico nem classificação automática de risco.`;
+  const participation = survey.participationPercent == null ? "" : ` Adesão: ${survey.participationPercent}% de ${survey.eligibleParticipants} participantes habilitados.`;
+  const integrityWarning = survey.invalidEncryptedResponses
+    ? ` Atenção: ${survey.invalidEncryptedResponses} resposta(s) não puderam ser lidas e exigem suporte antes da conclusão.` : "";
+  $("surveyIntro").textContent = `${survey.overall.responseCount} respostas válidas.${participation}${integrityWarning} Os percentuais indicam percepção desfavorável sobre condições de trabalho, não diagnóstico nem classificação automática de risco.`;
   for (const item of Object.values(survey.overall.domains)) {
     const card = node("div", "", "nr-item");
     const label = node("div", `${item.label} · ${item.unfavorablePercent}%`, "nr-row-between");
@@ -74,7 +81,8 @@ function render(reportData) {
   report = reportData;
   $("content").hidden = false;
   const campaign = reportData.campaign;
-  $("campaignState").textContent = `Status: ${campaign.status === "closed" ? "encerrada" : campaign.status === "open" ? "aberta" : "rascunho"}. Metodologia: ${campaign.methodology || "aguardando revisão técnica"}`;
+  const statusLabel = { draft: "rascunho", open: "coleta aberta", closed: "análise e integração", finalized: "finalizado tecnicamente" }[campaign.status] || campaign.status;
+  $("campaignState").textContent = `Status: ${statusLabel}. Metodologia: ${campaign.methodology || "aguardando revisão técnica"}`;
   document.querySelectorAll(".unit-select").forEach(select => fillSelect(select, campaign.units, "Selecione a unidade"));
   showSurvey(reportData.survey, campaign);
   $("observations").replaceChildren(...reportData.observations.map(item => box(
@@ -83,12 +91,14 @@ function render(reportData) {
   )));
   $("risks").replaceChildren(...reportData.risks.map(item => box(
     `${item.description} · ${item.priority} (${item.score}/25)`,
-    `${item.workActivity} · ${item.exposure} · Revisão técnica: ${item.technicalReview === "reviewed" ? "concluída" : "pendente"}`
+    `Processo/ambiente: ${item.processEnvironment} · Atividade: ${item.workActivity} · Grupo exposto: ${item.affectedGroup} · Possíveis agravos: ${item.possibleHarm} · Exposição: ${item.exposure} · Revisão técnica: ${item.technicalReview === "reviewed" ? "concluída" : "pendente"}`
   )));
   fillSelect($("riskSelect"), reportData.risks.map(item => ({ id: item.id, name: item.description })), "Selecione o risco");
   const actions = reportData.actions.map(item => {
     const risk = reportData.risks.find(r => r.id === item.riskId);
-    const wrapper = box(`${item.description} · ${item.status}`, `${risk?.description || "Risco"} · ${item.owner} · até ${item.dueDate} · Verificação: ${item.verification}${item.evidence ? ` · Evidência: ${item.evidence}` : ""}${item.verifiedBy ? ` · Verificado por: ${item.verifiedBy}` : ""}`);
+    const controlLabel = reportData.controlHierarchy?.[item.controlType] || item.controlType || "hierarquia não informada";
+    const overdue = item.status !== "verified" && item.dueDate < new Date().toISOString().slice(0, 10);
+    const wrapper = box(`${item.description} · ${item.status}${overdue ? " · ATRASADA" : ""}`, `${risk?.description || "Risco"} · ${controlLabel} · ${item.owner} · até ${item.dueDate} · Verificação: ${item.verification}${item.evidence ? ` · Evidência: ${item.evidence}` : ""}${item.verifiedBy ? ` · Verificado por: ${item.verifiedBy}` : ""}`);
     const form = node("form", "", "nr-row nr-no-print");
     const select = node("select");
     const stages = [["planned", "Planejada"], ["in_progress", "Em andamento"], ["completed", "Concluída"], ["verified", "Verificada"]];
@@ -114,6 +124,51 @@ function render(reportData) {
   $("actions").replaceChildren(...actions);
   $("communications").replaceChildren(...(reportData.communications || []).map(item =>
     box(`${item.audience} · ${item.channel}`, item.summary)));
+  const criteria = campaign.riskCriteria;
+  $("criteriaIntro").textContent = `${criteria?.method || "Critérios não registrados"}. ${criteria?.warning || ""}`;
+  const criteriaCards = [
+    box("Severidade · escala 1–5", Object.entries(criteria?.severity || {}).map(([score, text]) => `${score}: ${text}`).join(" · ") || "Não registrada"),
+    box("Probabilidade · escala 1–5", Object.entries(criteria?.likelihood || {}).map(([score, text]) => `${score}: ${text}`).join(" · ") || "Não registrada"),
+    ...(criteria?.levels || []).map(item => box(`${item.level} · ${item.min} a ${item.max}`, item.decision))
+  ];
+  $("criteria").replaceChildren(...criteriaCards);
+  const governance = campaign.governance;
+  const conclusion = campaign.technicalConclusion;
+  $("governanceRecord").replaceChildren(
+    box("Organização e ciclo", `${reportData.company?.name || "Organização"} · ${campaign.name} · relatório gerado em ${new Date().toLocaleString("pt-BR")}`),
+    box("Escopo", governance?.scope || "Aguardando definição antes da abertura"),
+    box("Participação dos trabalhadores", governance?.workerParticipationPlan || "Aguardando definição"),
+    box("Privacidade e retenção", governance ? `${governance.privacyContact} · retenção declarada de ${governance.retentionMonths} meses · aviso ${governance.privacyNoticeVersion}` : "Aguardando definição"),
+    box("Cronologia", `Abertura: ${timestampText(campaign.openedAt)} · encerramento: ${timestampText(campaign.closedAt)} · finalização: ${timestampText(campaign.finalizedAt)}`),
+    box("Revisão e conclusão técnica", conclusion ? `${conclusion.reviewerName} · ${conclusion.reviewerCredential} · ${conclusion.text}` : `Abertura revista por ${campaign.reviewer?.name || "não registrado"} · conclusão pendente`)
+  );
+  const integration = campaign.integration;
+  $("integrationRecord").replaceChildren(integration ? box(
+    `${integration.responsibleName} · ${integration.responsibleRole}`,
+    `AEP: ${integration.aepReference} · PGR: ${integration.pgrStatus === "integrated" ? integration.pgrReference : `dispensado — ${integration.exemptionRationale}`} · Reavaliar até ${integration.reviewDueDate} · ${integration.integrationNotes}`
+  ) : box("Integração pendente", "Disponível após encerrar a coleta e concluir a análise."));
+  $("integrationForm").hidden = campaign.status !== "closed" || Boolean(integration);
+  for (const id of ["observationForm", "riskForm", "actionForm"]) {
+    $(id).hidden = campaign.status === "finalized";
+  }
+  const reviewed = reportData.risks.every(item => item.technicalReview === "reviewed");
+  const actionable = reportData.risks.filter(item => item.priority !== "baixa")
+    .every(risk => reportData.actions.some(action => action.riskId === risk.id));
+  const unitsObserved = campaign.units.every(unit =>
+    reportData.observations.some(item => item.unitId === unit.id));
+  const checks = [
+    [Boolean(campaign.governance), "Governança e privacidade"],
+    [["closed", "finalized"].includes(campaign.status), "Coleta encerrada"],
+    [unitsObserved, "Condições observadas em todas as unidades"],
+    [reviewed, "Riscos com revisão técnica"],
+    [actionable, "Riscos relevantes com medida definida"],
+    [reportData.communications.length > 0, "Devolutiva aos trabalhadores"],
+    [Boolean(integration), "Integração registrada na AEP/PGR"],
+    [campaign.status === "finalized", "Conclusão técnica final"]
+  ];
+  $("readiness").replaceChildren(...checks.map(([done, label]) =>
+    box(done ? `✓ ${label}` : `○ ${label}`, done ? "Concluído" : "Pendente")));
+  $("readinessState").textContent = `${checks.filter(([done]) => done).length}/${checks.length} etapas`;
 }
 async function loadReport() {
   const id = $("campaignSelect").value;
@@ -138,8 +193,8 @@ $("participantForm").addEventListener("submit", async event => {
   if (!emails.length || emails.length > 400) { say("Informe entre 1 e 400 e-mails por envio.", true); return; }
   const button = form.querySelector("button"); button.disabled = true;
   try {
-    const result = await api("/empresa/nr1/participants", { method: "POST", body: JSON.stringify({ emails }) });
-    form.reset(); say(`${result.count} participante(s) habilitado(s).`);
+    const result = await api("/empresa/nr1/participants", { method: "POST", body: JSON.stringify({ emails, sendInvites: true }) });
+    form.reset(); say(`${result.count} participante(s) habilitado(s). Convites enviados: ${result.delivery?.sent || 0}; não enviados: ${(result.delivery?.skipped || 0) + (result.delivery?.failed || 0)}.`);
   } catch (error) { say(error.message, true); }
   finally { button.disabled = false; }
 });
@@ -168,4 +223,20 @@ for (const [formId, path] of [["observationForm", "observations"], ["riskForm", 
     finally { button.disabled = false; }
   });
 }
+$("integrationForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  if (!form.reportValidity() || !report) return;
+  const values = formData(form);
+  values.criteriaAccepted = form.elements.criteriaAccepted.checked;
+  values.confirmResponsibility = form.elements.confirmResponsibility.checked;
+  const button = form.querySelector("button[type=submit]"); button.disabled = true;
+  try {
+    await api(`/empresa/nr1/campaigns/${report.campaign.id}/integration`, {
+      method: "POST", body: JSON.stringify(values)
+    });
+    await loadReport(); say("Integração à AEP/PGR registrada.");
+  } catch (error) { say(error.message, true); }
+  finally { button.disabled = false; }
+});
 boot();

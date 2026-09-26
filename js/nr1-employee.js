@@ -23,6 +23,9 @@ function fillUnits() {
   const campaign = campaigns.find(item => item.id === $("campaign").value);
   $("unit").replaceChildren(new Option("Selecione sua unidade", ""));
   campaign?.units.forEach(unit => $("unit").add(new Option(unit.name, unit.id)));
+  $("privacyDetails").textContent = campaign
+    ? `Contato de privacidade: ${campaign.privacyContact}. Retenção informada: ${campaign.retentionMonths} meses. Aviso ${campaign.privacyNoticeVersion}.`
+    : "";
 }
 function render(data) {
   campaigns = data.campaigns;
@@ -68,7 +71,9 @@ $("surveyForm").addEventListener("submit", async event => {
   const button = $("submit"); button.disabled = true;
   try {
     await api(`/therapy/paciente/nr1/campaigns/${$("campaign").value}/responses`, {
-      method: "POST", body: JSON.stringify({ unitId: $("unit").value, answers })
+      method: "POST", body: JSON.stringify({ unitId: $("unit").value, answers,
+        noticeAccepted: $("acknowledge").checked,
+        privacyNoticeVersion: campaigns.find(item => item.id === $("campaign").value)?.privacyNoticeVersion })
     });
     $("surveyForm").hidden = true;
     message("Resposta recebida. Obrigado por participar. A empresa verá somente resultados agregados após o encerramento.");
