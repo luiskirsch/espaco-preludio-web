@@ -120,7 +120,7 @@ test('atividades novas exigem conclusão e atividades feitas abrem em revisão',
     assert.deepEqual(await cdp.evaluate("({fontSize:getComputedStyle(document.querySelector('.side__label')).fontSize,background:getComputedStyle(document.querySelector('.side__label')).backgroundImage,border:getComputedStyle(document.querySelector('.side__label')).borderTopStyle})"), { fontSize: '12px', background: 'linear-gradient(120deg, rgba(214, 169, 68, 0.2), rgba(255, 250, 240, 0.54))', border: 'solid' });
     assert.deepEqual(await cdp.evaluate("({title:document.querySelector('.project-identity strong').textContent,subtitle:document.querySelector('.project-identity span').textContent})"), {
       title: 'Projeto Lemniscata',
-      subtitle: 'Programa Municipal de Telepsicologia e Acompanhamento Emocional Estudantil'
+      subtitle: 'Programa Institucional de Cuidado Emocional'
     });
     assert.deepEqual(await cdp.evaluate("({href:document.querySelector('.appointment__join')?.getAttribute('href'),label:document.querySelector('.appointment__join')?.textContent.trim(),notice:document.querySelector('.demo-note--room')?.textContent.trim()})"), {
       href: './entrar.html?c=DEMO2026',
