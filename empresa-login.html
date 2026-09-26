@@ -13,78 +13,163 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
   <style>
-    body { background: var(--ep-bg); }
-    .corp-login {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      background: radial-gradient(ellipse 800px 400px at 50% -5%, rgba(45,74,62,.07), transparent 60%), var(--ep-bg);
+    :root { --corp-deep:#082f2f; --corp-deep-2:#0d4744; --corp-paper:#fffbf2; --corp-gold:#e0b45d; }
+    body { background:#ece4d1; }
+    .corp-login { min-height:100vh; min-height:100dvh; display:grid; place-items:center; padding:clamp(18px,3vw,48px); position:relative; isolation:isolate; overflow:hidden; background:radial-gradient(circle at 12% 8%,rgba(224,180,93,.22),transparent 25%),radial-gradient(circle at 88% 90%,rgba(8,47,47,.10),transparent 27%),linear-gradient(135deg,#f6efde 0%,#e9dfc8 100%); }
+    .corp-login::before { content:""; position:absolute; inset:0; z-index:-1; opacity:.22; background-image:radial-gradient(rgba(8,47,47,.2) .7px,transparent .7px); background-size:18px 18px; mask-image:linear-gradient(90deg,#000,transparent 38%,transparent 62%,#000); }
+    .corp-login__shell { width:min(100%,1360px); min-height:min(820px,calc(100dvh - clamp(36px,6vw,96px))); display:grid; grid-template-columns:minmax(0,1.08fr) minmax(440px,.92fr); overflow:hidden; border:1px solid rgba(255,255,255,.66); border-radius:32px; background:var(--corp-paper); box-shadow:0 40px 100px -44px rgba(16,31,27,.48),0 16px 38px -24px rgba(16,31,27,.32); }
+    .corp-login__story { position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; padding:clamp(42px,5vw,72px); color:#fff9e9; background:radial-gradient(circle at 84% 15%,rgba(224,180,93,.24),transparent 24%),radial-gradient(circle at 12% 92%,rgba(224,180,93,.12),transparent 30%),linear-gradient(145deg,var(--corp-deep-2) 0%,var(--corp-deep) 58%,#052625 100%); }
+    .corp-login__story::before,.corp-login__story::after { content:""; position:absolute; border:1px solid rgba(224,180,93,.2); border-radius:50%; pointer-events:none; }
+    .corp-login__story::before { width:520px; height:520px; right:-260px; top:-190px; }
+    .corp-login__story::after { width:360px; height:360px; right:-170px; top:-110px; }
+    .corp-login__logo { display:flex; align-items:center; gap:15px; position:relative; z-index:1; }
+    .corp-login__logo-img { width:54px; height:54px; object-fit:contain; flex-shrink:0; filter:drop-shadow(0 8px 18px rgba(0,0,0,.25)); }
+    .corp-login__brand { line-height:1.1; }
+    .corp-login__brand-lead { display:block; margin-bottom:5px; color:var(--corp-gold); font-size:11px; font-weight:700; letter-spacing:.19em; text-transform:uppercase; }
+    .corp-login__brand-name { color:#fff9e9; font-family:'Fraunces',serif; font-size:21px; font-weight:600; }
+    .corp-login__story-copy { position:relative; z-index:1; max-width:610px; margin:56px 0; }
+    .corp-login__eyebrow,.corp-login__form-eyebrow { display:inline-flex; align-items:center; gap:10px; margin:0 0 22px; font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; }
+    .corp-login__eyebrow { color:#e8c781; }
+    .corp-login__eyebrow::before,.corp-login__form-eyebrow::before { content:""; width:28px; height:1px; background:currentColor; }
+    .corp-login__headline { max-width:600px; margin:0; color:#fffaf0; font-family:'Fraunces',serif; font-size:clamp(42px,4.2vw,68px); font-weight:500; letter-spacing:-.035em; line-height:.98; }
+    .corp-login__intro { max-width:540px; margin:28px 0 0; color:rgba(255,249,233,.72); font-size:16px; line-height:1.75; }
+    .corp-login__trust { position:relative; z-index:1; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding-top:28px; border-top:1px solid rgba(255,249,233,.14); }
+    .corp-login__trust-item { display:flex; align-items:flex-start; gap:9px; color:rgba(255,249,233,.74); font-size:11px; line-height:1.45; }
+    .corp-login__trust-item svg { width:17px; height:17px; flex:0 0 auto; color:var(--corp-gold); }
+    .corp-login__panel { display:flex; align-items:center; justify-content:center; padding:clamp(42px,5.5vw,82px); background:radial-gradient(circle at 100% 0%,rgba(224,180,93,.12),transparent 25%),var(--corp-paper); }
+    .corp-login__form-wrap { width:100%; max-width:460px; }
+    .corp-login__form-eyebrow { margin-bottom:18px; color:#9a711f; }
+    .corp-login__title { margin:0 0 12px; color:#102e2d; font-family:'Fraunces',serif; font-size:clamp(38px,3.1vw,52px); font-weight:500; letter-spacing:-.03em; line-height:1.04; }
+    .corp-login__sub { max-width:420px; margin:0 0 38px; color:#675b49; font-size:14px; line-height:1.7; }
+    .corp-login .ep-stack { gap:20px; }
+    .corp-login .ep-label { display:block; margin-bottom:9px; color:#263d3b; font-size:12px; font-weight:700; letter-spacing:.015em; }
+    .corp-login .ep-input { width:100%; min-height:58px; border:1px solid rgba(8,47,47,.17); border-radius:13px; padding:0 17px; color:#102e2d; background:rgba(255,255,255,.68); box-shadow:inset 0 1px 0 rgba(255,255,255,.72); transition:border-color .2s ease,box-shadow .2s ease,background .2s ease; }
+    .corp-login .ep-input::placeholder { color:#a69a82; }
+    .corp-login .ep-input:hover { border-color:rgba(8,47,47,.3); background:#fffdf7; }
+    .corp-login .ep-input:focus { outline:none; border-color:#9e771f; background:#fff; box-shadow:0 0 0 4px rgba(224,180,93,.16),0 10px 24px -18px rgba(8,47,47,.55); }
+    .corp-login__password { position:relative; }
+    .corp-login__password .ep-input { padding-right:52px; }
+    .corp-login__toggle { position:absolute; top:50%; right:12px; display:grid; place-items:center; width:36px; height:36px; padding:0; border:0; border-radius:10px; color:#8d7954; background:transparent; cursor:pointer; transform:translateY(-50%); transition:color .18s ease,background .18s ease,transform .12s ease; }
+    .corp-login__toggle:hover { color:#153e3c; background:rgba(8,47,47,.07); }
+    .corp-login__toggle:active { transform:translateY(-50%) scale(.94); }
+    .corp-login__toggle:focus-visible { outline:2px solid var(--corp-gold); outline-offset:2px; }
+    .corp-login .ep-status { min-height:0; margin:-4px 0 0; font-size:12.5px; }
+    .corp-login .ep-status:empty { display:none; }
+    .corp-login .ep-status.is-err { padding:11px 13px; border:1px solid rgba(122,40,32,.2); border-radius:10px; color:#7a2820; background:rgba(122,40,32,.07); }
+    .corp-login__submit { display:flex; align-items:center; justify-content:space-between; width:100%; min-height:60px; margin-top:6px; padding:0 20px 0 24px; border:1px solid #0a3433; border-radius:13px; color:#fffaf0; background:linear-gradient(135deg,#0e4b48,#082f2f); box-shadow:0 14px 28px -16px rgba(8,47,47,.85),inset 0 1px 0 rgba(255,255,255,.12); font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; transition:transform .18s ease,box-shadow .18s ease,background .18s ease; }
+    .corp-login__submit:hover { transform:translateY(-2px); background:linear-gradient(135deg,#125b57,#0a3938); box-shadow:0 19px 34px -17px rgba(8,47,47,.95),inset 0 1px 0 rgba(255,255,255,.16); }
+    .corp-login__submit:active { transform:translateY(0) scale(.99); }
+    .corp-login__submit:focus-visible { outline:3px solid rgba(224,180,93,.45); outline-offset:3px; }
+    .corp-login__submit:disabled { cursor:wait; opacity:.72; transform:none; }
+    .corp-login__submit-icon { display:grid; place-items:center; width:34px; height:34px; border-radius:9px; background:rgba(255,255,255,.1); }
+    .corp-login__submit-icon svg { width:17px; height:17px; transition:transform .18s ease; }
+    .corp-login__submit:hover .corp-login__submit-icon svg { transform:translateX(2px); }
+    .corp-login__secure { display:flex; align-items:center; gap:9px; margin:18px 0 0; color:#80725c; font-size:11px; line-height:1.45; }
+    .corp-login__secure svg { width:15px; height:15px; flex:0 0 auto; color:#9a711f; }
+    .corp-login__support { margin:38px 0 0; padding-top:24px; border-top:1px solid rgba(8,47,47,.1); color:#7d705b; font-size:11.5px; line-height:1.7; text-align:center; }
+    .corp-login__support a { color:#785812; font-weight:700; text-decoration:none; }
+    .corp-login__support a:hover { color:#0d4744; text-decoration:underline; text-underline-offset:3px; }
+    @media (max-width:980px) {
+      .corp-login { padding:0; place-items:stretch; }
+      .corp-login__shell { min-height:100dvh; grid-template-columns:1fr; border:0; border-radius:0; }
+      .corp-login__story { min-height:330px; padding:34px clamp(24px,7vw,64px); }
+      .corp-login__story-copy { margin:42px 0 16px; }
+      .corp-login__headline { max-width:700px; font-size:clamp(38px,8vw,56px); }
+      .corp-login__intro { margin-top:18px; }
+      .corp-login__trust { display:none; }
+      .corp-login__panel { padding:52px clamp(24px,8vw,72px) 60px; }
     }
-    .corp-login__panel {
-      width: 100%;
-      max-width: 420px;
-      background: var(--ep-surface);
-      border: 1px solid var(--ep-line);
-      border-radius: 20px;
-      padding: 40px 36px;
-      box-shadow: 0 8px 40px rgba(0,0,0,.08);
+    @media (max-width:560px) {
+      .corp-login__story { min-height:300px; padding:26px 22px 32px; }
+      .corp-login__logo-img { width:46px; height:46px; }
+      .corp-login__brand-name { font-size:18px; }
+      .corp-login__story-copy { margin:36px 0 0; }
+      .corp-login__headline { font-size:39px; line-height:1.02; }
+      .corp-login__intro { font-size:14px; line-height:1.6; }
+      .corp-login__panel { align-items:flex-start; padding:42px 22px 48px; }
+      .corp-login__title { font-size:38px; }
+      .corp-login__sub { margin-bottom:30px; }
+      .corp-login__support { margin-top:30px; }
     }
-    .corp-login__logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
-    .corp-login__mark {
-      width: 40px; height: 40px; border-radius: 10px;
-      background: var(--ep-ink); color: var(--ep-bg);
-      display: grid; place-items: center;
-      font-family: 'Fraunces', serif; font-size: 16px; font-weight: 600;
-    }
-    .corp-login__brand { line-height: 1.2; }
-    .corp-login__brand-lead { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ep-ink-3); display: block; }
-    .corp-login__brand-name { font-size: 15px; font-weight: 600; color: var(--ep-ink); }
-    .corp-login__title { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 500; color: var(--ep-ink); margin-bottom: 6px; }
-    .corp-login__sub { font-size: 13.5px; color: var(--ep-ink-2); margin-bottom: 28px; line-height: 1.5; }
+    @media (prefers-reduced-motion:reduce) { .corp-login *,.corp-login *::before,.corp-login *::after { transition-duration:.01ms!important; animation-duration:.01ms!important; } }
   </style>
 </head>
 <body>
-<div class="corp-login">
-  <div class="corp-login__panel">
-    <div class="corp-login__logo">
-      <img src="/logo_oficial_fundo_transparente.png?v=2" alt="Espaço Prelúdio" style="width:44px;height:44px;object-fit:contain;flex-shrink:0;">
-      <div class="corp-login__brand">
-        <span class="corp-login__brand-lead">Espaço Prelúdio</span>
-        <span class="corp-login__brand-name">Painel Corporativo</span>
-      </div>
-    </div>
-
-    <h1 class="corp-login__title">Bem-vindo</h1>
-    <p class="corp-login__sub">Acesse o painel de saúde da sua equipe. Todos os dados são anônimos e agregados.</p>
-
-    <form id="loginForm" class="ep-stack" novalidate>
-      <div class="ep-field">
-        <label class="ep-label" for="email">E-mail corporativo</label>
-        <input id="email" class="ep-input" type="email" placeholder="rh@suaempresa.com.br" autocomplete="email" required>
-      </div>
-      <div class="ep-field">
-        <label class="ep-label" for="senha">Senha</label>
-        <div style="position:relative;">
-          <input id="senha" class="ep-input" type="password" placeholder="••••••••" autocomplete="current-password" required style="padding-right:40px;">
-          <button type="button" id="toggleSenha" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--ep-ink-3);padding:4px;" tabindex="-1">
-            <svg id="eyeIcon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
+<main class="corp-login">
+  <div class="corp-login__shell">
+    <section class="corp-login__story" aria-label="Espaço Prelúdio para empresas">
+      <div class="corp-login__logo">
+        <img class="corp-login__logo-img" src="/logo_oficial_fundo_transparente.png?v=2" alt="">
+        <div class="corp-login__brand">
+          <span class="corp-login__brand-lead">Espaço Prelúdio</span>
+          <span class="corp-login__brand-name">Saúde corporativa</span>
         </div>
       </div>
-      <div class="ep-status" id="loginStatus"></div>
-      <button type="submit" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-4" id="submitBtn">
-        Entrar no painel
-      </button>
-    </form>
 
-    <p class="ep-text-xs ep-text-muted ep-mt-20" style="text-align:center; line-height:1.6;">
-      Acesso exclusivo para gestores RH.<br>
-      Dúvidas? <a href="mailto:contato@espacopreludio.com.br" style="color:var(--ep-accent);">contato@espacopreludio.com.br</a>
-    </p>
+      <div class="corp-login__story-copy">
+        <p class="corp-login__eyebrow">Painel corporativo</p>
+        <h1 class="corp-login__headline">Cuidado que também orienta decisões.</h1>
+        <p class="corp-login__intro">Acompanhe o programa de saúde da sua equipe com indicadores responsáveis, visão consolidada e privacidade desde a origem.</p>
+      </div>
+
+      <div class="corp-login__trust" aria-label="Diferenciais do painel">
+        <div class="corp-login__trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <span>Privacidade e acesso protegido</span>
+        </div>
+        <div class="corp-login__trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 19V9m6 10V5m6 14v-7m4 7H2"/></svg>
+          <span>Indicadores agregados e responsáveis</span>
+        </div>
+        <div class="corp-login__trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 4 7v5c0 5 3.4 8 8 9 4.6-1 8-4 8-9V7l-8-4Z"/><path d="m9 12 2 2 4-4"/></svg>
+          <span>Governança para a gestão de pessoas</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="corp-login__panel" aria-labelledby="loginTitle">
+      <div class="corp-login__form-wrap">
+        <p class="corp-login__form-eyebrow">Acesso do gestor</p>
+        <h2 class="corp-login__title" id="loginTitle">Bem-vindo de volta.</h2>
+        <p class="corp-login__sub">Entre com as credenciais fornecidas à sua organização para acessar o ambiente corporativo.</p>
+
+        <form id="loginForm" class="ep-stack" novalidate>
+          <div class="ep-field">
+            <label class="ep-label" for="email">E-mail corporativo</label>
+            <input id="email" class="ep-input" type="email" placeholder="rh@suaempresa.com.br" autocomplete="email" inputmode="email" required>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="senha">Senha</label>
+            <div class="corp-login__password">
+              <input id="senha" class="ep-input" type="password" placeholder="Digite sua senha" autocomplete="current-password" required>
+              <button type="button" id="toggleSenha" class="corp-login__toggle" aria-label="Mostrar senha" aria-pressed="false">
+                <svg id="eyeIcon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="ep-status" id="loginStatus" role="status" aria-live="polite"></div>
+          <button type="submit" class="corp-login__submit" id="submitBtn">
+            <span id="submitLabel">Entrar no painel</span>
+            <span class="corp-login__submit-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+          </button>
+        </form>
+
+        <p class="corp-login__secure">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 4 7v5c0 5 3.4 8 8 9 4.6-1 8-4 8-9V7l-8-4Z"/><path d="m9 12 2 2 4-4"/></svg>
+          Seus dados de acesso são transmitidos por conexão segura.
+        </p>
+
+        <p class="corp-login__support">
+          Acesso exclusivo para gestores autorizados.<br>
+          Precisa de ajuda? <a href="mailto:contato@espacopreludio.com.br">Fale com o Espaço Prelúdio</a>
+        </p>
+      </div>
+    </section>
   </div>
-</div>
+</main>
 
 <script type="module">
   import { BACKEND_BASE_URL } from "./js/firebase-config.js";
@@ -98,11 +183,14 @@
   document.getElementById("toggleSenha").addEventListener("click", () => {
     const input = document.getElementById("senha");
     const icon  = document.getElementById("eyeIcon");
+    const toggle = document.getElementById("toggleSenha");
     const show = input.type === "password";
     input.type = show ? "text" : "password";
+    toggle.setAttribute("aria-pressed", String(show));
+    toggle.setAttribute("aria-label", show ? "Ocultar senha" : "Mostrar senha");
     icon.innerHTML = show
       ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`
-      : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+      : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>`;
   });
 
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
@@ -111,11 +199,12 @@
     const senha = document.getElementById("senha").value;
     const statusEl = document.getElementById("loginStatus");
     const btn = document.getElementById("submitBtn");
+    const btnLabel = document.getElementById("submitLabel");
 
     if (!email || !senha) { statusEl.textContent = "Preencha e-mail e senha."; statusEl.className = "ep-status is-err"; return; }
 
     btn.disabled = true;
-    btn.textContent = "Entrando…";
+    btnLabel.textContent = "Entrando…";
     statusEl.textContent = "";
     statusEl.className = "ep-status";
 
@@ -141,7 +230,7 @@
       statusEl.textContent = err.message;
       statusEl.className = "ep-status is-err";
       btn.disabled = false;
-      btn.textContent = "Entrar no painel";
+      btnLabel.textContent = "Entrar no painel";
     }
   });
 </script>
