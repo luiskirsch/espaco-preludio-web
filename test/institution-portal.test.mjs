@@ -404,6 +404,92 @@ test('login corporativo permanece fixo e integralmente visível', { timeout: 300
   }
 });
 
+test('login do paciente permanece fixo e integralmente visível', { timeout: 30000, skip: chromePath ? false : 'Chrome ou Edge não encontrado' }, async () => {
+  const server = await startServer();
+  const userData = await mkdtemp(join(tmpdir(), 'ep-patient-browser-'));
+  const debugPort = 14900 + Math.floor(Math.random() * 80);
+  const pageUrl = `http://127.0.0.1:${server.address().port}/paciente-login.html`;
+  const browser = spawn(chromePath, [
+    '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
+    `--remote-debugging-port=${debugPort}`, `--user-data-dir=${userData}`, pageUrl
+  ], { stdio: 'ignore' });
+  let cdp;
+  try {
+    const page = await poll(async () => {
+      const pages = await fetch(`http://127.0.0.1:${debugPort}/json/list`).then(response => response.json());
+      return pages.find(item => item.type === 'page' && item.url.includes('paciente-login.html'));
+    });
+    cdp = await connectCdp(page.webSocketDebuggerUrl);
+    await cdp.send('Runtime.enable');
+    await cdp.send('Page.enable');
+
+    for (const viewport of [
+      { width: 1366, height: 700, mobile: false },
+      { width: 1920, height: 800, mobile: false },
+      { width: 390, height: 844, mobile: true }
+    ]) {
+      await cdp.send('Emulation.setDeviceMetricsOverride', { ...viewport, deviceScaleFactor: 1 });
+      await poll(() => cdp.evaluate("document.querySelector('#loginForm')?.getBoundingClientRect().height > 0"));
+      const layout = await cdp.evaluate(`(() => {
+        const visible = [...document.body.querySelectorAll('*')].filter(node => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+        const overflowing = visible.filter(node => {
+          const rect = node.getBoundingClientRect();
+          return rect.right > innerWidth + 1 || rect.left < -1 || rect.bottom > innerHeight + 1 || rect.top < -1;
+        }).map(node => node.className || node.id || node.tagName).slice(0, 10);
+        const shell = document.querySelector('.patient-login__shell').getBoundingClientRect();
+        const story = document.querySelector('.patient-login__story').getBoundingClientRect();
+        const trust = document.querySelector('.patient-login__trust').getBoundingClientRect();
+        const panel = document.querySelector('.patient-login__panel').getBoundingClientRect();
+        const form = document.querySelector('.patient-login__form-wrap').getBoundingClientRect();
+        const recovery = document.querySelector('.patient-login__recovery').getBoundingClientRect();
+        return {
+          width: innerWidth,
+          height: innerHeight,
+          scrollWidth: document.documentElement.scrollWidth,
+          scrollHeight: document.documentElement.scrollHeight,
+          bodyOverflow: getComputedStyle(document.body).overflow,
+          shellTop: shell.top,
+          shellRight: shell.right,
+          shellBottom: shell.bottom,
+          storyTop: story.top,
+          storyBottom: story.bottom,
+          trustTop: trust.top,
+          trustBottom: trust.bottom,
+          panelTop: panel.top,
+          panelRight: panel.right,
+          panelBottom: panel.bottom,
+          formTop: form.top,
+          formRight: form.right,
+          formBottom: form.bottom,
+          recoveryBottom: recovery.bottom,
+          overflowing
+        };
+      })()`);
+      assert.ok(layout.scrollWidth <= layout.width, JSON.stringify(layout));
+      assert.ok(layout.scrollHeight <= layout.height, JSON.stringify(layout));
+      assert.equal(layout.bodyOverflow, 'hidden');
+      assert.ok(layout.shellTop >= 0 && layout.shellRight <= layout.width + 1, JSON.stringify(layout));
+      assert.ok(layout.shellBottom <= layout.height, JSON.stringify(layout));
+      assert.ok(layout.trustTop >= layout.storyTop, JSON.stringify(layout));
+      assert.ok(layout.trustBottom <= layout.storyBottom + 1, JSON.stringify(layout));
+      assert.ok(layout.formTop >= layout.panelTop && layout.formRight <= layout.panelRight + 1, JSON.stringify(layout));
+      assert.ok(layout.recoveryBottom <= layout.panelBottom + 1, JSON.stringify(layout));
+      assert.deepEqual(layout.overflowing, []);
+    }
+  } finally {
+    cdp?.socket.close();
+    if (browser.exitCode === null) {
+      browser.kill();
+      await once(browser, 'exit');
+    }
+    server.close();
+    await rm(userData, { recursive: true, force: true, maxRetries: 6, retryDelay: 150 });
+  }
+});
+
 test('login do RT permanece fixo e sem rolagem em desktop ou celular', { timeout: 30000, skip: chromePath ? false : 'Chrome ou Edge não encontrado' }, async () => {
   const server = await startServer();
   const userData = await mkdtemp(join(tmpdir(), 'ep-rt-browser-'));

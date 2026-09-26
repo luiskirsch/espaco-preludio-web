@@ -19,49 +19,195 @@
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
   <script src="./i18n/init.js?v=1-3" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
+  <style>
+    :root { --patient-deep:#092f2f; --patient-deep-2:#104b47; --patient-paper:#fffbf2; --patient-gold:#e1b45c; }
+    html,body { width:100%; height:100%; overflow:hidden; overscroll-behavior:none; }
+    body { background:#ede4d0; }
+    .patient-login { width:100%; height:100vh; height:100dvh; display:grid; place-items:center; padding:clamp(18px,3vw,48px); position:relative; isolation:isolate; overflow:hidden; background:radial-gradient(circle at 11% 10%,rgba(225,180,92,.2),transparent 25%),radial-gradient(circle at 92% 88%,rgba(9,47,47,.1),transparent 28%),linear-gradient(135deg,#f7efdd,#e9dfc8); }
+    .patient-login::before { content:""; position:absolute; inset:0; z-index:-1; opacity:.2; background-image:radial-gradient(rgba(9,47,47,.2) .7px,transparent .7px); background-size:18px 18px; mask-image:linear-gradient(90deg,#000,transparent 38%,transparent 62%,#000); }
+    .patient-login__shell { width:min(100%,1360px); height:min(820px,calc(100dvh - clamp(36px,6vw,96px))); display:grid; grid-template-columns:minmax(0,1.04fr) minmax(440px,.96fr); overflow:hidden; border:1px solid rgba(255,255,255,.68); border-radius:32px; background:var(--patient-paper); box-shadow:0 40px 100px -44px rgba(16,31,27,.48),0 16px 38px -24px rgba(16,31,27,.32); }
+    .patient-login__story { position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; padding:clamp(42px,5vw,72px); color:#fff9e9; background:radial-gradient(circle at 82% 15%,rgba(225,180,92,.24),transparent 24%),radial-gradient(circle at 12% 92%,rgba(225,180,92,.12),transparent 30%),linear-gradient(145deg,var(--patient-deep-2),var(--patient-deep) 58%,#052625); }
+    .patient-login__story::before,.patient-login__story::after { content:""; position:absolute; border:1px solid rgba(225,180,92,.2); border-radius:50%; pointer-events:none; }
+    .patient-login__story::before { width:520px; height:520px; right:-260px; top:-190px; }
+    .patient-login__story::after { width:360px; height:360px; right:-170px; top:-110px; }
+    .patient-login__brand { display:flex; align-items:center; gap:15px; position:relative; z-index:1; flex-shrink:0; color:#fff9e9; }
+    .patient-login__brand:hover { color:#fff9e9; }
+    .patient-login__logo { width:54px; height:54px; object-fit:contain; flex-shrink:0; filter:drop-shadow(0 8px 18px rgba(0,0,0,.25)); }
+    .patient-login__brand-copy { line-height:1.1; }
+    .patient-login__brand-lead { display:block; margin-bottom:5px; color:var(--patient-gold); font-family:'Inter',sans-serif; font-size:11px; font-weight:700; letter-spacing:.19em; text-transform:uppercase; }
+    .patient-login__brand-name { color:#fff9e9; font-family:'Fraunces',serif; font-size:21px; font-weight:600; }
+    .patient-login__story-copy { position:relative; z-index:1; max-width:610px; margin:52px 0; }
+    .patient-login__eyebrow,.patient-login__form-eyebrow { display:inline-flex; align-items:center; gap:10px; margin:0 0 22px; font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; }
+    .patient-login__eyebrow { color:#e9c77f; }
+    .patient-login__eyebrow::before,.patient-login__form-eyebrow::before { content:""; width:28px; height:1px; background:currentColor; }
+    .patient-login__headline { max-width:600px; margin:0; color:#fffaf0; font-family:'Fraunces',serif; font-size:clamp(42px,4.15vw,67px); font-weight:500; letter-spacing:-.035em; line-height:.98; }
+    .patient-login__intro { max-width:535px; margin:28px 0 0; color:rgba(255,249,233,.75); font-size:16px; line-height:1.72; }
+    .patient-login__trust { position:relative; z-index:1; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding-top:28px; border-top:1px solid rgba(255,249,233,.14); flex-shrink:0; }
+    .patient-login__trust-item { display:flex; align-items:flex-start; gap:9px; color:rgba(255,249,233,.74); font-size:11px; line-height:1.45; }
+    .patient-login__trust-item svg { width:17px; height:17px; flex:0 0 auto; color:var(--patient-gold); }
+    .patient-login__panel { display:flex; align-items:center; justify-content:center; min-height:0; padding:clamp(40px,5vw,76px); background:radial-gradient(circle at 100% 0%,rgba(225,180,92,.12),transparent 25%),var(--patient-paper); }
+    .patient-login__form-wrap { width:100%; max-width:460px; }
+    .patient-login__form-eyebrow { margin-bottom:17px; color:#9a711f; }
+    .patient-login__title { margin:0 0 11px; color:#102e2d; font-family:'Fraunces',serif; font-size:clamp(37px,3vw,50px); font-weight:500; letter-spacing:-.03em; line-height:1.04; }
+    .patient-login__sub { max-width:430px; margin:0 0 28px; color:#675b49; font-size:13.5px; line-height:1.65; }
+    .patient-login .ep-alert { margin:0 0 15px; padding:10px 12px; font-size:12px; }
+    .patient-login .ep-stack { gap:15px; }
+    .patient-login .ep-label { display:block; margin-bottom:7px; color:#263d3b; font-size:11.5px; font-weight:700; }
+    .patient-login .ep-input { width:100%; min-height:54px; border:1px solid rgba(9,47,47,.17); border-radius:13px; padding:0 16px; color:#102e2d; background:rgba(255,255,255,.7); box-shadow:inset 0 1px 0 rgba(255,255,255,.75); transition:border-color .2s ease,box-shadow .2s ease,background .2s ease; }
+    .patient-login .ep-input:hover { border-color:rgba(9,47,47,.3); background:#fffdf7; }
+    .patient-login .ep-input:focus { outline:none; border-color:#9e771f; background:#fff; box-shadow:0 0 0 4px rgba(225,180,92,.16),0 10px 24px -18px rgba(9,47,47,.55); }
+    .patient-login__password { position:relative; }
+    .patient-login__password .ep-input { padding-right:52px; }
+    .patient-login__toggle { position:absolute; top:50%; right:11px; display:grid; place-items:center; width:36px; height:36px; padding:0; border:0; border-radius:10px; color:#8d7954; background:transparent; cursor:pointer; transform:translateY(-50%); transition:color .18s ease,background .18s ease,transform .12s ease; }
+    .patient-login__toggle:hover { color:#153e3c; background:rgba(9,47,47,.07); }
+    .patient-login__toggle:active { transform:translateY(-50%) scale(.94); }
+    .patient-login__toggle:focus-visible { outline:2px solid var(--patient-gold); outline-offset:2px; }
+    .patient-login .ep-status { min-height:0; margin:0; font-size:12px; }
+    .patient-login .ep-status:empty { display:none; }
+    .patient-login .ep-status.is-err,.patient-login .ep-status.is-ok { padding:10px 12px; border-radius:10px; }
+    .patient-login__actions { display:grid; gap:9px; }
+    .patient-login__submit,.patient-login__create { display:flex; align-items:center; justify-content:center; width:100%; min-height:54px; border-radius:13px; font-family:inherit; font-size:13.5px; font-weight:700; transition:transform .18s ease,box-shadow .18s ease,background .18s ease,border-color .18s ease; }
+    .patient-login__submit { justify-content:space-between; padding:0 18px 0 22px; border:1px solid #0a3433; color:#fffaf0; background:linear-gradient(135deg,#0e4b48,#082f2f); box-shadow:0 14px 28px -16px rgba(9,47,47,.85),inset 0 1px 0 rgba(255,255,255,.12); cursor:pointer; }
+    .patient-login__submit:hover { transform:translateY(-2px); background:linear-gradient(135deg,#125b57,#0a3938); box-shadow:0 19px 34px -17px rgba(9,47,47,.95); }
+    .patient-login__submit:active { transform:translateY(0) scale(.99); }
+    .patient-login__submit:disabled { cursor:wait; opacity:.72; transform:none; }
+    .patient-login__submit-icon { display:grid; place-items:center; width:31px; height:31px; border-radius:9px; background:rgba(255,255,255,.1); }
+    .patient-login__submit-icon svg { width:16px; height:16px; }
+    .patient-login__create { border:1px solid rgba(9,47,47,.18); color:#173b39; background:transparent; }
+    .patient-login__create:hover { border-color:rgba(9,47,47,.38); color:#092f2f; background:rgba(9,47,47,.05); transform:translateY(-1px); }
+    .patient-login__recovery { display:flex; align-items:center; justify-content:center; gap:8px; margin:19px 0 0; padding-top:17px; border-top:1px solid rgba(9,47,47,.1); color:#785812; font-size:11.5px; font-weight:700; }
+    .patient-login__recovery:hover { color:#0d4744; }
+    .patient-login__recovery svg { width:15px; height:15px; flex:0 0 auto; }
+    @media (max-width:980px) {
+      .patient-login { padding:0; place-items:stretch; }
+      .patient-login__shell { width:100%; height:100dvh; grid-template-columns:1fr; grid-template-rows:minmax(250px,32dvh) minmax(0,1fr); border:0; border-radius:0; }
+      .patient-login__story { min-height:0; padding:30px clamp(24px,7vw,64px); }
+      .patient-login__story-copy { margin:34px 0 12px; }
+      .patient-login__headline { max-width:720px; font-size:clamp(37px,7vw,54px); }
+      .patient-login__intro { margin-top:16px; }
+      .patient-login__trust { display:none; }
+      .patient-login__panel { overflow:hidden; padding:30px clamp(24px,8vw,72px); }
+    }
+    @media (max-width:560px) {
+      .patient-login__shell { grid-template-rows:minmax(205px,27dvh) minmax(0,1fr); }
+      .patient-login__story { padding:18px 22px 20px; }
+      .patient-login__brand { gap:11px; }
+      .patient-login__logo { width:39px; height:39px; }
+      .patient-login__brand-lead { margin-bottom:3px; font-size:9px; }
+      .patient-login__brand-name { font-size:16px; }
+      .patient-login__story-copy { margin:18px 0 0; }
+      .patient-login__eyebrow { margin-bottom:10px; font-size:9px; }
+      .patient-login__headline { font-size:clamp(29px,9vw,36px); line-height:1; }
+      .patient-login__intro { margin-top:10px; font-size:11.5px; line-height:1.42; }
+      .patient-login__panel { align-items:center; padding:18px 22px 20px; }
+      .patient-login__form-eyebrow { margin-bottom:8px; font-size:9px; }
+      .patient-login__title { margin-bottom:6px; font-size:30px; }
+      .patient-login__sub { margin-bottom:13px; font-size:11px; line-height:1.42; }
+      .patient-login .ep-alert { margin-bottom:9px; padding:7px 9px; font-size:10px; }
+      .patient-login .ep-stack { gap:9px; }
+      .patient-login .ep-label { margin-bottom:4px; font-size:10px; }
+      .patient-login .ep-input { min-height:44px; border-radius:10px; padding:0 13px; }
+      .patient-login__toggle { width:32px; height:32px; }
+      .patient-login__actions { gap:7px; }
+      .patient-login__submit,.patient-login__create { min-height:44px; border-radius:10px; font-size:12px; }
+      .patient-login__submit-icon { width:27px; height:27px; }
+      .patient-login__recovery { margin-top:10px; padding-top:10px; font-size:10px; }
+    }
+    @media (min-width:981px) and (max-height:920px) {
+      .patient-login { padding:16px; }
+      .patient-login__shell { height:calc(100dvh - 32px); }
+      .patient-login__story { padding:36px 46px; }
+      .patient-login__story-copy { margin:28px 0; }
+      .patient-login__headline { font-size:47px; }
+      .patient-login__intro { margin-top:17px; }
+      .patient-login__trust { padding-top:17px; }
+      .patient-login__panel { padding:30px 52px; }
+      .patient-login__sub { margin-bottom:20px; }
+      .patient-login .ep-stack { gap:12px; }
+      .patient-login .ep-input { min-height:48px; }
+      .patient-login__submit,.patient-login__create { min-height:48px; }
+      .patient-login__recovery { margin-top:13px; padding-top:13px; }
+    }
+    @media (prefers-reduced-motion:reduce) { .patient-login *,.patient-login *::before,.patient-login *::after { transition-duration:.01ms!important; animation-duration:.01ms!important; } }
+  </style>
 </head>
 <body>
 
-<main class="ep-auth">
-  <div class="ep-auth__panel">
-    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
-      <span class="ep-brand__mark">EP</span>
-      <span class="ep-brand__name">
-        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
-        <span data-i18n="common:brand.tail">Prelúdio</span>
-      </span>
-    </a>
+<main class="patient-login">
+  <div class="patient-login__shell">
+    <section class="patient-login__story" aria-label="Espaço Prelúdio para pacientes">
+      <a href="./index.html" class="patient-login__brand" aria-label="Espaço Prelúdio">
+        <img class="patient-login__logo" src="/logo_oficial_fundo_transparente.png?v=2" alt="">
+        <span class="patient-login__brand-copy">
+          <span class="patient-login__brand-lead" data-i18n="common:brand.lead">Espaço</span>
+          <span class="patient-login__brand-name" data-i18n="common:brand.tail">Prelúdio</span>
+        </span>
+      </a>
 
-    <h2 class="ep-auth__title ep-mt-32" data-i18n="paciente-login:h2">Entrar na sua conta</h2>
-    <p class="ep-auth__sub" data-i18n="paciente-login:sub">
-      Sua senha desbloqueia também a chave que decifra suas anotações.
-    </p>
-
-    <div id="reauthAlert" class="ep-alert ep-alert--info ep-mt-12 ep-hide" data-i18n="paciente-login:reauthAlert">
-      Sua sessão de cifragem expirou. Confirme sua senha para continuar.
-    </div>
-
-    <form id="loginForm" class="ep-stack ep-mt-16" novalidate>
-      <div class="ep-field">
-        <label class="ep-label" for="email" data-i18n="paciente-login:labelEmail">E-mail</label>
-        <input id="email" class="ep-input" type="email" autocomplete="email" maxlength="160" required>
-      </div>
-      <div class="ep-field">
-        <label class="ep-label" for="password" data-i18n="paciente-login:labelPassword">Senha</label>
-        <input id="password" class="ep-input" type="password" autocomplete="current-password" required>
+      <div class="patient-login__story-copy">
+        <p class="patient-login__eyebrow">Seu espaço de cuidado</p>
+        <h1 class="patient-login__headline">Sua história permanece sua.</h1>
+        <p class="patient-login__intro">Um ambiente reservado para suas consultas, registros e jornada de cuidado — protegido desde o primeiro acesso.</p>
       </div>
 
-      <div class="ep-status" id="status"></div>
-
-      <div class="ep-stack" style="gap: 8px;">
-        <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="submitBtn" data-i18n="paciente-login:btnSubmit">Entrar</button>
-        <a href="./paciente-cadastro.html" class="ep-btn ep-btn--ghost ep-btn--block" data-i18n="paciente-login:btnCreate">Criar conta de paciente</a>
+      <div class="patient-login__trust" aria-label="Proteções do ambiente do paciente">
+        <div class="patient-login__trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <span>Anotações protegidas por cifragem</span>
+        </div>
+        <div class="patient-login__trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7-4.4-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.6-7 11-7 11Z"/></svg>
+          <span>Cuidado contínuo e acolhedor</span>
+        </div>
+        <div class="patient-login__trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 4 7v5c0 5 3.4 8 8 9 4.6-1 8-4 8-9V7l-8-4Z"/><path d="m9 12 2 2 4-4"/></svg>
+          <span>Privacidade desde a origem</span>
+        </div>
       </div>
-    </form>
+    </section>
 
-    <div class="ep-auth__bottom">
-      <a href="./paciente-recuperar.html" data-i18n="paciente-login:forgot">Esqueci minha senha · usar chave-semente</a>
-    </div>
+    <section class="patient-login__panel" aria-labelledby="patientLoginTitle">
+      <div class="patient-login__form-wrap">
+        <p class="patient-login__form-eyebrow">Área do paciente</p>
+        <h2 class="patient-login__title" id="patientLoginTitle" data-i18n="paciente-login:h2">Entrar na sua conta</h2>
+        <p class="patient-login__sub" data-i18n="paciente-login:sub">Sua senha desbloqueia também a chave que decifra suas anotações.</p>
+
+        <div id="reauthAlert" class="ep-alert ep-alert--info ep-hide" data-i18n="paciente-login:reauthAlert">
+          Sua sessão de cifragem expirou. Confirme sua senha para continuar.
+        </div>
+
+        <form id="loginForm" class="ep-stack" novalidate>
+          <div class="ep-field">
+            <label class="ep-label" for="email" data-i18n="paciente-login:labelEmail">E-mail</label>
+            <input id="email" class="ep-input" type="email" placeholder="seu@email.com" autocomplete="email" inputmode="email" maxlength="160" required>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="password" data-i18n="paciente-login:labelPassword">Senha</label>
+            <div class="patient-login__password">
+              <input id="password" class="ep-input" type="password" placeholder="Digite sua senha" autocomplete="current-password" required>
+              <button type="button" id="togglePassword" class="patient-login__toggle" aria-label="Mostrar senha" aria-pressed="false">
+                <svg id="passwordEyeIcon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="ep-status" id="status" role="status" aria-live="polite"></div>
+
+          <div class="patient-login__actions">
+            <button class="patient-login__submit" type="submit" id="submitBtn">
+              <span data-i18n="paciente-login:btnSubmit">Entrar</span>
+              <span class="patient-login__submit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            </button>
+            <a href="./paciente-cadastro.html" class="patient-login__create" data-i18n="paciente-login:btnCreate">Criar conta de paciente</a>
+          </div>
+        </form>
+
+        <a class="patient-login__recovery" href="./paciente-recuperar.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M7 14a5 5 0 1 1 3 3l-6 3v-4l3-2Z"/><circle cx="12" cy="9" r="1"/></svg>
+          <span data-i18n="paciente-login:forgot">Esqueci minha senha · usar chave-semente</span>
+        </a>
+      </div>
+    </section>
   </div>
 </main>
 
@@ -107,6 +253,19 @@
   if (errorParam === "NAO_REGISTRADO") {
     setStatus(tr("paciente-login:errors.naoRegistrado", "Sua conta existe, mas o cadastro de paciente não foi finalizado."), "err");
   }
+
+  document.getElementById("togglePassword").addEventListener("click", () => {
+    const input = document.getElementById("password");
+    const toggle = document.getElementById("togglePassword");
+    const icon = document.getElementById("passwordEyeIcon");
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    toggle.setAttribute("aria-pressed", String(show));
+    toggle.setAttribute("aria-label", show ? "Ocultar senha" : "Mostrar senha");
+    icon.innerHTML = show
+      ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`
+      : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>`;
+  });
 
   async function fetchProfile(idToken) {
     const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/me`, {
