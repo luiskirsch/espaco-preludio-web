@@ -181,7 +181,6 @@
     if (!user) { show("loginPanel"); return; }
     idToken = await user.getIdToken();
     document.getElementById("adminEmail").textContent = user.email || "?";
-    show("mainPanel");
     loadEmpresas(currentStatus);
   });
 
@@ -256,10 +255,23 @@
       const q = document.getElementById("searchInput").value.trim();
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/empresas?status=${status}&q=${encodeURIComponent(q)}`, { headers: { Authorization: `Bearer ${idToken}` } });
       const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        if (r.status === 401 || r.status === 403) {
+          document.getElementById("loginStatus").textContent = r.status === 403
+            ? `A conta ${auth.currentUser?.email || "atual"} não tem acesso administrativo. Entre com a conta autorizada.`
+            : "A sessão expirou. Entre novamente com a conta administradora.";
+          show("loginPanel");
+          return;
+        }
+        throw new Error(d.error || `Erro HTTP ${r.status}`);
+      }
+      document.getElementById("loginStatus").textContent = "";
+      show("mainPanel");
       document.getElementById("loadingMsg").textContent = "";
       allItems = d.items || [];
       renderCards(allItems);
     } catch (e) {
+      show("mainPanel");
       document.getElementById("loadingMsg").textContent = "Erro ao carregar: " + e.message;
     }
   }

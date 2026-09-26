@@ -1,10 +1,32 @@
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
 
 const $ = id => document.getElementById(id);
 let campaigns = [];
 let selected = null;
 function say(message, error = false) { $("message").textContent = message; $("message").style.color = error ? "#9b462d" : "#2d6a3e"; }
+function showAccess(error = null) {
+  const user = auth.currentUser;
+  const code = error?.details?.error || error?.message;
+  const account = user?.email ? `A conta ${user.email} ` : "Esta conta ";
+  const message = !user
+    ? "Entre com sua conta administradora para acessar os ciclos de avaliação."
+    : code === "NAO_AUTORIZADO"
+      ? `${account}não tem permissão de administração. Entre com a conta autorizada.`
+      : code === "EMAIL_NAO_VERIFICADO"
+        ? "Confirme o e-mail da conta administradora antes de continuar."
+        : code === "ADMIN_NAO_CONFIGURADO"
+          ? "O acesso administrativo não está configurado no servidor. Contate a administração da plataforma."
+          : code === "TOKEN_INVALIDO" || code === "TOKEN_NAO_INFORMADO"
+            ? "A sessão expirou. Entre novamente com a conta administradora."
+            : "Não foi possível verificar o acesso. Tente novamente.";
+  $("accessMessage").textContent = message;
+  $("accessPanel").hidden = false;
+  $("adminWorkspace").hidden = true;
+  $("retryAccess").hidden = !user;
+  $("signOutAdmin").hidden = !user;
+  $("company").replaceChildren(new Option("Acesso não verificado", ""));
+}
 async function api(path, options = {}) {
   const user = auth.currentUser;
   if (!user) throw new Error("Faça login no painel administrativo.");
@@ -16,6 +38,8 @@ async function api(path, options = {}) {
   if (!response.ok) {
     const error = new Error(data.error || `Erro HTTP ${response.status}`);
     error.details = data;
+    error.status = response.status;
+    if (["NAO_AUTORIZADO", "EMAIL_NAO_VERIFICADO", "ADMIN_NAO_CONFIGURADO", "TOKEN_INVALIDO", "TOKEN_NAO_INFORMADO"].includes(data.error)) showAccess(error);
     throw error;
   }
   return data;
@@ -25,6 +49,8 @@ function element(tag, text = "", cls = "") {
 }
 async function loadCompanies() {
   const data = await api("/therapy/admin/empresas?status=ativa");
+  $("accessPanel").hidden = true;
+  $("adminWorkspace").hidden = false;
   $("company").replaceChildren(new Option("Selecione", ""));
   (data.items || []).forEach(item => $("company").add(new Option(item.nome || item.name || item.id, item.id)));
   if (new URLSearchParams(location.search).get("empresa")) {
@@ -32,6 +58,15 @@ async function loadCompanies() {
     await loadCampaigns();
   }
   say("Selecione uma empresa para começar.");
+}
+async function refreshAccess() {
+  if (!auth.currentUser) { showAccess(); return; }
+  try {
+    await auth.currentUser.getIdToken(true);
+    await loadCompanies();
+  } catch (error) {
+    showAccess(error);
+  }
 }
 async function loadCampaigns() {
   const companyId = $("company").value;
@@ -186,7 +221,25 @@ $("finalizeForm").addEventListener("submit", async event => {
     say(parts.length ? `Não foi possível finalizar: ${parts.join("; ")}.` : error.message, true);
   } finally { button.disabled = false; }
 });
-onAuthStateChanged(auth, async user => {
-  if (!user) { location.replace("./admin-empresas.html"); return; }
-  try { await loadCompanies(); } catch (error) { say(error.message, true); }
+$("adminLoginForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  if (!form.reportValidity()) return;
+  const button = form.querySelector("button[type=submit]");
+  button.disabled = true;
+  try {
+    await signInWithEmailAndPassword(auth, form.elements.email.value.trim(), form.elements.password.value);
+    form.elements.password.value = "";
+    await refreshAccess();
+  } catch {
+    $("accessMessage").textContent = "Não foi possível entrar. Confira o e-mail e a senha da conta administradora.";
+  } finally { button.disabled = false; }
+});
+$("retryAccess").addEventListener("click", refreshAccess);
+$("signOutAdmin").addEventListener("click", () => signOut(auth).catch(() => {
+  $("accessMessage").textContent = "Não foi possível sair da conta atual. Tente novamente.";
+}));
+onAuthStateChanged(auth, user => {
+  if (!user) { showAccess(); return; }
+  refreshAccess();
 });
