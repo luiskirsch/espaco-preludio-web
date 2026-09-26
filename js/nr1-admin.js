@@ -239,6 +239,12 @@ $("retryAccess").addEventListener("click", refreshAccess);
 $("signOutAdmin").addEventListener("click", () => signOut(auth).catch(() => {
   $("accessMessage").textContent = "Não foi possível sair da conta atual. Tente novamente.";
 }));
+setTimeout(() => {
+  if (!$("adminWorkspace").hidden) return;
+  if ($("accessMessage").textContent.startsWith("Verificando")) {
+    $("accessMessage").textContent = "A verificação da sessão está demorando. Entre com a conta administradora ou atualize a página.";
+  }
+}, 5000);
 onAuthStateChanged(auth, user => {
   if (!user) { showAccess(); return; }
   refreshAccess();
