@@ -340,6 +340,7 @@ test('login corporativo permanece fixo e integralmente visível', { timeout: 300
 
     for (const viewport of [
       { width: 1366, height: 700, mobile: false },
+      { width: 1920, height: 800, mobile: false },
       { width: 390, height: 844, mobile: true }
     ]) {
       await cdp.send('Emulation.setDeviceMetricsOverride', { ...viewport, deviceScaleFactor: 1 });
@@ -354,7 +355,11 @@ test('login corporativo permanece fixo e integralmente visível', { timeout: 300
           return rect.right > innerWidth + 1 || rect.left < -1 || rect.bottom > innerHeight + 1 || rect.top < -1;
         }).map(node => node.className || node.id || node.tagName).slice(0, 10);
         const shell = document.querySelector('.corp-login__shell').getBoundingClientRect();
+        const story = document.querySelector('.corp-login__story').getBoundingClientRect();
+        const trust = document.querySelector('.corp-login__trust').getBoundingClientRect();
+        const panel = document.querySelector('.corp-login__panel').getBoundingClientRect();
         const form = document.querySelector('.corp-login__form-wrap').getBoundingClientRect();
+        const support = document.querySelector('.corp-login__support').getBoundingClientRect();
         return {
           width: innerWidth,
           height: innerHeight,
@@ -363,8 +368,15 @@ test('login corporativo permanece fixo e integralmente visível', { timeout: 300
           bodyOverflow: getComputedStyle(document.body).overflow,
           shellTop: shell.top,
           shellBottom: shell.bottom,
+          storyTop: story.top,
+          storyBottom: story.bottom,
+          trustTop: trust.top,
+          trustBottom: trust.bottom,
+          panelTop: panel.top,
+          panelBottom: panel.bottom,
           formTop: form.top,
           formBottom: form.bottom,
+          supportBottom: support.bottom,
           overflowing
         };
       })()`);
@@ -375,6 +387,10 @@ test('login corporativo permanece fixo e integralmente visível', { timeout: 300
       assert.ok(layout.shellBottom <= layout.height, JSON.stringify(layout));
       assert.ok(layout.formTop >= 0, JSON.stringify(layout));
       assert.ok(layout.formBottom <= layout.height, JSON.stringify(layout));
+      assert.ok(layout.trustTop >= layout.storyTop, JSON.stringify(layout));
+      assert.ok(layout.trustBottom <= layout.storyBottom + 1, JSON.stringify(layout));
+      assert.ok(layout.formTop >= layout.panelTop, JSON.stringify(layout));
+      assert.ok(layout.supportBottom <= layout.panelBottom + 1, JSON.stringify(layout));
       assert.deepEqual(layout.overflowing, []);
     }
   } finally {
