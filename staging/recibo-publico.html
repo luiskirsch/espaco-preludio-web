@@ -21,7 +21,8 @@
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
 <body>
-<div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
+<div class="ep-staging-banner">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
+
 
 <div class="ep-shell">
   <header class="ep-topbar">
@@ -143,7 +144,7 @@
 
   const $ = id => document.getElementById(id);
   const params = new URLSearchParams(location.search);
-  const token = (params.get("t") || "").trim();
+  const token = (params.get("t") || params.get("c") || "").trim();
 
   function showError(title, msg) {
     $("loading").classList.add("ep-hide");
@@ -170,7 +171,8 @@
 
   let receipt = null;
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/therapy/recibo/publico?t=${encodeURIComponent(token)}`);
+    const reciboParam = token.length <= 16 ? "c" : "t";
+    const res = await fetch(`${BACKEND_BASE_URL}/therapy/recibo/publico?${reciboParam}=${encodeURIComponent(token)}`);
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
       showError(

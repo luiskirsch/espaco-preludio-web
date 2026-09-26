@@ -1,14 +1,15 @@
-// Espaço Prelúdio — Firebase + Backend config com 2 detecções automáticas:
+// Espaço Prelúdio — Firebase + Backend config com detecções automáticas:
 //
 // (1) Ambiente (staging vs production) — por path:
 //     /staging/* → STAGING (Firebase sextolugar-staging + backend staging)
 //     resto      → PRODUCTION (Firebase osextolugar-game + backend production)
 //
-// (2) Perfil (paciente vs profissional) — por path:
-//     /paciente-* ou /entrar.html → PACIENTE (Firebase app "patient")
-//     resto                       → PROFISSIONAL (Firebase app "[DEFAULT]")
+// (2) Perfil (paciente/aluno, instituição ou profissional) — por path:
+//     /paciente-*, /aluno-* ou /entrar.html → app isolado "patient"
+//     /instituicao-*                         → app isolado "institution"
+//     resto                                  → PROFISSIONAL (app "[DEFAULT]")
 //
-// (2) RESOLVE bug critico: sem isso, ambos perfis compartilham a MESMA
+// Isso evita que perfis diferentes compartilhem a MESMA
 // instancia Firebase Auth, e login do paciente em outra aba derruba a
 // sessao do profissional (e vice-versa) — onAuthStateChanged dispara
 // pra todas as abas da mesma origem que compartilham a app.
@@ -25,7 +26,10 @@ const _path = typeof location !== "undefined" ? location.pathname : "";
 const IS_STAGING = _path.startsWith("/staging/");
 const IS_PATIENT_PAGE =
   _path.includes("/paciente-") ||
+  _path.includes("/aluno-") ||
   _path.endsWith("/entrar.html");
+const IS_INSTITUTION_PAGE = _path.includes("/instituicao-");
+const IS_RT_PAGE = _path.includes("/rt-");
 
 // ─── Configs por ambiente ─────────────────────────────────────────────────
 const STAGING_FIREBASE = {
@@ -114,20 +118,31 @@ const professionalApp = (() => {
   return existing || initializeApp(firebaseConfig);
 })();
 const patientApp = _ensureApp("patient", firebaseConfig);
+const institutionApp = _ensureApp("institution", firebaseConfig);
+const rtApp = _ensureApp("responsavel-tecnico", firebaseConfig);
 
 // Export padrao: aponta pro app correto baseado no perfil da pagina.
 // Codigo existente que faz `import { auth, db } from firebase-config` continua
 // funcionando sem mudanca — auth/db ja vem do app certo.
-export const app  = IS_PATIENT_PAGE ? patientApp : professionalApp;
+export const app  = IS_PATIENT_PAGE
+  ? patientApp
+  : IS_INSTITUTION_PAGE
+    ? institutionApp
+    : IS_RT_PAGE
+      ? rtApp
+    : professionalApp;
 export const auth = getAuth(app);
 export const db   = getFirestore(app);
 
-// Tambem exporta os 2 apps explicitos pra casos especiais (admin pages
-// que precisam consultar ambos perfis, por exemplo).
+// Também exporta os apps explícitos para casos especiais.
 export const authProfessional = getAuth(professionalApp);
 export const authPatient      = getAuth(patientApp);
 export const dbProfessional   = getFirestore(professionalApp);
 export const dbPatient        = getFirestore(patientApp);
+export const authInstitution  = getAuth(institutionApp);
+export const dbInstitution    = getFirestore(institutionApp);
+export const authRt           = getAuth(rtApp);
+export const dbRt             = getFirestore(rtApp);
 
 // Expõe na window pra monitoring.js (carregado antes deste módulo como
 // <script defer>) saber o domínio do backend e o ambiente. Também
@@ -141,7 +156,7 @@ if (typeof window !== "undefined") {
 if (typeof console !== "undefined") {
   console.info(
     `[ep] ambiente: ${IS_STAGING ? "STAGING" : "PRODUCTION"} · ` +
-    `perfil: ${IS_PATIENT_PAGE ? "PACIENTE" : "PROFISSIONAL"} · ` +
+    `perfil: ${IS_PATIENT_PAGE ? "PACIENTE" : IS_INSTITUTION_PAGE ? "INSTITUICAO" : IS_RT_PAGE ? "RT" : "PROFISSIONAL"} · ` +
     `backend: ${BACKEND_BASE_URL} · firebase: ${firebaseConfig.projectId}`
   );
 }

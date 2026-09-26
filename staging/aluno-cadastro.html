@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Cadastro no programa escolar · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <style>
+    .reg-wrap{max-width:680px;margin:0 auto}.reg-card{border:1px solid var(--ep-line);border-radius:12px;padding:16px;background:var(--ep-bg-2)}
+    .reg-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.reg-wide{grid-column:1/-1}.reg-section{border-top:1px solid var(--ep-line);padding-top:18px;margin-top:8px}
+    .reg-loading{text-align:center;padding:48px 0}.reg-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}.reg-summary strong{display:block;font-size:10px;text-transform:uppercase;color:var(--ep-ink-3);margin-bottom:3px}
+    @media(max-width:620px){.reg-grid,.reg-summary{grid-template-columns:1fr}.reg-wide{grid-column:auto}}
+  </style>
+</head>
+<body>
+<div class="ep-staging-banner">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
+
+<main class="ep-auth"><div class="ep-auth__panel reg-wrap">
+  <a href="./index.html" class="ep-brand" style="justify-content:center;margin-bottom:24px"><span class="ep-brand__mark">EP</span><span class="ep-brand__name"><span class="ep-brand__lead">Espaço</span><span>Prelúdio</span></span></a>
+  <section id="loadingState" class="reg-loading"><p class="ep-text-muted">Validando o convite da escola…</p></section>
+  <section id="invalidState" class="ep-hide" style="text-align:center;padding:32px 0"><div style="font-size:48px">🔒</div><h1 class="ep-h2 ep-mt-12">Convite inválido</h1><p id="invalidMessage" class="ep-text-muted ep-mt-8">Use o link individual fornecido pela escola ou pela equipe do programa.</p></section>
+  <section id="formState" class="ep-hide">
+    <div class="ep-eyebrow">Programa público de atenção psicológica</div><h1 class="ep-h1 ep-mt-8">Cadastro do estudante</h1>
+    <div class="reg-card ep-mt-16"><div class="reg-summary"><div><strong>Programa</strong><span id="programName"></span></div><div><strong>Escola</strong><span id="schoolName"></span></div><div><strong>Contratante</strong><span id="authorityName"></span></div><div><strong>Município</strong><span id="municipality"></span></div></div></div>
+    <p class="ep-text-sm ep-text-muted ep-mt-12">Este cadastro solicita entrada no programa. Ele não garante atendimento remoto: um(a) psicólogo(a) avaliará a viabilidade, o assentimento e a necessidade de encaminhamento presencial.</p>
+    <form id="studentForm" class="ep-stack ep-mt-20" novalidate>
+      <div class="reg-grid">
+        <div class="ep-field"><label class="ep-label" for="nome">Nome civil completo *</label><input id="nome" class="ep-input" maxlength="120" autocomplete="name" required></div>
+        <div class="ep-field"><label class="ep-label" for="nomeSocial">Nome social/preferido</label><input id="nomeSocial" class="ep-input" maxlength="120"></div>
+        <div class="ep-field"><label class="ep-label" for="dataNascimento">Data de nascimento *</label><input id="dataNascimento" class="ep-input" type="date" required></div>
+        <div class="ep-field"><label class="ep-label" for="schoolStudentCode">Identificador de matrícula da escola *</label><input id="schoolStudentCode" class="ep-input" maxlength="60" required><span class="ep-text-xs ep-text-muted">Use o código escolar; não informe CPF.</span></div>
+        <div class="ep-field"><label class="ep-label" for="preferredLanguage">Idioma preferido</label><input id="preferredLanguage" class="ep-input" maxlength="60" value="Português (Brasil)"></div>
+        <div class="ep-field"><label class="ep-label" for="anoSerie">Ano/série *</label><input id="anoSerie" class="ep-input" maxlength="40" placeholder="Ex.: 8º ano" required></div>
+        <div class="ep-field"><label class="ep-label" for="turma">Turma</label><input id="turma" class="ep-input" maxlength="40"></div>
+        <div class="ep-field"><label class="ep-label" for="turno">Turno *</label><select id="turno" class="ep-select" required><option value="">Selecione</option><option value="manha">Manhã</option><option value="tarde">Tarde</option><option value="noite">Noite</option><option value="integral">Integral</option></select></div>
+      </div>
+
+      <section id="agePending" class="reg-card"><p class="ep-text-sm">Informe a data de nascimento para exibirmos os campos corretos.</p></section>
+      <section id="minorFields" class="ep-hide reg-section">
+        <h2 class="ep-h3">Contato do estudante e responsável</h2><p class="ep-text-sm ep-text-muted ep-mt-4">O contato do estudante é opcional. A autorização será solicitada diretamente ao responsável.</p>
+        <div class="reg-grid ep-mt-12"><div class="ep-field"><label class="ep-label" for="studentEmail">E-mail do estudante</label><input id="studentEmail" class="ep-input" type="email" autocomplete="email"></div><div class="ep-field"><label class="ep-label" for="studentPhone">Celular do estudante</label><input id="studentPhone" class="ep-input" type="tel"></div></div>
+        <div class="reg-grid ep-mt-12"><div class="ep-field"><label class="ep-label" for="guardianName">Nome do responsável legal *</label><input id="guardianName" class="ep-input" maxlength="120"></div><div class="ep-field"><label class="ep-label" for="guardianRelationship">Vínculo *</label><select id="guardianRelationship" class="ep-select"><option value="">Selecione</option><option>Mãe</option><option>Pai</option><option>Responsável legal</option><option>Tutor(a)</option><option>Guardião(ã)</option><option>Outro vínculo legal</option></select></div><div class="ep-field"><label class="ep-label" for="guardianEmail">E-mail do responsável *</label><input id="guardianEmail" class="ep-input" type="email" autocomplete="email"></div><div class="ep-field"><label class="ep-label" for="guardianPhone">Telefone do responsável *</label><input id="guardianPhone" class="ep-input" type="tel" autocomplete="tel"></div></div>
+        <label class="ep-checkbox ep-mt-16"><input id="guardianDeclaration" type="checkbox"><span>Declaro ser responsável legal e solicito o envio do convite para ler as informações e decidir sobre a participação. Esta marcação ainda não é o consentimento para atendimento.</span></label>
+      </section>
+
+      <section id="adultFields" class="ep-hide reg-section">
+        <h2 class="ep-h3">Contato e ciência do estudante</h2>
+        <div class="reg-grid ep-mt-12"><div class="ep-field"><label class="ep-label" for="adultEmail">E-mail *</label><input id="adultEmail" class="ep-input" type="email" autocomplete="email"></div><div class="ep-field"><label class="ep-label" for="adultPhone">Celular *</label><input id="adultPhone" class="ep-input" type="tel" autocomplete="tel"></div></div>
+        <label class="ep-checkbox ep-mt-16"><input id="selfConsent" type="checkbox"><span>Confirmo que solicito o envio do convite para ler as informações completas, preencher os dados de segurança e decidir sobre minha participação. Esta marcação ainda não é o consentimento para atendimento.</span></label>
+      </section>
+      <div id="formStatus" class="ep-status"></div><button id="submitBtn" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" disabled>Enviar cadastro</button>
+    </form>
+  </section>
+  <section id="successState" class="ep-hide" style="text-align:center;padding:24px 0"><div style="font-size:52px">✅</div><h1 class="ep-h2 ep-mt-12">Cadastro recebido</h1><p id="successText" class="ep-text-muted ep-mt-8"></p><p class="ep-text-sm ep-text-muted ep-mt-12">Guarde o código do caso: <strong id="caseCode"></strong></p></section>
+</div></main>
+<script type="module">
+  import { BACKEND_BASE_URL } from "./js/firebase-config.js";
+  const $=id=>document.getElementById(id), params=new URLSearchParams(location.search);
+  const invitation={programSlug:params.get("programa")||"",schoolId:params.get("escola")||"",schoolCode:params.get("convite")||""};
+  let context=null,isMinor=null;
+  function show(id){["loadingState","invalidState","formState","successState"].forEach(x=>$(x).classList.toggle("ep-hide",x!==id))}
+  function ageFromDate(value){if(!value)return null;const birth=new Date(`${value}T12:00:00`),today=new Date();if(Number.isNaN(birth.getTime())||birth>today)return null;let age=today.getFullYear()-birth.getFullYear();if(today.getMonth()<birth.getMonth()||(today.getMonth()===birth.getMonth()&&today.getDate()<birth.getDate()))age--;return age}
+  async function loadInvitation(){try{if(!invitation.programSlug||!invitation.schoolId||!invitation.schoolCode)throw new Error("Convite incompleto.");const q=new URLSearchParams({escola:invitation.schoolId,convite:invitation.schoolCode});const r=await fetch(`${BACKEND_BASE_URL}/public/programa-escolar/${encodeURIComponent(invitation.programSlug)}?${q}`);const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error==="PROGRAMA_SEM_VAGAS"?"As vagas deste programa estão preenchidas.":"O convite não existe, expirou ou o programa não está aberto.");context=d;$("programName").textContent=d.program.name;$("schoolName").textContent=d.school.name;$("authorityName").textContent=d.program.contractingAuthorityName;$("municipality").textContent=`${d.program.municipality}/${d.program.state}`;show("formState")}catch(e){$("invalidMessage").textContent=e.message;show("invalidState")}}
+  $("dataNascimento").addEventListener("change",()=>{const age=ageFromDate($("dataNascimento").value);isMinor=age===null?null:age<18;$("agePending").classList.toggle("ep-hide",age!==null);$("minorFields").classList.toggle("ep-hide",isMinor!==true);$("adultFields").classList.toggle("ep-hide",isMinor!==false);$("submitBtn").disabled=age===null});
+  $("studentForm").addEventListener("submit",async e=>{e.preventDefault();const status=$("formStatus");status.textContent="";const payload={...invitation,nome:$("nome").value.trim(),nomeSocial:$("nomeSocial").value.trim()||null,dataNascimento:$("dataNascimento").value,schoolStudentCode:$("schoolStudentCode").value.trim(),preferredLanguage:$("preferredLanguage").value.trim()||"Português (Brasil)",anoSerie:$("anoSerie").value.trim(),turma:$("turma").value.trim()||null,turno:$("turno").value};if(!payload.nome||!payload.dataNascimento||!payload.schoolStudentCode||!payload.anoSerie||!payload.turno){status.textContent="Preencha os campos obrigatórios do estudante.";return}if(isMinor){Object.assign(payload,{studentEmail:$("studentEmail").value.trim()||null,studentPhone:$("studentPhone").value.trim()||null,responsavelNome:$("guardianName").value.trim(),responsavelVinculo:$("guardianRelationship").value,responsavelEmail:$("guardianEmail").value.trim(),responsavelTelefone:$("guardianPhone").value.trim(),consentimentoResponsavel:$("guardianDeclaration").checked});if(!payload.responsavelNome||!payload.responsavelVinculo||!payload.responsavelEmail||!payload.responsavelTelefone||!payload.consentimentoResponsavel){status.textContent="Complete os dados e a declaração do responsável.";return}}else{Object.assign(payload,{email:$("adultEmail").value.trim(),telefone:$("adultPhone").value.trim(),selfConsent:$("selfConsent").checked});if(!payload.email||!payload.telefone||!payload.selfConsent){status.textContent="Complete seu contato e confirme a solicitação.";return}}$("submitBtn").disabled=true;$("submitBtn").textContent="Enviando…";try{const r=await fetch(`${BACKEND_BASE_URL}/public/aluno-cadastro`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok){const messages={ALUNO_JA_CADASTRADO_NESTA_ESCOLA:"Este estudante já possui cadastro nesta escola.",IDADE_FORA_DO_ESCOPO_DO_PROGRAMA:"A idade informada está fora do público deste programa.",PROGRAMA_SEM_VAGAS:"As vagas do programa foram preenchidas.",CONVITE_ESCOLAR_INVALIDO:"O convite escolar não é mais válido."};throw new Error(messages[d.error]||d.error||"Não foi possível cadastrar.")}$("caseCode").textContent=d.caseCode||"—";$("successText").textContent=d.isMenor?"Enviamos ao responsável um convite para revisar as informações, completar os dados de segurança e decidir. Depois da autorização, o caso seguirá para triagem.":"Enviamos ao seu e-mail um convite para completar os dados de segurança e decidir sobre a participação. Depois da confirmação, o caso seguirá para triagem.";show("successState")}catch(err){status.textContent=err.message;$("submitBtn").disabled=false;$("submitBtn").textContent="Enviar cadastro"}});
+  loadInvitation();
+</script>
+</body></html>

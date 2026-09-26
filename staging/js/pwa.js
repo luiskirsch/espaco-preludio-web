@@ -41,12 +41,19 @@
         });
       });
 
-      // Quando o novo SW assumir o controle, recarrega
+      // Quando o novo SW assumir o controle, mostra aviso e recarrega após 2s
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
         refreshing = true;
-        window.location.reload();
+        injectStyles();
+        const notice = document.createElement("div");
+        notice.id = "ep-pwa-updating";
+        notice.className = "ep-pwa-toast";
+        notice.style.cssText = "background:#2d4a3e;color:#fff;border-color:#2d4a3e;top:16px;";
+        notice.innerHTML = `<div class="ep-pwa-toast__text" style="color:#fff;">⟳ <strong>Atualizando…</strong> recarregando em instantes.</div>`;
+        document.body.appendChild(notice);
+        setTimeout(() => window.location.reload(), 1800);
       });
 
       // Update check ativo: ao voltar pra aba + a cada 1h. Sem isso, user

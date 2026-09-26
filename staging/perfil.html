@@ -18,14 +18,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
-  <script src="./i18n/init.js?v=1-3" defer></script>
+  <script src="./i18n/init.js?v=1-4" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=2" defer></script>
 </head>
 <body class="ep-has-sidebar">
-<script src="./js/sidebar.js?v=21"></script>
+<div class="ep-staging-banner">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
+
+<script src="./js/sidebar.js?v=26"></script>
 
 <div class="ep-shell">
   <header class="ep-topbar">
@@ -357,6 +359,20 @@
         <p class="ep-text-xs ep-text-muted ep-mt-8" data-i18n="perfil:sched.listSub">
           O diretório lista só profissionais verificados com agendamento ativo. Você pode tirar a qualquer momento.
         </p>
+
+        <!-- Grade de disponibilidade semanal -->
+        <div class="ep-mt-24" style="border-top: 1px solid var(--ep-line); padding-top: 20px;">
+          <div class="ep-label ep-mt-0" style="font-size:13px;font-weight:600;margin-bottom:6px;">Horários disponíveis para agendamento</div>
+          <p class="ep-text-xs ep-text-muted" style="margin-bottom:14px;">Clique nas células para marcar os horários em que você aceita pedidos de consulta. Horários em verde = disponível.</p>
+          <div id="availGrid" style="overflow-x:auto;">
+            <table id="availTable" style="border-collapse:collapse;font-size:12px;min-width:480px;">
+              <thead id="availHead"></thead>
+              <tbody id="availBody"></tbody>
+            </table>
+          </div>
+          <div class="ep-status" id="availStatus" style="margin-top:8px;"></div>
+          <button type="button" class="ep-btn ep-btn--primary ep-btn--sm ep-mt-12" id="availSaveBtn">Salvar disponibilidade</button>
+        </div>
       </section>
 
       <!-- PIX para agendamento público -->
@@ -410,7 +426,7 @@
           </div>
           <div class="ep-field" style="flex: 2;">
             <label class="ep-label" for="asaasApiKey"><span data-i18n="perfil:asaas.apiKey">Chave de API</span> <span id="asaasKeyConfigured" class="ep-text-xs ep-text-muted" style="margin-left: 6px;"></span></label>
-            <input id="asaasApiKey" class="ep-input" type="password" maxlength="500" placeholder="Deixe em branco pra manter a atual" autocomplete="off" data-i18n-placeholder="perfil:asaas.apiKeyPlaceholder">
+            <input id="asaasApiKey" class="ep-input" type="text" maxlength="500" placeholder="Deixe em branco pra manter a atual" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="-webkit-text-security:disc;" data-i18n-placeholder="perfil:asaas.apiKeyPlaceholder">
             <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="perfil:asaas.apiKeyHint">
               Painel Asaas → Integrações → API. Sandbox e produção têm chaves distintas. Sua chave fica server-side e nunca volta pelo /me.
             </p>
@@ -431,6 +447,23 @@
         </div>
 
         <button type="button" id="asaasClearBtn" class="ep-btn ep-btn--ghost ep-btn--sm ep-mt-12" data-i18n="perfil:asaas.clearKey">Limpar chave Asaas</button>
+      </section>
+
+      <!-- WhatsApp de notificação -->
+      <section class="ep-receita-form">
+        <h2 class="ep-h3 ep-mt-0">Notificações por WhatsApp</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Receba uma mensagem no WhatsApp quando um paciente solicitar agendamento pelo seu link público.
+          Deixe em branco para não receber.
+        </p>
+        <div class="ep-field ep-mt-12">
+          <label class="ep-label" for="notifWhatsapp">Número do WhatsApp</label>
+          <input id="notifWhatsapp" class="ep-input" type="tel" maxlength="20"
+            placeholder="Ex.: (48) 99999-9999" autocomplete="tel">
+          <p class="ep-text-xs ep-text-muted ep-mt-0">Somente notificações — o paciente não vê este número.</p>
+        </div>
+        <div class="ep-status" id="notifWhatsappStatus"></div>
+        <button type="button" class="ep-btn ep-btn--primary ep-btn--sm ep-mt-12" id="notifWhatsappSaveBtn">Salvar</button>
       </section>
 
       <!-- Notificações push -->
@@ -789,7 +822,14 @@
   });
 
   const ctx = await requireTherapist({ requireDek: false });
-  const { idToken, therapist } = ctx;
+  let idToken = ctx.idToken;
+  const { therapist } = ctx;
+
+  // Sempre renova o token antes de chamadas autenticadas (expira em 1h)
+  async function freshToken() {
+    try { idToken = await auth.currentUser.getIdToken(); } catch(_) {}
+    return idToken;
+  }
 
   document.getElementById("topUserName").textContent = therapist.displayName || "";
 
@@ -835,6 +875,14 @@
       sub = t.nextChargeAt
         ? tr("perfil:plano.nextChargeOn","Próxima cobrança em {{date}}",{date: new Date(Number(t.nextChargeAt)).toLocaleDateString(currentLocaleSafe(), dateOpts)})
         : tr("perfil:plano.active","Assinatura ativa.");
+    } else if (plano === "empresa") {
+      const paymentActive = String(t.mpPreapprovalStatus || "").toLowerCase() === "authorized";
+      eyebrow = paymentActive ? tr("perfil:plano.proLabel","Plano · Ativo") : "Plano · Pagamento pendente";
+      title = "Programas institucionais";
+      sub = paymentActive
+        ? "Assinatura ativa por R$ 10,00/mês."
+        : "Cadastre o meio de pagamento para realizar consultas. 7 dias grátis; depois, R$ 10,00/mês.";
+      cta = paymentActive ? tr("perfil:plano.managePlan","Gerenciar plano") : "Cadastrar meio de pagamento";
     } else if (plano === "student-active") {
       eyebrow = tr("perfil:plano.proStudent","Plano · Estudante");
       title = tr("perfil:plano.proStudentTitle","Plano Estudante (gratuito)");
@@ -956,6 +1004,9 @@
     $("especialidade").value = t.especialidade || "";
     $("cnpj").value          = t.cnpj || "";
     $("bio").value           = t.bio || "";
+    if ($("notifWhatsapp")) $("notifWhatsapp").value = t.notifWhatsapp || "";
+    // Dispara hook da grade de disponibilidade
+    if (typeof window._applyTherapistData === "function") window._applyTherapistData(t);
 
     if (String(t.tipoConselho || "").toUpperCase() === "INTERNACIONAL") {
       $("numeroConselhoIntl").value = t.numeroConselho || "";
@@ -1145,7 +1196,7 @@
       }
       // Busca chave pública do backend
       const cfgRes = await fetch(`${BACKEND_BASE_URL}/therapy/push/config`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
+        headers: { "Authorization": `Bearer ${await freshToken()}` }
       });
       const cfgData = await cfgRes.json().catch(() => ({}));
       if (!cfgRes.ok || !cfgData.ok || !cfgData.publicKey) {
@@ -1163,7 +1214,7 @@
       });
       const subRes = await fetch(`${BACKEND_BASE_URL}/therapy/push/subscribe`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify({ subscription: sub.toJSON() })
       });
       const subData = await subRes.json().catch(() => ({}));
@@ -1199,7 +1250,7 @@
         await sub.unsubscribe();
         await fetch(`${BACKEND_BASE_URL}/therapy/push/subscribe`, {
           method: "DELETE",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
           body: JSON.stringify({ endpoint })
         }).catch(() => {});
       }
@@ -1214,6 +1265,131 @@
   $("pushEnableBtn").addEventListener("click", pushEnable);
   $("pushDisableBtn").addEventListener("click", pushDisable);
   pushUiRender().catch(() => {});
+
+  // ─── WhatsApp de notificação ─────────────────────────────────────────
+  if ($("notifWhatsappSaveBtn")) {
+    $("notifWhatsappSaveBtn").addEventListener("click", async () => {
+      const btn = $("notifWhatsappSaveBtn");
+      const statusEl = $("notifWhatsappStatus");
+      const value = $("notifWhatsapp").value.trim();
+      btn.disabled = true;
+      btn.textContent = "Salvando…";
+      statusEl.textContent = "";
+      statusEl.className = "ep-status";
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
+          body: JSON.stringify({ notifWhatsapp: value })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+        statusEl.textContent = value ? "✓ Número salvo. Você receberá notificações neste WhatsApp." : "✓ Notificações WhatsApp desativadas.";
+        statusEl.className = "ep-status is-ok";
+      } catch (e) {
+        statusEl.textContent = "Erro: " + e.message;
+        statusEl.className = "ep-status is-err";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Salvar";
+      }
+    });
+  }
+
+  // ─── Grade de disponibilidade semanal ────────────────────────────────
+  (function initAvailGrid() {
+    const DAYS   = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+    const HOURS  = Array.from({ length: 24 }, (_, i) => i); // 0h-23h
+    const SHOW   = [1,2,3,4,5,6]; // Seg-Sáb (sem Dom por padrão)
+    // weeklyAvailability[dow] = Set<hour>
+    let wa = {}; // dow → Set<hour>
+
+    function buildGrid() {
+      const head = document.getElementById("availHead");
+      const body = document.getElementById("availBody");
+      if (!head || !body) return;
+
+      // Cabeçalho
+      head.innerHTML = `<tr>
+        <th style="padding:4px 8px;font-size:11px;color:var(--ep-ink-3);text-align:right;"></th>
+        ${SHOW.map(d => `<th style="padding:4px 10px;font-size:11px;font-weight:600;color:var(--ep-ink-2);text-align:center;">${DAYS[d]}</th>`).join("")}
+      </tr>`;
+
+      // Linhas por hora
+      body.innerHTML = HOURS.map(h => `
+        <tr>
+          <td style="padding:3px 8px;font-size:11px;color:var(--ep-ink-3);text-align:right;white-space:nowrap;">${String(h).padStart(2,"0")}:00</td>
+          ${SHOW.map(d => {
+            const avail = wa[d]?.has(h);
+            return `<td data-dow="${d}" data-hour="${h}"
+              style="padding:3px 6px;text-align:center;cursor:pointer;border-radius:6px;background:${avail ? "rgba(45,106,79,.15)" : "rgba(184,69,61,.1)"};color:${avail ? "#2d6a3e" : "#b8453d"};font-size:11px;font-weight:600;border:1px solid ${avail ? "rgba(45,106,79,.3)" : "rgba(184,69,61,.25)"};user-select:none;">
+              ${avail ? "✓" : "✗"}
+            </td>`;
+          }).join("")}
+        </tr>
+      `).join("");
+
+      // Click handler
+      document.getElementById("availTable")?.querySelectorAll("td[data-dow]").forEach(td => {
+        td.addEventListener("click", () => {
+          const dow  = Number(td.dataset.dow);
+          const hour = Number(td.dataset.hour);
+          if (!wa[dow]) wa[dow] = new Set();
+          if (wa[dow].has(hour)) wa[dow].delete(hour);
+          else wa[dow].add(hour);
+          buildGrid(); // re-render
+        });
+      });
+    }
+
+    function loadAvail(t) {
+      wa = {};
+      const raw = t?.weeklyAvailability || {};
+      for (const [d, hours] of Object.entries(raw)) {
+        wa[Number(d)] = new Set(hours);
+      }
+      buildGrid();
+    }
+
+    // Pre-fill quando therapist carregar
+    const origApply = window._applyTherapistData;
+    window._applyTherapistData = function(t) {
+      if (origApply) origApply(t);
+      loadAvail(t);
+    };
+
+    const saveBtn = document.getElementById("availSaveBtn");
+    const statusEl = document.getElementById("availStatus");
+    if (saveBtn) {
+      saveBtn.addEventListener("click", async () => {
+        saveBtn.disabled = true; saveBtn.textContent = "Salvando…"; statusEl.textContent = "";
+        const payload = {};
+        for (const [d, hours] of Object.entries(wa)) {
+          payload[d] = [...hours].sort((a,b)=>a-b);
+        }
+        try {
+          const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
+            body: JSON.stringify({ weeklyAvailability: payload })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+          statusEl.textContent = "✓ Disponibilidade salva.";
+          statusEl.className = "ep-status is-ok";
+        } catch (e) {
+          statusEl.textContent = "Erro: " + e.message;
+          statusEl.className = "ep-status is-err";
+        } finally {
+          saveBtn.disabled = false; saveBtn.textContent = "Salvar disponibilidade";
+        }
+      });
+    }
+
+    // applyTherapist() é chamado antes deste IIFE, então _applyTherapistData
+    // ainda não existia. Carregamos a disponibilidade diretamente via closure.
+    loadAvail(therapist);
+  })();
 
   // ─── Exportar dados LGPD ─────────────────────────────────────────────
   // Fetch tudo do backend + decifra client-side (DEK) + empacota ZIP via
@@ -1256,13 +1432,13 @@
 
       // 1) Perfil (json completo)
       hdr("Baixando perfil…");
-      const meRes = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const meRes = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
       const meData = await meRes.json();
       zip.file("01-perfil.json", JSON.stringify(meData.therapist || {}, null, 2));
 
       // 2) Pacientes (decifrados)
       hdr("Baixando pacientes (decifrando)…");
-      const pacRes = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const pacRes = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
       const pacData = await pacRes.json();
       const decryptedPatients = [];
       const patientNameByPatientId = {};
@@ -1289,7 +1465,7 @@
 
       // 3) Sessões
       hdr("Baixando sessões…");
-      const sessRes = await fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const sessRes = await fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
       const sessData = await sessRes.json();
       const sessions = sessData.sessions || [];
       zip.file("03-sessoes.csv", rowsToCsv(sessions, [
@@ -1313,7 +1489,7 @@
       for (let i = 0; i < sessions.length; i += CONCURRENCY) {
         const batch = sessions.slice(i, i + CONCURRENCY);
         const results = await Promise.allSettled(batch.map(async s => {
-          const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(s.sessionId)}/notas`, { headers: { "Authorization": `Bearer ${idToken}` } });
+          const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(s.sessionId)}/notas`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
           const d = await r.json().catch(() => ({}));
           const noteList = d.notes || [];
           for (const n of noteList) {
@@ -1338,7 +1514,7 @@
 
       // 5) Financeiro
       hdr("Baixando financeiro…");
-      const finRes = await fetch(`${BACKEND_BASE_URL}/therapy/financeiro/transacoes`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const finRes = await fetch(`${BACKEND_BASE_URL}/therapy/financeiro/transacoes`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
       const finData = await finRes.json();
       const txs = finData.transactions || finData.transacoes || [];
       zip.file("05-financeiro.csv", rowsToCsv(txs, [
@@ -1357,7 +1533,7 @@
 
       // 6) Recibos
       hdr("Baixando recibos…");
-      const recRes = await fetch(`${BACKEND_BASE_URL}/therapy/recibos`, { headers: { "Authorization": `Bearer ${idToken}` } });
+      const recRes = await fetch(`${BACKEND_BASE_URL}/therapy/recibos`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
       const recData = await recRes.json();
       const recibos = recData.receipts || recData.recibos || [];
       zip.file("06-recibos.csv", rowsToCsv(recibos, [
@@ -1375,7 +1551,7 @@
       // 7) Receitas digitais
       hdr("Baixando receitas…");
       try {
-        const r2 = await fetch(`${BACKEND_BASE_URL}/therapy/receitas`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const r2 = await fetch(`${BACKEND_BASE_URL}/therapy/receitas`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
         const d2 = await r2.json();
         const receitas = d2.receitas || d2.receipts || d2.items || [];
         zip.file("07-receitas.csv", rowsToCsv(receitas, [
@@ -1390,7 +1566,7 @@
       // 8) Documentos
       hdr("Baixando documentos…");
       try {
-        const r3 = await fetch(`${BACKEND_BASE_URL}/therapy/documentos`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const r3 = await fetch(`${BACKEND_BASE_URL}/therapy/documentos`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
         const d3 = await r3.json();
         const documentos = d3.documentos || d3.items || [];
         zip.file("08-documentos.csv", rowsToCsv(documentos, [
@@ -1406,13 +1582,13 @@
       // 9) Anamneses respondidas
       hdr("Baixando anamneses…");
       try {
-        const r4 = await fetch(`${BACKEND_BASE_URL}/therapy/anamneses`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const r4 = await fetch(`${BACKEND_BASE_URL}/therapy/anamneses`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
         const d4 = await r4.json();
         const anam = (d4.anamneses || []).filter(a => a.status === "answered");
         const detailed = [];
         for (const a of anam) {
           try {
-            const dRes = await fetch(`${BACKEND_BASE_URL}/therapy/anamneses/${encodeURIComponent(a.anamneseId)}`, { headers: { "Authorization": `Bearer ${idToken}` } });
+            const dRes = await fetch(`${BACKEND_BASE_URL}/therapy/anamneses/${encodeURIComponent(a.anamneseId)}`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
             const dData = await dRes.json();
             detailed.push({ ...a, formatted: dData.anamnese?.formatted || [] });
           } catch { detailed.push(a); }
@@ -1423,7 +1599,7 @@
       // 10) Audit log
       hdr("Baixando audit…");
       try {
-        const r5 = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/audit?limit=2000`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const r5 = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/audit?limit=2000`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
         const d5 = await r5.json();
         const events = d5.events || d5.items || [];
         zip.file("10-audit.csv", rowsToCsv(events, [
@@ -1441,21 +1617,21 @@
         // Garante que tenho ECDH keypair (se não tiver, não tem chat)
         let myEcdhPriv = null;
         try {
-          const kpRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/keypair`, { headers: { "Authorization": `Bearer ${idToken}` } });
+          const kpRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/keypair`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
           if (kpRes.ok) {
             const kpData = await kpRes.json();
             myEcdhPriv = await unwrapKey(kpData.ecdhPrivateWrapped, dekLocal);
           }
         } catch {}
 
-        const threadsRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const threadsRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, { headers: { "Authorization": `Bearer ${await freshToken()}` } });
         const threadsData = await threadsRes.json();
         const threads = threadsData.threads || [];
         const allMessages = [];
 
         for (const tMeta of threads) {
           const tRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(tMeta.threadId)}`, {
-            headers: { "Authorization": `Bearer ${idToken}` }
+            headers: { "Authorization": `Bearer ${await freshToken()}` }
           });
           const tData = await tRes.json();
           if (!tData.ok) continue;
@@ -1471,7 +1647,7 @@
           }
 
           const msgsRes = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(tMeta.threadId)}/messages?limit=500`, {
-            headers: { "Authorization": `Bearer ${idToken}` }
+            headers: { "Authorization": `Bearer ${await freshToken()}` }
           });
           const msgsData = await msgsRes.json();
           for (const m of (msgsData.messages || [])) {
@@ -1578,7 +1754,7 @@ Direito de portabilidade — LGPD Art. 18, V.
 
     try {
       st.textContent = "Baixando dados cifrados…";
-      const headers = { "Authorization": `Bearer ${idToken}` };
+      const headers = { "Authorization": `Bearer ${await freshToken()}` };
 
       const [meRes, pacRes, sessRes] = await Promise.all([
         fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, { headers }),
@@ -1669,7 +1845,7 @@ Direito de portabilidade — LGPD Art. 18, V.
   (async () => {
     try {
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
+        headers: { "Authorization": `Bearer ${await freshToken()}` }
       });
       const d = await r.json().catch(() => ({}));
       const nfse = d.therapist?.nfseConfig || {};
@@ -1714,7 +1890,7 @@ Direito de portabilidade — LGPD Art. 18, V.
 
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify(body)
       });
       const data = await res.json().catch(() => ({}));
@@ -1745,7 +1921,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/nfse/test`, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${idToken}` }
+        headers: { "Authorization": `Bearer ${await freshToken()}` }
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
@@ -1766,7 +1942,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify({ asaasApiKey: "" })
       });
       const data = await res.json().catch(() => ({}));
@@ -1799,8 +1975,21 @@ Direito de portabilidade — LGPD Art. 18, V.
       box.classList.add("ep-hide");
     }
   }
+  function sanitizeSlug(v) {
+    return v.toLowerCase()
+      .replace(/\s+/g, "-")          // espaços → hífens
+      .replace(/[^a-z0-9-]/g, "")   // remove caracteres inválidos
+      .replace(/-+/g, "-")           // hífens duplos → simples
+      .replace(/^-+|-+$/g, "");      // remove hífens no início/fim
+  }
   $("schedSlug").addEventListener("input", () => {
-    renderSchedActiveLink($("schedSlug").value.trim().toLowerCase(), $("schedEnabled").checked);
+    const clean = sanitizeSlug($("schedSlug").value);
+    if (clean !== $("schedSlug").value) {
+      const pos = $("schedSlug").selectionStart;
+      $("schedSlug").value = clean;
+      $("schedSlug").setSelectionRange(pos, pos);
+    }
+    renderSchedActiveLink(clean, $("schedEnabled").checked);
   });
   $("schedEnabled").addEventListener("change", () => {
     renderSchedActiveLink($("schedSlug").value.trim().toLowerCase(), $("schedEnabled").checked);
@@ -1866,7 +2055,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/2fa/setup`, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${idToken}` }
+        headers: { "Authorization": `Bearer ${await freshToken()}` }
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
@@ -1907,7 +2096,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/2fa/enable`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify({ code })
       });
       const data = await res.json();
@@ -1954,7 +2143,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/2fa/disable`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify({ code })
       });
       const data = await res.json();
@@ -2145,7 +2334,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       },
       sessionTopics:                   customTopics,
       aiSummaryEnabled:                $("aiSummaryEnabledToggle")?.checked || false,
-      publicSchedulingSlug:            $("schedSlug").value.trim().toLowerCase(),
+      publicSchedulingSlug:            sanitizeSlug($("schedSlug").value),
       publicSchedulingEnabled:         $("schedEnabled").checked,
       // Campos obrigatórios quando publicSchedulingEnabled=true (validado
       // antes deste body montar — se enabled+vazio, save é bloqueado).
@@ -2224,7 +2413,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify(body)
       });
       const data = await res.json().catch(() => ({}));
@@ -2261,7 +2450,7 @@ Direito de portabilidade — LGPD Art. 18, V.
 
   // ─── TISS: convênios aceitos pelo profissional ──────────────────────
   const tissApi = async (path, opts = {}) => {
-    const headers = { ...(opts.headers || {}), "Authorization": `Bearer ${idToken}` };
+    const headers = { ...(opts.headers || {}), "Authorization": `Bearer ${await freshToken()}` };
     if (opts.body) headers["Content-Type"] = "application/json";
     const r = await fetch(BACKEND_BASE_URL + path, { ...opts, headers });
     const d = await r.json().catch(() => ({}));
@@ -2406,7 +2595,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify({ smsConfig: { provider: "twilio", enabled, accountSid, authToken, fromNumber } })
       });
       const d = await r.json().catch(() => ({}));
@@ -2431,7 +2620,7 @@ Direito de portabilidade — LGPD Art. 18, V.
     try {
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/sms/test`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
         body: JSON.stringify({ to })
       });
       const d = await r.json().catch(() => ({}));

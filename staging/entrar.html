@@ -25,11 +25,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <link rel="stylesheet" href="./css/consultation-video.css?v=1">
   <script src="./i18n/init.js?v=1-3" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <style>
-    /* Cápsula de idioma inline no topbar da sessão do paciente */
-    #top-lang-slot #ep-lang-switcher { position: static !important; }
+    /* Cápsula de idioma no canto direito do topbar da sessão do paciente */
+    #top-lang-slot {
+      margin-left: auto !important;
+      flex-shrink: 0;
+    }
+    #top-lang-slot #ep-lang-switcher {
+      position: static !important;
+      display: flex !important; /* sobrescreve o display:none do CSS global de sessão */
+    }
     #top-lang-slot #ep-lang-btn {
       background: transparent !important;
       border-color: rgba(255,255,255,.22) !important;
@@ -45,6 +53,8 @@
   </style>
 </head>
 <body class="ep-consult">
+<div class="ep-staging-banner">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
+
 
 <!-- Tela 1: pré-entrada com nome + consentimento -->
 <div id="prejoin" style="min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--ep-bg); color: var(--ep-ink);">
@@ -77,7 +87,7 @@
         <ul style="margin: 8px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.55;">
           <li data-i18n-html="entrar:prejoin.privacyItem1Html">O áudio e vídeo são <strong>cifrados ponta a ponta</strong> — só você e o(a) profissional veem/ouvem.</li>
           <li data-i18n="entrar:prejoin.privacyItem2">Não gravamos nada. Não há cookie de rastreio.</li>
-          <li data-i18n="entrar:prejoin.privacyItem3">Suas informações dadas em consulta ficam sob responsabilidade ética e legal do(a) profissional, conforme a Resolução CFP nº 11/2018.</li>
+          <li data-i18n="entrar:prejoin.privacyItem3">Suas informações dadas em consulta ficam sob responsabilidade ética e legal do(a) profissional, conforme a Resolução CFP nº 9/2024 e as demais normas aplicáveis.</li>
         </ul>
       </div>
 
@@ -85,29 +95,6 @@
         <input type="checkbox" id="consentLgpd">
         <span data-i18n="entrar:prejoin.consent">Confirmo que aceito iniciar a sessão de teleconsulta. Reconheço que os dados de saúde compartilhados são protegidos pela LGPD (Art. 11) e seguem o sigilo profissional.</span>
       </label>
-
-      <!-- Seção de pagamento PIX (exibida apenas se necessário) -->
-      <div id="pixSection" style="display:none; margin-top: 8px;">
-        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:16px;">
-          <div style="font-weight:700;font-size:15px;margin-bottom:4px;">💚 Pagamento necessário para entrar</div>
-          <div id="pixValorEntrar" style="font-size:24px;font-weight:700;color:#15803d;margin-bottom:12px;">R$ —</div>
-
-          <div id="pixQrWrap">
-            <img id="pixQrImgEntrar" style="width:180px;height:180px;border-radius:8px;border:1px solid #e2e8f0;display:block;margin:0 auto 12px;" alt="QR Code PIX" src="">
-            <div style="display:flex;gap:8px;align-items:center;background:#f8fafc;border-radius:8px;padding:8px 12px;margin-bottom:8px;">
-              <div id="pixCopiaColaEntrar" style="font-family:monospace;font-size:11px;word-break:break-all;flex:1;color:#475569;line-height:1.4;"></div>
-              <button id="pixCopiarEntrar" class="ep-btn ep-btn--ghost ep-btn--sm" type="button" style="flex-shrink:0;font-size:12px;">Copiar</button>
-            </div>
-            <p style="font-size:12px;color:#64748b;text-align:center;margin:0;">Pague e aguarde a confirmação automática · <span id="pixTimerEntrar" style="font-weight:700;color:#15803d;">30:00</span></p>
-          </div>
-
-          <div id="pixPagoEntrar" style="display:none;flex-direction:row;align-items:center;gap:8px;background:#dcfce7;color:#15803d;border-radius:8px;padding:12px 16px;font-weight:600;margin-top:8px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-            Pagamento confirmado! Você já pode entrar.
-          </div>
-          <div id="pixErroEntrar" style="display:none;color:#dc2626;font-size:13px;margin-top:8px;"></div>
-        </div>
-      </div>
 
       <div class="ep-status" id="prejoinStatus"></div>
 
@@ -147,7 +134,7 @@
     </div>
     <!-- Slot da cápsula de idioma — init.js cria #ep-lang-switcher no body;
          movemos via JS para cá assim que aparecer. -->
-    <div id="top-lang-slot" style="position:relative;flex-shrink:0;margin-left:12px;"></div>
+    <div id="top-lang-slot" style="position:relative;flex-shrink:0;"></div>
   </header>
 
   <main class="ep-consult__main ep-consult__main--solo">
@@ -228,7 +215,7 @@
   import { encryptNote, decryptNote } from "./js/crypto.js";
   import { recallPatientDek, recallPatientUser } from "./js/patient-session.js";
 
-  const LIVEKIT_VERSION = "2.5.6";
+  const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack } = await import('./js/consultation-media.js?v=1');
 
   // tr(key, fallback): retorna tradução do i18next (se já carregou) ou
   // fallback PT. Mesmo padrão de paciente-login.html — robusto a status
@@ -363,97 +350,8 @@
   await detectAuthMode();
   renderAccountSlot();
 
-  // ─── Verificação de pagamento PIX ──────────────────────────────────────
-  let paymentCleared = true; // true = pode entrar (sem PIX ou já pago)
-  let pixPollTimer   = null;
-  let pixCountdownTimer = null;
-
-  function updateStartBtn() {
-    startBtn.disabled = !consentEl.checked || !paymentCleared;
-  }
-
-  async function iniciarPixEntrar(slug, requestId, valor) {
-    const pixSection = document.getElementById("pixSection");
-    const pixQrImg   = document.getElementById("pixQrImgEntrar");
-    const pixCopia   = document.getElementById("pixCopiaColaEntrar");
-    const pixValor   = document.getElementById("pixValorEntrar");
-    const pixErro    = document.getElementById("pixErroEntrar");
-
-    pixValor.textContent = (valor / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-    try {
-      const r = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(slug)}/criar-pix`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId })
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!d.ok) throw new Error(d.error || "Erro ao gerar PIX");
-
-      pixQrImg.src = `data:image/png;base64,${d.qrBase64}`;
-      pixCopia.textContent = d.qrCode || "";
-
-      // Timer de expiração
-      pixCountdownTimer = setInterval(() => {
-        const left = d.expiresAt - Date.now();
-        if (left <= 0) { clearInterval(pixCountdownTimer); document.getElementById("pixTimerEntrar").textContent = "expirado"; return; }
-        const m = Math.floor(left / 60000);
-        const s = Math.floor((left % 60000) / 1000);
-        document.getElementById("pixTimerEntrar").textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
-      }, 1000);
-
-      // Polling de status
-      pixPollTimer = setInterval(async () => {
-        try {
-          const pr = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(requestId)}/status-pagamento`);
-          const pd = await pr.json().catch(() => ({}));
-          if (pd.paid) {
-            clearInterval(pixPollTimer);
-            clearInterval(pixCountdownTimer);
-            document.getElementById("pixQrWrap").style.display = "none";
-            const pagoEl = document.getElementById("pixPagoEntrar");
-            pagoEl.style.display = "flex";
-            paymentCleared = true;
-            updateStartBtn();
-          }
-        } catch { /* silencioso */ }
-      }, 3000);
-
-    } catch (e) {
-      pixErro.textContent = "Erro ao gerar QR code. Recarregue a página.";
-      pixErro.style.display = "block";
-      document.getElementById("pixQrWrap").style.display = "none";
-    }
-  }
-
-  // Checa pagamento via pre-join endpoint
-  (async () => {
-    try {
-      const qs = joinCode ? `c=${encodeURIComponent(joinCode)}` : `t=${encodeURIComponent(joinToken)}`;
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/pre-join?${qs}`);
-      const d = await r.json().catch(() => ({}));
-      if (d.ok && d.paymentRequired && d.pixConfigured) {
-        paymentCleared = false;
-        document.getElementById("pixSection").style.display = "block";
-        updateStartBtn();
-        await iniciarPixEntrar(d.therapistSlug, d.requestId, d.valor || 6000);
-      }
-    } catch { /* silencioso — em caso de erro não bloqueia a entrada */ }
-  })();
-
-  document.getElementById("pixCopiarEntrar").addEventListener("click", () => {
-    const code = document.getElementById("pixCopiaColaEntrar").textContent;
-    if (!code) return;
-    navigator.clipboard.writeText(code).then(() => {
-      const btn = document.getElementById("pixCopiarEntrar");
-      btn.textContent = "Copiado!";
-      setTimeout(() => { btn.textContent = "Copiar"; }, 2000);
-    });
-  });
-  // ─────────────────────────────────────────────────────────────────────
-
   consentEl.addEventListener("change", () => {
-    updateStartBtn();
+    startBtn.disabled = !consentEl.checked;
   });
 
   startBtn.addEventListener("click", async () => {
@@ -548,24 +446,7 @@
     const keyProvider = useE2EE ? new ExternalE2EEKeyProvider() : null;
 
     const room = new Room({
-      adaptiveStream: true,
-      dynacast: true,
-      // Mesma config canonica do consultorio (lado profissional) — telessaude
-      // 1:1 calibrada pra rosto que se mexe naturalmente: 720p@30 + VP9 + 3.5
-      // Mbps + balanced degradation. Ver feedback memory ep-livekit-tuning.
-      videoCaptureDefaults: {
-        resolution: { width: 1280, height: 720, frameRate: 30 },
-        facingMode: "user"
-      },
-      publishDefaults: {
-        dtx: true,
-        red: true,
-        simulcast: false,
-        videoCodec: "vp9",
-        videoEncoding: { maxBitrate: 3_500_000, maxFramerate: 30, priority: "high" },
-        degradationPreference: "balanced",
-        audioPreset: { maxBitrate: 32_000 }
-      },
+      ...consultationRoomOptions(livekitMod),
       e2ee: useE2EE ? { keyProvider, worker: e2eeWorker } : undefined
     });
 
@@ -774,7 +655,7 @@
         }
       })
       .on(RoomEvent.TrackUnsubscribed, (track) => {
-        track.detach().forEach(el => el.remove());
+        detachConsultationTrack(track);
         if (track.kind === Track.Kind.Video) {
           tileRemote.classList.remove("ep-tile--has-video");
         }
@@ -892,59 +773,363 @@
     const slidesImg     = document.getElementById("slidesImg");
     const _pSlidesBuf   = {};
     const _pSlidesData  = [];
+    let _pSlidesIdx = 0;
+    let _pSlidesActive = false;
+    let _pSlidesDeck = "";
+    let _pSlidesLastEndedDeck = "";
+    let _pSlidesGeneration = 0;
+    let _pSlidesRetryTimer = null;
+    let _pSlidesRetryAttempt = 0;
+    let _pSlidesDisplayedIdx = null;
+    let _pSlidesDisplayedUri = "";
+    const _pSlidesStreamControllers = new Map();
+    const _pSlidesAcknowledged = new Set();
+    const SLIDES_STREAM_TOPIC = "ep:slides:image";
+
+    function patientSlideDeck(value) {
+      return typeof value === "string" && value.length > 0 && value.length <= 96 ? value : "";
+    }
+
+    function patientSlideKey(idx) {
+      return `${_pSlidesGeneration}:${idx}`;
+    }
+
+    function patientSlideMessageMatches(msg) {
+      const deck = patientSlideDeck(msg.deck);
+      return _pSlidesActive && (_pSlidesDeck ? deck === _pSlidesDeck : !deck);
+    }
+
+    function publishPatientSlideControl(message) {
+      const payload = _pSlidesDeck && message.t !== "slides:ready"
+        ? { ...message, deck: _pSlidesDeck }
+        : message;
+      return room.localParticipant.publishData(
+        new TextEncoder().encode(JSON.stringify(payload)),
+        { reliable: true }
+      ).catch(() => {});
+    }
+
+    function clearPatientSlideRetry() {
+      if (_pSlidesRetryTimer) clearTimeout(_pSlidesRetryTimer);
+      _pSlidesRetryTimer = null;
+      _pSlidesRetryAttempt = 0;
+    }
+
+    function abortPatientSlideStreams() {
+      _pSlidesStreamControllers.forEach(controller => controller.abort());
+      _pSlidesStreamControllers.clear();
+    }
+
+    function clearPatientSlideData() {
+      clearPatientSlideRetry();
+      abortPatientSlideStreams();
+      _pSlidesData.length = 0;
+      Object.keys(_pSlidesBuf).forEach(k => delete _pSlidesBuf[k]);
+      _pSlidesAcknowledged.clear();
+      _pSlidesDisplayedIdx = null;
+      _pSlidesDisplayedUri = "";
+    }
+
+    function activatePatientSlides(deck) {
+      const isNew = !_pSlidesActive || deck !== _pSlidesDeck;
+      if (isNew) {
+        if (_pSlidesActive && _pSlidesDeck) _pSlidesLastEndedDeck = _pSlidesDeck;
+        _pSlidesGeneration += 1;
+        clearPatientSlideData();
+        _pSlidesDeck = deck;
+      }
+      _pSlidesActive = true;
+      return isNew;
+    }
+
+    function endPatientSlides(deck, rememberEnded = true) {
+      if (!_pSlidesActive || (_pSlidesDeck ? deck !== _pSlidesDeck : !!deck)) return;
+      if (rememberEnded) _pSlidesLastEndedDeck = _pSlidesDeck;
+      _pSlidesActive = false;
+      _pSlidesGeneration += 1;
+      _pSlidesDeck = "";
+      clearPatientSlideData();
+      _pSlidesIdx = 0;
+      slidesOverlay.style.display = "none";
+      slidesImg.removeAttribute("src");
+    }
+
+    function requestPatientSlide(idx, soon = false, delayOverride = null) {
+      if (!_pSlidesActive || idx !== _pSlidesIdx || _pSlidesData[idx]) return;
+      if (_pSlidesRetryTimer) {
+        if (!soon) return;
+        clearTimeout(_pSlidesRetryTimer);
+        _pSlidesRetryTimer = null;
+      }
+      const generation = _pSlidesGeneration;
+      const attempt = _pSlidesRetryAttempt;
+      const delay = delayOverride ?? (soon ? 150 : Math.min(4000, 400 * (2 ** Math.min(attempt, 4))));
+      _pSlidesRetryTimer = setTimeout(() => {
+        _pSlidesRetryTimer = null;
+        if (generation !== _pSlidesGeneration || !_pSlidesActive || idx !== _pSlidesIdx || _pSlidesData[idx]) {
+          clearPatientSlideRetry();
+          return;
+        }
+        _pSlidesRetryAttempt = attempt + 1;
+        void publishPatientSlideControl({ t: "slides:request", idx, stream: true });
+        requestPatientSlide(idx);
+      }, delay);
+    }
+
+    function postponePatientSlideRetry(idx) {
+      if (idx !== _pSlidesIdx) return;
+      if (_pSlidesRetryTimer) clearTimeout(_pSlidesRetryTimer);
+      _pSlidesRetryTimer = null;
+      _pSlidesRetryAttempt = 2;
+      requestPatientSlide(idx, false, 6000);
+    }
+
+    function showPatientSlide(idx, preservePrevious = true) {
+      if (!Number.isInteger(idx) || idx < 0 || idx >= 20) return;
+      if (idx !== _pSlidesIdx) {
+        clearPatientSlideRetry();
+      }
+      _pSlidesIdx = idx;
+      slidesOverlay.style.display = "flex";
+      const uri = _pSlidesData[idx] || "";
+      if (uri) {
+        clearPatientSlideRetry();
+        _pSlidesDisplayedIdx = idx;
+        _pSlidesDisplayedUri = uri;
+        slidesImg.src = uri;
+        slidesImg.alt = `Slide ${idx + 1}`;
+      } else {
+        if (!preservePrevious) {
+          _pSlidesDisplayedIdx = null;
+          _pSlidesDisplayedUri = "";
+          slidesImg.removeAttribute("src");
+        }
+        requestPatientSlide(idx);
+      }
+    }
 
     const _pSlidesKey = e2eeKeyBytes
       ? await crypto.subtle.importKey("raw", e2eeKeyBytes, { name: "AES-GCM" }, false, ["encrypt", "decrypt"])
       : null;
 
+    function concatSlideChunks(chunks) {
+      const length = chunks.reduce((total, chunk) => total + chunk.byteLength, 0);
+      const bytes = new Uint8Array(length);
+      let offset = 0;
+      chunks.forEach((chunk) => {
+        bytes.set(chunk, offset);
+        offset += chunk.byteLength;
+      });
+      return bytes;
+    }
+
+    function slideBytesToB64(bytes) {
+      let binary = "";
+      for (let start = 0; start < bytes.length; start += 8192) {
+        const end = Math.min(start + 8192, bytes.length);
+        let part = "";
+        for (let i = start; i < end; i++) part += String.fromCharCode(bytes[i]);
+        binary += part;
+      }
+      return btoa(binary);
+    }
+
+    function completePatientSlide(idx, uri, generation) {
+      if (!_pSlidesActive || generation !== _pSlidesGeneration) return;
+      _pSlidesData[idx] = uri;
+      delete _pSlidesBuf[idx];
+      if (idx === _pSlidesIdx) showPatientSlide(idx);
+    }
+
+    room.registerByteStreamHandler(SLIDES_STREAM_TOPIC, async (reader) => {
+      const idx = Number(reader.info.attributes?.idx);
+      const ivB64 = reader.info.attributes?.iv || "";
+      const deck = patientSlideDeck(reader.info.attributes?.deck);
+      const streamSize = reader.info.size;
+      if (
+        !Number.isInteger(idx)
+        || idx < 0
+        || idx >= 20
+        || reader.info.attributes?.format !== "jpeg-bytes-v1"
+        || (typeof streamSize === "number" && (!Number.isFinite(streamSize) || streamSize < 1 || streamSize > 512 * 1024))
+        || !_pSlidesActive
+        || (_pSlidesDeck ? deck !== _pSlidesDeck : !!deck)
+      ) {
+        const discardController = new AbortController();
+        const discardTimeout = setTimeout(() => discardController.abort(), 5000);
+        try {
+          reader.withAbortSignal(discardController.signal);
+          await reader.readAll();
+        } catch {} finally {
+          clearTimeout(discardTimeout);
+        }
+        return;
+      }
+      const generation = _pSlidesGeneration;
+      const streamKey = patientSlideKey(idx);
+      _pSlidesStreamControllers.get(streamKey)?.abort();
+      const controller = new AbortController();
+      _pSlidesStreamControllers.set(streamKey, controller);
+      reader.withAbortSignal(controller.signal);
+      const streamTimeout = setTimeout(() => controller.abort(), 20_000);
+      reader.onProgress = () => {
+        if (
+          generation === _pSlidesGeneration
+          && _pSlidesStreamControllers.get(streamKey) === controller
+        ) {
+          postponePatientSlideRetry(idx);
+        }
+      };
+      postponePatientSlideRetry(idx);
+      try {
+        let imageBytes = concatSlideChunks(await reader.readAll());
+        if (!_pSlidesActive || generation !== _pSlidesGeneration) return;
+        if (ivB64) {
+          if (!_pSlidesKey) throw new Error("missing slide key");
+          const iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
+          imageBytes = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv }, _pSlidesKey, imageBytes));
+        }
+        completePatientSlide(idx, "data:image/jpeg;base64," + slideBytesToB64(imageBytes), generation);
+      } catch (error) {
+        if (
+          generation === _pSlidesGeneration
+          && _pSlidesStreamControllers.get(streamKey) === controller
+        ) {
+          console.warn("[slides] stream failed", error);
+          requestPatientSlide(idx, true);
+        }
+      } finally {
+        clearTimeout(streamTimeout);
+        if (_pSlidesStreamControllers.get(streamKey) === controller) {
+          _pSlidesStreamControllers.delete(streamKey);
+        }
+      }
+    });
+
     room.on(RoomEvent.DataReceived, async (payload) => {
       let msg;
       try { msg = JSON.parse(new TextDecoder().decode(payload)); } catch { return; }
+      if (!msg || typeof msg.t !== "string") return;
+      if (msg.t === "slides:hello") {
+        announcePatientSlideReceiver();
+        return;
+      }
+      if (msg.t === "slides:start") {
+        const deck = patientSlideDeck(msg.deck);
+        if (deck && deck === _pSlidesLastEndedDeck) return;
+        if (_pSlidesActive && _pSlidesDeck && !deck) return;
+        const isNew = activatePatientSlides(deck);
+        const idx = Number.isInteger(msg.idx) && msg.idx >= 0 && msg.idx < 20 ? msg.idx : 0;
+        showPatientSlide(idx, !isNew);
+        return;
+      }
+      if (!msg.t.startsWith("slides:") || !patientSlideMessageMatches(msg)) return;
       switch (msg.t) {
-        case "slides:start":
-          slidesOverlay.style.display = "flex";
-          slidesImg.src = "";
+        case "slides:update":
+          showPatientSlide(Number.isInteger(msg.idx) ? msg.idx : _pSlidesIdx);
           break;
-        case "slides:slide":
-          _pSlidesBuf[msg.idx] = { cn: msg.cn, iv: msg.iv || null, chunks: new Array(msg.cn).fill(null) };
+        case "slides:slide": {
+          const idx = Number(msg.idx);
+          const count = Number(msg.cn);
+          if (!Number.isInteger(idx) || idx < 0 || idx >= 20) break;
+          if (!Number.isInteger(count) || count < 1 || count > 256) {
+            if (idx === _pSlidesIdx) requestPatientSlide(idx, true);
+            break;
+          }
+          _pSlidesBuf[idx] = {
+            generation: _pSlidesGeneration,
+            iv: typeof msg.iv === "string" ? msg.iv : null,
+            chunks: new Array(count).fill(null)
+          };
+          postponePatientSlideRetry(idx);
           break;
+        }
         case "slides:chunk": {
-          const buf = _pSlidesBuf[msg.idx];
-          if (buf) {
-            buf.chunks[msg.ci] = msg.d;
-            if (buf.chunks.every(c => c !== null)) {
-              const assembled = buf.chunks.join("");
-              if (buf.iv && _pSlidesKey) {
-                try {
-                  const iv  = Uint8Array.from(atob(buf.iv),  c => c.charCodeAt(0));
-                  const enc = Uint8Array.from(atob(assembled), c => c.charCodeAt(0));
-                  const dec = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, _pSlidesKey, enc);
-                  _pSlidesData[msg.idx] = "data:image/jpeg;base64," + new TextDecoder().decode(dec);
-                } catch (e) { console.warn("[slides] decrypt failed", e); }
-              } else {
-                _pSlidesData[msg.idx] = "data:image/jpeg;base64," + assembled;
+          const idx = Number(msg.idx);
+          const chunkIndex = Number(msg.ci);
+          const buf = _pSlidesBuf[idx];
+          if (
+            !buf
+            || buf.generation !== _pSlidesGeneration
+            || !Number.isInteger(chunkIndex)
+            || chunkIndex < 0
+            || chunkIndex >= buf.chunks.length
+            || typeof msg.d !== "string"
+            || msg.d.length > 16_000
+          ) {
+            if (idx === _pSlidesIdx) requestPatientSlide(idx, true);
+            break;
+          }
+          buf.chunks[chunkIndex] = msg.d;
+          if (buf.chunks.every(c => c !== null)) {
+            const generation = _pSlidesGeneration;
+            const assembled = buf.chunks.join("");
+            try {
+              let imageB64 = assembled;
+              if (buf.iv) {
+                if (!_pSlidesKey) throw new Error("missing slide key");
+                const iv  = Uint8Array.from(atob(buf.iv), c => c.charCodeAt(0));
+                const enc = Uint8Array.from(atob(assembled), c => c.charCodeAt(0));
+                const dec = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, _pSlidesKey, enc);
+                imageB64 = new TextDecoder().decode(dec);
+              }
+              completePatientSlide(idx, "data:image/jpeg;base64," + imageB64, generation);
+            } catch (error) {
+              if (generation === _pSlidesGeneration) {
+                if (_pSlidesBuf[idx] === buf) delete _pSlidesBuf[idx];
+                console.warn("[slides] decrypt failed", error);
+                requestPatientSlide(idx, true);
               }
             }
+          } else {
+            postponePatientSlideRetry(idx);
           }
           break;
         }
         case "slides:nav":
-          slidesOverlay.style.display = "flex";
-          if (_pSlidesData[msg.idx]) {
-            slidesImg.src = _pSlidesData[msg.idx];
-            slidesImg.alt = `Slide ${msg.idx + 1}`;
-          }
+          showPatientSlide(Number(msg.idx));
           break;
         case "slides:end":
-          slidesOverlay.style.display = "none";
-          slidesImg.src = "";
-          _pSlidesData.length = 0;
-          Object.keys(_pSlidesBuf).forEach(k => delete _pSlidesBuf[k]);
+          endPatientSlides(patientSlideDeck(msg.deck));
           break;
       }
     });
 
-    window.addEventListener("beforeunload", () => { try { room.disconnect(); } catch {} });
+    slidesImg.addEventListener("load", () => {
+      const idx = _pSlidesDisplayedIdx;
+      const uri = _pSlidesDisplayedUri;
+      if (!_pSlidesActive || idx === null || _pSlidesData[idx] !== uri) return;
+      const key = patientSlideKey(idx);
+      if (_pSlidesAcknowledged.has(key)) return;
+      _pSlidesAcknowledged.add(key);
+      void publishPatientSlideControl({ t: "slides:ack", idx, stream: true });
+    });
+
+    slidesImg.addEventListener("error", () => {
+      const failedIdx = _pSlidesDisplayedIdx;
+      if (failedIdx !== null) _pSlidesData[failedIdx] = "";
+      _pSlidesDisplayedIdx = null;
+      _pSlidesDisplayedUri = "";
+      slidesImg.removeAttribute("src");
+      if (_pSlidesActive) requestPatientSlide(_pSlidesIdx, true);
+    });
+
+    function announcePatientSlideReceiver() {
+      void publishPatientSlideControl({ t: "slides:ready", stream: true });
+    }
+
+    room.on(RoomEvent.Connected, announcePatientSlideReceiver);
+    room.on(RoomEvent.Reconnected, announcePatientSlideReceiver);
+    room.on(RoomEvent.ParticipantConnected, announcePatientSlideReceiver);
+    room.on(RoomEvent.ParticipantDisconnected, () => endPatientSlides(_pSlidesDeck, false));
+    room.on(RoomEvent.Disconnected, () => endPatientSlides(_pSlidesDeck, false));
+    announcePatientSlideReceiver();
+
+    window.addEventListener("beforeunload", () => {
+      abortPatientSlideStreams();
+      try { room.unregisterByteStreamHandler(SLIDES_STREAM_TOPIC); } catch {}
+      try { room.disconnect(); } catch {}
+    });
   }
 
   // Move #ep-lang-switcher para o slot no topbar assim que for criado pelo init.js

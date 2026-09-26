@@ -20,9 +20,9 @@
   <script src="./i18n/init.js?v=1-3" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <style>
-    /* Topbar admin: links compactos, sem empurrar à direita */
-    .ep-topbar .ep-nav { gap: 0 !important; }
-    .ep-topbar .ep-nav > a:first-child { margin-left: 0 !important; }
+    /* Topbar admin: links compactos, alinhados à direita */
+    .ep-topbar .ep-nav { gap: 0 !important; justify-content: flex-end; }
+    .ep-topbar .ep-nav > a:first-child { margin-left: auto !important; }
     .ep-topbar .ep-nav > a:not(.ep-btn) { padding: 6px 9px !important; font-size: 13px !important; }
 
     /* Layout grid principal do painel */
@@ -403,6 +403,9 @@
   </style>
 </head>
 <body>
+<div class="ep-staging-banner">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
+
+<script src="./js/admin-sidebar.js?v=1"></script>
 
 <div class="ep-shell">
   <header class="ep-topbar">
@@ -416,12 +419,17 @@
     <nav class="ep-nav">
       <a href="./admin-painel.html" class="ep-text-sm is-active" data-i18n="admin-painel:nav.painel">Painel</a>
       <a href="./admin-profissionais.html" class="ep-text-sm">Profissionais</a>
+      <a href="./admin-pacientes.html" class="ep-text-sm">Pacientes</a>
       <a href="./admin-denuncias.html" class="ep-text-sm">Denúncias</a>
       <a href="./admin-verificacoes.html" class="ep-text-sm"><span data-i18n="admin-painel:nav.crpcrm">CRP/CRM</span><span id="navBadgeCrpCrm" class="ep-nav-badge ep-hide">0</span></a>
       <a href="./admin-comprovantes.html" class="ep-text-sm"><span data-i18n="admin-painel:nav.estudante">Estudante</span><span id="navBadgeEstudante" class="ep-nav-badge ep-hide">0</span></a>
       <a href="./admin-comprovantes-recem-formado.html" class="ep-text-sm"><span data-i18n="admin-painel:nav.recemFormado">Recém-formado</span><span id="navBadgeRecemFormado" class="ep-nav-badge ep-hide">0</span></a>
       <a href="./admin-comprovantes-formacao.html" class="ep-text-sm"><span data-i18n="admin-painel:nav.semConselho">Sem conselho</span><span id="navBadgeSemConselho" class="ep-nav-badge ep-hide">0</span></a>
       <a href="./admin-leads-estudante.html" class="ep-text-sm">Leads Estudante<span id="navBadgeLeadsEstudante" class="ep-nav-badge ep-hide">0</span></a>
+      <a href="./admin-empresas.html" class="ep-text-sm">Empresas</a>
+      <a href="./admin-colaboradores.html" class="ep-text-sm">Colaboradores</a>
+      <a href="./admin-estudantes.html" class="ep-text-sm">Estudantes</a>
+      <a href="./admin-empresa.html" class="ep-text-sm">Aprovações<span id="navBadgeEmpresa" class="ep-nav-badge ep-hide">0</span></a>
       <span id="adminEmail" style="display:none;"></span>
     </nav>
   </header>
@@ -509,6 +517,7 @@
           <a href="./admin-comprovantes-recem-formado.html"><span data-i18n="admin-painel:nav.recemFormado">Recém-formado</span><span class="ap-badge ep-hide" id="badgeRecemFormado">0</span></a>
           <a href="./admin-comprovantes-formacao.html"><span data-i18n="admin-painel:nav.semConselho">Sem conselho</span><span class="ap-badge ep-hide" id="badgeSemConselho">0</span></a>
           <a href="./admin-leads-estudante.html"><span>Leads Estudante</span><span class="ap-badge ep-hide" id="badgeLeadsEstudante">0</span></a>
+          <a href="./admin-empresa.html"><span>Empresa</span><span class="ap-badge ep-hide" id="badgeEmpresa">0</span></a>
         </div>
       </div>
 
@@ -532,7 +541,7 @@
             </div>
 
             <div class="ap-metrics ep-mt-16">
-              <div class="ap-card ap-card--wide" data-clickable="true" onclick="location.href='./admin-verificacoes.html'">
+              <div class="ap-card ap-card--wide" data-clickable="true" onclick="location.href='./admin-sessoes.html'">
                 <div class="ap-card__label">
                   <span data-i18n="admin-painel:metrics.sessoes">Sessões</span>
                   <span class="ep-text-muted" id="metricSesPeriodLabel" style="text-transform: lowercase; font-weight: 400;">(período)</span>
@@ -678,7 +687,134 @@
         </div>
 
       </div>
+
+    <!-- ── COMUNICAR COM PROFISSIONAL ───────────────────────────────── -->
+    <section class="ap-section-wrap" id="sectionComunicar">
+      <div class="ap-section-inner">
+
+        <div class="ap-section" style="margin-top:0;">
+          <h2 class="ap-section__title">📣 Comunicar com Profissional</h2>
+          <p class="ap-section__sub">Envie uma notificação estilizada para um profissional específico ou para todos de uma vez.</p>
+
+          <div id="notifComposer" style="background:#fff;border-radius:16px;border:1.5px solid rgba(28,31,29,.1);padding:28px;margin-top:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);">
+
+            <!-- Destinatário -->
+            <div style="margin-bottom:20px;">
+              <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:8px;">Destinatário</label>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;border:1.5px solid rgba(28,31,29,.15);background:#f5f0e8;">
+                  <input type="radio" name="notifTarget" value="one" id="notifTargetOne" checked style="accent-color:#2d6a3e;">
+                  Profissional específico
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;border:1.5px solid rgba(28,31,29,.15);background:#f5f0e8;">
+                  <input type="radio" name="notifTarget" value="all" id="notifTargetAll" style="accent-color:#2d6a3e;">
+                  📢 Todos os profissionais
+                </label>
+              </div>
+              <div id="notifProfRow" style="margin-top:12px;">
+                <select id="notifProfSelect" style="width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid rgba(28,31,29,.15);font-size:13px;background:#f5f0e8;color:#1c1f1d;outline:none;">
+                  <option value="">Carregando profissionais…</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Tipo / Emoji -->
+            <div style="margin-bottom:20px;">
+              <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:8px;">Tipo</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;" id="notifTypeRow">
+                <button type="button" class="notif-type-btn notif-type-active" data-type="info" data-emoji="ℹ️" data-color="#2a3d5c" style="padding:8px 16px;border-radius:999px;border:2px solid #2a3d5c;background:#2a3d5c;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">ℹ️ Informação</button>
+                <button type="button" class="notif-type-btn" data-type="success" data-emoji="🎉" data-color="#2d6a3e" style="padding:8px 16px;border-radius:999px;border:2px solid rgba(28,31,29,.15);background:#f5f0e8;color:#1c1f1d;font-size:12px;font-weight:700;cursor:pointer;">🎉 Parabéns</button>
+                <button type="button" class="notif-type-btn" data-type="warning" data-emoji="⚠️" data-color="#b8453d" style="padding:8px 16px;border-radius:999px;border:2px solid rgba(28,31,29,.15);background:#f5f0e8;color:#1c1f1d;font-size:12px;font-weight:700;cursor:pointer;">⚠️ Aviso</button>
+                <button type="button" class="notif-type-btn" data-type="tip" data-emoji="💡" data-color="#c8963a" style="padding:8px 16px;border-radius:999px;border:2px solid rgba(28,31,29,.15);background:#f5f0e8;color:#1c1f1d;font-size:12px;font-weight:700;cursor:pointer;">💡 Dica</button>
+                <button type="button" class="notif-type-btn" data-type="admin_message" data-emoji="📨" data-color="#1c1f1d" style="padding:8px 16px;border-radius:999px;border:2px solid rgba(28,31,29,.15);background:#f5f0e8;color:#1c1f1d;font-size:12px;font-weight:700;cursor:pointer;">📨 Mensagem</button>
+              </div>
+            </div>
+
+            <!-- Título + Corpo -->
+            <div style="display:grid;gap:14px;margin-bottom:20px;">
+              <div>
+                <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px;">Título <span style="color:#b8453d;">*</span></label>
+                <input id="notifTitle" type="text" maxlength="100" placeholder="Ex.: Sua agenda está atualizada 🎯" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid rgba(28,31,29,.15);font-size:14px;background:#f5f0e8;color:#1c1f1d;outline:none;">
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px;">Mensagem <span style="color:#b8453d;">*</span></label>
+                <textarea id="notifBody" rows="3" maxlength="500" placeholder="Escreva a mensagem que o profissional vai ver…" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid rgba(28,31,29,.15);font-size:14px;background:#f5f0e8;color:#1c1f1d;outline:none;resize:vertical;font-family:inherit;"></textarea>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px;">Link (opcional)</label>
+                <input id="notifLink" type="url" placeholder="https://espacopreludio.com.br/…" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid rgba(28,31,29,.15);font-size:14px;background:#f5f0e8;color:#1c1f1d;outline:none;">
+              </div>
+            </div>
+
+            <!-- Preview -->
+            <div style="margin-bottom:20px;">
+              <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:8px;">Preview (como o profissional vai ver)</label>
+              <div id="notifPreview" style="border-radius:12px;padding:16px 18px;display:flex;align-items:flex-start;gap:14px;border:1.5px solid rgba(28,31,29,.1);background:#f5f0e8;">
+                <div id="notifPreviewEmoji" style="font-size:28px;flex-shrink:0;line-height:1;">ℹ️</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+                    <span style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9a9992;">Espaço Prelúdio</span>
+                    <span style="font-size:10px;color:#9a9992;">· agora</span>
+                  </div>
+                  <div id="notifPreviewTitle" style="font-size:14px;font-weight:700;color:#1c1f1d;margin-bottom:4px;">Título da notificação</div>
+                  <div id="notifPreviewBody" style="font-size:13px;color:#5a5a56;line-height:1.5;">Corpo da mensagem aqui…</div>
+                  <div id="notifPreviewLink" style="display:none;margin-top:8px;"><span style="font-size:12px;font-weight:600;color:#2d6a3e;">→ Ver mais</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botão -->
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+              <button id="notifSendBtn" type="button" style="padding:12px 28px;border-radius:999px;background:#1c1f1d;color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;">
+                Enviar notificação
+              </button>
+              <span id="notifSendStatus" style="font-size:13px;"></span>
+            </div>
+
+          </div><!-- /notifComposer -->
+
+          <!-- ── MENSAGEM DIRETA NO CHAT ── -->
+          <div style="background:#fff;border-radius:16px;border:1.5px solid rgba(28,31,29,.1);padding:28px;margin-top:20px;box-shadow:0 2px 12px rgba(0,0,0,.06);">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+              <div style="width:42px;height:42px;border-radius:50%;background:#c8963a;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;">EP</div>
+              <div>
+                <div style="font-size:14px;font-weight:700;color:#1c1f1d;">💬 Mensagem direta no chat</div>
+                <div style="font-size:12px;color:#9a9992;">Aparece na caixa de mensagens do profissional como "🏛️ Espaço Prelúdio"</div>
+              </div>
+            </div>
+
+            <div style="display:grid;gap:14px;">
+              <div>
+                <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px;">Destinatário</label>
+                <select id="msgProfSelect" style="width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid rgba(28,31,29,.15);font-size:13px;background:#f5f0e8;color:#1c1f1d;outline:none;">
+                  <option value="">Carregando…</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px;">Assunto (opcional)</label>
+                <input id="msgSubject" type="text" maxlength="100" placeholder="Ex.: Sobre seu perfil" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid rgba(28,31,29,.15);font-size:14px;background:#f5f0e8;color:#1c1f1d;outline:none;">
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:700;color:#5a5a56;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px;">Mensagem <span style="color:#b8453d;">*</span></label>
+                <textarea id="msgText" rows="4" maxlength="2000" placeholder="Escreva a mensagem…" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid rgba(28,31,29,.15);font-size:14px;background:#f5f0e8;color:#1c1f1d;outline:none;resize:vertical;font-family:inherit;"></textarea>
+                <div style="font-size:11px;color:#9a9992;margin-top:4px;">O profissional pode responder diretamente no chat.</div>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;margin-top:18px;flex-wrap:wrap;">
+              <button id="msgSendBtn" type="button" style="padding:12px 28px;border-radius:999px;background:#c8963a;color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;">
+                Enviar mensagem
+              </button>
+              <span id="msgSendStatus" style="font-size:13px;"></span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
     </section>
+    </section>
+
 
   </main>
 </div>
@@ -731,8 +867,10 @@
     }
   });
 
-  logoutBtn.addEventListener("click", () => signOut(auth));
-  document.getElementById("forbiddenLogout").addEventListener("click", () => signOut(auth));
+  // Expõe signOut globalmente para o botão flutuante do sidebar
+  window._epAdminSignOut = () => signOut(auth);
+  logoutBtn?.addEventListener("click", () => signOut(auth));
+  document.getElementById("forbiddenLogout")?.addEventListener("click", () => signOut(auth));
 
   // ─── Auth state ─────────────────────────────────────────────────────
   let idTokenCache = null;
@@ -740,15 +878,15 @@
     if (!user) {
       idTokenCache = null;
       adminEmail.textContent = "…";
-      window.location.href = "./admin-login.html"; return;
       stopAutoRefresh();
-      return;
+      window.location.href = "./admin-login.html"; return;
     }
     idTokenCache = await user.getIdToken();
     adminEmail.textContent = user.email || "?";
-    showDashboard();
-    fetchDashboard();
+    // Não mostra o dashboard antes de confirmar acesso admin no backend
+    await fetchDashboard();
     startAutoRefresh();
+    initNotifComposer();
   });
 
   // ─── Fetch dashboard ────────────────────────────────────────────────
@@ -765,12 +903,15 @@
       }
       const d = await r.json();
       if (!d.ok) {
+        showDashboard();
         document.getElementById("serverStatusText").textContent = tr("admin-painel:status.offline", "OFFLINE");
         setServerPill("err");
         return;
       }
+      showDashboard();
       render(d);
     } catch (err) {
+      showDashboard();
       document.getElementById("serverStatusText").textContent = tr("admin-painel:status.offline", "OFFLINE");
       setServerPill("err");
     } finally {
@@ -920,12 +1061,14 @@
     setBadge("badgeRecemFormado", d.pendencias.recemFormado);
     setBadge("badgeSemConselho", d.pendencias.semConselho);
     setBadge("badgeLeadsEstudante", d.pendencias.leadsEstudante);
+    setBadge("badgeEmpresa", d.pendencias.empresa);
 
     setNavBadge("navBadgeCrpCrm", d.pendencias.crpCrm);
     setNavBadge("navBadgeEstudante", d.pendencias.estudante);
     setNavBadge("navBadgeRecemFormado", d.pendencias.recemFormado);
     setNavBadge("navBadgeSemConselho", d.pendencias.semConselho);
     setNavBadge("navBadgeLeadsEstudante", d.pendencias.leadsEstudante);
+    setNavBadge("navBadgeEmpresa", d.pendencias.empresa);
 
     // Tiers
     document.getElementById("tierPro").textContent = fmtNumber(d.profissionais.byTier.pro);
@@ -1099,6 +1242,86 @@
     }
   }
 
+  const EVENT_LABELS = {
+    // Profissional
+    "therapist_perfil_updated":      "Perfil atualizado",
+    "therapist_registered":          "Novo cadastro",
+    "therapist_password_changed":    "Senha alterada",
+    "therapist_dek_recovered":       "Chave recuperada",
+    // Sessões
+    "session_created":               "Sessão criada",
+    "session_updated":               "Sessão atualizada",
+    "session_canceled":              "Sessão cancelada",
+    "session_started":               "Sessão iniciada",
+    "session_ended":                 "Sessão encerrada",
+    "session_no_show":               "Paciente não compareceu",
+    // Agendamento público
+    "scheduling_request_created":    "Pedido de consulta recebido",
+    "scheduling_request_approved":   "Pedido aprovado",
+    "scheduling_request_rejected":   "Pedido recusado",
+    // Bloqueios
+    "blackout_created":              "Horário bloqueado",
+    "blackout_deleted":              "Bloqueio removido",
+    // Verificações / Comprovantes
+    "verificacao_aprovada":          "Verificação aprovada",
+    "verificacao_rejeitada":         "Verificação rejeitada",
+    "comprovante_estudante_enviado": "Comprovante estudante enviado",
+    "comprovante_estudante_aprovado":"Comprovante estudante aprovado",
+    "comprovante_estudante_rejeitado":"Comprovante estudante rejeitado",
+    "comprovante_formacao_enviado":  "Comprovante formação enviado",
+    "comprovante_formacao_aprovado": "Comprovante formação aprovado",
+    "comprovante_formacao_rejeitado":"Comprovante formação rejeitado",
+    // Planos
+    "plano_ativado":                 "Assinatura ativada",
+    "plano_cancelado":               "Assinatura cancelada",
+    "cortesia_concedida":            "Cortesia concedida",
+    // Empresa
+    "empresa_aprovado":              "Empresa aprovada",
+    "empresa_rejeitado":             "Empresa rejeitada",
+    // Notificações / Push
+    "push_enviado":                  "Notificação push enviada",
+    // Paciente
+    "patient_account_created":       "Conta de paciente criada",
+    "patient_note_saved":            "Nota de sessão salva",
+    "anamnese_enviada":              "Anamnese enviada",
+    // Prontuário / Documentos
+    "documento_gerado":              "Documento gerado",
+    "receita_gerada":                "Receita gerada",
+    "recibo_gerado":                 "Recibo gerado",
+    // Admin
+    "admin_plano_alterado":          "Plano alterado pelo admin",
+    "admin_verificacao_manual":      "Verificação manual",
+    // Agenda
+    "agenda_config_updated":         "Configuração de agenda atualizada",
+    // Financeiro
+    "lancamento_criado":             "Lançamento criado",
+    "lancamento_atualizado":         "Lançamento atualizado",
+    // Sessão — estados adicionais
+    "therapist_joined":              "Terapeuta entrou na sessão",
+    "session_completed":             "Sessão concluída",
+    "session_hidden":                "Sessão ocultada",
+    "session_no_show_confirmed":     "Não-comparecimento confirmado",
+    // Documentos duplicados bloqueados
+    "student_doc_dedup_block":       "Comprovante duplicado bloqueado",
+    "recem_formado_doc_dedup_block": "Doc. recém-formado duplicado bloqueado",
+    "formacao_doc_dedup_block":      "Doc. formação duplicado bloqueado",
+    // NFS-e
+    "nfse_emitida":                  "NFS-e emitida",
+    "nfse_falha":                    "Falha ao emitir NFS-e",
+    // Paciente
+    "session_note_saved":            "Nota de sessão salva",
+    "patient_joined":                "Paciente entrou na sessão",
+    // Senha / acesso
+    "therapist_password_reset":      "Senha redefinida",
+  };
+
+  function eventLabel(type) {
+    if (!type) return "Evento desconhecido";
+    if (EVENT_LABELS[type]) return EVENT_LABELS[type];
+    // Formata snake_case → palavras capitalizadas como fallback
+    return type.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  }
+
   function renderEvents(eventos) {
     const list = document.getElementById("eventsList");
     if (!eventos || !eventos.length) {
@@ -1109,7 +1332,7 @@
       <div class="ap-event">
         <div class="ap-event__time">${fmtTime(e.at)}</div>
         <div>
-          <div class="ap-event__type">${escapeHtml(e.type || "?")}</div>
+          <div class="ap-event__type">${escapeHtml(eventLabel(e.type))}</div>
           ${e.therapistUid ? `<div class="ap-event__detail">uid: ${escapeHtml(String(e.therapistUid).substring(0,12))}…</div>` : ""}
           ${e.detail ? `<div class="ap-event__detail">${escapeHtml(String(e.detail).substring(0,80))}</div>` : ""}
         </div>
@@ -1122,12 +1345,172 @@
       "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
     }[c]));
   }
+
+  // ── COMUNICAR COM PROFISSIONAL ─────────────────────────────────────────
+  async function initNotifComposer() {
+    const $ = id => document.getElementById(id);
+    if (!$("notifComposer")) return;
+
+    let selectedType = "info";
+    let selectedEmoji = "ℹ️";
+    const TYPE_COLORS = {
+      info: "#2a3d5c", success: "#2d6a3e", warning: "#b8453d",
+      tip: "#c8963a", admin_message: "#1c1f1d"
+    };
+
+    // Carregar profissionais nos selects
+    let profsCache = [];
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/profissionais`, {
+        headers: { "Authorization": `Bearer ${idTokenCache}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      profsCache = (d.items || []).sort((a, b) => (a.displayName || "").localeCompare(b.displayName || ""));
+      const opts = `<option value="">— Selecione o profissional —</option>` +
+        profsCache.map(p => `<option value="${escapeHtml(p.uid)}">${escapeHtml(p.displayName || p.email || p.uid)}</option>`).join("");
+      if ($("notifProfSelect")) $("notifProfSelect").innerHTML = opts;
+      if ($("msgProfSelect"))  $("msgProfSelect").innerHTML  = opts;
+    } catch {
+      const err = `<option value="">Erro ao carregar</option>`;
+      if ($("notifProfSelect")) $("notifProfSelect").innerHTML = err;
+      if ($("msgProfSelect"))  $("msgProfSelect").innerHTML  = err;
+    }
+
+    // Alternar destinatário
+    document.querySelectorAll("input[name='notifTarget']").forEach(r => {
+      r.addEventListener("change", () => {
+        $("notifProfRow").style.display = r.value === "one" ? "block" : "none";
+      });
+    });
+
+    // Tipo buttons
+    document.querySelectorAll(".notif-type-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".notif-type-btn").forEach(b => {
+          b.style.background = "#f5f0e8";
+          b.style.color = "#1c1f1d";
+          b.style.borderColor = "rgba(28,31,29,.15)";
+          b.classList.remove("notif-type-active");
+        });
+        const color = btn.dataset.color;
+        btn.style.background = color;
+        btn.style.color = "#fff";
+        btn.style.borderColor = color;
+        btn.classList.add("notif-type-active");
+        selectedType = btn.dataset.type;
+        selectedEmoji = btn.dataset.emoji;
+        $("notifPreviewEmoji").textContent = selectedEmoji;
+        updatePreview();
+      });
+    });
+
+    // Preview em tempo real
+    function updatePreview() {
+      const title = $("notifTitle").value.trim() || "Título da notificação";
+      const body  = $("notifBody").value.trim()  || "Corpo da mensagem aqui…";
+      const link  = $("notifLink").value.trim();
+      const color = TYPE_COLORS[selectedType] || "#1c1f1d";
+      $("notifPreviewTitle").textContent = title;
+      $("notifPreviewBody").textContent  = body;
+      $("notifPreview").style.borderLeftColor = color;
+      $("notifPreview").style.borderLeftWidth = "4px";
+      if (link) { $("notifPreviewLink").style.display = "block"; }
+      else       { $("notifPreviewLink").style.display = "none"; }
+    }
+    ["notifTitle","notifBody","notifLink"].forEach(id => {
+      $(id)?.addEventListener("input", updatePreview);
+    });
+    updatePreview();
+
+    // Enviar
+    $("notifSendBtn").addEventListener("click", async () => {
+      const broadcast = document.querySelector("input[name='notifTarget']:checked")?.value === "all";
+      const recipientUid = $("notifProfSelect").value;
+      const title = $("notifTitle").value.trim();
+      const body  = $("notifBody").value.trim();
+      const link  = $("notifLink").value.trim() || null;
+
+      if (!title || !body) {
+        $("notifSendStatus").textContent = "⚠️ Preencha título e mensagem.";
+        $("notifSendStatus").style.color = "#b8453d";
+        return;
+      }
+      if (!broadcast && !recipientUid) {
+        $("notifSendStatus").textContent = "⚠️ Selecione um profissional.";
+        $("notifSendStatus").style.color = "#b8453d";
+        return;
+      }
+
+      const btn = $("notifSendBtn");
+      btn.disabled = true;
+      btn.textContent = broadcast ? "Enviando para todos…" : "Enviando…";
+      $("notifSendStatus").textContent = "";
+
+      try {
+        const payload = { title, body, type: selectedType, emoji: selectedEmoji, link };
+        if (broadcast) payload.broadcast = true;
+        else payload.recipientUid = recipientUid;
+
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/notificacoes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idTokenCache}` },
+          body: JSON.stringify(payload)
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d.error || r.status);
+
+        const msg = broadcast
+          ? `✅ Enviado para ${d.sent} profissionais!`
+          : "✅ Notificação enviada!";
+        $("notifSendStatus").textContent = msg;
+        $("notifSendStatus").style.color = "#2d6a3e";
+        $("notifTitle").value = "";
+        $("notifBody").value  = "";
+        $("notifLink").value  = "";
+        updatePreview();
+      } catch (e) {
+        $("notifSendStatus").textContent = "❌ Erro: " + e.message;
+        $("notifSendStatus").style.color = "#b8453d";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Enviar notificação";
+      }
+    });
+
+    // ── Enviar mensagem de chat ──────────────────────────────────────
+    $("msgSendBtn")?.addEventListener("click", async () => {
+      const recipientUid = $("msgProfSelect")?.value;
+      const text    = $("msgText")?.value?.trim();
+      const subject = $("msgSubject")?.value?.trim() || undefined;
+
+      if (!recipientUid) { $("msgSendStatus").textContent = "⚠️ Selecione um profissional."; $("msgSendStatus").style.color = "#b8453d"; return; }
+      if (!text)         { $("msgSendStatus").textContent = "⚠️ Escreva a mensagem."; $("msgSendStatus").style.color = "#b8453d"; return; }
+
+      const btn = $("msgSendBtn");
+      btn.disabled = true; btn.textContent = "Enviando…";
+      $("msgSendStatus").textContent = "";
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/admin/mensagem`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idTokenCache}` },
+          body: JSON.stringify({ recipientUid, text, subject })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d.error || r.status);
+        $("msgSendStatus").textContent = "✅ Mensagem enviada! Aparece no chat do profissional.";
+        $("msgSendStatus").style.color = "#2d6a3e";
+        if ($("msgText")) $("msgText").value = "";
+        if ($("msgSubject")) $("msgSubject").value = "";
+      } catch (e) {
+        $("msgSendStatus").textContent = "❌ Erro: " + e.message;
+        $("msgSendStatus").style.color = "#b8453d";
+      } finally {
+        btn.disabled = false; btn.textContent = "Enviar mensagem";
+      }
+    });
+  }
 </script>
 
-<button id="logoutBtn" type="button" style="position:fixed;bottom:24px;left:24px;z-index:9999;display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:999px;background:#1a130a;color:#f3ecd9;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;box-shadow:0 4px 16px rgba(26,19,10,0.25);">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f3ecd9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-  Sair
-</button>
 
 </body>
 </html>

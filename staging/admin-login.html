@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login Admin · Espaço Prelúdio (staging)</title>
+  <title>Login Admin · Espaço Prelúdio</title>
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,9 +27,10 @@
   </style>
 </head>
 <body>
-<div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
+<div class="ep-staging-banner">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
 
-<div class="admin-card" style="margin-top: 40px;">
+
+<div class="admin-card">
 
   <!-- Brand -->
   <div class="admin-brand">
@@ -38,7 +39,7 @@
     </div>
     <div class="admin-brand__text">
       <div class="admin-brand__name">Espaço Prelúdio</div>
-      <div class="admin-brand__tag">Painel Admin · Staging</div>
+      <div class="admin-brand__tag">Painel Admin</div>
     </div>
   </div>
 
@@ -64,6 +65,12 @@
       <button type="submit" id="loginBtn" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" style="margin-top: 20px;">
         Entrar
       </button>
+
+      <p style="text-align:center;margin-top:14px;margin-bottom:0;">
+        <button type="button" id="forgotBtn" style="background:none;border:none;padding:0;font:inherit;font-size:13px;color:var(--ep-ink-3);cursor:pointer;text-decoration:underline;">
+          Esqueci minha senha
+        </button>
+      </p>
     </form>
   </div>
 
@@ -78,7 +85,7 @@
 <script type="module">
   import {
     onAuthStateChanged, signInWithEmailAndPassword, signOut,
-    browserSessionPersistence, setPersistence
+    sendPasswordResetEmail, browserSessionPersistence, setPersistence
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth } from "./js/firebase-config.js";
 
@@ -90,6 +97,7 @@
   const loginForm = document.getElementById("loginForm");
   const sairBtn   = document.getElementById("sairBtn");
 
+  // Already authenticated? Go directly
   onAuthStateChanged(auth, user => {
     if (user) window.location.replace(dest);
   });
@@ -101,6 +109,7 @@
     statusEl.className = "ep-status";
 
     try {
+      // Sessão vive apenas na aba atual — fecha a aba, perde a sessão
       await setPersistence(auth, browserSessionPersistence);
       await signInWithEmailAndPassword(auth, emailEl.value.trim().toLowerCase(), passEl.value);
     } catch (err) {
@@ -122,6 +131,23 @@
   sairBtn.addEventListener("click", async () => {
     await signOut(auth);
     sairBtn.textContent = "Saído.";
+  });
+
+  document.getElementById("forgotBtn").addEventListener("click", async () => {
+    const email = emailEl.value.trim().toLowerCase();
+    if (!email) {
+      statusEl.textContent = "Digite o e-mail acima antes de redefinir a senha.";
+      statusEl.className = "ep-status is-err";
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      statusEl.textContent = "E-mail de redefinição enviado! Verifique sua caixa de entrada.";
+      statusEl.className = "ep-status";
+    } catch (err) {
+      statusEl.textContent = "Não foi possível enviar o e-mail. Verifique o endereço digitado.";
+      statusEl.className = "ep-status is-err";
+    }
   });
 </script>
 

@@ -41,6 +41,10 @@ export function clear2faSession() {
   try { sessionStorage.removeItem(TWOFA_KEY); } catch {}
 }
 
+// Acrescenta a prova de 2FA a toda chamada clínica feita por páginas que
+// usam este guard. A validação real é do backend; sessionStorage é apenas o
+// transporte do token opaco e não uma decisão de autorização do cliente.
+// Centralizar aqui também evita que novas telas esqueçam o header.
 const nativeFetch = globalThis.fetch.bind(globalThis);
 let twofaRedirectStarted = false;
 
@@ -57,12 +61,16 @@ function isTherapyApiRequest(input) {
 
 async function therapyAuthenticatedFetch(input, init = {}) {
   if (!isTherapyApiRequest(input)) return nativeFetch(input, init);
+
   const requestHeaders = typeof Request !== "undefined" && input instanceof Request
     ? input.headers
     : undefined;
   const headers = new Headers(init.headers || requestHeaders || undefined);
   const twofaToken = get2faSessionToken();
-  if (twofaToken && !headers.has("X-Therapy-2FA")) headers.set("X-Therapy-2FA", twofaToken);
+  if (twofaToken && !headers.has("X-Therapy-2FA")) {
+    headers.set("X-Therapy-2FA", twofaToken);
+  }
+
   const response = await nativeFetch(input, { ...init, headers });
   if (response.status === 401 && !location.pathname.endsWith("/2fa-verify.html")) {
     const data = await response.clone().json().catch(() => ({}));
@@ -414,9 +422,9 @@ function mountHelpBubble() {
   inputEl.addEventListener("keypress", (e) => { if (e.key === "Enter") sendQ(); });
 }
 
-// Preenche o slot de perfil no topbar — avatar circular + nome clicável.
-// O <a id="topProfileLink"> é o link pra perfil.html. Se a página não tiver
-// o markup (ex.: páginas públicas), no-op silencioso.
+// Preenche os slots de perfil do topbar e da sidebar. Algumas páginas
+// operacionais (como Escolas) não possuem topbar visível; por isso a sidebar
+// precisa receber os dados diretamente, sem depender do espelhamento do topo.
 //
 // Foto: vem como data URL construída a partir de therapist.photoBase64 +
 // therapist.photoMime (armazenamento inline no Firestore). Fallback pra
@@ -426,27 +434,38 @@ export function applyTopUserSlot(therapist) {
   const elName   = document.getElementById("topUserName");
   const elAvatar = document.getElementById("topUserAvatar");
   if (elName) elName.textContent = name || "Perfil";
-  if (elAvatar) {
+  const sidebarName = document.getElementById("sidebarUserName");
+  if (sidebarName) {
+    const parts = (name || "Perfil").split(/\s+/).filter(Boolean);
+    const visibleParts = parts.length > 1 ? [parts[0], parts[parts.length - 1]] : [parts[0]];
+    sidebarName.replaceChildren(...visibleParts.map(part => {
+      const span = document.createElement("span");
+      span.textContent = part;
+      return span;
+    }));
+  }
+  const avatars = [elAvatar, document.getElementById("sidebarUserAvatar")].filter(Boolean);
+  avatars.forEach(avatar => {
     const photoBase64 = String(therapist?.photoBase64 || "");
     const requestedMime = String(therapist?.photoMime || "image/jpeg");
     const photoMime = /^(?:image\/)(?:jpeg|png|webp|gif)$/i.test(requestedMime) ? requestedMime : "image/jpeg";
     const safePhoto = photoBase64.length <= 1_500_000 && /^[A-Za-z0-9+/]+={0,2}$/.test(photoBase64);
     if (safePhoto) {
-      elAvatar.style.backgroundImage = `url(data:${photoMime};base64,${photoBase64})`;
-      elAvatar.style.backgroundSize = "cover";
-      elAvatar.style.backgroundPosition = "center";
-      elAvatar.textContent = "";
+      avatar.style.backgroundImage = `url(data:${photoMime};base64,${photoBase64})`;
+      avatar.style.backgroundSize = "cover";
+      avatar.style.backgroundPosition = "center";
+      avatar.textContent = "";
     } else {
-      elAvatar.style.backgroundImage = "";
+      avatar.style.backgroundImage = "";
       const initials = (name.match(/\b\p{L}/gu) || []).slice(0, 2).join("").toUpperCase() || "·";
-      elAvatar.textContent = initials;
+      avatar.textContent = initials;
     }
     // Selo de verificado — só se status === "verified". Idempotente: remove
     // anteriores antes de adicionar. Garante avatar tenha class .ep-avatar-wrap.
     // O #topUserAvatar é o próprio span da imagem, então o badge fica como
     // filho dele com position:absolute.
-    elAvatar.classList.add("ep-avatar-wrap");
-    const old = elAvatar.querySelector(".ep-verified-badge");
+    avatar.classList.add("ep-avatar-wrap");
+    const old = avatar.querySelector(".ep-verified-badge");
     if (old) old.remove();
     if (therapist?.verificationStatus === "verified") {
       const badge = document.createElement("span");
@@ -454,9 +473,9 @@ export function applyTopUserSlot(therapist) {
       badge.setAttribute("title", "Profissional verificado · inscrição no conselho confirmada");
       badge.setAttribute("aria-label", "Profissional verificado");
       badge.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-      elAvatar.appendChild(badge);
+      avatar.appendChild(badge);
     }
-  }
+  });
 }
 
 // Helper exportado: cria HTML do selo (string) pra páginas usarem inline.
@@ -724,14 +743,38 @@ function mountMessagesBubble(idTokenGetter) {
   setInterval(refresh, 60_000);
 }
 
+function mountNotifBadge(idTokenGetter) {
+  if (typeof document === "undefined") return;
+
+  async function refresh() {
+    try {
+      const token = await idTokenGetter();
+      if (!token) return;
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/notificacoes?onlyUnread=true&limit=50`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) return;
+      const count = d.unreadCount || 0;
+      // Aguarda sidebar.js injetar o badge (pode ainda não estar pronto)
+      const trySet = () => {
+        if (window.EPSidebar?.setBadge) { window.EPSidebar.setBadge(count); }
+        else { setTimeout(trySet, 300); }
+      };
+      trySet();
+    } catch {}
+  }
+  refresh();
+  setInterval(refresh, 60_000);
+}
+
 (function hydrateChromeFromCache() {
   if (typeof document === "undefined") return;
   mountLogoutFab();
   mountThemeToggle();
-  mountMessagesBubble(async () => {
-    const u = auth.currentUser;
-    return u ? u.getIdToken() : null;
-  });
+  const tokenGetter = async () => { const u = auth.currentUser; return u ? u.getIdToken() : null; };
+  mountMessagesBubble(tokenGetter);
+  mountNotifBadge(tokenGetter);
   let hydratedSync = false;
   try {
     const raw = sessionStorage.getItem(PROFILE_CACHE_KEY);

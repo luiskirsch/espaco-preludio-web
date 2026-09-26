@@ -1,98 +1,243 @@
-// Gravação local cifrada de sessão. Captura a stream local (terapeuta) +
-// audio remoto se possível, cifra com DEK do terapeuta, oferece download
-// como .ep-rec. Não sobe pro servidor — usuário guarda local.
+// Gravação local cifrada de sessão.
 //
-// Decisão: local-only minimiza risco LGPD (sem retenção server-side), evita
-// custo de storage cifrado e responsabilidade de playback. Terapeuta decide
-// onde armazenar (cofre, pen-drive, nuvem pessoal).
+// Captura o vídeo local (terapeuta) + vídeo remoto (paciente via LiveKit),
+// compõe lado-a-lado num canvas 1280×720 a 24fps, mistura os áudios via
+// AudioContext, cifra cada chunk com AES-GCM usando a DEK do terapeuta.
+// Nada sobe pro servidor — download local em .ep-rec.
 //
-// Formato .ep-rec: JSON com versão + metadata + chunks base64 cifrados (AES-GCM
-// com DEK). Cada chunk vem com seu próprio IV. Reassemble: concatenar todos
-// os chunks decifrados na ordem.
+// Layout: paciente à esquerda | terapeuta à direita.
+// Fallback automático se um dos lados não tiver vídeo (full-width do lado ativo).
+//
+// Nota: não usa os elementos <video> do DOM (que ficam display:none) —
+// cria elementos off-screen próprios a partir das MediaStreamTracks do room,
+// garantindo decodificação de frames em todos os browsers.
+//
+// Formato .ep-rec v2: JSON { format, version, sessionId, mimeType,
+//   startedAt, durationMs, chunkCount, chunks: [{idx, ts, ciphertext, iv}] }
 
 import { encryptNote } from "./crypto.js";
 
-export class SessionRecorder {
-  constructor({ sessionId, dek, onChunk, onStop, mimeType }) {
-    this.sessionId = sessionId;
-    this.dek = dek;
-    this.onChunk = onChunk || (() => {});
-    this.onStop = onStop || (() => {});
-    this.mimeType = mimeType || "video/webm;codecs=vp9,opus";
-    this.recorder = null;
-    this.chunks = [];
-    this.startedAt = null;
-    this.stream = null;
-  }
-
-  async start({ video = true, audio = true } = {}) {
-    if (this.recorder) throw new Error("already_recording");
-    // Captura a stream local da câmera/mic. Remote audio fica fora da
-    // gravação local (terapeuta grava o que ele vê/ouve do seu lado).
-    this.stream = await navigator.mediaDevices.getUserMedia({ video, audio });
-    if (!MediaRecorder.isTypeSupported(this.mimeType)) {
-      // fallback pra default do browser
-      this.mimeType = "video/webm";
-    }
-    this.recorder = new MediaRecorder(this.stream, { mimeType: this.mimeType });
-    this.startedAt = Date.now();
-    this.recorder.ondataavailable = async (e) => {
-      if (!e.data || e.data.size === 0) return;
-      const ab = await e.data.arrayBuffer();
-      // Cifra cada chunk independentemente (chunk = ~5s de vídeo, ~500KB-1MB)
-      const text = base64FromArrayBuffer(ab);
-      const enc = await encryptNote(text, this.dek);
-      this.chunks.push({
-        idx: this.chunks.length,
-        ts: Date.now() - this.startedAt,
-        ciphertext: enc.ciphertext,
-        iv: enc.iv
-      });
-      this.onChunk(this.chunks.length);
-    };
-    this.recorder.onstop = () => {
-      this._releaseTracks();
-      this.onStop(this._buildBlob());
-    };
-    this.recorder.start(5000); // chunk a cada 5s
-  }
-
-  stop() {
-    if (!this.recorder) return;
-    if (this.recorder.state !== "inactive") this.recorder.stop();
-  }
-
-  _releaseTracks() {
-    if (this.stream) {
-      this.stream.getTracks().forEach(t => t.stop());
-      this.stream = null;
-    }
-  }
-
-  _buildBlob() {
-    const manifest = {
-      format: "ep-rec",
-      version: 1,
-      sessionId: this.sessionId,
-      mimeType: this.mimeType,
-      startedAt: this.startedAt,
-      durationMs: Date.now() - this.startedAt,
-      chunkCount: this.chunks.length,
-      chunks: this.chunks
-    };
-    const json = JSON.stringify(manifest);
-    return new Blob([json], { type: "application/json" });
-  }
-}
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
 function base64FromArrayBuffer(buffer) {
   const bytes = new Uint8Array(buffer);
   let bin = "";
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
   }
   return btoa(bin);
+}
+
+// Desenha `vid` cobrindo a área (x, y, w, h) como object-fit:cover + clip.
+function drawCover(ctx, vid, x, y, w, h) {
+  const vw = vid.videoWidth, vh = vid.videoHeight;
+  if (!vw || !vh) return;
+  const scale = Math.max(w / vw, h / vh);
+  const sw = vw * scale, sh = vh * scale;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+  ctx.drawImage(vid, x + (w - sw) / 2, y + (h - sh) / 2, sw, sh);
+  ctx.restore();
+}
+
+// Cria um <video> fora da viewport (NÃO display:none) com a MediaStreamTrack.
+// display:none impede decodificação de frames em alguns browsers — posição
+// off-screen garante que o browser processe os frames para o canvas.
+function makeOffscreenVideo(mediaStreamTrack) {
+  if (!mediaStreamTrack) return null;
+  const v = document.createElement("video");
+  v.autoplay    = true;
+  v.muted       = true;
+  v.playsInline = true;
+  Object.assign(v.style, {
+    position:      "fixed",
+    top:           "-9999px",
+    left:          "-9999px",
+    width:         "1px",
+    height:        "1px",
+    pointerEvents: "none",
+    opacity:       "0",
+  });
+  v.srcObject = new MediaStream([mediaStreamTrack]);
+  document.body.appendChild(v);
+  return v;
+}
+
+// Aguarda loadedmetadata (ou retorna imediatamente se já carregou).
+function waitMetadata(videoEl) {
+  return new Promise(resolve => {
+    if (!videoEl || videoEl.readyState >= 1) { resolve(); return; }
+    videoEl.addEventListener("loadedmetadata", resolve, { once: true });
+    setTimeout(resolve, 3000); // timeout de segurança
+  });
+}
+
+// ─── SessionRecorder ────────────────────────────────────────────────────────
+
+export class SessionRecorder {
+  constructor({ sessionId, dek, onChunk, onStop }) {
+    this.sessionId  = sessionId;
+    this.dek        = dek;
+    this.onChunk    = onChunk || (() => {});
+    this.onStop     = onStop  || (() => {});
+    this.recorder   = null;
+    this.chunks     = [];
+    this.startedAt  = null;
+    this.mimeType   = "video/webm;codecs=vp9,opus";
+    this._drawInterval     = null;
+    this._audioCtx         = null;
+    this._localAudioStream = null;
+    this._offscreenEls     = []; // <video> off-screen criados aqui — removidos no stop
+  }
+
+  // room          — instância LiveKit Room (fonte de tracks locais e áudio remoto)
+  // remoteVideoEl — <video> do paciente já em play (srcObject = stream descriptografado pelo LiveKit)
+  async start({ room, remoteVideoEl } = {}) {
+    if (this.recorder) throw new Error("already_recording");
+
+    // ── Resolve tracks de vídeo ─────────────────────────────────
+    let localVideoMST  = null;
+    let remoteAudioMST = null;
+
+    if (room) {
+      // Track de vídeo local (câmera local é pré-criptografia — funciona direto)
+      for (const pub of room.localParticipant.videoTrackPublications.values()) {
+        const mst = pub.videoTrack?.mediaStreamTrack;
+        if (mst && mst.readyState === "live") { localVideoMST = mst; break; }
+      }
+      // Áudio remoto via room (para AudioContext)
+      for (const p of room.remoteParticipants.values()) {
+        for (const pub of p.audioTrackPublications.values()) {
+          const mst = pub.track?.mediaStreamTrack;
+          if (mst && mst.readyState === "live") { remoteAudioMST = mst; break; }
+        }
+        if (remoteAudioMST) break;
+      }
+    }
+
+    // ── Elementos off-screen para decodificação de frames ───────
+    // Vídeo local: track direto do room (pré-E2EE, sem problema)
+    const localSrc = makeOffscreenVideo(localVideoMST);
+
+    // Vídeo remoto: NÃO usar pub.track.mediaStreamTrack com E2EE (pode ser stream
+    // cifrado antes de decodificação). Usar srcObject do elemento <video> que o
+    // LiveKit já descriptografou e renderiza. Clonar em elemento off-screen
+    // (não display:none) para garantir decodificação de frames pelo browser.
+    let remoteSrc = null;
+    if (remoteVideoEl?.srcObject) {
+      const videoTracks = remoteVideoEl.srcObject.getVideoTracks().filter(t => t.readyState === "live");
+      if (videoTracks.length) remoteSrc = makeOffscreenVideo(videoTracks[0]);
+    }
+
+    if (localSrc)  this._offscreenEls.push(localSrc);
+    if (remoteSrc) this._offscreenEls.push(remoteSrc);
+    await Promise.all([waitMetadata(localSrc), waitMetadata(remoteSrc)]);
+
+    // ── Áudio local (microfone) ──────────────────────────────────
+    this._localAudioStream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: false,
+    });
+
+    // ── AudioContext: mix local + remoto ─────────────────────────
+    const audioCtx = new AudioContext();
+    this._audioCtx = audioCtx;
+    const dest = audioCtx.createMediaStreamDestination();
+
+    audioCtx.createMediaStreamSource(this._localAudioStream).connect(dest);
+    if (remoteAudioMST) {
+      audioCtx.createMediaStreamSource(new MediaStream([remoteAudioMST])).connect(dest);
+    }
+
+    // ── Canvas HD 1280×720 ───────────────────────────────────────
+    const W = 1280, H = 720;
+    const canvas = document.createElement("canvas");
+    canvas.width  = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d", { alpha: false });
+
+    const drawFrame = () => {
+      const hasLocal  = localSrc  && localSrc.readyState  >= 2 && localSrc.videoWidth  > 0;
+      const hasRemote = remoteSrc && remoteSrc.readyState >= 2 && remoteSrc.videoWidth > 0;
+
+      ctx.fillStyle = "#0a0805";
+      ctx.fillRect(0, 0, W, H);
+
+      if (hasLocal && hasRemote) {
+        drawCover(ctx, remoteSrc, 0,     0, W / 2, H); // paciente à esquerda
+        drawCover(ctx, localSrc,  W / 2, 0, W / 2, H); // terapeuta à direita
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(W / 2 - 1, 0, 2, H);              // divisor central
+      } else if (hasLocal) {
+        drawCover(ctx, localSrc,  0, 0, W, H);
+      } else if (hasRemote) {
+        drawCover(ctx, remoteSrc, 0, 0, W, H);
+      }
+    };
+    this._drawInterval = setInterval(drawFrame, Math.round(1000 / 24));
+
+    // ── MediaRecorder VP9 + Opus ─────────────────────────────────
+    const canvasStream = canvas.captureStream(24);
+    const mixedStream  = new MediaStream([
+      ...canvasStream.getVideoTracks(),
+      ...dest.stream.getAudioTracks(),
+    ]);
+
+    if (!MediaRecorder.isTypeSupported(this.mimeType)) {
+      this.mimeType = "video/webm";
+    }
+    this.recorder = new MediaRecorder(mixedStream, {
+      mimeType: this.mimeType,
+      videoBitsPerSecond: 1_200_000, // VP9 1.2 Mbps — excelente pra 1280×720 de rostos
+      audioBitsPerSecond:   128_000, // Opus 128 kbps — transparente pra voz
+    });
+
+    this.startedAt = Date.now();
+
+    this.recorder.ondataavailable = async (e) => {
+      if (!e.data || e.data.size === 0) return;
+      const text = base64FromArrayBuffer(await e.data.arrayBuffer());
+      const enc  = await encryptNote(text, this.dek);
+      this.chunks.push({
+        idx:        this.chunks.length,
+        ts:         Date.now() - this.startedAt,
+        ciphertext: enc.ciphertext,
+        iv:         enc.iv,
+      });
+      this.onChunk(this.chunks.length);
+    };
+
+    this.recorder.onstop = () => {
+      clearInterval(this._drawInterval);
+      this._offscreenEls.forEach(v => { v.srcObject = null; v.remove(); });
+      this._offscreenEls = [];
+      this._localAudioStream?.getTracks().forEach(t => t.stop());
+      this._audioCtx?.close().catch(() => {});
+      this.onStop(this._buildBlob());
+    };
+
+    this.recorder.start(5000); // chunk cifrado a cada 5s
+  }
+
+  stop() {
+    if (this.recorder && this.recorder.state !== "inactive") this.recorder.stop();
+  }
+
+  _buildBlob() {
+    return new Blob([JSON.stringify({
+      format:     "ep-rec",
+      version:    2,
+      sessionId:  this.sessionId,
+      mimeType:   this.mimeType,
+      startedAt:  this.startedAt,
+      durationMs: Date.now() - this.startedAt,
+      chunkCount: this.chunks.length,
+      chunks:     this.chunks,
+    })], { type: "application/json" });
+  }
 }
 
 export function downloadRecording(blob, sessionId) {

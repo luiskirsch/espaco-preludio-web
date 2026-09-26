@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="ep-consult-html" data-i18n-ns="cadastro">
+<html lang="pt-BR" data-i18n-ns="cadastro">
 <head>
 <script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conte\u00fado s\u00f3 est\u00e1 dispon\u00edvel no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
   <meta charset="UTF-8">
@@ -16,11 +16,40 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-279">
   <style>
     .is-student-mode #heroProfissional { display: none !important; }
     .is-student-mode #heroStudent { display: flex !important; flex-direction: column; }
     .is-student-mode #especialidadeField { display: none !important; }
+    @media (min-width: 921px) {
+      html { scrollbar-gutter: auto; }
+      body { overflow: hidden; }
+      .ep-auth__panel--wide { height: calc(100vh - 80px) !important; overflow: hidden !important; }
+      .ep-auth__panel--wide .ep-auth__hero { height: calc(100vh - 80px) !important; overflow: hidden !important; }
+      .ep-auth__panel--wide .ep-auth__form {
+        height: calc(100vh - 80px) !important;
+        overflow-y: auto !important;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(90, 74, 53, .45) transparent;
+      }
+      .ep-auth__panel--wide .ep-auth__form::-webkit-scrollbar {
+        display: block;
+        width: 10px;
+      }
+      .ep-auth__panel--wide .ep-auth__form::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .ep-auth__panel--wide .ep-auth__form::-webkit-scrollbar-thumb {
+        background: rgba(90, 74, 53, .45);
+        border: 2px solid transparent;
+        border-radius: 999px;
+        background-clip: content-box;
+      }
+      .ep-auth__panel--wide .ep-auth__form::-webkit-scrollbar-thumb:hover {
+        background: rgba(90, 74, 53, .7);
+        background-clip: content-box;
+      }
+    }
     @media (max-width: 480px) {
       .ep-auth { padding: 0 !important; background: var(--ep-surface) !important; }
       .ep-auth__panel--wide { max-height: none !important; border: none !important; box-shadow: none !important; }
@@ -146,7 +175,8 @@
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
 <body>
-<div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
+<div class="ep-staging-banner">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
+
 <script>(function(){
   const p = new URLSearchParams(location.search).get("plano");
   if (p === "estudante") document.body.classList.add("is-student-mode");
@@ -182,11 +212,11 @@ document.addEventListener("DOMContentLoaded", function () {
     if (banner) {
       const titles = {
         profissional: "Plano Profissional (R$ 99,00/mês)",
-        empresa: "Plano Atendimento a Empresas (gratuito)"
+        empresa: "Programas institucionais (R$ 10,00/mês)"
       };
       const subs = {
         profissional: "Cadastre o meio de pagamento para liberar as consultas. Você terá 30 dias grátis antes da primeira cobrança.",
-        empresa: "Plataforma gratuita para o profissional. Consultas tabeladas a R$ 60,00 por sessão para o paciente."
+        empresa: "7 dias grátis. Cadastre o meio de pagamento para liberar as consultas; depois, R$ 10,00/mês."
       };
       banner.innerHTML = `<strong>${titles[plan] || plan}</strong><br><span class="ep-text-sm">${subs[plan] || ""}</span>`;
       banner.style.display = "block";
@@ -245,8 +275,38 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // 5 → 6: senha com ≥10 caracteres
   document.getElementById("password")?.addEventListener("input", function() {
-    if (this.value.length >= 10) reveal("fs-consent");
+    const len = this.value.length;
+    const counter = document.getElementById("passwordCounter");
+    if (counter) {
+      if (len === 0) {
+        counter.style.display = "none";
+      } else if (len < 10) {
+        counter.style.display = "block";
+        counter.style.color = "var(--ep-ink-3)";
+        counter.textContent = `Faltam ${10 - len} caractere${10 - len === 1 ? "" : "s"} (mínimo 10)`;
+      } else {
+        counter.style.display = "block";
+        counter.style.color = "var(--ep-green, #2d7a47)";
+        counter.textContent = "✓ Comprimento válido";
+      }
+    }
+    if (len >= 10) reveal("fs-consent");
   });
+
+  // Informa imediatamente quando a confirmação diverge da senha.
+  const passwordInput = document.getElementById("password");
+  const passwordConfirmInput = document.getElementById("passwordConfirm");
+  const passwordMismatch = document.getElementById("passwordMismatch");
+  function updatePasswordMatch() {
+    if (!passwordInput || !passwordConfirmInput || !passwordMismatch) return;
+    const mismatch = passwordConfirmInput.value.length > 0
+      && passwordInput.value !== passwordConfirmInput.value;
+    passwordMismatch.style.display = mismatch ? "block" : "none";
+    passwordConfirmInput.setCustomValidity(mismatch ? passwordMismatch.textContent.trim() : "");
+    passwordConfirmInput.setAttribute("aria-invalid", mismatch ? "true" : "false");
+  }
+  passwordInput?.addEventListener("input", updatePasswordMatch);
+  passwordConfirmInput?.addEventListener("input", updatePasswordMatch);
 
   // Toggle olho — mostrar/ocultar senha
   document.querySelectorAll(".ep-pwd-toggle").forEach(btn => {
@@ -360,7 +420,7 @@ document.addEventListener("DOMContentLoaded", function() {
           </button>
           <button type="button" class="ep-plan-pill" data-plan="empresa">
             <span class="ep-plan-pill__name">Atendimento a Empresas</span>
-            <span class="ep-plan-pill__price">Gratuito · aprovação manual</span>
+            <span class="ep-plan-pill__price">R$ 10,00/mês · 7 dias grátis</span>
           </button>
         </div>
 
@@ -564,6 +624,7 @@ document.addEventListener("DOMContentLoaded", function() {
               <label class="ep-label" for="password" data-i18n="cadastro:step1.labelPassword">Senha</label>
               <div style="position:relative;">
                 <input id="password" class="ep-input" type="password" minlength="10" autocomplete="new-password" placeholder="Mín. 10 caracteres" data-i18n-placeholder="cadastro:step1.placeholderPassword" required style="padding-right:40px;">
+                <p id="passwordCounter" style="display:none;font-size:12px;margin:4px 0 0;transition:color 200ms;"></p>
                 <button type="button" class="ep-pwd-toggle" data-target="password" aria-label="Mostrar senha" tabindex="-1">
                   <svg class="ep-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                   <svg class="ep-eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -579,6 +640,7 @@ document.addEventListener("DOMContentLoaded", function() {
                   <svg class="ep-eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
               </div>
+              <p id="passwordMismatch" role="alert" data-i18n="cadastro:status.passwordMismatch" style="display:none;font-size:12px;margin:4px 0 0;color:var(--ep-danger);">As senhas não conferem.</p>
             </div>
           </div>
           <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n-html="cadastro:step1.passwordHint">
@@ -594,7 +656,7 @@ document.addEventListener("DOMContentLoaded", function() {
               Declaro ser profissional habilitado(a) e regularmente inscrito(a) no meu conselho profissional (CFM, CFP, CREFITO ou equivalente), aceito a <a href="./termos.html" target="_blank">Política de Uso</a>
               e o <a href="./politica.html" target="_blank">Tratamento de Dados (LGPD)</a>, e assumo integral responsabilidade pela
               manutenção dos prontuários dos meus pacientes e pelo cumprimento das normas do meu conselho profissional
-              relativas a telessaúde (Res. CFM 2.314/2022, Res. CFP 11/2018 e equivalentes), incluindo a obtenção de TCLE dos pacientes e o registro clínico adequado.
+              relativas a telessaúde (Res. CFM 2.314/2022, Res. CFP 9/2024 e equivalentes), incluindo a obtenção de TCLE dos pacientes e o registro clínico adequado.
             </span>
           </label>
 
@@ -984,7 +1046,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Tier intencionado define a duração do trial:
     //   estudante      → 0d (libera só após validar doc, gratuito permanente)
     //   recem-formado  → 30d
-    //   profissional   → 7d (default)
+    //   profissional   → 30d após cadastrar o meio de pagamento (default)
     const planoQS = new URLSearchParams(location.search).get("plano") || window._selectedPlan || "";
     const intendedTier = planoQS === "estudante" ? "estudante"
                        : planoQS === "recem"     ? "recem-formado"
@@ -1142,8 +1204,8 @@ document.addEventListener("DOMContentLoaded", function() {
           sub: tr("cadastro:planBanner.profissionalSub", "Cadastre o meio de pagamento para liberar as consultas. Você terá 30 dias grátis antes da primeira cobrança.")
         },
         "empresa": {
-          title: tr("cadastro:planBanner.empresaTitle", "Plano Atendimento a Empresas (gratuito)"),
-          sub: tr("cadastro:planBanner.empresaSub", "Plataforma gratuita para o profissional. Consultas tabeladas a R$ 60,00 por sessão para o paciente.")
+          title: tr("cadastro:planBanner.empresaTitle", "Programas institucionais (R$ 10,00/mês)"),
+          sub: tr("cadastro:planBanner.empresaSub", "7 dias grátis. Cadastre o meio de pagamento para liberar as consultas; depois, R$ 10,00/mês.")
         }
       };
       const c = config[plano];

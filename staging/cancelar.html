@@ -21,7 +21,8 @@
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
 <body>
-<div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
+<div class="ep-staging-banner">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
+
 
 <div class="ep-shell">
   <header class="ep-topbar">
@@ -91,8 +92,9 @@
 
   const params = new URLSearchParams(location.search);
   const token = (params.get("t") || "").trim();
+  const code  = (params.get("c") || "").trim();
 
-  if (!token) {
+  if (!token && !code) {
     document.getElementById("missingToken").classList.remove("ep-hide");
   } else {
     document.getElementById("confirmBox").classList.remove("ep-hide");
@@ -105,10 +107,11 @@
       confirmBtn.disabled = true;
       confirmBtn.textContent = tr("cancelar:status.cancelling", "Cancelando…");
       try {
+        const body = code ? { cancelCode: code, reason } : { cancelToken: token, reason };
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/cancelar-publico`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cancelToken: token, reason })
+          body: JSON.stringify(body)
         });
         const data = await res.json().catch(() => ({}));
         document.getElementById("confirmBox").classList.add("ep-hide");

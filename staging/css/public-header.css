@@ -1,0 +1,135 @@
+:root {
+  --public-header-height: 82px;
+  --public-header-logo-size: 50px;
+  --public-header-brand-size: 23px;
+  --public-header-inline-space: 48px;
+  --public-header-max-width: 1180px;
+}
+
+.site-header,
+.ep-topbar,
+html[data-theme="dark"] .ep-topbar {
+  color: #fff;
+  background: rgba(6, 45, 49, .96);
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.site-header .header-inner,
+.ep-topbar .ep-topbar__inner {
+  width: min(calc(100% - var(--public-header-inline-space)), var(--public-header-max-width));
+  max-width: var(--public-header-max-width);
+  height: var(--public-header-height);
+  min-height: var(--public-header-height);
+  margin-inline: auto;
+  padding-inline: 0;
+  gap: 28px;
+}
+
+.site-header .brand,
+.ep-topbar .ep-brand {
+  display: inline-flex;
+  min-width: max-content;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.site-header .brand img,
+.ep-topbar .ep-brand__mark {
+  width: var(--public-header-logo-size);
+  height: var(--public-header-logo-size);
+  flex: 0 0 var(--public-header-logo-size);
+  object-fit: contain;
+}
+
+.site-header .brand-copy,
+.ep-topbar .ep-brand__name {
+  display: grid;
+  line-height: 1;
+}
+
+.site-header .brand-copy small,
+.ep-topbar .ep-brand__lead {
+  margin: 0 0 5px;
+  color: #fff;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .28em;
+  line-height: 1;
+  opacity: 1;
+}
+
+.site-header .brand-copy strong,
+.ep-topbar .ep-brand__name > span:not(.ep-brand__lead) {
+  color: #fff;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: var(--public-header-brand-size);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.site-header .main-nav,
+.ep-topbar .ep-nav {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: clamp(16px, 2vw, 30px);
+  padding: 0;
+}
+
+.site-header .main-nav > a:not(.button),
+.site-header .access-menu > summary,
+.ep-topbar .ep-nav > a:not(.ep-btn),
+.ep-topbar .ep-access-menu > summary {
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.site-header .main-nav .button-small,
+.ep-topbar .ep-nav .ep-btn--sm {
+  min-height: 44px;
+  padding: 11px 18px;
+  color: #153d40;
+  background: #d9ad45;
+  border-color: #d9ad45;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.2;
+  box-shadow: 0 12px 28px rgba(217, 173, 69, .2);
+}
+
+@media (min-width: 961px) and (max-height: 820px) {
+  :root {
+    --public-header-height: 72px;
+    --public-header-logo-size: 44px;
+    --public-header-brand-size: 21px;
+  }
+}
+
+@media (max-width: 960px) {
+  :root { --public-header-inline-space: 40px; }
+
+  .ep-topbar .pro-menu-toggle { display: block; flex: 0 0 44px; }
+  .ep-topbar .ep-nav { top: var(--public-header-height); max-height: calc(100dvh - var(--public-header-height)); }
+}
+
+@media (max-width: 720px) {
+  :root {
+    --public-header-height: 74px;
+    --public-header-logo-size: 44px;
+    --public-header-brand-size: 21px;
+    --public-header-inline-space: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root { --public-header-inline-space: 24px; }
+  .site-header .brand-copy small,
+  .ep-topbar .ep-brand__lead { letter-spacing: .22em; }
+}

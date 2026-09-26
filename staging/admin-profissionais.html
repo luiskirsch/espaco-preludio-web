@@ -21,6 +21,9 @@
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
 <body>
+<div class="ep-staging-banner">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
+
+<script src="./js/admin-sidebar.js?v=1"></script>
 
 <div class="ep-shell">
   <header class="ep-topbar">
@@ -34,6 +37,7 @@
     <nav class="ep-nav">
       <a href="./admin-painel.html" class="ep-text-sm">Painel</a>
       <a href="./admin-profissionais.html" class="ep-text-sm is-active">Profissionais</a>
+      <a href="./admin-pacientes.html" class="ep-text-sm">Pacientes</a>
       <a href="./admin-denuncias.html" class="ep-text-sm">Denúncias</a>
       <a href="./admin-verificacoes.html" class="ep-text-sm">CRP/CRM</a>
       <a href="./admin-comprovantes.html" class="ep-text-sm">Estudante</a>
@@ -153,9 +157,22 @@
       "student-active": "Estudante",
       "recem-formado-eligible": "Recém-formado (elegível)",
       "recem-formado-active": "Recém-formado",
+      "empresa": "Empresa",
+      "empresa-pending-review": "Empresa (pendente)",
       "canceled": "Cancelado"
     };
     return map[p] || (p || "—");
+  }
+
+  function tierPill(intendedTier) {
+    if (!intendedTier || intendedTier === "profissional") return "";
+    const labels = {
+      "estudante":     ["Veio: Estudante",     "#2d6a3e", "rgba(80,160,100,.12)"],
+      "recem-formado": ["Veio: Recém-formado", "#8a5b1a", "rgba(200,155,74,.15)"],
+      "empresa":       ["Veio: Empresa",        "#1a4a8a", "rgba(60,120,220,.12)"],
+    };
+    const [label, color, bg] = labels[intendedTier] || [`Veio: ${intendedTier}`, "#666", "#eee"];
+    return `<span class="ep-badge" style="background:${bg};color:${color};font-size:10px;">${label}</span>`;
   }
 
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
@@ -242,6 +259,8 @@
     // ainda estava no futuro. Agora plano=pro sempre vence trial.
     if (item.adminGrantActive) return `<span class="ep-badge ep-badge--ok" title="Cortesia admin até ${fmtDate(item.adminGrantedUntil)}">Cortesia até ${fmtDateOnly(item.adminGrantedUntil)}</span>`;
     if (item.plano === "pro") return `<span class="ep-badge ep-badge--ok">${item.mpPreapprovalId ? "Pro (MP)" : "Pro (manual)"}</span>`;
+    if (item.plano === "empresa") return `<span class="ep-badge ep-badge--ok">Empresa (ativo)</span>`;
+    if (item.plano === "empresa-pending-review") return `<span class="ep-badge ep-badge--warn">Empresa (pendente)</span>`;
     if (item.plano === "student-active" || item.plano === "recem-formado-active") return `<span class="ep-badge ep-badge--ok">${planoLabel(item.plano)}</span>`;
     if (item.trialActive) return `<span class="ep-badge ep-badge--warn">Trial até ${fmtDateOnly(item.trialUntil)}</span>`;
     return `<span class="ep-badge ep-badge--done">${planoLabel(item.plano)}</span>`;
@@ -265,6 +284,7 @@
               <strong>${escapeHtml(it.displayName || "(sem nome)")}</strong>
               ${statusPill(it)}
               ${accessPill(it)}
+              ${tierPill(it.intendedTier)}
             </div>
             <div class="ep-text-sm ep-text-muted ep-mt-4">
               ${escapeHtml(it.email || "—")} · ${escapeHtml(conselho)}${it.especialidade ? " · " + escapeHtml(it.especialidade) : ""}
@@ -309,7 +329,8 @@
       </div>
       <div class="ep-text-sm">
         <strong>Plano atual:</strong> ${escapeHtml(planoLabel(it.plano))}<br>
-        <strong>Trial até:</strong> ${fmtDate(it.trialUntil)}${it.trialActive ? " <span class='ep-badge ep-badge--ok'>ativo</span>" : ""}<br>
+        ${(it.intendedTier && it.intendedTier !== "profissional") ? `<strong>Plano de origem:</strong> ${escapeHtml(it.intendedTier)} ${tierPill(it.intendedTier)}<br>` : ""}
+        ${it.plano === "empresa" ? `<strong>Assinatura institucional:</strong> ${it.mpPreapprovalStatus === "authorized" ? "ativa · R$ 10,00/mês" : "aguardando meio de pagamento"}<br>` : `<strong>Trial até:</strong> ${fmtDate(it.trialUntil)}${it.trialActive ? " <span class='ep-badge ep-badge--ok'>ativo</span>" : ""}<br>`}
         <strong>Cortesia admin até:</strong> ${fmtDate(it.adminGrantedUntil)}${it.adminGrantActive ? " <span class='ep-badge ep-badge--ok'>ativa</span>" : ""}<br>
         <strong>Verificado:</strong> ${it.verificado ? "✓ sim" : "✗ não"} ${it.verifiedAt ? "(" + fmtDate(it.verifiedAt) + ")" : ""}<br>
         <strong>Conselho:</strong> ${escapeHtml(formatConselho(it))}
@@ -346,15 +367,33 @@
             <select id="newPlano" class="ep-input">
               <option value="">—</option>
               <option value="trial">Trial</option>
-              <option value="pro">Pro</option>
+              <option value="trial">Trial</option>
+              <option value="pro">Pro (assinante)</option>
+              <option value="empresa-pending-review">Empresa (pendente revisão)</option>
+              <option value="empresa">Empresa (aprovado)</option>
               <option value="student-pending-review">Estudante (pendente)</option>
-              <option value="student-active">Estudante</option>
-              <option value="recem-formado-eligible">Recém-formado (elegível)</option>
-              <option value="recem-formado-active">Recém-formado</option>
+              <option value="student-active">Estudante (ativo)</option>
               <option value="canceled">Cancelado</option>
             </select>
           </div>
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="plano">Aplicar</button>
+        </div>
+      </div>
+
+      <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
+        <div class="ep-eyebrow">Plano de origem (intendedTier)</div>
+        <div class="ep-flex" style="gap: 8px; align-items: end;">
+          <div class="ep-field" style="flex: 1;">
+            <label class="ep-label" for="newIntendedTier">Plano de origem</label>
+            <select id="newIntendedTier" class="ep-input">
+              <option value="">— atual: ${escapeHtml(it.intendedTier || "profissional")} —</option>
+              <option value="profissional">Profissional</option>
+              <option value="empresa">Empresa</option>
+              <option value="estudante">Estudante</option>
+              <option value="recem-formado">Recém-formado</option>
+            </select>
+          </div>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="intendedTier">Aplicar</button>
         </div>
       </div>
 
@@ -394,6 +433,10 @@
       const v = document.getElementById("newPlano").value;
       if (!v) { statusEl.className = "ep-status is-err"; statusEl.textContent = "Escolha um plano."; return; }
       body.setPlano = v;
+    } else if (action === "intendedTier") {
+      const v = document.getElementById("newIntendedTier").value;
+      if (!v) { statusEl.className = "ep-status is-err"; statusEl.textContent = "Escolha um plano de origem."; return; }
+      body.setIntendedTier = v;
     } else if (action === "toggleVerif") {
       const it = allItems.find(x => x.uid === uid);
       body.toggleVerificado = !it?.verificado;

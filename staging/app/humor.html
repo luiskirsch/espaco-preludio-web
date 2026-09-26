@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conte\u00fado s\u00f3 est\u00e1 dispon\u00edvel no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Humor · Espaço Prelúdio</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./app.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    .mood-hero {
+      background: linear-gradient(135deg, #1c1f1d 0%, #2d3a30 100%);
+      padding: 28px 20px 32px; text-align: center; color: #fff;
+    }
+    .mood-hero__emoji { font-size: 64px; display: block; margin-bottom: 12px;
+      animation: bounce 600ms cubic-bezier(.34,1.56,.64,1); }
+    @keyframes bounce { from{transform:scale(.5);opacity:0} to{transform:scale(1);opacity:1} }
+    .mood-hero__label { font-family: var(--ff-serif); font-size: 24px; font-weight: 500; }
+    .mood-hero__date  { font-size: 12px; color: rgba(255,255,255,.5); margin-top: 4px; }
+    .mood-picker-card { margin: -16px 16px 0; border-radius: var(--a-radius); background: var(--a-surface); box-shadow: var(--a-shadow-md); padding: 20px 16px; }
+    .mood-picker-label { font-size: 13px; font-weight: 600; color: var(--a-ink2); text-align: center; margin-bottom: 16px; }
+    .mood-picker-row { display: flex; justify-content: center; gap: 10px; }
+    .mood-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      background: none; border: 2px solid var(--a-line); border-radius: 14px;
+      padding: 12px 10px; cursor: pointer; transition: all 150ms; min-width: 56px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mood-btn:active { transform: scale(.94); }
+    .mood-btn.is-selected { border-color: var(--a-accent); background: rgba(45,106,62,.08); }
+    .mood-btn__emoji { font-size: 28px; }
+    .mood-btn__label { font-size: 10px; font-weight: 600; color: var(--a-ink3); }
+    .mood-btn.is-selected .mood-btn__label { color: var(--a-accent); }
+    .save-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 16px; }
+    .chart-card { background: var(--a-surface); border-radius: var(--a-radius); box-shadow: var(--a-shadow); padding: 18px 16px; }
+    .chart-title { font-size: 14px; font-weight: 700; color: var(--a-ink); margin-bottom: 4px; }
+    .chart-sub   { font-size: 12px; color: var(--a-ink3); margin-bottom: 16px; }
+    .chart-wrap  { height: 160px; position: relative; }
+    .history-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--a-line); }
+    .history-item:last-child { border-bottom: none; }
+    .history-emoji { font-size: 28px; flex-shrink: 0; }
+    .history-info  { flex: 1; }
+    .history-day   { font-size: 13px; font-weight: 600; color: var(--a-ink); }
+    .history-label { font-size: 12px; color: var(--a-ink2); }
+    .history-date  { font-family: var(--ff-mono); font-size: 11px; color: var(--a-ink3); }
+    .streak-card {
+      background: linear-gradient(135deg, rgba(45,106,62,.1), rgba(45,106,62,.04));
+      border: 1px solid rgba(45,106,62,.2);
+      border-radius: var(--a-radius); padding: 16px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .streak-num { font-family: var(--ff-serif); font-size: 40px; font-weight: 500; color: var(--a-accent); line-height: 1; }
+  </style>
+  <script src="./sw-register.js" defer></script>
+</head>
+<body>
+<div class="ep-staging-banner">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
+
+<div class="a-shell">
+
+  <div class="a-header">
+    <button class="a-header__back" onclick="history.back()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="a-header__title">Meu humor</div>
+  </div>
+
+  <div class="a-page a-page--no-nav a-page-enter">
+
+    <!-- Hero humor do dia -->
+    <div class="mood-hero" id="moodHero">
+      <span class="mood-hero__emoji" id="heroEmoji">😐</span>
+      <div class="mood-hero__label" id="heroLabel">Como está você hoje?</div>
+      <div class="mood-hero__date" id="heroDate"></div>
+    </div>
+
+    <!-- Picker -->
+    <div class="a-section">
+      <div class="mood-picker-card">
+        <div class="mood-picker-label">Toque para registrar seu humor</div>
+        <div class="mood-picker-row" id="moodPicker">
+          <button class="mood-btn" data-mood="1" data-emoji="😞" data-label="Mal">
+            <span class="mood-btn__emoji">😞</span>
+            <span class="mood-btn__label">Mal</span>
+          </button>
+          <button class="mood-btn" data-mood="2" data-emoji="😔" data-label="Cansado">
+            <span class="mood-btn__emoji">😔</span>
+            <span class="mood-btn__label">Cansado</span>
+          </button>
+          <button class="mood-btn" data-mood="3" data-emoji="😐" data-label="Ok">
+            <span class="mood-btn__emoji">😐</span>
+            <span class="mood-btn__label">Ok</span>
+          </button>
+          <button class="mood-btn" data-mood="4" data-emoji="🙂" data-label="Bem">
+            <span class="mood-btn__emoji">🙂</span>
+            <span class="mood-btn__label">Bem</span>
+          </button>
+          <button class="mood-btn" data-mood="5" data-emoji="😄" data-label="Ótimo">
+            <span class="mood-btn__emoji">😄</span>
+            <span class="mood-btn__label">Ótimo</span>
+          </button>
+        </div>
+        <div class="save-row">
+          <button class="a-btn a-btn--accent a-hide" id="saveBtn" style="min-width:140px;">Salvar humor</button>
+          <span class="a-hide" id="savedMsg" style="font-size:13px;color:var(--a-accent);font-weight:600;">✓ Registrado hoje!</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Streak -->
+    <div class="a-section" style="padding-top:0;" id="streakSection">
+      <div class="streak-card">
+        <div class="streak-num" id="streakNum">0</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--a-accent);">dias seguidos</div>
+          <div style="font-size:12px;color:var(--a-ink2);margin-top:3px;">registrando seu humor 🌱</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico semanal -->
+    <div class="a-section" style="padding-top:0;">
+      <div class="chart-card">
+        <div class="chart-title">Últimos 7 dias</div>
+        <div class="chart-sub">Seu índice de bem-estar</div>
+        <div class="chart-wrap">
+          <canvas id="moodChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Histórico -->
+    <div class="a-section" style="padding-top:0;">
+      <div style="font-size:15px;font-weight:700;margin-bottom:12px;">Histórico</div>
+      <div class="a-card a-card--pad" id="historyList">
+        <div class="a-empty" style="padding:24px 0;">
+          <div class="a-empty__icon" style="font-size:32px;">📝</div>
+          <div class="a-empty__sub">Seus registros de humor aparecerão aqui.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+
+  const MOODS = {
+    1: { emoji:"😞", label:"Mal",     color:"#b8453d" },
+    2: { emoji:"😔", label:"Cansado", color:"#d4704a" },
+    3: { emoji:"😐", label:"Ok",      color:"#c8963a" },
+    4: { emoji:"🙂", label:"Bem",     color:"#4a9e66" },
+    5: { emoji:"😄", label:"Ótimo",   color:"#2d6a3e" },
+  };
+  const DAYS   = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+  const MONTHS = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+
+  let selectedMood = null;
+  let currentUser  = null;
+  let humorData    = {}; // { "YYYY-MM-DD": mood }
+  let chartInstance = null;
+
+  const todayStr = () => new Date().toISOString().slice(0, 10);
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = "./login.html"; return; }
+    currentUser = user;
+
+    // Mostra data
+    const today = new Date();
+    document.getElementById("heroDate").textContent =
+      `${DAYS[today.getDay()]}, ${today.getDate()} de ${MONTHS[today.getMonth()]}`;
+
+    // Picker
+    document.querySelectorAll(".mood-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        selectedMood = Number(btn.dataset.mood);
+        markBtn(selectedMood);
+        const m = MOODS[selectedMood];
+        document.getElementById("heroEmoji").textContent = m.emoji;
+        document.getElementById("heroLabel").textContent = m.label;
+        document.getElementById("saveBtn").classList.remove("a-hide");
+        document.getElementById("savedMsg").classList.add("a-hide");
+      });
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", saveHumor);
+
+    await loadFromBackend();
+  });
+
+  const HUMOR_CACHE_KEY = () => `ep:humor:cache:${currentUser.uid}`;
+
+  async function loadFromBackend() {
+    // Apaga caches legados que continham dado de saúde em armazenamento
+    // persistente; a fonte da verdade é exclusivamente o backend.
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key?.startsWith("ep:humor:")) localStorage.removeItem(key);
+      }
+    } catch {}
+
+    try {
+      const token = await currentUser.getIdToken();
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor?days=30`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) throw new Error(d.error || "api");
+      humorData = {};
+      d.items.forEach(item => { humorData[item.date] = item.mood; });
+      renderAll();
+    } catch {
+      document.getElementById("savedMsg").textContent = "Não foi possível carregar o histórico.";
+    }
+  }
+
+  async function saveHumor() {
+    if (!selectedMood) return;
+    const date = todayStr();
+    humorData[date] = selectedMood;
+    document.getElementById("saveBtn").classList.add("a-hide");
+    document.getElementById("savedMsg").classList.remove("a-hide");
+    renderAll();
+    try {
+      const token = await currentUser.getIdToken();
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ mood: selectedMood, date })
+      });
+      if (!r.ok) throw new Error("fail");
+    } catch {
+      delete humorData[date];
+      document.getElementById("savedMsg").textContent = "Não foi possível salvar. Tente novamente.";
+      document.getElementById("saveBtn").classList.remove("a-hide");
+      renderAll();
+    }
+  }
+
+  function renderAll() {
+    const today = todayStr();
+    const todayMood = humorData[today];
+    if (todayMood) {
+      const m = MOODS[todayMood];
+      document.getElementById("heroEmoji").textContent = m.emoji;
+      document.getElementById("heroLabel").textContent = m.label;
+      document.getElementById("savedMsg").classList.remove("a-hide");
+      document.getElementById("saveBtn").classList.add("a-hide");
+      markBtn(todayMood);
+    }
+    buildChart();
+    buildStreak();
+    loadHistory();
+  }
+
+  function markBtn(mood) {
+    document.querySelectorAll(".mood-btn").forEach(b => {
+      b.classList.toggle("is-selected", Number(b.dataset.mood) === mood);
+    });
+  }
+
+  function buildChart() {
+    const labels = [], data = [], colors = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      labels.push(DAYS[d.getDay()]);
+      const val = humorData[dateStr] || 0;
+      data.push(val);
+      colors.push(val ? (MOODS[val]?.color || "#ccc") : "rgba(0,0,0,.06)");
+    }
+    const ctx = document.getElementById("moodChart").getContext("2d");
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(ctx, {
+      type: "bar",
+      data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 8, borderSkipped: false }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => MOODS[c.raw]?.label || "Sem registro" } } },
+        scales: {
+          y: { min: 0, max: 5, ticks: { display: false }, grid: { color: "rgba(0,0,0,.04)" } },
+          x: { ticks: { font: { size: 11, weight: "600" } }, grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  function buildStreak() {
+    let streak = 0;
+    const today = new Date();
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(today); d.setDate(today.getDate() - i);
+      if (humorData[d.toISOString().slice(0, 10)]) streak++;
+      else if (i > 0) break;
+    }
+    document.getElementById("streakNum").textContent = streak;
+  }
+
+  function loadHistory() {
+    const sorted = Object.entries(humorData).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 30);
+    const list = document.getElementById("historyList");
+    if (!sorted.length) return;
+    list.innerHTML = sorted.map(([dateStr, val]) => {
+      const d = new Date(dateStr + "T12:00:00");
+      const m = MOODS[val] || MOODS[3];
+      return `<div class="history-item">
+        <div class="history-emoji">${m.emoji}</div>
+        <div class="history-info">
+          <div class="history-day">${m.label}</div>
+          <div class="history-label">${DAYS[d.getDay()]}</div>
+        </div>
+        <div class="history-date">${d.getDate()} de ${MONTHS[d.getMonth()]}</div>
+      </div>`;
+    }).join("");
+  }
+</script>
+</body>
+</html>

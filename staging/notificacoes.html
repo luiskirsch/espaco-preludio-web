@@ -16,12 +16,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
-  <script src="./i18n/init.js?v=1-3" defer></script>
+  <script src="./i18n/init.js?v=1-4" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
 <body class="ep-has-sidebar">
-<div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
-<script src="./js/sidebar.js?v=21"></script>
+<div class="ep-staging-banner">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
+
+<script src="./js/sidebar.js?v=26"></script>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
@@ -77,16 +78,34 @@
 
   function typeLabel(type) {
     const map = {
-      warning:            "Aviso de conduta",
-      resolved_no_action: "Denúncia revisada",
-      resolved_action:    "Providências tomadas",
-      admin_message:      "Comunicado"
+      scheduling_request:  "Pedido de consulta",
+      warning:             "Aviso de conduta",
+      resolved_no_action:  "Denúncia revisada",
+      resolved_action:     "Providências tomadas",
+      admin_message:       "Comunicado"
     };
     return map[type] || "Notificação";
   }
 
+  function typeIcon(type) {
+    const map = {
+      scheduling_request: "📅",
+      warning:            "⚠️",
+      admin_message:      "📢"
+    };
+    return map[type] || "🔔";
+  }
+
   function esc(s) {
     return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  }
+
+  function safeNotificationTarget(value) {
+    try {
+      const target = new URL(String(value || ""), location.origin);
+      if (target.origin !== location.origin || !["http:", "https:"].includes(target.protocol)) return "";
+      return `${target.pathname}${target.search}${target.hash}`;
+    } catch { return ""; }
   }
 
   async function run() {
@@ -103,12 +122,12 @@
     }
 
     try {
-      const data = await apiFetch("/therapy/notifications");
+      const data = await apiFetch("/therapy/notificacoes");
       const items = data.items || [];
 
-      // Marca todas como lidas e zera badge
-      if (items.some(n => !n.read)) {
-        apiFetch("/therapy/notifications/read-all", { method: "PATCH" }).catch(() => {});
+      // Marca todas como lidas
+      if (items.some(n => !n.readAt)) {
+        apiFetch("/therapy/notificacoes/ler-todas", { method: "POST" }).catch(() => {});
       }
       if (window.EP_NOTIF) window.EP_NOTIF.setBadge(0);
 
@@ -120,22 +139,39 @@
         return;
       }
 
-      listEl.innerHTML = items.map(n => {
-        const isUnread = !n.read;
-        return `<article style="padding: 16px 20px; border: 1px solid var(--ep-line); border-radius: 10px; background: var(--ep-surface); ${isUnread ? "border-left: 4px solid var(--ep-accent);" : ""}">
+      listEl.innerHTML = items.map((n, index) => {
+        const isUnread = !n.readAt;
+        const target = safeNotificationTarget(n.link);
+        const card = `<article style="padding: 16px 20px; border: 1px solid var(--ep-line); border-radius: 10px; background: var(--ep-surface); ${isUnread ? "border-left: 4px solid var(--ep-accent);" : ""} cursor:${target ? "pointer" : "default"};" ${target ? `data-notification-index="${index}" tabindex="0" role="link"` : ""}>
           <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+            <div style="font-size:28px; flex-shrink:0;">${typeIcon(n.type)}</div>
             <div style="flex:1; min-width:0;">
-              <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
                 ${isUnread ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--ep-accent);flex-shrink:0;display:inline-block;"></span>' : ''}
                 <span style="font-size:11px; font-weight:600; color:var(--ep-ink-3); text-transform:uppercase; letter-spacing:.05em;">${esc(typeLabel(n.type))}</span>
                 <span style="font-size:12px; color:var(--ep-ink-3);">${fmtDate(n.createdAt)}</span>
               </div>
-              <div style="font-size:15px; font-weight:600; color:var(--ep-ink); margin-bottom:8px;">${esc(n.title)}</div>
-              <div style="font-size:13.5px; color:var(--ep-ink-2); line-height:1.6; white-space:pre-wrap;">${esc(n.body)}</div>
+              <div style="font-size:15px; font-weight:600; color:var(--ep-ink); margin-bottom:6px;">${esc(n.title)}</div>
+              <div style="font-size:13.5px; color:var(--ep-ink-2); line-height:1.6;">${esc(n.body)}</div>
+              ${target ? `<div style="font-size:12px; color:var(--ep-accent); margin-top:8px; font-weight:500;">Ver no painel →</div>` : ""}
             </div>
           </div>
         </article>`;
+        return card;
       }).join("");
+      listEl.querySelectorAll("[data-notification-index]").forEach(card => {
+        const open = () => {
+          const target = safeNotificationTarget(items[Number(card.dataset.notificationIndex)]?.link);
+          if (target) location.assign(target);
+        };
+        card.addEventListener("click", open);
+        card.addEventListener("keydown", event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            open();
+          }
+        });
+      });
     } catch (err) {
       listEl.innerHTML = `<div class="ep-status is-err">Erro ao carregar notificações: ${esc(err.message)}</div>`;
     }

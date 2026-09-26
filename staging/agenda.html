@@ -18,15 +18,76 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
-  <script src="./i18n/init.js?v=1-3" defer></script>
+  <script src="./i18n/init.js?v=1-6" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=2" defer></script>
+  <style>
+    .ep-agenda-blackout--red {
+      background: rgba(184,69,61,.15) !important;
+      border-left-color: #b8453d !important;
+      color: #7a2d28 !important;
+    }
+    html[data-theme=dark] .ep-agenda-blackout--red {
+      background: rgba(184,69,61,.25) !important;
+      border-left-color: #e06060 !important;
+      color: #f8b0a8 !important;
+    }
+    .ep-agenda-legend__item.is-overdue .ep-agenda-legend__dot {
+      background: #b45f45;
+    }
+    .ep-agenda-session.is-overdue {
+      --ep-sess-bg: rgba(180,95,69,.18);
+      --ep-sess-accent: #b45f45;
+      border-color: rgba(180,95,69,.52) !important;
+      background-image: repeating-linear-gradient(
+        135deg,
+        transparent 0,
+        transparent 8px,
+        rgba(180,95,69,.07) 8px,
+        rgba(180,95,69,.07) 12px
+      );
+    }
+    .ep-agenda-session.is-overdue::after {
+      content: "!";
+      position: absolute;
+      top: 4px;
+      right: 5px;
+      width: 17px;
+      height: 17px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #b45f45;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+    }
+    .ep-pop-status.is-overdue {
+      background: rgba(180,95,69,.11);
+      color: #9b4934;
+      border-color: rgba(180,95,69,.38);
+    }
+    html[data-theme=dark] .ep-agenda-legend__item.is-overdue .ep-agenda-legend__dot {
+      background: #ee9277;
+    }
+    html[data-theme=dark] .ep-agenda-session.is-overdue {
+      --ep-sess-bg: rgba(180,95,69,.28);
+      --ep-sess-accent: #ee9277;
+      border-color: rgba(238,146,119,.54) !important;
+    }
+    html[data-theme=dark] .ep-pop-status.is-overdue {
+      background: rgba(238,146,119,.13);
+      color: #f2aa95;
+      border-color: rgba(238,146,119,.38);
+    }
+  </style>
 </head>
 <body class="ep-has-sidebar">
-<div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
-<script src="./js/sidebar.js?v=21"></script>
+<div class="ep-staging-banner">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
+
+<script src="./js/sidebar.js?v=26"></script>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
@@ -110,6 +171,7 @@
     <div class="ep-agenda-legend" aria-label="Legenda" data-i18n-aria-label="agenda:legend.aria">
       <span class="ep-agenda-legend__item is-scheduled"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.scheduled">Agendada</span></span>
       <span class="ep-agenda-legend__item is-progress"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.progress">Em sessão</span></span>
+      <span class="ep-agenda-legend__item is-overdue"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.overdue">Pendente</span></span>
       <span class="ep-agenda-legend__item is-done"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.done">Encerrada</span></span>
       <span class="ep-agenda-legend__item is-canceled"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.canceled">Cancelada</span></span>
       <span class="ep-agenda-legend__item is-note"><span class="ep-agenda-legend__dot"></span><span data-i18n="agenda:legend.note">Anotação</span></span>
@@ -268,6 +330,8 @@
     <p class="ep-modal__sub" id="slotActionSub">—</p>
     <div style="padding: 8px 28px 0;">
       <button type="button" class="ep-btn ep-btn--primary ep-btn--block" id="slotCreateSessionBtn" data-i18n="agenda:slot.createSession">📅 Criar consulta</button>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--block ep-mt-8" id="slotBlockBtn" data-i18n="agenda:slot.blockTime">🚫 Bloquear este horário</button>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--block ep-mt-8 ep-hide" id="slotRemoveBlockBtn" style="color:#b8453d;border-color:rgba(184,69,61,.3);">🔓 Remover bloqueio</button>
       <div class="ep-text-xs ep-text-muted ep-text-center ep-mt-12" style="margin-bottom: 12px;" data-i18n="agenda:slot.or">— ou —</div>
       <label class="ep-label" for="slotNoteText" data-i18n="agenda:slot.addNote">Adicionar observação</label>
       <textarea id="slotNoteText" class="ep-input" rows="3" maxlength="300" placeholder="Ex.: almoço, supervisão, ligar pro paciente X…" data-i18n-placeholder="agenda:slot.notePlaceholder"></textarea>
@@ -480,13 +544,44 @@
       endDay: end.getDate(), endMonth: mn[end.getMonth()], year: end.getFullYear()
     });
   }
-  function statusToClass(s) {
+  const SESSION_OVERDUE_GRACE_MINUTES = 30;
+  let serverClockOffsetMs = 0;
+  function syncServerClock(serverNow) {
+    const value = Number(serverNow);
+    if (Number.isFinite(value) && value > 0) serverClockOffsetMs = value - Date.now();
+  }
+  function currentServerTime() { return Date.now() + serverClockOffsetMs; }
+  function sessionDurationMinutes(session = {}) {
+    const raw = session.durationMinutes;
+    if (raw == null || raw === "") return 60;
+    const duration = Number(raw);
+    if (!Number.isFinite(duration) || duration <= 0) return 60;
+    return Math.min(240, Math.max(15, duration));
+  }
+  function sessionOverdueAt(session = {}) {
+    const scheduledAt = Number(session.scheduledAt);
+    if (!Number.isFinite(scheduledAt) || scheduledAt <= 0) return null;
+    const explicit = Number(session.overdueAt);
+    if (Number.isFinite(explicit) && explicit > 0) return explicit;
+    return scheduledAt + (sessionDurationMinutes(session) + SESSION_OVERDUE_GRACE_MINUTES) * 60_000;
+  }
+  function isSessionOverdue(session = {}, now = currentServerTime()) {
+    if (!session || !["scheduled", "in_progress"].includes(session.status)) return false;
+    if (session.timingState === "overdue") return true;
+    const overdueAt = sessionOverdueAt(session);
+    return overdueAt != null && now >= overdueAt;
+  }
+  function statusToClass(session) {
+    if (isSessionOverdue(session)) return "is-overdue";
+    const s = session?.status;
     if (s === "completed")   return "is-done";
     if (s === "in_progress") return "is-progress";
     if (s === "canceled")    return "is-canceled";
     return "is-scheduled";
   }
-  function statusLabel(s) {
+  function statusLabel(session) {
+    if (isSessionOverdue(session)) return tr("agenda:legend.overdue", "Pendente");
+    const s = session?.status;
     if (s === "completed")   return tr("agenda:legend.done", "Encerrada");
     if (s === "in_progress") return tr("agenda:legend.progress", "Em sessão");
     if (s === "canceled")    return tr("agenda:legend.canceled", "Cancelada");
@@ -517,7 +612,7 @@
           // diferente do painel pra não conflitar dados entre as 2 views.
           url: `${BACKEND_BASE_URL}/therapy/sessoes?includeHidden=true`,
           idToken, uid, key: "sessoes:all", ttl: 30_000, getFreshToken,
-          onData: (data) => { allSessions = data.sessions || []; showAgenda(); }
+          onData: (data) => { syncServerClock(data.serverNow); allSessions = data.sessions || []; showAgenda(); }
         }),
         cachedGet({
           url: `${BACKEND_BASE_URL}/therapy/agenda/blackouts`,
@@ -640,26 +735,40 @@
         if (col) {
           const startD = new Date(cursor);
           const endD   = new Date(sliceEnd);
-          const topPx    = Math.max(0, ((startD.getHours() + startD.getMinutes()/60) - START_HOUR) * HOUR_PX);
+          const startHours = startD.getHours() + startD.getMinutes()/60;
+          const topPx    = Math.max(0, (startHours - START_HOUR) * HOUR_PX);
           const endHours = endD.getDate() !== startD.getDate() ? END_HOUR : (endD.getHours() + endD.getMinutes()/60);
-          const heightPx = Math.max(8, (endHours - Math.max(START_HOUR, startD.getHours() + startD.getMinutes()/60)) * HOUR_PX);
+          // Não clipa por END_HOUR — bloco pode ultrapassar a grade visível
+          const heightPx = Math.max(8, (endHours - Math.max(startHours, START_HOUR)) * HOUR_PX);
           // Recorta blackouts inteiramente fora do range visível
           if (topPx < (END_HOUR - START_HOUR) * HOUR_PX && heightPx > 0) {
             const block = document.createElement("button");
             block.type = "button";
-            block.className = "ep-agenda-blackout";
+            block.className = "ep-agenda-blackout ep-agenda-blackout--red";
             block.style.top = `${topPx}px`;
             block.style.height = `${heightPx}px`;
             const blockedLbl = tr("agenda:js.blocked", "Bloqueado");
             block.title = b.reason ? tr("agenda:js.blockedWithReason", "Bloqueado: {{reason}}", { reason: b.reason }) : blockedLbl;
             block.dataset.blackoutId = b.blackoutId;
+            // Verifica se existe nota neste slot bloqueado para embutir no bloco
+            const blockHour = startD.getHours();
+            const blockDayStart = new Date(startD); blockDayStart.setHours(0,0,0,0);
+            const noteInSlot = allNotes.find(n => {
+              const nd = new Date(Number(n.at));
+              const nd0 = new Date(nd); nd0.setHours(0,0,0,0);
+              return nd0.getTime() === blockDayStart.getTime() && nd.getHours() === blockHour;
+            });
             block.innerHTML = `
               <div class="ep-agenda-blackout__label">${escapeHtml(blockedLbl)}</div>
               ${b.reason ? `<div class="ep-agenda-blackout__reason">${escapeHtml(b.reason)}</div>` : ""}
+              ${noteInSlot ? `<div class="ep-agenda-blackout__reason" style="margin-top:4px;font-style:italic;opacity:.85;">${escapeHtml(noteInSlot.text || "")}</div>` : ""}
             `;
+            if (noteInSlot) block.dataset.embeddedNoteId = noteInSlot.noteId;
             block.addEventListener("click", (e) => {
               e.stopPropagation();
-              if (confirm(tr("agenda:js.confirmRemoveBlock", "Remover este bloqueio?"))) deleteBlackout(b.blackoutId);
+              const slotDate = new Date(cursor);
+              slotDate.setHours(startD.getHours(), 0, 0, 0);
+              openSlotActionModal(slotDate, b.blackoutId);
             });
             col.appendChild(block);
           }
@@ -674,7 +783,13 @@
       const nAt = Number(n.at || 0);
       return nAt >= weekStartMs && nAt < weekEndMs;
     });
+    // IDs de notas já embutidas em blocos de blackout — não renderizar novamente
+    const embeddedNoteIds = new Set(
+      [...document.querySelectorAll("[data-embedded-note-id]")].map(el => el.dataset.embeddedNoteId)
+    );
+
     for (const n of notesThisWeek) {
+      if (embeddedNoteIds.has(n.noteId)) continue; // já aparece dentro do bloqueio
       const nAt = Number(n.at);
       const nDate = new Date(nAt);
       const dayIdx = dayIndexFromDate(nDate);
@@ -724,14 +839,15 @@
       const startMinutesFromTop = (sessionStartHour - START_HOUR) * 60;
       const topPx = Math.max(0, (startMinutesFromTop / 60) * HOUR_PX);
       // Clamp ao tamanho do slot inteiro — bloco sempre preenche o horário.
-      const heightPx = Math.max(HOUR_PX, (SESSION_DEFAULT_MIN / 60) * HOUR_PX);
+      const heightPx = Math.max(HOUR_PX, (sessionDurationMinutes(s) / 60) * HOUR_PX);
 
       const block = document.createElement("button");
       block.type = "button";
-      block.className = `ep-agenda-session ${statusToClass(s.status)}`;
+      block.className = `ep-agenda-session ${statusToClass(s)}`;
       block.style.top = `${topPx}px`;
       block.style.height = `${heightPx}px`;
       block.dataset.patientName = s.patientName || "";
+      block.title = `${s.patientName || "—"} · ${statusLabel(s)}`;
       block.innerHTML = `
         <div class="ep-agenda-session__time">${pad2(sd.getHours())}:${pad2(sd.getMinutes())}</div>
         <div class="ep-agenda-session__name">${escapeHtml(s.patientName || "—")}</div>
@@ -789,11 +905,15 @@
     document.getElementById("popDateTime").textContent =
       sd.toLocaleString(currentLocale(), { weekday: "long", day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" });
     const statusEl = document.getElementById("popStatus");
-    statusEl.textContent = statusLabel(s.status);
+    const overdue = isSessionOverdue(s);
+    statusEl.textContent = overdue
+      ? tr("agenda:pop.overdue", "Horário encerrado · atualização pendente")
+      : statusLabel(s);
     statusEl.className = "ep-pop-status";
     if (s.status === "completed")   statusEl.classList.add("is-ok");
-    if (s.status === "in_progress") statusEl.classList.add("is-ok");
+    if (s.status === "in_progress" && !overdue) statusEl.classList.add("is-ok");
     if (s.status === "canceled")    statusEl.classList.add("is-err");
+    if (overdue) statusEl.classList.add("is-overdue");
 
     // Indicador de recorrência
     const recEl = document.getElementById("popRecurrence");
@@ -813,7 +933,8 @@
     opLinkBox.classList.add("ep-hide");
     opLinkBox.textContent = "";
 
-    const canEnter = s.status !== "completed" && s.status !== "canceled";
+    const canManage = s.status !== "completed" && s.status !== "canceled";
+    const canEnter = canManage && !overdue;
     opEnterBtn.classList.toggle("ep-hide", !canEnter);
     if (canEnter) opEnterBtn.href = `./consultorio.html?session=${encodeURIComponent(s.sessionId)}`;
 
@@ -821,7 +942,7 @@
     if (s.patientId) opProntBtn.href = `./prontuario.html?p=${encodeURIComponent(s.patientId)}`;
 
     opCopyBtn.classList.toggle("ep-hide", !canEnter);
-    opCancelBtn.classList.toggle("ep-hide", !canEnter);
+    opCancelBtn.classList.toggle("ep-hide", !canManage);
 
     popover.classList.add("is-open");
   }
@@ -969,7 +1090,15 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
       blackoutModal.classList.remove("is-open");
-      await loadAgenda();
+      // Adiciona imediatamente ao array local (sem esperar cache) e re-renderiza.
+      // Depois invalida o cache e recarrega pra sincronizar.
+      if (data.blackoutId && data.from && data.to) {
+        allBlackouts = [...allBlackouts.filter(b => b.blackoutId !== data.blackoutId),
+                        { blackoutId: data.blackoutId, from: data.from, to: data.to, reason: data.reason || null }];
+        showAgenda();
+      }
+      invalidateApi("blackouts", uid);
+      loadAgenda().catch(() => {});
     } catch (e) {
       blackoutStatusEl.textContent = tr("agenda:js.error", "Erro: {{msg}}", { msg: e?.message || tr("agenda:js.unknown", "desconhecido") });
       blackoutStatusEl.className = "ep-status is-err";
@@ -1120,9 +1249,11 @@
 
   // ─── Slot action modal (criar consulta OU adicionar nota) ────────────
   let pendingSlotDate = null;
+  let pendingBlackoutId = null;
 
-  function openSlotActionModal(slotDate) {
-    pendingSlotDate = slotDate;
+  function openSlotActionModal(slotDate, blackoutId = null) {
+    pendingSlotDate  = slotDate;
+    pendingBlackoutId = blackoutId;
     const wd = slotDate.toLocaleDateString(currentLocale(), { weekday: "long" });
     const dm = slotDate.toLocaleDateString(currentLocale(), { day: "2-digit", month: "long" });
     const hm = `${pad2(slotDate.getHours())}:${pad2(slotDate.getMinutes())}`;
@@ -1131,6 +1262,10 @@
     document.getElementById("slotNoteText").value = "";
     document.getElementById("slotActionStatus").textContent = "";
     document.getElementById("slotActionStatus").className = "ep-status";
+    // Mostra/esconde botões conforme contexto (bloqueado ou livre)
+    const isBlocked = !!blackoutId;
+    document.getElementById("slotBlockBtn").classList.toggle("ep-hide", isBlocked);
+    document.getElementById("slotRemoveBlockBtn").classList.toggle("ep-hide", !isBlocked);
     document.getElementById("slotActionModal").classList.add("is-open");
   }
 
@@ -1139,6 +1274,32 @@
     // Antes redirecionava pro painel; agora abre o modal direto na agenda.
     document.getElementById("slotActionModal").classList.remove("is-open");
     newSessionModalApi.open({ scheduledAt: toISOLocal(pendingSlotDate) });
+  });
+
+  // Remover bloqueio pelo modal de slot
+  document.getElementById("slotRemoveBlockBtn").addEventListener("click", async () => {
+    if (!pendingBlackoutId) return;
+    const btn = document.getElementById("slotRemoveBlockBtn");
+    btn.disabled = true;
+    btn.textContent = tr("agenda:js.removing", "Removendo…");
+    await deleteBlackout(pendingBlackoutId);
+    document.getElementById("slotActionModal").classList.remove("is-open");
+    btn.disabled = false;
+    btn.textContent = "🔓 Remover bloqueio";
+  });
+
+  // Bloquear horário direto pelo clique no slot
+  document.getElementById("slotBlockBtn").addEventListener("click", () => {
+    if (!pendingSlotDate) return;
+    document.getElementById("slotActionModal").classList.remove("is-open");
+    // Pré-preenche início = horário clicado, fim = +1h
+    const end = new Date(pendingSlotDate.getTime() + 60 * 60 * 1000);
+    blackoutFromEl.value = toISOLocal(pendingSlotDate);
+    blackoutToEl.value   = toISOLocal(end);
+    blackoutReasonEl.value = "";
+    blackoutStatusEl.textContent = "";
+    blackoutStatusEl.className = "ep-status";
+    blackoutModal.classList.add("is-open");
   });
 
   // "+ Nova consulta" da toolbar — antes era <a href="painel.html">,
@@ -1319,6 +1480,20 @@
 
   // ─── Boot ───────────────────────────────────────────────────────────
   await loadAgenda();
+
+  // Atualiza apenas a classificação temporal: uma sessão que atravessa a
+  // janela de duração + tolerância muda para "Pendente" sem recarregar a aba.
+  let overdueStateSnapshot = new Map(allSessions.map(session => [session.sessionId, isSessionOverdue(session)]));
+  const overdueRenderTimer = window.setInterval(() => {
+    if (document.visibilityState !== "visible" || !allSessions.length) return;
+    const changed = allSessions.some(session =>
+      overdueStateSnapshot.get(session.sessionId) !== isSessionOverdue(session)
+    );
+    if (!changed) return;
+    overdueStateSnapshot = new Map(allSessions.map(session => [session.sessionId, isSessionOverdue(session)]));
+    renderWeek();
+  }, 60_000);
+  window.addEventListener("pagehide", () => window.clearInterval(overdueRenderTimer), { once: true });
 
   // Aba voltou a ficar visível: alguém pode ter cancelado/encerrado/criado
   // consulta no painel em outra aba, ou o token expirou (>1h). Refresh

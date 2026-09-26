@@ -18,15 +18,314 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
-  <script src="./i18n/init.js?v=1-3" defer></script>
+  <style>
+    #studentBanner.ep-payment-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+    }
+    #studentBanner .ep-payment-banner__copy { flex: 1 1 360px; }
+    #studentBanner .ep-payment-banner__cta {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-height: 42px;
+      padding: 10px 16px;
+      border: 1px solid #184648;
+      border-radius: 10px;
+      background: #184648;
+      color: #fffaf0;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.2;
+      text-decoration: none;
+      white-space: nowrap;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+    #studentBanner .ep-payment-banner__cta:hover {
+      border-color: #0d3436;
+      background: #0d3436;
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(13, 52, 54, .22);
+      transform: translateY(-2px);
+    }
+    #studentBanner .ep-payment-banner__cta:active {
+      box-shadow: none;
+      transform: translateY(0) scale(.98);
+    }
+    #studentBanner .ep-payment-banner__cta:focus-visible {
+      outline: 3px solid #b77d1a;
+      outline-offset: 3px;
+    }
+    @media (max-width: 560px) {
+      #studentBanner .ep-payment-banner__cta { width: 100%; }
+    }
+    #heroNextSession.ep-next-session {
+      position: relative;
+      isolation: isolate;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      overflow: hidden;
+      padding: 16px 20px;
+      border: 1px solid var(--ep-gold-line);
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--ep-accent-soft) 0%, rgba(200, 155, 74, .10) 100%);
+      transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+    .ep-next-session__content {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      min-width: 240px;
+    }
+    #heroNextSession.is-public-school {
+      color: #fffaf0;
+      border-color: rgba(226, 183, 106, .72);
+      background:
+        radial-gradient(circle at 86% -20%, rgba(244, 203, 106, .24), transparent 42%),
+        linear-gradient(125deg, #073c47 0%, #0b5961 62%, #174f4d 100%);
+      box-shadow: 0 18px 38px -26px rgba(4, 49, 58, .85), inset 0 1px 0 rgba(255, 255, 255, .10);
+    }
+    #heroNextSession.is-public-school::before,
+    #heroNextSession.is-public-school::after {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      pointer-events: none;
+    }
+    #heroNextSession.is-public-school::before {
+      inset: 0;
+      opacity: .13;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, .24) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .24) 1px, transparent 1px);
+      background-size: 34px 34px;
+      -webkit-mask-image: linear-gradient(90deg, transparent 38%, #000 100%);
+      mask-image: linear-gradient(90deg, transparent 38%, #000 100%);
+    }
+    #heroNextSession.is-public-school::after {
+      width: 190px;
+      height: 190px;
+      right: -54px;
+      top: -82px;
+      border: 1px solid rgba(244, 203, 106, .30);
+      border-radius: 50%;
+      box-shadow: 0 0 0 28px rgba(255, 255, 255, .035), 0 0 0 62px rgba(244, 203, 106, .035);
+    }
+    #heroNextSession.is-public-school #heroNextLabel { color: #f4cb6a; }
+    #heroNextSession.is-public-school #heroNextWhen { color: rgba(255, 250, 240, .82); }
+    #heroNextSession.is-public-school #heroEnterBtn {
+      position: relative;
+      z-index: 1;
+      color: #172c2d;
+      border-color: #f4cb6a;
+      background: linear-gradient(135deg, #f4cb6a, #dfaa46);
+      box-shadow: 0 10px 24px -14px rgba(0, 0, 0, .8);
+    }
+    #heroNextSession.is-overdue {
+      border-color: rgba(218, 134, 88, .78);
+      background:
+        radial-gradient(circle at 86% -20%, rgba(255, 193, 119, .20), transparent 42%),
+        linear-gradient(125deg, #432b27 0%, #31494a 58%, #265653 100%);
+      box-shadow: 0 18px 38px -26px rgba(63, 31, 24, .88), inset 0 1px 0 rgba(255, 255, 255, .09);
+    }
+    #heroNextSession.is-overdue #heroNextLabel { color: #ffd09b; }
+    #heroNextSession.is-overdue #heroNextWhen { color: rgba(255, 247, 235, .82); }
+    #heroNextSession.is-overdue #heroEnterBtn {
+      color: #4b2c23;
+      border-color: #f2c07d;
+      background: linear-gradient(135deg, #fff0d8, #eec27d);
+    }
+    .ep-school-origin {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      max-width: 100%;
+      padding: 7px 11px 7px 7px;
+      color: #fffaf0;
+      border: 1px solid rgba(226, 183, 106, .58);
+      border-radius: 11px;
+      background: linear-gradient(135deg, #0b5360, #0b434b);
+      box-shadow: 0 7px 18px -14px rgba(5, 55, 63, .9);
+      vertical-align: middle;
+    }
+    .ep-school-origin__icon {
+      display: grid;
+      place-items: center;
+      flex: 0 0 30px;
+      width: 30px;
+      height: 30px;
+      color: #172c2d;
+      border-radius: 8px;
+      background: linear-gradient(145deg, #f4cb6a, #dfa43d);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .42);
+    }
+    .ep-school-origin__icon svg { width: 18px; height: 18px; }
+    .ep-school-origin__copy {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      gap: 2px;
+      text-align: left;
+    }
+    .ep-school-origin__copy strong {
+      font-size: 10.5px;
+      line-height: 1;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    .ep-school-origin__copy small {
+      overflow: hidden;
+      color: rgba(255, 250, 240, .78);
+      font-size: 10.5px;
+      line-height: 1.25;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .ep-school-origin--hero {
+      border-color: rgba(255, 255, 255, .19);
+      background: rgba(255, 255, 255, .09);
+      box-shadow: none;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+    .ep-session.ep-session--public-school {
+      overflow: hidden;
+      padding-left: 15px;
+      border-color: rgba(11, 83, 96, .34);
+      border-left: 5px solid #0b5961;
+      background:
+        radial-gradient(circle at 94% 0%, rgba(226, 183, 106, .16), transparent 24%),
+        linear-gradient(100deg, rgba(11, 89, 97, .095), var(--ep-surface) 38%);
+      box-shadow: -1px 0 0 rgba(11, 89, 97, .16), 0 8px 26px -24px rgba(5, 55, 63, .7);
+    }
+    .ep-session.ep-session--public-school::before {
+      content: "";
+      position: absolute;
+      left: -5px;
+      top: 14px;
+      width: 5px;
+      height: 28px;
+      border-radius: 0 4px 4px 0;
+      background: #e2b76a;
+    }
+    .ep-session.ep-session--public-school::after {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      right: -38px;
+      top: -54px;
+      width: 150px;
+      height: 150px;
+      pointer-events: none;
+      border: 1px solid rgba(11, 89, 97, .11);
+      border-radius: 50%;
+      box-shadow: 0 0 0 24px rgba(11, 89, 97, .025);
+    }
+    .ep-session.ep-session--public-school > * { position: relative; z-index: 1; }
+    .ep-session.ep-session--public-school:hover {
+      border-color: rgba(11, 83, 96, .52);
+      box-shadow: -1px 0 0 rgba(11, 89, 97, .20), 0 12px 30px -24px rgba(5, 55, 63, .82);
+    }
+    .ep-session--public-school .ep-school-origin { margin-bottom: 9px; }
+    .ep-badge.ep-badge--overdue {
+      color: #7f351f;
+      border-color: rgba(188, 87, 51, .42);
+      background: rgba(224, 133, 91, .14);
+    }
+    #heroNextSession .ep-badge--overdue {
+      color: #ffe4c5;
+      border-color: rgba(255, 203, 147, .44);
+      background: rgba(84, 35, 25, .34);
+    }
+    .ep-session.ep-session--overdue {
+      border-color: rgba(188, 87, 51, .46);
+      border-left-color: #bc5733;
+      background:
+        radial-gradient(circle at 94% 0%, rgba(224, 133, 91, .13), transparent 24%),
+        linear-gradient(100deg, rgba(188, 87, 51, .09), var(--ep-surface) 40%);
+      box-shadow: -1px 0 0 rgba(188, 87, 51, .18), 0 8px 26px -24px rgba(91, 39, 28, .72);
+    }
+    .ep-session.ep-session--overdue::before { background: #f0b766; }
+    .ep-session.ep-session--overdue:hover {
+      border-color: rgba(188, 87, 51, .64);
+      box-shadow: -1px 0 0 rgba(188, 87, 51, .22), 0 12px 30px -24px rgba(91, 39, 28, .82);
+    }
+    .ep-overdue-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      max-width: 620px;
+      margin-top: 10px;
+      padding: 9px 11px;
+      color: #673321;
+      border: 1px solid rgba(188, 87, 51, .24);
+      border-radius: 9px;
+      background: rgba(255, 237, 218, .66);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .ep-overdue-note svg { flex: 0 0 16px; width: 16px; height: 16px; margin-top: 1px; }
+    .ep-overdue-note strong { display: block; color: #5c2b1d; }
+    .ep-btn.ep-resolution-btn { background: transparent; box-shadow: none; }
+    .ep-btn.ep-resolution-btn--held { color: #1e6558; border-color: rgba(30, 101, 88, .48); }
+    .ep-btn.ep-resolution-btn--not-held { color: #8b3d29; border-color: rgba(188, 87, 51, .48); }
+    .ep-btn.ep-resolution-btn--held:hover { background: rgba(30, 101, 88, .10); }
+    .ep-btn.ep-resolution-btn--not-held:hover { background: rgba(188, 87, 51, .10); }
+    .ep-session.is-focus-pulse { animation: ep-pending-focus 900ms ease both; }
+    @keyframes ep-pending-focus {
+      0%, 100% { box-shadow: -1px 0 0 rgba(188, 87, 51, .18), 0 8px 26px -24px rgba(91, 39, 28, .72); }
+      45% { box-shadow: 0 0 0 4px rgba(224, 133, 91, .22), 0 14px 34px -20px rgba(91, 39, 28, .82); }
+    }
+    html[data-theme="dark"] .ep-session.ep-session--public-school {
+      background:
+        radial-gradient(circle at 94% 0%, rgba(226, 183, 106, .12), transparent 24%),
+        linear-gradient(100deg, rgba(24, 125, 134, .18), var(--ep-surface) 42%);
+    }
+    html[data-theme="dark"] .ep-session.ep-session--overdue {
+      background:
+        radial-gradient(circle at 94% 0%, rgba(224, 133, 91, .13), transparent 24%),
+        linear-gradient(100deg, rgba(188, 87, 51, .17), var(--ep-surface) 42%);
+    }
+    html[data-theme="dark"] .ep-overdue-note {
+      color: #f0c7ad;
+      border-color: rgba(224, 133, 91, .30);
+      background: rgba(120, 53, 34, .22);
+    }
+    html[data-theme="dark"] .ep-overdue-note strong { color: #ffd2b5; }
+    html[data-theme="dark"] .ep-btn.ep-resolution-btn--held { color: #a7d8ca; border-color: rgba(117, 190, 170, .52); }
+    html[data-theme="dark"] .ep-btn.ep-resolution-btn--not-held { color: #f1b99d; border-color: rgba(224, 133, 91, .52); }
+    @media (prefers-reduced-motion: reduce) {
+      .ep-session.is-focus-pulse { animation: none; outline: 3px solid rgba(224, 133, 91, .34); }
+    }
+    @media (max-width: 680px) {
+      #heroNextSession.ep-next-session { align-items: stretch; padding: 16px; }
+      #heroNextSession #heroEnterBtn { width: 100%; }
+      #heroNextBadges { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+      #sessionList .ep-session { grid-template-columns: 1fr; }
+      #sessionList .ep-session__actions { justify-content: flex-start; }
+      .ep-school-origin__copy small { white-space: normal; }
+    }
+  </style>
+  <script src="./i18n/init.js?v=1-6" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=2" defer></script>
 </head>
 <body class="ep-has-sidebar">
-<div class="ep-staging-banner">Ambiente de teste &middot; Espa&ccedil;o Prel&uacute;dio &middot; staging</div>
-<script src="./js/sidebar.js?v=21"></script>
+<div class="ep-staging-banner">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
+
+<script src="./js/sidebar.js?v=26"></script>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
@@ -85,8 +384,8 @@
 
     <!-- Hero: próxima consulta + KPIs do mês (só aparece quando carrega) -->
     <section id="painelHero" class="ep-hide ep-mt-16" aria-label="Resumo do dia" data-i18n-aria-label="painel:hero.ariaSummary">
-      <div id="heroNextSession" class="ep-hide" style="padding: 16px 20px; background: linear-gradient(135deg, var(--ep-accent-soft) 0%, rgba(200,155,74,0.10) 100%); border-radius: 12px; border: 1px solid var(--ep-gold-line); display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 240px;">
+      <div id="heroNextSession" class="ep-next-session ep-hide">
+        <div class="ep-next-session__content">
           <div class="ep-eyebrow" id="heroNextLabel" data-i18n="painel:hero.nextLabel">Próxima consulta</div>
           <div style="font-size: 18px; font-weight: 600; margin-top: 4px;" id="heroNextPatient">—</div>
           <div class="ep-text-sm" style="margin-top: 2px;" id="heroNextWhen">—</div>
@@ -96,6 +395,32 @@
       </div>
 
       <div id="heroKpis" class="ep-mt-12" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;"></div>
+    </section>
+
+    <!-- Solicitações de nova consulta — alunos do programa escolar -->
+    <section id="studentRequestsSection" class="ep-hide ep-mt-16">
+      <div>
+        <div class="ep-eyebrow">Solicitações de alunos</div>
+        <h2 class="ep-h3 ep-mt-12" style="margin:0;"><span id="studentRequestsCount">0</span> aluno(s) pediram nova consulta</h2>
+        <p class="ep-text-muted ep-text-sm ep-mt-8">Acesse o caso e agende a sessão pelo fluxo de cuidado.</p>
+      </div>
+      <div id="studentRequestsList" class="ep-session-list ep-mt-12"></div>
+    </section>
+
+    <!-- Horários escolhidos diretamente por alunos no app Lemniscata -->
+    <section id="publicSchoolSchedRequestsSection" class="ep-hide ep-mt-16">
+      <div class="ep-flex--end-wrap ep-flex ep-mt-0">
+        <div>
+          <div class="ep-eyebrow" data-i18n="painel:school.requestEyebrow">Rede pública · Projeto Lemniscata</div>
+          <h2 class="ep-h3 ep-mt-12" style="margin: 0;" data-i18n-html="painel:school.requestH2">
+            <span id="publicSchoolSchedRequestsCount">0</span> pedido(s) de aluno aguardando aprovação
+          </h2>
+          <p class="ep-text-muted ep-text-sm ep-mt-8" data-i18n="painel:school.requestSub">
+            Solicitações feitas pelo app do aluno. Aprove para criar a consulta no fluxo da Rede Pública e enviar a confirmação.
+          </p>
+        </div>
+      </div>
+      <div id="publicSchoolSchedRequestsList" class="ep-session-list ep-mt-12"></div>
     </section>
 
     <!-- Solicitações pendentes (agendamento público) — só aparece com itens -->
@@ -363,7 +688,7 @@
 
   document.getElementById("topUserName").textContent = therapist.displayName || "";
 
-  // ─── Verificação CRP/CRM (e-Psi) — pill dinâmica ────────────
+  // ─── Verificação CRP/CRM — pill dinâmica ───────────────────
   (async () => {
     const pill = document.getElementById("verifPill");
     try {
@@ -437,6 +762,16 @@
       if (studentRes?.studentDoc?.decision === "rejected") {
         const reasons = (studentRes.studentDoc.reasons || []).map(r => `<li>${r}</li>`).join("");
         return setBanner("ep-alert--warn", `${tr("painel:studentBanner.rejected", "<strong>Comprovante de matrícula não aprovado.</strong>")} ${reasons ? `<ul style="margin: 6px 0 8px 18px; padding: 0;">${reasons}</ul>` : ""} <a href="./comprovante-estudante.html">${tr("painel:studentBanner.sendAnother", "Enviar outro →")}</a>`);
+      }
+
+      // Plano empresa — aguardando aprovação manual da equipe
+      if (plano === "empresa-pending-review" || therapist?.plano === "empresa-pending-review") {
+        return setBanner("ep-alert--info", "<strong>Cadastro recebido — aguardando aprovação.</strong> Nossa equipe está revisando seu perfil para o plano Atendimento a Empresas. Você será notificado por e-mail assim que for liberado.");
+      }
+      if ((plano === "empresa" || therapist?.plano === "empresa")
+          && String(therapist?.mpPreapprovalStatus || "").toLowerCase() !== "authorized") {
+        setBanner("ep-alert--warn ep-payment-banner", '<span class="ep-payment-banner__copy"><strong>Cadastre o meio de pagamento para realizar consultas.</strong> Você terá 7 dias grátis; depois, R$ 10,00/mês.</span><a class="ep-payment-banner__cta" href="./planos.html" aria-label="Cadastrar meio de pagamento">Cadastrar agora <span aria-hidden="true">→</span></a>');
+        return;
       }
 
       // Tier recém-formado
@@ -524,6 +859,77 @@
   }
   loadClinicInvites();
 
+  // ─── Solicitações de nova consulta (alunos do programa escolar) ─────────
+  async function loadStudentSessionRequests() {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/agendamentos/solicitacoes-estudante`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) return;
+      const pending = data.requests || [];
+      const section = document.getElementById("studentRequestsSection");
+      const list    = document.getElementById("studentRequestsList");
+      document.getElementById("studentRequestsCount").textContent = String(pending.length);
+      if (!pending.length) { section.classList.add("ep-hide"); return; }
+      section.classList.remove("ep-hide");
+      list.innerHTML = "";
+      pending.forEach(r => list.appendChild(renderStudentRequestCard(r)));
+    } catch (e) { console.error("student_requests_load_failed", e); }
+  }
+  function renderStudentRequestCard(r) {
+    const div = document.createElement("article");
+    div.className = "ep-session ep-session--patient";
+    div.dataset.studentReqId = r.id;
+    div.dataset.studentReqStudentId = r.studentId || "";
+    const when = r.createdAtMs ? new Date(r.createdAtMs).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) : "—";
+    div.innerHTML = `
+      <div>
+        <div class="ep-session__name">${escapeHtmlBasic(r.studentName)}</div>
+        <div class="ep-session__meta"><span>${escapeHtmlBasic(r.schoolName || r.programName || "Programa escolar")} · solicitado em ${when}</span></div>
+        <div class="ep-text-xs ep-text-muted ep-mt-8">${escapeHtmlBasic(r.studentEmail || "")}</div>
+      </div>
+      <div class="ep-session__actions">
+        <button class="ep-btn ep-btn--primary ep-btn--sm" data-student-req-action="claim">Pegar e abrir caso</button>
+      </div>`;
+    return div;
+  }
+  document.getElementById("studentRequestsList").addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-student-req-action='claim']");
+    if (!btn) return;
+    const card = btn.closest(".ep-session");
+    const id = card?.dataset?.studentReqId;
+    const studentId = card?.dataset?.studentReqStudentId;
+    if (!id) return;
+    btn.disabled = true;
+    btn.textContent = "Reservando…";
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/agendamentos/solicitacoes-estudante/${encodeURIComponent(id)}/pegar`, {
+        method: "POST", headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        if (data?.error === "JA_PEGO") {
+          card.remove();
+          const remaining = document.querySelectorAll("#studentRequestsList .ep-session").length;
+          document.getElementById("studentRequestsCount").textContent = String(remaining);
+          if (!remaining) document.getElementById("studentRequestsSection").classList.add("ep-hide");
+          alert("Outro profissional já pegou essa solicitação.");
+        } else {
+          alert("Erro: " + (data?.error || res.status));
+          btn.disabled = false;
+          btn.textContent = "Pegar e abrir caso";
+        }
+        return;
+      }
+      card.remove();
+      const remaining = document.querySelectorAll("#studentRequestsList .ep-session").length;
+      document.getElementById("studentRequestsCount").textContent = String(remaining);
+      if (!remaining) document.getElementById("studentRequestsSection").classList.add("ep-hide");
+      if (studentId) window.open(`./casos-publicos.html?id=${encodeURIComponent(studentId)}`, "_blank");
+    } catch (e) { alert("Erro de rede."); btn.disabled = false; btn.textContent = "Pegar e abrir caso"; }
+  });
+
   // ─── Solicitações de agendamento público ────────────────────
   // Lista pedidos pendentes do link público do terapeuta. Renderiza só
   // se houver pelo menos 1 — caso contrário, seção fica oculta.
@@ -546,34 +952,52 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) return;
       const pending = (data.requests || []).filter(r => r.status === "pending");
-      const section = document.getElementById("schedRequestsSection");
-      const list    = document.getElementById("schedRequestsList");
-      document.getElementById("schedRequestsCount").textContent = String(pending.length);
-      if (!pending.length) {
-        section.classList.add("ep-hide");
-        return;
-      }
-      section.classList.remove("ep-hide");
-      list.innerHTML = "";
-      pending.forEach(r => list.appendChild(renderSchedRequestCard(r)));
+      const publicSchoolPending = pending.filter(isPublicSchoolSession);
+      const publicLinkPending = pending.filter(r => !isPublicSchoolSession(r));
+      renderSchedulingRequestGroup({
+        requests: publicSchoolPending,
+        sectionId: "publicSchoolSchedRequestsSection",
+        listId: "publicSchoolSchedRequestsList",
+        countId: "publicSchoolSchedRequestsCount"
+      });
+      renderSchedulingRequestGroup({
+        requests: publicLinkPending,
+        sectionId: "schedRequestsSection",
+        listId: "schedRequestsList",
+        countId: "schedRequestsCount"
+      });
     } catch (e) {
       console.error("scheduling_requests_load_failed", e);
     }
   }
+  function renderSchedulingRequestGroup({ requests, sectionId, listId, countId }) {
+    const section = document.getElementById(sectionId);
+    const list = document.getElementById(listId);
+    document.getElementById(countId).textContent = String(requests.length);
+    section.classList.toggle("ep-hide", !requests.length);
+    list.innerHTML = "";
+    requests.forEach(r => list.appendChild(renderSchedRequestCard(r)));
+  }
   function renderSchedRequestCard(r) {
     const div = document.createElement("article");
-    div.className = "ep-session ep-session--patient";
+    const publicSchool = isPublicSchoolSession(r);
+    div.className = `ep-session ep-session--patient${publicSchool ? " ep-session--public-school" : ""}`;
     div.dataset.requestId = r.requestId;
     const phoneLine = r.patientPhone ? ` · ${escapeHtmlBasic(r.patientPhone)}` : "";
+    const schoolDetails = [r.schoolName, r.programName].filter(Boolean).map(escapeHtmlBasic).join(" · ");
+    const originLine = publicSchool
+      ? `<div class="ep-mt-8">${publicSchoolOriginTag()}</div>${schoolDetails ? `<div class="ep-text-xs ep-text-muted ep-mt-8">${schoolDetails}</div>` : ""}`
+      : "";
     const notesLine = r.notes
       ? `<div class="ep-text-sm ep-mt-8" style="padding: 8px 10px; background: var(--ep-bg-2); border-radius: 6px; color: var(--ep-ink-2);">${escapeHtmlBasic(r.notes)}</div>`
       : "";
     div.innerHTML = `
       <div>
-        <div class="ep-session__name">${escapeHtmlBasic(r.patientName)}</div>
+        <div class="ep-session__name">${escapeHtmlBasic(r.studentName || r.patientName)}</div>
         <div class="ep-session__meta">
           <span>${tr("painel:sched.askedFor","Pediu para")} <strong>${escapeHtmlBasic(fmtSchedRequestSlot(r.requestedSlot))}</strong></span>
         </div>
+        ${originLine}
         <div class="ep-text-xs ep-text-muted ep-mt-8">${escapeHtmlBasic(r.patientEmail)}${phoneLine}</div>
         ${notesLine}
       </div>
@@ -584,7 +1008,7 @@
     `;
     return div;
   }
-  document.getElementById("schedRequestsList").addEventListener("click", async (e) => {
+  async function handleSchedulingRequestAction(e) {
     const btn = e.target.closest("button[data-sched-action]");
     if (!btn) return;
     const card = btn.closest(".ep-session");
@@ -634,9 +1058,13 @@
         btn.disabled = false;
       }
     }
+  }
+  ["publicSchoolSchedRequestsList", "schedRequestsList"].forEach(listId => {
+    document.getElementById(listId).addEventListener("click", handleSchedulingRequestAction);
   });
   // Boot: carrega na mesma hora que carrega as sessões.
   loadSchedulingRequests().catch(() => {});
+  loadStudentSessionRequests().catch(() => {});
 
   // ─── Dashboard "Hoje" ────────────────────────────────────────
   // Carrega agregação leve + renderiza hero. Falha silenciosa.
@@ -647,10 +1075,18 @@
   let lastHeroData = null;
   let nextSessionScheduledAt = null;
   let countdownInterval = null;
+  let serverClockOffsetMs = 0;
+  function syncServerClock(serverNow) {
+    const value = Number(serverNow);
+    if (Number.isFinite(value) && value > 0) serverClockOffsetMs = value - Date.now();
+  }
+  function currentServerTime() {
+    return Date.now() + serverClockOffsetMs;
+  }
   function tickCountdown() {
     const el = document.getElementById("heroCountdownBadge");
     if (!el || !nextSessionScheduledAt) { clearInterval(countdownInterval); countdownInterval = null; return; }
-    const diffMin = (nextSessionScheduledAt - Date.now()) / 60000;
+    const diffMin = (nextSessionScheduledAt - currentServerTime()) / 60000;
     if (diffMin <= 0) {
       el.textContent = tr("painel:hero.alreadyNow", "Já no horário");
       clearInterval(countdownInterval);
@@ -698,41 +1134,115 @@
     }
     return d.toLocaleString(loc, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
   }
+  const DEFAULT_SESSION_DURATION_MINUTES = 60;
+  const SESSION_OVERDUE_GRACE_MINUTES = 30;
+  function sessionDurationMinutes(session = {}) {
+    const raw = session.durationMinutes;
+    if (raw == null || raw === "") return DEFAULT_SESSION_DURATION_MINUTES;
+    const duration = Number(raw);
+    if (!Number.isFinite(duration) || duration <= 0) return DEFAULT_SESSION_DURATION_MINUTES;
+    return Math.min(240, Math.max(15, duration));
+  }
+  function sessionOverdueAt(session = {}) {
+    const explicit = Number(session.overdueAt);
+    if (Number.isFinite(explicit) && explicit > 0) return explicit;
+    const scheduledAt = Number(session.scheduledAt);
+    if (!Number.isFinite(scheduledAt) || scheduledAt <= 0) return null;
+    return scheduledAt + (sessionDurationMinutes(session) + SESSION_OVERDUE_GRACE_MINUTES) * 60 * 1000;
+  }
+  function isSessionOverdue(session = {}, now = currentServerTime()) {
+    if (!["scheduled", "in_progress"].includes(session.status)) return false;
+    const overdueAt = sessionOverdueAt(session);
+    return overdueAt !== null && now >= overdueAt;
+  }
   function renderHero(data) {
+    syncServerClock(data?.serverNow);
     const hero = document.getElementById("painelHero");
     const nextBlock = document.getElementById("heroNextSession");
     const kpisBlock = document.getElementById("heroKpis");
 
-    // Próxima consulta
-    if (data.nextSession) {
-      const s = data.nextSession;
+    // Pendências vencidas têm prioridade visual; uma consulta não finalizada
+    // nunca continua se apresentando como "próxima" ou "já no horário".
+    const staleNext = isSessionOverdue(data.nextSession || {}) ? data.nextSession : null;
+    const activeNext = staleNext ? null : data.nextSession;
+    const s = activeNext || data.overdueSession || staleNext;
+    if (s) {
+      const sessionDetail = allSessions.find(item => item.sessionId === s.sessionId) || s;
+      const overdue = isSessionOverdue(sessionDetail);
+      const publicSchool = isPublicSchoolSession(sessionDetail);
+      const nextLabel = document.getElementById("heroNextLabel");
+      nextLabel.dataset.i18n = overdue ? "painel:hero.pendingLabel" : "painel:hero.nextLabel";
+      nextLabel.textContent = overdue
+        ? tr("painel:hero.pendingLabel", "Consulta não finalizada")
+        : tr("painel:hero.nextLabel", "Próxima consulta");
+      nextBlock.classList.toggle("is-public-school", publicSchool);
+      nextBlock.classList.toggle("is-overdue", overdue);
+      nextBlock.dataset.careOrigin = publicSchool ? "public-school" : "private";
+      nextBlock.dataset.timingState = overdue ? "overdue" : "current";
       document.getElementById("heroNextPatient").textContent = s.patientName || tr("painel:hero.patientFallback","Paciente");
       document.getElementById("heroNextWhen").textContent = fmtSessionWhen(s.scheduledAt);
       const badges = [];
+      if (publicSchool) badges.push(publicSchoolOriginTag("hero"));
       if (s.confirmedAt) badges.push(`<span class="ep-badge ep-badge--ok">${tr("painel:hero.confirmed","✓ Confirmada")}</span>`);
-      const diffMin = (s.scheduledAt - Date.now()) / 60000;
-      if (diffMin <= 0) badges.push(`<span class="ep-badge ep-badge--warn">${tr("painel:hero.alreadyNow","Já no horário")}</span>`);
-      else if (diffMin < 60) badges.push(`<span id="heroCountdownBadge" class="ep-badge ep-badge--warn">${tr("painel:hero.inMin","Em {{min}}min",{min:Math.round(diffMin)})}</span>`);
+      const diffMin = (s.scheduledAt - currentServerTime()) / 60000;
+      if (overdue) {
+        badges.push(`<span class="ep-badge ep-badge--overdue">${tr("painel:hero.timeClosed","Horário encerrado")}</span>`);
+      } else if (diffMin <= 0) {
+        badges.push(`<span class="ep-badge ep-badge--warn">${tr("painel:hero.alreadyNow","Já no horário")}</span>`);
+      } else if (diffMin < 60) {
+        badges.push(`<span id="heroCountdownBadge" class="ep-badge ep-badge--warn">${tr("painel:hero.inMin","Em {{min}}min",{min:Math.round(diffMin)})}</span>`);
+      }
       document.getElementById("heroNextBadges").innerHTML = badges.join(" ");
       // Real-time countdown — atualiza a cada 10s sem recarregar a página
       clearInterval(countdownInterval);
       countdownInterval = null;
-      if (diffMin > 0 && diffMin < 60) {
+      nextSessionScheduledAt = null;
+      if (!overdue && diffMin > 0 && diffMin < 60) {
         nextSessionScheduledAt = s.scheduledAt;
         countdownInterval = setInterval(tickCountdown, 10000);
       }
       const btn = document.getElementById("heroEnterBtn");
       btn.dataset.sessionId = s.sessionId;
-      // Reaproveita o handler de "Entrar" da lista — dispara o mesmo data-action="enter" virtualmente
-      btn.onclick = () => {
-        sessionList.dispatchEvent(new CustomEvent("synthetic-enter", { detail: { sessionId: s.sessionId } }));
-        // Fallback: encontra na lista e clica
-        const target = sessionList.querySelector(`button[data-action="enter"][data-id="${s.sessionId}"]`);
-        if (target) target.click();
-        else window.location.href = `./consultorio.html?session=${encodeURIComponent(s.sessionId)}`;
-      };
+      btn.dataset.i18n = overdue ? "painel:hero.reviewPending" : "painel:hero.enter";
+      btn.textContent = overdue
+        ? tr("painel:hero.reviewPending", "Revisar pendência")
+        : tr("painel:hero.enter", "Entrar na consulta");
+      if (overdue) {
+        btn.onclick = async () => {
+          let target = [...sessionList.querySelectorAll(".ep-session")]
+            .find(item => item.dataset.sessionId === s.sessionId);
+          if (!target) {
+            await loadSessions();
+            target = [...sessionList.querySelectorAll(".ep-session")]
+              .find(item => item.dataset.sessionId === s.sessionId);
+          }
+          if (!target) {
+            const pendingFallback = { ...s, timingState: "overdue" };
+            if (!allSessions.some(item => item.sessionId === s.sessionId)) {
+              allSessions.unshift(pendingFallback);
+            }
+            emptyState.classList.add("ep-hide");
+            sessionList.classList.remove("ep-hide");
+            sessionList.prepend(renderSession(pendingFallback));
+            target = sessionList.firstElementChild;
+          }
+          const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+          target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+          target.classList.remove("is-focus-pulse");
+          requestAnimationFrame(() => target.classList.add("is-focus-pulse"));
+        };
+      } else {
+        btn.onclick = () => {
+          const target = sessionList.querySelector(`button[data-action="enter"][data-id="${s.sessionId}"]`);
+          if (target) target.click();
+          else window.location.href = `./consultorio.html?session=${encodeURIComponent(s.sessionId)}`;
+        };
+      }
       nextBlock.classList.remove("ep-hide");
     } else {
+      nextBlock.classList.remove("is-public-school", "is-overdue");
+      delete nextBlock.dataset.careOrigin;
+      delete nextBlock.dataset.timingState;
       nextBlock.classList.add("ep-hide");
     }
 
@@ -753,7 +1263,8 @@
     })();
     const weekEndMs = weekStartMs + 7 * 86400000;
     const weekSessions = allSessions.filter(s =>
-      s.scheduledAt && s.scheduledAt >= weekStartMs && s.scheduledAt < weekEndMs && s.status !== "canceled"
+      s.scheduledAt && s.scheduledAt >= weekStartMs && s.scheduledAt < weekEndMs
+      && s.status !== "canceled" && s.status !== "completed"
     );
     const weekCount     = weekSessions.length;
     const weekConfirmed = weekSessions.filter(s => s.confirmedAt).length;
@@ -816,11 +1327,38 @@
       day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
     });
   }
-  function statusBadge(status) {
-    if (status === "completed")   return `<span class="ep-badge ep-badge--done">${tr("painel:badge.completed","Encerrada")}</span>`;
-    if (status === "in_progress") return `<span class="ep-badge ep-badge--ok">${tr("painel:badge.inProgress","Em sessão")}</span>`;
-    if (status === "canceled")    return `<span class="ep-badge ep-badge--done">${tr("painel:badge.canceled","Cancelada")}</span>`;
+  function statusBadge(session) {
+    if (session.status === "completed") return `<span class="ep-badge ep-badge--done">${tr("painel:badge.completed","Encerrada")}</span>`;
+    if (session.status === "canceled" && session.cancellationKind === "not_held") {
+      return `<span class="ep-badge ep-badge--done">${tr("painel:list.notHeldStatus","Não realizada")}</span>`;
+    }
+    if (session.status === "canceled") return `<span class="ep-badge ep-badge--done">${tr("painel:badge.canceled","Cancelada")}</span>`;
+    if (isSessionOverdue(session)) return `<span class="ep-badge ep-badge--overdue">${tr("painel:list.pendingStatus","Pendente")}</span>`;
+    if (session.status === "in_progress") return `<span class="ep-badge ep-badge--ok">${tr("painel:badge.inProgress","Em sessão")}</span>`;
     return `<span class="ep-badge ep-badge--warn">${tr("painel:badge.scheduled","Agendada")}</span>`;
+  }
+  function isPublicSchoolSession(session) {
+    if (!session) return false;
+    if (session.careOrigin === "public_school" || session.isPublicSchoolSession === true) return true;
+    if (session.fundingSource === "public_contract") return true;
+    return session.fundingSource === "synthetic_demo" && session.demoTechnicalRoom === true;
+  }
+  function publicSchoolOriginTag(variant = "list") {
+    const network = tr("painel:school.publicNetwork", "Rede pública");
+    const context = tr("painel:school.careContext", "Projeto Lemniscata · atendimento escolar");
+    const title = tr("painel:school.originTitle", "Consulta de aluno vinculada à rede pública");
+    return `
+      <span class="ep-school-origin${variant === "hero" ? " ep-school-origin--hero" : ""}" title="${escapeHtml(title)}" aria-label="${escapeHtml(`${network}. ${context}`)}">
+        <span class="ep-school-origin__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6M8 11h.01M12 11h.01M16 11h.01"/>
+          </svg>
+        </span>
+        <span class="ep-school-origin__copy">
+          <strong>${escapeHtml(network)}</strong>
+          <small>${escapeHtml(context)}</small>
+        </span>
+      </span>`;
   }
   // Aceita short code (~8 chars) OU joinToken JWT legado. Heurística pelo
   // tamanho: códigos curtos ficam <= 16 chars; JWTs sempre passam disso.
@@ -838,9 +1376,12 @@
   // Cache global das sessões — usado tanto pra render quanto pra extrair
   // pacientes "atendidos antes" (avulsos sem patientId) no select de nova consulta.
   let allSessions = [];
+  let timingRefreshInterval = null;
+  let timingStateSnapshot = new Map();
 
   function renderSessionsFromData(data) {
     loadingBanner.classList.add("ep-hide");
+    syncServerClock(data.serverNow);
     allSessions = data.sessions || [];
     // Re-renderiza o hero — card "Esta semana" precisa de allSessions atualizado.
     if (lastHeroData) renderHero(lastHeroData);
@@ -853,6 +1394,20 @@
     sessionList.innerHTML = "";
     allSessions.forEach(s => sessionList.appendChild(renderSession(s)));
     sessionList.classList.remove("ep-hide");
+    timingStateSnapshot = new Map(allSessions.map(session => [session.sessionId, isSessionOverdue(session)]));
+    if (!timingRefreshInterval) {
+      timingRefreshInterval = setInterval(() => {
+        const listTimingChanged = allSessions.some(session =>
+          timingStateSnapshot.get(session.sessionId) !== isSessionOverdue(session)
+        );
+        const heroSource = lastHeroData?.nextSession || lastHeroData?.overdueSession;
+        const heroTimingChanged = heroSource
+          ? isSessionOverdue(heroSource) !== document.getElementById("heroNextSession").classList.contains("is-overdue")
+          : false;
+        if (listTimingChanged) renderSessionsFromData({ sessions: allSessions });
+        else if (heroTimingChanged && lastHeroData) renderHero(lastHeroData);
+      }, 60 * 1000);
+    }
   }
 
   async function loadSessions() {
@@ -876,6 +1431,9 @@
 
   function renderSession(s) {
     const div = document.createElement("article");
+    const publicSchool = isPublicSchoolSession(s);
+    const overdue = isSessionOverdue(s);
+    const isOpen = s.status !== "completed" && s.status !== "canceled";
     // Marca lateral colorida — espelha o badge: ouro pra agendada/em-sessão,
     // terracota pra encerrada. Identifica o status sem ler o badge.
     let sideClass = "";
@@ -883,43 +1441,71 @@
       sideClass = " ep-session--done";
     } else if (s.status === "canceled") {
       sideClass = " ep-session--canceled";
-    } else {
+    } else if (!overdue) {
       sideClass = " ep-session--active";
     }
-    div.className = "ep-session" + sideClass;
+    div.className = "ep-session" + sideClass
+      + (publicSchool ? " ep-session--public-school" : "")
+      + (overdue ? " ep-session--overdue" : "");
+    div.dataset.sessionId = s.sessionId;
+    div.dataset.timingState = overdue ? "overdue" : "current";
+    if (publicSchool) div.dataset.careOrigin = "public-school";
     const confirmedTag = (s.confirmedAt && s.status === "scheduled")
       ? `<span class="ep-badge ep-badge--ok" title="${tr("painel:list.confirmedTitle","Paciente clicou no link de confirmação do e-mail de lembrete")}">${tr("painel:list.confirmedTag","✓ Confirmada pelo paciente")}</span>`
+      : "";
+    const demoTag = s.demoTechnicalRoom
+      ? `<span class="ep-badge" style="border-color:#b78a2f;color:#8a6418;background:#fff5d8">DEMONSTRAÇÃO · SALA TÉCNICA</span>`
       : "";
     const preNote = readPreNote(s.sessionId);
     const preNoteBlock = preNote
       ? `<div class="ep-prenote" title="${tr("painel:list.preNoteSavedTitle","Sua nota pré-sessão (salva só neste navegador)")}">📝 ${escapeHtml(preNote.length > 110 ? preNote.slice(0, 110) + "…" : preNote)}</div>`
       : "";
+    const overdueBlock = overdue
+      ? `<div class="ep-overdue-note" role="note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/>
+          </svg>
+          <span>
+            <strong>${tr("painel:list.overdueTitle","Horário encerrado")}</strong>
+            ${tr("painel:list.overdueBody","Esta consulta ainda não teve o status final atualizado.")}
+          </span>
+        </div>`
+      : "";
     div.innerHTML = `
-      <div>
+      <div class="ep-session__main">
+        ${publicSchool ? publicSchoolOriginTag() : ""}
         <div class="ep-session__name">${escapeHtml(s.patientName)}</div>
         <div class="ep-session__meta">
-          ${statusBadge(s.status)}
+          ${statusBadge(s)}
+          ${demoTag}
           ${confirmedTag}
           <span>${tr("painel:list.createdAt","Criada {{date}}",{date:fmtDate(s.createdAt)})}</span>
           ${s.scheduledAt ? `<span>${tr("painel:list.scheduledAt","· Agendada {{date}}",{date:fmtDate(s.scheduledAt)})}</span>` : ""}
           ${s.completedAt ? `<span>${tr("painel:list.completedAt","· Encerrada {{date}}",{date:fmtDate(s.completedAt)})}</span>` : ""}
         </div>
+        ${overdueBlock}
         ${preNoteBlock}
       </div>
       <div class="ep-session__actions">
-        ${s.status !== "completed" ? `
-          <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="enter" data-id="${s.sessionId}">${tr("painel:list.enter","Entrar")}</button>
+        ${isOpen && !overdue ? `
+          <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="enter" data-id="${s.sessionId}">${s.demoTechnicalRoom?'Abrir sala demo':tr("painel:list.enter","Entrar")}</button>
         ` : ""}
-        ${s.status !== "completed" ? `
+        ${isOpen && overdue ? `
+          <button class="ep-btn ep-btn--ghost ep-btn--sm ep-resolution-btn ep-resolution-btn--held" data-action="encerrar" data-id="${s.sessionId}">${tr("painel:list.markHeld","Marcar realizada")}</button>
+        ` : ""}
+        ${isOpen && overdue ? `
+          <button class="ep-btn ep-btn--ghost ep-btn--sm ep-resolution-btn ep-resolution-btn--not-held" data-action="not-held" data-id="${s.sessionId}">${tr("painel:list.markNotHeld","Não realizada")}</button>
+        ` : ""}
+        ${isOpen ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="prenote" data-id="${s.sessionId}" title="${tr("painel:list.preNoteTitle","Nota pré-sessão (só neste navegador)")}">${preNote ? tr("painel:list.preNoteSet","📝 Nota") : tr("painel:list.preNoteEmpty","Nota")}</button>
         ` : ""}
-        ${s.status !== "completed" ? `
+        ${isOpen && !overdue ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="encerrar" data-id="${s.sessionId}">${tr("painel:list.encerrar","Encerrar")}</button>
         ` : ""}
-        ${s.status !== "canceled" ? `
+        ${isOpen && !s.demoTechnicalRoom && !publicSchool ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="recibo" data-id="${s.sessionId}" title="${tr("painel:list.reciboTitle","Enviar recibo ao paciente")}">${tr("painel:list.recibo","Recibo")}</button>
         ` : ""}
-        ${!s.patientAccountUid ? `
+        ${isOpen && !s.patientAccountUid && !s.demoTechnicalRoom && !publicSchool ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="vincular" data-id="${s.sessionId}" title="${tr("painel:list.vincularTitle","Vincular conta de paciente pra abrir chat E2EE")}">${tr("painel:list.vincular","Vincular conta")}</button>
         ` : ""}
         ${(s.status === "completed" || s.status === "canceled") ? `
@@ -947,8 +1533,16 @@
     if (action === "enter") {
       window.location.href = `./consultorio.html?session=${encodeURIComponent(id)}`;
     } else if (action === "encerrar") {
-      if (!confirmOnce("encerrar_consulta", tr("painel:list.confirmEncerrar","Encerrar esta consulta? Ela ficará marcada como concluída."))) return;
-      btn.disabled = true;
+      const selectedSession = allSessions.find(item => item.sessionId === id);
+      const overdue = isSessionOverdue(selectedSession || {});
+      const confirmed = overdue
+        ? confirm(tr("painel:list.confirmMarkHeld","Confirmar que esta consulta foi realizada? Ela será contabilizada como concluída."))
+        : confirmOnce("encerrar_consulta", tr("painel:list.confirmEncerrar","Encerrar esta consulta? Ela ficará marcada como concluída."));
+      if (!confirmed) return;
+      const decisionButtons = overdue
+        ? [...btn.closest(".ep-session__actions").querySelectorAll('button[data-action="encerrar"], button[data-action="not-held"]')]
+        : [btn];
+      decisionButtons.forEach(item => { item.disabled = true; });
       try {
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/encerrar`, {
           method: "POST",
@@ -957,10 +1551,35 @@
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
         invalidatePrefix("sessoes", uid);
-        await loadSessions();
+        await Promise.all([loadSessions(), loadHero()]);
       } catch {
-        btn.disabled = false;
+        decisionButtons.forEach(item => { item.disabled = false; });
         alert(tr("painel:list.encerrarErr","Erro ao encerrar."));
+      }
+    } else if (action === "not-held") {
+      if (!confirm(tr("painel:list.confirmMarkNotHeld","Confirmar que esta consulta não foi realizada? Ela será encerrada sem contar como atendimento concluído."))) return;
+      const decisionButtons = [...btn.closest(".ep-session__actions").querySelectorAll('button[data-action="encerrar"], button[data-action="not-held"]')];
+      decisionButtons.forEach(item => { item.disabled = true; });
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/cancelar`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${idToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            scope: "this",
+            cancellationKind: "not_held",
+            reason: "Consulta não realizada após o encerramento do horário."
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
+        invalidatePrefix("sessoes", uid);
+        await Promise.all([loadSessions(), loadHero()]);
+      } catch {
+        decisionButtons.forEach(item => { item.disabled = false; });
+        alert(tr("painel:list.markNotHeldErr","Erro ao marcar a consulta como não realizada."));
       }
     } else if (action === "ocultar") {
       if (!confirmOnce("ocultar_consulta", tr("painel:list.confirmOcultar","Remover esta consulta da lista? O registro permanece no prontuário do paciente — só some daqui."))) return;
