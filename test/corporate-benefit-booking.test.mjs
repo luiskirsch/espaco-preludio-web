@@ -13,6 +13,7 @@ test('inscrição corporativa não promete acesso imediato nem preço extra fixo
   assert.match(registration, /aprovação da empresa/);
   assert.match(registration, /crie sua conta de paciente com este mesmo e-mail/);
   assert.doesNotMatch(registration, /R\$\s*60[,\.]00/);
+  assert.match(registration, /BENEFICIO_INATIVO/);
 });
 
 test('agendamento corporativo valida saldo e preço no servidor', () => {

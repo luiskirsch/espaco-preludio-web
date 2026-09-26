@@ -138,7 +138,14 @@
     fetch(`${BACKEND_BASE_URL}/public/empresa/${slug}`)
       .then(r => r.json()).catch(() => ({}))
       .then(d => {
-        if (!d.ok) { showState("stateInvalid"); return; }
+        if (!d.ok) {
+          if (d.error === "BENEFICIO_INATIVO") {
+            document.querySelector("#stateInvalid h2").textContent = "Programa ainda não disponível";
+            document.querySelector("#stateInvalid p").textContent = "A inscrição será aberta quando a empresa confirmar o início do benefício. Consulte o RH antes de enviar dados.";
+          }
+          showState("stateInvalid");
+          return;
+        }
         document.getElementById("empresaNomeBanner").textContent = d.nome;
         document.title = `Cadastro · ${d.nome} · Espaço Prelúdio`;
         if (d.limiteColaboradores && d.totalColaboradores >= d.limiteColaboradores) {
@@ -189,6 +196,7 @@
           EMAIL_JA_CADASTRADO: "Este e-mail já foi inscrito nesta empresa. Entre na sua conta de paciente e aguarde a aprovação do RH.",
           LIMITE_COLABORADORES_ATINGIDO: "O programa atingiu o limite de vagas.",
           EMPRESA_INATIVA: "Este programa não está mais ativo.",
+          BENEFICIO_INATIVO: "A inscrição ainda não está aberta. Consulte o RH da empresa.",
           EMPRESA_NAO_ENCONTRADA: "Link inválido."
         };
         throw new Error(msgs[d.error] || d.error || "Erro ao cadastrar.");
