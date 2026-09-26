@@ -2,13 +2,14 @@
 // Documentos usam network-first para nunca prender o app em uma versão antiga.
 // Apenas ativos estáticos do mesmo domínio usam cache com revalidação.
 
-const VERSION = "ep-app-v3-2026-09-18-security-hardening";
+const VERSION = "ep-app-v4-2026-09-26-dark-theme";
 const STATIC_CACHE = `static-${VERSION}`;
 const PAGE_CACHE = `pages-${VERSION}`;
 const OFFLINE_PAGE = "/app/login.html";
 const PRECACHE = [
   OFFLINE_PAGE,
   "/app/app.css",
+  "/css/dark-mode.css?v=20260926",
   "/app/manifest.json",
   "/logo_oficial_fundo_transparente.png?v=2",
 ];
