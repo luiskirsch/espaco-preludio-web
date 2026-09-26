@@ -181,6 +181,7 @@
 
     { section: "B2B / Empresas" },
     { href: "admin-empresas.html",      label: "Empresas",       icon: "building"   },
+    { href: "admin-nr1.html",           label: "NR-1 / Riscos",  icon: "file"       },
     { href: "admin-colaboradores.html", label: "Colaboradores",  icon: "briefcase"  },
     { href: "admin-empresa.html",       label: "Aprovações",     icon: "check",     badgeId: "navBadgeEmpresa" },
 
