@@ -117,6 +117,24 @@
           <div class="ep-field"><label class="ep-label">Limite de colaboradores</label><input id="fLimite" class="ep-input" type="number" min="1" placeholder="Ilimitado se vazio"></div>
         </div>
         <div class="ep-field"><label class="ep-label">Observações internas</label><textarea id="fObs" class="ep-input" rows="2" maxlength="500" style="resize:vertical;"></textarea></div>
+        <section id="benefitConfig" class="ep-hide" style="border-top:1px solid var(--ep-line);padding-top:16px;">
+          <div class="ep-eyebrow">Benefício de psicologia</div>
+          <p class="ep-text-sm ep-text-muted">Duas consultas incluídas por colaborador/mês. Preencha taxas confirmadas pela contabilidade e pelo Mercado Pago antes de ativar. O preço adicional é calculado pelo servidor para preservar R$ 60 líquidos ao profissional CPF.</p>
+          <div class="ep-row">
+            <div class="ep-field"><label class="ep-label" for="fWithholding">Retenções do profissional (%)</label><input id="fWithholding" class="ep-input" type="number" min="0" max="99" step="0.01" placeholder="INSS + IRRF aplicável"></div>
+            <div class="ep-field"><label class="ep-label" for="fEmployer">Encargo patronal fora do DAS (%)</label><input id="fEmployer" class="ep-input" type="number" min="0" max="100" step="0.01" placeholder="0 se já incluso no DAS"></div>
+          </div>
+          <div class="ep-row">
+            <div class="ep-field"><label class="ep-label" for="fSimples">Simples efetivo sobre a receita (%)</label><input id="fSimples" class="ep-input" type="number" min="0" max="99" step="0.01"></div>
+            <div class="ep-field"><label class="ep-label" for="fGateway">Taxa Pix da conta (%)</label><input id="fGateway" class="ep-input" type="number" min="0" max="99" step="0.01"></div>
+          </div>
+          <div class="ep-row">
+            <div class="ep-field"><label class="ep-label" for="fGatewayFixed">Taxa Pix fixa (R$)</label><input id="fGatewayFixed" class="ep-input" type="number" min="0" step="0.01"></div>
+            <div class="ep-field"><label class="ep-label" for="fOtherFixed">Outros custos por extra (R$)</label><input id="fOtherFixed" class="ep-input" type="number" min="0" step="0.01"></div>
+          </div>
+          <p id="benefitCurrentQuote" class="ep-text-sm ep-text-muted"></p>
+          <label class="ep-checkbox"><input id="fBenefitActive" type="checkbox"><span>Ativar benefício somente após contrato, RT, CRP-MG, rede e preços homologados</span></label>
+        </section>
         <p id="empModalStatus" class="ep-text-sm ep-text-muted" style="min-height:18px;"></p>
       </div>
     </div>
@@ -193,6 +211,7 @@
             <div class="emp-card__name">${esc(e.nome)}</div>
             <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;">
               ${statusBadge(e.status)}
+              <span class="ep-badge">Benefício ${e.benefitStatus === "active" ? "ativo" : "inativo"}${e.extraQuote ? ` · extra R$ ${(e.extraQuote.totalCents / 100).toFixed(2).replace(".", ",")}` : ""}</span>
               ${e.segmento ? `<span class="ep-badge">${esc(e.segmento)}</span>` : ""}
             </div>
           </div>
@@ -273,6 +292,20 @@
     document.getElementById("fContatoPhone").value = item?.contatoPhone || "";
     document.getElementById("fLimite").value = item?.limiteColaboradores || "";
     document.getElementById("fObs").value = item?.obs || "";
+    document.getElementById("benefitConfig").classList.toggle("ep-hide", !item);
+    const pricing = item?.extraPricing;
+    const setRate = (id, value) => { document.getElementById(id).value = value == null ? "" : (Number(value) * 100).toString(); };
+    const setMoney = (id, value) => { document.getElementById(id).value = value == null ? "" : (Number(value) / 100).toFixed(2); };
+    setRate("fWithholding", pricing?.workerWithholdingRate);
+    setRate("fEmployer", pricing?.employerContributionRate);
+    setRate("fSimples", pricing?.simplesEffectiveRate);
+    setRate("fGateway", pricing?.gatewayPercentRate);
+    setMoney("fGatewayFixed", pricing?.gatewayFixedCents);
+    setMoney("fOtherFixed", pricing?.otherFixedCents);
+    document.getElementById("fBenefitActive").checked = item?.benefitStatus === "active";
+    document.getElementById("benefitCurrentQuote").textContent = item?.extraQuote
+      ? `Preço adicional vigente: R$ ${(item.extraQuote.totalCents / 100).toFixed(2).replace(".", ",")} (versão ${pricing?.version || "—"}).`
+      : "Consulta adicional indisponível até a configuração completa e homologada.";
     document.getElementById("empModalStatus").textContent = "";
     modal.style.display = "grid";
   }
@@ -300,6 +333,34 @@
       limiteColaboradores: document.getElementById("fLimite").value || null,
       obs: document.getElementById("fObs").value.trim() || null
     };
+    if (editingId) {
+      const fieldIds = ["fWithholding", "fEmployer", "fSimples", "fGateway", "fGatewayFixed", "fOtherFixed"];
+      const values = fieldIds.map(id => document.getElementById(id).value.trim());
+      const hasAny = values.some(Boolean);
+      if (hasAny && !values.every(Boolean)) {
+        statusEl.textContent = "Preencha todas as taxas, inclusive zero onde não houver cobrança.";
+        return;
+      }
+      if (hasAny) {
+        if (!window.confirm("Confirma que todas as taxas e retenções foram homologadas pela contabilidade e pelo Mercado Pago?")) return;
+        const rate = id => Number(document.getElementById(id).value) / 100;
+        const cents = id => Math.round(Number(document.getElementById(id).value) * 100);
+        payload.extraPricing = {
+          version: `admin-${Date.now()}`, netPsychologistCents: 6000,
+          workerWithholdingRate: rate("fWithholding"),
+          employerContributionRate: rate("fEmployer"),
+          simplesEffectiveRate: rate("fSimples"),
+          gatewayPercentRate: rate("fGateway"),
+          gatewayFixedCents: cents("fGatewayFixed"),
+          otherFixedCents: cents("fOtherFixed")
+        };
+      }
+      const current = allItems.find(item => item.id === editingId);
+      const enable = document.getElementById("fBenefitActive").checked;
+      if (enable && current?.benefitStatus !== "active"
+          && !window.confirm("Ativar agora? Confirme contrato, RT e situação no CRP-MG, rede clínica e conciliação financeira.")) return;
+      payload.benefitStatus = enable ? "active" : "inactive";
+    }
     try {
       idToken = await auth.currentUser?.getIdToken(true);
       const url = editingId

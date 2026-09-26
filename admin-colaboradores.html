@@ -69,7 +69,8 @@
         <select id="filterEmpresa" class="ep-select" style="max-width:220px;">
           <option value="">Todas as empresas</option>
         </select>
-        <button class="ep-btn ep-btn--primary ep-btn--sm" data-status="ativo">Ativos</button>
+        <button class="ep-btn ep-btn--primary ep-btn--sm" data-status="pendente">Pendentes</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-status="ativo">Ativos</button>
         <button class="ep-btn ep-btn--ghost ep-btn--sm" data-status="all">Todos</button>
         <button class="ep-btn ep-btn--ghost ep-btn--sm" data-status="inativo">Inativos</button>
         <span id="countLabel" class="ep-text-sm ep-text-muted"></span>
@@ -115,10 +116,12 @@
         <div class="ep-field">
           <label class="ep-label">Status</label>
           <select id="eStatus" class="ep-select">
+            <option value="pendente">Pendente de validação</option>
             <option value="ativo">Ativo</option>
             <option value="inativo">Inativo</option>
           </select>
         </div>
+        <p class="ep-text-sm ep-text-muted">Aprovar como ativo libera o benefício. Confirme antes o vínculo empregatício com o RH da empresa; o link público não comprova elegibilidade.</p>
         <p id="editStatus" class="ep-text-sm ep-text-muted" style="min-height:16px;"></p>
       </div>
     </div>
@@ -134,7 +137,7 @@
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
 
   let idToken = null;
-  let currentStatus = "ativo";
+  let currentStatus = "pendente";
   let editingId = null;
   let allItems = [];
   let empresas = [];
@@ -221,7 +224,7 @@
         <td>${esc(c.empresaNome || "—")}</td>
         <td>${esc(c.departamento || "—")}</td>
         <td>${esc(c.cargo || "—")}</td>
-        <td>${c.status === "ativo" ? '<span class="ep-badge" style="background:rgba(80,160,100,.15);color:#2d6a3e;">Ativo</span>' : '<span class="ep-badge">Inativo</span>'}</td>
+        <td>${c.status === "ativo" ? '<span class="ep-badge" style="background:rgba(80,160,100,.15);color:#2d6a3e;">Ativo</span>' : c.status === "pendente" ? '<span class="ep-badge">Pendente</span>' : '<span class="ep-badge">Inativo</span>'}</td>
         <td>${fmtDate(c.createdAt)}</td>
         <td><button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-edit-id="${esc(c.id)}">Editar</button></td>
       </tr>
@@ -274,6 +277,9 @@
 
   document.getElementById("editSave").addEventListener("click", async () => {
     if (!editingId) return;
+    const original = allItems.find(item => item.id === editingId);
+    if (original?.status !== "ativo" && document.getElementById("eStatus").value === "ativo"
+      && !window.confirm("Você confirmou com o RH o vínculo deste colaborador? A aprovação libera o benefício corporativo.")) return;
     document.getElementById("editStatus").textContent = "Salvando…";
     try {
       idToken = await auth.currentUser?.getIdToken(true);

@@ -68,6 +68,23 @@
       </div>
     </div>
 
+    <section id="paymentBox" class="ep-card ep-mt-32 ep-hide" aria-live="polite">
+      <div class="ep-eyebrow">Pagamento da consulta adicional</div>
+      <h2 class="ep-h2 ep-mt-8">Conclua o Pix para liberar o pedido</h2>
+      <p class="ep-text-muted">A consulta adicional não está coberta pelo benefício. O pedido só seguirá para confirmação do profissional após o pagamento ser identificado.</p>
+      <p id="paymentAmount" class="ep-h3 ep-mt-16"></p>
+      <div id="paymentQrWrap" class="ep-hide ep-mt-16" style="text-align:center;">
+        <img id="paymentQr" alt="QR Code Pix para pagamento da consulta adicional" style="max-width:220px;width:100%;height:auto;">
+      </div>
+      <div id="paymentCodeWrap" class="ep-hide ep-mt-16 ep-field">
+        <label class="ep-label" for="paymentCode">Pix copia e cola</label>
+        <textarea id="paymentCode" class="ep-textarea" readonly rows="3"></textarea>
+        <button id="copyPaymentCode" class="ep-btn ep-btn--ghost ep-mt-8" type="button">Copiar código Pix</button>
+      </div>
+      <div id="paymentStatus" class="ep-status ep-mt-16" role="status" aria-live="polite"></div>
+      <button id="retryPaymentStatus" class="ep-btn ep-btn--ghost ep-mt-16" type="button">Verificar pagamento</button>
+    </section>
+
     <!-- Conteúdo principal -->
     <div id="content" class="ep-hide">
 
@@ -85,6 +102,13 @@
       </section>
 
       <p id="therapistBio" class="ep-text-muted ep-mt-16 ep-hide" style="line-height: 1.55; font-size: 14.5px;"></p>
+
+      <section id="benefitBox" class="ep-card ep-mt-24 ep-hide" aria-live="polite">
+        <div class="ep-eyebrow">Benefício corporativo</div>
+        <h2 id="benefitTitle" class="ep-h3 ep-mt-8"></h2>
+        <p id="benefitMessage" class="ep-text-muted ep-mt-8"></p>
+        <a id="benefitLogin" class="ep-btn ep-btn--ghost ep-mt-12 ep-hide" href="./paciente-login.html">Entrar na conta de paciente</a>
+      </section>
 
       <!-- Passo 1: escolher dia -->
       <section class="ep-mt-32">
@@ -128,13 +152,21 @@
             <label class="ep-label" for="notes" data-i18n="agendar:form.notesLabel">Mensagem para o profissional (opcional)</label>
             <textarea id="notes" class="ep-textarea" maxlength="1000" rows="3" data-i18n-placeholder="agendar:form.notesPlaceholder" placeholder="Conte brevemente o motivo da consulta, se desejar."></textarea>
           </div>
-          <!-- TCLE — Res. CFM 2.314/2022 -->
+          <div id="benefitCheckout" class="ep-alert ep-alert--info ep-hide" aria-live="polite">
+            <strong id="benefitCheckoutTitle"></strong>
+            <p id="benefitCheckoutMessage" class="ep-mt-8"></p>
+            <label id="extraPriceConsentWrap" class="ep-checkbox ep-hide" style="align-items:flex-start;gap:10px;">
+              <input id="extraPriceConsent" type="checkbox" style="margin-top:3px;flex-shrink:0;">
+              <span id="extraPriceConsentText"></span>
+            </label>
+          </div>
+          <!-- Consentimento para atendimento remoto; regras específicas dependem da profissão. -->
           <div style="background: rgba(45,106,62,.06); border: 1px solid rgba(45,106,62,.2); border-radius: 10px; padding: 16px; margin-top: 8px;">
             <p style="font-size: 12px; color: #1c1f1d; margin: 0 0 10px; font-weight: 600;">📋 Termo de Consentimento Livre e Esclarecido (TCLE)</p>
             <p style="font-size: 11.5px; color: #5a5a56; margin: 0 0 12px; line-height: 1.6;">
               Ao solicitar este atendimento, declaro que: (1) estou ciente de que a consulta ocorrerá por videoconferência (telessaúde);
               (2) compreendo que posso encerrar o atendimento a qualquer momento; (3) autorizo o registro das informações clínicas em prontuário
-              pelo(a) profissional, conforme a Res. CFM 2.314/2022 e a Res. CFP 9/2024; (4) fui informado(a) sobre os limites e riscos
+              pelo(a) profissional, conforme as normas éticas aplicáveis à sua profissão; (4) fui informado(a) sobre os limites e riscos
               inerentes ao atendimento remoto; (5) consinto com o tratamento dos meus dados de saúde conforme a LGPD (Lei 13.709/2018).
             </p>
             <label class="ep-checkbox" style="align-items: flex-start; gap: 10px;">
@@ -164,7 +196,8 @@
 </div>
 
 <script type="module">
-  import { BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
 
   const $ = id => document.getElementById(id);
 
@@ -186,6 +219,117 @@
 
   const params = new URLSearchParams(location.search);
   const slug = (params.get("p") || params.get("slug") || "").trim().toLowerCase();
+  const companySlug = (params.get("empresa") || "").trim().toLowerCase();
+  const corporateIntent = Boolean(companySlug);
+
+  let benefitUser = null;
+  let benefitInfo = null;
+  let benefitLoading = false;
+  let benefitRequestSeq = 0;
+  let pendingPaymentId = null;
+  let pendingPaymentAmountCents = null;
+  let paymentTimer = null;
+
+  const money = cents => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(cents) / 100);
+  const pendingPaymentKey = `ep:agendamento-pix:${slug}`;
+  const loginReturn = `./agendar.html?p=${encodeURIComponent(slug)}${companySlug ? `&empresa=${encodeURIComponent(companySlug)}` : ""}`;
+  $("benefitLogin").href = `./paciente-login.html?redirect=${encodeURIComponent(loginReturn)}`;
+
+  function authReady() {
+    return new Promise(resolve => {
+      let unsubscribe = () => {};
+      unsubscribe = onAuthStateChanged(auth, user => {
+        unsubscribe();
+        resolve(user);
+      }, () => resolve(null));
+    });
+  }
+
+  function renderCheckout() {
+    const box = $("benefitCheckout");
+    const consent = $("extraPriceConsentWrap");
+    box.classList.add("ep-hide");
+    consent.classList.add("ep-hide");
+    $("extraPriceConsent").checked = false;
+    if (!benefitInfo?.eligible) return;
+    box.classList.remove("ep-hide");
+    if (Number(benefitInfo.remaining) > 0) {
+      $("benefitCheckoutTitle").textContent = "Consulta incluída no benefício";
+      $("benefitCheckoutMessage").textContent = `Você tem ${benefitInfo.remaining} de ${benefitInfo.limit} consultas disponíveis no mês do horário escolhido. O pedido depende da confirmação do profissional.`;
+      return;
+    }
+    const price = Number(benefitInfo.extraQuote?.totalCents);
+    $("benefitCheckoutTitle").textContent = "Consulta adicional";
+    if (benefitInfo.extraQuote?.available && Number.isInteger(price) && price > 0) {
+      $("benefitCheckoutMessage").textContent = `As consultas incluídas deste mês foram utilizadas. Esta consulta adicional custa ${money(price)} e só será encaminhada ao profissional após a confirmação do Pix.`;
+      $("extraPriceConsentText").textContent = `Estou ciente do preço de ${money(price)} e desejo gerar o Pix para esta consulta adicional.`;
+      consent.classList.remove("ep-hide");
+    } else {
+      $("benefitCheckoutMessage").textContent = "As consultas incluídas deste mês foram utilizadas. O preço da consulta adicional não está disponível agora; não enviaremos um pedido com cobrança desconhecida.";
+    }
+  }
+
+  async function loadBenefit(scheduledAt = null) {
+    const requestSeq = ++benefitRequestSeq;
+    benefitLoading = true;
+    benefitInfo = null;
+    benefitUser = await authReady();
+    if (!benefitUser) {
+      if (corporateIntent) {
+        $("benefitTitle").textContent = "Entre na sua conta de paciente";
+        $("benefitMessage").textContent = "Use a conta com o mesmo e-mail aprovado pela empresa para consultar seu saldo e solicitar uma sessão incluída.";
+        $("benefitBox").classList.remove("ep-hide");
+        $("benefitLogin").classList.remove("ep-hide");
+      }
+      if (requestSeq === benefitRequestSeq) benefitLoading = false;
+      return;
+    }
+    if (benefitUser.email) $("patientEmail").value = benefitUser.email;
+    try {
+      await benefitUser.reload();
+      const token = await benefitUser.getIdToken();
+      const query = scheduledAt ? `?scheduledAt=${encodeURIComponent(scheduledAt)}` : "";
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/colaborador/beneficio${query}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO_BENEFICIO");
+      if (requestSeq !== benefitRequestSeq) return;
+      if (data.eligible && (!Number.isInteger(Number(data.remaining)) || Number(data.remaining) < 0 || !Number.isInteger(Number(data.limit)))) {
+        throw new Error("SALDO_BENEFICIO_INVALIDO");
+      }
+      benefitInfo = data;
+      if (data.eligible || corporateIntent || data.reason === "COLABORADOR_NAO_APROVADO") {
+        $("benefitBox").classList.remove("ep-hide");
+        $("patientEmail").value = benefitUser.email || "";
+        $("patientEmail").readOnly = true;
+        if (!benefitUser.emailVerified) {
+          $("benefitTitle").textContent = "Confirme seu e-mail";
+          $("benefitMessage").textContent = "Abra o link de verificação enviado ao seu e-mail e recarregue esta página antes de agendar pelo benefício.";
+        } else if (!data.eligible) {
+          $("benefitTitle").textContent = "Vínculo ainda não liberado";
+          $("benefitMessage").textContent = "Sua empresa precisa aprovar a inscrição antes de liberar as consultas incluídas. Consulte o RH se já solicitou a inscrição.";
+        } else {
+          $("benefitTitle").textContent = data.empresaNome || "Seu benefício";
+          $("benefitMessage").textContent = Number(data.remaining) > 0
+            ? `${data.remaining} de ${data.limit} consultas incluídas disponíveis em ${data.month || "este mês"}. O saldo é confirmado novamente ao enviar o pedido.`
+            : data.extraQuote?.available && Number.isInteger(Number(data.extraQuote.totalCents))
+              ? `Suas ${data.limit} consultas incluídas em ${data.month || "este mês"} foram utilizadas. Consulta adicional: ${money(data.extraQuote.totalCents)}, com Pix antes da confirmação do pedido.`
+              : "Suas consultas incluídas neste mês foram utilizadas. A contratação de sessão adicional está temporariamente indisponível.";
+        }
+        renderCheckout();
+      }
+    } catch (error) {
+      if (requestSeq !== benefitRequestSeq) return;
+      if (corporateIntent) {
+        $("benefitTitle").textContent = "Não foi possível consultar seu benefício";
+        $("benefitMessage").textContent = "Recarregue a página. Não é possível solicitar uma consulta incluída sem verificar sua elegibilidade.";
+        $("benefitBox").classList.remove("ep-hide");
+      }
+    } finally {
+      if (requestSeq === benefitRequestSeq) benefitLoading = false;
+    }
+  }
 
   // ─── State ─────────────────────────────────────────────────────────────
   let profile      = null;  // therapist info do backend
@@ -376,6 +520,15 @@
 
   $("loadingBox").classList.add("ep-hide");
   $("content").classList.remove("ep-hide");
+  await loadBenefit();
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(pendingPaymentKey) || "null");
+    if (benefitUser && stored?.uid === benefitUser.uid && typeof stored.requestId === "string" && stored.requestId.length < 150) {
+      showPayment(stored.requestId, Number(stored.amountCents));
+      await checkPayment();
+      if (pendingPaymentId) await createPix(pendingPaymentId);
+    }
+  } catch (_) { /* nenhum pagamento pendente nesta aba */ }
 
   async function selectDay(dayMs, btnEl) {
     selectedDay = dayMs;
@@ -428,6 +581,13 @@
     $("formSection").classList.remove("ep-hide");
     $("formStatus").textContent = "";
     $("formStatus").className = "ep-status";
+    if (benefitUser || corporateIntent) {
+      $("benefitCheckout").classList.remove("ep-hide");
+      $("benefitCheckoutTitle").textContent = "Conferindo benefício";
+      $("benefitCheckoutMessage").textContent = "Consultando o saldo e o preço para o mês do horário escolhido…";
+      $("extraPriceConsentWrap").classList.add("ep-hide");
+      loadBenefit(slot.start);
+    }
     document.querySelectorAll("#slotPicker .ep-slot-chip").forEach(b => b.classList.remove("is-selected"));
     // Marca o slot selecionado (procura por label igual)
     const lbl = fmtTimeLabel(slot.start);
@@ -446,6 +606,101 @@
     });
   });
 
+  function setPaymentStatus(message, type = "") {
+    $("paymentStatus").textContent = message;
+    $("paymentStatus").className = "ep-status";
+    if (type) $("paymentStatus").classList.add(`is-${type}`);
+  }
+
+  function showPayment(requestId, amountCents) {
+    pendingPaymentId = requestId;
+    pendingPaymentAmountCents = amountCents;
+    try {
+      sessionStorage.setItem(pendingPaymentKey, JSON.stringify({ requestId, amountCents, uid: benefitUser?.uid }));
+    } catch (_) { /* sessão privada sem armazenamento */ }
+    $("content").classList.add("ep-hide");
+    $("successBox").classList.add("ep-hide");
+    $("paymentBox").classList.remove("ep-hide");
+    $("paymentAmount").textContent = Number.isInteger(amountCents) && amountCents > 0 ? money(amountCents) : "";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function checkPayment() {
+    if (!pendingPaymentId) return;
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(pendingPaymentId)}/status-pagamento`, {
+        headers: benefitUser ? { Authorization: `Bearer ${await benefitUser.getIdToken()}` } : {}
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO_PAGAMENTO");
+      if (data.refundStatus || data.requestStatus === "expired" || data.requestStatus === "rejected") {
+        if (paymentTimer) clearInterval(paymentTimer);
+        setPaymentStatus("O pagamento foi identificado após o prazo ou o pedido não pôde seguir. Não haverá consulta neste horário; contate o suporte para acompanhar o reembolso.", "err");
+        return;
+      }
+      if (data.paid === true || data.paymentStatus === "paid" || data.paymentStatus === "approved") {
+        if (paymentTimer) clearInterval(paymentTimer);
+        try { sessionStorage.removeItem(pendingPaymentKey); } catch (_) {}
+        $("paymentBox").classList.add("ep-hide");
+        $("successMsg").textContent = "Pagamento confirmado. Seu pedido foi encaminhado ao profissional; você receberá a confirmação do horário por e-mail.";
+        $("successBox").classList.remove("ep-hide");
+        pendingPaymentId = null;
+        return;
+      }
+      setPaymentStatus("Aguardando confirmação do Pix. Este pedido ainda não foi encaminhado ao profissional.");
+    } catch (_) {
+      setPaymentStatus("Não foi possível consultar o pagamento agora. Use ‘Verificar pagamento’ novamente em alguns instantes.", "err");
+    }
+  }
+
+  async function createPix(requestId) {
+    setPaymentStatus("Gerando Pix…");
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(slug)}/criar-pix`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(benefitUser ? { Authorization: `Bearer ${await benefitUser.getIdToken()}` } : {})
+        },
+        body: JSON.stringify({ requestId })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data?.error || "PAGAMENTO_INDISPONIVEL");
+      if (data.alreadyPaid === true) {
+        await checkPayment();
+        return;
+      }
+      if (data.qrBase64 && /^[A-Za-z0-9+/=]+$/.test(data.qrBase64)) {
+        $("paymentQr").src = `data:image/png;base64,${data.qrBase64}`;
+        $("paymentQrWrap").classList.remove("ep-hide");
+      }
+      if (data.qrCode) {
+        $("paymentCode").value = data.qrCode;
+        $("paymentCodeWrap").classList.remove("ep-hide");
+      }
+      if (!data.qrCode && !data.qrBase64) throw new Error("PIX_SEM_CODIGO");
+      setPaymentStatus("Pague pelo aplicativo do seu banco. Esta página acompanhará a confirmação automaticamente.");
+      if (paymentTimer) clearInterval(paymentTimer);
+      paymentTimer = setInterval(checkPayment, 5000);
+    } catch (error) {
+      setPaymentStatus("Não foi possível gerar o Pix agora. O pedido não será encaminhado nem cobrado sem pagamento. Tente verificar novamente ou solicite ajuda ao suporte.", "err");
+    }
+  }
+
+  $("copyPaymentCode").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText($("paymentCode").value);
+      setPaymentStatus("Código Pix copiado.", "ok");
+    } catch (_) {
+      $("paymentCode").select();
+      setPaymentStatus("Selecione e copie manualmente o código Pix.");
+    }
+  });
+  $("retryPaymentStatus").addEventListener("click", async () => {
+    await checkPayment();
+    if (pendingPaymentId && $("paymentCodeWrap").classList.contains("ep-hide")) await createPix(pendingPaymentId);
+  });
+
   $("requestForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!selectedSlot) {
@@ -457,6 +712,42 @@
     const patientEmail = $("patientEmail").value.trim().toLowerCase();
     const patientPhone = $("patientPhone").value.trim();
     const notes        = $("notes").value.trim();
+
+    if (benefitLoading) {
+      $("formStatus").textContent = "Aguarde a consulta do benefício para o mês do horário escolhido.";
+      $("formStatus").classList.add("is-err");
+      return;
+    }
+    if (corporateIntent || benefitInfo?.eligible || benefitInfo?.reason === "COLABORADOR_NAO_APROVADO") {
+      if (!benefitUser) {
+        $("formStatus").textContent = "Entre na sua conta de paciente para utilizar o benefício da empresa.";
+        $("formStatus").classList.add("is-err");
+        $("benefitLogin").classList.remove("ep-hide");
+        return;
+      }
+      if (!benefitUser.emailVerified) {
+        $("formStatus").textContent = "Confirme seu e-mail pelo link recebido antes de solicitar a consulta.";
+        $("formStatus").classList.add("is-err");
+        return;
+      }
+      if (!benefitInfo?.eligible) {
+        $("formStatus").textContent = "O vínculo com a empresa ainda não foi aprovado ou o benefício está indisponível.";
+        $("formStatus").classList.add("is-err");
+        return;
+      }
+    }
+    const isCorporateExtra = benefitInfo?.eligible && Number(benefitInfo.remaining) <= 0;
+    const quotedExtraCents = Number(benefitInfo?.extraQuote?.totalCents);
+    if (isCorporateExtra && (!benefitInfo.extraQuote?.available || !Number.isInteger(quotedExtraCents) || quotedExtraCents <= 0)) {
+      $("formStatus").textContent = "O preço da consulta adicional não está disponível. Tente novamente mais tarde.";
+      $("formStatus").classList.add("is-err");
+      return;
+    }
+    if (isCorporateExtra && !$("extraPriceConsent").checked) {
+      $("formStatus").textContent = `Confirme que aceita o preço de ${money(quotedExtraCents)} e o pagamento por Pix para continuar.`;
+      $("formStatus").classList.add("is-err");
+      return;
+    }
 
     if (!patientName) {
       $("formStatus").textContent = tr("agendar:formErrors.nameRequired", "Informe seu nome.");
@@ -482,11 +773,15 @@
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(slug)}/solicitar`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(benefitUser ? { Authorization: `Bearer ${await benefitUser.getIdToken()}` } : {})
+        },
         body: JSON.stringify({
           patientName, patientEmail, patientPhone, notes,
           requestedSlot: selectedSlot.start,
-          tcleSigned: true
+          tcleSigned: true,
+          ...(isCorporateExtra ? { acceptExtraPriceCents: quotedExtraCents } : {})
         })
       });
       const data = await res.json().catch(() => ({}));
@@ -494,6 +789,18 @@
         const code = data?.error || "ERRO";
         const msg = code === "HORARIO_INDISPONIVEL"
           ? tr("agendar:formErrors.slotTaken", "Esse horário ficou indisponível enquanto você preenchia. Escolha outro.")
+          : code === "COLABORADOR_NAO_APROVADO" || code === "EMPRESA_SEM_BENEFICIO"
+            ? "Seu vínculo com a empresa ainda não está aprovado ou o benefício não está ativo. Consulte o RH."
+          : code === "LIMITE_BENEFICIO_ATINGIDO"
+            ? "As consultas incluídas deste mês foram utilizadas. Atualize a página para conferir o preço da consulta adicional."
+          : code === "EMAIL_COLABORADOR_DIVERGENTE"
+            ? "Use o mesmo e-mail da conta de paciente e da inscrição aprovada pela empresa."
+          : code === "EMAIL_NAO_VERIFICADO"
+            ? "Confirme seu e-mail pelo link recebido antes de agendar pelo benefício."
+          : code === "PRECO_EXTRA_NAO_ACEITO"
+            ? "O preço da consulta adicional mudou ou não foi aceito. Atualize a página para conferir antes de continuar."
+          : code === "PRECO_EXTRA_NAO_CONFIGURADO" || code === "PAGAMENTO_INDISPONIVEL"
+            ? "A consulta adicional está indisponível para pagamento no momento. Nenhum valor foi cobrado."
           : code === "RATE_LIMIT_EXCEDIDO"
             ? tr("agendar:formErrors.rateLimit", "Muitas tentativas. Aguarde 1h e tente novamente.")
             : code === "EMAIL_INVALIDO"
@@ -502,6 +809,28 @@
         $("formStatus").textContent = msg;
         $("formStatus").classList.add("is-err");
         $("submitBtn").disabled = false;
+        return;
+      }
+      if (data.paymentRequired === true) {
+        if (!isCorporateExtra || data.corporateBenefit?.mode !== "extra") {
+          $("formStatus").textContent = "O preço da consulta adicional precisa ser confirmado novamente antes do pagamento. Recarregue a página.";
+          $("formStatus").classList.add("is-err");
+          $("submitBtn").disabled = false;
+          return;
+        }
+        const requestId = data.requestId || data.id;
+        if (!requestId) {
+          $("formStatus").textContent = "O pedido precisa de pagamento, mas não foi possível identificar a cobrança. Não faça uma nova solicitação; entre em contato com o suporte.";
+          $("formStatus").classList.add("is-err");
+          return;
+        }
+        showPayment(requestId, quotedExtraCents);
+        await createPix(requestId);
+        return;
+      }
+      if (isCorporateExtra && data.corporateBenefit?.mode !== "covered") {
+        $("formStatus").textContent = "Não recebemos confirmação de cobertura nem cobrança para este pedido. Entre em contato com o suporte antes de tentar novamente.";
+        $("formStatus").classList.add("is-err");
         return;
       }
       $("content").classList.add("ep-hide");

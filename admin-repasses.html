@@ -70,7 +70,7 @@
         <div>
           <div class="ep-eyebrow">Painel administrativo</div>
           <h1 class="ep-h1 ep-mt-12">Repasses PIX</h1>
-          <p class="ep-text-muted ep-mt-8">Pagamentos de consultas recebidos via PIX aguardando repasse para o profissional. Após fazer o PIX, marque como concluído.</p>
+          <p class="ep-text-muted ep-mt-8">Pagamentos recebidos via Pix aguardando repasse. Para extras corporativos, só conclua após a sessão realizada e a apuração do RPA; o valor exibido é o líquido do profissional.</p>
         </div>
         <div id="summaryBox" style="background: var(--ep-bg-2); border-radius: 10px; padding: 12px 18px; text-align: right; min-width: 180px; display: none;">
           <div class="ep-text-xs ep-text-muted">Total pendente</div>
@@ -81,6 +81,7 @@
       <div class="ep-flex" style="gap: 8px; margin-bottom: 16px;">
         <button class="ep-btn ep-btn--ghost ep-btn--sm is-active" data-filter="pending">Pendentes</button>
         <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="completed">Concluídos</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="on_hold_refund">Retidos para reembolso</button>
         <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="all">Todos</button>
       </div>
 
@@ -89,6 +90,16 @@
       <div id="list" style="display: flex; flex-direction: column; gap: 12px;">
         <div class="ep-skeleton">Carregando…</div>
       </div>
+      <section class="ep-card ep-mt-32" aria-labelledby="refundTitle">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div>
+            <h2 id="refundTitle" class="ep-h3 ep-mt-0">Reembolsos a conferir</h2>
+            <p class="ep-text-muted ep-mt-8">Solicitações extras canceladas, recusadas ou pagas após o prazo. Efetue o reembolso na conta Mercado Pago e use “Conferir” para validar a devolução pela API. Não marque o repasse ao profissional.</p>
+          </div>
+          <button id="reloadRefunds" class="ep-btn ep-btn--ghost ep-btn--sm" type="button">Atualizar</button>
+        </div>
+        <div id="refundList" class="ep-mt-16" role="status">Carregando…</div>
+      </section>
     </section>
 
     <!-- Acesso negado -->
@@ -218,7 +229,7 @@
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
                   <span style="font-size:18px;font-weight:700;color:var(--ep-accent);">${valorFmt}</span>
                   <span style="font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px;background:${isPending ? "rgba(212,165,83,0.15)" : "rgba(45,106,79,0.12)"};color:${isPending ? "#92640a" : "#1a7a4a"};">
-                    ${isPending ? "⏳ Pendente" : "✅ Concluído"}
+                    ${isPending ? "⏳ Pendente" : r.status === "completed" ? "✅ Concluído" : r.status === "on_hold_refund" ? "⛔ Retido para reembolso" : "Revisão"}
                   </span>
                   <span style="font-size:12px;color:var(--ep-ink-3);">${fmtDate(r.createdAt)}</span>
                 </div>
@@ -280,6 +291,37 @@
     }
   }
 
+  async function loadRefunds() {
+    const container = document.getElementById("refundList");
+    container.textContent = "Carregando reembolsos…";
+    try {
+      const data = await api("/therapy/admin/reembolsos");
+      const tasks = (data.items || []).filter(item => item.status !== "refunded");
+      if (!tasks.length) { container.textContent = "Nenhum reembolso pendente."; return; }
+      container.innerHTML = tasks.map(item => `
+        <article style="border:1px solid var(--ep-line);border-radius:10px;padding:14px;margin-top:10px;">
+          <strong>${fmtValor(item.amountCents || 0)}</strong> · ${esc(item.reason || "Revisão")}
+          <div class="ep-text-sm ep-text-muted ep-mt-8">Pedido ${esc(item.requestId || "—")} · Pagamento MP ${esc(item.paymentId || "—")} · ${fmtDate(item.createdAt)}</div>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm ep-mt-8" type="button" data-refund-id="${esc(item.id)}">Conferir no Mercado Pago</button>
+        </article>
+      `).join("");
+      container.querySelectorAll("[data-refund-id]").forEach(button => button.addEventListener("click", async () => {
+        button.disabled = true;
+        try {
+          const result = await api(`/therapy/admin/reembolsos/${encodeURIComponent(button.dataset.refundId)}/conferir`, { method: "POST" });
+          if (!result.refunded) alert(result.hint || "O reembolso ainda não foi confirmado pelo Mercado Pago.");
+          await loadRefunds();
+          await loadRepasses();
+        } catch (error) {
+          alert("Não foi possível conferir o reembolso: " + error.message);
+          button.disabled = false;
+        }
+      }));
+    } catch (error) { container.textContent = "Erro ao carregar reembolsos: " + error.message; }
+  }
+
+  document.getElementById("reloadRefunds").addEventListener("click", loadRefunds);
+
   window.concluirRepasse = async function(id) {
     const btn      = document.getElementById(`btn-${id}`);
     const noteInput = document.getElementById(`note-${id}`);
@@ -306,6 +348,7 @@
       document.getElementById("adminEmail").textContent = user.email;
       show(dashboardPanel);
       loadRepasses();
+      loadRefunds();
     } catch (err) {
       if (err.status === 403) { show(forbiddenPanel); return; }
       show(loginPanel);

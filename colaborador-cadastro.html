@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
-  <title>Cadastro de Colaborador · Espaço Prelúdio</title>
+  <title>Inscrição no benefício · Espaço Prelúdio</title>
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -60,7 +60,7 @@
         <span class="ep-text-sm">Preencha seus dados para acessar o programa de saúde.</span>
       </div>
 
-      <p class="ep-auth__sub ep-mt-0">Consultas de R$ 60,00 por sessão, com o profissional da sua escolha.</p>
+      <p class="ep-auth__sub ep-mt-0">Após a aprovação da empresa, o benefício inclui até 2 consultas por mês. Consultas adicionais têm preço informado antes da solicitação e exigem pagamento prévio.</p>
       <h2 class="ep-auth__title ep-mt-8">Seus dados</h2>
 
       <form id="formColab" class="ep-stack ep-mt-16" novalidate>
@@ -94,14 +94,13 @@
         </div>
 
         <p class="ep-text-xs ep-text-muted ep-mt-4">
-          Seus dados são protegidos pela LGPD e não são compartilhados com sua empresa individualmente.
-          A empresa só recebe estatísticas agregadas de saúde.
+          O RH pode verificar seus dados cadastrais para aprovar o vínculo. Conteúdo clínico e informações das sessões não são exibidos à empresa; indicadores de saúde são apresentados de forma agregada.
         </p>
 
-        <div class="ep-status" id="formStatus"></div>
+        <div class="ep-status" id="formStatus" role="status" aria-live="polite"></div>
 
         <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-8" type="submit" id="submitBtn">
-          Cadastrar e acessar o diretório
+          Solicitar inscrição no benefício
         </button>
       </form>
     </div>
@@ -109,12 +108,13 @@
     <!-- Estado: sucesso -->
     <div id="stateSuccess" class="ep-hide" style="text-align:center;padding:16px 0;">
       <div style="font-size:48px;margin-bottom:16px;">✅</div>
-      <h2 class="ep-auth__title">Cadastro realizado!</h2>
-      <p class="ep-text-muted ep-mt-8" id="successMsg">Bem-vindo(a) ao programa de saúde.</p>
-      <p class="ep-text-muted ep-mt-8">Acesse o diretório, escolha um profissional e agende sua primeira consulta.</p>
-      <a href="./profissionais.html" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-24">
-        Ver profissionais disponíveis →
+      <h2 class="ep-auth__title">Inscrição recebida</h2>
+      <p class="ep-text-muted ep-mt-8" id="successMsg">Seu vínculo com a empresa será verificado antes da liberação do benefício.</p>
+      <p class="ep-text-muted ep-mt-8">Para usar as consultas, crie sua conta de paciente com este mesmo e-mail e confirme-o pelo link enviado. Se já possui conta, basta entrar. O agendamento incluído só fica disponível após a aprovação do vínculo.</p>
+      <a href="./paciente-cadastro.html" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-24">
+        Criar conta de paciente
       </a>
+      <a href="./paciente-login.html" class="ep-btn ep-btn--ghost ep-btn--block ep-mt-8">Já tenho conta · Entrar</a>
     </div>
   </div>
 </main>
@@ -142,9 +142,9 @@
         document.getElementById("empresaNomeBanner").textContent = d.nome;
         document.title = `Cadastro · ${d.nome} · Espaço Prelúdio`;
         if (d.limiteColaboradores && d.totalColaboradores >= d.limiteColaboradores) {
-          document.getElementById("stateInvalid").innerHTML = `
-            <h2 class="ep-auth__title">Vagas encerradas</h2>
-            <p class="ep-text-muted ep-mt-8">O programa de ${d.nome} atingiu o limite de vagas. Entre em contato com o RH.</p>`;
+          const invalid = document.getElementById("stateInvalid");
+          invalid.querySelector("h2").textContent = "Vagas encerradas";
+          invalid.querySelector("p").textContent = `O programa de ${d.nome} atingiu o limite de vagas. Entre em contato com o RH.`;
           showState("stateInvalid");
           return;
         }
@@ -186,19 +186,19 @@
       const d = await r.json().catch(() => ({}));
       if (!d.ok) {
         const msgs = {
-          EMAIL_JA_CADASTRADO: "Este e-mail já está cadastrado nesta empresa.",
+          EMAIL_JA_CADASTRADO: "Este e-mail já foi inscrito nesta empresa. Entre na sua conta de paciente e aguarde a aprovação do RH.",
           LIMITE_COLABORADORES_ATINGIDO: "O programa atingiu o limite de vagas.",
           EMPRESA_INATIVA: "Este programa não está mais ativo.",
           EMPRESA_NAO_ENCONTRADA: "Link inválido."
         };
         throw new Error(msgs[d.error] || d.error || "Erro ao cadastrar.");
       }
-      document.getElementById("successMsg").textContent = `Bem-vindo(a) ao programa de saúde de ${d.empresaNome || "sua empresa"}!`;
+      document.getElementById("successMsg").textContent = `Sua inscrição no programa de ${d.empresaNome || "sua empresa"} foi recebida e será verificada antes da liberação das consultas incluídas.`;
       showState("stateSuccess");
     } catch (err) {
       status.textContent = err.message;
       btn.disabled = false;
-      btn.textContent = "Cadastrar e acessar o diretório";
+      btn.textContent = "Solicitar inscrição no benefício";
     }
   });
 </script>

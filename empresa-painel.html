@@ -207,6 +207,12 @@
     </p>
   </div>
 
+  <div id="stateError" class="ep-hide" role="alert" style="max-width:520px;margin:80px auto;text-align:center;">
+    <h2 style="font-family:'Fraunces',serif;font-size:24px;margin-bottom:8px;">Não foi possível carregar os indicadores</h2>
+    <p style="color:var(--ep-ink-2);font-size:14px;line-height:1.6;">Nenhum dado foi estimado. Tente novamente em instantes.</p>
+    <button type="button" class="ep-btn ep-btn--primary" id="btnRecarregarPainel">Tentar novamente</button>
+  </div>
+
   <!-- Dashboard principal -->
   <div id="stateDashboard" class="ep-hide">
 
@@ -223,7 +229,10 @@
     <!-- Aviso LGPD -->
     <div class="corp-lgpd-notice">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-      <span>Este painel exibe apenas dados estatísticos e agregados. Nenhuma informação individual é compartilhada, conforme a Lei Geral de Proteção de Dados (LGPD). Dados com menos de 5 registros são automaticamente protegidos.</span>
+      <span>Este painel exibe apenas dados estatísticos e agregados. Nenhuma informação clínica individual é compartilhada com a empresa. Indicadores de atendimento com menos de cinco colaboradores distintos são ocultados.</span>
+    </div>
+    <div id="dadosProtegidos" class="corp-lgpd-notice ep-hide" role="status" style="margin-top:12px;">
+      <span id="dadosProtegidosTexto"></span>
     </div>
 
     <!-- KPIs -->
@@ -244,7 +253,7 @@
         <div class="corp-kpi__icon">📅</div>
         <div class="corp-kpi__label">Consultas este mês</div>
         <div class="corp-kpi__value corp-kpi__value--gold" id="kpiSessoesMes">—</div>
-        <div class="corp-kpi__sub">últimos 30 dias</div>
+        <div class="corp-kpi__sub">mês atual</div>
       </div>
       <div class="corp-kpi">
         <div class="corp-kpi__icon">📊</div>
@@ -266,7 +275,7 @@
         </div>
         <div id="especialidadesVazia" class="corp-coming ep-hide">
           <div class="corp-coming__icon">📊</div>
-          <p>Dados disponíveis após as primeiras consultas serem realizadas.</p>
+          <p>Dados disponíveis quando houver pelo menos cinco colaboradores distintos com atendimento registrado no período.</p>
         </div>
       </div>
 
@@ -285,122 +294,8 @@
           <div style="margin-top:24px;display:flex;flex-direction:column;gap:10px;" id="engajamentoStats"></div>
         </div>
 
-        <!-- Humor — demo -->
-        <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--ep-line);">
-          <div class="corp-card__title">Índice de bem-estar semanal</div>
-          <div class="corp-humor-score">7,4 <span>/ 10</span></div>
-          <div class="corp-humor-trend">↑ +0,3 em relação à semana passada</div>
-
-          <!-- Barras empilhadas por dia -->
-          <div class="corp-humor-bars" id="humorBars"></div>
-
-          <div class="corp-humor-dist">
-            <div class="corp-humor-chip"><div class="corp-humor-dot" style="background:#2d6a3e"></div>Ótimo 33%</div>
-            <div class="corp-humor-chip"><div class="corp-humor-dot" style="background:#5a9e6f"></div>Bem 42%</div>
-            <div class="corp-humor-chip"><div class="corp-humor-dot" style="background:#c8963a"></div>Regular 17%</div>
-            <div class="corp-humor-chip"><div class="corp-humor-dot" style="background:#b8453d"></div>Estressado 8%</div>
-          </div>
-
-          <div class="corp-humor-tooltip" id="humorTooltip" style="display:none;position:fixed;z-index:9999;"></div>
-
-          <script>
-          (function() {
-            // Dados por dia: [ótimo%, bem%, regular%, estressado%]
-            const DIAS = [
-              { label: "Seg", d: [25, 42, 25, 8]  },
-              { label: "Ter", d: [38, 46, 12, 4]  },
-              { label: "Qua", d: [29, 38, 21, 12] },
-              { label: "Qui", d: [42, 46, 8,  4]  },
-              { label: "Sex", d: [33, 38, 17, 12] },
-            ];
-            const COLORS = ["#2d6a3e","#5a9e6f","#c8963a","#b8453d"];
-            const LABELS = ["Ótimo","Bem","Regular","Estressado"];
-
-            const container = document.getElementById("humorBars");
-            const tooltip   = document.getElementById("humorTooltip");
-
-            DIAS.forEach(({ label, d }) => {
-              const wrap = document.createElement("div");
-              wrap.className = "corp-humor-bar-wrap";
-              wrap.style.position = "relative";
-
-              // Barra empilhada
-              const stack = document.createElement("div");
-              stack.style.cssText = "width:100%;flex:1;display:flex;flex-direction:column-reverse;border-radius:4px;overflow:hidden;cursor:pointer;";
-              d.forEach((pct, i) => {
-                const seg = document.createElement("div");
-                seg.style.cssText = `height:${pct}%;background:${COLORS[i]};min-height:${pct > 0 ? 3 : 0}px;`;
-                stack.appendChild(seg);
-              });
-
-              // Label
-              const lbl = document.createElement("div");
-              lbl.className = "corp-humor-bar-label";
-              lbl.textContent = label;
-
-              // Hover
-              stack.addEventListener("mouseenter", (e) => {
-                const rows = d.map((pct, i) =>
-                  `<div style="display:flex;align-items:center;gap:6px;font-size:12px;">
-                    <div style="width:8px;height:8px;border-radius:50%;background:${COLORS[i]};flex-shrink:0;"></div>
-                    <span style="color:#444;">${LABELS[i]}</span>
-                    <span style="margin-left:auto;font-weight:600;color:#222;">${pct}%</span>
-                  </div>`
-                ).join("");
-                tooltip.innerHTML = `<strong style="font-size:12px;display:block;margin-bottom:6px;">${label}</strong>${rows}`;
-                tooltip.style.display = "block";
-                positionTooltip(e);
-              });
-              stack.addEventListener("mousemove", (e) => positionTooltip(e));
-              stack.addEventListener("mouseleave", () => { tooltip.style.display = "none"; });
-
-              wrap.appendChild(stack);
-              wrap.appendChild(lbl);
-              container.appendChild(wrap);
-            });
-
-            function positionTooltip(e) {
-              let left = e.clientX - tooltip.offsetWidth / 2;
-              let top  = e.clientY - tooltip.offsetHeight - 12;
-              if (left < 8) left = 8;
-              if (top < 8)  top  = e.clientY + 16;
-              tooltip.style.left = left + "px";
-              tooltip.style.top  = top  + "px";
-            }
-          })();
-          </script>
-        </div>
       </div>
 
-    </div>
-
-    <!-- Top motivos — demo -->
-    <div class="corp-card" style="margin-bottom:20px;">
-      <div class="corp-card__title">Principais motivos de atendimento</div>
-      <div class="corp-card__sub">Ranking anônimo das categorias mais buscadas pela equipe</div>
-      <div class="corp-motivos-list">
-        <div class="corp-motivo-row">
-          <div class="corp-motivo-label"><span>Ansiedade e estresse</span><span class="corp-motivo-pct">38%</span></div>
-          <div class="corp-motivo-track"><div class="corp-motivo-fill" style="width:38%"></div></div>
-        </div>
-        <div class="corp-motivo-row">
-          <div class="corp-motivo-label"><span>Equilíbrio vida-trabalho</span><span class="corp-motivo-pct">24%</span></div>
-          <div class="corp-motivo-track"><div class="corp-motivo-fill" style="width:24%"></div></div>
-        </div>
-        <div class="corp-motivo-row">
-          <div class="corp-motivo-label"><span>Autoestima e autoconfiança</span><span class="corp-motivo-pct">18%</span></div>
-          <div class="corp-motivo-track"><div class="corp-motivo-fill" style="width:18%"></div></div>
-        </div>
-        <div class="corp-motivo-row">
-          <div class="corp-motivo-label"><span>Relacionamentos interpessoais</span><span class="corp-motivo-pct">12%</span></div>
-          <div class="corp-motivo-track"><div class="corp-motivo-fill" style="width:12%"></div></div>
-        </div>
-        <div class="corp-motivo-row">
-          <div class="corp-motivo-label"><span>Outros</span><span class="corp-motivo-pct">8%</span></div>
-          <div class="corp-motivo-track"><div class="corp-motivo-fill" style="width:8%"></div></div>
-        </div>
-      </div>
-      <p style="margin-top:14px;font-size:11px;color:var(--ep-ink-3);">Baseado em 22 sessões · dados anonimizados · LGPD</p>
     </div>
 
     <div class="corp-footer">
@@ -450,7 +345,7 @@
   document.getElementById("nomeEmpresaH1").textContent = nomeEmpresa;
 
   function show(id) {
-    ["stateLoading","stateMascarado","stateDashboard"].forEach(s => {
+    ["stateLoading","stateMascarado","stateDashboard","stateError"].forEach(s => {
       document.getElementById(s).classList.toggle("ep-hide", s !== id);
     });
   }
@@ -469,11 +364,17 @@
       const d = await res.json().catch(() => ({}));
 
       if (res.status === 401) { sessionStorage.removeItem("ep:empresa:token"); window.location.href = "./empresa-login.html"; return; }
-      if (!d.ok) { show("stateDashboard"); return; }
-
-      if (d.mascarado) { show("stateMascarado"); return; }
+      if (!res.ok || !d.ok) { show("stateError"); return; }
 
       show("stateDashboard");
+
+      const avisoProtecao = document.getElementById("dadosProtegidos");
+      avisoProtecao.classList.toggle("ep-hide", !d.mascarado && !d.dadosIncompletos);
+      document.getElementById("dadosProtegidosTexto").textContent = d.dadosIncompletos
+        ? "Há registros pendentes de reconciliação. Os indicadores de atendimento foram ocultados para evitar números incorretos."
+        : d.mascarado
+          ? "Indicadores de atendimento ocultados porque ainda não há cinco colaboradores distintos no grupo. Os totais administrativos continuam disponíveis."
+          : "";
 
       const k = d.kpis || {};
       document.getElementById("kpiCadastrados").textContent = k.totalCadastrados ?? "—";
@@ -482,11 +383,12 @@
       document.getElementById("kpiAdesao").textContent      = k.taxaAdesao != null ? k.taxaAdesao + "%" : "—";
 
       // Barra de adesão
-      const pct = k.taxaAdesao ?? 0;
-      document.getElementById("adesaoPct").textContent = pct + "%";
-      setTimeout(() => { document.getElementById("adesaoBar").style.width = pct + "%"; }, 100);
-      document.getElementById("adesaoDesc").textContent =
-        pct >= 60 ? "✅ Excelente adesão — a equipe está aproveitando o benefício!"
+      const pct = k.taxaAdesao;
+      document.getElementById("adesaoPct").textContent = pct == null ? "—" : pct + "%";
+      setTimeout(() => { document.getElementById("adesaoBar").style.width = pct == null ? "0%" : pct + "%"; }, 100);
+      document.getElementById("adesaoDesc").textContent = pct == null
+        ? "A taxa será exibida quando houver dados suficientes e completos."
+        : pct >= 60 ? "✅ Excelente adesão — a equipe está aproveitando o benefício!"
         : pct >= 30 ? "📈 Adesão moderada — há espaço para engajar mais colaboradores."
         : "💡 Baixa adesão — incentive os colaboradores a usarem o benefício.";
 
@@ -532,12 +434,16 @@
 
       document.getElementById("atualizadoEm").textContent = fmtTs(d.geradoEm || Date.now());
     } catch (e) {
-      show("stateDashboard");
+      show("stateError");
       console.error(e);
     }
   }
 
   loadDashboard();
+  document.getElementById("btnRecarregarPainel").addEventListener("click", () => {
+    show("stateLoading");
+    loadDashboard();
+  });
 
   // Sair
   document.getElementById("btnSair").addEventListener("click", () => {
