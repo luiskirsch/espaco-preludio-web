@@ -2,7 +2,7 @@
 // logado (paciente-painel.html). Espelha auth-guard.js do profissional, mas
 // usa coleção `therapy_patient_accounts` e sessionStorage namespaced.
 
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
 import { recallPatientDek } from "./patient-session.js";
 import { mountThemeToggle } from "./theme-toggle.js";
@@ -45,6 +45,8 @@ export async function requirePatient({ requireDek = true } = {}) {
     throw new Error(profile.code);
   }
 
+  mountEmailVerificationBanner(user);
+
   if (requireDek) {
     const dek = recallPatientDek();
     if (!dek) {
@@ -59,6 +61,41 @@ export async function requirePatient({ requireDek = true } = {}) {
   mountMessagesBubble(idToken);
   mountThemeToggle();
   return { user, idToken, account: profile.account };
+}
+
+// Banner fixo no topo quando o e-mail ainda não foi confirmado. Sem
+// confirmar, o backend não vincula sessões/documentos antigos cadastrados
+// com esse e-mail (auto-link exige email_verified) — o paciente precisa
+// saber disso e ter como reenviar o link, já que hoje isso só é disparado
+// automaticamente no cadastro.
+function mountEmailVerificationBanner(user) {
+  if (typeof document === "undefined") return;
+  if (user.emailVerified) return;
+  if (document.getElementById("epEmailVerifyBanner")) return;
+
+  const bar = document.createElement("div");
+  bar.id = "epEmailVerifyBanner";
+  bar.className = "ep-alert ep-alert--warn";
+  bar.style.cssText = "position:sticky;top:0;z-index:2000;border-radius:0;margin:0;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;text-align:center;padding:10px 16px;";
+  bar.innerHTML = `
+    <span>Confirme seu e-mail para ver todo o seu histórico de consultas e documentos.</span>
+    <button type="button" id="epEmailVerifyResend" class="ep-btn ep-btn--sm ep-btn--ghost">Reenviar e-mail de confirmação</button>
+  `;
+  document.body.prepend(bar);
+
+  const btn = bar.querySelector("#epEmailVerifyResend");
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    const original = btn.textContent;
+    try {
+      await sendEmailVerification(user);
+      btn.textContent = "E-mail enviado ✓";
+      setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 30_000);
+    } catch {
+      btn.textContent = "Erro — tente de novo";
+      btn.disabled = false;
+    }
+  });
 }
 
 // Botão flutuante de mensagens — entre help e theme toggle. Polling 60s.
