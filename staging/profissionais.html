@@ -257,8 +257,14 @@
 
   function renderItem(item) {
     const initials = (item.displayName.match(/\b\p{L}/gu) || []).slice(0, 2).join("").toUpperCase() || "·";
-    const avatar = item.photoBase64
-      ? `<div style="width: 64px; height: 64px; border-radius: 50%; background-image: url(data:${item.photoMime || "image/jpeg"};base64,${item.photoBase64}); background-size: cover; background-position: center; flex-shrink: 0;"></div>`
+    // photoBase64/photoMime vêm de outro usuário (perfil do profissional) e
+    // caem direto num atributo style via innerHTML — sem validar o charset
+    // aqui, um valor malicioso quebra o atributo e injeta HTML arbitrário.
+    const photoMime = /^image\/(?:jpeg|png|webp|gif)$/i.test(String(item.photoMime || "")) ? item.photoMime : "image/jpeg";
+    const photoBase64 = String(item.photoBase64 || "");
+    const safePhoto = photoBase64.length <= 1_500_000 && /^[A-Za-z0-9+/]+={0,2}$/.test(photoBase64);
+    const avatar = safePhoto
+      ? `<div style="width: 64px; height: 64px; border-radius: 50%; background-image: url(data:${photoMime};base64,${photoBase64}); background-size: cover; background-position: center; flex-shrink: 0;"></div>`
       : `<div class="ep-nav-avatar" style="width: 64px; height: 64px; font-size: 22px; flex-shrink: 0;">${initials}</div>`;
     // Badge verificado vai INLINE ao lado do nome (padrão Instagram), não
     // mais sobreposto no avatar. Decisão visual exclusiva da página pública

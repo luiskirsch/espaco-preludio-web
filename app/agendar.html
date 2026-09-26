@@ -250,8 +250,11 @@
       document.getElementById("profNome").textContent = prof.displayName || "Profissional";
       document.getElementById("profEsp").textContent  = prof.especialidade || "";
       document.getElementById("profCrp").textContent  = prof.conselhoLabel && prof.numeroConselho ? `${prof.conselhoLabel} ${prof.numeroConselho}` : "";
-      if (prof.photoBase64) {
-        document.getElementById("profAvatar").innerHTML = `<img src="data:${prof.photoMime||'image/jpeg'};base64,${prof.photoBase64}" alt="">`;
+      const profPhotoMime = /^image\/(?:jpeg|png|webp|gif)$/i.test(String(prof.photoMime || "")) ? prof.photoMime : "image/jpeg";
+      const profPhotoBase64 = String(prof.photoBase64 || "");
+      const profSafePhoto = profPhotoBase64.length <= 1_500_000 && /^[A-Za-z0-9+/]+={0,2}$/.test(profPhotoBase64);
+      if (profSafePhoto) {
+        document.getElementById("profAvatar").innerHTML = `<img src="data:${profPhotoMime};base64,${profPhotoBase64}" alt="">`;
       } else {
         document.getElementById("profAvatar").textContent = (prof.displayName||"?").match(/\b\p{L}/gu)?.slice(0,2).join("").toUpperCase()||"?";
       }

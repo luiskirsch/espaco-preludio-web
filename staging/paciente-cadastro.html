@@ -157,6 +157,7 @@
 <script type="module">
   import {
     createUserWithEmailAndPassword,
+    sendEmailVerification,
     updateProfile
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
@@ -251,6 +252,11 @@
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName });
+      // Best-effort: o backend só vincula sessões/documentos antigos e libera
+      // acesso admin por e-mail depois que o Firebase confirma esse e-mail
+      // (email_verified). Sem isso, cadastro fica normal mas o histórico por
+      // e-mail só aparece depois que a pessoa confirmar pelo link recebido.
+      sendEmailVerification(cred.user).catch(() => {});
       const idToken = await cred.user.getIdToken();
 
       setStatus(statusData, tr("paciente-cadastro:status.generatingKey", "Gerando sua chave de cifragem…"));
