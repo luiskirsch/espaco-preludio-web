@@ -30,9 +30,17 @@
       box-shadow: 0 4px 16px rgba(45,106,62,.4);
     }
     .home-hero__btn svg { width: 16px; height: 16px; }
-    .mood-card { background: var(--a-surface); border-radius: var(--a-radius); padding: 18px 16px; box-shadow: var(--a-shadow); }
-    .mood-card__label { font-size: 13px; font-weight: 600; color: var(--a-ink); margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
-    .mood-card__saved { font-size: 12px; color: var(--a-accent); font-weight: 600; display: none; }
+    .mood-card { background: var(--a-surface); border-radius: var(--a-radius); padding: 20px 18px; box-shadow: var(--a-shadow); }
+    .mood-card__header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .mood-card__icon { font-size: 28px; line-height: 1; }
+    .mood-card__label { font-family: var(--ff-serif); font-size: 17px; font-weight: 600; color: var(--a-ink); line-height: 1.2; }
+    .mood-card__sub { font-size: 11px; color: var(--a-ink3); margin-top: 2px; }
+    .mood-card__footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(0,0,0,.06); opacity: 0; max-height: 0; overflow: hidden; transition: opacity .3s, max-height .3s, margin-top .3s, padding-top .3s; margin-top: 0; padding-top: 0; }
+    .mood-card__footer.is-visible { opacity: 1; max-height: 50px; margin-top: 16px; padding-top: 14px; }
+    .mood-card__saved { font-size: 12px; color: var(--a-accent); font-weight: 600; }
+    .mood-card__history { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: #175f59; text-decoration: none; transition: gap .2s; }
+    .mood-card__history:hover { gap: 8px; }
+    .mood-card__history svg { flex-shrink: 0; }
     .section-title { font-size: 17px; font-weight: 700; color: var(--a-ink); margin-bottom: 12px; }
     .next-session-empty { text-align: center; padding: 20px; background: var(--a-surface); border-radius: var(--a-radius); box-shadow: var(--a-shadow); }
     .next-session-empty p { font-size: 13px; color: var(--a-ink2); margin: 8px 0 16px; }
@@ -72,16 +80,23 @@
     <!-- Humor do dia -->
     <div class="a-section">
       <div class="mood-card">
-        <div class="mood-card__label">
-          Como você está hoje?
-          <span class="mood-card__tools"><span class="mood-card__saved" id="moodSaved">✓ Registrado</span><a href="./humor.html">Ver histórico</a></span>
+        <div class="mood-card__header">
+          <span class="mood-card__icon">🌿</span>
+          <div>
+            <div class="mood-card__label">Como você está hoje?</div>
+            <div class="mood-card__sub">Seu registro é confidencial</div>
+          </div>
         </div>
         <div class="a-mood" id="moodPicker">
-          <button class="a-mood__btn" data-mood="5" title="Ótimo">😄</button>
-          <button class="a-mood__btn" data-mood="4" title="Bem">🙂</button>
-          <button class="a-mood__btn" data-mood="3" title="Ok">😐</button>
-          <button class="a-mood__btn" data-mood="2" title="Cansado">😔</button>
-          <button class="a-mood__btn" data-mood="1" title="Mal">😞</button>
+          <button class="a-mood__btn" data-mood="5" title="Ótimo"><span class="a-mood__emoji">😄</span><span class="a-mood__name">Ótimo</span></button>
+          <button class="a-mood__btn" data-mood="4" title="Bem"><span class="a-mood__emoji">🙂</span><span class="a-mood__name">Bem</span></button>
+          <button class="a-mood__btn" data-mood="3" title="Ok"><span class="a-mood__emoji">😐</span><span class="a-mood__name">Ok</span></button>
+          <button class="a-mood__btn" data-mood="2" title="Cansado"><span class="a-mood__emoji">😔</span><span class="a-mood__name">Cansado</span></button>
+          <button class="a-mood__btn" data-mood="1" title="Mal"><span class="a-mood__emoji">😞</span><span class="a-mood__name">Mal</span></button>
+        </div>
+        <div class="mood-card__footer" id="moodFooter">
+          <span class="mood-card__saved" id="moodSaved">✓ Registrado</span>
+          <a href="./humor.html" class="mood-card__history">Ver histórico <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></a>
         </div>
       </div>
     </div>
@@ -218,7 +233,7 @@
     const savedMood = await loadTodayMood();
     if (savedMood) {
       document.querySelectorAll(".a-mood__btn").forEach(b => { if (b.dataset.mood === savedMood) b.classList.add("is-selected"); });
-      document.getElementById("moodSaved").style.display = "block";
+      document.getElementById("moodFooter").classList.add("is-visible");
     }
 
     document.querySelectorAll(".a-mood__btn").forEach(btn => {
@@ -226,7 +241,7 @@
         document.querySelectorAll(".a-mood__btn").forEach(b => b.classList.remove("is-selected"));
         btn.classList.add("is-selected");
         const mood = btn.dataset.mood;
-        document.getElementById("moodSaved").style.display = "block";
+        document.getElementById("moodFooter").classList.add("is-visible");
         // Salva no backend
         try {
           const tok = await user.getIdToken();
