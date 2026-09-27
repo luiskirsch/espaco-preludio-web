@@ -230,19 +230,31 @@
       return null;
     }
 
+    let moodLocked = false;
+    function lockMoodPicker() {
+      moodLocked = true;
+      document.querySelectorAll(".a-mood__btn").forEach(b => {
+        b.disabled = true;
+        b.style.opacity = b.classList.contains("is-selected") ? "1" : ".45";
+        b.style.cursor = "default";
+      });
+    }
+
     const savedMood = await loadTodayMood();
     if (savedMood) {
       document.querySelectorAll(".a-mood__btn").forEach(b => { if (b.dataset.mood === savedMood) b.classList.add("is-selected"); });
       document.getElementById("moodFooter").classList.add("is-visible");
+      lockMoodPicker();
     }
 
     document.querySelectorAll(".a-mood__btn").forEach(btn => {
       btn.addEventListener("click", async () => {
+        if (moodLocked) return;
         document.querySelectorAll(".a-mood__btn").forEach(b => b.classList.remove("is-selected"));
         btn.classList.add("is-selected");
         const mood = btn.dataset.mood;
         document.getElementById("moodFooter").classList.add("is-visible");
-        // Salva no backend
+        lockMoodPicker();
         try {
           const tok = await user.getIdToken();
           await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
@@ -250,7 +262,12 @@
             headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" },
             body: JSON.stringify({ mood: Number(mood), date: todayStr })
           });
-        } catch {}
+        } catch {
+          moodLocked = false;
+          document.querySelectorAll(".a-mood__btn").forEach(b => {
+            b.disabled = false; b.style.opacity = ""; b.style.cursor = "";
+          });
+        }
       });
     });
 

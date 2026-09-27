@@ -165,23 +165,52 @@
 
   let selectedMood = null;
   let currentUser  = null;
-  let humorData    = {}; // { "YYYY-MM-DD": mood }
+  let humorData    = {};
   let chartInstance = null;
+  let todayLocked  = false;
 
   const todayStr = () => new Date().toISOString().slice(0, 10);
+  const SESSION_KEY = "ep:humor:session";
+
+  function readSessionCache() {
+    try {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed.date !== todayStr()) return null;
+      return parsed.data;
+    } catch { return null; }
+  }
+  function writeSessionCache(data) {
+    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ date: todayStr(), data })); } catch {}
+  }
+
+  function lockPicker() {
+    todayLocked = true;
+    document.querySelectorAll(".mood-btn").forEach(b => {
+      b.disabled = true;
+      b.style.opacity = b.classList.contains("is-selected") ? "1" : ".45";
+      b.style.cursor = "default";
+    });
+  }
 
   onAuthStateChanged(auth, async user => {
     if (!user) { window.location.href = "./login.html"; return; }
     currentUser = user;
 
-    // Mostra data
     const today = new Date();
     document.getElementById("heroDate").textContent =
       `${DAYS[today.getDay()]}, ${today.getDate()} de ${MONTHS[today.getMonth()]}`;
 
-    // Picker
+    const cached = readSessionCache();
+    if (cached) {
+      humorData = cached;
+      renderAll();
+    }
+
     document.querySelectorAll(".mood-btn").forEach(btn => {
       btn.addEventListener("click", () => {
+        if (todayLocked) return;
         selectedMood = Number(btn.dataset.mood);
         markBtn(selectedMood);
         const m = MOODS[selectedMood];
@@ -197,11 +226,7 @@
     await loadFromBackend();
   });
 
-  const HUMOR_CACHE_KEY = () => `ep:humor:cache:${currentUser.uid}`;
-
   async function loadFromBackend() {
-    // Apaga caches legados que continham dado de saúde em armazenamento
-    // persistente; a fonte da verdade é exclusivamente o backend.
     try {
       for (let i = localStorage.length - 1; i >= 0; i--) {
         const key = localStorage.key(i);
@@ -218,19 +243,24 @@
       if (!d.ok) throw new Error(d.error || "api");
       humorData = {};
       d.items.forEach(item => { humorData[item.date] = item.mood; });
+      writeSessionCache(humorData);
       renderAll();
     } catch {
-      document.getElementById("savedMsg").textContent = "Não foi possível carregar o histórico.";
+      if (!Object.keys(humorData).length) {
+        document.getElementById("savedMsg").textContent = "Não foi possível carregar o histórico.";
+      }
     }
   }
 
   async function saveHumor() {
-    if (!selectedMood) return;
+    if (!selectedMood || todayLocked) return;
     const date = todayStr();
     humorData[date] = selectedMood;
     document.getElementById("saveBtn").classList.add("a-hide");
     document.getElementById("savedMsg").classList.remove("a-hide");
+    lockPicker();
     renderAll();
+    writeSessionCache(humorData);
     try {
       const token = await currentUser.getIdToken();
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
@@ -241,8 +271,13 @@
       if (!r.ok) throw new Error("fail");
     } catch {
       delete humorData[date];
+      todayLocked = false;
+      document.querySelectorAll(".mood-btn").forEach(b => {
+        b.disabled = false; b.style.opacity = ""; b.style.cursor = "";
+      });
       document.getElementById("savedMsg").textContent = "Não foi possível salvar. Tente novamente.";
       document.getElementById("saveBtn").classList.remove("a-hide");
+      writeSessionCache(humorData);
       renderAll();
     }
   }
@@ -257,6 +292,7 @@
       document.getElementById("savedMsg").classList.remove("a-hide");
       document.getElementById("saveBtn").classList.add("a-hide");
       markBtn(todayMood);
+      if (!todayLocked) lockPicker();
     }
     buildChart();
     buildStreak();
