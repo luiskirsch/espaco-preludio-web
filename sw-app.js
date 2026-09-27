@@ -2,13 +2,13 @@
 // Documentos usam network-first para nunca prender o app em uma versão antiga.
 // Apenas ativos estáticos do mesmo domínio usam cache com revalidação.
 
-const VERSION = "ep-app-v10-2026-09-27-care-refinement";
+const VERSION = "ep-app-v11-2026-09-27-chat-wiring";
 const STATIC_CACHE = `static-${VERSION}`;
 const PAGE_CACHE = `pages-${VERSION}`;
 const OFFLINE_PAGE = "/app/login.html";
 const PRECACHE = [
   OFFLINE_PAGE,
-  "/app/app.css?v=20260927d",
+  "/app/app.css?v=20260927e",
   "/app/portal-shell.js?v=3",
   "/app/jornada.html",
   "/app/nr1.html",
@@ -50,7 +50,7 @@ self.addEventListener("fetch", (event) => {
   if (request.mode === "navigate" || request.destination === "document") {
     event.respondWith((async () => {
       try {
-        const fresh = await fetch(request);
+        const fresh = await fetch(request, { cache: "no-store" });
         if (fresh.ok) {
           const cache = await caches.open(PAGE_CACHE);
           cache.put(request, fresh.clone()).catch(() => {});
