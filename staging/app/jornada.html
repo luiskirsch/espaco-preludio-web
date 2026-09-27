@@ -106,7 +106,11 @@
       const courses = track.courses.map(course => {
         const modules = course.modules.map((module, index) => {
           const state = moduleState(course, module, index);
-          const label = state === "complete" ? "Revisar" : state === "locked" ? "Conclua o anterior" : module.id === nextId ? "Continuar" : "Começar";
+          // Não existe progresso parcial por módulo (só concluído/não
+          // concluído) — "is-next" é só destaque visual de qual abrir
+          // agora, então o rótulo tem que ser sempre "Começar" aqui, nunca
+          // "Continuar" (isso implicaria retomar algo já iniciado).
+          const label = state === "complete" ? "Revisar" : state === "locked" ? "Conclua o anterior" : "Começar";
           return `<button class="learning-module is-${state}${module.id === nextId ? " is-next" : ""}" data-module="${esc(module.id)}" ${state === "locked" ? "disabled" : ""}>
             <span class="learning-module__status">${state === "complete" ? "✓" : String(index + 1).padStart(2, "0")}</span>
             <span><strong>${esc(module.title)}</strong><small>${module.durationMinutes} min · ${esc(module.objective)}</small></span>
