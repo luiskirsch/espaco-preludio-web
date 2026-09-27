@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conteúdo só está disponível no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Recuperar acesso · Espaço Prelúdio</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./app.css?v=20260927e">
+  <style>
+    :root { --staff-deep: #123a45; --staff-blue: #2c6670; --staff-gold: #e0ad4f; --staff-paper: #f5edd9; }
+    html, body { width: 100%; min-height: 100%; }
+    body { background: var(--staff-paper); }
+    .a-shell { max-width: none; width: 100%; min-height: 100vh; min-height: 100dvh; background: var(--staff-paper); }
+    .recover-wrap { min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+    .recover-card { width: 100%; max-width: 520px; padding: 30px 28px; border: 1px solid rgba(18,58,69,.13); border-radius: 20px; background: rgba(255,251,241,.97); box-shadow: 0 30px 70px -38px rgba(18,58,69,.48); }
+    .recover-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 22px; text-decoration: none; }
+    .recover-brand img { width: 40px; height: 40px; }
+    .recover-brand strong { display: block; font-family: var(--ff-serif); font-size: 16px; color: #1a2b2d; }
+    .recover-card h2 { font-family: var(--ff-serif); font-size: 24px; margin: 0 0 8px; color: #1a2b2d; }
+    .recover-card p { font-size: 13.5px; line-height: 1.6; color: #455d61; margin: 0 0 4px; }
+    .recover-step { margin-top: 24px; padding-top: 22px; border-top: 1px solid rgba(18,58,69,.12); }
+    .recover-step:first-of-type { margin-top: 20px; padding-top: 0; border-top: none; }
+    .recover-step h3 { font-size: 15px; font-weight: 700; margin: 0 0 6px; color: #1a2b2d; }
+    .recover-step .a-field { margin-top: 10px; }
+    .recover-alert { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: rgba(224,173,79,.14); border: 1px solid rgba(224,173,79,.35); font-size: 12.5px; line-height: 1.55; color: #5a4620; }
+    .recover-back { display: block; margin-top: 22px; text-align: center; font-size: 12px; font-weight: 700; color: #245d67; text-decoration: none; }
+    #statusReset, #statusRecover { margin-top: 10px; font-size: 12.5px; }
+    #statusReset.is-ok, #statusRecover.is-ok { color: #2d6a3e; }
+    #statusReset.is-err, #statusRecover.is-err { color: #b8453d; }
+    #recoveryPhraseInput { font-family: var(--ff-mono); font-size: 13px; letter-spacing: .03em; }
+  </style>
+  <script src="./sw-register.js" defer></script>
+</head>
+<body>
+<div class="a-shell">
+  <div class="recover-wrap">
+    <div class="recover-card">
+      <a class="recover-brand" href="./login.html">
+        <img src="/logo_oficial_fundo_transparente.png?v=2" alt="">
+        <strong>Espaço Prelúdio</strong>
+      </a>
+
+      <h2>Recuperar seu acesso</h2>
+      <p>Esta tela é para colaboradores que esqueceram a senha. Tem dois passos: redefinir a senha pelo e-mail e, se você já trocou mensagens no chat, reconectar sua chave de recuperação.</p>
+
+      <div class="recover-alert">
+        <strong>Sem a chave de recuperação, o histórico de chat não pode ser recuperado.</strong> Por desenho, ninguém — nem nós — consegue decifrar suas mensagens sem ela. Você pode redefinir a senha e continuar usando o portal normalmente; só o chat anterior ficaria inacessível.
+      </div>
+
+      <section class="recover-step">
+        <h3>Passo 1 — Redefinir sua senha</h3>
+        <p>Enviamos um link para o seu e-mail. Cadastre a nova senha por lá e volte aqui.</p>
+        <form id="formReset" novalidate>
+          <div class="a-field">
+            <label class="a-field__label" for="emailReset">E-mail da conta</label>
+            <input id="emailReset" class="a-input" type="email" autocomplete="email" required>
+          </div>
+          <div id="statusReset"></div>
+          <button class="a-btn a-btn--ghost a-btn--block a-mt-12" type="submit" id="resetBtn">Enviar link de redefinição</button>
+        </form>
+      </section>
+
+      <section class="recover-step">
+        <h3>Passo 2 — Recuperar o chat</h3>
+        <p>Já redefiniu a senha? Cole sua chave de recuperação abaixo. Reconstruímos a chave com a nova senha — nada sai do seu navegador.</p>
+        <form id="formRecover" novalidate>
+          <div class="a-field">
+            <label class="a-field__label" for="emailRecover">E-mail</label>
+            <input id="emailRecover" class="a-input" type="email" autocomplete="email" required>
+          </div>
+          <div class="a-field">
+            <label class="a-field__label" for="passwordRecover">Nova senha (a que você acabou de cadastrar)</label>
+            <input id="passwordRecover" class="a-input" type="password" autocomplete="current-password" minlength="8" required>
+          </div>
+          <div class="a-field">
+            <label class="a-field__label" for="recoveryPhraseInput">Chave de recuperação (13 grupos de 4 caracteres)</label>
+            <textarea id="recoveryPhraseInput" class="a-input" rows="3" placeholder="Ex.: ABCD EFGH JKMN PQRS TUVW XYZ2 3456 789A BCDE FGHJ KMNP QRST UVWX" required></textarea>
+          </div>
+          <div id="statusRecover"></div>
+          <button class="a-btn a-btn--primary a-btn--block a-mt-12" type="submit" id="recoverBtn">Recuperar acesso ao chat</button>
+        </form>
+      </section>
+
+      <a class="recover-back" href="./login.html">Voltar ao login</a>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+  import { generateSalt, wrapDek, recoveryPhraseToDek } from "../js/crypto.js";
+  import { rememberPatientDek, rememberPatientUser } from "../js/patient-session.js";
+
+  function setStatus(el, text, type = "") {
+    el.textContent = text;
+    el.className = type ? "is-" + type : "";
+  }
+  function humanizeAuth(err) {
+    const code = err?.code || "";
+    if (code === "auth/user-not-found")     return "E-mail não cadastrado.";
+    if (code === "auth/invalid-email")      return "E-mail inválido.";
+    if (code === "auth/invalid-credential") return "E-mail ou senha incorretos.";
+    if (code === "auth/wrong-password")     return "Senha incorreta.";
+    if (code === "auth/too-many-requests")  return "Muitas tentativas. Tente em alguns minutos.";
+    if (code === "auth/network-request-failed") return "Erro de conexão.";
+    return err?.message || "Erro de autenticação.";
+  }
+
+  const formReset   = document.getElementById("formReset");
+  const emailReset  = document.getElementById("emailReset");
+  const statusReset = document.getElementById("statusReset");
+  const resetBtn    = document.getElementById("resetBtn");
+
+  formReset.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = emailReset.value.trim().toLowerCase();
+    if (!email) { setStatus(statusReset, "Informe seu e-mail.", "err"); return; }
+    resetBtn.disabled = true;
+    setStatus(statusReset, "Enviando…");
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setStatus(statusReset, "Pronto. Se o e-mail está cadastrado, você receberá um link em instantes. Cheque também o spam.", "ok");
+    } catch (err) {
+      console.error("colaborador_reset_email_error", err);
+      setStatus(statusReset, humanizeAuth(err), "err");
+    }
+    resetBtn.disabled = false;
+  });
+
+  const formRecover     = document.getElementById("formRecover");
+  const emailRecover    = document.getElementById("emailRecover");
+  const passwordRecover = document.getElementById("passwordRecover");
+  const recoveryEl      = document.getElementById("recoveryPhraseInput");
+  const statusRecover   = document.getElementById("statusRecover");
+  const recoverBtn      = document.getElementById("recoverBtn");
+
+  formRecover.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    recoverBtn.disabled = true;
+
+    const email    = emailRecover.value.trim().toLowerCase();
+    const password = passwordRecover.value;
+    const phrase   = recoveryEl.value.trim();
+
+    if (!email || !password || !phrase) {
+      setStatus(statusRecover, "Preencha todos os campos.", "err");
+      recoverBtn.disabled = false;
+      return;
+    }
+    if (password.length < 8) {
+      setStatus(statusRecover, "Senha precisa ter pelo menos 8 caracteres.", "err");
+      recoverBtn.disabled = false;
+      return;
+    }
+
+    let dekBytes;
+    try {
+      dekBytes = recoveryPhraseToDek(phrase);
+    } catch {
+      setStatus(statusRecover, "Chave inválida ou incompleta. Confira se colou todos os 13 grupos.", "err");
+      recoverBtn.disabled = false;
+      return;
+    }
+
+    setStatus(statusRecover, "Autenticando com sua nova senha…");
+    let cred;
+    try {
+      cred = await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      console.error("colaborador_recover_signin_error", err);
+      setStatus(statusRecover, "Não consegui entrar com essa senha. Você redefiniu pelo e-mail antes? " + humanizeAuth(err), "err");
+      recoverBtn.disabled = false;
+      return;
+    }
+
+    const idToken = await cred.user.getIdToken();
+
+    setStatus(statusRecover, "Re-cifrando sua chave com a nova senha…");
+    const salt = generateSalt();
+    const { wrappedDEK, wrappedDEKIv } = await wrapDek(dekBytes, password, salt);
+
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/recuperar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ e2eeSalt: salt, wrappedDEK, wrappedDEKIv })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        setStatus(statusRecover, "Erro ao salvar a nova chave: " + (data?.error || res.status), "err");
+        recoverBtn.disabled = false;
+        return;
+      }
+    } catch (err) {
+      console.error("colaborador_recover_save_error", err);
+      setStatus(statusRecover, "Erro de rede ao salvar. Tente novamente.", "err");
+      recoverBtn.disabled = false;
+      return;
+    }
+
+    rememberPatientDek(dekBytes);
+    rememberPatientUser({ uid: cred.user.uid, email, displayName: cred.user.displayName || "" });
+
+    setStatus(statusRecover, "Acesso recuperado. Indo para o seu painel…", "ok");
+    setTimeout(() => { window.location.href = "./home.html"; }, 1200);
+  });
+</script>
+
+</body>
+</html>

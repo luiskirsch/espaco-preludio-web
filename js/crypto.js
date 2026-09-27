@@ -171,7 +171,12 @@ export async function decryptNote({ ciphertext, iv }, dekBytes) {
 // legíveis. Usuário copia/imprime/guarda offline. NÃO é mnemônico BIP39 — é
 // o próprio DEK em formato resistente a transcrição manual.
 
-const ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // 30 chars sem 0/O/1/I/L
+// 32 chars exatos p/ codificar 5 bits/char sem overflow. Faltava 1 char aqui
+// (tinha 31) — value&0x1f podia indexar ALPHABET[31]=undefined, que
+// concatenado na string virava o texto "undefined" ali no meio da frase,
+// corrompendo ~80% das frases geradas (medido). "1" reaparece pois I/L já
+// foram excluídos — sem ambiguidade dentro deste alfabeto específico.
+const ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ234567891"; // 32 chars sem 0/O/I/L
 
 function bytesToBase32Custom(bytes) {
   let bits = 0;
@@ -189,8 +194,13 @@ function bytesToBase32Custom(bytes) {
   return out;
 }
 
+const NON_ALPHABET_CHARS = new RegExp(`[^${ALPHABET}]`, "g");
 function base32CustomToBytes(str) {
-  const clean = String(str || "").toUpperCase().replace(/[^A-Z2-9]/g, "");
+  // Regex derivado do próprio ALPHABET — hardcodar um em paralelo (ex.:
+  // [^A-Z2-9]) dessincroniza silenciosamente se o alfabeto mudar, como
+  // aconteceu quando "1" foi adicionado e o filtro antigo continuava
+  // descartando esse caractere antes da decodificação.
+  const clean = String(str || "").toUpperCase().replace(NON_ALPHABET_CHARS, "");
   const out = [];
   let bits = 0, value = 0;
   for (const ch of clean) {

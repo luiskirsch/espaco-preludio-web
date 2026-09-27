@@ -38,7 +38,7 @@ test("local HTML references resolve to versioned files", () => {
 test("app service worker keeps documents fresh and notification navigation same-origin", () => {
   const source = readFileSync(join(ROOT, "sw-app.js"), "utf8");
   assert.match(source, /request\.mode === "navigate"/);
-  assert.match(source, /const fresh = await fetch\(request\)/);
+  assert.match(source, /const fresh = await fetch\(request, \{ cache: "no-store" \}\)/);
   assert.match(source, /target\.origin !== self\.location\.origin/);
   assert.doesNotMatch(source, /event\.data\?\.json\(\)\.catch/);
 });

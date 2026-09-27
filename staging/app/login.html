@@ -97,6 +97,15 @@
     @media (max-height: 760px) and (min-width: 901px) { .staff-side { padding-top: 18px; padding-bottom: 18px; } .login-card { padding-top: 28px; padding-bottom: 22px; } .login-card__identity { margin-bottom: 16px; } .login-card .a-h1 { margin-top: 10px; } .login-toggle { margin: 18px 0 20px; } .login-footer { margin-top: 18px; padding-top: 14px; } }
     @media (max-width: 900px) and (max-height: 740px) { .login-card { padding-top: 22px; padding-bottom: 18px; } .login-card__identity { margin-bottom: 14px; } .login-card__seal { width: 38px; height: 38px; flex-basis: 38px; } .login-card .a-h1 { margin-top: 8px; font-size: 27px; } .login-card .a-sub { margin-top: 4px; font-size: 12.5px; } .login-toggle { margin: 14px 0 17px; } .login-card .a-input { height: 45px; min-height: 45px; } .login-footer { margin-top: 14px; padding-top: 10px; line-height: 1.45; } .login-back { margin-top: 7px; } .login-card.is-registering { padding-top: 17px; padding-bottom: 14px; } .login-card.is-registering .login-card__identity { display: none; } .login-card.is-registering .login-kicker { font-size: 10px; } .login-card.is-registering .a-h1 { font-size: 23px; } .login-card.is-registering .a-sub { display: none; } .login-card.is-registering .login-toggle { margin: 9px 0 10px; } .login-card.is-registering #formCadastrar { gap: 5px; } .login-card.is-registering #formCadastrar .a-field { gap: 3px; } .login-card.is-registering #formCadastrar .a-input { height: 38px; min-height: 38px; } .login-card.is-registering #formCadastrar .a-btn--lg { height: 42px; } .login-card.is-registering .login-footer { margin-top: 8px; padding-top: 7px; } }
     @media (prefers-reduced-motion: reduce) { .staff-emblem__orbit, .staff-emblem__heart { animation: none; } }
+    .recovery-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(14,30,33,.6); }
+    .recovery-modal__card { width: 100%; max-width: 480px; max-height: calc(100dvh - 40px); overflow-y: auto; background: #fffaf0; border-radius: 18px; padding: 26px 24px; box-shadow: 0 30px 70px rgba(0,0,0,.35); }
+    .recovery-modal__card h3 { font-family: var(--ff-serif); font-size: 21px; margin: 0 0 10px; color: #1a2b2d; }
+    .recovery-modal__card p { font-size: 13px; line-height: 1.6; color: #455d61; margin: 0 0 14px; }
+    .recovery-phrase { font-family: var(--ff-mono); font-size: 13px; letter-spacing: .03em; line-height: 1.7; padding: 14px; border-radius: 10px; background: #fff; border: 1px solid rgba(18,58,69,.2); color: #1a2b2d; word-break: break-word; user-select: all; }
+    .recovery-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .recovery-actions button { flex: 1; }
+    .recovery-confirm { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; font-size: 12.5px; color: #455d61; }
+    .recovery-confirm input { margin-top: 2px; }
   </style>
   <script src="./sw-register.js" defer></script>
 </head>
@@ -164,7 +173,7 @@
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
-        <a href="../recuperar.html" class="login-help" style="font-size:12px;margin-top:4px;display:inline-block;">Esqueceu a senha?</a>
+        <a href="./recuperar.html" class="login-help" style="font-size:12px;margin-top:4px;display:inline-block;">Esqueceu a senha?</a>
       </div>
       <div id="erroEntrar" class="a-alert a-alert--err a-hide"></div>
       <button type="submit" class="a-btn a-btn--primary a-btn--block a-btn--lg a-mt-8" id="btnEntrar">Entrar</button>
@@ -207,13 +216,130 @@
   </main>
 </div>
 
+<div id="recoveryModal" class="recovery-modal a-hide">
+  <div class="recovery-modal__card">
+    <h3>Guarde sua chave de recuperação</h3>
+    <p>Suas mensagens no chat são cifradas — nem nós conseguimos lê-las. Esta chave é a <strong>única forma</strong> de recuperar o acesso se você esquecer sua senha. Copie ou baixe agora; ela não será mostrada de novo.</p>
+    <div class="recovery-phrase" id="recoveryPhraseText"></div>
+    <div class="recovery-actions">
+      <button type="button" class="a-btn a-btn--ghost" id="copyRecoveryBtn">Copiar</button>
+      <button type="button" class="a-btn a-btn--ghost" id="downloadRecoveryBtn">Baixar</button>
+    </div>
+    <label class="recovery-confirm">
+      <input type="checkbox" id="confirmRecoveryCheck">
+      <span>Copiei ou salvei minha chave de recuperação em local seguro.</span>
+    </label>
+    <button type="button" class="a-btn a-btn--primary a-btn--block a-mt-16" id="finishRecoveryBtn" disabled>Continuar</button>
+    <div id="recoveryStatus" class="a-sub" style="margin-top:8px;font-size:12px;"></div>
+  </div>
+</div>
+
 <script type="module">
   import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile }
     from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth } from "../js/firebase-config.js";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+  import { generateSalt, generateDEK, wrapDek, unwrapDek, dekToRecoveryPhrase } from "../js/crypto.js";
+  import { rememberPatientDek, rememberPatientUser } from "../js/patient-session.js";
 
-  // Já logado → vai pro home
-  onAuthStateChanged(auth, u => { if (u) window.location.href = "./home.html"; });
+  const params = new URLSearchParams(location.search);
+  const redirectTo = params.get("redirect") || "./home.html";
+  const isReauth = params.get("reauth") === "1";
+  if (isReauth) {
+    const erro = document.getElementById("erroEntrar");
+    erro.textContent = "Sua sessão de chat expirou. Entre novamente para desbloquear suas mensagens.";
+    erro.classList.remove("a-hide");
+  }
+
+  // Já logado com DEK disponível → vai direto. Sem DEK, deixa logar de novo
+  // (cobre o caso de reauth por expiração de sessionStorage).
+  onAuthStateChanged(auth, u => {
+    if (u && !isReauth) window.location.href = redirectTo;
+  });
+
+  async function registerAccount({ idToken, displayName, e2eeSalt, wrappedDEK, wrappedDEKIv }) {
+    const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/registrar`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+      body: JSON.stringify({ displayName, e2eeSalt, wrappedDEK, wrappedDEKIv, consentLgpd: true })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+    return data;
+  }
+
+  // ─── Modal de chave de recuperação (mostrado 1x no cadastro e na 1ª
+  // vez que uma conta antiga migra pra ter chave de chat) ─────────────
+  let pendingRecovery = null; // { dekBytes, salt, wrappedDEK, wrappedDEKIv, idToken, displayName, onDone }
+  const recoveryModal   = document.getElementById("recoveryModal");
+  const recoveryText    = document.getElementById("recoveryPhraseText");
+  const confirmCheck    = document.getElementById("confirmRecoveryCheck");
+  const finishBtn       = document.getElementById("finishRecoveryBtn");
+  const recoveryStatus  = document.getElementById("recoveryStatus");
+
+  function openRecoveryModal(phrase) {
+    recoveryText.textContent = phrase;
+    confirmCheck.checked = false;
+    finishBtn.disabled = true;
+    recoveryStatus.textContent = "";
+    recoveryModal.classList.remove("a-hide");
+  }
+  confirmCheck.addEventListener("change", () => { finishBtn.disabled = !confirmCheck.checked; });
+  document.getElementById("copyRecoveryBtn").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(pendingRecovery?.recoveryPhrase || ""); recoveryStatus.textContent = "Copiado."; }
+    catch { recoveryStatus.textContent = "Não foi possível copiar — selecione o texto manualmente."; }
+  });
+  document.getElementById("downloadRecoveryBtn").addEventListener("click", () => {
+    const p = pendingRecovery;
+    if (!p) return;
+    const blob = new Blob([
+      "ESPAÇO PRELÚDIO — CHAVE DE RECUPERAÇÃO (COLABORADOR)\n\n",
+      "Esta é a única forma de recuperar o acesso ao chat se você esquecer a senha.\n",
+      "Guarde em local seguro. Nunca compartilhe.\n\n",
+      `Nome: ${p.displayName || ""}\n`,
+      `Gerada em: ${new Date().toISOString()}\n\n`,
+      "CHAVE:\n", p.recoveryPhrase, "\n"
+    ].join(""), { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `espaco-preludio-colaborador-chave-${Date.now()}.txt`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  });
+  finishBtn.addEventListener("click", async () => {
+    if (!pendingRecovery) return;
+    finishBtn.disabled = true;
+    recoveryStatus.textContent = "Salvando…";
+    try {
+      await registerAccount({
+        idToken: pendingRecovery.idToken,
+        displayName: pendingRecovery.displayName,
+        e2eeSalt: pendingRecovery.salt,
+        wrappedDEK: pendingRecovery.wrappedDEK,
+        wrappedDEKIv: pendingRecovery.wrappedDEKIv
+      });
+      rememberPatientDek(pendingRecovery.dekBytes);
+      rememberPatientUser({ uid: pendingRecovery.uid, email: pendingRecovery.email, displayName: pendingRecovery.displayName });
+      recoveryModal.classList.add("a-hide");
+      window.location.href = pendingRecovery.redirectTo || redirectTo;
+    } catch (e) {
+      recoveryStatus.textContent = "Erro ao salvar: " + (e?.message || "tente novamente");
+      finishBtn.disabled = false;
+    }
+  });
+
+  async function beginRecoverySetup({ user, password, displayName, redirectTo: dest }) {
+    const salt = generateSalt();
+    const dekBytes = generateDEK();
+    const { wrappedDEK, wrappedDEKIv } = await wrapDek(dekBytes, password, salt);
+    const recoveryPhrase = dekToRecoveryPhrase(dekBytes);
+    const idToken = await user.getIdToken();
+    pendingRecovery = {
+      dekBytes, salt, wrappedDEK, wrappedDEKIv, recoveryPhrase,
+      idToken, uid: user.uid, email: user.email, displayName: displayName || user.displayName || "",
+      redirectTo: dest
+    };
+    openRecoveryModal(recoveryPhrase);
+  }
 
   // Tabs
   const tabE = document.getElementById("tabEntrar");
@@ -252,8 +378,40 @@
     const erro = document.getElementById("erroEntrar");
     erro.classList.add("a-hide");
     btn.disabled = true; btn.textContent = "Entrando…";
+    const email = document.getElementById("loginEmail").value.trim();
+    const senha = document.getElementById("loginSenha").value;
     try {
-      await signInWithEmailAndPassword(auth, document.getElementById("loginEmail").value.trim(), document.getElementById("loginSenha").value);
+      const cred = await signInWithEmailAndPassword(auth, email, senha);
+      const idToken = await cred.user.getIdToken();
+
+      // Verifica se a conta já tem chave de chat configurada.
+      let account = null;
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/me`, {
+          headers: { "Authorization": `Bearer ${idToken}` }
+        });
+        if (r.ok) { const d = await r.json(); account = d.account; }
+      } catch { /* chat é opcional — não bloqueia login se a checagem falhar */ }
+
+      if (account && account.e2eeSalt && account.wrappedDEK && account.wrappedDEKIv) {
+        try {
+          const dek = await unwrapDek({
+            wrappedDEK: account.wrappedDEK,
+            wrappedDEKIv: account.wrappedDEKIv,
+            e2eeSalt: account.e2eeSalt
+          }, senha);
+          rememberPatientDek(dek);
+          rememberPatientUser({ uid: cred.user.uid, email, displayName: account.displayName || cred.user.displayName || "" });
+        } catch { /* senha certa no Firebase mas chave não abriu — segue sem chat */ }
+        window.location.href = redirectTo;
+        return;
+      }
+
+      // Conta sem chave de chat ainda (1º acesso à conta OU conta criada
+      // antes desse recurso existir) — gera agora e mostra a chave de
+      // recuperação antes de liberar o acesso ao chat.
+      await beginRecoverySetup({ user: cred.user, password: senha, displayName: account?.displayName || cred.user.displayName, redirectTo });
+      btn.disabled = false; btn.textContent = "Entrar";
     } catch (err) {
       erro.textContent = ERROS[err.code] || "Erro ao entrar. Tente novamente.";
       erro.classList.remove("a-hide");
@@ -278,6 +436,8 @@
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, senha);
       await updateProfile(cred.user, { displayName: nome });
+      await beginRecoverySetup({ user: cred.user, password: senha, displayName: nome, redirectTo });
+      btn.disabled = false; btn.textContent = "Criar minha conta";
     } catch (err) {
       erro.textContent = ERROS[err.code] || "Erro ao criar conta.";
       erro.classList.remove("a-hide");

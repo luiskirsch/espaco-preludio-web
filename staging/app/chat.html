@@ -134,7 +134,7 @@
     <div id="convEmpty" class="chat-empty a-hide">
       <div style="font-size:48px;">💬</div>
       <div style="font-family:var(--ff-serif);font-size:20px;">Nenhuma conversa ainda</div>
-      <div class="a-sub" style="max-width:280px;margin-top:8px;">Quando você tiver uma consulta agendada, poderá conversar com o profissional por aqui.</div>
+      <div class="a-sub" style="max-width:280px;margin-top:8px;">As conversas aparecem aqui quando o profissional iniciar contato, depois que sua consulta for confirmada.</div>
       <a href="./buscar.html" class="a-btn a-btn--accent a-mt-16">Buscar profissional</a>
     </div>
   </div>
@@ -168,17 +168,20 @@
 <script type="module">
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+  import {
+    generateEcdhKeypair, wrapKey, unwrapKey,
+    unwrapThreadKeyFromPeer, encryptNote, decryptNote
+  } from "../js/crypto.js";
+  import { recallPatientDek } from "../js/patient-session.js";
 
   let currentUser = null;
-  let currentConvId = null;
-  let messages = [];
+  let idToken = null;
+  let dek = null;
+  let myEcdhPrivBytes = null;
+  let currentThreadId = null;
+  let currentThread = null;
   let pollTimer = null;
-
-  onAuthStateChanged(auth, async user => {
-    if (!user) { window.location.href = "./login.html"; return; }
-    currentUser = user;
-    loadConversations();
-  });
+  const threadKeyCache = new Map();
 
   function esc(s) { return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
   function fmtTime(ms) { const d=new Date(Number(ms)); return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
@@ -188,111 +191,200 @@
     if (diff===0) return "Hoje"; if (diff===-1) return "Ontem";
     return d.toLocaleDateString("pt-BR",{day:"2-digit",month:"short"});
   }
+  function reauth() {
+    window.location.href = "./login.html?reauth=1&redirect=" + encodeURIComponent(location.pathname + location.search);
+  }
 
-  async function loadConversations() {
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = "./login.html"; return; }
+    currentUser = user;
+    idToken = await user.getIdToken();
+
+    dek = recallPatientDek();
+    if (!dek) { reauth(); return; }
+
     try {
-      const token = await currentUser.getIdToken();
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/mensagens/conversas`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/me`, {
+        headers: { Authorization: `Bearer ${idToken}` }
       });
-      const d = await r.json().catch(() => ({}));
-      document.getElementById("convLoading").style.display = "none";
-      const convs = d.conversas || d.items || [];
-      if (!convs.length) { document.getElementById("convEmpty").classList.remove("a-hide"); return; }
-      document.getElementById("convList").style.display = "flex";
-      const convList = document.getElementById("convList");
-      convList.innerHTML = convs.map((c, index) => {
-        const initials = (c.therapistName||"?").match(/\b\p{L}/gu)?.slice(0,2).join("").toUpperCase()||"?";
-        const safePhoto = /^[A-Za-z0-9+/=]+$/.test(String(c.therapistPhoto || "")) ? String(c.therapistPhoto) : "";
-        const avatar = safePhoto
-          ? `<img src="data:image/jpeg;base64,${safePhoto}" alt="">`
-          : initials;
-        const badge = c.unread > 0 ? `<div class="conv-item__badge">${c.unread}</div>` : "";
-        return `<button type="button" class="conv-item" data-conv-index="${index}">
-          <div class="conv-item__avatar">${avatar}</div>
-          <div class="conv-item__info">
-            <div class="conv-item__name">${esc(c.therapistName)}</div>
-            <div class="conv-item__preview">${esc(c.lastMessage||"")}</div>
-          </div>
-          <div class="a-flex-col a-items-center" style="gap:4px;flex-shrink:0;">
-            <div class="conv-item__time">${c.lastAt ? fmtTime(c.lastAt) : ""}</div>
-            ${badge}
-          </div>
-        </button>`;
-      }).join("");
-      convList.querySelectorAll("[data-conv-index]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const c = convs[Number(btn.dataset.convIndex)];
-          if (!c) return;
-          const initials = (c.therapistName||"?").match(/\b\p{L}/gu)?.slice(0,2).join("").toUpperCase()||"?";
-          const photo = /^[A-Za-z0-9+/=]+$/.test(String(c.therapistPhoto || "")) ? String(c.therapistPhoto) : "";
-          openChat(c.convId || c.therapistUid, c.therapistName || "", c.especialidade || "", initials, photo);
-        });
-      });
+      if (!r.ok) throw new Error("perfil indisponível");
     } catch {
       document.getElementById("convLoading").style.display = "none";
       document.getElementById("convEmpty").classList.remove("a-hide");
+      return;
     }
-  }
 
-  window.openChat = async function(convId, name, esp, initials, photo) {
-    currentConvId = convId;
-    document.getElementById("listView").style.display = "none";
-    document.getElementById("chatView").style.display = "flex";
-    document.getElementById("chatName").textContent = name;
-    document.getElementById("chatEsp").textContent  = esp;
-    const chatAvatar = document.getElementById("chatAvatar");
-    chatAvatar.replaceChildren();
-    if (/^[A-Za-z0-9+/=]+$/.test(String(photo || ""))) {
-      const img = document.createElement("img");
-      img.src = `data:image/jpeg;base64,${photo}`;
-      img.alt = "";
-      chatAvatar.appendChild(img);
-    } else {
-      chatAvatar.textContent = initials;
-    }
-    document.getElementById("chatMessages").innerHTML = "";
-    await loadMessages();
-    pollTimer = setInterval(loadMessages, 4000);
-  };
-
-  function backToList() {
-    clearInterval(pollTimer);
-    currentConvId = null;
-    document.getElementById("chatView").style.display = "none";
-    document.getElementById("listView").style.display = "flex";
-  }
-
-  async function loadMessages() {
-    if (!currentConvId) return;
     try {
-      const token = await currentUser.getIdToken();
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/mensagens/${encodeURIComponent(currentConvId)}`, {
-        headers: { Authorization: `Bearer ${token}` }
+      await ensureEcdhKeypair();
+    } catch (e) {
+      document.getElementById("convLoading").style.display = "none";
+      document.getElementById("convList").innerHTML = "";
+      document.getElementById("convEmpty").classList.remove("a-hide");
+      console.error("chat_ecdh_init_failed", e);
+      return;
+    }
+
+    loadThreads();
+    setInterval(loadThreads, 30000);
+  });
+
+  // ─── ECDH keypair: lazy gen + cache no backend ─────────────────────
+  async function ensureEcdhKeypair() {
+    const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/keypair`, {
+      headers: { Authorization: `Bearer ${idToken}` }
+    });
+    if (r.ok) {
+      const d = await r.json();
+      myEcdhPrivBytes = await unwrapKey(d.ecdhPrivateWrapped, dek);
+      return;
+    }
+    if (r.status !== 404) throw new Error(`GET keypair falhou: HTTP ${r.status}`);
+    const kp = await generateEcdhKeypair();
+    const privWrapped = await wrapKey(kp.privateRaw, dek);
+    const post = await fetch(`${BACKEND_BASE_URL}/therapy/chat/keypair`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ ecdhPublicJwk: kp.publicJwk, ecdhPrivateWrapped: privWrapped })
+    });
+    if (!post.ok) throw new Error(`POST keypair falhou: HTTP ${post.status}`);
+    myEcdhPrivBytes = kp.privateRaw;
+  }
+
+  async function unwrapThreadKey(t) {
+    let key = threadKeyCache.get(t.threadId);
+    if (key) return key;
+    key = t.myThreadKeyWrappedVia === "own-dek"
+      ? await unwrapKey(t.myThreadKeyWrapper, dek)
+      : await unwrapThreadKeyFromPeer(t.myThreadKeyWrapper, myEcdhPrivBytes, t.peerEcdhPublicJwk);
+    threadKeyCache.set(t.threadId, key);
+    return key;
+  }
+
+  let _lastThreads = [];
+  async function loadThreads() {
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, {
+        headers: { Authorization: `Bearer ${idToken}` }
       });
       const d = await r.json().catch(() => ({}));
-      const msgs = d.mensagens || d.messages || [];
-      if (msgs.length !== messages.length) {
-        messages = msgs;
-        renderMessages();
+      document.getElementById("convLoading").style.display = "none";
+      if (!r.ok || !d.ok) throw new Error("threads");
+      _lastThreads = d.threads || [];
+      if (!_lastThreads.length) {
+        document.getElementById("convList").style.display = "none";
+        document.getElementById("convEmpty").classList.remove("a-hide");
+        return;
       }
-    } catch {}
+      document.getElementById("convEmpty").classList.add("a-hide");
+      document.getElementById("convList").style.display = "flex";
+      await renderThreads();
+    } catch {
+      document.getElementById("convLoading").style.display = "none";
+      if (!_lastThreads.length) document.getElementById("convEmpty").classList.remove("a-hide");
+    }
   }
 
-  function renderMessages() {
+  async function renderThreads() {
+    const convList = document.getElementById("convList");
+    const rows = await Promise.all(_lastThreads.map(async (t, index) => {
+      const name = t.therapistDisplayName || "Profissional";
+      const initials = name.trim().split(/\s+/).map(w => w[0]).slice(0,2).join("").toUpperCase() || "?";
+      const badge = t.unreadCount > 0 ? `<div class="conv-item__badge">${t.unreadCount > 99 ? "99+" : t.unreadCount}</div>` : "";
+      let preview = "Sem mensagens";
+      if (t.lastMessageCiphertext && t.lastMessageIv) {
+        try {
+          const key = await unwrapThreadKey(t);
+          preview = await decryptNote({ ciphertext: t.lastMessageCiphertext, iv: t.lastMessageIv }, key);
+        } catch { preview = "[mensagem corrompida]"; }
+      }
+      return `<button type="button" class="conv-item" data-thread-id="${esc(t.threadId)}" data-index="${index}">
+        <div class="conv-item__avatar">${esc(initials)}</div>
+        <div class="conv-item__info">
+          <div class="conv-item__name">${esc(name)}</div>
+          <div class="conv-item__preview">${esc(preview)}</div>
+        </div>
+        <div class="a-flex-col a-items-center" style="gap:4px;flex-shrink:0;">
+          <div class="conv-item__time">${t.lastMessageAt ? fmtTime(t.lastMessageAt) : ""}</div>
+          ${badge}
+        </div>
+      </button>`;
+    }));
+    convList.innerHTML = rows.join("");
+    convList.querySelectorAll("[data-thread-id]").forEach(btn => {
+      btn.addEventListener("click", () => openThread(btn.dataset.threadId));
+    });
+  }
+
+  window.backToList = function backToList() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    currentThreadId = null;
+    document.getElementById("chatView").style.display = "none";
+    document.getElementById("listView").style.display = "flex";
+    loadThreads();
+  };
+
+  async function openThread(threadId) {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    currentThreadId = threadId;
+    document.getElementById("listView").style.display = "none";
+    document.getElementById("chatView").style.display = "flex";
+    document.getElementById("chatMessages").innerHTML = "";
+
+    const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(threadId)}`, {
+      headers: { Authorization: `Bearer ${idToken}` }
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) { backToList(); return; }
+    currentThread = d.thread;
+
+    const name = currentThread.therapistDisplayName || "Profissional";
+    document.getElementById("chatName").textContent = name;
+    document.getElementById("chatEsp").textContent = "";
+    const initials = name.trim().split(/\s+/).map(w => w[0]).slice(0,2).join("").toUpperCase() || "?";
+    document.getElementById("chatAvatar").textContent = initials;
+
+    const threadKeyBytes = await unwrapThreadKey(currentThread);
+    await refreshMessages(threadKeyBytes);
+
+    fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(threadId)}/read`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ until: Date.now() })
+    }).catch(() => {});
+
+    pollTimer = setInterval(() => refreshMessages(threadKeyBytes), 5000);
+  }
+
+  async function refreshMessages(threadKeyBytes) {
+    const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/messages?limit=100`, {
+      headers: { Authorization: `Bearer ${idToken}` }
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) return;
+
+    const decrypted = [];
+    for (const m of (d.messages || [])) {
+      try {
+        const plain = await decryptNote({ ciphertext: m.ciphertext, iv: m.iv }, threadKeyBytes);
+        decrypted.push({ ...m, plain });
+      } catch {
+        decrypted.push({ ...m, plain: "[mensagem corrompida]" });
+      }
+    }
+
     const container = document.getElementById("chatMessages");
     let lastDate = "";
-    container.innerHTML = messages.map(m => {
-      const isOut = m.fromPatient || m.senderType === "patient";
-      const dayLabel = fmtDay(m.sentAt || m.at || m.createdAt);
+    container.innerHTML = decrypted.map(m => {
+      const isOut = m.senderRole === "patient";
+      const dayLabel = fmtDay(m.createdAt);
       let dateSep = "";
-      if (dayLabel !== lastDate) { dateSep = `<div class="date-sep">${dayLabel}</div>`; lastDate = dayLabel; }
+      if (dayLabel !== lastDate) { dateSep = `<div class="date-sep">${esc(dayLabel)}</div>`; lastDate = dayLabel; }
       return `${dateSep}
         <div class="msg ${isOut ? "msg--out" : "msg--in"}">
-          <div class="msg__bubble">${esc(m.text || m.body || "")}</div>
-          <div class="${isOut ? "msg__status" : "msg__time"}">${fmtTime(m.sentAt||m.at||m.createdAt)} ${isOut ? (m.read ? "✓✓" : "✓") : ""}</div>
+          <div class="msg__bubble">${esc(m.plain)}</div>
+          <div class="${isOut ? "msg__status" : "msg__time"}">${fmtTime(m.createdAt)}</div>
         </div>`;
-    }).join("");
+    }).join("") || "";
     container.scrollTop = container.scrollHeight;
   }
 
@@ -311,19 +403,20 @@
 
   async function sendMessage() {
     const text = chatInput.value.trim();
-    if (!text || !currentConvId) return;
+    if (!text || !currentThreadId) return;
+    const threadKeyBytes = threadKeyCache.get(currentThreadId);
+    if (!threadKeyBytes) return;
     chatInput.value = ""; chatInput.style.height = "auto"; sendBtn.disabled = true;
-    // Optimistic
-    messages.push({ text, sentAt: Date.now(), fromPatient: true });
-    renderMessages();
     try {
-      const token = await currentUser.getIdToken();
-      await fetch(`${BACKEND_BASE_URL}/therapy/paciente/mensagens/${encodeURIComponent(currentConvId)}`, {
+      const enc = await encryptNote(text, threadKeyBytes);
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/messages`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ text })
+        headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify(enc)
       });
-    } catch {}
+      if (!r.ok) throw new Error("send failed");
+      await refreshMessages(threadKeyBytes);
+    } catch { /* mensagem fica no campo perdida — usuário pode reenviar */ }
   }
 </script>
 </body>

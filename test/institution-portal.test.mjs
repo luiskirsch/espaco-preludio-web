@@ -210,7 +210,7 @@ test('todas as telas autenticadas do colaborador usam a estrutura responsiva com
     const html = await readFile(resolve(root, `app/${page}.html`), 'utf8');
     assert.match(html, /<body class="a-portal-authenticated">/, page);
     assert.match(html, /portal-shell\.js\?v=3/, page);
-    assert.match(html, /app\.css\?v=20260927d/, page);
+    assert.match(html, /app\.css\?v=20260927e/, page);
   }
   const shell = await readFile(resolve(root, 'app/portal-shell.js'), 'utf8');
   assert.match(shell, /Portal do colaborador/);
@@ -227,13 +227,15 @@ test('portal do colaborador integra jornada, NR-1 e ajuda imediata sem prometer 
   ]);
   assert.doesNotMatch(home, /class="quick-actions"/);
   assert.doesNotMatch(home, /id="nextSessionEmpty"[\s\S]*?Buscar profissional/);
-  assert.match(home, /href="\.\/humor\.html">Ver histórico/);
+  assert.match(home, /href="\.\/humor\.html"[^>]*>Ver histórico/);
   assert.match(home, /Sua jornada profissional/);
   assert.match(home, /Escuta sobre o trabalho/);
   assert.match(journey, /therapy\/paciente\/colaborador\/jornada/);
   assert.match(journey, /completedModules[\s\S]*?módulos/);
   assert.match(survey, /resultados agrupados/);
-  assert.match(survey, /Não emite PGR, AEP, PCMSO/);
+  // Aviso de limites de compliance (PGR/AEP/PCMSO) foi removido da tela do
+  // colaborador — linguagem institucional que não cabia ali.
+  assert.doesNotMatch(survey, /Não emite PGR, AEP, PCMSO/);
   assert.match(emergency, /href="tel:192"/);
   assert.match(emergency, /href="tel:190"/);
   assert.match(emergency, /href="tel:188"/);
@@ -243,7 +245,9 @@ test('portal do colaborador integra jornada, NR-1 e ajuda imediata sem prometer 
   assert.match(shell, /jornada\.html/);
   assert.match(shell, /nr1\.html/);
   assert.match(shell, /emergencia\.html/);
-  assert.match(shell, /humor\.html"[^}]*Histórico de humor/);
+  // "Histórico de humor" saiu do menu lateral — acesso passou a ser só
+  // pelo card de humor no início (ver asserção "Ver histórico" acima).
+  assert.doesNotMatch(shell, /Histórico de humor/);
 });
 
 test('plano institucional permite informar uma conta Mercado Pago pagadora diferente', async () => {
