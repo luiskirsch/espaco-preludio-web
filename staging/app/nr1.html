@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="";}else{document.documentElement.classList.add("guard-ok");}})();</script>
+  <style>html:not(.guard-ok) body{visibility:hidden!important}</style>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Pesquisas do trabalho · Espaço Prelúdio</title>
+  <link rel="manifest" href="./manifest.json"><link rel="icon" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./app.css?v=20260927c">
+  <script src="./portal-shell.js?v=2" defer></script><script src="./sw-register.js" defer></script>
+</head>
+<body class="a-portal-authenticated">
+<div class="a-shell">
+  <header class="a-header"><a href="./home.html" class="a-header__back" aria-label="Voltar">‹</a><div><div class="a-header__eyebrow">Participação confidencial</div><h1 class="a-header__title">Pesquisas do trabalho</h1></div></header>
+  <main class="a-page survey-page">
+    <section class="survey-hero">
+      <div><span>Escuta sobre as condições de trabalho</span><h2>Sua experiência ajuda a construir um ambiente mais seguro.</h2><p>As perguntas tratam de tarefas, recursos, relações e organização do trabalho. Não avaliam diagnóstico, personalidade, terapia ou prontuário.</p></div>
+      <div class="survey-privacy"><b>Privacidade por desenho</b><p>A organização recebe somente resultados agrupados após o encerramento. Respostas individuais e dados clínicos não são compartilhados.</p></div>
+    </section>
+    <section class="survey-explainer">
+      <article><b>01</b><div><strong>Responda sobre o trabalho</strong><span>Considere sua experiência recente nas condições reais em que atua.</span></div></article>
+      <article><b>02</b><div><strong>Uma resposta por ciclo</strong><span>Um identificador pseudônimo impede duplicidade sem revelar sua resposta.</span></div></article>
+      <article><b>03</b><div><strong>Proteção de grupos pequenos</strong><span>Recortes com poucas respostas ficam ocultos para reduzir reidentificação.</span></div></article>
+    </section>
+    <div id="surveyStatus" class="portal-status" role="status">Verificando pesquisas disponíveis…</div>
+    <form id="surveyForm" class="survey-form" hidden>
+      <header><div><span>Pesquisa disponível</span><h2 id="surveyHeading">Questionário sobre o trabalho</h2></div><div class="survey-estimate">aprox. 6 minutos</div></header>
+      <div class="survey-fields"><label>Ciclo<select id="campaign" required></select></label><label>Unidade onde você trabalha<select id="unit" required></select></label></div>
+      <div id="privacyDetails" class="survey-notice"></div>
+      <div class="survey-scale"><strong>Escala de resposta</strong><span>1 · Discordo totalmente</span><span>2 · Discordo</span><span>3 · Neutro</span><span>4 · Concordo</span><span>5 · Concordo totalmente</span></div>
+      <div id="questions" class="survey-questions"></div>
+      <label class="survey-consent"><input id="acknowledge" type="checkbox" required><span>Li o aviso de privacidade, entendi a finalidade desta escuta e sei que ela não é atendimento clínico.</span></label>
+      <div class="survey-submit"><p>Você poderá enviar uma única resposta neste ciclo.</p><button class="a-btn a-btn--primary" id="surveySubmit" type="submit">Enviar respostas com segurança</button></div>
+    </form>
+    <aside class="survey-boundary"><strong>O que esta pesquisa não faz</strong><p>Ela é uma fonte de evidência para o processo de prevenção. Não emite PGR, AEP, PCMSO, laudo ou certificado de conformidade e não substitui a análise técnica das condições de trabalho.</p><a href="https://www.gov.br/trabalho-e-emprego/pt-br/acesso-a-informacao/participacao-social/conselhos-e-orgaos-colegiados/comissao-tripartite-partitaria-permanente/normas-regulamentadora/normas-regulamentadoras-vigentes/nr-1" target="_blank" rel="noopener">Consultar orientações oficiais do MTE ↗</a></aside>
+  </main>
+</div>
+<script type="module">
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+  const $ = id => document.getElementById(id);
+  let user = null, campaigns = [], questions = [];
+  async function api(path, options = {}) { const token = await user.getIdToken(); const response = await fetch(`${BACKEND_BASE_URL}${path}`, { ...options, headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(options.headers || {}) } }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || `Erro HTTP ${response.status}`); return data; }
+  function status(text, error = false) { $("surveyStatus").hidden = false; $("surveyStatus").textContent = text; $("surveyStatus").classList.toggle("is-error", error); }
+  function fillUnits() { const campaign = campaigns.find(item => item.id === $("campaign").value); $("unit").replaceChildren(new Option("Selecione sua unidade", "")); campaign?.units.forEach(unit => $("unit").add(new Option(unit.name, unit.id))); const details = $("privacyDetails"); details.replaceChildren(); if (campaign) { const title = document.createElement("strong"); title.textContent = "Como seus dados serão tratados"; const copy = document.createElement("span"); copy.textContent = `Contato de privacidade: ${campaign.privacyContact || "não informado"} · Retenção informada: ${campaign.retentionMonths || "—"} meses · Aviso ${campaign.privacyNoticeVersion || "—"}.`; details.append(title, copy); } }
+  function render(data) {
+    campaigns = data.campaigns || []; questions = data.questions || [];
+    if (!campaigns.length) { status("Nenhuma pesquisa está aberta para sua organização neste momento."); return; }
+    $("campaign").replaceChildren(...campaigns.map(item => new Option(item.name, item.id))); fillUnits();
+    $("questions").replaceChildren(); questions.forEach((question, index) => { const fieldset = document.createElement("fieldset"); fieldset.className = "survey-question"; const legend = document.createElement("legend"); const number = document.createElement("span"); number.textContent = String(index + 1).padStart(2,"0"); legend.append(number, document.createTextNode(String(question.text || ""))); const choices = document.createElement("div"); choices.className = "survey-options"; for (let value = 1; value <= 5; value++) { const label = document.createElement("label"); const radio = document.createElement("input"); radio.type = "radio"; radio.name = question.id; radio.value = String(value); if (value === 1) radio.required = true; const text = document.createElement("span"); text.textContent = String(value); label.append(radio, text); choices.append(label); } fieldset.append(legend, choices); $("questions").append(fieldset); });
+    $("surveyHeading").textContent = campaigns[0].name; $("surveyForm").hidden = false; $("surveyStatus").hidden = true;
+  }
+  $("campaign").addEventListener("change", () => { fillUnits(); const selected = campaigns.find(item => item.id === $("campaign").value); if (selected) $("surveyHeading").textContent = selected.name; });
+  $("surveyForm").addEventListener("submit", async event => { event.preventDefault(); if (!$("surveyForm").reportValidity()) return; const answers = {}; for (const question of questions) { const checked = document.querySelector(`input[name="${question.id}"]:checked`); if (!checked) { status("Responda todas as perguntas antes de enviar.", true); return; } answers[question.id] = Number(checked.value); } const button = $("surveySubmit"); button.disabled = true; button.textContent = "Enviando com segurança…"; try { const campaign = campaigns.find(item => item.id === $("campaign").value); await api(`/therapy/paciente/nr1/campaigns/${encodeURIComponent(campaign.id)}/responses`, { method: "POST", body: JSON.stringify({ unitId: $("unit").value, answers, noticeAccepted: $("acknowledge").checked, privacyNoticeVersion: campaign.privacyNoticeVersion }) }); $("surveyForm").hidden = true; status("Resposta recebida. Obrigado por participar. Sua organização verá somente resultados agregados após o encerramento."); } catch (error) { status(error.message === "RESPOSTA_JA_ENVIADA" ? "Sua participação neste ciclo já foi registrada." : `Não foi possível enviar: ${error.message}`, true); button.disabled = false; button.textContent = "Enviar respostas com segurança"; } });
+  onAuthStateChanged(auth, async account => { if (!account) { location.replace("./login.html"); return; } user = account; try { render(await api("/therapy/paciente/nr1/campaigns")); } catch (error) { const noAccess = ["COLABORADOR_NAO_APROVADO","EMPRESA_INATIVA"].includes(error.message); status(noAccess ? "Não há uma pesquisa vinculada à sua conta neste momento." : `Não foi possível consultar as pesquisas: ${error.message}`, !noAccess); } });
+</script>
+</body>
+</html>

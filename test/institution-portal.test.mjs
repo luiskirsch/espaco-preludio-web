@@ -150,7 +150,10 @@ test('portal do colaborador usa layout amplo no desktop e preserva a navegacao m
         navPosition: style('.a-nav').position,
         brandDisplay: style('.a-nav__brand').display,
         hero: rect('.home-hero').toJSON(),
-        quickColumns: style('.quick-actions').gridTemplateColumns.split(' ').filter(Boolean).length
+        journey: rect('.home-journey').toJSON(),
+        survey: rect('.home-survey').toJSON(),
+        safety: rect('.home-safety').toJSON(),
+        duplicateQuickActions: Boolean(document.querySelector('.quick-actions'))
       };
     })()`);
     assert.ok(desktop.scrollWidth <= desktop.width, JSON.stringify(desktop));
@@ -158,7 +161,9 @@ test('portal do colaborador usa layout amplo no desktop e preserva a navegacao m
     assert.ok(desktop.nav.width >= 250, JSON.stringify(desktop));
     assert.ok(desktop.shell.left >= desktop.nav.right - 1, JSON.stringify(desktop));
     assert.ok(desktop.hero.width >= 850, JSON.stringify(desktop));
-    assert.equal(desktop.quickColumns, 4);
+    assert.ok(desktop.journey.width >= 850, JSON.stringify(desktop));
+    assert.ok(Math.abs(desktop.survey.top - desktop.safety.top) < 3, JSON.stringify(desktop));
+    assert.equal(desktop.duplicateQuickActions, false);
     assert.notEqual(desktop.brandDisplay, 'none');
 
     await cdp.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, mobile: true, deviceScaleFactor: 1 });
@@ -173,7 +178,9 @@ test('portal do colaborador usa layout amplo no desktop e preserva a navegacao m
         nav: rect('.a-nav').toJSON(),
         navPosition: style('.a-nav').position,
         brandDisplay: style('.a-nav__brand').display,
-        quickColumns: style('.quick-actions').gridTemplateColumns.split(' ').filter(Boolean).length
+        journey: rect('.home-journey').toJSON(),
+        safety: rect('.home-safety').toJSON(),
+        duplicateQuickActions: Boolean(document.querySelector('.quick-actions'))
       };
     })()`);
     assert.ok(mobile.scrollWidth <= mobile.width, JSON.stringify(mobile));
@@ -181,7 +188,9 @@ test('portal do colaborador usa layout amplo no desktop e preserva a navegacao m
     assert.equal(mobile.navPosition, 'fixed');
     assert.ok(mobile.nav.bottom <= mobile.height + 1, JSON.stringify(mobile));
     assert.equal(mobile.brandDisplay, 'none');
-    assert.equal(mobile.quickColumns, 2);
+    assert.ok(mobile.journey.width <= mobile.width, JSON.stringify(mobile));
+    assert.ok(mobile.safety.width <= mobile.width, JSON.stringify(mobile));
+    assert.equal(mobile.duplicateQuickActions, false);
   } finally {
     cdp?.socket.close();
     if (browser.exitCode === null) {
@@ -194,16 +203,39 @@ test('portal do colaborador usa layout amplo no desktop e preserva a navegacao m
 });
 
 test('todas as telas autenticadas do colaborador usam a estrutura responsiva compartilhada', async () => {
-  const authenticatedPages = ['home', 'buscar', 'consultas', 'perfil', 'agendar', 'chat', 'dependentes', 'documentos', 'humor'];
+  const authenticatedPages = ['home', 'buscar', 'consultas', 'perfil', 'agendar', 'chat', 'dependentes', 'documentos', 'humor', 'jornada', 'nr1', 'emergencia'];
   for (const page of authenticatedPages) {
     const html = await readFile(resolve(root, `app/${page}.html`), 'utf8');
     assert.match(html, /<body class="a-portal-authenticated">/, page);
-    assert.match(html, /portal-shell\.js\?v=1/, page);
-    assert.match(html, /app\.css\?v=20260927b/, page);
+    assert.match(html, /portal-shell\.js\?v=2/, page);
+    assert.match(html, /app\.css\?v=20260927c/, page);
   }
   const shell = await readFile(resolve(root, 'app/portal-shell.js'), 'utf8');
   assert.match(shell, /Portal do colaborador/);
   assert.match(shell, /a-nav__item--secondary/);
+});
+
+test('portal do colaborador integra jornada, NR-1 e ajuda imediata sem prometer conformidade automática', async () => {
+  const [home, journey, survey, emergency, shell] = await Promise.all([
+    readFile(resolve(root, 'app/home.html'), 'utf8'),
+    readFile(resolve(root, 'app/jornada.html'), 'utf8'),
+    readFile(resolve(root, 'app/nr1.html'), 'utf8'),
+    readFile(resolve(root, 'app/emergencia.html'), 'utf8'),
+    readFile(resolve(root, 'app/portal-shell.js'), 'utf8')
+  ]);
+  assert.doesNotMatch(home, /class="quick-actions"/);
+  assert.match(home, /Sua jornada profissional/);
+  assert.match(home, /Escuta sobre o trabalho/);
+  assert.match(journey, /therapy\/paciente\/colaborador\/jornada/);
+  assert.match(journey, /completedModules[\s\S]*?módulos/);
+  assert.match(survey, /resultados agrupados/);
+  assert.match(survey, /Não emite PGR, AEP, PCMSO/);
+  assert.match(emergency, /href="tel:192"/);
+  assert.match(emergency, /href="tel:190"/);
+  assert.match(emergency, /href="tel:188"/);
+  assert.match(shell, /jornada\.html/);
+  assert.match(shell, /nr1\.html/);
+  assert.match(shell, /emergencia\.html/);
 });
 
 test('plano institucional permite informar uma conta Mercado Pago pagadora diferente', async () => {

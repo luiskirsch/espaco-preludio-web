@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="";}else{document.documentElement.classList.add("guard-ok");}})();</script>
+  <style>html:not(.guard-ok) body{visibility:hidden!important}</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Minha jornada · Espaço Prelúdio</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./app.css?v=20260927c">
+  <script src="./portal-shell.js?v=2" defer></script>
+  <script src="./sw-register.js" defer></script>
+</head>
+<body class="a-portal-authenticated">
+<div class="a-shell">
+  <header class="a-header">
+    <a href="./home.html" class="a-header__back" aria-label="Voltar">‹</a>
+    <div><div class="a-header__eyebrow">Desenvolvimento e prevenção</div><h1 class="a-header__title">Minha jornada</h1></div>
+  </header>
+  <main class="a-page learning-page">
+    <section class="learning-hero">
+      <div>
+        <span class="learning-kicker">Aprender para cuidar melhor de si e do trabalho</span>
+        <h2>Uma jornada prática, no seu ritmo.</h2>
+        <p>Cursos curtos e objetivos sobre bem-estar, relações profissionais e prevenção. Conteúdo educativo — não é avaliação clínica.</p>
+      </div>
+      <div class="learning-overall" aria-label="Progresso geral">
+        <strong id="overallPercent">0%</strong><span>da jornada</span>
+        <div class="learning-progress"><i id="overallBar"></i></div>
+        <small id="overallDetail">Carregando progresso…</small>
+      </div>
+    </section>
+
+    <div id="journeyStatus" class="portal-status" role="status">Preparando sua jornada…</div>
+    <div id="tracks" class="learning-tracks" hidden></div>
+  </main>
+</div>
+
+<div class="learning-modal" id="learningModal" role="dialog" aria-modal="true" aria-labelledby="moduleTitle" hidden>
+  <div class="learning-modal__panel">
+    <header class="learning-modal__head">
+      <div><span id="moduleCourse">Curso</span><h2 id="moduleTitle">Módulo</h2></div>
+      <button id="moduleClose" type="button" aria-label="Fechar">×</button>
+    </header>
+    <div class="learning-modal__body">
+      <div class="module-objective"><strong>Objetivo</strong><p id="moduleObjective"></p></div>
+      <div id="moduleSections" class="module-sections"></div>
+      <fieldset class="module-quiz" id="moduleQuiz">
+        <legend>Verifique seu entendimento</legend>
+        <p id="moduleQuestion"></p>
+        <div id="moduleOptions"></div>
+      </fieldset>
+      <div id="moduleFeedback" class="module-feedback" role="status" aria-live="polite"></div>
+    </div>
+    <footer class="learning-modal__foot">
+      <span id="moduleDuration"></span>
+      <button id="moduleSubmit" class="a-btn a-btn--primary" type="button">Concluir módulo</button>
+    </footer>
+  </div>
+</div>
+
+<script type="module">
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+
+  const $ = id => document.getElementById(id);
+  let user = null;
+  let catalog = null;
+  let current = null;
+
+  async function api(path, options = {}) {
+    const token = await user.getIdToken();
+    const response = await fetch(`${BACKEND_BASE_URL}${path}`, {
+      ...options,
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(options.headers || {}) }
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) { const error = new Error(data.error || `Erro HTTP ${response.status}`); error.details = data; throw error; }
+    return data;
+  }
+  const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
+
+  function moduleState(course, module, index) {
+    if (module.completedAt) return "complete";
+    if (index > 0 && !course.modules[index - 1].completedAt) return "locked";
+    return "available";
+  }
+  function findNextModule() {
+    for (const track of catalog.tracks) for (const course of track.courses) {
+      const module = course.modules.find((item, index) => moduleState(course, item, index) === "available");
+      if (module) return module.id;
+    }
+    return null;
+  }
+  function render() {
+    const summary = catalog.summary;
+    $("overallPercent").textContent = `${summary.progressPercent}%`;
+    $("overallBar").style.width = `${summary.progressPercent}%`;
+    $("overallDetail").textContent = `${summary.completedModules} de ${summary.totalModules} módulos · ${summary.completedMinutes} min concluídos`;
+    const nextId = findNextModule();
+    $("tracks").innerHTML = catalog.tracks.map((track, trackIndex) => {
+      const courses = track.courses.map(course => {
+        const modules = course.modules.map((module, index) => {
+          const state = moduleState(course, module, index);
+          const label = state === "complete" ? "Revisar" : state === "locked" ? "Conclua o anterior" : module.id === nextId ? "Continuar" : "Começar";
+          return `<button class="learning-module is-${state}${module.id === nextId ? " is-next" : ""}" data-module="${esc(module.id)}" ${state === "locked" ? "disabled" : ""}>
+            <span class="learning-module__status">${state === "complete" ? "✓" : String(index + 1).padStart(2, "0")}</span>
+            <span><strong>${esc(module.title)}</strong><small>${module.durationMinutes} min · ${esc(module.objective)}</small></span>
+            <em>${label}</em>
+          </button>`;
+        }).join("");
+        return `<article class="learning-course">
+          <div class="learning-course__head"><div><span>Curso · ${course.durationMinutes} min</span><h4>${esc(course.title)}</h4><p>${esc(course.description)}</p></div><strong>${course.progressPercent}%</strong></div>
+          <div class="learning-progress"><i style="width:${course.progressPercent}%"></i></div>
+          <div class="learning-modules">${modules}</div>
+        </article>`;
+      }).join("");
+      return `<section class="learning-track learning-track--${esc(track.color)}">
+        <div class="learning-track__index">${String(trackIndex + 1).padStart(2, "0")}</div>
+        <header><span>${esc(track.eyebrow)}</span><h3>${esc(track.title)}</h3><p>${esc(track.description)}</p></header>
+        <div class="learning-courses">${courses}</div>
+      </section>`;
+    }).join("");
+    $("tracks").hidden = false;
+    $("journeyStatus").hidden = true;
+    document.querySelectorAll("[data-module]").forEach(button => button.addEventListener("click", () => openModule(button.dataset.module)));
+  }
+  function openModule(id) {
+    for (const track of catalog.tracks) for (const course of track.courses) {
+      const module = course.modules.find(item => item.id === id);
+      if (!module) continue;
+      current = { course, module };
+      $("moduleCourse").textContent = course.title;
+      $("moduleTitle").textContent = module.title;
+      $("moduleObjective").textContent = module.objective;
+      $("moduleDuration").textContent = `${module.durationMinutes} minutos`;
+      $("moduleSections").innerHTML = module.sections.map(([title, copy], index) => `<section><b>${String(index + 1).padStart(2,"0")}</b><div><h3>${esc(title)}</h3><p>${esc(copy)}</p></div></section>`).join("");
+      $("moduleQuestion").textContent = module.quiz.question;
+      $("moduleOptions").innerHTML = module.quiz.options.map((option, index) => `<label><input type="radio" name="moduleAnswer" value="${index}"><span>${esc(option)}</span></label>`).join("");
+      $("moduleFeedback").textContent = module.completedAt ? "Você já concluiu este módulo. Pode revisar o conteúdo livremente." : "";
+      $("moduleFeedback").className = `module-feedback${module.completedAt ? " is-success" : ""}`;
+      $("moduleQuiz").hidden = Boolean(module.completedAt);
+      $("moduleSubmit").textContent = module.completedAt ? "Fechar revisão" : "Concluir módulo";
+      $("moduleSubmit").dataset.action = module.completedAt ? "close" : "submit";
+      $("moduleSubmit").disabled = false;
+      $("learningModal").hidden = false;
+      document.body.style.overflow = "hidden";
+      return;
+    }
+  }
+  function closeModule() { $("learningModal").hidden = true; document.body.style.overflow = ""; current = null; }
+  $("moduleClose").addEventListener("click", closeModule);
+  $("learningModal").addEventListener("click", event => { if (event.target === $("learningModal")) closeModule(); });
+  $("moduleSubmit").addEventListener("click", async () => {
+    if (!current) return;
+    if ($("moduleSubmit").dataset.action === "close") { closeModule(); return; }
+    if ($("moduleSubmit").dataset.action === "refresh") { closeModule(); render(); return; }
+    const selected = document.querySelector('input[name="moduleAnswer"]:checked');
+    if (!selected) { $("moduleFeedback").textContent = "Escolha uma resposta antes de concluir."; $("moduleFeedback").className = "module-feedback is-error"; return; }
+    const button = $("moduleSubmit"); button.disabled = true; button.textContent = "Registrando…";
+    try {
+      const data = await api(`/therapy/paciente/colaborador/jornada/modules/${encodeURIComponent(current.module.id)}/complete`, { method: "POST", body: JSON.stringify({ answer: Number(selected.value) }) });
+      catalog = data;
+      $("moduleFeedback").textContent = data.explanation || "Módulo concluído.";
+      $("moduleFeedback").className = "module-feedback is-success";
+      button.textContent = "Continuar jornada";
+      button.dataset.action = "refresh";
+      button.disabled = false;
+    } catch (error) {
+      $("moduleFeedback").textContent = error.message === "RESPOSTA_INCORRETA" ? (error.details?.explanation || "Revise o conteúdo e tente novamente.") : error.message;
+      $("moduleFeedback").className = "module-feedback is-error";
+      button.disabled = false; button.textContent = "Tentar novamente";
+    }
+  });
+  onAuthStateChanged(auth, async account => {
+    if (!account) { location.replace("./login.html"); return; }
+    user = account;
+    try { catalog = await api("/therapy/paciente/colaborador/jornada"); render(); }
+    catch (error) { $("journeyStatus").textContent = error.message === "COLABORADOR_NAO_APROVADO" ? "Sua jornada será liberada quando o vínculo corporativo for aprovado." : `Não foi possível carregar a jornada: ${error.message}`; $("journeyStatus").classList.add("is-error"); }
+  });
+</script>
+</body>
+</html>
