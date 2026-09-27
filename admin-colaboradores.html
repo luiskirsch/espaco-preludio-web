@@ -90,6 +90,9 @@
               <th>Empresa</th>
               <th>Departamento</th>
               <th>Cargo</th>
+              <th>Vínculo</th>
+              <th>Benefício</th>
+              <th>NR-1</th>
               <th>Status</th>
               <th>Cadastro</th>
               <th></th>
@@ -113,6 +116,16 @@
           <div class="ep-field"><label class="ep-label">Cargo</label><input id="eCargo" class="ep-input" type="text" maxlength="80"></div>
         </div>
         <div class="ep-field"><label class="ep-label">Telefone</label><input id="eTelefone" class="ep-input" type="text" maxlength="20"></div>
+        <div class="ep-row">
+          <div class="ep-field"><label class="ep-label">Tipo de vínculo</label><select id="eEmploymentType" class="ep-select" required>
+            <option value="">Selecione</option><option value="clt">CLT</option><option value="pj">Pessoa jurídica (PJ)</option>
+            <option value="estagiario">Estagiário</option><option value="aprendiz">Aprendiz</option><option value="estatutario">Estatutário</option><option value="outro">Outro</option>
+          </select></div>
+          <div class="ep-field"><label class="ep-label">Escopo NR-1</label><select id="eNr1Scope" class="ep-select">
+            <option value="technical_review">Aguardando revisão técnica</option><option value="included">Incluído no ciclo</option><option value="excluded">Fora do ciclo</option>
+          </select></div>
+        </div>
+        <label class="ep-row" style="justify-content:flex-start;gap:9px;"><input id="eBenefitEligible" type="checkbox"> Elegível ao benefício Espaço Prelúdio</label>
         <div class="ep-field">
           <label class="ep-label">Status</label>
           <select id="eStatus" class="ep-select">
@@ -121,7 +134,7 @@
             <option value="inativo">Inativo</option>
           </select>
         </div>
-        <p class="ep-text-sm ep-text-muted">Aprovar como ativo libera o benefício. Confirme antes o vínculo empregatício com o RH da empresa; o link público não comprova elegibilidade.</p>
+        <p class="ep-text-sm ep-text-muted">Vínculo, elegibilidade ao benefício e escopo técnico da NR-1 são controles independentes. Confirme os três com a empresa e com o responsável técnico; o cadastro público não comprova elegibilidade.</p>
         <p id="editStatus" class="ep-text-sm ep-text-muted" style="min-height:16px;"></p>
       </div>
     </div>
@@ -172,6 +185,8 @@
 
   function fmtDate(ms) { return ms ? new Date(ms).toLocaleDateString("pt-BR") : "—"; }
   function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  const employmentLabels = { clt: "CLT", pj: "PJ", estagiario: "Estagiário", aprendiz: "Aprendiz", estatutario: "Estatutário", outro: "Outro" };
+  const nr1Labels = { included: "Incluído", excluded: "Fora do ciclo", technical_review: "Revisão técnica" };
 
   async function loadEmpresas() {
     try {
@@ -224,6 +239,9 @@
         <td>${esc(c.empresaNome || "—")}</td>
         <td>${esc(c.departamento || "—")}</td>
         <td>${esc(c.cargo || "—")}</td>
+        <td>${esc(employmentLabels[c.employmentType] || "Não classificado")}</td>
+        <td>${c.benefitEligible ? '<span class="ep-badge" style="background:rgba(80,160,100,.15);color:#2d6a3e;">Elegível</span>' : '<span class="ep-badge">Não liberado</span>'}</td>
+        <td>${esc(nr1Labels[c.nr1Scope] || "Revisão técnica")}</td>
         <td>${c.status === "ativo" ? '<span class="ep-badge" style="background:rgba(80,160,100,.15);color:#2d6a3e;">Ativo</span>' : c.status === "pendente" ? '<span class="ep-badge">Pendente</span>' : '<span class="ep-badge">Inativo</span>'}</td>
         <td>${fmtDate(c.createdAt)}</td>
         <td><button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-edit-id="${esc(c.id)}">Editar</button></td>
@@ -249,7 +267,7 @@
   // Export CSV
   document.getElementById("btnExport").addEventListener("click", () => {
     if (!allItems.length) return;
-    const cols = ["nome","email","telefone","cpf","empresaNome","departamento","cargo","status","createdAt"];
+    const cols = ["nome","email","telefone","cpf","empresaNome","departamento","cargo","employmentType","benefitEligible","nr1Scope","status","createdAt"];
     const rows = [cols.join(";"), ...allItems.map(c => cols.map(k => `"${String(c[k] ?? "").replace(/"/g,'""')}"`).join(";"))];
     const blob = new Blob(["﻿" + rows.join("\n")], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a");
@@ -268,6 +286,9 @@
     document.getElementById("eDept").value = c.departamento || "";
     document.getElementById("eCargo").value = c.cargo || "";
     document.getElementById("eTelefone").value = c.telefone || "";
+    document.getElementById("eEmploymentType").value = c.employmentType || "";
+    document.getElementById("eBenefitEligible").checked = c.benefitEligible !== false;
+    document.getElementById("eNr1Scope").value = c.nr1Scope || "technical_review";
     document.getElementById("eStatus").value = c.status || "ativo";
     document.getElementById("editStatus").textContent = "";
     editModal.style.display = "grid";
@@ -277,6 +298,10 @@
 
   document.getElementById("editSave").addEventListener("click", async () => {
     if (!editingId) return;
+    if (!document.getElementById("eEmploymentType").value) {
+      document.getElementById("editStatus").textContent = "Selecione o tipo de vínculo antes de salvar.";
+      return;
+    }
     const original = allItems.find(item => item.id === editingId);
     if (original?.status !== "ativo" && document.getElementById("eStatus").value === "ativo"
       && !window.confirm("Você confirmou com o RH o vínculo deste colaborador? A aprovação libera o benefício corporativo.")) return;
@@ -290,6 +315,9 @@
           departamento: document.getElementById("eDept").value.trim() || null,
           cargo: document.getElementById("eCargo").value.trim() || null,
           telefone: document.getElementById("eTelefone").value.trim() || null,
+          employmentType: document.getElementById("eEmploymentType").value,
+          benefitEligible: document.getElementById("eBenefitEligible").checked,
+          nr1Scope: document.getElementById("eNr1Scope").value,
           status: document.getElementById("eStatus").value
         })
       });
