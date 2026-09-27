@@ -18,6 +18,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <link rel="stylesheet" href="./css/planos.css?v=20260926a">
   <script src="./i18n/init.js?v=1-7" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
@@ -62,14 +63,23 @@
   </div>
 </header>
 
-<main class="ep-container ep-mt-32 ep-mb-16 ep-page-main" style="max-width: 980px;">
+<main class="ep-container ep-mb-16 ep-page-main ep-plans-page">
 
-  <div class="ep-eyebrow" data-i18n="planos:header.eyebrow">Plano da sua conta</div>
-  <h1 class="ep-h1 ep-mt-12" data-i18n="planos:header.h1">Espaço Prelúdio Pro</h1>
-  <p class="ep-text-muted ep-mt-8" data-i18n="planos:header.lead">
-    Toda a infraestrutura clínica online, com pagamento mensal sem fidelidade.
-    Cancele a qualquer momento.
-  </p>
+  <section class="ep-plans-hero">
+    <div class="ep-plans-hero__copy">
+      <div class="ep-eyebrow" data-i18n="planos:header.eyebrow">Plano da sua conta</div>
+      <h1 class="ep-h1" data-i18n="planos:header.h1">Espaço Prelúdio Pro</h1>
+      <p class="ep-text-muted" data-i18n="planos:header.lead">
+        Toda a infraestrutura clínica online, com pagamento mensal sem fidelidade.
+        Cancele a qualquer momento.
+      </p>
+    </div>
+    <div class="ep-plans-hero__trust" aria-label="Condições da assinatura">
+      <span><strong>Sem fidelidade</strong><small>Cancele quando quiser</small></span>
+      <span><strong>Pagamento seguro</strong><small>Processado pelo Mercado Pago</small></span>
+      <span><strong>Ativação simples</strong><small>Sem interromper sua rotina</small></span>
+    </div>
+  </section>
 
   <!-- Card de status atual -->
   <div id="planStatus" class="ep-status-card ep-mt-16" style="display: none;">
@@ -138,30 +148,43 @@
   <div id="tiersGrid" style="display: none; grid-template-columns: 1fr 1fr; gap: 16px;" class="ep-mt-16">
 
     <!-- Tier Programas institucionais -->
-    <section id="empresaCard" class="ep-plan-card" style="position: relative;">
-      <div class="ep-plan-card__head">
-        <h2 class="ep-h2 ep-mt-0" data-i18n="planos:empresa.h2">Programas institucionais</h2>
-        <div class="ep-plan-card__price">
-          <span class="ep-plan-card__currency">R$</span>
-          <span class="ep-plan-card__amount" style="font-size: 28px; font-family: 'Fraunces', serif;" data-i18n="planos:empresa.amount">10,00</span>
-          <span class="ep-plan-card__per" data-i18n="planos:empresa.per">/mês</span>
+    <section id="empresaCard" class="ep-plan-card ep-plan-card--institutional">
+      <div class="ep-plan-card__content">
+        <span class="ep-plan-card__label">Plano institucional</span>
+        <div class="ep-plan-card__head">
+          <h2 class="ep-h2 ep-mt-0" data-i18n="planos:empresa.h2">Programas institucionais</h2>
+          <div class="ep-plan-card__price">
+            <span class="ep-plan-card__currency">R$</span>
+            <span class="ep-plan-card__amount" data-i18n="planos:empresa.amount">10,00</span>
+            <span class="ep-plan-card__per" data-i18n="planos:empresa.per">/mês</span>
+          </div>
         </div>
+        <p class="ep-plan-card__description ep-text-sm ep-text-muted" data-i18n="planos:empresa.sub">Para profissionais vinculados a programas contratados por escolas, empresas ou redes públicas.</p>
+        <ul class="ep-plan-card__features">
+          <li data-i18n="planos:empresa.f1">✓ 7 dias grátis; cobrança de R$ 10,00/mês depois</li>
+          <li data-i18n="planos:empresa.paymentRequired">✓ Meio de pagamento obrigatório para realizar consultas</li>
+          <li data-i18n="planos:empresa.f2">✓ Repasse por atendimento conforme o programa institucional</li>
+          <li data-i18n="planos:empresa.f3">✓ Vídeo cifrado E2EE + prontuário completo + documentos clínicos</li>
+          <li data-i18n="planos:empresa.f4">✓ Indicadores operacionais agregados, sem conteúdo clínico individual</li>
+          <li data-i18n="planos:empresa.f5">✓ Agendamento direto pelo link do profissional</li>
+        </ul>
       </div>
-      <p class="ep-text-sm ep-text-muted ep-mt-8" data-i18n="planos:empresa.sub">Para profissionais vinculados a programas contratados por escolas, empresas ou redes públicas.</p>
-      <ul class="ep-plan-card__features ep-mt-12">
-        <li data-i18n="planos:empresa.f1">✓ 7 dias grátis; cobrança de R$ 10,00/mês depois</li>
-        <li data-i18n="planos:empresa.paymentRequired">✓ Meio de pagamento obrigatório para realizar consultas</li>
-        <li data-i18n="planos:empresa.f2">✓ Repasse por atendimento conforme o programa institucional</li>
-        <li data-i18n="planos:empresa.f3">✓ Vídeo cifrado E2EE + prontuário completo + documentos clínicos</li>
-        <li data-i18n="planos:empresa.f4">✓ Indicadores operacionais agregados, sem conteúdo clínico individual</li>
-        <li data-i18n="planos:empresa.f5">✓ Agendamento direto pelo link do profissional</li>
-      </ul>
-      <label for="empresaPayerEmail" class="ep-text-sm" style="display:block;margin-top:16px;font-weight:600;" data-i18n="planos:empresa.payerEmailLabel">E-mail da conta Mercado Pago pagadora (opcional)</label>
-      <input id="empresaPayerEmail" class="ep-input ep-mt-8" type="email" inputmode="email" autocomplete="off" maxlength="254" style="width:100%;" data-i18n-placeholder="planos:empresa.payerEmailPlaceholder" placeholder="pagador@exemplo.com">
-      <p class="ep-text-xs ep-text-muted ep-mt-8" data-i18n="planos:empresa.payerEmailHint">Se seu e-mail pertence à conta Mercado Pago que recebe os pagamentos, informe outra conta pagadora sua. Não altera o e-mail de acesso à plataforma.</p>
-      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16" id="subscribeEmpresaBtn" data-i18n="planos:empresa.subscribeBtn">
-        Cadastrar meio de pagamento
-      </button>
+      <aside class="ep-plan-checkout">
+        <div class="ep-plan-checkout__heading">
+          <span>Concluir ativação</span>
+          <strong>7 dias gratuitos</strong>
+        </div>
+        <label for="empresaPayerEmail" class="ep-text-sm" data-i18n="planos:empresa.payerEmailLabel">E-mail da conta Mercado Pago pagadora (opcional)</label>
+        <input id="empresaPayerEmail" class="ep-input" type="email" inputmode="email" autocomplete="off" maxlength="254" data-i18n-placeholder="planos:empresa.payerEmailPlaceholder" placeholder="pagador@exemplo.com">
+        <p class="ep-text-xs ep-text-muted" data-i18n="planos:empresa.payerEmailHint">Se seu e-mail pertence à conta Mercado Pago que recebe os pagamentos, informe outra conta pagadora sua. Não altera o e-mail de acesso à plataforma.</p>
+        <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" id="subscribeEmpresaBtn" data-i18n="planos:empresa.subscribeBtn">
+          Cadastrar meio de pagamento
+        </button>
+        <div class="ep-plan-checkout__security">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.7-2.9 8.1-7 10-4.1-1.9-7-5.3-7-10V6l7-3zM9 12l2 2 4-5"/></svg>
+          <span>Cobrança protegida e cancelamento a qualquer momento.</span>
+        </div>
+      </aside>
     </section>
 
     <!-- Tier Profissional -->
