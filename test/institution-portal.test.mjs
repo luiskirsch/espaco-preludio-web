@@ -173,6 +173,15 @@ test('login institucional não cria rolagem horizontal em desktop ou celular', {
     await cdp.send('Page.enable');
     await poll(() => cdp.evaluate("document.querySelector('.login-card') && getComputedStyle(document.body).fontFamily.includes('Inter')"));
 
+    await cdp.evaluate("localStorage.setItem('ep:theme', 'dark'); location.reload()");
+    await poll(() => cdp.evaluate("document.readyState === 'complete' && document.querySelector('.login-card')"));
+    const isolatedTheme = await cdp.evaluate(`({
+      darkAttribute: document.documentElement.getAttribute('data-theme'),
+      colorScheme: getComputedStyle(document.documentElement).colorScheme
+    })`);
+    assert.equal(isolatedTheme.darkAttribute, null);
+    assert.equal(isolatedTheme.colorScheme, 'light');
+
     for (const viewport of [
       { width: 1440, height: 800, mobile: false },
       { width: 390, height: 844, mobile: true }
@@ -252,11 +261,13 @@ test('login institucional não cria rolagem horizontal em desktop ou celular', {
           navSize: style('${page.nav}').fontSize,
           buttonHeight: rect('${page.button}').height,
           buttonSize: style('${page.button}').fontSize,
-          buttonRadius: style('${page.button}').borderRadius
+          buttonRadius: style('${page.button}').borderRadius,
+          darkAttribute: document.documentElement.getAttribute('data-theme')
         };
       })()`));
     }
     assert.deepEqual(publicHeaders[1], publicHeaders[0]);
+    assert.equal(publicHeaders[0].darkAttribute, null);
 
     await cdp.send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/instituicao-painel-preview.html` });
     await poll(() => cdp.evaluate("location.pathname.endsWith('instituicao-painel-preview.html') && document.readyState === 'complete'"));

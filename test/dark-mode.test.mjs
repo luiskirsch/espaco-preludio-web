@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import test from 'node:test';
 
@@ -24,9 +24,11 @@ test('dark theme keeps primary and secondary copy above WCAG AA contrast', () =>
   assert.ok(contrast('#171006', '#e4b85f') >= 4.5);
 });
 
-test('every visual system imports the shared dark foundation', async () => {
-  const stylesheets = [
-    'css/espaco-preludio.css',
+test('only the professional platform imports the shared dark foundation', async () => {
+  const professional = await read('css/espaco-preludio.css');
+  assert.match(professional.slice(0, 100), /dark-mode\.css/);
+
+  const lightOnlyStylesheets = [
     'css/profissional-institucional.css',
     'css/nr1.css',
     'css/instituicao.css',
@@ -34,22 +36,29 @@ test('every visual system imports the shared dark foundation', async () => {
     'css/escolas.css',
     'app/app.css'
   ];
-  for (const stylesheet of stylesheets) {
+  for (const stylesheet of lightOnlyStylesheets) {
     const source = await read(stylesheet);
-    assert.match(source.slice(0, 100), /dark-mode\.css/, `${stylesheet} must import dark-mode.css first`);
+    assert.doesNotMatch(source, /dark-mode\.css/, `${stylesheet} must stay light-only`);
   }
 });
 
-test('standalone portals restore the saved theme before rendering', async () => {
-  const pages = [
-    'admin-nr1.html', 'empresa-nr1.html', 'paciente-nr1.html',
-    'instituicao-login.html', 'instituicao-painel.html',
-    'rt-login.html', 'rt-painel.html', 'index.html',
-    'app/login.html', 'app/home.html', 'app/chat.html', 'app/perfil.html'
-  ];
+test('saved dark preference is restored only on professional pages', async () => {
+  const entries = await readdir(root, { recursive: true });
+  const pages = entries
+    .map((entry) => String(entry).replaceAll('\\', '/'))
+    .filter((entry) => entry.endsWith('.html'));
+
   for (const page of pages) {
     const source = await read(page);
-    assert.match(source, /localStorage\.getItem\("ep:theme"\)/, `${page} must restore ep:theme`);
+    assert.doesNotMatch(source, /<html[^>]*data-theme=["']dark["']/i, `${page} must not force dark mode`);
+    if (!source.includes('ep:theme')) continue;
+    const body = source.match(/<body[^>]*>/i)?.[0] || '';
+    assert.match(body, /ep-has-sidebar|ep-consult/, `${page} must not inherit the professional theme`);
+  }
+
+  for (const patientGuardPath of ['js/patient-auth-guard.js', 'staging/js/patient-auth-guard.js']) {
+    const patientGuard = await read(patientGuardPath);
+    assert.doesNotMatch(patientGuard, /theme-toggle|mountThemeToggle/);
   }
 });
 
