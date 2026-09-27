@@ -21,8 +21,17 @@ const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 function startServer() {
   const server = createServer(async (request, response) => {
     try {
-      const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
+      const requestUrl = new URL(request.url, 'http://localhost');
+      const pathname = decodeURIComponent(requestUrl.pathname);
       const relative = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
+      if (relative === 'app/home.html' && requestUrl.searchParams.has('preview')) {
+        const html = (await readFile(resolve(root, 'app/home.html'), 'utf8'))
+          .replace(/\s*<script type="module">[\s\S]*?<\/script>\s*<\/body>/, '\n</body>')
+          .replace(/\s*<script src="\.\/sw-register\.js" defer><\/script>/, '');
+        response.writeHead(200, { 'content-type': mime['.html'] });
+        response.end(html);
+        return;
+      }
       if (relative === 'chat-colegas-preview.html' || relative === 'chat-pacientes-preview.html') {
         const source = relative === 'chat-colegas-preview.html' ? 'mensagens-pro.html' : 'mensagens.html';
         const html = (await readFile(resolve(root, source), 'utf8'))
@@ -107,6 +116,94 @@ test('entrada principal aponta para o portal institucional', async () => {
   const html = await readFile(resolve(root, 'index.html'), 'utf8');
   assert.match(html, /<a href="\.\/instituicao-login\.html" class="nav-login">Entrar<\/a>/);
   assert.doesNotMatch(html, /<a href="\.\/entrar\.html" class="nav-login">Entrar<\/a>/);
+});
+
+test('portal do colaborador usa layout amplo no desktop e preserva a navegacao movel', { timeout: 30000, skip: chromePath ? false : 'Chrome ou Edge nao encontrado' }, async () => {
+  const server = await startServer();
+  const userData = await mkdtemp(join(tmpdir(), 'ep-collaborator-browser-'));
+  const debugPort = 16000 + Math.floor(Math.random() * 1000);
+  const pageUrl = `http://127.0.0.1:${server.address().port}/app/home.html?preview=1`;
+  const browser = spawn(chromePath, [
+    '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
+    `--remote-debugging-port=${debugPort}`, `--user-data-dir=${userData}`, pageUrl
+  ], { stdio: 'ignore' });
+  let cdp;
+  try {
+    const page = await poll(async () => {
+      const pages = await fetch(`http://127.0.0.1:${debugPort}/json/list`).then(response => response.json());
+      return pages.find(item => item.type === 'page' && item.url.includes('/app/home.html'));
+    });
+    cdp = await connectCdp(page.webSocketDebuggerUrl);
+    await cdp.send('Runtime.enable');
+    await cdp.send('Page.enable');
+    await poll(() => cdp.evaluate("document.body.classList.contains('a-route-home') && document.querySelector('.a-nav__brand')"));
+
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, mobile: false, deviceScaleFactor: 1 });
+    const desktop = await cdp.evaluate(`(() => {
+      const rect = selector => document.querySelector(selector).getBoundingClientRect();
+      const style = selector => getComputedStyle(document.querySelector(selector));
+      return {
+        width: innerWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+        shell: rect('.a-shell').toJSON(),
+        nav: rect('.a-nav').toJSON(),
+        navPosition: style('.a-nav').position,
+        brandDisplay: style('.a-nav__brand').display,
+        hero: rect('.home-hero').toJSON(),
+        quickColumns: style('.quick-actions').gridTemplateColumns.split(' ').filter(Boolean).length
+      };
+    })()`);
+    assert.ok(desktop.scrollWidth <= desktop.width, JSON.stringify(desktop));
+    assert.equal(desktop.navPosition, 'fixed');
+    assert.ok(desktop.nav.width >= 250, JSON.stringify(desktop));
+    assert.ok(desktop.shell.left >= desktop.nav.right - 1, JSON.stringify(desktop));
+    assert.ok(desktop.hero.width >= 850, JSON.stringify(desktop));
+    assert.equal(desktop.quickColumns, 4);
+    assert.notEqual(desktop.brandDisplay, 'none');
+
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, mobile: true, deviceScaleFactor: 1 });
+    const mobile = await cdp.evaluate(`(() => {
+      const rect = selector => document.querySelector(selector).getBoundingClientRect();
+      const style = selector => getComputedStyle(document.querySelector(selector));
+      return {
+        width: innerWidth,
+        height: innerHeight,
+        scrollWidth: document.documentElement.scrollWidth,
+        shell: rect('.a-shell').toJSON(),
+        nav: rect('.a-nav').toJSON(),
+        navPosition: style('.a-nav').position,
+        brandDisplay: style('.a-nav__brand').display,
+        quickColumns: style('.quick-actions').gridTemplateColumns.split(' ').filter(Boolean).length
+      };
+    })()`);
+    assert.ok(mobile.scrollWidth <= mobile.width, JSON.stringify(mobile));
+    assert.ok(mobile.shell.width <= 430, JSON.stringify(mobile));
+    assert.equal(mobile.navPosition, 'fixed');
+    assert.ok(mobile.nav.bottom <= mobile.height + 1, JSON.stringify(mobile));
+    assert.equal(mobile.brandDisplay, 'none');
+    assert.equal(mobile.quickColumns, 2);
+  } finally {
+    cdp?.socket.close();
+    if (browser.exitCode === null) {
+      browser.kill();
+      await once(browser, 'exit');
+    }
+    server.close();
+    await rm(userData, { recursive: true, force: true, maxRetries: 6, retryDelay: 150 });
+  }
+});
+
+test('todas as telas autenticadas do colaborador usam a estrutura responsiva compartilhada', async () => {
+  const authenticatedPages = ['home', 'buscar', 'consultas', 'perfil', 'agendar', 'chat', 'dependentes', 'documentos', 'humor'];
+  for (const page of authenticatedPages) {
+    const html = await readFile(resolve(root, `app/${page}.html`), 'utf8');
+    assert.match(html, /<body class="a-portal-authenticated">/, page);
+    assert.match(html, /portal-shell\.js\?v=1/, page);
+    assert.match(html, /app\.css\?v=20260927b/, page);
+  }
+  const shell = await readFile(resolve(root, 'app/portal-shell.js'), 'utf8');
+  assert.match(shell, /Portal do colaborador/);
+  assert.match(shell, /a-nav__item--secondary/);
 });
 
 test('plano institucional permite informar uma conta Mercado Pago pagadora diferente', async () => {
