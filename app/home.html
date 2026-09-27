@@ -42,8 +42,9 @@
     .mood-card__history:hover { gap: 8px; }
     .mood-card__history svg { flex-shrink: 0; }
     .section-title { font-size: 17px; font-weight: 700; color: var(--a-ink); margin-bottom: 12px; }
-    .next-session-empty { text-align: center; padding: 20px; background: var(--a-surface); border-radius: var(--a-radius); box-shadow: var(--a-shadow); }
-    .next-session-empty p { font-size: 13px; color: var(--a-ink2); margin: 8px 0 16px; }
+    .next-session-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: var(--a-surface); border-radius: var(--a-radius); box-shadow: var(--a-shadow); }
+    .next-session-empty .section-title { align-self: flex-start; }
+    .next-session-empty p { font-size: 13px; color: var(--a-ink2); margin: 8px 0 0; }
     .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .quick-action {
       background: var(--a-surface); border-radius: var(--a-radius); padding: 16px;
@@ -103,12 +104,13 @@
 
     <!-- Próxima consulta -->
     <div class="a-section" style="padding-top:0;">
-      <div class="section-title">Próxima consulta</div>
-      <div id="nextSessionLoading">
-        <div class="a-skel" style="height:90px;"></div>
+      <div id="nextSessionLoading" class="next-session-empty">
+        <div class="section-title" style="margin-bottom:0;">Próxima consulta</div>
+        <div class="a-skel" style="height:60px;margin-top:12px;"></div>
       </div>
       <div id="nextSessionCard" class="a-hide"></div>
       <div id="nextSessionEmpty" class="next-session-empty a-hide">
+        <div class="section-title">Próxima consulta</div>
         <div style="font-size:36px;">📅</div>
         <p>Você não tem consultas agendadas.</p>
       </div>
@@ -235,7 +237,7 @@
       moodLocked = true;
       document.querySelectorAll(".a-mood__btn").forEach(b => {
         b.disabled = true;
-        b.style.opacity = b.classList.contains("is-selected") ? "1" : ".45";
+        b.style.opacity = b.classList.contains("is-selected") ? "1" : ".55";
         b.style.cursor = "default";
       });
     }
@@ -291,7 +293,8 @@
         const dateStr = dt.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
         const timeStr = dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
         document.getElementById("nextSessionCard").innerHTML = `
-          <div class="a-card a-card--pad">
+          <div class="a-card a-card--pad" style="height:100%;">
+            <div class="section-title">Próxima consulta</div>
             <div class="a-flex a-items-center a-justify-between">
               <span class="a-badge a-badge--ok">Confirmada</span>
               <span style="font-family:var(--ff-mono);font-size:13px;color:var(--a-accent);font-weight:700;">${timeStr}</span>
