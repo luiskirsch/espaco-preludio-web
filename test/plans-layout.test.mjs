@@ -6,7 +6,7 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('plans page separates plan value from secure activation', async () => {
   const html = await read('planos.html');
-  assert.match(html, /css\/planos\.css\?v=20260926a/);
+  assert.match(html, /css\/planos\.css\?v=20260926b/);
   assert.match(html, /class="ep-plan-card__content"/);
   assert.match(html, /class="ep-plan-checkout"/);
   assert.match(html, /id="subscribeEmpresaBtn"/);
@@ -19,4 +19,5 @@ test('institutional-only state uses the full grid width and remains responsive',
   assert.match(css, /#tiersGrid:has\([^}]+\.ep-plan-card--institutional\s*\{[^}]*grid-template-columns/s);
   assert.match(css, /@media \(max-width: 1080px\)[\s\S]*#tiersGrid:has\([^}]+\.ep-plan-card--institutional\s*\{\s*grid-template-columns: 1fr/);
   assert.match(css, /@media \(max-width: 720px\)/);
+  assert.match(css, /\.ep-plans-hero__copy \.ep-h1\s*\{[^}]*white-space: nowrap/);
 });
