@@ -17,10 +17,33 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <style>
+    .patient-portal{background:radial-gradient(circle at 88% 4%,rgba(218,185,112,.18),transparent 24%),#f2eddf;color:#173a39}
+    .patient-portal .ep-shell{min-height:100vh}
+    .patient-topbar{height:76px;padding:0 clamp(24px,5vw,76px);background:rgba(255,250,240,.9);border-bottom:1px solid rgba(155,113,28,.2);backdrop-filter:blur(18px);position:sticky;top:0;z-index:40}
+    .patient-topbar .ep-brand__mark{width:46px;height:46px;background:url('/logo_oficial_fundo_transparente.png?v=2') center/cover;border:1px solid rgba(18,63,64,.18);font-size:0}
+    .patient-topbar .ep-brand__name{font-family:Fraunces,serif;font-size:20px;color:#123f40}
+    .patient-topbar .ep-nav{gap:8px}.patient-topbar .ep-nav a{padding:10px 14px;border-radius:999px;color:#355452;text-decoration:none}.patient-topbar .ep-nav a:hover{background:#e9e2d3;color:#123f40}
+    .patient-topbar #navUser{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .patient-main{width:min(1500px,calc(100% - 48px));margin:0 auto;padding:34px 0 72px}
+    .patient-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:32px;align-items:center;padding:clamp(28px,4vw,52px);border:1px solid rgba(217,180,95,.32);border-radius:28px;background:linear-gradient(125deg,#0d4142 0%,#164d48 54%,#496447 100%);box-shadow:0 28px 65px -42px rgba(13,45,43,.75);color:#fff}
+    .patient-hero:before,.patient-hero:after{content:"";position:absolute;border:1px solid rgba(226,190,104,.22);border-radius:50%;pointer-events:none}.patient-hero:before{width:390px;height:390px;right:-90px;top:-250px}.patient-hero:after{width:270px;height:270px;right:16px;top:-190px}
+    .patient-identity{position:relative;z-index:1;display:flex;align-items:center;gap:22px;min-width:0}.patient-avatar{width:92px;height:92px;flex:0 0 auto;display:grid;place-items:center;border-radius:26px;background:linear-gradient(145deg,#f3ce79,#b8842d);color:#123534;font:600 27px Fraunces,serif;border:1px solid rgba(255,255,255,.34);box-shadow:0 18px 35px rgba(4,28,27,.25)}
+    .patient-copy{min-width:0}.patient-copy .ep-eyebrow{color:#f1c968}.patient-copy h1{margin:8px 0 10px;color:#fff;font-size:clamp(31px,4vw,55px);line-height:1.02;overflow-wrap:anywhere}.patient-copy .ep-pill{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.2);color:#e8eee9}
+    .patient-hero__actions{position:relative;z-index:1;display:grid;gap:10px;min-width:210px}.patient-hero__actions a{justify-content:center}.patient-primary{background:#edbd58!important;border-color:#edbd58!important;color:#173a39!important}.patient-secondary{background:rgba(255,255,255,.07)!important;border-color:rgba(255,255,255,.22)!important;color:#fff!important}
+    .patient-dashboard{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,.7fr);gap:18px;margin-top:18px}.patient-overview{padding:22px;border:1px solid rgba(22,77,72,.11);border-radius:22px;background:rgba(255,252,245,.88);box-shadow:0 18px 45px -38px rgba(26,55,52,.45)}
+    .patient-overview__head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:14px}.patient-overview__head h2{margin:4px 0 0;font:600 23px Fraunces,serif}.patient-overview__head span{font-size:12px;color:#75807b}
+    .patient-overview .ep-stats-strip{margin:0;gap:10px}.patient-overview .ep-stat{min-height:142px;padding:20px;border:1px solid rgba(22,77,72,.1);border-radius:17px;background:#fff}.patient-overview .ep-stat__label{color:#95701d}.patient-overview .ep-stat__value{font:600 29px Fraunces,serif;color:#123f40;margin-top:14px}.patient-overview .ep-stat__sub{color:#76817d;margin-top:5px}
+    .patient-nr1{position:relative;overflow:hidden;display:flex;flex-direction:column;padding:25px;border:1px solid rgba(218,180,93,.34);border-radius:22px;background:linear-gradient(150deg,#201811,#34261a);color:#f9f3e6;box-shadow:0 18px 44px -35px rgba(36,24,13,.8)}.patient-nr1:after{content:"";position:absolute;width:180px;height:180px;right:-80px;bottom:-95px;border:1px solid rgba(237,189,88,.24);border-radius:50%}.patient-nr1 .ep-eyebrow{color:#edbd58}.patient-nr1 h2{margin:10px 0 10px;color:#fff;font:600 25px/1.12 Fraunces,serif}.patient-nr1 p{margin:0;color:#d1c8b9;font-size:13px;line-height:1.6}.patient-nr1__privacy{display:flex;gap:8px;align-items:flex-start;margin:16px 0;color:#e5d8c1;font-size:11px}.patient-nr1 .ep-btn{position:relative;z-index:1;margin-top:auto;align-self:flex-start;background:#edbd58;border-color:#edbd58;color:#173a39}
+    .patient-preferences{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr);gap:24px;align-items:center;margin-top:18px;padding:25px 28px;border:1px solid rgba(22,77,72,.11);border-radius:22px;background:#fffaf0}.patient-preferences h2{margin:7px 0 0;font:600 24px Fraunces,serif}.patient-preferences__control{padding:18px 20px;border:1px solid rgba(22,77,72,.12);border-radius:16px;background:#f4efe4}.patient-preferences__control>div:first-child{font-weight:700;color:#173a39}.patient-consent{display:flex;align-items:flex-start;gap:11px;margin-top:13px;cursor:pointer;line-height:1.45}.patient-consent input{width:19px;height:19px;margin-top:1px;accent-color:#176257;flex:0 0 auto}
+    .patient-history{margin-top:32px}.patient-history__head{display:flex;align-items:end;justify-content:space-between;gap:18px;padding-bottom:13px;border-bottom:1px solid rgba(22,77,72,.14)}.patient-history__head h2{margin:5px 0 0;font:600 30px Fraunces,serif}.patient-history .ep-timeline{margin-top:18px}.patient-history .ep-session-card{border-radius:17px;border-color:rgba(22,77,72,.12);background:#fffaf0}.patient-history .ep-timeline-month__label{color:#9b711c}
+    @media(max-width:900px){.patient-dashboard{grid-template-columns:1fr}.patient-nr1{min-height:260px}.patient-preferences{grid-template-columns:1fr}.patient-hero{grid-template-columns:1fr}.patient-hero__actions{display:flex;flex-wrap:wrap}.patient-hero__actions a{flex:1 1 180px}}
+    @media(max-width:640px){.patient-topbar{height:auto;min-height:64px;padding:9px 15px}.patient-topbar #navUser{display:none}.patient-topbar .ep-nav a{padding:8px;font-size:12px}.patient-main{width:min(100% - 24px,1500px);padding:18px 0 50px}.patient-hero{padding:24px 20px;border-radius:21px}.patient-identity{align-items:flex-start;gap:15px}.patient-avatar{width:62px;height:62px;border-radius:18px;font-size:20px}.patient-copy h1{font-size:29px}.patient-overview{padding:15px}.patient-overview .ep-stats-strip{grid-template-columns:1fr}.patient-overview .ep-stat{min-height:auto}.patient-preferences{padding:20px}.patient-history__head{align-items:flex-start;flex-direction:column}.patient-history__head h2{font-size:26px}}
+  </style>
   <script src="./i18n/init.js?v=1-3" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
-<body>
+<body class="patient-portal">
 <script>
 (function () {
   var stack = document.createElement("div");
@@ -41,7 +64,7 @@
 </script>
 
 <div class="ep-shell">
-  <header class="ep-topbar">
+  <header class="ep-topbar patient-topbar">
     <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
@@ -50,48 +73,57 @@
       </span>
     </a>
     <nav class="ep-nav">
-      <a href="./profissionais.html" class="ep-text-sm" data-i18n="paciente-painel:nav.find">Encontrar profissional</a>
-      <a href="./paciente-audit.html" class="ep-text-sm" data-i18n="paciente-painel:nav.audit">Auditoria</a>
       <span id="navUser" class="ep-text-sm ep-text-muted" data-i18n="paciente-painel:nav.loading">…</span>
       <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="logoutBtn" data-i18n="paciente-painel:nav.logout">Sair</button>
     </nav>
   </header>
 
-  <main class="ep-main">
-    <section class="ep-prontuario__header" style="grid-template-columns: auto 1fr;">
-      <div class="ep-prontuario__avatar" id="avatar" aria-hidden="true">P</div>
-      <div class="ep-prontuario__title">
+  <main class="patient-main">
+    <section class="patient-hero">
+      <div class="patient-identity">
+      <div class="patient-avatar" id="avatar" aria-hidden="true">P</div>
+      <div class="patient-copy">
         <div class="ep-eyebrow" data-i18n="paciente-painel:header.eyebrow">Seu painel</div>
         <h1 class="ep-h1" id="patientName">…</h1>
         <div class="ep-pill-row" id="pillRow"></div>
       </div>
+      </div>
+      <div class="patient-hero__actions">
+        <a class="ep-btn patient-primary" href="./profissionais.html">Encontrar profissional</a>
+        <a class="ep-btn ep-btn--ghost patient-secondary" href="./paciente-audit.html">Ver meus acessos</a>
+      </div>
     </section>
 
-    <section class="ep-stats-strip" id="statsStrip"></section>
+    <div class="patient-dashboard">
+    <section class="patient-overview">
+      <div class="patient-overview__head"><div><div class="ep-eyebrow">Visão geral</div><h2>Sua jornada de cuidado</h2></div><span>Informações privadas da sua conta</span></div>
+      <div class="ep-stats-strip" id="statsStrip"></div>
+    </section>
 
-    <section class="ep-card ep-mt-24">
+    <section class="patient-nr1">
       <div class="ep-eyebrow">Seu ambiente de trabalho</div>
-      <h2 class="ep-h2 ep-mt-8">Escuta sobre as condições de trabalho</h2>
-      <p class="ep-text-sm ep-text-muted">Se sua empresa abriu uma pesquisa, compartilhe sua experiência. O empregador recebe somente resultados agrupados, nunca suas respostas individuais.</p>
-      <a class="ep-btn ep-btn--primary ep-mt-12" href="./paciente-nr1.html">Ver pesquisas abertas</a>
+      <h2>Escuta sobre as condições de trabalho</h2>
+      <p>Participe quando sua empresa abrir uma pesquisa sobre riscos psicossociais.</p>
+      <div class="patient-nr1__privacy"><span>◆</span><span>Suas respostas individuais não são entregues ao empregador. Somente resultados protegidos e agregados.</span></div>
+      <a class="ep-btn" href="./paciente-nr1.html">Ver pesquisas abertas</a>
     </section>
+    </div>
 
-    <section class="ep-card ep-mt-24" id="prefsCard">
-      <div class="ep-eyebrow" data-i18n="paciente-painel:prefs.eyebrow">Suas preferências</div>
-      <div class="ep-text-sm ep-mt-8" style="font-weight: 600;" data-i18n="paciente-painel:prefs.aiSummary.title">Resumo IA das sessões</div>
+    <section class="patient-preferences" id="prefsCard">
+      <div><div class="ep-eyebrow" data-i18n="paciente-painel:prefs.eyebrow">Suas preferências</div><h2>Você controla como sua consulta é processada</h2></div>
+      <div class="patient-preferences__control"><div data-i18n="paciente-painel:prefs.aiSummary.title">Resumo IA das sessões</div>
       <p class="ep-text-xs ep-text-muted ep-mt-4" data-i18n="paciente-painel:prefs.aiSummary.description">Quando ligado, o(a) profissional pode gerar um resumo automático após cada consulta para revisar antes da próxima — só ele(a) tem acesso. O áudio é deletado do servidor logo após o processamento.</p>
-      <div class="ep-flex ep-gap-8 ep-mt-12" style="align-items: center;">
-        <label class="ep-flex ep-gap-8" style="align-items: center; cursor: pointer;">
+        <label class="patient-consent">
           <input type="checkbox" id="consentAiSummaryToggle">
           <span data-i18n="paciente-painel:prefs.aiSummary.enable">Aceito a transcrição e o resumo IA das minhas sessões</span>
         </label>
-      </div>
       <div id="prefsStatus" class="ep-text-xs ep-text-muted ep-mt-8">&nbsp;</div>
+      </div>
     </section>
 
-    <section class="ep-stack ep-mt-24">
-      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
-        <h2 class="ep-h2 ep-mt-0" data-i18n="paciente-painel:history.h2">Histórico de consultas</h2>
+    <section class="patient-history">
+      <div class="patient-history__head">
+        <div><div class="ep-eyebrow">Seu arquivo pessoal</div><h2 data-i18n="paciente-painel:history.h2">Histórico de consultas</h2></div>
         <span class="ep-text-xs ep-text-muted ep-lock">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
           <span data-i18n="paciente-painel:history.lock">Cifradas com a sua chave — só você lê</span>
