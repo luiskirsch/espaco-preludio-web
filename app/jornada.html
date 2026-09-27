@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app.css?v=20260927e">
+  <link rel="stylesheet" href="./app.css?v=20260927f">
   <script src="./portal-shell.js?v=3" defer></script>
   <script src="./sw-register.js" defer></script>
 </head>
@@ -181,7 +181,11 @@
     if (!account) { location.replace("./login.html"); return; }
     user = account;
     try { catalog = await api("/therapy/paciente/colaborador/jornada"); render(); }
-    catch (error) { $("journeyStatus").textContent = error.message === "COLABORADOR_NAO_APROVADO" ? "Sua jornada será liberada quando o vínculo corporativo for aprovado." : `Não foi possível carregar a jornada: ${error.message}`; $("journeyStatus").classList.add("is-error"); }
+    catch (error) {
+      const pending = error.message === "COLABORADOR_NAO_APROVADO";
+      $("journeyStatus").textContent = pending ? "Sua jornada será liberada quando o vínculo corporativo for aprovado." : `Não foi possível carregar a jornada: ${error.message}`;
+      $("journeyStatus").classList.add(pending ? "is-pending" : "is-error");
+    }
   });
 </script>
 </body>
