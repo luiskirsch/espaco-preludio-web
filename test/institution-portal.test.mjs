@@ -210,7 +210,7 @@ test('todas as telas autenticadas do colaborador usam a estrutura responsiva com
     const html = await readFile(resolve(root, `app/${page}.html`), 'utf8');
     assert.match(html, /<body class="a-portal-authenticated">/, page);
     assert.match(html, /portal-shell\.js\?v=3/, page);
-    assert.match(html, /app\.css\?v=20260927j/, page);
+    assert.match(html, /app\.css\?v=20260927k/, page);
   }
   const shell = await readFile(resolve(root, 'app/portal-shell.js'), 'utf8');
   assert.match(shell, /Portal do colaborador/);
