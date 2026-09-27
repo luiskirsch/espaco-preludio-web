@@ -744,7 +744,11 @@ html, body {
 
 /* Trilhas e cursos */
 .learning-page { display: grid; gap: 22px; }
-.learning-hero { display: grid; gap: 24px; padding: 28px; border-radius: 24px; background: radial-gradient(circle at 90% 0,rgba(225,184,88,.22),transparent 18rem),linear-gradient(135deg,#103f40,#1e5149); color: #fff; box-shadow: 0 24px 56px rgba(10,55,55,.16); }
+/* align-self:start evita um bug de stretch recursivo do grid: .learning-page
+   é grid, .learning-hero também é grid — sem isso o navegador infla a
+   altura da linha bem além do conteúdo real (medido: ~360px em vez de
+   ~185px), deixando o card gigante mesmo com pouco texto dentro. */
+.learning-hero { display: grid; align-self: start; gap: 24px; padding: 28px; border-radius: 24px; background: radial-gradient(circle at 90% 0,rgba(225,184,88,.22),transparent 18rem),linear-gradient(135deg,#103f40,#1e5149); color: #fff; box-shadow: 0 24px 56px rgba(10,55,55,.16); }
 .learning-kicker,.learning-track > header > span,.learning-course__head span { color: #e9bf62; font-size: 9px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
 .learning-hero h2 { max-width: 620px; margin: 8px 0 10px; font: 600 34px/1.04 var(--ff-serif); }
 .learning-hero p { max-width: 680px; margin: 0; color: rgba(255,255,255,.72); font-size: 13px; line-height: 1.65; }
@@ -808,7 +812,7 @@ html, body {
 
 /* Pesquisa NR-1 do colaborador */
 .survey-page { display: grid; gap: 19px; }
-.survey-hero { display: grid; gap: 22px; padding: 28px; border-radius: 23px; background: linear-gradient(135deg,#153e42,#276158); color: #fff; box-shadow: 0 23px 55px rgba(13,57,58,.16); }
+.survey-hero { display: grid; align-self: start; gap: 22px; padding: 28px; border-radius: 23px; background: linear-gradient(135deg,#153e42,#276158); color: #fff; box-shadow: 0 23px 55px rgba(13,57,58,.16); }
 .survey-hero > div:first-child > span,.survey-form > header span,.emergency-hero > span,.emergency-more > header span { color: #e8bd62; font-size: 9px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
 .survey-hero h2 { max-width: 720px; margin: 8px 0 10px; font: 600 32px/1.05 var(--ff-serif); }
 .survey-hero p { margin: 0; color: rgba(255,255,255,.72); font-size: 12px; line-height: 1.62; }
