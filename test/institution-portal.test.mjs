@@ -153,6 +153,7 @@ test('portal do colaborador usa layout amplo no desktop e preserva a navegacao m
         journey: rect('.home-journey').toJSON(),
         survey: rect('.home-survey').toJSON(),
         safety: rect('.home-safety').toJSON(),
+        safetyPadding: parseFloat(style('.home-safety').paddingLeft),
         duplicateQuickActions: Boolean(document.querySelector('.quick-actions'))
       };
     })()`);
@@ -163,6 +164,7 @@ test('portal do colaborador usa layout amplo no desktop e preserva a navegacao m
     assert.ok(desktop.hero.width >= 850, JSON.stringify(desktop));
     assert.ok(desktop.journey.width >= 850, JSON.stringify(desktop));
     assert.ok(Math.abs(desktop.survey.top - desktop.safety.top) < 3, JSON.stringify(desktop));
+    assert.ok(desktop.safetyPadding >= 24, JSON.stringify(desktop));
     assert.equal(desktop.duplicateQuickActions, false);
     assert.notEqual(desktop.brandDisplay, 'none');
 
@@ -207,8 +209,8 @@ test('todas as telas autenticadas do colaborador usam a estrutura responsiva com
   for (const page of authenticatedPages) {
     const html = await readFile(resolve(root, `app/${page}.html`), 'utf8');
     assert.match(html, /<body class="a-portal-authenticated">/, page);
-    assert.match(html, /portal-shell\.js\?v=2/, page);
-    assert.match(html, /app\.css\?v=20260927c/, page);
+    assert.match(html, /portal-shell\.js\?v=3/, page);
+    assert.match(html, /app\.css\?v=20260927d/, page);
   }
   const shell = await readFile(resolve(root, 'app/portal-shell.js'), 'utf8');
   assert.match(shell, /Portal do colaborador/);
@@ -224,6 +226,8 @@ test('portal do colaborador integra jornada, NR-1 e ajuda imediata sem prometer 
     readFile(resolve(root, 'app/portal-shell.js'), 'utf8')
   ]);
   assert.doesNotMatch(home, /class="quick-actions"/);
+  assert.doesNotMatch(home, /id="nextSessionEmpty"[\s\S]*?Buscar profissional/);
+  assert.match(home, /href="\.\/humor\.html">Ver histórico/);
   assert.match(home, /Sua jornada profissional/);
   assert.match(home, /Escuta sobre o trabalho/);
   assert.match(journey, /therapy\/paciente\/colaborador\/jornada/);
@@ -233,9 +237,13 @@ test('portal do colaborador integra jornada, NR-1 e ajuda imediata sem prometer 
   assert.match(emergency, /href="tel:192"/);
   assert.match(emergency, /href="tel:190"/);
   assert.match(emergency, /href="tel:188"/);
+  assert.match(emergency, /class="phone-stage"/);
+  assert.match(emergency, /deviceCanPlaceCall/);
+  assert.match(emergency, /Copiar número/);
   assert.match(shell, /jornada\.html/);
   assert.match(shell, /nr1\.html/);
   assert.match(shell, /emergencia\.html/);
+  assert.match(shell, /humor\.html"[^}]*Histórico de humor/);
 });
 
 test('plano institucional permite informar uma conta Mercado Pago pagadora diferente', async () => {

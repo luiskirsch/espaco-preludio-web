@@ -8,7 +8,7 @@
   <link rel="manifest" href="./manifest.json"><link rel="icon" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app.css?v=20260927c"><script src="./portal-shell.js?v=2" defer></script><script src="./sw-register.js" defer></script>
+  <link rel="stylesheet" href="./app.css?v=20260927d"><script src="./portal-shell.js?v=3" defer></script><script src="./sw-register.js" defer></script>
 </head>
 <body class="a-portal-authenticated">
 <div class="a-shell">
@@ -38,12 +38,55 @@
     <section class="emergency-sources"><strong>Informações e fontes oficiais</strong><div><a target="_blank" rel="noopener" href="https://www.gov.br/saude/pt-br/composicao/saes/samu-192/samu-192">SAMU 192 · Ministério da Saúde ↗</a><a target="_blank" rel="noopener" href="https://cvv.org.br/">CVV 188 ↗</a><a target="_blank" rel="noopener" href="https://www.gov.br/mulheres/pt-br/ligue180">Ligue 180 ↗</a><a target="_blank" rel="noopener" href="https://www.gov.br/mdh/pt-br/disque100">Disque 100 ↗</a></div></section>
   </main>
 </div>
-<div class="emergency-confirm" id="callConfirm" role="dialog" aria-modal="true" aria-labelledby="callTitle" hidden><div><span>Você está prestes a ligar</span><h2 id="callTitle">Serviço de emergência</h2><p id="callCopy">A ligação será iniciada pelo seu dispositivo.</p><div><button type="button" id="callCancel">Cancelar</button><a id="callProceed" href="#">Ligar agora</a></div></div></div>
+<div id="emergencyCallModal" class="emergency-call-modal" role="dialog" aria-modal="true" aria-labelledby="emergencyCallTitle" aria-describedby="emergencyCallDescription">
+  <article class="emergency-call-card">
+    <button id="emergencyCallClose" class="emergency-call-close" type="button" aria-label="Fechar orientação de chamada">×</button>
+    <div class="emergency-call-copy">
+      <div class="emergency-call-eyebrow"><span>●</span> <span id="emergencyCallEyebrow">Emergência médica</span></div>
+      <h2 id="emergencyCallTitle">Ligar para o SAMU 192</h2>
+      <p id="emergencyCallDescription">O SAMU atende urgências e emergências gratuitamente, 24 horas por dia.</p>
+      <p id="emergencyDeviceGuidance" class="emergency-device-guidance"></p>
+      <div class="emergency-call-actions">
+        <a id="emergencyDirectCall" class="emergency-call-action emergency-direct-call" href="tel:192" data-direct-call>☎&nbsp; Ligar agora para 192</a>
+        <button id="emergencyCallCancel" class="emergency-call-action emergency-cancel" type="button">Agora não</button>
+      </div>
+      <p id="emergencyCallNote" class="emergency-call-note"><span>✦</span> A animação prepara a discagem. A ligação começa somente após a confirmação no seu aparelho.</p>
+    </div>
+    <div class="phone-stage" aria-hidden="true">
+      <span class="phone-halo"></span><span class="phone-halo"></span>
+      <div id="emergencyPhone" class="phone">
+        <span class="phone-buttons"></span>
+        <div class="phone-screen">
+          <span class="phone-island"></span>
+          <span id="emergencyPhoneService" class="phone-service">Emergência nacional</span>
+          <span id="emergencyCallStatus" class="phone-status">Abrindo a discagem…</span>
+          <div id="emergencyPhoneNumber" class="phone-number"></div>
+          <div class="phone-contact"><span id="emergencyContactIcon" class="phone-contact-icon">✚</span><strong id="emergencyContactName">SAMU</strong><small id="emergencyContactRole">Serviço de urgência</small></div>
+          <span class="phone-call-orb">☎</span><span class="phone-home"></span>
+        </div>
+      </div>
+    </div>
+  </article>
+</div>
 <script>
-  const modal=document.getElementById('callConfirm'),title=document.getElementById('callTitle'),proceed=document.getElementById('callProceed');
-  document.querySelectorAll('a[href^="tel:"][data-service]').forEach(link=>link.addEventListener('click',event=>{event.preventDefault();title.textContent=link.dataset.service;proceed.href=link.href;modal.hidden=false;}));
-  document.getElementById('callCancel').addEventListener('click',()=>modal.hidden=true);
-  modal.addEventListener('click',event=>{if(event.target===modal)modal.hidden=true;});
+  const $=id=>document.getElementById(id);
+  const CALLS={
+    '192':{theme:'medical',eyebrow:'Emergência médica',title:'Ligar para o SAMU 192',description:'O SAMU atende urgências e emergências gratuitamente, 24 horas por dia. Informe o endereço, o que aconteceu e quantas pessoas precisam de ajuda.',contact:'SAMU',role:'Serviço de urgência',icon:'✚',ready:'Pronto para ligar ao SAMU'},
+    '190':{theme:'police',eyebrow:'Segurança imediata',title:'Ligar para a Polícia 190',description:'Use o 190 diante de perigo imediato, violência, ameaça ou crime em andamento. Informe onde você está e siga as orientações.',contact:'Polícia',role:'Emergência policial',icon:'◆',ready:'Pronto para ligar para a Polícia'},
+    '188':{theme:'emotional',eyebrow:'Apoio emocional',title:'Conversar com o CVV 188',description:'O CVV oferece apoio emocional gratuito e sigiloso, 24 horas por dia, por telefone.',phoneService:'Apoio emocional 24 horas',contact:'CVV',role:'Escuta e apoio emocional',icon:'♡',ready:'Pronto para ligar ao CVV'},
+    '193':{theme:'rescue',eyebrow:'Resgate e salvamento',title:'Ligar para os Bombeiros 193',description:'Acione o Corpo de Bombeiros em incêndios, resgates, salvamentos e situações de risco.',contact:'Bombeiros',role:'Resgate e salvamento',icon:'✦',ready:'Pronto para ligar aos Bombeiros'},
+    '180':{theme:'protection',eyebrow:'Proteção da mulher',title:'Ligar para a Central 180',description:'O Ligue 180 orienta e recebe denúncias de violência contra a mulher.',contact:'Ligue 180',role:'Orientação e denúncia',icon:'◇',ready:'Pronto para ligar ao 180'},
+    '100':{theme:'protection',eyebrow:'Direitos humanos',title:'Ligar para o Disque 100',description:'O Disque 100 recebe denúncias de violações de direitos humanos.',contact:'Disque 100',role:'Proteção de direitos',icon:'○',ready:'Pronto para ligar ao 100'}
+  };
+  let trigger=null,number='192',timers=[];
+  const clearTimers=()=>{timers.forEach(clearTimeout);timers=[]};
+  const deviceCanPlaceCall=()=>Boolean(navigator.userAgentData?.mobile||/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1));
+  function configureAction(){const mobile=deviceCanPlaceCall(),button=$('emergencyDirectCall'),guidance=$('emergencyDeviceGuidance'),note=$('emergencyCallNote');button.dataset.callMode=mobile?'phone':'desktop';button.href=mobile?`tel:${number}`:'#';button.innerHTML=mobile?`☎&nbsp; Ligar agora para ${number}`:`▣&nbsp; Copiar número ${number}`;guidance.classList.toggle('is-visible',!mobile);guidance.textContent=mobile?'':`Você está usando um computador. Pegue um telefone e disque ${number}. O portal copiará o número para facilitar.`;note.innerHTML=mobile?`<span>✦</span> A animação prepara a discagem. A ligação começa depois que você tocar em “Ligar agora para ${number}” e confirmar no aparelho.`:`<span>✦</span> No computador, o portal não inicia nem simula uma ligação. Use um telefone fixo ou celular e disque ${number}.`;}
+  function openCall(link){trigger=link;number=String(link.getAttribute('href')||'tel:192').replace('tel:','');if(!CALLS[number])number='192';clearTimers();const config=CALLS[number],modal=$('emergencyCallModal'),phone=$('emergencyPhone');modal.dataset.service=config.theme;$('emergencyCallEyebrow').textContent=config.eyebrow;$('emergencyCallTitle').textContent=config.title;$('emergencyCallDescription').textContent=config.description;$('emergencyPhoneService').textContent=config.phoneService||'Emergência nacional';$('emergencyPhoneNumber').innerHTML=[...number].map(digit=>`<span class="phone-digit">${digit}</span>`).join('');$('emergencyContactIcon').textContent=config.icon;$('emergencyContactName').textContent=config.contact;$('emergencyContactRole').textContent=config.role;configureAction();phone.classList.remove('is-active','is-ready','is-connecting');$('emergencyCallStatus').textContent='Abrindo a discagem…';modal.classList.add('is-open');document.body.style.overflow='hidden';void phone.offsetWidth;phone.classList.add('is-active');[...modal.querySelectorAll('.phone-digit')].forEach((digit,index)=>timers.push(setTimeout(()=>digit.classList.add('is-visible'),360+index*310)));timers.push(setTimeout(()=>{phone.classList.add('is-ready');$('emergencyCallStatus').textContent=deviceCanPlaceCall()?config.ready:`Disque ${number} no seu telefone`},1380));timers.push(setTimeout(()=>$('emergencyDirectCall').focus(),120));}
+  function closeCall(){clearTimers();$('emergencyCallModal').classList.remove('is-open');$('emergencyPhone').classList.remove('is-active','is-ready','is-connecting');document.body.style.overflow='';trigger?.focus();trigger=null;}
+  async function callAction(event){const button=$('emergencyDirectCall'),phone=$('emergencyPhone'),status=$('emergencyCallStatus');if(button.dataset.callMode==='phone'){status.textContent='Abrindo o telefone…';phone.classList.add('is-connecting');return}event.preventDefault();let copied=false;try{await navigator.clipboard.writeText(number);copied=true}catch(_){copied=false}status.textContent=copied?`Número copiado: disque ${number}`:`Use um telefone e disque ${number}`;button.textContent=copied?`✓ ${number} copiado`:`${number} — disque no telefone`;timers.push(setTimeout(configureAction,2200));}
+  document.querySelectorAll('a[href^="tel:"][data-service]').forEach(link=>link.addEventListener('click',event=>{event.preventDefault();openCall(link)}));
+  $('emergencyCallClose').addEventListener('click',closeCall);$('emergencyCallCancel').addEventListener('click',closeCall);$('emergencyDirectCall').addEventListener('click',callAction);$('emergencyCallModal').addEventListener('click',event=>{if(event.target===$('emergencyCallModal'))closeCall()});document.addEventListener('keydown',event=>{if(event.key==='Escape'&&$('emergencyCallModal').classList.contains('is-open'))closeCall()});
 </script>
 </body>
 </html>
