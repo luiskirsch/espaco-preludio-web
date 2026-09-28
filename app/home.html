@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./app.css?v=20260927m">
-  <link rel="stylesheet" href="./weather-hero.css?v=20260928j">
+  <link rel="stylesheet" href="./weather-hero.css?v=20260928k">
   <style>
     .home-hero {
       background: linear-gradient(135deg, #1c1f1d 0%, #2d3a30 100%);
@@ -81,6 +81,7 @@
         <span class="sky-rain-depth"></span>
         <span class="sky-drops"></span>
         <span class="sky-flash"></span>
+        <span class="sky-lightning"></span>
         <span class="sky-vignette"></span>
       </div>
       <div class="home-hero__greeting">Bom dia</div>
@@ -219,6 +220,66 @@
     }
     container.replaceChildren(frag);
   }
+  let lightningTimer = null;
+  function lightningPath(startX, startY, endY, spread = 5) {
+    const points = [[startX, startY]];
+    let x = startX, y = startY;
+    while (y < endY) {
+      y = Math.min(endY, y + 7 + Math.random() * 7);
+      x = Math.max(4, Math.min(96, x + (Math.random() - .46) * spread * 2));
+      points.push([x, y]);
+    }
+    return points;
+  }
+  function pathData(points) {
+    return points.map(([x, y], index) => `${index ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  }
+  function drawLightning() {
+    lightningTimer = null;
+    if (hero.dataset.weather !== "storm" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const layer = hero.querySelector(".sky-lightning");
+    const flash = hero.querySelector(".sky-flash");
+    const startX = 60 + Math.random() * 30;
+    const main = lightningPath(startX, -5, 62 + Math.random() * 27, 5.5);
+    const forkAt = Math.max(2, Math.floor(main.length * (.38 + Math.random() * .25)));
+    const [forkX, forkY] = main[forkAt];
+    const branch = lightningPath(forkX, forkY, Math.min(96, forkY + 20 + Math.random() * 24), 7.5);
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 100 100");
+    svg.setAttribute("preserveAspectRatio", "none");
+    for (const [points, className] of [[main, "lightning-main"], [branch, "lightning-branch"]]) {
+      const path = document.createElementNS(svg.namespaceURI, "path");
+      path.setAttribute("d", pathData(points));
+      path.setAttribute("pathLength", "1");
+      path.setAttribute("class", className);
+      svg.append(path);
+    }
+    layer.replaceChildren(svg);
+    layer.classList.remove("is-striking");
+    flash.classList.remove("is-striking");
+    void layer.offsetWidth;
+    layer.classList.add("is-striking");
+    flash.classList.add("is-striking");
+    setTimeout(() => {
+      layer.classList.remove("is-striking");
+      flash.classList.remove("is-striking");
+    }, 720);
+    lightningTimer = setTimeout(drawLightning, 4500 + Math.random() * 9500);
+  }
+  function syncLightning(weather) {
+    const layer = hero.querySelector(".sky-lightning");
+    if (weather === "storm" && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (!lightningTimer && !layer.classList.contains("is-striking")) {
+        lightningTimer = setTimeout(drawLightning, 1200 + Math.random() * 4200);
+      }
+      return;
+    }
+    clearTimeout(lightningTimer);
+    lightningTimer = null;
+    layer.classList.remove("is-striking");
+    layer.replaceChildren();
+    hero.querySelector(".sky-flash").classList.remove("is-striking");
+  }
   function renderSky(weather, reveal = true) {
     const hour = new Date().getHours();
     const phase = skyPhase(hour);
@@ -250,6 +311,7 @@
         el.style.opacity = String(.35 + Math.random() * .55);
       });
     } else drops.replaceChildren();
+    syncLightning(weather);
     document.getElementById("skyCredits").hidden = !weather;
     if (reveal) requestAnimationFrame(() => { hero.dataset.weatherState = "ready"; });
   }
