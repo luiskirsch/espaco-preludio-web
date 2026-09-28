@@ -109,7 +109,17 @@ async function connectCdp(url) {
     if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
     return result.result.value;
   };
-  return { socket, send, evaluate };
+  // O override responde antes do relayout; medir em seguida às vezes pegava a
+  // geometria do viewport anterior (teste de login intermitente).
+  const sendAndSettle = async (method, params = {}) => {
+    const result = await send(method, params);
+    if (method === 'Emulation.setDeviceMetricsOverride') {
+      await poll(() => evaluate(`innerWidth === ${params.width} && innerHeight === ${params.height}`));
+      await evaluate('new Promise(resolve => { requestAnimationFrame(() => requestAnimationFrame(() => resolve(true))); setTimeout(() => resolve(true), 500); })');
+    }
+    return result;
+  };
+  return { socket, send: sendAndSettle, evaluate };
 }
 
 test('entrada principal aponta para o portal institucional', async () => {
