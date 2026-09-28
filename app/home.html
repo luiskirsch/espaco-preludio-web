@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app.css?v=20260927l">
+  <link rel="stylesheet" href="./app.css?v=20260927m">
   <style>
     .home-hero {
       background: linear-gradient(135deg, #1c1f1d 0%, #2d3a30 100%);
@@ -69,7 +69,15 @@
   <div class="a-page a-page-enter">
 
     <!-- Hero -->
-    <div class="home-hero">
+    <div class="home-hero" id="homeHero">
+      <div class="home-hero__sky" aria-hidden="true">
+        <span class="sky-orb"></span>
+        <span class="sky-stars"></span>
+        <span class="sky-clouds"><i></i><i></i><i></i><i></i></span>
+        <span class="sky-fog"></span>
+        <span class="sky-drops"></span>
+        <span class="sky-flash"></span>
+      </div>
       <div class="home-hero__greeting">Bom dia 🌿</div>
       <div class="home-hero__name" id="heroNome">Carregando…</div>
       <a href="./buscar.html" class="home-hero__btn">
@@ -136,6 +144,8 @@
       <a href="./emergencia.html">Ver ajuda imediata <b>→</b></a>
     </section>
 
+    <p class="home-credits" id="skyCredits" hidden>Clima: <a href="https://api.met.no/" target="_blank" rel="noopener">MET Norway</a> · Localização aproximada: <a href="https://db-ip.com" target="_blank" rel="noopener">IP Geolocation by DB-IP</a></p>
+
   </div>
 
   <!-- Bottom Nav -->
@@ -172,6 +182,77 @@
     if (!response.ok) throw new Error(data.error || `Erro HTTP ${response.status}`);
     return data;
   }
+  // Céu do card: fase pelo relógio local (sempre certa) + clima aproximado por
+  // IP vindo do backend, só quando a localização é confiável.
+  const hero = document.getElementById("homeHero");
+  const SKY_CACHE = "ep:sky:v1";
+  const SKY_TTL_MS = 30 * 60 * 1000;
+  function skyPhase(hour) {
+    if (hour >= 5 && hour < 7) return "dawn";
+    if (hour >= 7 && hour < 12) return "morning";
+    if (hour >= 12 && hour < 17) return "afternoon";
+    if (hour >= 17 && hour < 19) return "dusk";
+    return "night";
+  }
+  function fillParticles(container, count, build) {
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement("i");
+      build(el, i);
+      frag.append(el);
+    }
+    container.replaceChildren(frag);
+  }
+  function renderSky(weather) {
+    const phase = skyPhase(new Date().getHours());
+    hero.dataset.phase = phase;
+    if (weather) hero.dataset.weather = weather; else delete hero.dataset.weather;
+    const stars = hero.querySelector(".sky-stars");
+    if (phase === "night" || phase === "dawn") {
+      if (!stars.childElementCount) fillParticles(stars, 46, el => {
+        el.style.left = `${Math.random() * 100}%`;
+        el.style.top = `${Math.random() * 78}%`;
+        el.style.setProperty("--s", `${1 + Math.random() * 1.6}px`);
+        el.style.animationDelay = `${-Math.random() * 6}s`;
+        el.style.animationDuration = `${3 + Math.random() * 4}s`;
+      });
+    } else stars.replaceChildren();
+    const drops = hero.querySelector(".sky-drops");
+    if (weather === "rain" || weather === "storm" || weather === "snow") {
+      const snow = weather === "snow";
+      const count = weather === "storm" ? 110 : snow ? 55 : 75;
+      fillParticles(drops, count, el => {
+        const duration = snow ? 7 + Math.random() * 6 : (weather === "storm" ? .55 : .8) + Math.random() * .45;
+        el.style.left = `${-10 + Math.random() * 115}%`;
+        el.style.setProperty("--y", String(Math.round(Math.random() * 100)));
+        el.style.animationDuration = `${duration}s`;
+        el.style.animationDelay = `${-Math.random() * duration}s`;
+        el.style.opacity = String(.35 + Math.random() * .55);
+      });
+    } else drops.replaceChildren();
+    document.getElementById("skyCredits").hidden = !weather;
+  }
+  function readSkyCache() {
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(SKY_CACHE) || "null");
+      return cached && cached.expires > Date.now() ? cached : null;
+    } catch { return null; }
+  }
+  async function loadSky(user) {
+    const cached = readSkyCache();
+    renderSky(cached?.weather || null);
+    if (cached) return;
+    try {
+      const conn = navigator.connection?.type || "";
+      const data = await portalApi(user, `/therapy/paciente/ambiente?conn=${encodeURIComponent(conn)}`);
+      const weather = ["clear", "partly", "cloudy", "fog", "rain", "storm", "snow"].includes(data.weather) ? data.weather : null;
+      try { sessionStorage.setItem(SKY_CACHE, JSON.stringify({ weather, expires: Date.now() + SKY_TTL_MS })); } catch {}
+      renderSky(weather);
+    } catch { /* sem clima: fica o céu do horário */ }
+  }
+  renderSky(null);
+  setInterval(() => renderSky(hero.dataset.weather || null), 10 * 60 * 1000);
+
   async function loadJourney(user) {
     const container = document.getElementById("homeJourney");
     try {
@@ -212,6 +293,7 @@
     const greeting = hour < 12 ? "Bom dia 🌅" : hour < 18 ? "Boa tarde ☀️" : "Boa noite 🌙";
     document.querySelector(".home-hero__greeting").textContent = greeting;
     document.getElementById("heroNome").textContent = (user.displayName || user.email.split("@")[0]).split(" ")[0];
+    loadSky(user);
     loadJourney(user);
     loadSurveys(user);
 

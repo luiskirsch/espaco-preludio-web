@@ -984,3 +984,72 @@ html, body {
   .emergency-call-copy h2 { margin: 7px 0 10px; font-size: 32px; }.emergency-call-copy > p { font-size: 12px; line-height: 1.5; }
   .phone-stage { min-height: 305px; order: -1; }.phone { width: 148px; height: 294px; padding: 8px; border-radius: 27px; }.phone-screen { padding: 27px 12px 13px; border-radius: 20px; }.phone-island { top: 7px; width: 51px; height: 13px; }.phone-service { font-size: 8px; }.phone-status { margin-top: 9px; font-size: 9px; }.phone-number { margin: 8px 0 5px; font-size: 31px; }.phone-contact { gap: 4px; }.phone-contact-icon { width: 39px; height: 39px; font-size: 19px; }.phone-contact strong { font-size: 11px; }.phone-contact small { font-size: 8px; }.phone-call-orb { width: 42px; height: 42px; font-size: 19px; }.phone-home { margin-top: 9px; }.phone-halo { width: 190px; height: 190px; }.phone-halo:nth-child(2) { width: 150px; height: 150px; }.emergency-call-actions { margin-top: 17px; }.emergency-call-action { flex: 1; padding: 0 12px; font-size: 10px; }.emergency-call-note { margin-top: 12px !important; padding-top: 11px; font-size: 9px !important; text-align: left; }
 }
+
+/* Céu do card da Home: fase pelo relógio + clima aproximado (data-weather) */
+.home-hero { position: relative; overflow: hidden; isolation: isolate; }
+.home-hero > :not(.home-hero__sky) { position: relative; z-index: 2; }
+body.a-route-home .home-hero::before, body.a-route-home .home-hero::after { z-index: 1; }
+.home-hero__sky { --cloud: 226, 233, 231; --cloud-a: .26; --dim: 0; position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; border-radius: inherit; background: radial-gradient(circle at 82% 15%, rgba(226, 184, 95, .22), transparent 19rem), linear-gradient(135deg, #103f40 0%, #164b47 52%, #243f35 100%); transition: background .8s ease; }
+.home-hero__sky::after { content: ""; position: absolute; inset: 0; background: rgba(6, 18, 22, var(--dim)); transition: background .8s ease; }
+.home-hero__sky > span { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease; }
+
+.home-hero[data-phase="dawn"] .home-hero__sky { background: radial-gradient(ellipse at 88% 118%, rgba(238, 162, 112, .42), transparent 58%), linear-gradient(180deg, #152c3b 0%, #21435a 48%, #5d4f4e 100%); }
+.home-hero[data-phase="morning"] .home-hero__sky { background: radial-gradient(circle at 84% 4%, rgba(242, 204, 126, .3), transparent 17rem), linear-gradient(135deg, #0f4648 0%, #17605b 55%, #2a5f4c 100%); }
+.home-hero[data-phase="dusk"] .home-hero__sky { background: radial-gradient(ellipse at 86% 116%, rgba(234, 142, 82, .5), transparent 56%), linear-gradient(168deg, #182a3a 0%, #30374a 52%, #573e3b 100%); }
+.home-hero[data-phase="night"] .home-hero__sky { --cloud: 168, 186, 196; --cloud-a: .16; background: radial-gradient(circle at 82% 12%, rgba(126, 164, 192, .14), transparent 16rem), linear-gradient(160deg, #0b1d26 0%, #0f2c33 55%, #13282a 100%); }
+
+/* Sol/lua e estrelas só com céu aberto; sem clima confiável, fica só a fase */
+.home-hero__sky > .sky-orb { inset: auto; top: 26px; right: clamp(34px, 17%, 300px); width: 150px; height: 150px; border-radius: 50%; transform: translate(50%, -35%); background: radial-gradient(circle, rgba(255, 222, 140, .55) 0 12%, rgba(242, 196, 102, .22) 30%, transparent 68%); }
+.home-hero[data-phase="dawn"] .sky-orb, .home-hero[data-phase="dusk"] .sky-orb { top: auto; bottom: -34px; background: radial-gradient(circle, rgba(255, 196, 128, .7) 0 12%, rgba(240, 150, 90, .28) 32%, transparent 68%); }
+.home-hero[data-phase="night"] .sky-orb { top: 34px; width: 38px; height: 38px; transform: translate(50%, 0); background: transparent; box-shadow: 10px 7px 0 0 #efe3c4; filter: drop-shadow(0 0 16px rgba(239, 227, 196, .45)); }
+.home-hero[data-weather="clear"] .sky-orb { opacity: 1; }
+.home-hero[data-weather="partly"] .sky-orb { opacity: .7; }
+.home-hero[data-weather="clear"] .sky-stars, .home-hero[data-weather="partly"] .sky-stars { opacity: 1; }
+.home-hero[data-weather="partly"] .sky-stars { opacity: .55; }
+.sky-stars i { position: absolute; width: var(--s, 1.5px); height: var(--s, 1.5px); border-radius: 50%; background: #fbf5e2; box-shadow: 0 0 4px rgba(251, 245, 226, .8); animation: sky-twinkle 4s ease-in-out infinite; }
+
+.sky-clouds i { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(var(--cloud), var(--cloud-a)), rgba(var(--cloud), 0)); filter: blur(4px); animation: sky-drift 46s ease-in-out infinite alternate; }
+.sky-clouds i:nth-child(1) { width: 44%; height: 96px; right: -6%; top: 4%; }
+.sky-clouds i:nth-child(2) { width: 32%; height: 74px; right: 24%; top: 32%; animation-duration: 58s; animation-delay: -20s; }
+.sky-clouds i:nth-child(3) { width: 38%; height: 86px; right: 6%; top: 60%; animation-duration: 52s; animation-delay: -35s; }
+.sky-clouds i:nth-child(4) { width: 50%; height: 110px; right: 42%; top: -14%; animation-duration: 64s; animation-delay: -10s; display: none; }
+.home-hero[data-weather="partly"] .sky-clouds { opacity: .85; }
+.home-hero[data-weather="partly"] .sky-clouds i:nth-child(3) { display: none; }
+.home-hero:is([data-weather="cloudy"], [data-weather="rain"], [data-weather="storm"], [data-weather="snow"], [data-weather="fog"]) .sky-clouds { opacity: 1; }
+.home-hero:is([data-weather="cloudy"], [data-weather="rain"], [data-weather="storm"], [data-weather="snow"]) .sky-clouds i:nth-child(4) { display: block; }
+.home-hero[data-weather="cloudy"] .home-hero__sky { --dim: .1; --cloud-a: .3; }
+.home-hero[data-weather="rain"] .home-hero__sky { --dim: .2; --cloud: 172, 186, 190; --cloud-a: .3; }
+.home-hero[data-weather="storm"] .home-hero__sky { --dim: .3; --cloud: 150, 162, 170; --cloud-a: .34; }
+.home-hero[data-weather="snow"] .home-hero__sky { --dim: .08; --cloud-a: .32; }
+.home-hero[data-phase="night"]:is([data-weather="cloudy"], [data-weather="rain"], [data-weather="storm"]) .home-hero__sky { --cloud-a: .18; }
+
+/* Chuva/neve só mais intensa à direita, pra não disputar com o texto */
+.sky-drops { -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, .4) 0%, #000 55%); mask-image: linear-gradient(90deg, rgba(0, 0, 0, .4) 0%, #000 55%); }
+.home-hero:is([data-weather="rain"], [data-weather="storm"], [data-weather="snow"]) .sky-drops { opacity: 1; }
+.sky-drops i { position: absolute; top: -30px; width: 1.5px; height: 22px; border-radius: 1px; background: linear-gradient(transparent, rgba(226, 238, 242, .85)); animation: sky-rain .9s linear infinite; }
+.home-hero[data-weather="storm"] .sky-drops i { height: 26px; }
+.home-hero[data-weather="snow"] .sky-drops i { width: 4px; height: 4px; border-radius: 50%; background: rgba(250, 252, 252, .9); animation-name: sky-snow; animation-timing-function: linear; }
+
+.sky-fog::before, .sky-fog::after { content: ""; position: absolute; left: -20%; width: 140%; height: 46%; background: linear-gradient(90deg, transparent, rgba(222, 230, 228, .16) 30%, rgba(222, 230, 228, .2) 60%, transparent); filter: blur(12px); animation: sky-drift 38s ease-in-out infinite alternate; }
+.sky-fog::before { top: 22%; }
+.sky-fog::after { top: 58%; animation-duration: 50s; animation-direction: alternate-reverse; }
+.home-hero[data-weather="fog"] .sky-fog { opacity: 1; }
+.home-hero[data-weather="fog"] .home-hero__sky { --dim: .06; }
+
+.sky-flash { background: radial-gradient(ellipse at 72% 0%, rgba(236, 242, 255, .5), transparent 65%); }
+.home-hero[data-weather="storm"] .sky-flash { opacity: 1; animation: sky-flash 11s linear infinite; }
+
+@keyframes sky-twinkle { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@keyframes sky-drift { from { transform: translateX(-28px); } to { transform: translateX(28px); } }
+@keyframes sky-rain { from { transform: translate3d(0, 0, 0) rotate(12deg); } to { transform: translate3d(-62px, 360px, 0) rotate(12deg); } }
+@keyframes sky-snow { from { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(14px, 180px, 0); } to { transform: translate3d(-8px, 360px, 0); } }
+@keyframes sky-flash { 0%, 90%, 91.6%, 94%, 95.2%, 100% { opacity: 0; } 90.8% { opacity: .9; } 94.6% { opacity: .5; } }
+
+.home-credits { grid-column: 1 / -1; margin: 4px 0 0; padding: 0 16px; color: var(--a-ink3); font-size: 10px; text-align: center; }
+.home-credits a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero__sky *, .home-hero__sky *::before, .home-hero__sky *::after { animation: none !important; }
+  .home-hero[data-weather="storm"] .sky-flash { opacity: 0; }
+  .sky-drops i { top: auto; bottom: calc(var(--y, 50) * 1%); }
+}
