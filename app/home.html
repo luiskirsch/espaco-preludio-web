@@ -246,7 +246,9 @@
       const conn = navigator.connection?.type || "";
       const data = await portalApi(user, `/therapy/paciente/ambiente?conn=${encodeURIComponent(conn)}`);
       const weather = ["clear", "partly", "cloudy", "fog", "rain", "storm", "snow"].includes(data.weather) ? data.weather : null;
-      try { sessionStorage.setItem(SKY_CACHE, JSON.stringify({ weather, expires: Date.now() + SKY_TTL_MS })); } catch {}
+      // Só guarda clima real: "sem clima" pode ser a base ainda carregando no
+      // servidor, e não deve prender o card sem clima por 30 minutos.
+      if (weather) try { sessionStorage.setItem(SKY_CACHE, JSON.stringify({ weather, expires: Date.now() + SKY_TTL_MS })); } catch {}
       renderSky(weather);
     } catch { /* sem clima: fica o céu do horário */ }
   }
