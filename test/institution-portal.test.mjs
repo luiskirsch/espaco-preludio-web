@@ -230,6 +230,9 @@ test('live weather greeting card has layered motion and reduced-motion fallback'
   assert.match(weatherCss, /@keyframes live-snow-fall/);
   assert.match(weatherCss, /prefers-reduced-motion:\s*reduce/);
   assert.match(weatherCss, /assets\/home-sky-clouds\.webp/);
+  assert.match(home, /navigator\.geolocation\.getCurrentPosition/);
+  assert.match(home, /method:\s*"POST"/);
+  assert.match(home, /source\s*=\s*coordinates\s*\?\s*"device"\s*:\s*"ip"/);
 });
 
 test('todas as telas autenticadas do colaborador usam a estrutura responsiva compartilhada', async () => {

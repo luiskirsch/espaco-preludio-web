@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./app.css?v=20260927m">
-  <link rel="stylesheet" href="./weather-hero.css?v=20260928c">
+  <link rel="stylesheet" href="./weather-hero.css?v=20260928d">
   <style>
     .home-hero {
       background: linear-gradient(135deg, #1c1f1d 0%, #2d3a30 100%);
@@ -180,9 +180,16 @@
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
 
   const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
-  async function portalApi(user, path) {
+  async function portalApi(user, path, options = {}) {
     const token = await user.getIdToken();
-    const response = await fetch(`${BACKEND_BASE_URL}${path}`, { headers: { Authorization: `Bearer ${token}` } });
+    const response = await fetch(`${BACKEND_BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...(options.headers || {})
+      }
+    });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || `Erro HTTP ${response.status}`);
     return data;
@@ -190,7 +197,7 @@
   // Céu do card: fase pelo relógio local (sempre certa) + clima aproximado por
   // IP vindo do backend, só quando a localização é confiável.
   const hero = document.getElementById("homeHero");
-  const SKY_CACHE = "ep:sky:v1";
+  const SKY_CACHE = "ep:sky:v2";
   const SKY_TTL_MS = 30 * 60 * 1000;
   function skyPhase(hour) {
     if (hour >= 5 && hour < 7) return "dawn";
@@ -239,23 +246,41 @@
     } else drops.replaceChildren();
     document.getElementById("skyCredits").hidden = !weather;
   }
-  function readSkyCache() {
+  function readSkyCache(source) {
     try {
       const cached = JSON.parse(sessionStorage.getItem(SKY_CACHE) || "null");
-      return cached && cached.expires > Date.now() ? cached : null;
+      return cached && cached.source === source && cached.expires > Date.now() ? cached : null;
     } catch { return null; }
   }
+  function deviceCoordinates() {
+    if (!navigator.geolocation || !window.isSecureContext) return Promise.resolve(null);
+    return new Promise(resolve => navigator.geolocation.getCurrentPosition(position => {
+      const { latitude, longitude, accuracy } = position.coords || {};
+      if (![latitude, longitude, accuracy].every(Number.isFinite) || accuracy > 50000) return resolve(null);
+      resolve({ lat: latitude, lon: longitude });
+    }, () => resolve(null), {
+      enableHighAccuracy: false,
+      maximumAge: 15 * 60 * 1000,
+      timeout: 7000
+    }));
+  }
   async function loadSky(user) {
-    const cached = readSkyCache();
+    const coordinates = await deviceCoordinates();
+    const source = coordinates ? "device" : "ip";
+    const cached = readSkyCache(source);
     renderSky(cached?.weather || null);
     if (cached) return;
     try {
-      const conn = navigator.connection?.type || "";
-      const data = await portalApi(user, `/therapy/paciente/ambiente?conn=${encodeURIComponent(conn)}`);
+      const data = coordinates
+        ? await portalApi(user, "/therapy/paciente/ambiente", {
+            method: "POST",
+            body: JSON.stringify(coordinates)
+          })
+        : await portalApi(user, `/therapy/paciente/ambiente?conn=${encodeURIComponent(navigator.connection?.type || "")}`);
       const weather = ["clear", "partly", "cloudy", "fog", "rain", "storm", "snow"].includes(data.weather) ? data.weather : null;
       // Só guarda clima real: "sem clima" pode ser a base ainda carregando no
       // servidor, e não deve prender o card sem clima por 30 minutos.
-      if (weather) try { sessionStorage.setItem(SKY_CACHE, JSON.stringify({ weather, expires: Date.now() + SKY_TTL_MS })); } catch {}
+      if (weather) try { sessionStorage.setItem(SKY_CACHE, JSON.stringify({ weather, source, expires: Date.now() + SKY_TTL_MS })); } catch {}
       renderSky(weather);
     } catch { /* sem clima: fica o céu do horário */ }
   }
