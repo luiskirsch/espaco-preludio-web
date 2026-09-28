@@ -22,6 +22,12 @@ body.a-route-home .home-hero::after {
     linear-gradient(125deg, #083f43 0%, #17615b 51%, #47745a 100%);
 }
 
+.home-hero[data-phase="night"] .home-hero__sky {
+  background:
+    radial-gradient(ellipse at 82% 108%, rgba(75, 119, 132, .2), transparent 52%),
+    linear-gradient(128deg, #071b24 0%, #0b2b35 52%, #17343a 100%);
+}
+
 .home-hero__sky > .sky-atmosphere {
   inset: -12% -5%;
   z-index: 1;
@@ -76,6 +82,33 @@ body.a-route-home .home-hero::after {
   mix-blend-mode: screen;
 }
 
+/* Ã€ noite a fotografia conserva relevo, mas recebe luz azulada e baixa. */
+.home-hero[data-phase="night"] .sky-atmosphere {
+  opacity: .3;
+  filter: saturate(.38) contrast(1.16) brightness(.42) hue-rotate(5deg);
+  mix-blend-mode: screen;
+}
+
+.home-hero[data-phase="night"][data-weather="clear"] .sky-atmosphere { opacity: .16; }
+.home-hero[data-phase="night"][data-weather="partly"] .sky-atmosphere { opacity: .38; }
+.home-hero[data-phase="night"][data-weather="cloudy"] .sky-atmosphere {
+  opacity: .62;
+  filter: saturate(.34) contrast(1.22) brightness(.36) hue-rotate(5deg);
+}
+.home-hero[data-phase="night"][data-weather="rain"] .sky-atmosphere {
+  opacity: .72;
+  filter: saturate(.28) contrast(1.28) brightness(.29) hue-rotate(7deg);
+}
+.home-hero[data-phase="night"][data-weather="storm"] .sky-atmosphere {
+  opacity: .84;
+  filter: saturate(.2) contrast(1.4) brightness(.23) hue-rotate(8deg);
+}
+.home-hero[data-phase="night"][data-weather="fog"] .sky-atmosphere { opacity: .46; }
+.home-hero[data-phase="night"][data-weather="snow"] .sky-atmosphere {
+  opacity: .56;
+  filter: saturate(.3) contrast(1.02) brightness(.58) hue-rotate(5deg);
+}
+
 .home-hero__sky > .sky-haze {
   z-index: 2;
   opacity: .72;
@@ -108,6 +141,13 @@ body.a-route-home .home-hero::after {
   background:
     radial-gradient(ellipse at 80% 110%, rgba(255, 165, 102, .38), transparent 58%),
     linear-gradient(100deg, rgba(10, 29, 40, .28), transparent 55%);
+}
+
+.home-hero[data-phase="night"] .sky-haze {
+  opacity: .66;
+  background:
+    radial-gradient(ellipse at 80% 116%, rgba(101, 151, 163, .2), transparent 56%),
+    linear-gradient(105deg, rgba(2, 16, 24, .28), transparent 52%);
 }
 
 .home-hero__sky > .sky-orb {
