@@ -265,14 +265,8 @@
 
 <script type="module">
   import { onAuthStateChanged, signOut, updateProfile, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
-  import { auth, BACKEND_BASE_URL, firebaseConfig } from "../js/firebase-config.js";
-  import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
   import { clearPatientDek } from "../js/patient-session.js";
-
-  // Inicializa storage usando a mesma app do auth
-  const _fbApp = getApps().find(a => a.name === "[DEFAULT]") || getApps()[0];
-  const storage = getStorage(_fbApp);
 
   let currentUser = null;
   let deferredInstall = null;
@@ -318,15 +312,20 @@
     // A foto NÃO vem de user.photoURL (Firebase Auth) — este projeto Firebase
     // é compartilhado com O SextoLugar (jogo), e esse campo é global à conta:
     // quem já jogou e definiu um avatar lá via a mesma conta via o avatar do
-    // jogo aqui, e uma foto enviada aqui vazaria pro jogo. photoUrl fica em
-    // therapy_patient_accounts, isolado por produto.
+    // jogo aqui, e uma foto enviada aqui vazaria pro jogo. A foto fica em
+    // therapy_patient_accounts (base64), isolada por produto.
     let photoUrl = null;
     try {
       const idToken = await user.getIdToken();
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/me`, {
         headers: { Authorization: `Bearer ${idToken}` }
       });
-      if (r.ok) { const d = await r.json(); photoUrl = d.account?.photoUrl || null; }
+      if (r.ok) {
+        const a = (await r.json()).account || {};
+        if (a.photoBase64 && /^image\/(png|jpeg|webp)$/.test(a.photoMime || "")) {
+          photoUrl = `data:${a.photoMime};base64,${a.photoBase64}`;
+        }
+      }
     } catch { /* sem conta/rede — cai pras iniciais, não é bloqueante */ }
 
     if (photoUrl) {
@@ -403,41 +402,41 @@
     if (!file) return;
     document.getElementById("photoLoading").style.display = "block";
     try {
-      // Comprime para 300x300 max via canvas
-      const base64 = await new Promise((resolve, reject) => {
+      // Comprime para 256x256 max via canvas (~20-40 KB, cabe no limite do backend)
+      const dataUrl = await new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
-          const size = 300;
+          const size = 256;
           const canvas = document.createElement("canvas");
           const ratio = Math.min(size / img.width, size / img.height);
           canvas.width  = Math.round(img.width  * ratio);
           canvas.height = Math.round(img.height * ratio);
           canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL("image/jpeg", 0.82));
+          resolve(canvas.toDataURL("image/jpeg", 0.85));
         };
         img.onerror = reject;
         img.src = URL.createObjectURL(file);
       });
-      setAvatar(base64);
-      // Upload para Firebase Storage → URL real → salva em therapy_patient_accounts.
-      // NÃO usa updateProfile()/photoURL do Firebase Auth — esse campo é
-      // compartilhado com O SextoLugar (jogo), que roda no mesmo projeto
-      // Firebase; gravar ali vazaria a foto pro perfil do jogador e vice-versa.
-      const storageRef = ref(storage, `patient-photos/${currentUser.uid}.jpg`);
-      await uploadString(storageRef, base64, "data_url");
-      const downloadURL = await getDownloadURL(storageRef);
+      const previous = document.getElementById("profileAvatar").innerHTML;
+      setAvatar(dataUrl);
+      // Salva em therapy_patient_accounts via backend. NÃO usa
+      // updateProfile()/photoURL do Firebase Auth (compartilhado com o jogo)
+      // nem Firebase Storage (projeto no plano Spark, sem bucket).
       const idToken = await currentUser.getIdToken();
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/perfil`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ photoUrl: downloadURL })
+        body: JSON.stringify({ photoBase64: dataUrl.split(",")[1], photoMime: "image/jpeg" })
       });
-      if (!r.ok) throw new Error("save_failed");
+      if (!r.ok) {
+        document.getElementById("profileAvatar").innerHTML = previous;
+        throw new Error("save_failed");
+      }
       document.getElementById("photoLoading").textContent = "✓ Foto salva!";
       setTimeout(() => { document.getElementById("photoLoading").style.display = "none"; document.getElementById("photoLoading").textContent = "Salvando foto…"; }, 2000);
     } catch {
-      document.getElementById("photoLoading").textContent = "⚠️ Salvo só neste device";
-      setTimeout(() => { document.getElementById("photoLoading").style.display = "none"; document.getElementById("photoLoading").textContent = "Salvando foto…"; }, 2000);
+      document.getElementById("photoLoading").textContent = "Não foi possível salvar a foto. Tente novamente.";
+      setTimeout(() => { document.getElementById("photoLoading").style.display = "none"; document.getElementById("photoLoading").textContent = "Salvando foto…"; }, 4000);
     } finally {
       e.target.value = "";
     }
