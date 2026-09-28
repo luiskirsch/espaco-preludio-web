@@ -109,6 +109,15 @@
     .conv-item__badge { width: 20px; height: 20px; border-radius: 50%; background: var(--a-accent);
       color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center;
       justify-content: center; flex-shrink: 0; }
+    .chat-unlock { min-height: 100dvh; display: grid; place-items: center; padding: 24px; }
+    .chat-unlock.a-hide { display: none; }
+    .chat-unlock__card { width: min(100%, 430px); padding: 28px; border: 1px solid var(--a-line); border-radius: 24px; background: var(--a-surface); box-shadow: var(--a-shadow); }
+    .chat-unlock__icon { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 18px; border-radius: 15px; background: var(--a-bg2); color: var(--a-accent); }
+    .chat-unlock__icon svg { width: 24px; height: 24px; }
+    .chat-unlock h1 { margin: 0; color: var(--a-ink); font: 600 27px/1.1 var(--ff-serif); }
+    .chat-unlock p { margin: 10px 0 22px; color: var(--a-ink2); font-size: 13px; line-height: 1.55; }
+    .chat-unlock__error { margin-top: 12px; color: #b84135; font-size: 12px; line-height: 1.45; }
+    .chat-unlock__back { display: inline-block; margin-top: 18px; color: var(--a-ink2); font-size: 12px; text-decoration: none; }
   </style>
   <script src="./portal-shell.js?v=3" defer></script>
   <script src="./sw-register.js" defer></script>
@@ -163,6 +172,21 @@
       </button>
     </div>
   </div>
+
+  <section id="chatUnlock" class="chat-unlock a-hide" aria-labelledby="chatUnlockTitle">
+    <form id="chatUnlockForm" class="chat-unlock__card">
+      <div class="chat-unlock__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+      </div>
+      <h1 id="chatUnlockTitle">Desbloquear mensagens</h1>
+      <p>Sua sessão no portal continua ativa. Confirme sua senha apenas para abrir localmente a chave das mensagens protegidas.</p>
+      <label class="a-field__label" for="chatUnlockPassword">Senha</label>
+      <input id="chatUnlockPassword" class="a-input" type="password" autocomplete="current-password" required>
+      <button id="chatUnlockButton" class="a-btn a-btn--primary a-btn--block a-mt-16" type="submit">Desbloquear chat</button>
+      <div id="chatUnlockError" class="chat-unlock__error a-hide" role="alert"></div>
+      <a class="chat-unlock__back" href="./home.html">← Voltar ao início</a>
+    </form>
+  </section>
 </div>
 
 <script type="module">
@@ -170,9 +194,9 @@
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
   import {
     generateEcdhKeypair, wrapKey, unwrapKey,
-    unwrapThreadKeyFromPeer, encryptNote, decryptNote
+    unwrapThreadKeyFromPeer, encryptNote, decryptNote, unwrapDek
   } from "../js/crypto.js";
-  import { recallPatientDek } from "../js/patient-session.js";
+  import { recallPatientDek, recallPatientUser, rememberPatientDek, rememberPatientUser } from "../js/patient-session.js";
 
   let currentUser = null;
   let idToken = null;
@@ -181,6 +205,7 @@
   let currentThreadId = null;
   let currentThread = null;
   let pollTimer = null;
+  let chatStarted = false;
   const threadKeyCache = new Map();
 
   function esc(s) { return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
@@ -191,18 +216,15 @@
     if (diff===0) return "Hoje"; if (diff===-1) return "Ontem";
     return d.toLocaleDateString("pt-BR",{day:"2-digit",month:"short"});
   }
-  function reauth() {
-    window.location.href = "./login.html?reauth=1&redirect=" + encodeURIComponent(location.pathname + location.search);
+  function showChatUnlock() {
+    document.getElementById("listView").style.display = "none";
+    document.getElementById("chatView").style.display = "none";
+    document.getElementById("chatUnlock").classList.remove("a-hide");
+    setTimeout(() => document.getElementById("chatUnlockPassword").focus(), 0);
   }
 
-  onAuthStateChanged(auth, async user => {
-    if (!user) { window.location.href = "./login.html"; return; }
-    currentUser = user;
-    idToken = await user.getIdToken();
-
-    dek = recallPatientDek();
-    if (!dek) { reauth(); return; }
-
+  async function startChat() {
+    if (chatStarted) return;
     try {
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/me`, {
         headers: { Authorization: `Bearer ${idToken}` }
@@ -224,8 +246,60 @@
       return;
     }
 
+    chatStarted = true;
     loadThreads();
     setInterval(loadThreads, 30000);
+  }
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = "./login.html"; return; }
+    currentUser = user;
+    idToken = await user.getIdToken();
+
+    const rememberedUser = recallPatientUser();
+    dek = rememberedUser?.uid === user.uid ? recallPatientDek() : null;
+    if (!dek) { showChatUnlock(); return; }
+    startChat();
+  });
+
+  document.getElementById("chatUnlockForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    const button = document.getElementById("chatUnlockButton");
+    const error = document.getElementById("chatUnlockError");
+    const password = document.getElementById("chatUnlockPassword").value;
+    error.classList.add("a-hide");
+    button.disabled = true;
+    button.textContent = "Desbloqueando…";
+    try {
+      idToken = await currentUser.getIdToken();
+      const response = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/me`, {
+        headers: { Authorization: `Bearer ${idToken}` }
+      });
+      const data = await response.json().catch(() => ({}));
+      const account = data.account;
+      if (!response.ok || !account?.e2eeSalt || !account?.wrappedDEK || !account?.wrappedDEKIv) {
+        throw new Error("CHAT_KEY_UNAVAILABLE");
+      }
+      dek = await unwrapDek({
+        wrappedDEK: account.wrappedDEK,
+        wrappedDEKIv: account.wrappedDEKIv,
+        e2eeSalt: account.e2eeSalt
+      }, password);
+      rememberPatientDek(dek);
+      rememberPatientUser({ uid: currentUser.uid, email: currentUser.email, displayName: account.displayName || currentUser.displayName || "" });
+      document.getElementById("chatUnlockPassword").value = "";
+      document.getElementById("chatUnlock").classList.add("a-hide");
+      document.getElementById("listView").style.display = "flex";
+      await startChat();
+    } catch (unlockError) {
+      error.textContent = unlockError?.message === "CHAT_KEY_UNAVAILABLE"
+        ? "A chave segura do chat ainda não está configurada. Entre novamente pelo portal para concluir a configuração."
+        : "Não foi possível desbloquear. Confira sua senha e tente novamente.";
+      error.classList.remove("a-hide");
+    } finally {
+      button.disabled = false;
+      button.textContent = "Desbloquear chat";
+    }
   });
 
   // ─── ECDH keypair: lazy gen + cache no backend ─────────────────────

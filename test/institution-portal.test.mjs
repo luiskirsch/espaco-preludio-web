@@ -244,6 +244,17 @@ test('live weather greeting card has layered motion and reduced-motion fallback'
   assert.match(home, /visibilitychange/);
 });
 
+test('chat desbloqueia a chave local sem encerrar a sessão válida do portal', async () => {
+  const chat = await readFile(resolve(root, 'app/chat.html'), 'utf8');
+  assert.match(chat, /id="chatUnlockForm"/);
+  assert.match(chat, /Sua sessão no portal continua ativa/);
+  assert.match(chat, /unwrapDek/);
+  assert.match(chat, /rememberPatientDek\(dek\)/);
+  assert.match(chat, /rememberedUser\?\.uid === user\.uid/);
+  assert.doesNotMatch(chat, /if \(!dek\) \{ reauth\(\); return; \}/);
+  assert.doesNotMatch(chat, /login\.html\?reauth=1/);
+});
+
 test('todas as telas autenticadas do colaborador usam a estrutura responsiva compartilhada', async () => {
   const authenticatedPages = ['home', 'buscar', 'consultas', 'perfil', 'agendar', 'chat', 'dependentes', 'documentos', 'humor', 'jornada', 'nr1', 'emergencia'];
   for (const page of authenticatedPages) {
