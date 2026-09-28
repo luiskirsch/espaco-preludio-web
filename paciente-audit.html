@@ -17,13 +17,26 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <style>
+    .audit-portal{background:radial-gradient(circle at 88% 5%,rgba(218,185,112,.2),transparent 25%),#f2eddf;color:#173a39}
+    .audit-topbar{height:76px;padding:0 clamp(24px,5vw,76px);background:rgba(255,250,240,.92);border-bottom:1px solid rgba(155,113,28,.2);backdrop-filter:blur(18px);position:sticky;top:0;z-index:40}
+    .audit-topbar .ep-brand__mark{width:46px;height:46px;background:url('/logo_oficial_fundo_transparente.png?v=2') center/contain no-repeat;border:0;box-shadow:none;font-size:0}.audit-topbar .ep-brand__name{font-family:Fraunces,serif;font-size:20px;color:#123f40}.audit-topbar .ep-nav{gap:8px}.audit-topbar .ep-nav a{padding:10px 14px;border-radius:999px;color:#355452;text-decoration:none}.audit-topbar .ep-nav a:hover{background:#e9e2d3;color:#123f40}
+    .audit-main{width:min(1180px,calc(100% - 48px));margin:0 auto;padding:34px 0 72px}
+    .audit-hero{position:relative;overflow:hidden;padding:clamp(28px,4vw,48px);border:1px solid rgba(217,180,95,.32);border-radius:27px;background:linear-gradient(125deg,#0d4142 0%,#164d48 56%,#496447 100%);box-shadow:0 28px 65px -42px rgba(13,45,43,.75);color:#fff}.audit-hero:before,.audit-hero:after{content:"";position:absolute;border:1px solid rgba(226,190,104,.22);border-radius:50%;pointer-events:none}.audit-hero:before{width:350px;height:350px;right:-70px;top:-220px}.audit-hero:after{width:240px;height:240px;right:25px;top:-165px}.audit-hero__content{position:relative;z-index:1;max-width:760px}.audit-back{display:inline-flex;align-items:center;gap:7px;color:#e2ebe5;text-decoration:none;font-size:13px;font-weight:600}.audit-back:hover{color:#f1c968}.audit-hero .ep-eyebrow{margin-top:22px;color:#f1c968}.audit-hero h1{margin:8px 0 10px;color:#fff;font-size:clamp(34px,5vw,58px);line-height:1.03}.audit-hero p{max-width:680px;margin:0;color:#d8e2dc;line-height:1.65}
+    .audit-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}.audit-summary__card{min-height:124px;padding:21px;border:1px solid rgba(22,77,72,.11);border-radius:19px;background:rgba(255,252,245,.92);box-shadow:0 18px 45px -38px rgba(26,55,52,.45)}.audit-summary__label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#95701d}.audit-summary__value{margin-top:13px;font:600 25px/1.2 Fraunces,serif;color:#123f40}.audit-summary__sub{margin-top:6px;font-size:12px;color:#71807b}
+    .audit-content{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;margin-top:18px;align-items:start}.audit-panel{padding:25px;border:1px solid rgba(22,77,72,.11);border-radius:22px;background:rgba(255,252,245,.9);box-shadow:0 18px 45px -38px rgba(26,55,52,.45)}.audit-panel__head{display:flex;align-items:end;justify-content:space-between;gap:16px;padding-bottom:17px;border-bottom:1px solid rgba(22,77,72,.12)}.audit-panel__head h2{margin:5px 0 0;font:600 25px Fraunces,serif}.audit-filters{display:flex;gap:7px;flex-wrap:wrap}.audit-filter{padding:8px 12px;border:1px solid rgba(22,77,72,.14);border-radius:999px;background:#fffaf0;color:#49615c;font:600 11px Inter,sans-serif;cursor:pointer}.audit-filter.is-active{background:#15544f;border-color:#15544f;color:#fff}
+    .audit-list{display:grid;gap:11px;margin-top:18px}.audit-event{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:14px;align-items:start;padding:17px;border:1px solid rgba(22,77,72,.11);border-radius:17px;background:#fff;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}.audit-event:hover{transform:translateY(-1px);border-color:rgba(155,113,28,.34);box-shadow:0 15px 32px -27px rgba(20,70,66,.55)}.audit-event__icon{width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:#e8f0e9;color:#15544f}.audit-event--care .audit-event__icon{background:#fff0cf;color:#91630c}.audit-event__title{font-weight:700;color:#173f3d}.audit-event__description{margin-top:4px;color:#677570;font-size:12px;line-height:1.5}.audit-event__meta{display:flex;gap:7px 13px;flex-wrap:wrap;margin-top:10px}.audit-event__meta span{display:inline-flex;align-items:center;gap:5px;color:#53645f;font-size:11px}.audit-event__meta svg{color:#9b711c}.audit-event__time{text-align:right;white-space:nowrap}.audit-event__time strong{display:block;color:#244945;font-size:12px}.audit-event__time span{display:block;margin-top:4px;color:#88928e;font-size:10px}
+    .privacy-card{padding:24px;border-radius:22px;background:#2a2018;color:#fff;border:1px solid rgba(217,180,95,.28);box-shadow:0 20px 40px -32px rgba(42,32,24,.75)}.privacy-card .ep-eyebrow{color:#edbd58}.privacy-card h2{margin:8px 0 10px;font:600 25px/1.15 Fraunces,serif}.privacy-card>p{margin:0;color:#d7cfc2;font-size:12px;line-height:1.6}.privacy-actions{display:grid;gap:9px;margin-top:20px}.privacy-action{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border:1px solid rgba(255,255,255,.14);border-radius:13px;color:#fff;text-decoration:none;font-size:12px;font-weight:600;background:rgba(255,255,255,.04)}.privacy-action:hover{border-color:#edbd58;background:rgba(237,189,88,.08)}.privacy-note{margin-top:17px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);color:#bfb5a7;font-size:10px;line-height:1.55}.audit-empty{padding:28px;border-radius:16px;text-align:center;background:#fff;color:#65736f}
+    @media(max-width:900px){.audit-content{grid-template-columns:1fr}.audit-summary{grid-template-columns:1fr 1fr}.audit-summary__card:last-child{grid-column:1/-1}}
+    @media(max-width:640px){.audit-topbar{height:auto;min-height:64px;padding:9px 15px}.audit-main{width:min(100% - 24px,1180px);padding:18px 0 50px}.audit-hero{padding:25px 21px;border-radius:21px}.audit-summary{grid-template-columns:1fr}.audit-summary__card:last-child{grid-column:auto}.audit-content{gap:14px}.audit-panel{padding:16px}.audit-panel__head{align-items:flex-start;flex-direction:column}.audit-event{grid-template-columns:42px minmax(0,1fr);padding:14px;gap:11px}.audit-event__icon{width:42px;height:42px;border-radius:12px}.audit-event__time{grid-column:2;text-align:left;display:flex;gap:7px;align-items:center}.audit-event__time span{margin:0}}
+  </style>
   <script src="./i18n/init.js?v=1-3" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
-<body>
+<body class="audit-portal">
 
 <div class="ep-shell">
-  <header class="ep-topbar">
+  <header class="ep-topbar audit-topbar">
     <a href="./paciente-painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
@@ -37,29 +50,49 @@
     </nav>
   </header>
 
-  <main class="ep-main" style="max-width: 760px;">
+  <main class="audit-main">
+    <section class="audit-hero">
+      <div class="audit-hero__content">
+        <a href="./paciente-painel.html" class="audit-back" data-i18n="paciente-audit:back">← Voltar ao painel</a>
+        <div class="ep-eyebrow" data-i18n="paciente-audit:eyebrow">Privacidade e transparência</div>
+        <h1 data-i18n="paciente-audit:h1">Histórico da sua conta</h1>
+        <p>Veja quando sua conta foi criada, recuperada ou utilizada para entrar em uma consulta. Este registro ajuda você a reconhecer a própria atividade e identificar acessos inesperados.</p>
+      </div>
+    </section>
 
-    <a href="./paciente-painel.html" class="ep-text-sm ep-text-muted" data-i18n="paciente-audit:back">← Voltar ao painel</a>
+    <section class="audit-summary" aria-label="Resumo da atividade">
+      <article class="audit-summary__card"><div class="audit-summary__label">Atividades registradas</div><div class="audit-summary__value" id="summaryTotal">—</div><div class="audit-summary__sub">Eventos recentes desta conta</div></article>
+      <article class="audit-summary__card"><div class="audit-summary__label">Última atividade</div><div class="audit-summary__value" id="summaryLast">—</div><div class="audit-summary__sub" id="summaryLastDate">Aguardando dados</div></article>
+      <article class="audit-summary__card"><div class="audit-summary__label">Proteção da conta</div><div class="audit-summary__value">Acesso protegido</div><div class="audit-summary__sub">Autenticação exigida para visualizar</div></article>
+    </section>
 
-    <div class="ep-eyebrow ep-mt-12" data-i18n="paciente-audit:eyebrow">LGPD · Art. 18, II</div>
-    <h1 class="ep-h1 ep-mt-12" data-i18n="paciente-audit:h1">Histórico da sua conta</h1>
-    <p class="ep-text-muted ep-mt-0" data-i18n-html="paciente-audit:intro">
-      Eventos da sua conta no Espaço Prelúdio. Para correção, exportação ou
-      exclusão de dados, escreva para
-      <a href="mailto:contato@espacopreludio.com.br">contato@espacopreludio.com.br</a>.
-    </p>
+    <div class="audit-content">
+      <section class="audit-panel">
+        <div class="audit-panel__head">
+          <div><div class="ep-eyebrow">Linha do tempo</div><h2>Atividade recente</h2></div>
+          <div class="audit-filters" role="group" aria-label="Filtrar histórico">
+            <button class="audit-filter is-active" type="button" data-filter="all">Tudo</button>
+            <button class="audit-filter" type="button" data-filter="account">Conta</button>
+            <button class="audit-filter" type="button" data-filter="care">Consultas</button>
+          </div>
+        </div>
+        <div id="loading" class="ep-skeleton ep-mt-16" data-i18n="paciente-audit:loading">Carregando…</div>
+        <div id="list" class="audit-list ep-hide"></div>
+        <div id="empty" class="audit-empty ep-hide"><p class="ep-mt-0" data-i18n="paciente-audit:empty">Nenhum evento registrado ainda.</p></div>
+      </section>
 
-    <div id="loading" class="ep-skeleton ep-mt-16" data-i18n="paciente-audit:loading">Carregando…</div>
-    <div id="list" class="ep-stack ep-mt-16 ep-hide" style="gap: 8px;"></div>
-    <div id="empty" class="ep-empty ep-mt-16 ep-hide">
-      <p class="ep-text-muted ep-mt-0" data-i18n="paciente-audit:empty">Nenhum evento registrado ainda.</p>
+      <aside class="privacy-card">
+        <div class="ep-eyebrow">Seus dados, suas escolhas</div>
+        <h2>Central de privacidade</h2>
+        <p>Exerça seus direitos de acesso, correção, portabilidade ou exclusão. A equipe confirma sua identidade antes de atender à solicitação.</p>
+        <div class="privacy-actions">
+          <a class="privacy-action" href="mailto:contato@espacopreludio.com.br?subject=Solicita%C3%A7%C3%A3o%20de%20c%C3%B3pia%20dos%20meus%20dados">Solicitar cópia dos dados <span>→</span></a>
+          <a class="privacy-action" href="mailto:contato@espacopreludio.com.br?subject=Solicita%C3%A7%C3%A3o%20de%20corre%C3%A7%C3%A3o%20de%20dados">Corrigir meus dados <span>→</span></a>
+          <a class="privacy-action" href="mailto:contato@espacopreludio.com.br?subject=Solicita%C3%A7%C3%A3o%20de%20exclus%C3%A3o%20de%20conta">Solicitar exclusão <span>→</span></a>
+        </div>
+        <div class="privacy-note">LGPD, art. 18. Algumas informações podem precisar ser preservadas durante o prazo legal ou regulatório aplicável.</div>
+      </aside>
     </div>
-
-    <p class="ep-text-xs ep-text-muted ep-mt-24" style="text-align: center;" data-i18n="paciente-audit:footer">
-      Mostramos seus eventos recentes. Para histórico completo, solicite via
-      e-mail ao Encarregado de Dados.
-    </p>
-
   </main>
 </div>
 
@@ -117,50 +150,161 @@
     const n = Math.floor(d / 30);
     return tr("paciente-audit:relative.months", `há ${n} meses`, { n });
   }
+  function eventPresentation(type) {
+    const presentations = {
+      patient_account_registered: {
+        category: "account", title: "Conta criada",
+        description: "Seu cadastro e a proteção do arquivo pessoal foram configurados.",
+        icon: '<path d="M12 3v18M3 12h18"/>'
+      },
+      patient_account_recovered: {
+        category: "account", title: "Acesso recuperado",
+        description: "A senha foi redefinida por meio da sua chave-semente.",
+        icon: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>'
+      },
+      patient_joined: {
+        category: "care", title: "Entrada em consulta",
+        description: "Sua conta autenticada foi utilizada para acessar uma sala de atendimento.",
+        icon: '<path d="m16 16 4 4m0-4-4 4"/><rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v7l-5-3"/>'
+      },
+      care_session: {
+        category: "care", title: "Consulta registrada",
+        description: "Atendimento vinculado ao seu arquivo pessoal.",
+        icon: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>'
+      }
+    };
+    return presentations[type] || {
+      category: "account", title: "Atividade da conta",
+      description: "Um evento relacionado à sua conta foi registrado.",
+      icon: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
+    };
+  }
+  function compactSessionId(value) {
+    const id = String(value || "");
+    return id.length > 12 ? `${id.slice(0, 8)}…${id.slice(-4)}` : id;
+  }
+
+  const list = document.getElementById("list");
+  const empty = document.getElementById("empty");
+  let auditEvents = [];
+
+  function renderEvents(filter = "all") {
+    const visible = filter === "all"
+      ? auditEvents
+      : auditEvents.filter(ev => eventPresentation(ev.type).category === filter);
+    list.replaceChildren();
+    empty.classList.toggle("ep-hide", visible.length !== 0);
+    list.classList.toggle("ep-hide", visible.length === 0);
+
+    for (const ev of visible) {
+      const presentation = eventPresentation(ev.type);
+      const meta = ev.meta || {};
+      const row = document.createElement("article");
+      row.className = `audit-event audit-event--${presentation.category}`;
+      row.dataset.category = presentation.category;
+      row.innerHTML = `
+        <div class="audit-event__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${presentation.icon}</svg></div>
+        <div>
+          <div class="audit-event__title"></div>
+          <div class="audit-event__description"></div>
+          <div class="audit-event__meta"></div>
+        </div>
+        <div class="audit-event__time"><strong></strong><span></span></div>
+      `;
+      row.querySelector(".audit-event__title").textContent = presentation.title;
+      row.querySelector(".audit-event__description").textContent = presentation.description;
+      row.querySelector(".audit-event__time strong").textContent = fmtAt(ev.at);
+      row.querySelector(".audit-event__time span").textContent = fmtRelative(ev.at);
+
+      const metaBox = row.querySelector(".audit-event__meta");
+      if (meta.sessionId) {
+        const item = document.createElement("span");
+        item.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4z"/><path d="M8 9h8m-8 4h5"/></svg>';
+        item.append(`Consulta ${compactSessionId(meta.sessionId)}`);
+        metaBox.appendChild(item);
+      }
+      if (meta.ip) {
+        const item = document.createElement("span");
+        item.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>';
+        item.append(`Rede ${String(meta.ip)}`);
+        metaBox.appendChild(item);
+      }
+      if (meta.therapistName) {
+        const item = document.createElement("span");
+        item.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+        item.append(String(meta.therapistName));
+        metaBox.appendChild(item);
+      }
+      if (meta.specialty) {
+        const item = document.createElement("span");
+        item.textContent = String(meta.specialty);
+        metaBox.appendChild(item);
+      }
+      if (meta.statusLabel) {
+        const item = document.createElement("span");
+        item.textContent = String(meta.statusLabel);
+        metaBox.appendChild(item);
+      }
+      if (meta.durationMinutes) {
+        const item = document.createElement("span");
+        item.textContent = `${Number(meta.durationMinutes)} min`;
+        metaBox.appendChild(item);
+      }
+      if (!metaBox.children.length) {
+        const item = document.createElement("span");
+        item.textContent = "Registro verificado pelo sistema";
+        metaBox.appendChild(item);
+      }
+      list.appendChild(row);
+    }
+  }
+
+  document.querySelectorAll(".audit-filter").forEach(button => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll(".audit-filter").forEach(item => item.classList.toggle("is-active", item === button));
+      renderEvents(button.dataset.filter);
+    });
+  });
 
   (async () => {
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/audit`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) throw new Error(data?.error || "ERRO");
+      const headers = { "Authorization": `Bearer ${idToken}` };
+      const [auditRes, sessionsRes] = await Promise.all([
+        fetch(`${BACKEND_BASE_URL}/therapy/paciente/audit`, { headers }),
+        fetch(`${BACKEND_BASE_URL}/therapy/paciente/sessoes`, { headers })
+      ]);
+      const [data, sessionsData] = await Promise.all([
+        auditRes.json().catch(() => ({})),
+        sessionsRes.json().catch(() => ({}))
+      ]);
+      if (!auditRes.ok || !data.ok) throw new Error(data?.error || "ERRO_AUDITORIA");
+      if (!sessionsRes.ok || !sessionsData.ok) throw new Error(sessionsData?.error || "ERRO_CONSULTAS");
 
-      const events = data.events || [];
+      const statusLabels = {
+        scheduled: "Agendada", approved: "Agendada", pending: "Aguardando confirmação",
+        in_progress: "Em andamento", completed: "Realizada", finished: "Realizada",
+        canceled: "Cancelada", cancelled: "Cancelada", no_show: "Não realizada"
+      };
+      const sessionEvents = (sessionsData.sessions || []).map(session => ({
+        id: `session-${session.sessionId}`,
+        type: "care_session",
+        at: Number(session.scheduledAt) || null,
+        meta: {
+          sessionId: session.sessionId,
+          therapistName: session.therapistName || null,
+          specialty: session.especialidade || "Atendimento particular",
+          statusLabel: statusLabels[String(session.status || "scheduled").toLowerCase()] || "Registrada",
+          durationMinutes: Number(session.durationMinutes) || null
+        }
+      }));
+      const events = [...(data.events || []), ...sessionEvents]
+        .sort((a, b) => (b.at || 0) - (a.at || 0));
+      auditEvents = events;
       document.getElementById("loading").classList.add("ep-hide");
-
-      const list = document.getElementById("list");
-      const empty = document.getElementById("empty");
-      if (events.length === 0) {
-        empty.classList.remove("ep-hide");
-        return;
-      }
-
-      const sessionLabel = tr("paciente-audit:meta.sessionPrefix", "Sessão ");
-      const ipLabel = tr("paciente-audit:meta.ipPrefix", "IP: ");
-
-      list.innerHTML = "";
-      for (const ev of events) {
-        const meta = ev.meta || {};
-        const metaParts = [];
-        if (meta.sessionId) metaParts.push(`${escapeHtml(sessionLabel)}<code>${escapeHtml(meta.sessionId.slice(0, 12))}…</code>`);
-        if (meta.ip)        metaParts.push(escapeHtml(ipLabel) + escapeHtml(meta.ip));
-
-        const row = document.createElement("article");
-        row.className = "ep-audit-row";
-        row.innerHTML = `
-          <div class="ep-audit-row__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-          </div>
-          <div class="ep-audit-row__main">
-            <div class="ep-audit-row__title">${escapeHtml(ev.description)}</div>
-            <div class="ep-audit-row__meta">${metaParts.join(" · ") || "&nbsp;"}</div>
-          </div>
-          <div class="ep-audit-row__time" title="${escapeHtml(fmtAt(ev.at))}">${escapeHtml(fmtRelative(ev.at))}</div>
-        `;
-        list.appendChild(row);
-      }
-      list.classList.remove("ep-hide");
+      document.getElementById("summaryTotal").textContent = String(events.length);
+      document.getElementById("summaryLast").textContent = events[0]?.at ? fmtRelative(events[0].at) : "Sem atividade";
+      document.getElementById("summaryLastDate").textContent = events[0]?.at ? fmtAt(events[0].at) : "Nenhum registro disponível";
+      renderEvents("all");
     } catch (e) {
       console.error("audit_load_error", e);
       document.getElementById("loading").textContent = tr("paciente-audit:errorPrefix", "Erro: ") + e.message;
