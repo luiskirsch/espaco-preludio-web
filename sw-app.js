@@ -2,13 +2,15 @@
 // Documentos usam network-first para nunca prender o app em uma versão antiga.
 // Apenas ativos estáticos do mesmo domínio usam cache com revalidação.
 
-const VERSION = "ep-app-v17-2026-09-27-home-journey-fixes";
+const VERSION = "ep-app-v18-2026-09-28-live-weather-hero";
 const STATIC_CACHE = `static-${VERSION}`;
 const PAGE_CACHE = `pages-${VERSION}`;
 const OFFLINE_PAGE = "/app/login.html";
 const PRECACHE = [
   OFFLINE_PAGE,
   "/app/app.css?v=20260927k",
+  "/app/weather-hero.css?v=20260928a",
+  "/app/assets/home-sky-clouds.webp",
   "/app/portal-shell.js?v=3",
   "/app/jornada.html",
   "/app/nr1.html",

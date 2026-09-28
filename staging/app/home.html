@@ -14,6 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./app.css?v=20260927m">
+  <link rel="stylesheet" href="./weather-hero.css?v=20260928a">
   <style>
     .home-hero {
       background: linear-gradient(135deg, #1c1f1d 0%, #2d3a30 100%);
@@ -71,12 +72,16 @@
     <!-- Hero -->
     <div class="home-hero" id="homeHero">
       <div class="home-hero__sky" aria-hidden="true">
+        <span class="sky-atmosphere"></span>
+        <span class="sky-haze"></span>
         <span class="sky-orb"></span>
         <span class="sky-stars"></span>
         <span class="sky-clouds"><i></i><i></i><i></i><i></i></span>
         <span class="sky-fog"></span>
+        <span class="sky-rain-depth"></span>
         <span class="sky-drops"></span>
         <span class="sky-flash"></span>
+        <span class="sky-vignette"></span>
       </div>
       <div class="home-hero__greeting">Bom dia 🌿</div>
       <div class="home-hero__name" id="heroNome">Carregando…</div>
@@ -220,11 +225,13 @@
     const drops = hero.querySelector(".sky-drops");
     if (weather === "rain" || weather === "storm" || weather === "snow") {
       const snow = weather === "snow";
-      const count = weather === "storm" ? 110 : snow ? 55 : 75;
+      const count = weather === "storm" ? 125 : snow ? 65 : 90;
       fillParticles(drops, count, el => {
-        const duration = snow ? 7 + Math.random() * 6 : (weather === "storm" ? .55 : .8) + Math.random() * .45;
+        const duration = snow ? 7 + Math.random() * 6 : (weather === "storm" ? .48 : .72) + Math.random() * .5;
         el.style.left = `${-10 + Math.random() * 115}%`;
         el.style.setProperty("--y", String(Math.round(Math.random() * 100)));
+        el.style.setProperty("--depth", (.55 + Math.random() * .9).toFixed(2));
+        el.style.setProperty("--wind", `${-42 - Math.random() * 38}px`);
         el.style.animationDuration = `${duration}s`;
         el.style.animationDelay = `${-Math.random() * duration}s`;
         el.style.opacity = String(.35 + Math.random() * .55);

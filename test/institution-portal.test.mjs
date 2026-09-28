@@ -214,6 +214,24 @@ test('portal do colaborador usa layout amplo no desktop e preserva a navegacao m
   }
 });
 
+test('live weather greeting card has layered motion and reduced-motion fallback', async () => {
+  const [home, weatherCss] = await Promise.all([
+    readFile(resolve(root, 'app/home.html'), 'utf8'),
+    readFile(resolve(root, 'app/weather-hero.css'), 'utf8')
+  ]);
+  for (const layer of ['sky-atmosphere', 'sky-haze', 'sky-rain-depth', 'sky-drops', 'sky-flash', 'sky-vignette']) {
+    assert.match(home, new RegExp(`class="${layer}"`));
+  }
+  for (const weather of ['partly', 'cloudy', 'rain', 'storm', 'snow', 'fog']) {
+    assert.match(weatherCss, new RegExp(`data-weather="${weather}"`));
+  }
+  assert.match(weatherCss, /@keyframes live-sky-breathe/);
+  assert.match(weatherCss, /@keyframes live-rain-near/);
+  assert.match(weatherCss, /@keyframes live-snow-fall/);
+  assert.match(weatherCss, /prefers-reduced-motion:\s*reduce/);
+  assert.match(weatherCss, /assets\/home-sky-clouds\.webp/);
+});
+
 test('todas as telas autenticadas do colaborador usam a estrutura responsiva compartilhada', async () => {
   const authenticatedPages = ['home', 'buscar', 'consultas', 'perfil', 'agendar', 'chat', 'dependentes', 'documentos', 'humor', 'jornada', 'nr1', 'emergencia'];
   for (const page of authenticatedPages) {
