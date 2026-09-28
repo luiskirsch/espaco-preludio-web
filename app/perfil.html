@@ -300,7 +300,7 @@
     el.innerHTML = `<img src="${src}" alt="Foto de perfil">`;
   }
 
-  onAuthStateChanged(auth, user => {
+  onAuthStateChanged(auth, async user => {
     if (!user) { window.location.href = "./login.html"; return; }
     currentUser = user;
     const name = user.displayName || user.email.split("@")[0];
@@ -314,9 +314,23 @@
     // o resto do callback (inclusive a lógica do avatar logo a seguir),
     // deixando o "?" estático travado mesmo quando o usuário tinha nome mas
     // não tinha foto. Preenchido dentro de buildNotifCard() agora.
-    // photoURL do Firebase Auth — disponível imediatamente, persiste em todos os devices
-    if (user.photoURL) {
-      setAvatar(user.photoURL);
+
+    // A foto NÃO vem de user.photoURL (Firebase Auth) — este projeto Firebase
+    // é compartilhado com O SextoLugar (jogo), e esse campo é global à conta:
+    // quem já jogou e definiu um avatar lá via a mesma conta via o avatar do
+    // jogo aqui, e uma foto enviada aqui vazaria pro jogo. photoUrl fica em
+    // therapy_patient_accounts, isolado por produto.
+    let photoUrl = null;
+    try {
+      const idToken = await user.getIdToken();
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/me`, {
+        headers: { Authorization: `Bearer ${idToken}` }
+      });
+      if (r.ok) { const d = await r.json(); photoUrl = d.account?.photoUrl || null; }
+    } catch { /* sem conta/rede — cai pras iniciais, não é bloqueante */ }
+
+    if (photoUrl) {
+      setAvatar(photoUrl);
     } else {
       document.getElementById("profileAvatar").textContent = initials;
     }
@@ -405,11 +419,20 @@
         img.src = URL.createObjectURL(file);
       });
       setAvatar(base64);
-      // Upload para Firebase Storage → URL real → salva em user.photoURL
+      // Upload para Firebase Storage → URL real → salva em therapy_patient_accounts.
+      // NÃO usa updateProfile()/photoURL do Firebase Auth — esse campo é
+      // compartilhado com O SextoLugar (jogo), que roda no mesmo projeto
+      // Firebase; gravar ali vazaria a foto pro perfil do jogador e vice-versa.
       const storageRef = ref(storage, `patient-photos/${currentUser.uid}.jpg`);
       await uploadString(storageRef, base64, "data_url");
       const downloadURL = await getDownloadURL(storageRef);
-      await updateProfile(currentUser, { photoURL: downloadURL });
+      const idToken = await currentUser.getIdToken();
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/perfil`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ photoUrl: downloadURL })
+      });
+      if (!r.ok) throw new Error("save_failed");
       document.getElementById("photoLoading").textContent = "✓ Foto salva!";
       setTimeout(() => { document.getElementById("photoLoading").style.display = "none"; document.getElementById("photoLoading").textContent = "Salvando foto…"; }, 2000);
     } catch {
