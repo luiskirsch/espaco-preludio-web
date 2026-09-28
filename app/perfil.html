@@ -308,8 +308,12 @@
     document.getElementById("profileName").textContent = name;
     document.getElementById("profileEmail").textContent = user.email;
     document.getElementById("menuNome").textContent  = name;
-    document.getElementById("menuEmail").textContent = user.email;
     document.getElementById("newName").value = name;
+    // #menuEmail não existe ainda aqui — buildNotifCard() é quem o cria via
+    // innerHTML mais abaixo. Setar antes disso lançava TypeError e abortava
+    // o resto do callback (inclusive a lógica do avatar logo a seguir),
+    // deixando o "?" estático travado mesmo quando o usuário tinha nome mas
+    // não tinha foto. Preenchido dentro de buildNotifCard() agora.
     // photoURL do Firebase Auth — disponível imediatamente, persiste em todos os devices
     if (user.photoURL) {
       setAvatar(user.photoURL);
@@ -345,7 +349,7 @@
             ⚠️ Seu iPhone 7 (iOS ${iosVer}) não suporta notificações push em apps web. Você receberá avisos por e-mail normalmente.
           </div>
           ${emailRow}`;
-        document.getElementById("menuEmail").textContent = currentUser?.email || "—";
+        document.getElementById("menuEmail").textContent = user.email;
         return;
       }
 
@@ -359,6 +363,7 @@
               <div class="menu-item__sub">Não suportado neste navegador</div>
             </div>
           </div>${emailRow}`;
+        document.getElementById("menuEmail").textContent = user.email;
         return;
       }
 
@@ -374,6 +379,7 @@
           <button class="toggle-switch ${isOn ? "is-on" : ""}" id="notifToggle" onclick="toggleNotif()"></button>
         </div>
         ${emailRow}`;
+      document.getElementById("menuEmail").textContent = user.email;
     })();
   });
 
