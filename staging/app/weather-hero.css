@@ -88,15 +88,15 @@ body.a-route-home .home-hero::after {
 .sky-haze::before {
   content: "";
   position: absolute;
-  width: 52%;
-  height: 190%;
-  right: 1%;
-  top: -80%;
-  opacity: .42;
-  background: conic-gradient(from 168deg at 50% 0%, transparent 0 5deg, rgba(255, 232, 166, .15) 7deg 10deg, transparent 12deg 18deg, rgba(255, 239, 188, .1) 20deg 23deg, transparent 26deg);
-  filter: blur(7px);
-  transform-origin: 50% 0;
-  animation: live-sun-rays 15s ease-in-out infinite alternate;
+  width: 38%;
+  height: 115%;
+  right: 0;
+  top: -42%;
+  opacity: .34;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 229, 155, .2) 0%, rgba(255, 224, 145, .08) 34%, transparent 70%);
+  filter: blur(18px);
+  animation: live-sun-glow 12s ease-in-out infinite alternate;
 }
 
 .home-hero:is([data-weather="cloudy"], [data-weather="rain"], [data-weather="storm"], [data-weather="fog"], [data-weather="snow"]) .sky-haze::before,
@@ -119,18 +119,6 @@ body.a-route-home .home-hero::after {
   animation: live-orb-pulse 7s ease-in-out infinite alternate;
 }
 
-.home-hero__sky > .sky-orb::before {
-  content: "";
-  position: absolute;
-  inset: -44px;
-  border-radius: 50%;
-  opacity: .42;
-  background: repeating-conic-gradient(from 8deg, rgba(255, 227, 146, .22) 0 4deg, transparent 8deg 19deg);
-  -webkit-mask: radial-gradient(circle, transparent 0 29%, #000 49%, transparent 72%);
-  mask: radial-gradient(circle, transparent 0 29%, #000 49%, transparent 72%);
-  animation: live-rays-turn 34s linear infinite;
-}
-
 .home-hero[data-phase="night"] .sky-orb {
   width: 42px;
   height: 42px;
@@ -139,8 +127,6 @@ body.a-route-home .home-hero::after {
   filter: none;
   animation: live-moon-float 8s ease-in-out infinite alternate;
 }
-
-.home-hero[data-phase="night"] .sky-orb::before { display: none; }
 
 .sky-stars { z-index: 2; }
 .sky-clouds { z-index: 3; }
@@ -218,13 +204,9 @@ body.a-route-home .home-hero::after {
   to { transform: translate3d(1.5%, -2%, 0) scale(1.06); }
 }
 
-@keyframes live-sun-rays {
-  from { transform: rotate(-3deg) scaleX(.92); opacity: .25; }
-  to { transform: rotate(4deg) scaleX(1.08); opacity: .55; }
-}
-
-@keyframes live-rays-turn {
-  to { transform: rotate(360deg); }
+@keyframes live-sun-glow {
+  from { transform: scale(.94); opacity: .24; }
+  to { transform: scale(1.06); opacity: .4; }
 }
 
 @keyframes live-orb-pulse {
