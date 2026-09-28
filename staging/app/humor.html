@@ -169,12 +169,30 @@
   let chartInstance = null;
   let todayLocked  = false;
 
-  const todayStr = () => new Date().toISOString().slice(0, 10);
-  const SESSION_KEY = "ep:humor:session";
+  // Data em horário de São Paulo, não UTC — toISOString() usaria UTC e, entre
+  // 21h e 23h59 em SP (UTC-3), o UTC já teria virado o dia seguinte, fazendo
+  // o humor "de hoje" cair no dia errado tanto aqui quanto no que é salvo.
+  function todayStr() {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit"
+    }).formatToParts(new Date()).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  }
+  function shiftDate(dateStr, days) {
+    const date = new Date(`${dateStr}T12:00:00Z`);
+    date.setUTCDate(date.getUTCDate() + days);
+    return date.toISOString().slice(0, 10);
+  }
+  function dateFromKey(dateStr) {
+    return new Date(`${dateStr}T12:00:00Z`);
+  }
+  const sessionKey = () => currentUser ? `ep:humor:session:${currentUser.uid}` : null;
 
   function readSessionCache() {
     try {
-      const raw = sessionStorage.getItem(SESSION_KEY);
+      const key = sessionKey();
+      if (!key) return null;
+      const raw = sessionStorage.getItem(key);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       if (parsed.date !== todayStr()) return null;
@@ -182,7 +200,10 @@
     } catch { return null; }
   }
   function writeSessionCache(data) {
-    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ date: todayStr(), data })); } catch {}
+    try {
+      const key = sessionKey();
+      if (key) sessionStorage.setItem(key, JSON.stringify({ date: todayStr(), data }));
+    } catch {}
   }
 
   function lockPicker() {
@@ -197,11 +218,15 @@
   onAuthStateChanged(auth, async user => {
     if (!user) { window.location.href = "./login.html"; return; }
     currentUser = user;
+    // Remove a antiga chave compartilhada entre contas, usada antes do cache
+    // ser isolado por usuário neste dispositivo.
+    try { sessionStorage.removeItem("ep:humor:session"); } catch {}
 
-    const today = new Date();
+    const today = dateFromKey(todayStr());
     document.getElementById("heroDate").textContent =
-      `${DAYS[today.getDay()]}, ${today.getDate()} de ${MONTHS[today.getMonth()]}`;
+      `${DAYS[today.getUTCDay()]}, ${today.getUTCDate()} de ${MONTHS[today.getUTCMonth()]}`;
 
+    // Render do cache de sessão imediatamente
     const cached = readSessionCache();
     if (cached) {
       humorData = cached;
@@ -266,9 +291,16 @@
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ mood: selectedMood, date })
+        body: JSON.stringify({ mood: selectedMood })
       });
-      if (!r.ok) throw new Error("fail");
+      const response = await r.json().catch(() => ({}));
+      if (!r.ok || !response.ok) throw new Error(response.error || "fail");
+      if (response.date && response.date !== date) {
+        delete humorData[date];
+        humorData[response.date] = response.mood;
+        writeSessionCache(humorData);
+        renderAll();
+      }
     } catch {
       delete humorData[date];
       todayLocked = false;
@@ -278,7 +310,10 @@
       document.getElementById("savedMsg").textContent = "Não foi possível salvar. Tente novamente.";
       document.getElementById("saveBtn").classList.remove("a-hide");
       writeSessionCache(humorData);
-      renderAll();
+      markBtn(selectedMood);
+      buildChart();
+      buildStreak();
+      loadHistory();
     }
   }
 
@@ -293,6 +328,11 @@
       document.getElementById("saveBtn").classList.add("a-hide");
       markBtn(todayMood);
       if (!todayLocked) lockPicker();
+    } else if (!todayLocked) {
+      selectedMood = null;
+      markBtn(null);
+      document.getElementById("heroEmoji").textContent = "😐";
+      document.getElementById("heroLabel").textContent = "Como está você hoje?";
     }
     buildChart();
     buildStreak();
@@ -307,10 +347,11 @@
 
   function buildChart() {
     const labels = [], data = [], colors = [];
+    const today = todayStr();
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().slice(0, 10);
-      labels.push(DAYS[d.getDay()]);
+      const dateStr = shiftDate(today, -i);
+      const d = dateFromKey(dateStr);
+      labels.push(DAYS[d.getUTCDay()]);
       const val = humorData[dateStr] || 0;
       data.push(val);
       colors.push(val ? (MOODS[val]?.color || "#ccc") : "rgba(0,0,0,.06)");
@@ -333,10 +374,10 @@
 
   function buildStreak() {
     let streak = 0;
-    const today = new Date();
+    const today = todayStr();
     for (let i = 0; i < 365; i++) {
-      const d = new Date(today); d.setDate(today.getDate() - i);
-      if (humorData[d.toISOString().slice(0, 10)]) streak++;
+      const date = shiftDate(today, -i);
+      if (humorData[date]) streak++;
       else if (i > 0) break;
     }
     document.getElementById("streakNum").textContent = streak;
@@ -345,17 +386,20 @@
   function loadHistory() {
     const sorted = Object.entries(humorData).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 30);
     const list = document.getElementById("historyList");
-    if (!sorted.length) return;
+    if (!sorted.length) {
+      list.innerHTML = `<div class="a-empty" style="padding:24px 0;"><div class="a-empty__icon" style="font-size:32px;">📝</div><div class="a-empty__sub">Seus registros de humor aparecerão aqui.</div></div>`;
+      return;
+    }
     list.innerHTML = sorted.map(([dateStr, val]) => {
-      const d = new Date(dateStr + "T12:00:00");
+      const d = dateFromKey(dateStr);
       const m = MOODS[val] || MOODS[3];
       return `<div class="history-item">
         <div class="history-emoji">${m.emoji}</div>
         <div class="history-info">
           <div class="history-day">${m.label}</div>
-          <div class="history-label">${DAYS[d.getDay()]}</div>
+          <div class="history-label">${DAYS[d.getUTCDay()]}</div>
         </div>
-        <div class="history-date">${d.getDate()} de ${MONTHS[d.getMonth()]}</div>
+        <div class="history-date">${d.getUTCDate()} de ${MONTHS[d.getUTCMonth()]}</div>
       </div>`;
     }).join("");
   }

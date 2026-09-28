@@ -217,7 +217,15 @@
 
     // Humor de hoje — o backend é a única fonte persistente. Dados de saúde
     // não ficam em localStorage em dispositivos compartilhados.
-    const todayStr = new Date().toISOString().slice(0, 10);
+    function todayInSaoPaulo() {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit"
+      }).formatToParts(new Date()).reduce((acc, part) => {
+        acc[part.type] = part.value;
+        return acc;
+      }, {});
+      return `${parts.year}-${parts.month}-${parts.day}`;
+    }
     const HUMOR_CACHE = `ep:humor:cache:${user.uid}`;
     try { localStorage.removeItem(HUMOR_CACHE); } catch {}
 
@@ -229,7 +237,8 @@
           headers: { Authorization: `Bearer ${tok}` }
         });
         const d = await r.json().catch(() => ({}));
-        if (d.ok && d.items) return d.items[0]?.mood ? String(d.items[0].mood) : null;
+        const latest = d.items?.[0];
+        if (d.ok && latest?.date === todayInSaoPaulo() && latest.mood) return String(latest.mood);
       } catch {}
       return null;
     }
@@ -257,17 +266,26 @@
         document.querySelectorAll(".a-mood__btn").forEach(b => b.classList.remove("is-selected"));
         btn.classList.add("is-selected");
         const mood = btn.dataset.mood;
-        document.getElementById("moodFooter").classList.add("is-visible");
+        const moodFooter = document.getElementById("moodFooter");
+        const moodSaved = document.getElementById("moodSaved");
+        moodSaved.textContent = "Salvando…";
+        moodFooter.classList.add("is-visible");
         lockMoodPicker();
         try {
           const tok = await user.getIdToken();
-          await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
+          const response = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
             method: "POST",
             headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ mood: Number(mood), date: todayStr })
+            body: JSON.stringify({ mood: Number(mood) })
           });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.ok || data.date !== todayInSaoPaulo()) {
+            throw new Error(data.error || "Não foi possível confirmar o registro.");
+          }
+          moodSaved.textContent = "✓ Registrado";
         } catch {
           moodLocked = false;
+          moodSaved.textContent = "Não foi possível salvar. Toque novamente para tentar.";
           document.querySelectorAll(".a-mood__btn").forEach(b => {
             b.disabled = false; b.style.opacity = ""; b.style.cursor = "";
           });
