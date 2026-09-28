@@ -199,6 +199,10 @@
   const hero = document.getElementById("homeHero");
   const SKY_CACHE = "ep:sky:v2";
   const SKY_TTL_MS = 30 * 60 * 1000;
+  const SKY_REFRESH_MS = 10 * 60 * 1000;
+  let activeSkyUser = null;
+  let skyRequestInFlight = false;
+  let lastSkyCheck = 0;
   function skyPhase(hour) {
     if (hour >= 5 && hour < 7) return "dawn";
     if (hour >= 7 && hour < 12) return "morning";
@@ -216,8 +220,10 @@
     container.replaceChildren(frag);
   }
   function renderSky(weather, reveal = true) {
-    const phase = skyPhase(new Date().getHours());
+    const hour = new Date().getHours();
+    const phase = skyPhase(hour);
     hero.dataset.phase = phase;
+    document.querySelector(".home-hero__greeting").textContent = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
     if (weather) hero.dataset.weather = weather; else delete hero.dataset.weather;
     const stars = hero.querySelector(".sky-stars");
     if (phase === "night" || phase === "dawn") {
@@ -265,12 +271,14 @@
       timeout: 7000
     }));
   }
-  async function loadSky(user) {
-    const coordinates = await deviceCoordinates();
-    const source = coordinates ? "device" : "ip";
-    const cached = readSkyCache(source);
-    if (cached) { renderSky(cached.weather); return; }
+  async function loadSky(user, { force = false } = {}) {
+    if (skyRequestInFlight) return;
+    skyRequestInFlight = true;
     try {
+      const coordinates = await deviceCoordinates();
+      const source = coordinates ? "device" : "ip";
+      const cached = force ? null : readSkyCache(source);
+      if (cached) { renderSky(cached.weather); return; }
       const data = coordinates
         ? await portalApi(user, "/therapy/paciente/ambiente", {
             method: "POST",
@@ -281,11 +289,24 @@
       // Só guarda clima real: "sem clima" pode ser a base ainda carregando no
       // servidor, e não deve prender o card sem clima por 30 minutos.
       if (weather) try { sessionStorage.setItem(SKY_CACHE, JSON.stringify({ weather, source, expires: Date.now() + SKY_TTL_MS })); } catch {}
-      renderSky(weather);
-    } catch { renderSky(null); /* sem clima: fica o céu do horário */ }
+      if (weather || !force) renderSky(weather);
+    } catch {
+      if (!force) renderSky(null); // Em refresh, preserva a última cena válida.
+    } finally {
+      lastSkyCheck = Date.now();
+      skyRequestInFlight = false;
+    }
   }
   renderSky(null, false);
-  setInterval(() => renderSky(hero.dataset.weather || null), 10 * 60 * 1000);
+  setInterval(() => {
+    renderSky(hero.dataset.weather || null);
+    if (activeSkyUser && !document.hidden) loadSky(activeSkyUser, { force: true });
+  }, SKY_REFRESH_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) return;
+    renderSky(hero.dataset.weather || null);
+    if (activeSkyUser && Date.now() - lastSkyCheck >= SKY_REFRESH_MS) loadSky(activeSkyUser, { force: true });
+  });
 
   async function loadJourney(user) {
     const container = document.getElementById("homeJourney");
@@ -320,13 +341,14 @@
   }
 
   onAuthStateChanged(auth, async user => {
-    if (!user) { window.location.href = "./login.html"; return; }
+    if (!user) { activeSkyUser = null; window.location.href = "./login.html"; return; }
 
     // Saudação
     const hour = new Date().getHours();
     const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
     document.querySelector(".home-hero__greeting").textContent = greeting;
     document.getElementById("heroNome").textContent = (user.displayName || user.email.split("@")[0]).split(" ")[0];
+    activeSkyUser = user;
     loadSky(user);
     loadJourney(user);
     loadSurveys(user);

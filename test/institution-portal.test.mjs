@@ -235,6 +235,9 @@ test('live weather greeting card has layered motion and reduced-motion fallback'
   assert.match(home, /source\s*=\s*coordinates\s*\?\s*"device"\s*:\s*"ip"/);
   assert.match(home, /data-weather-state="loading"/);
   assert.match(home, /requestAnimationFrame\(\(\) => \{ hero\.dataset\.weatherState = "ready";/);
+  assert.match(home, /SKY_REFRESH_MS\s*=\s*10\s*\*\s*60\s*\*\s*1000/);
+  assert.match(home, /loadSky\(activeSkyUser,\s*\{\s*force:\s*true\s*\}\)/);
+  assert.match(home, /visibilitychange/);
 });
 
 test('todas as telas autenticadas do colaborador usam a estrutura responsiva compartilhada', async () => {
