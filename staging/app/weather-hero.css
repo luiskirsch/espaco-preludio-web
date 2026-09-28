@@ -41,11 +41,27 @@ body.a-route-home .home-hero::after {
   inset: -12% -5%;
   z-index: 1;
   opacity: .46;
-  background: url("./assets/home-sky-clouds.webp") center 42% / cover no-repeat;
+  overflow: hidden;
+  background: none;
   filter: saturate(.7) contrast(.9);
   mix-blend-mode: normal;
-  transform: scale(1.06);
-  animation: live-sky-breathe 18s ease-in-out infinite alternate;
+  transform: none;
+  animation: none;
+}
+
+.sky-atmosphere::before,
+.sky-atmosphere::after {
+  content: "";
+  position: absolute;
+  inset: -8%;
+  background: url("./assets/home-sky-clouds.webp") center 42% / cover no-repeat;
+  will-change: transform, opacity;
+  animation: live-cloud-pan 38s linear infinite;
+}
+
+.sky-atmosphere::after {
+  background-position: 62% 46%;
+  animation-delay: -19s;
 }
 
 .home-hero[data-weather="clear"] .sky-atmosphere {
@@ -180,7 +196,12 @@ body.a-route-home .home-hero::after {
 
 .sky-stars { z-index: 2; }
 .sky-clouds { z-index: 3; }
-.sky-clouds i { filter: blur(7px); }
+.sky-clouds i {
+  filter: blur(7px);
+  animation-name: live-cloud-bank;
+  animation-timing-function: linear;
+  animation-direction: normal;
+}
 
 .home-hero[data-weather="rain"] .home-hero__sky { --dim: .28; }
 .home-hero[data-weather="storm"] .home-hero__sky { --dim: .4; }
@@ -223,7 +244,12 @@ body.a-route-home .home-hero::after {
 .sky-fog::before,
 .sky-fog::after {
   background: linear-gradient(90deg, transparent, rgba(222, 230, 228, .21) 30%, rgba(222, 230, 228, .29) 60%, transparent);
+  animation-name: live-fog-flow;
+  animation-duration: 52s;
+  animation-timing-function: linear;
+  animation-direction: normal;
 }
+.sky-fog::after { animation-delay: -26s; }
 
 .sky-flash {
   z-index: 6;
@@ -246,9 +272,23 @@ body.a-route-home .home-hero::after {
     linear-gradient(0deg, rgba(3, 13, 17, .27), transparent 58%);
 }
 
-@keyframes live-sky-breathe {
-  from { transform: scale(1.06) translate3d(-2.2%, .5%, 0); }
-  to { transform: scale(1.11) translate3d(2.2%, -1.5%, 0); }
+@keyframes live-cloud-pan {
+  0% { opacity: 0; transform: translate3d(-4%, 1%, 0) scale(1.08); }
+  50% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(4%, -1%, 0) scale(1.13); }
+}
+
+@keyframes live-cloud-bank {
+  0% { opacity: 0; transform: translate3d(-55px, 0, 0); }
+  16% { opacity: 1; }
+  84% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(55px, -3px, 0); }
+}
+
+@keyframes live-fog-flow {
+  0% { opacity: 0; transform: translate3d(-4%, 0, 0) scaleX(1.02); }
+  50% { opacity: .88; }
+  100% { opacity: 0; transform: translate3d(4%, -2px, 0) scaleX(1.06); }
 }
 
 @keyframes live-haze {
@@ -291,4 +331,6 @@ body.a-route-home .home-hero::after {
   .home-hero__sky *,
   .home-hero__sky *::before,
   .home-hero__sky *::after { animation: none !important; }
+  .sky-atmosphere::before { opacity: 1; transform: scale(1.08); }
+  .sky-atmosphere::after { display: none; }
 }

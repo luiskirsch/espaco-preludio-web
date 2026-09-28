@@ -225,7 +225,9 @@ test('live weather greeting card has layered motion and reduced-motion fallback'
   for (const weather of ['partly', 'cloudy', 'rain', 'storm', 'snow', 'fog']) {
     assert.match(weatherCss, new RegExp(`data-weather="${weather}"`));
   }
-  assert.match(weatherCss, /@keyframes live-sky-breathe/);
+  assert.match(weatherCss, /@keyframes live-cloud-pan/);
+  assert.match(weatherCss, /@keyframes live-cloud-bank/);
+  assert.match(weatherCss, /@keyframes live-fog-flow/);
   assert.match(weatherCss, /@keyframes live-rain-near/);
   assert.match(weatherCss, /@keyframes live-snow-fall/);
   assert.match(weatherCss, /prefers-reduced-motion:\s*reduce/);
