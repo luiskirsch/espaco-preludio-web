@@ -28,7 +28,7 @@
     .patient-main{width:min(1500px,calc(100% - 48px));margin:0 auto;padding:34px 0 72px}
     .patient-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:32px;align-items:center;padding:clamp(28px,4vw,52px);border:1px solid rgba(217,180,95,.32);border-radius:28px;background:linear-gradient(125deg,#0d4142 0%,#164d48 54%,#496447 100%);box-shadow:0 28px 65px -42px rgba(13,45,43,.75);color:#fff}
     .patient-hero:before,.patient-hero:after{content:"";position:absolute;border:1px solid rgba(226,190,104,.22);border-radius:50%;pointer-events:none}.patient-hero:before{width:390px;height:390px;right:-90px;top:-250px}.patient-hero:after{width:270px;height:270px;right:16px;top:-190px}
-    .patient-identity{position:relative;z-index:1;display:flex;align-items:center;gap:22px;min-width:0}.patient-avatar{width:92px;height:92px;flex:0 0 auto;display:grid;place-items:center;border-radius:26px;background:linear-gradient(145deg,#f3ce79,#b8842d);color:#123534;font:600 27px Fraunces,serif;border:1px solid rgba(255,255,255,.34);box-shadow:0 18px 35px rgba(4,28,27,.25)}
+    .patient-identity{position:relative;z-index:1;display:flex;align-items:center;gap:22px;min-width:0}.patient-avatar{position:relative;width:92px;height:92px;padding:0;flex:0 0 auto;display:grid;place-items:center;border-radius:26px;background:linear-gradient(145deg,#f3ce79,#b8842d);background-size:cover;background-position:center;color:#123534;font:600 27px Fraunces,serif;border:1px solid rgba(255,255,255,.34);box-shadow:0 18px 35px rgba(4,28,27,.25);cursor:pointer;overflow:visible;transition:transform .18s ease,box-shadow .18s ease}.patient-avatar:hover{transform:translateY(-2px);box-shadow:0 22px 38px rgba(4,28,27,.32)}.patient-avatar:focus-visible{outline:3px solid #f1c968;outline-offset:4px}.patient-avatar.has-photo .patient-avatar__initials{opacity:0}.patient-avatar__camera{position:absolute;right:-7px;bottom:-7px;width:31px;height:31px;display:grid;place-items:center;border-radius:11px;background:#fffaf0;color:#15544f;border:2px solid #15544f;box-shadow:0 7px 16px rgba(5,34,32,.24)}.patient-avatar__status{position:absolute;left:0;top:calc(100% + 13px);min-width:180px;padding:7px 10px;border-radius:9px;background:#fffaf0;color:#254b47;box-shadow:0 8px 24px rgba(4,28,27,.22);font:600 10px/1.35 Inter,sans-serif;text-align:left;opacity:0;pointer-events:none;transform:translateY(-4px);transition:opacity .18s ease,transform .18s ease}.patient-avatar__status.is-visible{opacity:1;transform:translateY(0)}.patient-avatar.is-loading{cursor:progress;opacity:.72}
     .patient-copy{min-width:0}.patient-copy .ep-eyebrow{color:#f1c968}.patient-copy h1{margin:8px 0 10px;color:#fff;font-size:clamp(31px,4vw,55px);line-height:1.02;overflow-wrap:anywhere}.patient-copy .ep-pill{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.2);color:#e8eee9}
     .patient-hero__actions{position:relative;z-index:1;display:grid;gap:10px;min-width:210px}.patient-hero__actions a{justify-content:center}.patient-primary{background:#edbd58!important;border-color:#edbd58!important;color:#173a39!important}.patient-secondary{background:rgba(255,255,255,.07)!important;border-color:rgba(255,255,255,.22)!important;color:#fff!important}
     .patient-dashboard{display:grid;grid-template-columns:1fr;gap:18px;margin-top:18px}.patient-overview{padding:22px;border:1px solid rgba(22,77,72,.11);border-radius:22px;background:rgba(255,252,245,.88);box-shadow:0 18px 45px -38px rgba(26,55,52,.45)}
@@ -80,7 +80,12 @@
   <main class="patient-main">
     <section class="patient-hero">
       <div class="patient-identity">
-      <div class="patient-avatar" id="avatar" aria-hidden="true">P</div>
+      <button class="patient-avatar" id="avatar" type="button" aria-label="Adicionar ou trocar foto do perfil" title="Adicionar ou trocar foto">
+        <span class="patient-avatar__initials" id="avatarInitials" aria-hidden="true">P</span>
+        <span class="patient-avatar__camera" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4 16 6h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l1.5-2z"/><circle cx="12" cy="13" r="3"/></svg></span>
+        <span class="patient-avatar__status" id="avatarStatus" role="status" aria-live="polite"></span>
+      </button>
+      <input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
       <div class="patient-copy">
         <div class="ep-eyebrow" data-i18n="paciente-painel:header.eyebrow">Seu painel</div>
         <h1 class="ep-h1" id="patientName">…</h1>
@@ -157,6 +162,9 @@
 
   const navUser     = document.getElementById("navUser");
   const avatar      = document.getElementById("avatar");
+  const avatarInitials = document.getElementById("avatarInitials");
+  const avatarFile  = document.getElementById("avatarFile");
+  const avatarStatus = document.getElementById("avatarStatus");
   const patientName = document.getElementById("patientName");
   const pillRow     = document.getElementById("pillRow");
   const statsStrip  = document.getElementById("statsStrip");
@@ -255,7 +263,7 @@
 
   function renderHeader() {
     patientName.textContent = account.displayName || tr("paciente-painel:header.fallbackName", "Você");
-    avatar.textContent = initials(account.displayName);
+    avatarInitials.textContent = initials(account.displayName);
     navUser.textContent = account.displayName
       ? tr("paciente-painel:nav.greeting", "Olá, {{name}}", { name: account.displayName })
       : tr("paciente-painel:nav.loading", "…");
@@ -271,6 +279,79 @@
       pillRow.appendChild(p);
     }
   }
+
+  function showAvatarStatus(message, isError = false) {
+    avatarStatus.textContent = message;
+    avatarStatus.style.color = isError ? "#963f32" : "#254b47";
+    avatarStatus.classList.add("is-visible");
+    clearTimeout(showAvatarStatus.timer);
+    showAvatarStatus.timer = setTimeout(() => avatarStatus.classList.remove("is-visible"), 4000);
+  }
+
+  function applyAvatarPhoto(dataUrl) {
+    avatar.style.backgroundImage = dataUrl ? `url("${dataUrl}")` : "";
+    avatar.classList.toggle("has-photo", Boolean(dataUrl));
+  }
+
+  async function resizeAvatar(file) {
+    if (!file.type.startsWith("image/")) throw new Error("Selecione uma imagem válida.");
+    if (file.size > 8 * 1024 * 1024) throw new Error("A imagem deve ter no máximo 8 MB.");
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = objectUrl;
+      await image.decode();
+      if (Math.max(image.naturalWidth, image.naturalHeight) > 12000) throw new Error("A resolução da imagem é muito alta.");
+      const side = Math.min(image.naturalWidth, image.naturalHeight);
+      if (!side) throw new Error("Não foi possível ler esta imagem.");
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 512;
+      const context = canvas.getContext("2d", { alpha: false });
+      context.fillStyle = "#f2eddf";
+      context.fillRect(0, 0, 512, 512);
+      context.drawImage(image, (image.naturalWidth - side) / 2, (image.naturalHeight - side) / 2, side, side, 0, 0, 512, 512);
+      return canvas.toDataURL("image/jpeg", .86);
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
+
+  async function loadAvatarPhoto() {
+    try {
+      const data = await api("/therapy/paciente/foto");
+      applyAvatarPhoto(data.foto || null);
+    } catch (_) { /* mantém as iniciais quando a foto não puder ser carregada */ }
+  }
+
+  avatar.addEventListener("click", () => {
+    if (!avatar.classList.contains("is-loading")) avatarFile.click();
+  });
+  avatarFile.addEventListener("change", async () => {
+    const file = avatarFile.files?.[0];
+    avatarFile.value = "";
+    if (!file) return;
+    avatar.classList.add("is-loading");
+    avatar.disabled = true;
+    showAvatarStatus("Preparando sua foto…");
+    try {
+      const dataUrl = await resizeAvatar(file);
+      applyAvatarPhoto(dataUrl);
+      const [, base64] = dataUrl.split(",", 2);
+      await api("/therapy/paciente/foto", {
+        method: "POST",
+        body: JSON.stringify({ base64, contentType: "image/jpeg" })
+      });
+      showAvatarStatus("Foto atualizada com sucesso.");
+    } catch (error) {
+      await loadAvatarPhoto();
+      showAvatarStatus(error?.message || "Não foi possível atualizar a foto.", true);
+    } finally {
+      avatar.disabled = false;
+      avatar.classList.remove("is-loading");
+    }
+  });
 
   function renderStats() {
     const total = allSessions.length;
@@ -582,6 +663,7 @@
       // paralelo — não bloqueia o load principal.
       api("/therapy/paciente/auto-link", { method: "POST" }).catch(() => {});
       renderHeader();
+      loadAvatarPhoto();
       await loadSessions();
       renderStats();
       renderTimeline();
