@@ -9,12 +9,12 @@
   <link rel="manifest" href="./manifest.json"><link rel="icon" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app.css?v=20260927k">
+  <link rel="stylesheet" href="./app.css?v=20260927l">
   <script src="./portal-shell.js?v=3" defer></script><script src="./sw-register.js" defer></script>
 </head>
 <body class="a-portal-authenticated">
 <div class="a-shell">
-  <header class="a-header"><a href="./home.html" class="a-header__back" aria-label="Voltar">‹</a><div><div class="a-header__eyebrow">Participação confidencial</div><h1 class="a-header__title">Pesquisas do trabalho</h1></div></header>
+  <header class="a-header"><div><div class="a-header__eyebrow">Participação confidencial</div><h1 class="a-header__title">Pesquisas do trabalho</h1></div></header>
   <main class="a-page survey-page">
     <section class="survey-hero">
       <div><span>Escuta sobre as condições de trabalho</span><h2>Sua experiência ajuda a construir um ambiente mais seguro.</h2><p>As perguntas tratam de tarefas, recursos, relações e organização do trabalho. Não avaliam diagnóstico, personalidade, terapia ou prontuário.</p></div>
@@ -49,7 +49,7 @@
     campaigns = data.campaigns || []; questions = data.questions || [];
     if (!campaigns.length) { status("Nenhuma pesquisa está aberta para sua organização neste momento."); return; }
     $("campaign").replaceChildren(...campaigns.map(item => new Option(item.name, item.id))); fillUnits();
-    $("questions").replaceChildren(); questions.forEach((question, index) => { const fieldset = document.createElement("fieldset"); fieldset.className = "survey-question"; const legend = document.createElement("legend"); const number = document.createElement("span"); number.textContent = String(index + 1).padStart(2,"0"); legend.append(number, document.createTextNode(String(question.text || ""))); const choices = document.createElement("div"); choices.className = "survey-options"; for (let value = 1; value <= 5; value++) { const label = document.createElement("label"); const radio = document.createElement("input"); radio.type = "radio"; radio.name = question.id; radio.value = String(value); if (value === 1) radio.required = true; const text = document.createElement("span"); text.textContent = String(value); label.append(radio, text); choices.append(label); } fieldset.append(legend, choices); $("questions").append(fieldset); });
+    $("questions").replaceChildren(); questions.forEach((question, index) => { const group = document.createElement("div"); group.className = "survey-question"; group.setAttribute("role", "group"); const labelId = `surveyQLabel${index}`; group.setAttribute("aria-labelledby", labelId); const legend = document.createElement("div"); legend.className = "survey-question-label"; legend.id = labelId; const number = document.createElement("span"); number.textContent = String(index + 1).padStart(2,"0"); legend.append(number, document.createTextNode(String(question.text || ""))); const choices = document.createElement("div"); choices.className = "survey-options"; for (let value = 1; value <= 5; value++) { const label = document.createElement("label"); const radio = document.createElement("input"); radio.type = "radio"; radio.name = question.id; radio.value = String(value); if (value === 1) radio.required = true; const text = document.createElement("span"); text.textContent = String(value); label.append(radio, text); choices.append(label); } group.append(legend, choices); $("questions").append(group); });
     $("surveyHeading").textContent = campaigns[0].name; $("surveyForm").hidden = false; $("surveyStatus").hidden = true;
   }
   $("campaign").addEventListener("change", () => { fillUnits(); const selected = campaigns.find(item => item.id === $("campaign").value); if (selected) $("surveyHeading").textContent = selected.name; });
