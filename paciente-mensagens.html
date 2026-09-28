@@ -20,6 +20,12 @@
   <script src="./i18n/init.js?v=1-3" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <style>
+    .patient-messages{background:radial-gradient(circle at 88% 5%,rgba(218,185,112,.19),transparent 25%),#f2eddf;color:#173a39;min-height:100vh}
+    .messages-topbar{height:76px;padding:0 clamp(24px,5vw,76px);background:rgba(255,250,240,.92);border-bottom:1px solid rgba(155,113,28,.2);backdrop-filter:blur(18px);position:sticky;top:0;z-index:40}.messages-topbar .ep-container{max-width:none;padding:0}.messages-topbar .ep-topbar__inner{height:76px}.messages-topbar .ep-brand__mark{width:46px;height:46px;background:url('/logo_oficial_fundo_transparente.png?v=2') center/contain no-repeat;border:0;box-shadow:none;font-size:0}.messages-topbar .ep-brand__name{font-family:Fraunces,serif;font-size:20px;color:#123f40}.messages-topbar .ep-nav{gap:8px}.messages-topbar .ep-nav a{padding:10px 14px;border-radius:999px;color:#355452;text-decoration:none}.messages-topbar .ep-nav a:hover{background:#e9e2d3;color:#123f40}
+    .messages-main{width:min(1500px,calc(100% - 48px));margin:0 auto;padding:30px 0 48px}.messages-hero{display:flex;align-items:end;justify-content:space-between;gap:28px;margin-bottom:18px;padding:clamp(25px,3.2vw,40px);border-radius:25px;background:linear-gradient(125deg,#0d4142 0%,#164d48 58%,#496447 100%);border:1px solid rgba(217,180,95,.32);box-shadow:0 28px 65px -42px rgba(13,45,43,.75);color:#fff;overflow:hidden;position:relative}.messages-hero:after{content:"";position:absolute;width:330px;height:330px;border:1px solid rgba(226,190,104,.22);border-radius:50%;right:-65px;top:-220px}.messages-hero__copy{position:relative;z-index:1;max-width:780px}.messages-hero .ep-eyebrow{color:#f1c968}.messages-hero h1{margin:7px 0 8px;color:#fff;font-size:clamp(34px,4.8vw,58px);line-height:1}.messages-hero p{margin:0;color:#dce5df;line-height:1.55}.messages-security{position:relative;z-index:1;display:flex;align-items:center;gap:10px;flex:0 0 auto;padding:12px 15px;border:1px solid rgba(255,255,255,.17);border-radius:14px;background:rgba(255,255,255,.07);font-size:11px;color:#e6ece8}.messages-security svg{color:#f1c968}
+    .patient-messages-shell{display:flex;height:calc(100dvh - 285px);min-height:520px;border:1px solid rgba(22,77,72,.12);border-radius:24px;overflow:hidden;box-shadow:0 25px 60px -43px rgba(19,61,57,.6);background:#fffaf0}.messages-sidebar{width:330px;flex-shrink:0;border-right:1px solid rgba(22,77,72,.1);display:flex;flex-direction:column;overflow:hidden;background:#f8f3e8}.messages-sidebar__head{padding:20px;border-bottom:1px solid rgba(22,77,72,.1)}.messages-sidebar__head strong{display:block;color:#173f3d;font-size:15px}.messages-sidebar__head span{display:block;margin-top:4px;color:#77827e;font-size:11px}.messages-thread-list{display:flex;flex-direction:column;gap:0;flex:1;overflow-y:auto;align-content:flex-start;padding:8px}
+    .messages-panel{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;background:linear-gradient(145deg,#fffdf8,#f7f1e5)}.messages-empty{margin:auto;max-width:480px;text-align:center;padding:40px;color:#667570}.messages-empty__icon{width:76px;height:76px;margin:0 auto 18px;display:grid;place-items:center;border-radius:24px;background:#e8f0e9;color:#15544f;box-shadow:0 14px 30px -22px rgba(21,84,79,.55)}.messages-empty h3{margin:0;font:600 27px Fraunces,serif;color:#173f3d}.messages-empty p{margin:9px auto 0;max-width:390px;line-height:1.6}.messages-empty__note{display:flex;gap:9px;align-items:flex-start;margin:21px auto 0;padding:13px 15px;border-radius:13px;background:#fff0cf;color:#77571d;text-align:left;font-size:11px;line-height:1.5}.messages-empty__note svg{flex:0 0 auto;margin-top:1px}
+    .messages-thread{display:flex;flex-direction:column;flex:1;min-height:0}.messages-thread__head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(255,250,240,.94);border-bottom:1px solid rgba(22,77,72,.1)}.messages-thread__avatar{width:43px;height:43px;display:grid;place-items:center;border-radius:13px;background:#15544f;color:#fff;font-weight:700}.messages-thread__identity{flex:1;min-width:0}.messages-thread__identity strong{display:block;color:#173f3d;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.messages-thread__secure{display:flex;align-items:center;gap:5px;margin-top:3px;color:#6f7d78;font-size:10px}.messages-thread__secure svg{color:#2f7755}.messages-back{display:none;width:38px;height:38px;border:1px solid rgba(22,77,72,.14);border-radius:11px;background:#fff;color:#15544f;place-items:center;cursor:pointer}.messages-chat-area{flex:1;overflow-y:auto;min-height:0;padding:22px clamp(14px,3vw,32px);display:flex;flex-direction:column;gap:5px}.messages-composer{background:#fffaf0;border-top:1px solid rgba(22,77,72,.1);position:relative;padding:12px 14px}.messages-composer__row{display:flex;gap:9px;align-items:center;max-width:900px;margin:0 auto}.messages-emoji{width:41px;height:41px;display:grid;place-items:center;border:0;background:#f0eadf;color:#667570;border-radius:13px;cursor:pointer;flex-shrink:0}.messages-emoji:hover{background:#e6ded0;color:#15544f}.messages-input{flex:1!important;border-radius:14px!important;padding:11px 15px!important;font-size:14px!important;background:#fff!important;border-color:rgba(22,77,72,.15)!important}.messages-send{min-height:43px;border-radius:13px!important;padding:9px 21px!important;background:#15544f!important;border-color:#15544f!important;color:#fff!important}.messages-send:hover{background:#0f413d!important;color:#fff!important}.messages-status{display:block;max-width:900px;margin:4px auto -4px;color:#777;font-size:10px}
     .ep-contact-card{border-radius:8px;overflow:hidden;min-width:200px;max-width:260px;background:rgba(255,255,255,0.12);}
     .ep-msg-bubble.is-theirs .ep-contact-card{background:rgba(0,0,0,0.06);}
     .ep-contact-card__head{display:flex;align-items:center;gap:10px;padding:10px 12px;}
@@ -33,11 +39,13 @@
     .ep-msg-bubble.is-theirs .ep-contact-card__label{color:#128c7e;}
     html[data-theme="dark"] .ep-msg-bubble.is-theirs .ep-contact-card__label{color:#25d366;}
     .ep-wb-text{display:inline;white-space:pre-wrap;word-break:break-word;}
+    .messages-thread-list .ep-thread-card{border-color:transparent!important;background:transparent!important;border-radius:15px!important;margin:3px 0!important;width:100%!important;padding:11px!important;color:#173a39}.messages-thread-list .ep-thread-card:hover{background:#eee7d9!important}.messages-thread-list .ep-thread-card.is-active{background:#e3ece7!important;border-color:rgba(21,84,79,.17)!important}.messages-thread-list .ep-thread-card>div:first-child{background:#15544f!important;border-radius:13px!important}.messages-chat-area .ep-msg-bubble.is-mine{background:#15544f;color:#fff}.messages-chat-area .ep-msg-bubble.is-theirs{background:#fff;border:1px solid rgba(22,77,72,.09);color:#273f3d}
+    @media(max-width:760px){.messages-topbar{height:auto;min-height:64px;padding:8px 14px}.messages-topbar .ep-topbar__inner{height:auto;min-height:48px}.messages-topbar #navUser,.messages-topbar .ep-nav a:first-child{display:none}.messages-main{width:min(100% - 20px,1500px);padding:14px 0 24px}.messages-hero{padding:21px;border-radius:20px;margin-bottom:12px}.messages-hero h1{font-size:31px}.messages-hero p{font-size:12px}.messages-security{display:none}.patient-messages-shell{height:calc(100dvh - 235px);min-height:480px;border-radius:18px}.patient-messages-shell:not([data-mv="chat"]) .messages-sidebar{width:100%;border-right:0}.patient-messages-shell:not([data-mv="chat"]) .messages-panel{display:none}.patient-messages-shell[data-mv="chat"] .messages-sidebar{display:none}.patient-messages-shell[data-mv="chat"] .messages-panel{display:flex}.messages-back{display:grid}.messages-chat-area{padding:15px 11px}.messages-composer{padding:9px}.messages-send{padding:9px 14px!important}.messages-sidebar__head{padding:16px}}
   </style>
 </head>
-<body>
+<body class="patient-messages">
 
-<header class="ep-topbar">
+<header class="ep-topbar messages-topbar">
   <div class="ep-container ep-topbar__inner">
     <a href="./paciente-painel.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
@@ -47,59 +55,65 @@
       </span>
     </a>
     <nav class="ep-nav">
-      <a href="./paciente-painel.html" class="ep-text-sm" data-i18n="paciente-mensagens:nav.history">Histórico</a>
-      <a href="./paciente-audit.html" class="ep-text-sm" data-i18n="paciente-mensagens:nav.audit">Auditoria</a>
+      <a href="./paciente-painel.html" class="ep-text-sm">Painel</a>
+      <a href="./paciente-audit.html" class="ep-text-sm">Meu histórico</a>
       <span id="navUser" class="ep-text-sm ep-text-muted" data-i18n="paciente-mensagens:nav.userLoading">…</span>
       <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="logoutBtn" data-i18n="paciente-mensagens:nav.logout">Sair</button>
     </nav>
   </div>
 </header>
 
-<main class="ep-container ep-mt-32 ep-mb-16 ep-page-main" style="overflow: hidden;">
-  <section class="ep-stack">
-    <div>
+<main class="messages-main">
+  <section>
+    <div class="messages-hero">
+      <div class="messages-hero__copy">
       <div class="ep-eyebrow" data-i18n="paciente-mensagens:eyebrow">Conversas</div>
-      <h1 class="ep-h1 ep-mt-12 ep-page-title" data-i18n="paciente-mensagens:h1">Mensagens</h1>
-      <p class="ep-text-muted ep-mt-8" data-i18n-html="paciente-mensagens:subtitle">
+      <h1 data-i18n="paciente-mensagens:h1">Mensagens</h1>
+      <p data-i18n-html="paciente-mensagens:subtitle">
         Conversas com seu(sua) profissional. <strong>Cifradas ponta-a-ponta</strong> — só você e ele(a) leem.
       </p>
+      </div>
+      <div class="messages-security"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Canal privado de cuidado<br><strong>Protegido de ponta a ponta</strong></span></div>
     </div>
 
-    <div style="display: flex; height: calc(100dvh - 260px); min-height: 420px; margin-top: 16px; border: 1px solid var(--ep-line); border-radius: var(--ep-radius-lg, 12px); overflow: hidden; box-shadow: var(--ep-shadow-soft); background: var(--ep-surface);">
+    <div class="patient-messages-shell" id="messagesShell">
       <!-- Sidebar de threads -->
-      <aside style="width: 280px; flex-shrink: 0; border-right: 1px solid var(--ep-line); display: flex; flex-direction: column; overflow: hidden; background: var(--ep-surface);">
-        <div style="padding: 12px 14px; border-bottom: 1px solid var(--ep-line);">
+      <aside class="messages-sidebar">
+        <div class="messages-sidebar__head">
           <strong class="ep-text-sm" data-i18n="paciente-mensagens:threadsHead">Profissionais</strong>
+          <span>Suas conversas de acompanhamento</span>
         </div>
-        <div id="threadList" style="display: flex; flex-direction: column; gap: 0; flex: 1; overflow-y: auto; align-content: flex-start;">
+        <div id="threadList" class="messages-thread-list">
           <div class="ep-text-xs ep-text-muted" style="padding: 12px;" data-i18n="paciente-mensagens:threads.loading">Carregando…</div>
         </div>
       </aside>
 
       <!-- Painel da thread ativa -->
-      <section style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
-        <div id="msgEmpty" style="margin: auto; text-align: center; padding: 40px; color: var(--ep-ink-3);">
-          <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
-          <h3 class="ep-h3 ep-mt-0" data-i18n="paciente-mensagens:emptyTitle">Selecione uma conversa</h3>
-          <p class="ep-text-muted ep-mt-8" data-i18n="paciente-mensagens:emptySub">
+      <section class="messages-panel">
+        <div id="msgEmpty" class="messages-empty">
+          <div class="messages-empty__icon"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 9h8M8 13h5"/></svg></div>
+          <h3 data-i18n="paciente-mensagens:emptyTitle">Selecione uma conversa</h3>
+          <p data-i18n="paciente-mensagens:emptySub">
             Conversas aparecem aqui quando seu(sua) profissional iniciar.
           </p>
+          <div class="messages-empty__note"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg><span>Este canal é destinado ao acompanhamento entre consultas. Em uma emergência, procure o SAMU 192, a Polícia 190 ou o CVV 188.</span></div>
         </div>
-        <div id="msgThread" class="ep-hide" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
-          <div style="padding: 8px 16px; background: var(--ep-bg-2); border-bottom: 1px solid var(--ep-line);">
-            <div id="msgPeerName" style="font-weight: 600; font-size: 15px; line-height: 1.3;">—</div>
-            <div class="ep-text-xs ep-text-muted" data-i18n="paciente-mensagens:e2eeBadge">cifrada ponta-a-ponta</div>
+        <div id="msgThread" class="messages-thread ep-hide">
+          <div class="messages-thread__head">
+            <button class="messages-back" id="messagesBackBtn" type="button" aria-label="Voltar às conversas"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+            <div class="messages-thread__avatar" id="msgPeerAvatar">P</div>
+            <div class="messages-thread__identity"><strong id="msgPeerName">—</strong><span class="messages-thread__secure"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-i18n="paciente-mensagens:e2eeBadge">cifrada ponta-a-ponta</span></span></div>
           </div>
-          <div id="msgList" class="ep-chat-area" style="flex: 1; overflow-y: auto; min-height: 0; padding: 12px 14px; display: flex; flex-direction: column; gap: 3px;"></div>
-          <div style="background: var(--ep-bg-2); border-top: 1px solid var(--ep-line); position: relative;">
-            <div style="padding: 10px 12px; display: flex; gap: 8px; align-items: center;">
-              <button id="emojiToggleBtn" type="button" aria-label="Inserir emoji" title="Inserir emoji" style="border: 0; background: transparent; cursor: pointer; padding: 4px; line-height: 1; border-radius: 8px; flex-shrink: 0; color: var(--ep-ink-3); display: flex; align-items: center;">
+          <div id="msgList" class="ep-chat-area messages-chat-area"></div>
+          <div class="messages-composer">
+            <div class="messages-composer__row">
+              <button id="emojiToggleBtn" class="messages-emoji" type="button" aria-label="Inserir emoji" title="Inserir emoji">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
               </button>
-              <input id="msgInput" type="text" class="ep-input" data-i18n-placeholder="paciente-mensagens:composer.placeholder" placeholder="Digite uma mensagem…" maxlength="3000" style="flex: 1; border-radius: 20px; padding: 8px 16px; font-size: 14px;">
-              <button id="msgSendBtn" type="button" class="ep-btn ep-btn--primary" style="border-radius: 20px; padding: 8px 20px;" data-i18n="paciente-mensagens:composer.send">Enviar</button>
+              <input id="msgInput" type="text" class="ep-input messages-input" data-i18n-placeholder="paciente-mensagens:composer.placeholder" placeholder="Digite uma mensagem…" maxlength="3000">
+              <button id="msgSendBtn" type="button" class="ep-btn ep-btn--primary messages-send" data-i18n="paciente-mensagens:composer.send">Enviar</button>
             </div>
-            <span id="msgStatus" class="ep-text-xs ep-text-muted" style="position: absolute; bottom: 3px; left: 16px;"></span>
+            <span id="msgStatus" class="messages-status"></span>
           </div>
         </div>
       </section>
@@ -282,6 +296,10 @@
   let presenceTimer = null;
   let lastSeenMessageMs = 0;
 
+  $("messagesBackBtn").addEventListener("click", () => {
+    $("messagesShell").removeAttribute("data-mv");
+  });
+
   function pingPresence(threadId, offline = false) {
     if (!threadId) return;
     const opts = {
@@ -325,7 +343,7 @@
   function renderThreads(threads) {
     const peerFallback = tr("paciente-mensagens:peerFallback", "Profissional");
     if (!threads.length) {
-      $("threadList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${tr("paciente-mensagens:threads.empty", "Você ainda não tem conversas.<br>O(a) profissional inicia a partir do consultório.")}</div>`;
+      $("threadList").innerHTML = `<div style="margin:10px;padding:18px;border:1px dashed rgba(22,77,72,.2);border-radius:15px;background:rgba(255,255,255,.55);text-align:center;color:#667570;font-size:12px;line-height:1.55;"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="#15544f" stroke-width="1.7" style="display:block;margin:0 auto 9px"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg><strong style="display:block;color:#173f3d;margin-bottom:4px">Nenhuma conversa ainda</strong>O canal aparece depois que um profissional iniciar o acompanhamento.</div>`;
       return;
     }
     $("threadList").innerHTML = threads.map(t => {
@@ -410,6 +428,7 @@
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     if (presenceTimer) { clearInterval(presenceTimer); presenceTimer = null; }
     currentThreadId = threadId;
+    $("messagesShell").setAttribute("data-mv", "chat");
     $("msgEmpty").classList.add("ep-hide");
     $("msgThread").classList.remove("ep-hide");
     $("msgList").innerHTML = `<div class="ep-text-xs ep-text-muted" style="padding:12px;">${escapeHtml(tr("paciente-mensagens:messages.loading", "Carregando…"))}</div>`;
@@ -424,7 +443,9 @@
       return;
     }
     currentThread = d.thread;
-    $("msgPeerName").textContent = currentThread.therapistDisplayName || tr("paciente-mensagens:peerFallback", "Profissional");
+    const peerName = currentThread.therapistDisplayName || tr("paciente-mensagens:peerFallback", "Profissional");
+    $("msgPeerName").textContent = peerName;
+    $("msgPeerAvatar").textContent = peerName.trim().split(/\s+/).filter(Boolean).map(part => part[0]).slice(0, 2).join("").toUpperCase() || "P";
 
     let threadKeyBytes = threadKeyCache.get(threadId);
     if (!threadKeyBytes) {
