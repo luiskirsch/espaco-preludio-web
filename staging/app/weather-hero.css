@@ -16,6 +16,15 @@ body.a-route-home .home-hero::after {
   transition: background 1.2s ease;
 }
 
+/* Monta a cena completa antes de revelar as camadas meteorológicas. */
+.home-hero[data-weather-state="loading"] .home-hero__sky > span {
+  opacity: 0 !important;
+}
+
+.home-hero[data-weather-state="ready"] .home-hero__sky > span {
+  transition: opacity 1s ease;
+}
+
 .home-hero[data-phase="afternoon"] .home-hero__sky {
   background:
     radial-gradient(circle at 84% 12%, rgba(255, 217, 126, .34), transparent 20rem),

@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./app.css?v=20260927m">
-  <link rel="stylesheet" href="./weather-hero.css?v=20260928g">
+  <link rel="stylesheet" href="./weather-hero.css?v=20260928h">
   <style>
     .home-hero {
       background: linear-gradient(135deg, #1c1f1d 0%, #2d3a30 100%);
@@ -70,7 +70,7 @@
   <div class="a-page a-page-enter">
 
     <!-- Hero -->
-    <div class="home-hero" id="homeHero">
+    <div class="home-hero" id="homeHero" data-weather-state="loading">
       <div class="home-hero__sky" aria-hidden="true">
         <span class="sky-atmosphere"></span>
         <span class="sky-haze"></span>
@@ -215,7 +215,7 @@
     }
     container.replaceChildren(frag);
   }
-  function renderSky(weather) {
+  function renderSky(weather, reveal = true) {
     const phase = skyPhase(new Date().getHours());
     hero.dataset.phase = phase;
     if (weather) hero.dataset.weather = weather; else delete hero.dataset.weather;
@@ -245,6 +245,7 @@
       });
     } else drops.replaceChildren();
     document.getElementById("skyCredits").hidden = !weather;
+    if (reveal) requestAnimationFrame(() => { hero.dataset.weatherState = "ready"; });
   }
   function readSkyCache(source) {
     try {
@@ -268,8 +269,7 @@
     const coordinates = await deviceCoordinates();
     const source = coordinates ? "device" : "ip";
     const cached = readSkyCache(source);
-    renderSky(cached?.weather || null);
-    if (cached) return;
+    if (cached) { renderSky(cached.weather); return; }
     try {
       const data = coordinates
         ? await portalApi(user, "/therapy/paciente/ambiente", {
@@ -282,9 +282,9 @@
       // servidor, e não deve prender o card sem clima por 30 minutos.
       if (weather) try { sessionStorage.setItem(SKY_CACHE, JSON.stringify({ weather, source, expires: Date.now() + SKY_TTL_MS })); } catch {}
       renderSky(weather);
-    } catch { /* sem clima: fica o céu do horário */ }
+    } catch { renderSky(null); /* sem clima: fica o céu do horário */ }
   }
-  renderSky(null);
+  renderSky(null, false);
   setInterval(() => renderSky(hero.dataset.weather || null), 10 * 60 * 1000);
 
   async function loadJourney(user) {
