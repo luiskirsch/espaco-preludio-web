@@ -84,29 +84,32 @@ body.a-route-home .home-hero::after {
 
 /* Ã€ noite a fotografia conserva relevo, mas recebe luz azulada e baixa. */
 .home-hero[data-phase="night"] .sky-atmosphere {
-  opacity: .3;
-  filter: saturate(.38) contrast(1.16) brightness(.42) hue-rotate(5deg);
+  opacity: .24;
+  filter: saturate(.5) contrast(1.28) brightness(.3) hue-rotate(8deg);
   mix-blend-mode: normal;
 }
 
-.home-hero[data-phase="night"][data-weather="clear"] .sky-atmosphere { opacity: .16; }
-.home-hero[data-phase="night"][data-weather="partly"] .sky-atmosphere { opacity: .38; }
+.home-hero[data-phase="night"][data-weather="clear"] .sky-atmosphere { opacity: .12; }
+.home-hero[data-phase="night"][data-weather="partly"] .sky-atmosphere { opacity: .3; }
 .home-hero[data-phase="night"][data-weather="cloudy"] .sky-atmosphere {
-  opacity: .62;
-  filter: saturate(.34) contrast(1.22) brightness(.36) hue-rotate(5deg);
+  opacity: .5;
+  filter: saturate(.48) contrast(1.34) brightness(.22) hue-rotate(8deg);
 }
 .home-hero[data-phase="night"][data-weather="rain"] .sky-atmosphere {
-  opacity: .72;
-  filter: saturate(.28) contrast(1.28) brightness(.29) hue-rotate(7deg);
+  opacity: .58;
+  filter: saturate(.4) contrast(1.38) brightness(.18) hue-rotate(10deg);
 }
 .home-hero[data-phase="night"][data-weather="storm"] .sky-atmosphere {
-  opacity: .84;
-  filter: saturate(.2) contrast(1.4) brightness(.23) hue-rotate(8deg);
+  opacity: .68;
+  filter: saturate(.3) contrast(1.5) brightness(.14) hue-rotate(12deg);
 }
-.home-hero[data-phase="night"][data-weather="fog"] .sky-atmosphere { opacity: .46; }
+.home-hero[data-phase="night"][data-weather="fog"] .sky-atmosphere {
+  opacity: .38;
+  filter: saturate(.35) contrast(.92) brightness(.34) hue-rotate(8deg);
+}
 .home-hero[data-phase="night"][data-weather="snow"] .sky-atmosphere {
-  opacity: .56;
-  filter: saturate(.3) contrast(1.02) brightness(.58) hue-rotate(5deg);
+  opacity: .46;
+  filter: saturate(.38) contrast(1.1) brightness(.42) hue-rotate(8deg);
 }
 
 .home-hero__sky > .sky-haze {
@@ -228,6 +231,7 @@ body.a-route-home .home-hero::after {
 .home-hero[data-weather="storm"] .sky-vignette,
 .home-hero[data-phase="night"] .sky-vignette {
   background:
+    linear-gradient(rgba(3, 18, 28, .28), rgba(2, 14, 22, .38)),
     linear-gradient(90deg, rgba(3, 17, 22, .68) 0%, rgba(3, 20, 24, .29) 38%, transparent 70%),
     linear-gradient(0deg, rgba(3, 13, 17, .27), transparent 58%);
 }
