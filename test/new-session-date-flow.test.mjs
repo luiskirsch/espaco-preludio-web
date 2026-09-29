@@ -6,6 +6,8 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('nova consulta continua da data completa para o campo de hora', async () => {
   const script = await read('js/new-session-modal.js');
+  const panel = await read('painel.html');
+  const agenda = await read('agenda.html');
 
   assert.match(script, /id="scheduledDate"[^>]*type="date"/);
   assert.match(script, /id="scheduledTime"[^>]*type="time"/);
@@ -14,4 +16,6 @@ test('nova consulta continua da data completa para o campo de hora', async () =>
   assert.match(script, /if \(year >= 1000\) scheduledTimeInput\.focus\(\)/);
   assert.match(script, /`\$\{scheduledDateRaw\}T\$\{scheduledTimeRaw\}`/);
   assert.doesNotMatch(script, /type="datetime-local"/);
+  assert.match(panel, /new-session-modal\.js\?v=4/);
+  assert.match(agenda, /new-session-modal\.js\?v=4/);
 });
