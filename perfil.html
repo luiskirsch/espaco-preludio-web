@@ -874,13 +874,10 @@
         ? tr("perfil:plano.nextChargeOn","Próxima cobrança em {{date}}",{date: new Date(Number(t.nextChargeAt)).toLocaleDateString(currentLocaleSafe(), dateOpts)})
         : tr("perfil:plano.active","Assinatura ativa.");
     } else if (plano === "empresa") {
-      const paymentActive = String(t.mpPreapprovalStatus || "").toLowerCase() === "authorized";
-      eyebrow = paymentActive ? tr("perfil:plano.proLabel","Plano · Ativo") : "Plano · Pagamento pendente";
+      eyebrow = tr("perfil:plano.proLabel","Plano · Ativo");
       title = "Programas institucionais";
-      sub = paymentActive
-        ? "Assinatura ativa por R$ 10,00/mês."
-        : "Cadastre o meio de pagamento para realizar consultas. 7 dias grátis; depois, R$ 10,00/mês.";
-      cta = paymentActive ? tr("perfil:plano.managePlan","Gerenciar plano") : "Cadastrar meio de pagamento";
+      sub = "Acesso custeado pelo programa contratante, sem mensalidade para você.";
+      cta = tr("perfil:plano.viewDetails","Ver detalhes");
     } else if (plano === "student-active") {
       eyebrow = tr("perfil:plano.proStudent","Plano · Estudante");
       title = tr("perfil:plano.proStudentTitle","Plano Estudante (gratuito)");

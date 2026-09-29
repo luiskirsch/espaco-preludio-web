@@ -310,11 +310,12 @@ test('portal do colaborador integra jornada, NR-1 e ajuda imediata sem prometer 
   assert.doesNotMatch(shell, /Histórico de humor/);
 });
 
-test('plano institucional permite informar uma conta Mercado Pago pagadora diferente', async () => {
+test('plano institucional não cobra nem pede meio de pagamento ao profissional', async () => {
   const html = await readFile(resolve(root, 'planos.html'), 'utf8');
-  assert.match(html, /id="empresaPayerEmail"[^>]*type="email"/);
-  assert.match(html, /startSubscription\("empresa",[\s\S]*empresaPayerEmail\.value\.trim\(\)\)/);
-  assert.match(html, /body: JSON\.stringify\(\{ tier, billingCycle, \.\.\.\(payerEmail \? \{ payerEmail \} : \{\}\) \}\)/);
+  assert.match(html, /Sem mensalidade/);
+  assert.match(html, /Acesso custeado pelo programa contratante/);
+  assert.doesNotMatch(html, /id="empresaPayerEmail"/);
+  assert.doesNotMatch(html, /startSubscription\("empresa"/);
 });
 
 test('sessão não verificada é limpa sem enviar confirmação ao abrir a página', async () => {

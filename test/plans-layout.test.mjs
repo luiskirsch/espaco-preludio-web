@@ -4,13 +4,14 @@ import test from 'node:test';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('plans page separates plan value from secure activation', async () => {
+test('plans page separates free institutional access from the optional Pro subscription', async () => {
   const html = await read('planos.html');
   assert.match(html, /css\/planos\.css\?v=20260926b/);
   assert.match(html, /class="ep-plan-card__content"/);
-  assert.match(html, /class="ep-plan-checkout"/);
-  assert.match(html, /id="subscribeEmpresaBtn"/);
-  assert.match(html, /id="empresaPayerEmail"/);
+  assert.match(html, /Sem mensalidade/);
+  assert.match(html, /id="subscribeProfBtn"/);
+  assert.doesNotMatch(html, /id="subscribeEmpresaBtn"/);
+  assert.doesNotMatch(html, /id="empresaPayerEmail"/);
 });
 
 test('institutional-only state uses the full grid width and remains responsive', async () => {
