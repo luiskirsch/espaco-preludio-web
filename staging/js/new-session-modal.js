@@ -365,7 +365,10 @@ export function createNewSessionModal({
     }
   });
   scheduledDateInput.addEventListener("input", () => {
-    if (scheduledDateInput.value) scheduledTimeInput.focus();
+    // O Chrome preenche o primeiro dígito do ano como 0002 e já considera a
+    // data válida. Só avança quando houver um ano moderno completo (ex.: 2026).
+    const year = Number(scheduledDateInput.value.slice(0, 4));
+    if (year >= 1000) scheduledTimeInput.focus();
   });
 
   document.getElementById("cancelNewSession").addEventListener("click", () => closeModal(newSessionModal));
