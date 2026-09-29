@@ -348,6 +348,22 @@ export function createNewSessionModal({
   // dígitos do ano estão completos. Nesse instante, segue direto para a hora.
   const scheduledDateInput = document.getElementById("scheduledDate");
   const scheduledTimeInput = document.getElementById("scheduledTime");
+  let scheduledDateDigits = 0;
+  scheduledDateInput.addEventListener("focus", () => {
+    scheduledDateDigits = 0;
+  });
+  scheduledDateInput.addEventListener("keydown", (event) => {
+    if (/^\d$/.test(event.key)) {
+      scheduledDateDigits += 1;
+      if (scheduledDateDigits === 8) {
+        // Aguarda o navegador registrar o quarto dígito do ano e avança
+        // antes que os dígitos da hora sejam anexados ao ano.
+        setTimeout(() => scheduledTimeInput.focus(), 0);
+      }
+    } else if (event.key === "Backspace" || event.key === "Delete") {
+      scheduledDateDigits = Math.max(0, scheduledDateDigits - 1);
+    }
+  });
   scheduledDateInput.addEventListener("input", () => {
     if (scheduledDateInput.value) scheduledTimeInput.focus();
   });

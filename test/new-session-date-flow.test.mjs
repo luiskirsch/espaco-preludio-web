@@ -9,6 +9,7 @@ test('nova consulta continua da data completa para o campo de hora', async () =>
 
   assert.match(script, /id="scheduledDate"[^>]*type="date"/);
   assert.match(script, /id="scheduledTime"[^>]*type="time"/);
+  assert.match(script, /scheduledDateDigits === 8[\s\S]*scheduledTimeInput\.focus\(\)/);
   assert.match(script, /scheduledDateInput\.addEventListener\("input",[\s\S]*scheduledTimeInput\.focus\(\)/);
   assert.match(script, /`\$\{scheduledDateRaw\}T\$\{scheduledTimeRaw\}`/);
   assert.doesNotMatch(script, /type="datetime-local"/);
