@@ -34,13 +34,13 @@
       </div>
       <div class="a-chips a-mt-8" id="chipsEsp">
         <button class="a-chip is-active" data-esp="">Todos</button>
-        <button class="a-chip" data-esp="psicologia-clinica">Psicologia</button>
-        <button class="a-chip" data-esp="psiquiatria">Psiquiatria</button>
-        <button class="a-chip" data-esp="terapia-cognitivo-comportamental">TCC</button>
-        <button class="a-chip" data-esp="terapia-de-casal">Casal</button>
-        <button class="a-chip" data-esp="neuropsicologia">Neuro</button>
-        <button class="a-chip" data-esp="terapia-familiar">Família</button>
-        <button class="a-chip" data-esp="psicanalise">Psicanálise</button>
+        <button class="a-chip" data-esp="psicologia-clinica" hidden>Psicologia</button>
+        <button class="a-chip" data-esp="psiquiatria" hidden>Psiquiatria</button>
+        <button class="a-chip" data-esp="terapia-cognitivo-comportamental" hidden>TCC</button>
+        <button class="a-chip" data-esp="terapia-de-casal" hidden>Casal</button>
+        <button class="a-chip" data-esp="neuropsicologia" hidden>Neuro</button>
+        <button class="a-chip" data-esp="terapia-familiar" hidden>Família</button>
+        <button class="a-chip" data-esp="psicanalise" hidden>Psicanálise</button>
       </div>
     </div>
 
@@ -124,6 +124,19 @@
     return (name||"?").match(/\b\p{L}/gu)?.slice(0,2).join("").toUpperCase() || "?";
   }
 
+  function normalizeSpecialty(value) {
+    return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase().replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
+  }
+
+  function updateSpecialtyChips(especialidades) {
+    const available = new Set((especialidades || []).map(normalizeSpecialty));
+    document.querySelectorAll(".a-chip[data-esp]").forEach(chip => {
+      if (!chip.dataset.esp) return;
+      chip.hidden = !available.has(normalizeSpecialty(chip.dataset.esp));
+    });
+  }
+
   function renderResults(items) {
     searchLoading.classList.add("a-hide");
     searchHint.classList.add("a-hide");
@@ -173,6 +186,7 @@
       if (q) params.set("q", q);
       const res = await fetch(`${BACKEND_BASE_URL}/public/profissionais?${params}`);
       const data = await res.json().catch(() => ({}));
+      updateSpecialtyChips(data.especialidades);
       renderResults(data.items || []);
     } catch {
       searchLoading.classList.add("a-hide");

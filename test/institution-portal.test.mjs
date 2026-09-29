@@ -260,6 +260,8 @@ test('aba Todos carrega o diretório completo de profissionais', async () => {
   assert.match(search, /if \(!u\) \{ window\.location\.href = "\.\/login\.html"; return; \}\s*buscar\(\);/);
   assert.match(search, /fetch\(`\$\{BACKEND_BASE_URL\}\/public\/profissionais\?\$\{params\}`\)/);
   assert.doesNotMatch(search, /if \(!q && !currentEsp\)/);
+  assert.match(search, /updateSpecialtyChips\(data\.especialidades\)/);
+  assert.match(search, /chip\.hidden = !available\.has/);
 });
 
 test('todas as telas autenticadas do colaborador usam a estrutura responsiva compartilhada', async () => {
