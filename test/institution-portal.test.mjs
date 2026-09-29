@@ -219,7 +219,7 @@ test('live weather greeting card has layered motion and reduced-motion fallback'
     readFile(resolve(root, 'app/home.html'), 'utf8'),
     readFile(resolve(root, 'app/weather-hero.css'), 'utf8')
   ]);
-  for (const layer of ['sky-atmosphere', 'sky-haze', 'sky-rain-depth', 'sky-drops', 'sky-flash', 'sky-lightning', 'sky-vignette']) {
+  for (const layer of ['sky-atmosphere', 'sky-haze', 'sky-drops', 'sky-flash', 'sky-lightning', 'sky-vignette']) {
     assert.match(home, new RegExp(`class="${layer}"`));
   }
   for (const weather of ['partly', 'cloudy', 'rain', 'storm', 'snow', 'fog']) {

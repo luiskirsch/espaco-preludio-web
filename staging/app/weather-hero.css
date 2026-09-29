@@ -206,17 +206,6 @@ body.a-route-home .home-hero::after {
 .home-hero[data-weather="rain"] .home-hero__sky { --dim: .28; }
 .home-hero[data-weather="storm"] .home-hero__sky { --dim: .4; }
 
-.sky-rain-depth {
-  z-index: 4;
-  background: repeating-linear-gradient(105deg, transparent 0 13px, rgba(211, 229, 237, .1) 14px, transparent 15px 27px);
-  background-size: 150% 150%;
-  filter: blur(.35px);
-  animation: live-rain-sheet .58s linear infinite;
-}
-
-.home-hero:is([data-weather="rain"], [data-weather="storm"]) .sky-rain-depth { opacity: .68; }
-.home-hero[data-weather="storm"] .sky-rain-depth { opacity: .92; animation-duration: .43s; }
-
 .sky-drops {
   z-index: 5;
   -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, .74) 0%, #000 48%);
@@ -361,11 +350,6 @@ body.a-route-home .home-hero::after {
 @keyframes live-moon-float {
   from { transform: translate(50%, 0); }
   to { transform: translate(50%, 4px); }
-}
-
-@keyframes live-rain-sheet {
-  from { background-position: 0 -80px; }
-  to { background-position: -58px 80px; }
 }
 
 @keyframes live-rain-near {
