@@ -255,6 +255,13 @@ test('chat desbloqueia a chave local sem encerrar a sessão válida do portal', 
   assert.doesNotMatch(chat, /login\.html\?reauth=1/);
 });
 
+test('aba Todos carrega o diretório completo de profissionais', async () => {
+  const search = await readFile(resolve(root, 'app/buscar.html'), 'utf8');
+  assert.match(search, /if \(!u\) \{ window\.location\.href = "\.\/login\.html"; return; \}\s*buscar\(\);/);
+  assert.match(search, /fetch\(`\$\{BACKEND_BASE_URL\}\/public\/profissionais\?\$\{params\}`\)/);
+  assert.doesNotMatch(search, /if \(!q && !currentEsp\)/);
+});
+
 test('todas as telas autenticadas do colaborador usam a estrutura responsiva compartilhada', async () => {
   const authenticatedPages = ['home', 'buscar', 'consultas', 'perfil', 'agendar', 'chat', 'dependentes', 'documentos', 'humor', 'jornada', 'nr1', 'emergencia'];
   for (const page of authenticatedPages) {

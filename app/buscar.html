@@ -94,7 +94,10 @@
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
 
-  onAuthStateChanged(auth, u => { if (!u) window.location.href = "./login.html"; });
+  onAuthStateChanged(auth, u => {
+    if (!u) { window.location.href = "./login.html"; return; }
+    buscar();
+  });
 
   const ESP_LABELS = {
     "psicologia-clinica": "Psicologia clínica",
@@ -160,7 +163,6 @@
 
   async function buscar() {
     const q = searchInput.value.trim();
-    if (!q && !currentEsp) { searchHint.classList.remove("a-hide"); resultsList.classList.add("a-hide"); return; }
     searchHint.classList.add("a-hide");
     searchEmpty.classList.add("a-hide");
     resultsList.classList.add("a-hide");
