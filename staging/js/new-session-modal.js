@@ -56,8 +56,11 @@ const MODAL_HTML = `
         <span class="ep-text-xs ep-text-muted" data-i18n="painel:modalNew.patientPhoneHint">Recebe confirmação e lembrete via WhatsApp. Ative no Perfil → WhatsApp.</span>
       </div>
       <div class="ep-field">
-        <label class="ep-label" for="scheduledAt" data-i18n="painel:modalNew.scheduledAt">Horário *</label>
-        <input id="scheduledAt" class="ep-input" type="datetime-local" required>
+        <label class="ep-label" for="scheduledDate" data-i18n="painel:modalNew.scheduledAt">Data e horário *</label>
+        <div class="ep-date-time-flow">
+          <input id="scheduledDate" class="ep-input" type="date" required aria-label="Data da consulta">
+          <input id="scheduledTime" class="ep-input" type="time" step="300" required aria-label="Hora da consulta">
+        </div>
         <span class="ep-text-xs ep-text-muted" data-i18n="painel:modalNew.scheduledAtHint">Obrigatório — a consulta precisa aparecer na agenda. Você pode entrar antes do horário marcado.</span>
       </div>
       <div class="ep-field">
@@ -277,7 +280,9 @@ export function createNewSessionModal({
       patientSelect.value = "";
     }
     document.getElementById("patientName").value = prefill.patientName || "";
-    document.getElementById("scheduledAt").value = prefill.scheduledAt || "";
+    const [prefillDate = "", prefillTime = ""] = String(prefill.scheduledAt || "").split("T");
+    document.getElementById("scheduledDate").value = prefillDate;
+    document.getElementById("scheduledTime").value = prefillTime.slice(0, 5);
     document.getElementById("newSessionStatus").textContent = "";
     if (prefill.patientId || (prefill.patientName && patientSelect.value)) {
       freeNameField.classList.add("ep-hide");
@@ -339,6 +344,14 @@ export function createNewSessionModal({
   }
   patientSelect.addEventListener("change", refreshTissNewSessionConvenios);
 
+  // O campo nativo de data só recebe valor quando dia, mês e os quatro
+  // dígitos do ano estão completos. Nesse instante, segue direto para a hora.
+  const scheduledDateInput = document.getElementById("scheduledDate");
+  const scheduledTimeInput = document.getElementById("scheduledTime");
+  scheduledDateInput.addEventListener("input", () => {
+    if (scheduledDateInput.value) scheduledTimeInput.focus();
+  });
+
   document.getElementById("cancelNewSession").addEventListener("click", () => closeModal(newSessionModal));
 
   document.getElementById("createNewSession").addEventListener("click", async () => {
@@ -354,7 +367,11 @@ export function createNewSessionModal({
     } else {
       patientName = document.getElementById("patientName").value.trim();
     }
-    const scheduledAtRaw  = document.getElementById("scheduledAt").value;
+    const scheduledDateRaw = scheduledDateInput.value;
+    const scheduledTimeRaw = scheduledTimeInput.value;
+    const scheduledAtRaw = scheduledDateRaw && scheduledTimeRaw
+      ? `${scheduledDateRaw}T${scheduledTimeRaw}`
+      : "";
     const recurrenceWeeks = Number(document.getElementById("recurrenceWeeks").value || 1);
     const patientEmailRaw = document.getElementById("patientEmail").value.trim().toLowerCase();
     const patientPhoneRaw = document.getElementById("patientPhone").value.trim();
@@ -364,10 +381,10 @@ export function createNewSessionModal({
       statusEl.className = "ep-status is-err";
       return;
     }
-    if (!scheduledAtRaw) {
+    if (!scheduledDateRaw || !scheduledTimeRaw) {
       statusEl.textContent = tr("painel:modalNew.errMissingTime", "Defina o horário da consulta — sem isso ela não aparece na agenda.");
       statusEl.className = "ep-status is-err";
-      document.getElementById("scheduledAt").focus();
+      (scheduledDateRaw ? scheduledTimeInput : scheduledDateInput).focus();
       return;
     }
     if (!patientEmailRaw || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patientEmailRaw)) {
