@@ -20,7 +20,9 @@
       '.ep-notif-fab:focus-visible{outline:2px solid #c89b4a;outline-offset:2px;}',
       '.ep-notif-fab__badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#c0392b;color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center;border:2px solid #f5f0e8;box-shadow:0 2px 6px rgba(28,31,29,.20);}',
       'body:has(.ep-logout-fab) .ep-notif-fab{bottom:288px;}',
-      'body.ep-has-sidebar .ep-fab-stack>.ep-notif-fab{position:relative!important;top:auto!important;right:auto!important;bottom:auto!important;margin:0!important;}',
+      // Só na coluna do desktop; no celular a pilha vira display:contents e o sino
+      // precisa manter a posição fixa (senão cai no fluxo, no canto esquerdo).
+      '@media (min-width:900px){body.ep-has-sidebar .ep-fab-stack>.ep-notif-fab{position:relative!important;top:auto!important;right:auto!important;bottom:auto!important;margin:0!important;}}',
       '@media print{.ep-notif-fab{display:none!important;}}',
       'body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools{position:relative;isolation:isolate;overflow:hidden;color:#fff4dc;font-weight:700;letter-spacing:.01em;background:radial-gradient(circle at 16% 50%,rgba(226,183,106,.22),transparent 42%),linear-gradient(115deg,rgba(226,183,106,.22),rgba(111,82,31,.12));border:1px solid rgba(226,183,106,.48);box-shadow:inset 0 1px 0 rgba(255,244,220,.08),0 10px 26px -15px rgba(226,183,106,.72),0 0 0 1px rgba(226,183,106,.06);animation:ep-schools-breathe 3.4s ease-in-out infinite;}',
       'body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools::before{content:"";position:absolute;z-index:0;pointer-events:none;inset:-60% auto -60% -42%;width:34%;transform:skewX(-18deg);background:linear-gradient(90deg,transparent,rgba(255,239,198,.18),transparent);animation:ep-schools-shine 4.8s ease-in-out infinite;}',
@@ -234,7 +236,7 @@
       const stack = document.createElement('div');
       stack.className = 'ep-fab-stack';
       document.body.appendChild(stack);
-      const SELECTORS = '.ep-theme-toggle, .ep-msg-bubble-fab, .ep-help-bubble, .ep-logout-fab, .ep-notif-fab, .ep-receita-fab, .ep-atestado-fab, .ep-calc-fab';
+      const SELECTORS = '.ep-theme-toggle, .ep-msg-bubble-fab, .ep-aurora-fab, .ep-help-bubble, .ep-logout-fab, .ep-notif-fab, .ep-receita-fab, .ep-atestado-fab, .ep-calc-fab';
       function collect() {
         document.querySelectorAll(SELECTORS).forEach(el => {
           if (el.parentNode !== stack) stack.appendChild(el);

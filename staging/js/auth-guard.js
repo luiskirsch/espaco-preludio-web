@@ -293,29 +293,70 @@ function applyCapabilityVisibility(capabilities) {
   mountLogoutFab();
 }
 
-// Botão flutuante de suporte — bubble vira chat ao vivo com Claude (Suporte 24/7).
+// Estilos do botão da Aurora — injetados aqui (dono do componente) pra não
+// exigir bump do CSS global. Cores fixas em hex e sem var() na transição:
+// padrão que evita o bug recorrente de ícone sumindo no hover dos FABs.
+function injectAuroraFabStyle() {
+  if (document.getElementById("ep-aurora-fab-style")) return;
+  const style = document.createElement("style");
+  style.id = "ep-aurora-fab-style";
+  style.textContent = [
+    ".ep-aurora-fab{position:fixed;right:16px;bottom:90px;width:52px;height:52px;border-radius:50%;border:2px solid #c89b4a;padding:0;background:#1c1f1d;display:block;overflow:hidden;cursor:pointer;box-shadow:0 4px 14px rgba(200,155,74,.30),0 1px 3px rgba(28,31,29,.10);transition:transform 160ms ease,box-shadow 160ms ease,border-color 160ms ease;z-index:180;}",
+    ".ep-aurora-fab img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%;}",
+    ".ep-aurora-fab:hover{transform:translateY(-2px) scale(1.04);border-color:#e2b76a;box-shadow:0 8px 22px rgba(200,155,74,.42),0 2px 4px rgba(28,31,29,.14);}",
+    ".ep-aurora-fab:active{transform:translateY(0) scale(1);}",
+    ".ep-aurora-fab:focus-visible{outline:2px solid #c89b4a;outline-offset:2px;}",
+    ".ep-aurora-fab[aria-expanded=\"true\"]{border-color:#e2b76a;box-shadow:0 0 0 3px rgba(226,183,106,.35),0 8px 22px rgba(200,155,74,.42);}",
+    "body:has(.ep-logout-fab) .ep-aurora-fab{bottom:156px;}",
+    // Na coluna do desktop: logo acima do "?" (que passa pra ordem 8).
+    ".ep-aurora-fab,body.ep-has-sidebar .ep-fab-stack>.ep-aurora-fab{order:7;}",
+    ".ep-fab-stack>.ep-help-bubble,body.ep-has-sidebar .ep-fab-stack>.ep-help-bubble{order:8;}",
+    "@media (min-width:900px){.ep-fab-stack>.ep-aurora-fab{position:relative!important;top:auto!important;right:auto!important;bottom:auto!important;margin:0!important;}}",
+    // Fora da coluna (celular, ou páginas sem sidebar), cada botão tem altura
+    // fixa: a Aurora ocupa a vaga acima do "?" e os de cima sobem uma posição.
+    "@media (max-width:899px){body:has(.ep-aurora-fab) :is(.ep-msg-bubble-fab,.ep-theme-toggle,.ep-notif-fab){translate:0 -66px;}}",
+    "body:has(.ep-aurora-fab) :is(.ep-msg-bubble-fab,.ep-theme-toggle,.ep-notif-fab):not(.ep-fab-stack > *){translate:0 -66px;}",
+    "body.ep-consult .ep-aurora-fab{display:none!important;}",
+    "@media print{.ep-aurora-fab{display:none!important;}}",
+    // Painel: no desktop ao lado da coluna de botões; no celular, largura toda.
+    "@media (min-width:900px){#epSupportPanel{right:88px!important;bottom:24px!important;}}",
+    "@media (max-width:899px){#epSupportPanel{left:8px!important;right:8px!important;width:auto!important;bottom:12px!important;}}"
+  ].join("");
+  document.head.appendChild(style);
+}
+
+// Aurora (chat IA 24/7) ganha botão próprio na coluna de botões flutuantes,
+// logo acima do "?", que segue sendo a Central de Ajuda.
 // History persiste em sessionStorage durante a aba.
 function mountHelpBubble() {
   if (typeof document === "undefined") return;
   const path = location.pathname.toLowerCase();
   if (path.endsWith("/2fa-verify.html")) return;
-  if (document.getElementById("epHelpBubble")) return;
+  if (document.getElementById("epAuroraBubble")) return;
 
-  // Bubble
+  injectAuroraFabStyle();
+  const fabParent = document.querySelector(".ep-fab-stack") || document.body;
+
+  if (!document.getElementById("epHelpBubble")) {
+    const help = document.createElement("a");
+    help.id = "epHelpBubble";
+    help.className = "ep-help-bubble";
+    help.href = "./suporte.html";
+    help.title = "Suporte e ajuda";
+    help.setAttribute("aria-label", "Abrir suporte");
+    help.innerHTML = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+    fabParent.appendChild(help);
+  }
+
   const a = document.createElement("button");
-  a.id = "epHelpBubble";
+  a.id = "epAuroraBubble";
   a.type = "button";
-  a.className = "ep-help-bubble";
-  a.title = "Aurora · suporte IA 24/7";
+  a.className = "ep-aurora-fab";
+  a.title = "Aurora · assistente IA 24/7";
   a.setAttribute("aria-label", "Abrir Aurora — assistente IA");
-  a.innerHTML = `
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="10"></circle>
-      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-      <line x1="12" y1="17" x2="12.01" y2="17"></line>
-    </svg>
-  `;
-  document.body.appendChild(a);
+  a.setAttribute("aria-expanded", "false");
+  a.innerHTML = `<img src="/img/aurora-avatar.png" alt="" width="52" height="52" aria-hidden="true">`;
+  fabParent.appendChild(a);
 
   // Widget panel (oculto inicialmente)
   const panel = document.createElement("div");
@@ -566,9 +607,13 @@ function mountHelpBubble() {
   a.addEventListener("click", () => {
     const open = panel.style.display === "flex";
     panel.style.display = open ? "none" : "flex";
+    a.setAttribute("aria-expanded", open ? "false" : "true");
     if (!open) setTimeout(() => inputEl.focus(), 50);
   });
-  closeBtn.addEventListener("click", () => { panel.style.display = "none"; });
+  closeBtn.addEventListener("click", () => {
+    panel.style.display = "none";
+    a.setAttribute("aria-expanded", "false");
+  });
   sendBtn.addEventListener("click", sendQ);
   inputEl.addEventListener("keypress", (e) => { if (e.key === "Enter") sendQ(); });
 }

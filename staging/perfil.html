@@ -27,7 +27,7 @@
 <body class="ep-has-sidebar">
 <div class="ep-staging-banner">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
 
-<script src="./js/sidebar.js?v=26"></script>
+<script src="./js/sidebar.js?v=27"></script>
 
 <div class="ep-shell">
   <header class="ep-topbar">
@@ -796,7 +796,7 @@
 <script type="module">
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-30";
+  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-31";
 
   // ─── i18n helper ────────────────────────────────────────────
   function tr(key, fallback, opts) {
@@ -2099,7 +2099,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
       // Salva session 2FA token (evita redirect imediato após ativar).
-      const { save2faSession } = await import("./js/auth-guard.js?v=3-30");
+      const { save2faSession } = await import("./js/auth-guard.js?v=3-31");
       save2faSession(data.sessionToken);
       therapist.twoFactorEnabled = true;
       twofaModal.classList.remove("is-open");
@@ -2146,7 +2146,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
       therapist.twoFactorEnabled = false;
-      const { clear2faSession } = await import("./js/auth-guard.js?v=3-30");
+      const { clear2faSession } = await import("./js/auth-guard.js?v=3-31");
       clear2faSession();
       twofaDisableModal.classList.remove("is-open");
       renderTwoFactorStatus();
