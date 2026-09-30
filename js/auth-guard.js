@@ -6,6 +6,7 @@
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
 import { recallDek } from "./crypto.js";
+import { matchPatients, loadBookingDirectory, createSessionFromProposal, sanitizeProposal, isValidEmail } from "./aurora-booking.js?v=1";
 import { mountThemeToggle } from "./theme-toggle.js";
 import "./cmdk.js";
 import db from "./db.js";
@@ -370,16 +371,144 @@ function mountHelpBubble() {
         : label;
     });
   }
+  // Cartões de agendamento propostos pela Aurora. A proposta vem do backend;
+  // paciente/e-mail são resolvidos aqui (cadastro cifrado) e a consulta só é
+  // criada no clique em Confirmar.
+  const bookingUi = new Map(); // "msg:ação" -> estado da interface do cartão
+  let bookingDirectory = null;
+  const supToken = async () => (auth.currentUser ? auth.currentUser.getIdToken() : null);
+  function bookingDirectoryOnce() {
+    if (!bookingDirectory) {
+      bookingDirectory = loadBookingDirectory({ backendBaseUrl: BACKEND_BASE_URL, getToken: supToken })
+        .catch(err => { bookingDirectory = null; throw err; });
+    }
+    return bookingDirectory;
+  }
+  const BOOKING_ERRORS = {
+    HORARIO_PASSADO: "Esse horário já passou. Peça um novo horário à Aurora.",
+    PLANO_INATIVO: "Seu plano não permite criar consultas agora. Veja no Perfil.",
+    EMAIL_INVALIDO: "Informe um e-mail válido do paciente.",
+    DATA_INVALIDA: "Data inválida. Peça de novo à Aurora.",
+    PACIENTE_OBRIGATORIO: "Escolha o paciente."
+  };
+  const supCardStyle = "align-self: stretch; padding: 10px 12px; border: 1px solid var(--ep-line, #ddd); border-radius: 10px; background: var(--ep-bg, #fff); color: var(--ep-ink, #1c1f1d); font-size: 12.5px; line-height: 1.45; display: flex; flex-direction: column; gap: 7px;";
+  const supFieldStyle = "padding: 6px 8px; border: 1px solid var(--ep-line, #ddd); border-radius: 6px; font-size: 12.5px; background: var(--ep-bg, #fff); color: var(--ep-ink, #1c1f1d); width: 100%; box-sizing: border-box;";
+  const supLabelStyle = "display: flex; flex-direction: column; gap: 3px;";
+  const supHintStyle = "color: var(--ep-ink-3, #888); font-size: 11px;";
+  const supBtnStyle = (primary) => `padding: 6px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: 1px solid ${primary ? "var(--ep-accent, #2d4a3e)" : "var(--ep-line, #ddd)"}; background: ${primary ? "var(--ep-accent, #2d4a3e)" : "transparent"}; color: ${primary ? "#fff" : "var(--ep-ink, #1c1f1d)"};`;
+
+  function bookingCardHtml(mi, ai, action) {
+    const id = `${mi}:${ai}`;
+    const status = action.state?.status || "pending";
+    const when = `${escSup(action.quando)}${action.duracaoMin ? ` · ${action.duracaoMin} min` : ""}`;
+    if (status === "created") {
+      return `<div style="${supCardStyle}"><strong>✓ Consulta agendada</strong><span>${escSup(action.state.name)} · ${escSup(action.quando)}</span><span>O link da sala está em ${linkSupPages("[[Consultas]]")}.</span></div>`;
+    }
+    if (status === "dismissed") {
+      return `<div style="${supCardStyle} opacity: .7;"><span>Agendamento descartado.</span></div>`;
+    }
+    const ui = bookingUi.get(id) || { loading: true };
+    const conflicts = action.conflitos?.length
+      ? `<span style="color: #b45309;">Atenção: já há consulta nesse horário — ${action.conflitos.map(c => `${escSup(c.paciente)} (${escSup(c.quando)})`).join(", ")}.</span>`
+      : "";
+    let body;
+    if (ui.loading) {
+      body = `<span style="${supHintStyle}">Procurando “${escSup(action.paciente)}” nos seus pacientes…</span>`;
+    } else if (ui.loadError) {
+      body = `<span>Não consegui carregar seus pacientes agora.</span><div><button type="button" data-sup-act="retry" data-sup-id="${id}" style="${supBtnStyle(false)}">Tentar de novo</button></div>`;
+    } else if (!ui.candidates.length) {
+      body = `<span>Não encontrei “${escSup(action.paciente)}” entre seus pacientes${ui.hasDek ? "" : " (a lista cifrada não está desbloqueada nesta aba)"}. Cadastre em ${linkSupPages("[[Pacientes]]")} e me peça de novo.</span><div><button type="button" data-sup-act="dismiss" data-sup-id="${id}" style="${supBtnStyle(false)}">Fechar</button></div>`;
+    } else {
+      const only = ui.candidates.length === 1 ? ui.candidates[0] : null;
+      const sourceTag = c => (c.source !== "cadastro" ? ` (${escSup(c.source)})` : "");
+      const patientField = only
+        ? `<strong>${escSup(only.name)}<span style="font-weight: 400; ${supHintStyle}">${sourceTag(only)}</span></strong>`
+        : `<select data-sup-field="patient" data-sup-id="${id}" style="${supFieldStyle}">${ui.candidates.map(c => `<option value="${escSup(c.key)}"${c.key === ui.selectedKey ? " selected" : ""}>${escSup(c.name)}${sourceTag(c)}</option>`).join("")}</select>`;
+      body = `
+        <label style="${supLabelStyle}"><span style="${supHintStyle}">Paciente${only ? "" : ` — ${ui.candidates.length} encontrados, escolha`}</span>${patientField}</label>
+        <label style="${supLabelStyle}"><span style="${supHintStyle}">E-mail do paciente (confirmação e lembrete)</span><input type="email" data-sup-field="email" data-sup-id="${id}" value="${escSup(ui.email || "")}" placeholder="email@exemplo.com" style="${supFieldStyle}"></label>
+        ${ui.error ? `<span style="color: #b91c1c;">${escSup(ui.error)}</span>` : ""}
+        <div style="display: flex; gap: 6px;"><button type="button" data-sup-act="confirm" data-sup-id="${id}" style="${supBtnStyle(true)}"${ui.busy ? " disabled" : ""}>${ui.busy ? "Agendando…" : "Confirmar"}</button><button type="button" data-sup-act="dismiss" data-sup-id="${id}" style="${supBtnStyle(false)}"${ui.busy ? " disabled" : ""}>Cancelar</button></div>`;
+    }
+    return `<div style="${supCardStyle}" data-sup-card="${id}"><strong>Nova consulta</strong><span>${when}</span>${conflicts}${body}</div>`;
+  }
+
+  function resolveBookingCards() {
+    history.forEach((m, mi) => (m.actions || []).forEach((action, ai) => {
+      const id = `${mi}:${ai}`;
+      if ((action.state?.status || "pending") !== "pending" || bookingUi.has(id)) return;
+      bookingUi.set(id, { loading: true });
+      bookingDirectoryOnce()
+        .then(dir => {
+          const candidates = matchPatients(action.paciente, dir.entries);
+          bookingUi.set(id, { candidates, hasDek: dir.hasDek, selectedKey: candidates[0]?.key || null, email: candidates[0]?.email || "" });
+        })
+        .catch(() => bookingUi.set(id, { loadError: true }))
+        .finally(renderHistory);
+    }));
+  }
+
+  msgsEl.addEventListener("input", (e) => {
+    const el = e.target.closest('[data-sup-field="email"]');
+    const ui = el && bookingUi.get(el.dataset.supId);
+    if (ui) ui.email = el.value;
+  });
+  msgsEl.addEventListener("change", (e) => {
+    const el = e.target.closest('[data-sup-field="patient"]');
+    const ui = el && bookingUi.get(el.dataset.supId);
+    if (!ui) return;
+    ui.selectedKey = el.value;
+    ui.email = ui.candidates.find(c => c.key === el.value)?.email || "";
+    renderHistory();
+  });
+  msgsEl.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-sup-act]");
+    if (!btn) return;
+    const id = btn.dataset.supId;
+    const [mi, ai] = id.split(":").map(Number);
+    const action = history[mi]?.actions?.[ai];
+    if (!action) return;
+    const act = btn.dataset.supAct;
+    if (act === "retry") { bookingUi.delete(id); renderHistory(); return; }
+    if (act === "dismiss") { action.state = { status: "dismissed" }; persistHistory(); renderHistory(); return; }
+    if (act !== "confirm") return;
+    const ui = bookingUi.get(id);
+    if (!ui || ui.busy || !ui.candidates?.length) return;
+    const patient = ui.candidates.find(c => c.key === ui.selectedKey) || ui.candidates[0];
+    if (!isValidEmail(ui.email)) { ui.error = BOOKING_ERRORS.EMAIL_INVALIDO; renderHistory(); return; }
+    ui.busy = true;
+    ui.error = "";
+    renderHistory();
+    const result = await createSessionFromProposal({ backendBaseUrl: BACKEND_BASE_URL, getToken: supToken, proposal: action, patient, email: ui.email })
+      .catch(err => ({ ok: false, error: err.message }));
+    ui.busy = false;
+    if (!result.ok) {
+      ui.error = BOOKING_ERRORS[result.error] || `Não foi possível agendar (${result.error}).`;
+      renderHistory();
+      return;
+    }
+    action.state = { status: "created", name: patient.name };
+    // Nota só pro contexto da Aurora (vai no histórico); o cartão já mostra.
+    history.push({ role: "assistant", content: `Consulta agendada: ${patient.name}, ${action.quando}.`, silent: true });
+    bookingDirectory = null;
+    persistHistory();
+    renderHistory();
+  });
+
   function renderHistory() {
     if (history.length === 0) {
       msgsEl.innerHTML = `<div style="text-align: center; color: var(--ep-ink-3, #888); padding: 20px; font-size: 12px; line-height: 1.5;">Oi, sou a <strong style="color:var(--ep-accent,#2d4a3e);">Aurora</strong>.<br>Posso consultar sua agenda, pendências da conta e novidades da plataforma, além de tirar dúvidas de uso.</div>`;
       return;
     }
-    msgsEl.innerHTML = history.map(m => {
+    msgsEl.innerHTML = history.map((m, mi) => {
+      if (m.silent) return "";
       const mine = m.role === "user";
-      return `<div style="align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 85%; padding: 8px 12px; border-radius: 10px; background: ${mine ? "var(--ep-accent, #2d4a3e)" : "var(--ep-bg-2, #f3f1ea)"}; color: ${mine ? "#fff" : "var(--ep-ink, #1c1f1d)"}; white-space: pre-wrap; word-wrap: break-word;">${mine ? escSup(m.content) : linkSupPages(escSup(m.content))}</div>`;
+      const bubble = `<div style="align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 85%; padding: 8px 12px; border-radius: 10px; background: ${mine ? "var(--ep-accent, #2d4a3e)" : "var(--ep-bg-2, #f3f1ea)"}; color: ${mine ? "#fff" : "var(--ep-ink, #1c1f1d)"}; white-space: pre-wrap; word-wrap: break-word;">${mine ? escSup(m.content) : linkSupPages(escSup(m.content))}</div>`;
+      const cards = !mine && Array.isArray(m.actions) ? m.actions.map((action, ai) => bookingCardHtml(mi, ai, action)).join("") : "";
+      return bubble + cards;
     }).join("");
     msgsEl.scrollTop = msgsEl.scrollHeight;
+    resolveBookingCards();
   }
   renderHistory();
 
@@ -405,7 +534,12 @@ function mountHelpBubble() {
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/support/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(idToken ? { "Authorization": `Bearer ${idToken}` } : {}) },
-        body: JSON.stringify({ message: text, history: history.slice(0, -1), page: location.pathname })
+        body: JSON.stringify({
+          message: text,
+          history: history.slice(0, -1).map(m => ({ role: m.role, content: m.content })),
+          page: location.pathname,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        })
       });
       thinking.remove();
       const d = await r.json().catch(() => ({}));
@@ -413,7 +547,8 @@ function mountHelpBubble() {
         const errMsg = r.status === 429 ? "Você atingiu o limite de 30 perguntas/dia. Reset em 24h." : ("Erro: " + (d?.error || r.status));
         history.push({ role: "assistant", content: errMsg });
       } else {
-        history.push({ role: "assistant", content: d.reply });
+        const actions = (Array.isArray(d.actions) ? d.actions : []).map(sanitizeProposal).filter(Boolean).slice(0, 3);
+        history.push({ role: "assistant", content: d.reply, ...(actions.length ? { actions } : {}) });
       }
       persistHistory();
       renderHistory();
