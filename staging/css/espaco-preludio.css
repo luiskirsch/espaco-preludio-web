@@ -26,9 +26,10 @@ body.ep-consult .ep-topics-deck__draw:disabled{background:rgba(226,183,106,.08);
 +/* Premium opening ritual shared by professional and patient consultation rooms. */
 .ep-ritual-open{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;overflow:hidden;pointer-events:none;background:radial-gradient(circle at 50% 46%,rgba(71,55,30,.3) 0,rgba(17,13,9,.96) 34%,#070504 78%);animation:epPremiumRitualOverlay 6s cubic-bezier(.22,.61,.36,1) forwards}
 .ep-ritual-open::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 20%,rgba(226,183,106,.035) 46%,transparent 68%);transform:translateX(-100%);animation:epPremiumRitualLight 4.6s ease-out .4s both}
-.ep-ritual-open__aura{position:absolute;left:50%;top:47%;width:min(74vw,840px);aspect-ratio:1;border-radius:50%;border:1px solid rgba(226,183,106,.12);transform:translate(-50%,-50%) scale(.38);opacity:0;animation:epPremiumRitualAura 5.4s cubic-bezier(.16,1,.3,1) .22s both}
-.ep-ritual-open__aura::before,.ep-ritual-open__aura::after{content:"";position:absolute;border-radius:50%;inset:12%;border:1px solid rgba(226,183,106,.16)}
-.ep-ritual-open__aura::after{inset:18%;border-color:rgba(226,183,106,.22);box-shadow:0 0 90px rgba(226,183,106,.08)}
+.ep-ritual-open__aura{position:absolute;left:50%;top:47%;width:min(78vw,920px);aspect-ratio:1;border-radius:50%;border:1px solid rgba(226,183,106,.12);transform:translate(-50%,-50%) scale(.52);opacity:0;animation:epPremiumRitualAura 5.4s cubic-bezier(.16,1,.3,1) .22s both}
+.ep-ritual-open__aura::before,.ep-ritual-open__aura::after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(226,183,106,.16)}
+.ep-ritual-open__aura::before{inset:17%}
+.ep-ritual-open__aura::after{inset:4%;border-color:rgba(226,183,106,.22);box-shadow:0 0 90px rgba(226,183,106,.08)}
 .ep-ritual-open__content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px;transform:translateY(10px);opacity:0;animation:epPremiumRitualContent 5.5s cubic-bezier(.22,.61,.36,1) .28s both}
 .ep-ritual-open__eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:22px;color:#e6c37f;font-size:10px;font-weight:700;letter-spacing:.24em;text-transform:uppercase}
 .ep-ritual-open__eyebrow span{display:block;width:34px;height:1px;background:linear-gradient(90deg,transparent,rgba(226,183,106,.72))}
@@ -41,7 +42,7 @@ body.ep-consult .ep-topics-deck__draw:disabled{background:rgba(226,183,106,.08);
 .ep-ritual-open__sub{margin-top:12px;color:rgba(255,250,240,.68);font-size:13px;font-weight:400;letter-spacing:.045em}
 @keyframes epPremiumRitualOverlay{0%{opacity:0}10%,76%{opacity:1}100%{opacity:0;visibility:hidden}}
 @keyframes epPremiumRitualContent{0%{opacity:0;transform:translateY(12px)}18%,76%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-5px)}}
-@keyframes epPremiumRitualAura{0%{opacity:0;transform:translate(-50%,-50%) scale(.38)}24%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.1)}}
+@keyframes epPremiumRitualAura{0%{opacity:0;transform:translate(-50%,-50%) scale(.52)}20%{opacity:1;transform:translate(-50%,-50%) scale(.82)}48%{opacity:1;transform:translate(-50%,-50%) scale(1)}78%{opacity:.9;transform:translate(-50%,-50%) scale(1.04)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.1)}}
 @keyframes epPremiumRitualRing{0%{opacity:0;transform:scale(.76)}35%{opacity:1}100%{opacity:.12;transform:scale(1.08)}}
 @keyframes epPremiumRitualLight{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
 @media (prefers-reduced-motion:reduce){.ep-ritual-open,.ep-ritual-open::before,.ep-ritual-open__aura,.ep-ritual-open__content,.ep-ritual-open__seal::before,.ep-ritual-open__seal::after{animation-duration:.01ms!important;animation-delay:0s!important}.ep-ritual-open{animation-duration:2.2s!important}}
