@@ -13,4 +13,12 @@ for (const file of ["painel.html", "staging/painel.html"]) {
       /#heroNextSession\.is-overdue #heroNextPatient\s*\{[^}]*color:\s*#fffaf0/i
     );
   });
+
+  test(`${file} usa o azul oficial no estado de profissional verificado`, async () => {
+    const html = await readFile(resolve(root, file), "utf8");
+    assert.match(
+      html,
+      /#verifPill\.is-verified\s*\{[^}]*background:\s*var\(--ep-verified-blue\)/i
+    );
+  });
 }
