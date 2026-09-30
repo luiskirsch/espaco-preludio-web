@@ -14,12 +14,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./app.css?v=20260927m">
   <style>
-    .prof-hero { padding: 20px 16px; display: flex; gap: 14px; align-items: center; border-bottom: 1px solid var(--a-line); }
+    .prof-hero { padding: 20px 16px; display: flex; gap: 14px; align-items: flex-start; border-bottom: 1px solid var(--a-line); }
     .prof-hero__avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--a-bg2); display:flex;align-items:center;justify-content:center; font-family:var(--ff-serif);font-size:22px;color:var(--a-ink2); overflow:hidden; flex-shrink:0; }
     .prof-hero__avatar img { width:100%;height:100%;object-fit:cover; }
+    .prof-hero__info { min-width: 0; flex: 1; }
     .prof-hero__name { font-family: var(--ff-serif); font-size: 20px; font-weight: 500; }
     .prof-hero__esp  { font-size: 13px; color: var(--a-ink2); margin-top: 3px; }
     .prof-hero__crp  { font-size: 11px; color: var(--a-ink3); margin-top: 2px; }
+    .prof-hero__location { font-size: 12px; color: var(--a-ink2); margin-top: 5px; }
+    .prof-hero__bio { font-size: 13px; color: var(--a-ink2); line-height: 1.55; margin-top: 10px; white-space: pre-line; max-width: 680px; }
+    .profile-notice { margin: 16px; padding: 16px; border: 1px solid var(--a-line); border-radius: 14px; background: var(--a-surface); color: var(--a-ink2); font-size: 14px; line-height: 1.5; }
+    .profile-notice strong { display: block; color: var(--a-ink); margin-bottom: 4px; }
     .step-header { padding: 16px 16px 8px; }
     .step-header__title { font-size: 16px; font-weight: 700; color: var(--a-ink); }
     .step-header__sub   { font-size: 12px; color: var(--a-ink3); margin-top: 2px; }
@@ -60,12 +65,16 @@
     <!-- Perfil do profissional -->
     <div class="prof-hero" id="profHero">
       <div class="prof-hero__avatar" id="profAvatar">?</div>
-      <div>
+      <div class="prof-hero__info">
         <div class="prof-hero__name" id="profNome"><div class="a-skel" style="width:160px;height:20px;"></div></div>
         <div class="prof-hero__esp"  id="profEsp"><div class="a-skel a-mt-4" style="width:100px;height:14px;"></div></div>
         <div class="prof-hero__crp"  id="profCrp"></div>
+        <div class="prof-hero__location a-hide" id="profLocation"></div>
+        <div class="prof-hero__bio a-hide" id="profBio"></div>
       </div>
     </div>
+
+    <div class="profile-notice a-hide" id="profileNotice"></div>
 
     <!-- Steps indicator -->
     <div style="padding:14px 16px 6px;display:flex;justify-content:space-between;align-items:center;" id="stepsRow">
@@ -219,10 +228,13 @@
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
 
-  const slug = new URLSearchParams(location.search).get("p") || "";
-  if (!slug) window.location.href = "./buscar.html";
+  const query = new URLSearchParams(location.search);
+  const professionalUid = query.get("uid") || "";
+  const legacySlug = query.get("p") || "";
+  if (!professionalUid && !legacySlug) window.location.href = "./buscar.html";
 
   let therapist    = null;
+  let bookingSlug  = legacySlug;
   let currentUser  = null;
   let selectedDate = null;
   let selectedSlot = null;
@@ -244,14 +256,25 @@
   // Carrega dados do profissional
   async function loadProf() {
     try {
-      const r = await fetch(`${BACKEND_BASE_URL}/public/profissionais?q=${encodeURIComponent(slug)}`);
+      const endpoint = professionalUid
+        ? `${BACKEND_BASE_URL}/public/profissionais/${encodeURIComponent(professionalUid)}`
+        : `${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(legacySlug)}`;
+      const r = await fetch(endpoint);
       const d = await r.json().catch(() => ({}));
-      const prof = (d.items||[]).find(p => p.slug === slug || p.publicSchedulingSlug === slug);
-      if (!prof) return;
+      if (!r.ok || !d.ok || !d.profissional) throw new Error(d.error || "PROFISSIONAL_NAO_ENCONTRADO");
+      const prof = d.profissional;
       therapist = prof;
+      bookingSlug = d.publicSchedulingSlug || legacySlug;
       document.getElementById("profNome").textContent = prof.displayName || "Profissional";
       document.getElementById("profEsp").textContent  = prof.especialidade || "";
       document.getElementById("profCrp").textContent  = prof.conselhoLabel && prof.numeroConselho ? `${prof.conselhoLabel} ${prof.numeroConselho}` : "";
+      const location = [prof.cidade, prof.uf].filter(Boolean).join("/");
+      const locationEl = document.getElementById("profLocation");
+      locationEl.textContent = location ? `Localização: ${location}` : "";
+      locationEl.classList.toggle("a-hide", !location);
+      const bioEl = document.getElementById("profBio");
+      bioEl.textContent = String(prof.bio || "").trim();
+      bioEl.classList.toggle("a-hide", !bioEl.textContent);
       const profPhotoMime = /^image\/(?:jpeg|png|webp|gif)$/i.test(String(prof.photoMime || "")) ? prof.photoMime : "image/jpeg";
       const profPhotoBase64 = String(prof.photoBase64 || "");
       const profSafePhoto = profPhotoBase64.length <= 1_500_000 && /^[A-Za-z0-9+/]+={0,2}$/.test(profPhotoBase64);
@@ -268,8 +291,29 @@
         document.getElementById("confValor").textContent = valorFmt;
       }
 
+      const schedulingEnabled = professionalUid ? d.publicSchedulingEnabled === true : true;
+      if (!schedulingEnabled || !bookingSlug) {
+        showProfileNotice("Agenda online indisponível", "Este profissional faz parte da Rede de Psicologia, mas não está aceitando agendamentos online no momento.");
+        return;
+      }
       buildCalendar();
-    } catch { }
+    } catch {
+      document.getElementById("profNome").textContent = "Não foi possível carregar o profissional";
+      document.getElementById("profEsp").textContent = "Volte à busca e tente novamente.";
+      document.getElementById("profAvatar").textContent = "!";
+      showProfileNotice("Perfil indisponível", "Não foi possível carregar as informações deste profissional.");
+    }
+  }
+
+  function showProfileNotice(title, message) {
+    const notice = document.getElementById("profileNotice");
+    notice.innerHTML = "<strong></strong><span></span>";
+    notice.querySelector("strong").textContent = title;
+    notice.querySelector("span").textContent = message;
+    notice.classList.remove("a-hide");
+    document.getElementById("stepsRow").classList.add("a-hide");
+    [1,2,3,4,5].forEach(i => document.getElementById(`step${i}`).classList.add("a-hide"));
+    document.getElementById("footerBtn").classList.add("a-hide");
   }
   loadProf();
 
@@ -305,7 +349,7 @@
     try {
       const from = date.getTime();
       const to   = from + 24*3600*1000 - 1;
-      const r = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(slug)}/slots?from=${from}&to=${to}`);
+      const r = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(bookingSlug)}/slots?from=${from}&to=${to}`);
       const d = await r.json().catch(() => ({}));
       document.getElementById("slotsLoading").classList.add("a-hide");
       const avail = (d.slots||[]).filter(s => s.available);
@@ -391,7 +435,7 @@
     btn.disabled = true; btn.textContent = "Enviando…";
     erro.classList.add("a-hide");
     try {
-      const r = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(slug)}/solicitar`, {
+      const r = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(bookingSlug)}/solicitar`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -436,7 +480,7 @@
     document.getElementById("pixConfirmado").classList.add("a-hide");
 
     try {
-      const r = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(slug)}/criar-pix`, {
+      const r = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(bookingSlug)}/criar-pix`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ requestId })
