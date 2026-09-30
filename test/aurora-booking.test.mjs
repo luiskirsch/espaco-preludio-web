@@ -5,7 +5,7 @@ globalThis.sessionStorage = { getItem: () => null, setItem() {}, removeItem() {}
 
 const { encryptNote } = await import("../js/crypto.js");
 const {
-  normalizeName, matchPatients, loadBookingDirectory, createSessionFromProposal, sanitizeProposal, proposalTimestamp
+  normalizeName, matchPatients, loadBookingDirectory, createSessionFromProposal, regeneratePatientLink, sanitizeProposal, proposalTimestamp
 } = await import("../js/aurora-booking.js");
 
 const DEK = new Uint8Array(32).fill(3);
@@ -70,7 +70,7 @@ test("sem a chave da conta, usa só pacientes de consultas anteriores", async ()
 test("cria a consulta com os mesmos campos do modal Nova consulta", async () => {
   const proposal = { data: "2030-05-10", hora: "12:00" };
   let request;
-  const fetchImpl = async (url, init) => { request = { url, ...init, body: JSON.parse(init.body) }; return { ok: true, status: 200, json: async () => ({ ok: true, session: { sessionId: "sess_1", joinCode: "ABC23456", joinToken: "token-longo" } }) }; };
+  const fetchImpl = async (url, init) => { request = { url, ...init, body: JSON.parse(init.body) }; return { ok: true, status: 200, json: async () => ({ ok: true, session: { sessionId: "sess_1", joinCode: "ABC23456", joinToken: "token-longo", joinTokenExp: 12345 } }) }; };
   const result = await createSessionFromProposal({
     backendBaseUrl: "https://api.test", getToken: async () => "tok", proposal,
     patient: { name: "Luís Henrique Kirsch", patientId: "p1" }, email: " LUIS@x.com ", fetchImpl
@@ -78,9 +78,23 @@ test("cria a consulta com os mesmos campos do modal Nova consulta", async () => 
   assert.equal(result.ok, true);
   assert.equal(result.sessionId, "sess_1");
   assert.equal(result.joinCodeOrToken, "ABC23456", "prefere o código curto para montar o link do paciente");
+  assert.equal(result.joinTokenExp, 12345);
   assert.equal(request.url, "https://api.test/therapy/sessao/criar");
   assert.equal(request.method, "POST");
   assert.deepEqual(request.body, { patientName: "Luís Henrique Kirsch", patientId: "p1", patientEmail: "luis@x.com", scheduledAt: new Date("2030-05-10T12:00").getTime() });
+});
+
+test("regenera link de uma consulta confirmada", async () => {
+  let request;
+  const fetchImpl = async (url, init) => {
+    request = { url, ...init };
+    return { ok: true, status: 200, json: async () => ({ ok: true, joinCode: "NEW23456", joinToken: "token", joinTokenExp: 99999 }) };
+  };
+  const result = await regeneratePatientLink({ backendBaseUrl: "https://api.test", getToken: async () => "tok", sessionId: "sess 1", fetchImpl });
+  assert.deepEqual(result, { ok: true, joinCodeOrToken: "NEW23456", joinTokenExp: 99999 });
+  assert.equal(request.url, "https://api.test/therapy/sessao/sess%201/regenerar-link");
+  assert.equal(request.method, "POST");
+  assert.equal(request.headers.Authorization, "Bearer tok");
 });
 
 test("barra horário passado, e-mail inválido e plano inativo", async () => {

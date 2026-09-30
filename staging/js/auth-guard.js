@@ -6,7 +6,7 @@
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
 import { recallDek } from "./crypto.js";
-import { matchPatients, loadBookingDirectory, createSessionFromProposal, sanitizeProposal, isValidEmail } from "./aurora-booking.js?v=2";
+import { matchPatients, loadBookingDirectory, createSessionFromProposal, regeneratePatientLink, sanitizeProposal, proposalTimestamp, isValidEmail } from "./aurora-booking.js?v=3";
 import { mountThemeToggle } from "./theme-toggle.js";
 import "./cmdk.js";
 import db from "./db.js";
@@ -458,9 +458,10 @@ function mountHelpBubble() {
     const when = `${escSup(action.quando)}${action.duracaoMin ? ` · ${action.duracaoMin} min` : ""}`;
     if (status === "created") {
       const patientLink = auroraPatientLink(action.state.joinCodeOrToken);
-      const linkBlock = patientLink
+      const linkStillValid = patientLink && (!action.state.joinTokenExp || Number(action.state.joinTokenExp) > Date.now());
+      const linkBlock = linkStillValid
         ? `<a href="${escSup(patientLink)}" target="_blank" rel="noopener" style="color:var(--ep-accent,#2d4a3e);font-weight:700;text-decoration:underline;word-break:break-all;">Abrir link da consulta do paciente</a><button type="button" data-sup-act="copy-link" data-sup-id="${id}" style="${supBtnStyle(false)}">Copiar link</button>`
-        : `<span>Para gerar o link, abra ${linkSupPages("[[Agenda]]")}, clique na consulta e use “Copiar link”.</span>`;
+        : `<button type="button" data-sup-act="generate-link" data-sup-id="${id}" style="${supBtnStyle(true)}">${patientLink ? "Gerar novo link" : "Gerar link da consulta"}</button><span>Você também pode gerar em ${linkSupPages("[[Agenda]]")}, clicando na consulta e em “Copiar link”.</span>`;
       return `<div style="${supCardStyle}"><strong>✓ Consulta agendada pela Aurora</strong><span>${escSup(action.state.name)} · ${escSup(action.quando)}</span>${linkBlock}<span style="${supHintStyle}">Este é o link de acesso do paciente. Não o publique.</span></div>`;
     }
     if (status === "dismissed") {
@@ -528,6 +529,37 @@ function mountHelpBubble() {
     const action = history[mi]?.actions?.[ai];
     if (!action) return;
     const act = btn.dataset.supAct;
+    if (act === "generate-link") {
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Gerando…";
+      try {
+        let sessionId = action.state?.sessionId || "";
+        // Compatibilidade com cartões confirmados antes de o sessionId passar
+        // a ser salvo no histórico: localiza pela combinação paciente + horário.
+        if (!sessionId) {
+          const token = await supToken();
+          const sessionsRes = await fetch(`${BACKEND_BASE_URL}/therapy/sessoes?includeHidden=true`, { headers: { Authorization: `Bearer ${token}` } });
+          const sessionsData = await sessionsRes.json().catch(() => ({}));
+          const targetAt = proposalTimestamp(action);
+          const matches = (Array.isArray(sessionsData.sessions) ? sessionsData.sessions : []).filter(s =>
+            s.patientName === action.state?.name && Number(s.scheduledAt) === targetAt && s.status !== "completed" && s.status !== "canceled"
+          );
+          if (matches.length !== 1) throw new Error("SESSAO_NAO_ENCONTRADA");
+          sessionId = matches[0].sessionId;
+        }
+        const result = await regeneratePatientLink({ backendBaseUrl: BACKEND_BASE_URL, getToken: supToken, sessionId });
+        if (!result.ok || !result.joinCodeOrToken) throw new Error(result.error || "LINK_INDISPONIVEL");
+        action.state = { ...action.state, sessionId, joinCodeOrToken: result.joinCodeOrToken, joinTokenExp: result.joinTokenExp };
+        persistHistory();
+        renderHistory();
+      } catch {
+        btn.textContent = "Não foi possível gerar";
+        btn.disabled = false;
+        setTimeout(() => { btn.textContent = original; }, 2000);
+      }
+      return;
+    }
     if (act === "copy-link") {
       const link = auroraPatientLink(action.state?.joinCodeOrToken);
       if (!link) return;
@@ -559,7 +591,7 @@ function mountHelpBubble() {
       renderHistory();
       return;
     }
-    action.state = { status: "created", name: patient.name, joinCodeOrToken: result.joinCodeOrToken };
+    action.state = { status: "created", name: patient.name, sessionId: result.sessionId, joinCodeOrToken: result.joinCodeOrToken, joinTokenExp: result.joinTokenExp };
     // Nota só pro contexto da Aurora (vai no histórico); o cartão já mostra.
     history.push({ role: "assistant", content: `Consulta agendada por meio do cartão da Aurora: ${patient.name}, ${action.quando}. O link do paciente está disponível no cartão e também pode ser gerado em Agenda, clicando na consulta e em Copiar link.`, silent: true });
     bookingDirectory = null;

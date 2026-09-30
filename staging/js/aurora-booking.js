@@ -135,7 +135,24 @@ export async function createSessionFromProposal({ backendBaseUrl, getToken, prop
     scheduledAt,
     // Credencial do link do paciente. Fica somente no navegador e no cartão;
     // não é reenviada à Aurora/modelo no histórico da conversa.
-    joinCodeOrToken: data.session?.joinCode || data.session?.joinToken || null
+    joinCodeOrToken: data.session?.joinCode || data.session?.joinToken || null,
+    joinTokenExp: Number(data.session?.joinTokenExp || 0) || null
+  };
+}
+
+export async function regeneratePatientLink({ backendBaseUrl, getToken, sessionId, fetchImpl = fetch }) {
+  const cleanId = String(sessionId || "").trim();
+  if (!cleanId) return { ok: false, error: "SESSAO_NAO_ENCONTRADA" };
+  const res = await fetchImpl(`${backendBaseUrl}/therapy/sessao/${encodeURIComponent(cleanId)}/regenerar-link`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${await getToken()}` }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) return { ok: false, error: data?.error || `HTTP_${res.status}` };
+  return {
+    ok: true,
+    joinCodeOrToken: data.joinCode || data.joinToken || null,
+    joinTokenExp: Number(data.joinTokenExp || 0) || null
   };
 }
 
