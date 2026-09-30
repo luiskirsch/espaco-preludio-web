@@ -689,11 +689,12 @@
     // só áudio mixado pro Whisper. Web Audio API consome ~1-2% CPU.
     if (tokenData.aiSummaryReady) {
       try {
-        const { SessionAiCapture } = await import("./js/session-ai-capture.js?v=3");
+        const { SessionAiCapture } = await import("./js/session-ai-capture.js?v=4");
         const aiCaptureBadge = document.getElementById("aiCaptureBadge");
         aiCapture = new SessionAiCapture({
           room,
           sessionId,
+          dek,
           backendBaseUrl: BACKEND_BASE_URL,
           // Sessão pode durar 50+ min — pega token fresco no upload (Firebase
           // auto-renova internamente). O idToken inicial pode ter expirado.
@@ -1641,7 +1642,8 @@
 
   await loadNotes();
 
-  // beforeunload: leave gracefully
+  // beforeunload: leave gracefully. cancel() mantém os trechos de áudio já
+  // guardados: ao voltar à sala a captura continua e tudo sobe no encerramento.
   window.addEventListener("beforeunload", () => {
     try { aiCapture?.cancel(); } catch {}
     try { room?.disconnect(); } catch {}
