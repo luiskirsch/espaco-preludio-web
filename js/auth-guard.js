@@ -6,7 +6,7 @@
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
 import { recallDek } from "./crypto.js";
-import { matchPatients, loadBookingDirectory, createSessionFromProposal, sanitizeProposal, isValidEmail } from "./aurora-booking.js?v=1";
+import { matchPatients, loadBookingDirectory, createSessionFromProposal, sanitizeProposal, isValidEmail } from "./aurora-booking.js?v=2";
 import { mountThemeToggle } from "./theme-toggle.js";
 import "./cmdk.js";
 import db from "./db.js";
@@ -445,12 +445,23 @@ function mountHelpBubble() {
   const supHintStyle = "color: var(--ep-ink-3, #888); font-size: 11px;";
   const supBtnStyle = (primary) => `padding: 6px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: 1px solid ${primary ? "var(--ep-accent, #2d4a3e)" : "var(--ep-line, #ddd)"}; background: ${primary ? "var(--ep-accent, #2d4a3e)" : "transparent"}; color: ${primary ? "#fff" : "var(--ep-ink, #1c1f1d)"};`;
 
+  function auroraPatientLink(codeOrToken) {
+    const value = String(codeOrToken || "").trim();
+    if (!value) return "";
+    const param = value.length <= 16 ? "c" : "t";
+    return `${location.origin}/entrar.html?${param}=${encodeURIComponent(value)}`;
+  }
+
   function bookingCardHtml(mi, ai, action) {
     const id = `${mi}:${ai}`;
     const status = action.state?.status || "pending";
     const when = `${escSup(action.quando)}${action.duracaoMin ? ` · ${action.duracaoMin} min` : ""}`;
     if (status === "created") {
-      return `<div style="${supCardStyle}"><strong>✓ Consulta agendada</strong><span>${escSup(action.state.name)} · ${escSup(action.quando)}</span><span>O link da sala está em ${linkSupPages("[[Consultas]]")}.</span></div>`;
+      const patientLink = auroraPatientLink(action.state.joinCodeOrToken);
+      const linkBlock = patientLink
+        ? `<a href="${escSup(patientLink)}" target="_blank" rel="noopener" style="color:var(--ep-accent,#2d4a3e);font-weight:700;text-decoration:underline;word-break:break-all;">Abrir link da consulta do paciente</a><button type="button" data-sup-act="copy-link" data-sup-id="${id}" style="${supBtnStyle(false)}">Copiar link</button>`
+        : `<span>Para gerar o link, abra ${linkSupPages("[[Agenda]]")}, clique na consulta e use “Copiar link”.</span>`;
+      return `<div style="${supCardStyle}"><strong>✓ Consulta agendada pela Aurora</strong><span>${escSup(action.state.name)} · ${escSup(action.quando)}</span>${linkBlock}<span style="${supHintStyle}">Este é o link de acesso do paciente. Não o publique.</span></div>`;
     }
     if (status === "dismissed") {
       return `<div style="${supCardStyle} opacity: .7;"><span>Agendamento descartado.</span></div>`;
@@ -517,6 +528,19 @@ function mountHelpBubble() {
     const action = history[mi]?.actions?.[ai];
     if (!action) return;
     const act = btn.dataset.supAct;
+    if (act === "copy-link") {
+      const link = auroraPatientLink(action.state?.joinCodeOrToken);
+      if (!link) return;
+      const original = btn.textContent;
+      try {
+        await navigator.clipboard.writeText(link);
+        btn.textContent = "Copiado!";
+      } catch {
+        btn.textContent = "Abra o link acima";
+      }
+      setTimeout(() => { btn.textContent = original; }, 1600);
+      return;
+    }
     if (act === "retry") { bookingUi.delete(id); renderHistory(); return; }
     if (act === "dismiss") { action.state = { status: "dismissed" }; persistHistory(); renderHistory(); return; }
     if (act !== "confirm") return;
@@ -535,9 +559,9 @@ function mountHelpBubble() {
       renderHistory();
       return;
     }
-    action.state = { status: "created", name: patient.name };
+    action.state = { status: "created", name: patient.name, joinCodeOrToken: result.joinCodeOrToken };
     // Nota só pro contexto da Aurora (vai no histórico); o cartão já mostra.
-    history.push({ role: "assistant", content: `Consulta agendada: ${patient.name}, ${action.quando}.`, silent: true });
+    history.push({ role: "assistant", content: `Consulta agendada por meio do cartão da Aurora: ${patient.name}, ${action.quando}. O link do paciente está disponível no cartão e também pode ser gerado em Agenda, clicando na consulta e em Copiar link.`, silent: true });
     bookingDirectory = null;
     persistHistory();
     renderHistory();

@@ -129,7 +129,14 @@ export async function createSessionFromProposal({ backendBaseUrl, getToken, prop
   const data = await res.json().catch(() => ({}));
   if (res.status === 402) return { ok: false, error: "PLANO_INATIVO" };
   if (!res.ok || !data.ok) return { ok: false, error: data?.error || `HTTP_${res.status}` };
-  return { ok: true, sessionId: data.session?.sessionId || null, scheduledAt };
+  return {
+    ok: true,
+    sessionId: data.session?.sessionId || null,
+    scheduledAt,
+    // Credencial do link do paciente. Fica somente no navegador e no cartão;
+    // não é reenviada à Aurora/modelo no histórico da conversa.
+    joinCodeOrToken: data.session?.joinCode || data.session?.joinToken || null
+  };
 }
 
 // Proposta vinda da API → só os campos esperados, com limites.

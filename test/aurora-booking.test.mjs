@@ -70,13 +70,14 @@ test("sem a chave da conta, usa só pacientes de consultas anteriores", async ()
 test("cria a consulta com os mesmos campos do modal Nova consulta", async () => {
   const proposal = { data: "2030-05-10", hora: "12:00" };
   let request;
-  const fetchImpl = async (url, init) => { request = { url, ...init, body: JSON.parse(init.body) }; return { ok: true, status: 200, json: async () => ({ ok: true, session: { sessionId: "sess_1" } }) }; };
+  const fetchImpl = async (url, init) => { request = { url, ...init, body: JSON.parse(init.body) }; return { ok: true, status: 200, json: async () => ({ ok: true, session: { sessionId: "sess_1", joinCode: "ABC23456", joinToken: "token-longo" } }) }; };
   const result = await createSessionFromProposal({
     backendBaseUrl: "https://api.test", getToken: async () => "tok", proposal,
     patient: { name: "Luís Henrique Kirsch", patientId: "p1" }, email: " LUIS@x.com ", fetchImpl
   });
   assert.equal(result.ok, true);
   assert.equal(result.sessionId, "sess_1");
+  assert.equal(result.joinCodeOrToken, "ABC23456", "prefere o código curto para montar o link do paciente");
   assert.equal(request.url, "https://api.test/therapy/sessao/criar");
   assert.equal(request.method, "POST");
   assert.deepEqual(request.body, { patientName: "Luís Henrique Kirsch", patientId: "p1", patientEmail: "luis@x.com", scheduledAt: new Date("2030-05-10T12:00").getTime() });
