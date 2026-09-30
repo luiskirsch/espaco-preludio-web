@@ -350,16 +350,6 @@
           </label>
         </div>
 
-        <div class="ep-flex ep-mt-8" style="gap: 8px; align-items: center;">
-          <input id="listPublicly" type="checkbox" style="width: 18px; height: 18px;">
-          <label for="listPublicly" class="ep-text-sm" style="cursor: pointer;" data-i18n-html="perfil:sched.listToggleHtml">
-            Aparecer no <a href="./profissionais.html" target="_blank">diretório público</a> (pacientes podem te encontrar)
-          </label>
-        </div>
-        <p class="ep-text-xs ep-text-muted ep-mt-8" data-i18n="perfil:sched.listSub">
-          O diretório lista só profissionais verificados com agendamento ativo. Você pode tirar a qualquer momento.
-        </p>
-
         <!-- Grade de disponibilidade semanal -->
         <div class="ep-mt-24" style="border-top: 1px solid var(--ep-line); padding-top: 20px;">
           <div class="ep-label ep-mt-0" style="font-size:13px;font-weight:600;margin-bottom:6px;">Horários disponíveis para agendamento</div>
@@ -1040,7 +1030,6 @@
     $("schedEnabled").checked   = !!t.publicSchedulingEnabled;
     $("schedMinNotice").value   = t.publicSchedulingMinNoticeHours ?? "";
     $("schedMaxAdvance").value  = t.publicSchedulingMaxAdvanceDays ?? "";
-    $("listPublicly").checked   = !!t.listPublicly;
     renderSchedActiveLink(t.publicSchedulingSlug || "", !!t.publicSchedulingEnabled);
 
     // PIX para agendamento público.
@@ -2340,7 +2329,6 @@ Direito de portabilidade — LGPD Art. 18, V.
       // pra backend tratar como "não configurado".
       publicSchedulingMinNoticeHours:  Number($("schedMinNotice").value) || 0,
       publicSchedulingMaxAdvanceDays:  Number($("schedMaxAdvance").value) || 0,
-      listPublicly:                    $("listPublicly").checked,
       asaasEnv:                        $("asaasEnv").value,
       asaasEnabled:                    $("asaasEnabled").checked
     };

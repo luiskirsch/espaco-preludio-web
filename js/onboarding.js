@@ -17,8 +17,8 @@ const STEPS = [
   },
   {
     eyebrow: "Passo 1 de 6",
-    title: "Apareça no diretório público",
-    body: "Pacientes encontram você pelo diretório (/profissionais) e marcam consulta direto — você só aprova as solicitações no painel.\n\nProfissionais com inscrição no conselho verificada ganham o <strong>selo azul</strong>, igual nas redes sociais. Mais credibilidade, mais agendamentos.",
+    title: "Prepare seu perfil público",
+    body: "Depois da verificação, a equipe do Espaço Prelúdio pode liberar seu perfil no diretório (/profissionais). Se o agendamento online estiver ativo, pacientes também poderão solicitar consultas por lá.\n\nProfissionais com inscrição no conselho verificada ganham o <strong>selo azul</strong>, igual nas redes sociais.",
     meta: "Presença digital e novos pacientes",
     icon: "profile",
     cta: "Próximo"

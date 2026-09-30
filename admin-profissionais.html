@@ -251,8 +251,10 @@
     return `<span class="ep-badge ep-badge--warn">Pendente</span>`;
   }
   function directoryPill(item) {
-    if (!item.adminDirectoryBlocked) return "";
-    return `<span class="ep-badge ep-badge--done" title="Bloqueado pelo administrador no diretório público">Fora da rede</span>`;
+    if (item.adminDirectoryVisible) {
+      return `<span class="ep-badge ep-badge--ok" title="Visível no diretório público">Na rede</span>`;
+    }
+    return `<span class="ep-badge ep-badge--done" title="Oculto do diretório público">Fora da rede</span>`;
   }
   function accessPill(item) {
     // Prioridade: plano explicito > trial > expirado. Cortesia eh bypass separado.
@@ -337,7 +339,7 @@
         <strong>Cortesia admin até:</strong> ${fmtDate(it.adminGrantedUntil)}${it.adminGrantActive ? " <span class='ep-badge ep-badge--ok'>ativa</span>" : ""}<br>
         <strong>Verificado:</strong> ${it.verificado ? "✓ sim" : "✗ não"} ${it.verifiedAt ? "(" + fmtDate(it.verifiedAt) + ")" : ""}<br>
         <strong>Conselho:</strong> ${escapeHtml(formatConselho(it))}<br>
-        <strong>Rede de Psicologia:</strong> ${it.adminDirectoryBlocked ? "bloqueado pelo administrador" : "liberado"}
+        <strong>Rede de Psicologia:</strong> ${it.adminDirectoryVisible ? "visível no diretório público" : "fora do diretório público"}
       </div>
 
       <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
@@ -408,8 +410,8 @@
 
       <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
         <div class="ep-eyebrow">Rede de Psicologia</div>
-        <div class="ep-text-sm ep-text-muted">O bloqueio retira o profissional do diretório público, sem suspender a conta nem impedir atendimentos por link direto.</div>
-        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="toggleDirectory" style="align-self: flex-start;${it.adminDirectoryBlocked ? "" : " color:#b8453d;border-color:#b8453d;"}">${it.adminDirectoryBlocked ? "Liberar na rede" : "Bloquear da rede"}</button>
+        <div class="ep-text-sm ep-text-muted">Apenas a administração controla esta exibição. Ocultar não suspende a conta nem impede atendimentos por link direto.</div>
+        <button class="ep-btn ${it.adminDirectoryVisible ? "ep-btn--ghost" : "ep-btn--primary"} ep-btn--sm" data-action="toggleDirectory" style="align-self: flex-start;${it.adminDirectoryVisible ? " color:#b8453d;border-color:#b8453d;" : ""}">${it.adminDirectoryVisible ? "Ocultar da rede" : "Exibir na rede"}</button>
       </div>
 
       <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
@@ -452,12 +454,15 @@
       body.toggleVerificado = !it?.verificado;
     } else if (action === "toggleDirectory") {
       const it = allItems.find(x => x.uid === uid);
-      const willBlock = !it?.adminDirectoryBlocked;
-      if (willBlock && !confirm("Bloquear este profissional na Rede de Psicologia? Ele deixará de aparecer no diretório público.")) {
+      const willShow = !it?.adminDirectoryVisible;
+      const question = willShow
+        ? "Exibir este profissional na Rede de Psicologia? Os dados públicos do perfil ficarão visíveis no diretório."
+        : "Ocultar este profissional da Rede de Psicologia? Ele deixará de aparecer no diretório público.";
+      if (!confirm(question)) {
         statusEl.textContent = "";
         return;
       }
-      body.setAdminDirectoryBlocked = willBlock;
+      body.setAdminDirectoryVisible = willShow;
     } else if (action === "note") {
       body.setAdminNote = document.getElementById("adminNote").value || "";
     }

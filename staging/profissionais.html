@@ -279,6 +279,7 @@
       ? `${item.orgaoRegistro ? item.orgaoRegistro + " " : ""}${item.numeroConselho}${item.paisRegistro ? ` (${item.paisRegistro})` : ""}`
       : (item.conselhoLabel && item.numeroConselho ? `${item.conselhoLabel} ${item.numeroConselho}` : "");
     const scheduleBtn = tr("profissionais:card.scheduleBtn", "Agendar consulta →");
+    const schedulingUnavailable = tr("profissionais:card.schedulingUnavailable", "Agendamento online indisponível");
 
     return `
       <article class="ep-card ep-session--patient" style="padding: 18px; display: flex; flex-direction: column; gap: 12px;">
@@ -293,7 +294,9 @@
         ${item.bio ? `<p class="ep-text-sm ep-text-muted" style="margin: 0; line-height: 1.5;">${escapeHtml(item.bio)}</p>` : ""}
         <div class="ep-flex" style="justify-content: space-between; align-items: center; margin-top: auto;">
           ${cityLine ? `<span class="ep-text-xs ep-text-muted">📍 ${escapeHtml(cityLine)}</span>` : "<span></span>"}
-          <a href="./agendar.html?p=${encodeURIComponent(item.slug)}" class="ep-btn ep-btn--primary ep-btn--sm">${escapeHtml(scheduleBtn)}</a>
+          ${item.publicSchedulingEnabled
+            ? `<a href="./agendar.html?p=${encodeURIComponent(item.slug)}" class="ep-btn ep-btn--primary ep-btn--sm">${escapeHtml(scheduleBtn)}</a>`
+            : `<span class="ep-text-xs ep-text-muted">${escapeHtml(schedulingUnavailable)}</span>`}
         </div>
       </article>
     `;
