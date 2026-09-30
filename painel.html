@@ -651,7 +651,7 @@
   function tr(key, fallback, opts) {
     if (window.EP_I18N && window.EP_I18N.t) {
       const v = window.EP_I18N.t(key, opts);
-      if (v && v !== key) return v;
+      if (v && v !== key && v !== key.split(":").pop()) return v;
     }
     if (opts && typeof fallback === "string") {
       return fallback.replace(/\{\{(\w+)\}\}/g, (_, k) => (opts[k] != null ? String(opts[k]) : ""));
@@ -1521,7 +1521,7 @@
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="recibo" data-id="${s.sessionId}" title="${tr("painel:list.reciboTitle","Enviar recibo ao paciente")}">${tr("painel:list.recibo","Recibo")}</button>
         ` : ""}
         ${isOpen && !s.patientAccountUid && !s.demoTechnicalRoom && !publicSchool ? `
-          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="vincular" data-id="${s.sessionId}" title="${tr("painel:list.vincularTitle","Vincular conta de paciente pra abrir chat E2EE")}">${tr("painel:list.vincular","Vincular conta")}</button>
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="vincular" data-id="${s.sessionId}" title="${tr("painel:list.vincularTitle","Conecte a conta do paciente (pelo e-mail de login) para conversar com ele pelo chat seguro")}">${tr("painel:list.vincular","Liberar chat")}</button>
         ` : ""}
         ${(s.status === "completed" || s.status === "canceled") ? `
           <button class="ep-btn-icon" data-action="ocultar" data-id="${s.sessionId}" aria-label="${tr("painel:list.ocultar","Remover da lista")}" title="${tr("painel:list.ocultarTitle","Remover da lista (mantém no prontuário)")}">
