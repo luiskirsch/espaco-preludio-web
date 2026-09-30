@@ -131,20 +131,30 @@ export class SessionAiCapture {
       const dek = recallDek();
       const encryption = await createAiSummaryEnvelope(dek);
 
+      // O áudio só existe na memória desta aba: após o redirect ele se perde,
+      // então falhas de rede/servidor ganham novas tentativas antes de desistir.
       let r;
       try {
-        r = await fetch(
-          `${this.backendBaseUrl}/therapy/session/${encodeURIComponent(this.sessionId)}/ai-summarize`,
-          {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${idToken}`,
-              "Content-Type": mime,
-              ...encryption.headers,
-            },
-            body: blob
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            r = await fetch(
+              `${this.backendBaseUrl}/therapy/session/${encodeURIComponent(this.sessionId)}/ai-summarize`,
+              {
+                method: "POST",
+                headers: {
+                  "Authorization": `Bearer ${idToken}`,
+                  "Content-Type": mime,
+                  ...encryption.headers,
+                },
+                body: blob
+              }
+            );
+            if (r.status < 500 && r.status !== 429) break;
+          } catch (networkErr) {
+            if (attempt === 3) throw networkErr;
           }
-        );
+          if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 1500 * attempt));
+        }
       } finally {
         encryption.key.fill(0);
       }

@@ -689,7 +689,7 @@
     // só áudio mixado pro Whisper. Web Audio API consome ~1-2% CPU.
     if (tokenData.aiSummaryReady) {
       try {
-        const { SessionAiCapture } = await import("./js/session-ai-capture.js?v=2");
+        const { SessionAiCapture } = await import("./js/session-ai-capture.js?v=3");
         const aiCaptureBadge = document.getElementById("aiCaptureBadge");
         aiCapture = new SessionAiCapture({
           room,
@@ -771,7 +771,7 @@
     // /encerrar e stopAndUpload rodam em PARALELO — são independentes.
     // stopAndUpload precisa terminar ANTES de room.disconnect (tracks
     // do LiveKit são destruídas no disconnect e o último chunk ficaria vazio).
-    const [endResult] = await Promise.allSettled([
+    const [endResult, aiUploadResult] = await Promise.allSettled([
       (async () => {
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/encerrar`, {
           method: "POST",
@@ -782,8 +782,8 @@
         return data;
       })(),
       (aiCapture && aiCapture.state() === "recording")
-        ? aiCapture.stopAndUpload().catch(() => {})
-        : Promise.resolve()
+        ? aiCapture.stopAndUpload().catch((err) => ({ ok: false, error: err?.message || "upload_error" }))
+        : Promise.resolve(null)
     ]);
 
     if (endResult.status === "rejected") {
@@ -794,6 +794,14 @@
       setStatus(tr("consultorio:status.inSession", "em sessão"));
       alert(tr("consultorio:alerts.endError", "Não foi possível encerrar a consulta. Tente novamente."));
       return;
+    }
+
+    // Falha no envio do áudio não impede encerrar, mas não pode ser silenciosa:
+    // sem aviso o prontuário só mostra que não há resumo.
+    const aiUpload = aiUploadResult.value;
+    if (aiUpload && aiUpload.ok === false) {
+      console.error("ai_summary_upload_failed", aiUpload);
+      alert(tr("consultorio:alerts.aiUploadFailed", "A consulta foi encerrada, mas o áudio para o Resumo IA não pôde ser enviado. Esta sessão ficará sem resumo automático.") + `\n(${aiUpload.error})`);
     }
 
     try { await room?.disconnect(); } catch {}

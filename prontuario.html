@@ -786,7 +786,7 @@
     }
 
     // Resumo IA: só busca quando o card abre pela primeira vez. Sessões
-    // sem resumo retornam 404 — UI fica vazia (não mostra mensagem).
+    // sem resumo retornam { exists: false, status: "none" } — UI fica vazia.
     let aiSummaryLoaded = false;
     const aiBox = card.querySelector("[data-ai-summary]");
     async function loadAiSummary() {
@@ -799,7 +799,7 @@
         );
         if (!res.ok) return;
         let data = await res.json().catch(() => ({}));
-        if (!data.ok) return;
+        if (!data.ok || data.exists === false || data.status === "none") return;
         if (data.encryptedPayload) {
           const payload = await decryptAiSummaryPayload(data.encryptedPayload, dek);
           data = { ...data, ...payload };
