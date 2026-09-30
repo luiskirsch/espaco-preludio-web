@@ -252,7 +252,9 @@ test('chat desbloqueia a chave local sem encerrar a sessão válida do portal', 
   assert.match(chat, /rememberPatientDek\(dek\)/);
   assert.match(chat, /rememberedUser\?\.uid === user\.uid/);
   assert.doesNotMatch(chat, /if \(!dek\) \{ reauth\(\); return; \}/);
-  assert.doesNotMatch(chat, /login\.html\?reauth=1/);
+  assert.match(chat, /id="chatSetupButton"/);
+  assert.match(chat, /login\.html\?reauth=1&amp;setup=chat&amp;redirect=\.\/chat\.html/);
+  assert.match(chat, /prepareChatUnlock/);
 });
 
 test('aba Todos carrega o diretório completo de profissionais', async () => {
@@ -270,7 +272,7 @@ test('todas as telas autenticadas do colaborador usam a estrutura responsiva com
     const html = await readFile(resolve(root, `app/${page}.html`), 'utf8');
     assert.match(html, /<body class="a-portal-authenticated">/, page);
     assert.match(html, /portal-shell\.js\?v=3/, page);
-    assert.match(html, /app\.css\?v=20260930h/, page);
+    assert.match(html, /app\.css\?v=20260930i/, page);
   }
   const shell = await readFile(resolve(root, 'app/portal-shell.js'), 'utf8');
   assert.match(shell, /Portal do colaborador/);

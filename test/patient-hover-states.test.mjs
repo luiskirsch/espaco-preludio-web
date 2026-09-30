@@ -16,6 +16,10 @@ for (const prefix of ["", "staging/"]) {
     assert.match(css, /\.learning-module:not\(:disabled\):hover/);
     assert.match(css, /\.home-section-head > a/);
     assert.match(css, /\.menu-item, \.conv-item/);
+    assert.match(css, /body\.a-portal-authenticated :where\(a\[href\], button:not\(:disabled\), summary, \[role="button"\]\):hover/);
+    assert.match(css, /\.a-nav__urgent:hover/);
+    assert.match(css, /\.emergency-primary a, \.emergency-more > div a/);
+    assert.match(css, /\.emergency-sources a:hover/);
   });
 }
 
@@ -26,7 +30,7 @@ test("páginas do portal requisitam a versão nova do CSS interativo", async () 
     for (const file of files) {
       const html = await readFile(new URL(`../${directory}/${file}`, import.meta.url), "utf8");
       if (!html.includes("./app.css?v=")) continue;
-      assert.match(html, /\.\/app\.css\?v=20260930h/, `${directory}/${file}`);
+      assert.match(html, /\.\/app\.css\?v=20260930i/, `${directory}/${file}`);
     }
   }
 });

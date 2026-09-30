@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app.css?v=20260930h">
+  <link rel="stylesheet" href="./app.css?v=20260930i">
   <style>
     .chat-shell { display: flex; flex-direction: column; height: 100dvh; }
     .chat-header {
@@ -176,10 +176,13 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
       </div>
       <h1 id="chatUnlockTitle">Desbloquear mensagens</h1>
-      <p>Sua sessão no portal continua ativa. Confirme sua senha apenas para abrir localmente a chave das mensagens protegidas.</p>
-      <label class="a-field__label" for="chatUnlockPassword">Senha</label>
-      <input id="chatUnlockPassword" class="a-input" type="password" autocomplete="current-password" required>
-      <button id="chatUnlockButton" class="a-btn a-btn--primary a-btn--block a-mt-16" type="submit">Desbloquear chat</button>
+      <p id="chatUnlockDescription">Sua sessão no portal continua ativa. Confirme sua senha apenas para abrir localmente a chave das mensagens protegidas.</p>
+      <div id="chatUnlockControls">
+        <label class="a-field__label" for="chatUnlockPassword">Senha</label>
+        <input id="chatUnlockPassword" class="a-input" type="password" autocomplete="current-password" required>
+        <button id="chatUnlockButton" class="a-btn a-btn--primary a-btn--block a-mt-16" type="submit">Desbloquear chat</button>
+      </div>
+      <a id="chatSetupButton" class="a-btn a-btn--accent a-btn--block a-mt-16 a-hide" href="./login.html?reauth=1&amp;setup=chat&amp;redirect=./chat.html">Configurar chat seguro</a>
       <div id="chatUnlockError" class="chat-unlock__error a-hide" role="alert"></div>
       <a class="chat-unlock__back" href="./home.html">← Voltar ao início</a>
     </form>
@@ -220,6 +223,32 @@
     setTimeout(() => document.getElementById("chatUnlockPassword").focus(), 0);
   }
 
+  function showChatSetup() {
+    showChatUnlock();
+    document.getElementById("chatUnlockTitle").textContent = "Configurar mensagens";
+    document.getElementById("chatUnlockDescription").textContent = "Sua conta ainda não possui a chave segura deste chat. Confirme sua senha uma vez para criar a chave e voltar diretamente às mensagens.";
+    document.getElementById("chatUnlockControls").classList.add("a-hide");
+    document.getElementById("chatSetupButton").classList.remove("a-hide");
+    document.getElementById("chatUnlockError").classList.add("a-hide");
+    setTimeout(() => document.getElementById("chatSetupButton").focus(), 0);
+  }
+
+  async function prepareChatUnlock() {
+    showChatUnlock();
+    try {
+      const response = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/me`, {
+        headers: { Authorization: `Bearer ${idToken}` }
+      });
+      const data = await response.json().catch(() => ({}));
+      const account = data.account;
+      if (response.status === 404 || (response.ok && (!account?.e2eeSalt || !account?.wrappedDEK || !account?.wrappedDEKIv))) {
+        showChatSetup();
+      }
+    } catch {
+      // Falha transitória: mantém o desbloqueio disponível para nova tentativa.
+    }
+  }
+
   async function startChat() {
     if (chatStarted) return;
     try {
@@ -255,7 +284,7 @@
 
     const rememberedUser = recallPatientUser();
     dek = rememberedUser?.uid === user.uid ? recallPatientDek() : null;
-    if (!dek) { showChatUnlock(); return; }
+    if (!dek) { await prepareChatUnlock(); return; }
     startChat();
   });
 
@@ -290,9 +319,12 @@
       await startChat();
     } catch (unlockError) {
       error.textContent = unlockError?.message === "CHAT_KEY_UNAVAILABLE"
-        ? "A chave segura do chat ainda não está configurada. Entre novamente pelo portal para concluir a configuração."
+        ? "A chave segura do chat ainda não está configurada. Use o botão abaixo para concluir a configuração."
         : "Não foi possível desbloquear. Confira sua senha e tente novamente.";
       error.classList.remove("a-hide");
+      if (unlockError?.message === "CHAT_KEY_UNAVAILABLE") {
+        document.getElementById("chatSetupButton").classList.remove("a-hide");
+      }
     } finally {
       button.disabled = false;
       button.textContent = "Desbloquear chat";

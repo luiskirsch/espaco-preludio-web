@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app.css?v=20260930h">
+  <link rel="stylesheet" href="./app.css?v=20260930i">
   <style>
     :root {
       --staff-deep: #123a45;
@@ -242,17 +242,21 @@
   import { rememberPatientDek, rememberPatientUser } from "../js/patient-session.js";
 
   const params = new URLSearchParams(location.search);
-  const redirectTo = params.get("redirect") || "./home.html";
+  const requestedRedirect = params.get("redirect") || "./home.html";
+  const redirectTo = /^\.\/[a-z0-9-]+\.html(?:[?#].*)?$/i.test(requestedRedirect) ? requestedRedirect : "./home.html";
   const isReauth = params.get("reauth") === "1";
   if (isReauth) {
     const erro = document.getElementById("erroEntrar");
-    erro.textContent = "Sua sessão de chat expirou. Entre novamente para desbloquear suas mensagens.";
+    erro.textContent = params.get("setup") === "chat"
+      ? "Confirme sua senha para configurar a chave segura das mensagens. Depois você voltará ao chat."
+      : "Sua sessão de chat expirou. Entre novamente para desbloquear suas mensagens.";
     erro.classList.remove("a-hide");
   }
 
   // Já logado com DEK disponível → vai direto. Sem DEK, deixa logar de novo
   // (cobre o caso de reauth por expiração de sessionStorage).
   onAuthStateChanged(auth, u => {
+    if (u && isReauth && u.email) document.getElementById("loginEmail").value = u.email;
     if (u && !isReauth) window.location.href = redirectTo;
   });
 

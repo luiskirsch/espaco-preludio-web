@@ -1051,6 +1051,14 @@ body.a-route-home .home-hero::before, body.a-route-home .home-hero::after { z-in
 /* Resposta visual consistente para mouse/trackpad. Em telas de toque o estado
    hover não é aplicado, evitando controles que parecem ficar pressionados. */
 @media (hover: hover) and (pointer: fine) {
+  body.a-portal-authenticated :where(a[href], button:not(:disabled), summary, [role="button"]) {
+    cursor: pointer;
+    transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease,
+      border-color .18s ease, color .18s ease, opacity .18s ease, filter .18s ease;
+  }
+  body.a-portal-authenticated :where(a[href], button:not(:disabled), summary, [role="button"]):hover {
+    filter: brightness(1.04) saturate(1.025);
+  }
   :is(
     .a-btn,
     .a-header__back,
@@ -1128,6 +1136,17 @@ body.a-route-home .home-hero::before, body.a-route-home .home-hero::after { z-in
   }
   :is(.menu-item, .conv-item):hover { background: var(--a-bg2); }
   .toggle-switch:hover { filter: brightness(1.05); box-shadow: 0 0 0 4px rgba(45,106,62,.1); }
+  .a-nav__item:hover { color: #fff; background: rgba(255,255,255,.1); transform: translateX(3px); }
+  .a-nav__urgent:hover { background: rgba(190,65,49,.25); border-color: rgba(255,149,129,.5); transform: translateY(-2px); box-shadow: 0 9px 20px rgba(0,0,0,.18); }
+  :is(.emergency-primary a, .emergency-more > div a):hover {
+    transform: translateY(-3px);
+    border-color: rgba(228,180,84,.5);
+    background: rgba(255,255,255,.12);
+    box-shadow: 0 14px 26px rgba(0,0,0,.2);
+  }
+  :is(.emergency-primary a, .emergency-more > div a):hover > b { transform: scale(1.06); }
+  .emergency-sources a:hover { color: #0d7470; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  .emergency-call-close:hover { transform: rotate(5deg) scale(1.06); background: rgba(255,255,255,.16); }
 
   :is(
     .mood-card__history,
