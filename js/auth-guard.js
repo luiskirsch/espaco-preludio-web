@@ -317,6 +317,13 @@ function injectAuroraFabStyle() {
     "@media (max-width:899px){body:has(.ep-aurora-fab) :is(.ep-msg-bubble-fab,.ep-theme-toggle,.ep-notif-fab){translate:0 -66px;}}",
     "body:has(.ep-aurora-fab) :is(.ep-msg-bubble-fab,.ep-theme-toggle,.ep-notif-fab):not(.ep-fab-stack > *){translate:0 -66px;}",
     "body.ep-consult .ep-aurora-fab{display:none!important;}",
+    ".ep-aurora-typing{display:inline-flex;align-items:center;gap:7px;}",
+    ".ep-aurora-typing__dots{display:inline-flex;align-items:center;gap:3px;height:10px;}",
+    ".ep-aurora-typing__dots i{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.35;animation:ep-aurora-typing 1.2s ease-in-out infinite;}",
+    ".ep-aurora-typing__dots i:nth-child(2){animation-delay:.15s;}",
+    ".ep-aurora-typing__dots i:nth-child(3){animation-delay:.3s;}",
+    "@keyframes ep-aurora-typing{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-3px);opacity:1}}",
+    "@media (prefers-reduced-motion:reduce){.ep-aurora-typing__dots i{animation:none;opacity:.6;}}",
     "@media print{.ep-aurora-fab{display:none!important;}}",
     // Painel: no desktop ao lado da coluna de botões; no celular, largura toda.
     "@media (min-width:900px){#epSupportPanel{right:88px!important;bottom:24px!important;}}",
@@ -562,10 +569,12 @@ function mountHelpBubble() {
     renderHistory();
     sendBtn.disabled = true;
 
-    // Indicador "..."
+    // Indicador de digitação: texto + três pontos animados
     const thinking = document.createElement("div");
+    thinking.className = "ep-aurora-typing";
+    thinking.setAttribute("role", "status");
     thinking.style.cssText = `align-self: flex-start; padding: 8px 12px; border-radius: 10px; background: var(--ep-bg-2, #f3f1ea); color: var(--ep-ink-3, #888); font-size: 12px;`;
-    thinking.textContent = "Pensando…";
+    thinking.innerHTML = `<span>Aurora está digitando</span><span class="ep-aurora-typing__dots" aria-hidden="true"><i></i><i></i><i></i></span>`;
     msgsEl.appendChild(thinking);
     msgsEl.scrollTop = msgsEl.scrollHeight;
 
