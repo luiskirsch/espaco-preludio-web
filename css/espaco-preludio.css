@@ -23,3 +23,26 @@ body.ep-consult .ep-topic-card__abord{color:#efc36b;font-weight:700}
 body.ep-consult .ep-topics-deck__draw{background:rgba(226,183,106,.14);border-color:rgba(226,183,106,.42);color:#efd08e;font-weight:600}
 body.ep-consult .ep-topics-deck__draw:hover{background:rgba(226,183,106,.24);border-color:rgba(226,183,106,.64);color:#fffaf0}
 body.ep-consult .ep-topics-deck__draw:disabled{background:rgba(226,183,106,.08);border-color:rgba(226,183,106,.24);color:rgba(255,250,240,.52);opacity:1;cursor:not-allowed}
++/* Premium opening ritual shared by professional and patient consultation rooms. */
+.ep-ritual-open{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;overflow:hidden;pointer-events:none;background:radial-gradient(circle at 50% 46%,rgba(71,55,30,.3) 0,rgba(17,13,9,.96) 34%,#070504 78%);animation:epPremiumRitualOverlay 4s cubic-bezier(.22,.61,.36,1) forwards}
+.ep-ritual-open::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 20%,rgba(226,183,106,.035) 46%,transparent 68%);transform:translateX(-100%);animation:epPremiumRitualLight 2.8s ease-out .25s both}
+.ep-ritual-open__aura{position:absolute;left:50%;top:47%;width:min(66vw,680px);aspect-ratio:1;border-radius:50%;border:1px solid rgba(226,183,106,.12);transform:translate(-50%,-50%) scale(.38);opacity:0;animation:epPremiumRitualAura 3.4s cubic-bezier(.16,1,.3,1) .15s both}
+.ep-ritual-open__aura::before,.ep-ritual-open__aura::after{content:"";position:absolute;border-radius:50%;inset:12%;border:1px solid rgba(226,183,106,.16)}
+.ep-ritual-open__aura::after{inset:27%;border-color:rgba(226,183,106,.22);box-shadow:0 0 90px rgba(226,183,106,.08)}
+.ep-ritual-open__content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px;transform:translateY(10px);opacity:0;animation:epPremiumRitualContent 3.5s cubic-bezier(.22,.61,.36,1) .18s both}
+.ep-ritual-open__eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:22px;color:#e6c37f;font-size:10px;font-weight:700;letter-spacing:.24em;text-transform:uppercase}
+.ep-ritual-open__eyebrow span{display:block;width:34px;height:1px;background:linear-gradient(90deg,transparent,rgba(226,183,106,.72))}
+.ep-ritual-open__eyebrow span:last-child{transform:scaleX(-1)}
+.ep-ritual-open__seal{position:relative;width:82px;height:82px;margin-bottom:25px;border:1px solid rgba(226,183,106,.42);border-radius:50%;display:grid;place-items:center;background:rgba(255,250,240,.025);box-shadow:0 0 0 9px rgba(226,183,106,.035),0 18px 70px rgba(0,0,0,.38)}
+.ep-ritual-open__seal::before,.ep-ritual-open__seal::after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(226,183,106,.16);animation:epPremiumRitualRing 2.5s ease-out .45s both}
+.ep-ritual-open__seal::before{inset:-14px}.ep-ritual-open__seal::after{inset:-27px;animation-delay:.62s}
+.ep-ritual-open__seal i{width:52px;height:52px;display:block;background:url("../logo_oficial_fundo_transparente.png?v=3") center/contain no-repeat;filter:drop-shadow(0 5px 14px rgba(0,0,0,.42))}
+.ep-ritual-open__text{position:static;color:#fffaf0;font-family:var(--ep-font-serif);font-size:clamp(30px,4vw,48px);font-weight:500;line-height:1.05;letter-spacing:-.025em;text-transform:none;opacity:1;animation:none}
+.ep-ritual-open__sub{margin-top:12px;color:rgba(255,250,240,.68);font-size:13px;font-weight:400;letter-spacing:.045em}
+@keyframes epPremiumRitualOverlay{0%{opacity:0}10%,76%{opacity:1}100%{opacity:0;visibility:hidden}}
+@keyframes epPremiumRitualContent{0%{opacity:0;transform:translateY(12px)}18%,76%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-5px)}}
+@keyframes epPremiumRitualAura{0%{opacity:0;transform:translate(-50%,-50%) scale(.38)}24%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.1)}}
+@keyframes epPremiumRitualRing{0%{opacity:0;transform:scale(.76)}35%{opacity:1}100%{opacity:.12;transform:scale(1.08)}}
+@keyframes epPremiumRitualLight{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){.ep-ritual-open,.ep-ritual-open::before,.ep-ritual-open__aura,.ep-ritual-open__content,.ep-ritual-open__seal::before,.ep-ritual-open__seal::after{animation-duration:.01ms!important;animation-delay:0s!important}.ep-ritual-open{animation-duration:2.2s!important}}
+@media (max-width:640px){.ep-ritual-open__aura{width:92vw}.ep-ritual-open__seal{width:72px;height:72px}.ep-ritual-open__seal i{width:46px;height:46px}.ep-ritual-open__text{font-size:32px}.ep-ritual-open__sub{font-size:12px}}
