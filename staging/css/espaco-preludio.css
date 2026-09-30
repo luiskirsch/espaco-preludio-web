@@ -24,26 +24,27 @@ body.ep-consult .ep-topics-deck__draw{background:rgba(226,183,106,.14);border-co
 body.ep-consult .ep-topics-deck__draw:hover{background:rgba(226,183,106,.24);border-color:rgba(226,183,106,.64);color:#fffaf0}
 body.ep-consult .ep-topics-deck__draw:disabled{background:rgba(226,183,106,.08);border-color:rgba(226,183,106,.24);color:rgba(255,250,240,.52);opacity:1;cursor:not-allowed}
 /* Premium opening ritual shared by professional and patient consultation rooms. */
-.ep-ritual-open{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;overflow:hidden;pointer-events:none;background:radial-gradient(circle at 50% 46%,rgba(71,55,30,.3) 0,rgba(17,13,9,.96) 34%,#070504 78%);animation:epPremiumRitualOverlay 9s linear forwards}
-.ep-ritual-open::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 20%,rgba(226,183,106,.035) 46%,transparent 68%);transform:translateX(-100%);animation:epPremiumRitualLight 7.2s cubic-bezier(.22,.61,.36,1) .7s both}
-.ep-ritual-open__aura{position:absolute;left:50%;top:47%;width:min(74vw,860px);aspect-ratio:1;border-radius:50%;border:1px solid rgba(226,183,106,.12);transform:translate(-50%,-50%) scale(.58);opacity:0;animation:epPremiumRitualAura 8.2s cubic-bezier(.22,.61,.36,1) .35s both}
+.ep-ritual-open{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;overflow:hidden;pointer-events:none;background:radial-gradient(circle at 50% 46%,#17110c 0,#100c09 38%,#070504 78%);will-change:opacity;animation:epPremiumRitualOverlay 6.5s cubic-bezier(.22,.61,.36,1) forwards}
+.ep-ritual-open::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 20%,rgba(226,183,106,.03) 46%,transparent 68%);transform:translate3d(-100%,0,0);will-change:transform;animation:epPremiumRitualLight 5.2s cubic-bezier(.22,.61,.36,1) .45s both}
+.ep-ritual-open__aura{position:absolute;left:50%;top:47%;width:min(74vw,860px);aspect-ratio:1;border-radius:50%;border:1px solid rgba(226,183,106,.12);transform:translate3d(-50%,-50%,0) scale(.64);opacity:0;will-change:transform,opacity;animation:epPremiumRitualAura 5.9s cubic-bezier(.22,.61,.36,1) .25s both}
 .ep-ritual-open__aura::before,.ep-ritual-open__aura::after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(226,183,106,.16)}
 .ep-ritual-open__aura::before{inset:17%}
 .ep-ritual-open__aura::after{inset:4%;border-color:rgba(226,183,106,.22);box-shadow:0 0 90px rgba(226,183,106,.08)}
-.ep-ritual-open__content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px;transform:translateY(14px);opacity:0;animation:epPremiumRitualContent 8.1s cubic-bezier(.22,.61,.36,1) .55s both}
+.ep-ritual-open__content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px;transform:translate3d(0,10px,0);opacity:0;will-change:transform,opacity;animation:epPremiumRitualContent 5.9s cubic-bezier(.22,.61,.36,1) .32s both}
+.ep-ritual-open__content::before{content:"";position:absolute;z-index:-1;left:50%;top:52%;width:min(72vw,720px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(5,4,3,.48) 0,rgba(7,5,4,.28) 42%,transparent 72%);pointer-events:none}
 .ep-ritual-open__eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:22px;color:#e6c37f;font-size:10px;font-weight:700;letter-spacing:.24em;text-transform:uppercase}
 .ep-ritual-open__eyebrow span{display:block;width:34px;height:1px;background:linear-gradient(90deg,transparent,rgba(226,183,106,.72))}
 .ep-ritual-open__eyebrow span:last-child{transform:scaleX(-1)}
 .ep-ritual-open__seal{position:relative;width:82px;height:82px;margin-bottom:25px;border:1px solid rgba(226,183,106,.42);border-radius:50%;display:grid;place-items:center;background:rgba(255,250,240,.025);box-shadow:0 0 0 9px rgba(226,183,106,.035),0 18px 70px rgba(0,0,0,.38)}
-.ep-ritual-open__seal::before,.ep-ritual-open__seal::after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(226,183,106,.16);animation:epPremiumRitualRing 6.6s cubic-bezier(.22,.61,.36,1) 1.15s both}
-.ep-ritual-open__seal::before{inset:-14px}.ep-ritual-open__seal::after{inset:-27px;animation-delay:1.45s}
+.ep-ritual-open__seal::before,.ep-ritual-open__seal::after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(226,183,106,.16);will-change:transform,opacity;animation:epPremiumRitualRing 5.1s cubic-bezier(.22,.61,.36,1) .75s both}
+.ep-ritual-open__seal::before{inset:-14px}.ep-ritual-open__seal::after{inset:-27px;animation-delay:.95s}
 .ep-ritual-open__seal i{width:52px;height:52px;display:block;background:url("../logo_oficial_fundo_transparente.png?v=3") center/contain no-repeat;filter:drop-shadow(0 5px 14px rgba(0,0,0,.42))}
 .ep-ritual-open__text{position:static;color:#fffaf0;font-family:var(--ep-font-serif);font-size:clamp(30px,4vw,48px);font-weight:500;line-height:1.05;letter-spacing:-.025em;text-transform:none;opacity:1;animation:none}
 .ep-ritual-open__sub{margin-top:12px;color:rgba(255,250,240,.68);font-size:13px;font-weight:400;letter-spacing:.045em}
-@keyframes epPremiumRitualOverlay{0%{opacity:0}8%,80%{opacity:1}89%{opacity:.9}95%{opacity:.42}100%{opacity:0;visibility:hidden}}
-@keyframes epPremiumRitualContent{0%,8%{opacity:0;transform:translateY(14px) scale(.985);filter:blur(3px)}25%,78%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}89%{opacity:.5;transform:translateY(-2px) scale(.988);filter:blur(1px)}100%{opacity:0;transform:translateY(-4px) scale(.97);filter:blur(5px)}}
-@keyframes epPremiumRitualAura{0%{opacity:0;transform:translate(-50%,-50%) scale(.58)}16%{opacity:.45;transform:translate(-50%,-50%) scale(.7)}38%{opacity:.82;transform:translate(-50%,-50%) scale(.86)}63%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:.9;transform:translate(-50%,-50%) scale(1.02)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.07)}}
-@keyframes epPremiumRitualRing{0%{opacity:0;transform:scale(.82)}28%{opacity:.7}58%{opacity:1;transform:scale(1)}100%{opacity:.16;transform:scale(1.06)}}
-@keyframes epPremiumRitualLight{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes epPremiumRitualOverlay{0%{opacity:0}9%,78%{opacity:1}90%{opacity:.82}100%{opacity:0;visibility:hidden}}
+@keyframes epPremiumRitualContent{0%,8%{opacity:0;transform:translate3d(0,10px,0) scale(.99)}24%,76%{opacity:1;transform:translate3d(0,0,0) scale(1)}100%{opacity:0;transform:translate3d(0,-3px,0) scale(.985)}}
+@keyframes epPremiumRitualAura{0%{opacity:0;transform:translate3d(-50%,-50%,0) scale(.64)}20%{opacity:.65;transform:translate3d(-50%,-50%,0) scale(.78)}62%{opacity:1;transform:translate3d(-50%,-50%,0) scale(1)}82%{opacity:.86;transform:translate3d(-50%,-50%,0) scale(1.02)}100%{opacity:0;transform:translate3d(-50%,-50%,0) scale(1.055)}}
+@keyframes epPremiumRitualRing{0%{opacity:0;transform:scale(.86)}32%{opacity:.75}64%{opacity:1;transform:scale(1)}100%{opacity:.18;transform:scale(1.045)}}
+@keyframes epPremiumRitualLight{0%{transform:translate3d(-100%,0,0)}100%{transform:translate3d(100%,0,0)}}
 @media (prefers-reduced-motion:reduce){.ep-ritual-open,.ep-ritual-open::before,.ep-ritual-open__aura,.ep-ritual-open__content,.ep-ritual-open__seal::before,.ep-ritual-open__seal::after{animation-duration:.01ms!important;animation-delay:0s!important}.ep-ritual-open{animation-duration:2.2s!important}}
 @media (max-width:640px){.ep-ritual-open__aura{width:108vw}.ep-ritual-open__seal{width:72px;height:72px}.ep-ritual-open__seal i{width:46px;height:46px}.ep-ritual-open__text{font-size:32px}.ep-ritual-open__sub{font-size:12px}}
