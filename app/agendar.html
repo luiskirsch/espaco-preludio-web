@@ -96,6 +96,11 @@
       </div>
       <div class="a-section" style="padding-top:8px;">
         <div class="a-cal__days" id="calDays"></div>
+        <div class="a-empty a-hide" id="calendarEmpty">
+          <div class="a-empty__icon">📅</div>
+          <div class="a-empty__title">Sem datas disponíveis</div>
+          <div class="a-empty__sub">Este profissional não possui horários livres nos próximos 30 dias.</div>
+        </div>
       </div>
     </div>
 
@@ -238,6 +243,7 @@
   let currentUser  = null;
   let selectedDate = null;
   let selectedSlot = null;
+  let availableSlotsByDay = new Map();
   let step         = 1;
   let pixPollTimer = null;
   let pixCountdown = null;
@@ -317,47 +323,86 @@
   }
   loadProf();
 
-  // Calendário — próximos 30 dias
-  function buildCalendar() {
+  function saoPauloDateKey(value) {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit"
+    }).formatToParts(new Date(value));
+    const get = type => parts.find(part => part.type === type)?.value || "";
+    return `${get("year")}-${get("month")}-${get("day")}`;
+  }
+
+  // Consulta a agenda e mostra somente dias que realmente possuem horário livre.
+  async function buildCalendar() {
     const container = document.getElementById("calDays");
-    const DAYS   = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
-    const MONTHS = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+    const empty = document.getElementById("calendarEmpty");
     const today  = new Date(); today.setHours(0,0,0,0);
-    container.innerHTML = "";
-    for (let i = 1; i <= 30; i++) {
-      const d = new Date(today); d.setDate(today.getDate() + i);
+    const fromDate = new Date(today); fromDate.setDate(today.getDate() + 1);
+    const toDate = new Date(today); toDate.setDate(today.getDate() + 31); toDate.setMilliseconds(-1);
+    container.innerHTML = '<div class="a-sub">Consultando horários disponíveis…</div>';
+    empty.classList.add("a-hide");
+    document.getElementById("btnNext").disabled = true;
+
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(bookingSlug)}/slots?from=${fromDate.getTime()}&to=${toDate.getTime()}`);
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) throw new Error(data.error || "AGENDA_INDISPONIVEL");
+
+      availableSlotsByDay = new Map();
+      (data.slots || []).filter(slot => slot.available).forEach(slot => {
+        const key = saoPauloDateKey(Number(slot.start));
+        if (!availableSlotsByDay.has(key)) availableSlotsByDay.set(key, []);
+        availableSlotsByDay.get(key).push(slot);
+      });
+
+      container.innerHTML = "";
+      if (!availableSlotsByDay.size) {
+        empty.classList.remove("a-hide");
+        document.getElementById("noticeText").textContent = "";
+        return;
+      }
+
+      document.getElementById("noticeText").textContent = "Selecione uma data com horário livre.";
+      for (const [key, slots] of availableSlotsByDay) {
+        const firstSlot = new Date(Number(slots[0].start));
+        const dayLabel = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", weekday: "short" })
+          .format(firstSlot).replace(".", "").toUpperCase();
+        const dayNumber = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "numeric" }).format(firstSlot);
+        const monthLabel = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", month: "short" })
+          .format(firstSlot).replace(".", "");
       const btn = document.createElement("button");
       btn.className = "a-cal__day";
-      btn.innerHTML = `<span class="a-cal__dow">${DAYS[d.getDay()]}</span><span class="a-cal__num">${d.getDate()}</span><span class="a-cal__mon">${MONTHS[d.getMonth()]}</span>`;
+        btn.innerHTML = `<span class="a-cal__dow">${dayLabel}</span><span class="a-cal__num">${dayNumber}</span><span class="a-cal__mon">${monthLabel}</span>`;
       btn.addEventListener("click", () => {
         document.querySelectorAll(".a-cal__day").forEach(b => b.classList.remove("is-selected"));
         btn.classList.add("is-selected");
-        selectedDate = d;
-        loadSlots(d);
+          selectedDate = key;
+          loadSlots(key, slots);
         goStep(2);
       });
       container.appendChild(btn);
+      }
+    } catch {
+      container.innerHTML = "";
+      empty.querySelector(".a-empty__title").textContent = "Agenda indisponível";
+      empty.querySelector(".a-empty__sub").textContent = "Não foi possível consultar os horários. Tente novamente mais tarde.";
+      empty.classList.remove("a-hide");
     }
   }
 
-  async function loadSlots(date) {
-    document.getElementById("slotsLoading").classList.remove("a-hide");
+  function loadSlots(dateKey, availableSlots) {
+    document.getElementById("slotsLoading").classList.add("a-hide");
     document.getElementById("slotsGrid").classList.add("a-hide");
     document.getElementById("slotsEmpty").classList.add("a-hide");
-    const weekday = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"][date.getDay()];
-    document.getElementById("step2Sub").textContent = `${weekday}, ${date.getDate()} de ${["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"][date.getMonth()]}`;
-    try {
-      const from = date.getTime();
-      const to   = from + 24*3600*1000 - 1;
-      const r = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(bookingSlug)}/slots?from=${from}&to=${to}`);
-      const d = await r.json().catch(() => ({}));
-      document.getElementById("slotsLoading").classList.add("a-hide");
-      const avail = (d.slots||[]).filter(s => s.available);
-      if (!avail.length) { document.getElementById("slotsEmpty").classList.remove("a-hide"); document.getElementById("btnNext").disabled = true; return; }
+    const firstSlot = new Date(Number(availableSlots[0].start));
+    document.getElementById("step2Sub").textContent = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo", weekday: "long", day: "numeric", month: "short"
+    }).format(firstSlot);
       const grid = document.getElementById("slotsGrid");
-      grid.innerHTML = avail.map(s => {
+    grid.innerHTML = availableSlots.map(s => {
         const t = new Date(Number(s.start));
-        const label = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
+      const label = new Intl.DateTimeFormat("pt-BR", {
+        timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false
+      }).format(t);
         return `<button class="a-slot" data-start="${s.start}">${label}</button>`;
       }).join("");
       grid.querySelectorAll(".a-slot").forEach(btn => {
@@ -370,10 +415,6 @@
       });
       grid.classList.remove("a-hide");
       document.getElementById("btnNext").disabled = true;
-    } catch {
-      document.getElementById("slotsLoading").classList.add("a-hide");
-      document.getElementById("slotsEmpty").classList.remove("a-hide");
-    }
   }
 
   function totalSteps() {

@@ -13,6 +13,10 @@ for (const prefix of ["", "staging/"]) {
     assert.match(schedule, /id="profBio"/);
     assert.match(schedule, /publicSchedulingEnabled === true/);
     assert.match(schedule, /encodeURIComponent\(bookingSlug\).*\/slots/);
+    assert.match(schedule, /filter\(slot => slot\.available\)/);
+    assert.match(schedule, /availableSlotsByDay\.set\(key, \[\]\)/);
+    assert.match(schedule, /for \(const \[key, slots\] of availableSlotsByDay\)/);
+    assert.doesNotMatch(schedule, /for \(let i = 1; i <= 30; i\+\+\)/);
     assert.match(schedule, /Agenda online indisponível/);
     assert.doesNotMatch(schedule, /public\/profissionais\?q=/);
   });
