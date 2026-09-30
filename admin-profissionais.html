@@ -250,6 +250,10 @@
     if (item.verificationStatus === "rejected") return `<span class="ep-badge ep-badge--done">Recusado</span>`;
     return `<span class="ep-badge ep-badge--warn">Pendente</span>`;
   }
+  function directoryPill(item) {
+    if (!item.adminDirectoryBlocked) return "";
+    return `<span class="ep-badge ep-badge--done" title="Bloqueado pelo administrador no diretório público">Fora da rede</span>`;
+  }
   function accessPill(item) {
     // Prioridade: plano explicito > trial > expirado. Cortesia eh bypass separado.
     // Antes 'pro' so virava pill se tivesse mpPreapprovalId — quando admin
@@ -283,6 +287,7 @@
               ${statusPill(it)}
               ${accessPill(it)}
               ${tierPill(it.intendedTier)}
+              ${directoryPill(it)}
             </div>
             <div class="ep-text-sm ep-text-muted ep-mt-4">
               ${escapeHtml(it.email || "—")} · ${escapeHtml(conselho)}${it.especialidade ? " · " + escapeHtml(it.especialidade) : ""}
@@ -331,7 +336,8 @@
         ${it.plano === "empresa" ? `<strong>Acesso institucional:</strong> ativo · sem cobrança ao profissional<br>` : `<strong>Trial até:</strong> ${fmtDate(it.trialUntil)}${it.trialActive ? " <span class='ep-badge ep-badge--ok'>ativo</span>" : ""}<br>`}
         <strong>Cortesia admin até:</strong> ${fmtDate(it.adminGrantedUntil)}${it.adminGrantActive ? " <span class='ep-badge ep-badge--ok'>ativa</span>" : ""}<br>
         <strong>Verificado:</strong> ${it.verificado ? "✓ sim" : "✗ não"} ${it.verifiedAt ? "(" + fmtDate(it.verifiedAt) + ")" : ""}<br>
-        <strong>Conselho:</strong> ${escapeHtml(formatConselho(it))}
+        <strong>Conselho:</strong> ${escapeHtml(formatConselho(it))}<br>
+        <strong>Rede de Psicologia:</strong> ${it.adminDirectoryBlocked ? "bloqueado pelo administrador" : "liberado"}
       </div>
 
       <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
@@ -401,6 +407,12 @@
       </div>
 
       <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
+        <div class="ep-eyebrow">Rede de Psicologia</div>
+        <div class="ep-text-sm ep-text-muted">O bloqueio retira o profissional do diretório público, sem suspender a conta nem impedir atendimentos por link direto.</div>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="toggleDirectory" style="align-self: flex-start;${it.adminDirectoryBlocked ? "" : " color:#b8453d;border-color:#b8453d;"}">${it.adminDirectoryBlocked ? "Liberar na rede" : "Bloquear da rede"}</button>
+      </div>
+
+      <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
         <div class="ep-eyebrow">Nota administrativa</div>
         <textarea id="adminNote" class="ep-input" rows="2" placeholder="ex.: Cortesia 3 meses por indicação" style="font-family: inherit;">${escapeHtml(it.adminNote || "")}</textarea>
         <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="note" style="align-self: flex-start;">Salvar nota</button>
@@ -438,6 +450,14 @@
     } else if (action === "toggleVerif") {
       const it = allItems.find(x => x.uid === uid);
       body.toggleVerificado = !it?.verificado;
+    } else if (action === "toggleDirectory") {
+      const it = allItems.find(x => x.uid === uid);
+      const willBlock = !it?.adminDirectoryBlocked;
+      if (willBlock && !confirm("Bloquear este profissional na Rede de Psicologia? Ele deixará de aparecer no diretório público.")) {
+        statusEl.textContent = "";
+        return;
+      }
+      body.setAdminDirectoryBlocked = willBlock;
     } else if (action === "note") {
       body.setAdminNote = document.getElementById("adminNote").value || "";
     }
