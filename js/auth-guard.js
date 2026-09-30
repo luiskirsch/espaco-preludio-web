@@ -354,14 +354,30 @@ function mountHelpBubble() {
     try { sessionStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-20))); } catch {}
   }
   function escSup(s) { return String(s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+  // A Aurora escreve [[Agenda]] pra levar o usuário a uma tela. Só nomes desta
+  // lista viram link; o texto já chega escapado, então nada mais é interpretado.
+  const SUP_PAGE_LINKS = {
+    "Consultas": "./painel.html", "Agenda": "./agenda.html", "Pacientes": "./pacientes.html",
+    "Financeiro": "./financeiro.html", "Relatórios": "./relatorios.html", "Clínica": "./clinica.html",
+    "Estoque": "./inventario.html", "Receitas": "./receita.html", "Calculadora": "./calculadora.html",
+    "TISS": "./tiss.html", "Suporte": "./suporte.html", "Perfil": "./perfil.html"
+  };
+  function linkSupPages(escaped) {
+    return escaped.replace(/\[\[([^\[\]]{2,24})\]\]/g, (match, label) => {
+      const href = SUP_PAGE_LINKS[label.trim()];
+      return href
+        ? `<a href="${href}" style="color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 2px;">${label.trim()}</a>`
+        : label;
+    });
+  }
   function renderHistory() {
     if (history.length === 0) {
-      msgsEl.innerHTML = `<div style="text-align: center; color: var(--ep-ink-3, #888); padding: 20px; font-size: 12px; line-height: 1.5;">Oi, sou a <strong style="color:var(--ep-accent,#2d4a3e);">Aurora</strong>.<br>Me pergunte sobre features, fluxos ou troubleshooting da plataforma.</div>`;
+      msgsEl.innerHTML = `<div style="text-align: center; color: var(--ep-ink-3, #888); padding: 20px; font-size: 12px; line-height: 1.5;">Oi, sou a <strong style="color:var(--ep-accent,#2d4a3e);">Aurora</strong>.<br>Posso consultar sua agenda, pendências da conta e novidades da plataforma, além de tirar dúvidas de uso.</div>`;
       return;
     }
     msgsEl.innerHTML = history.map(m => {
       const mine = m.role === "user";
-      return `<div style="align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 85%; padding: 8px 12px; border-radius: 10px; background: ${mine ? "var(--ep-accent, #2d4a3e)" : "var(--ep-bg-2, #f3f1ea)"}; color: ${mine ? "#fff" : "var(--ep-ink, #1c1f1d)"}; white-space: pre-wrap; word-wrap: break-word;">${escSup(m.content)}</div>`;
+      return `<div style="align-self: ${mine ? "flex-end" : "flex-start"}; max-width: 85%; padding: 8px 12px; border-radius: 10px; background: ${mine ? "var(--ep-accent, #2d4a3e)" : "var(--ep-bg-2, #f3f1ea)"}; color: ${mine ? "#fff" : "var(--ep-ink, #1c1f1d)"}; white-space: pre-wrap; word-wrap: break-word;">${mine ? escSup(m.content) : linkSupPages(escSup(m.content))}</div>`;
     }).join("");
     msgsEl.scrollTop = msgsEl.scrollHeight;
   }
@@ -389,7 +405,7 @@ function mountHelpBubble() {
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/support/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(idToken ? { "Authorization": `Bearer ${idToken}` } : {}) },
-        body: JSON.stringify({ message: text, history: history.slice(0, -1) })
+        body: JSON.stringify({ message: text, history: history.slice(0, -1), page: location.pathname })
       });
       thinking.remove();
       const d = await r.json().catch(() => ({}));
