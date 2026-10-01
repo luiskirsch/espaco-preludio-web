@@ -644,6 +644,7 @@
   import { requireTherapist, refreshIdToken } from "./js/auth-guard.js?v=3-35";
   import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=4";
   import { clearDek, recallUser, decryptNote } from "./js/crypto.js";
+  import { downloadAttendanceCertificate } from "./js/attendance-pdf.js?v=1";
   import { createNewSessionModal } from "./js/new-session-modal.js?v=4";
   import { runOnboarding } from "./js/onboarding.js?v=3-15";
 
@@ -1523,6 +1524,9 @@
         ${isOpen && !s.patientAccountUid && !s.demoTechnicalRoom && !publicSchool ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="vincular" data-id="${s.sessionId}" title="${tr("painel:list.vincularTitle","Conecte a conta do paciente (pelo e-mail de login) para conversar com ele pelo chat seguro")}">${tr("painel:list.vincular","Liberar chat")}</button>
         ` : ""}
+        ${s.status === "completed" && !s.demoTechnicalRoom ? `
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="comparecimento" data-id="${s.sessionId}" title="Baixar comprovante de comparecimento (PDF) com os horários registrados pela plataforma">Comprovante</button>
+        ` : ""}
         ${(s.status === "completed" || s.status === "canceled") ? `
           <button class="ep-btn-icon" data-action="ocultar" data-id="${s.sessionId}" aria-label="${tr("painel:list.ocultar","Remover da lista")}" title="${tr("painel:list.ocultarTitle","Remover da lista (mantém no prontuário)")}">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -1611,6 +1615,25 @@
       } catch (err) {
         btn.disabled = false;
         alert(tr("painel:list.ocultarErr","Erro ao ocultar: ") + (err?.message || tr("painel:list.unknown","desconhecido")));
+      }
+    } else if (action === "comparecimento") {
+      btn.disabled = true;
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/comparecimento`, {
+          headers: { Authorization: `Bearer ${await getFreshToken()}` }
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) {
+          alert(d.error === "PRESENCA_NAO_REGISTRADA"
+            ? "Não há registro de entrada do paciente na sala desta consulta, então o comprovante não pode ser emitido."
+            : "Não foi possível gerar o comprovante agora.");
+        } else {
+          await downloadAttendanceCertificate(d.comprovante);
+        }
+      } catch {
+        alert("Não foi possível gerar o comprovante agora.");
+      } finally {
+        btn.disabled = false;
       }
     } else if (action === "recibo") {
       openReciboModal(allSessions.find(x => x.sessionId === id));
