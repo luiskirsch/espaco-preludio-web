@@ -45,6 +45,30 @@
 
   if (detectLocale() !== DEFAULT_LOCALE) localizeDates(detectLocale());
 
+  // Informa o idioma ao servidor em toda chamada (header X-Locale): é assim
+  // que e-mails e outras mensagens enviadas depois saem no idioma escolhido.
+  (function tagBackendRequests(locale) {
+    const origFetch = window.fetch;
+    if (typeof origFetch !== 'function' || origFetch.__epLocale) return;
+    const isBackend = url => {
+      const base = window.EP_BACKEND_BASE_URL;
+      return (base && url.startsWith(base)) || /osl-video-server[\w-]*\.up\.railway\.app/.test(url);
+    };
+    const wrapped = function (input, init) {
+      try {
+        const url = typeof input === 'string' ? input : (input && input.url) || '';
+        if (isBackend(url)) {
+          const headers = new Headers((init && init.headers) || (typeof input !== 'string' && input.headers) || undefined);
+          if (!headers.has('X-Locale')) headers.set('X-Locale', locale);
+          init = Object.assign({}, init, { headers });
+        }
+      } catch (_) { /* nunca impede a chamada original */ }
+      return origFetch.call(this, input, init);
+    };
+    wrapped.__epLocale = true;
+    window.fetch = wrapped;
+  })(detectLocale());
+
   // Some pages mark <html class="ep-i18n-pending"> inline (before any CSS/JS
   // loads) to hide <body> via CSS while a non-default locale is being applied,
   // avoiding a flash of pt-BR text. Always reveal it once we're done — or after
