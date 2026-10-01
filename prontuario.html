@@ -610,10 +610,30 @@
     return Promise.all((data.notes || []).map(async n => ({ ...n, text: await decryptNote(n, dek) })));
   }
 
+  // Foto que o paciente pôs na própria conta (quando a conta está vinculada
+  // às sessões). Sem foto, ficam as iniciais.
+  async function loadPatientPhoto(avatarEl) {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patientId)}/foto`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      const foto = data?.foto;
+      if (!res.ok || typeof foto !== "string" || !/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(foto)) return;
+      const img = document.createElement("img");
+      img.src = foto;
+      img.alt = "";
+      img.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;";
+      avatarEl.textContent = "";
+      avatarEl.appendChild(img);
+    } catch {}
+  }
+
   // ─── Renders ────────────────────────────────────────────────
   function renderHeader(patient) {
     const avatarEl = document.getElementById("patientAvatar");
     avatarEl.textContent = initialsFromName(patient.name);
+    loadPatientPhoto(avatarEl);
 
     document.getElementById("patientName").textContent = patient.name || tr("prontuario:stats.dash", "—");
 
@@ -674,16 +694,20 @@
       document.getElementById("statLastHint").textContent = tr("prontuario:stats.noSessions", "sem sessões");
     }
 
-    // Tempo total = soma de (completedAt - createdAt) das encerradas
+    // Tempo total = soma de (encerramento - início real) das encerradas.
+    // Antes usava createdAt (quando a consulta foi criada, às vezes dias antes),
+    // o que inflava o total. Sem início real registrado, a sessão não entra.
     let totalMs = 0;
+    let timed = 0;
     for (const s of completed) {
-      if (s.completedAt && s.createdAt) {
-        totalMs += Math.max(0, s.completedAt - s.createdAt);
+      if (s.completedAt && s.startedAt && s.completedAt > s.startedAt) {
+        totalMs += s.completedAt - s.startedAt;
+        timed++;
       }
     }
     document.getElementById("statTotal").textContent = fmtDuration(totalMs);
-    document.getElementById("statTotalHint").textContent = completed.length
-      ? tr("prontuario:stats.avgPerSession", "média {{value}}/sessão", { value: fmtDuration(Math.round(totalMs / completed.length)) })
+    document.getElementById("statTotalHint").textContent = timed
+      ? tr("prontuario:stats.avgPerSession", "média {{value}}/sessão", { value: fmtDuration(Math.round(totalMs / timed)) })
       : tr("prontuario:stats.dash", "—");
   }
 
@@ -694,8 +718,8 @@
     // Agrupa por mês (já ordenado desc por createdAt)
     const groups = new Map();
     for (const s of sessions) {
-      const k = monthKey(s.createdAt || Date.now());
-      if (!groups.has(k)) groups.set(k, { label: fmtMonthYear(s.createdAt || Date.now()), items: [] });
+      const k = monthKey(s.startedAt || s.createdAt || Date.now());
+      if (!groups.has(k)) groups.set(k, { label: fmtMonthYear(s.startedAt || s.createdAt || Date.now()), items: [] });
       groups.get(k).items.push(s);
     }
 
@@ -737,18 +761,19 @@
         ? `<span class="ep-badge ep-badge--ok">${escapeHtml(tr("prontuario:sessionCard.inProgress", "Em sessão"))}</span>`
         : `<span class="ep-badge">${escapeHtml(tr("prontuario:sessionCard.scheduled", "Agendada"))}</span>`;
 
-    const duration = (s.completedAt && s.createdAt)
-      ? fmtDuration(s.completedAt - s.createdAt)
+    const startMs = s.startedAt || s.createdAt;
+    const duration = (s.completedAt && s.startedAt && s.completedAt > s.startedAt)
+      ? fmtDuration(s.completedAt - s.startedAt)
       : null;
 
     const timeRange = s.completedAt
-      ? `${fmtTime(s.createdAt)} — ${fmtTime(s.completedAt)}${duration ? ` · ${duration}` : ""}`
-      : fmtTime(s.createdAt);
+      ? `${fmtTime(startMs)} — ${fmtTime(s.completedAt)}${duration ? ` · ${duration}` : ""}`
+      : fmtTime(startMs);
 
     card.innerHTML = `
       <button type="button" class="ep-session-card__head" aria-expanded="false">
         <div>
-          <div class="ep-session-card__date">${escapeHtml(fmtDateLong(s.createdAt))}</div>
+          <div class="ep-session-card__date">${escapeHtml(fmtDateLong(startMs))}</div>
           <div class="ep-session-card__time">${escapeHtml(timeRange)}</div>
           ${overdue ? `<div class="ep-session-card__overdue">${escapeHtml(tr("prontuario:sessionCard.overdueDetail", "Horário encerrado · status ainda não atualizado"))}</div>` : ""}
         </div>
@@ -1836,7 +1861,7 @@
       for (let i = 0; i < sessionsAsc.length; i++) {
         const s = sessionsAsc[i];
         ensure(60);
-        txt(tr("prontuario:pdf.sessionLabel", "Sessão {{n}} — {{date}} {{time}}", { n: i + 1, date: fmtDate(s.createdAt), time: fmtTime(s.createdAt) }), { font: fontBold, size: 12 });
+        txt(tr("prontuario:pdf.sessionLabel", "Sessão {{n}} — {{date}} {{time}}", { n: i + 1, date: fmtDate(s.startedAt || s.createdAt), time: fmtTime(s.startedAt || s.createdAt) }), { font: fontBold, size: 12 });
         const statusMap = {
           completed: tr("prontuario:sessionCard.completed", "Encerrada"),
           in_progress: tr("prontuario:sessionCard.inProgress", "Em sessão"),
