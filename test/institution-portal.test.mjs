@@ -351,8 +351,8 @@ test('páginas institucional e profissional usam a mesma régua de cabeçalho', 
   const institutional = await readFile(resolve(root, 'index.html'), 'utf8');
   const professional = await readFile(resolve(root, 'profissional.html'), 'utf8');
   const sharedStyles = await readFile(resolve(root, 'css/public-header.css'), 'utf8');
-  assert.match(institutional, /css\/public-header\.css\?v=1/);
-  assert.match(professional, /css\/public-header\.css\?v=1/);
+  assert.match(institutional, /css\/public-header\.css\?v=2/);
+  assert.match(professional, /css\/public-header\.css\?v=2/);
   assert.match(sharedStyles, /--public-header-logo-size: 50px/);
   assert.match(sharedStyles, /\.site-header \.brand img,\s*\.ep-topbar \.ep-brand__mark/);
 });

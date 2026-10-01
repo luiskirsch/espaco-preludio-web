@@ -133,3 +133,19 @@ html[data-theme="dark"] .ep-topbar {
   .site-header .brand-copy small,
   .ep-topbar .ep-brand__lead { letter-spacing: .22em; }
 }
+
+/* Ouro envelhecido na marca ao passar o mouse — mesmo tom do portal.
+   Área sensível só no logo e nas letras (o <a> inteiro não reage). */
+:is(.site-header, .site-footer, footer) .brand,
+.ep-topbar .ep-brand { pointer-events: none; }
+:is(.site-header, .site-footer, footer) .brand :is(img, .brand-copy small, .brand-copy strong),
+.ep-topbar .ep-brand :is(.ep-brand__mark, .ep-brand__lead, .ep-brand__name > span) { pointer-events: auto; }
+.brand-copy :is(small, strong),
+.ep-brand__name > span { justify-self: start; width: fit-content; transition: color .35s ease, text-shadow .35s ease; }
+.brand-copy:has(small:hover, strong:hover) :is(small, strong),
+.brand:focus-visible .brand-copy :is(small, strong),
+.ep-brand__name:has(> span:hover) > span,
+.ep-brand:focus-visible .ep-brand__name > span {
+  color: #c9a45c;
+  text-shadow: 0 1px 10px rgba(201,164,92,.28);
+}
