@@ -1102,8 +1102,7 @@ body.a-route-home .home-hero::before, body.a-route-home .home-hero::after { z-in
     .conv-item,
     .chat-header__back,
     .chat-send,
-    .emergency-call-action,
-    .tab-btn
+    .emergency-call-action
   ):not(:disabled):hover {
     transform: translateY(-2px);
     filter: brightness(1.035) saturate(1.04);
@@ -1115,17 +1114,14 @@ body.a-route-home .home-hero::before, body.a-route-home .home-hero::after { z-in
   .a-btn--ghost:not(:disabled):hover { border-color: rgba(45,106,62,.32); background: #fbfdfb; color: var(--a-accent); }
   .home-hero__btn:hover { background: #edc464; box-shadow: 0 15px 32px rgba(0,0,0,.22); }
 
+  /* Chips, horários, dias e abas vivem em faixas com rolagem: deslocamento e
+     sombra são cortados pela borda do container. Hover só em cor/borda. */
   :is(.a-chip:not(.is-active), .a-slot:not(.is-selected), .a-cal__day:not(.is-selected)):hover {
-    transform: translateY(-2px);
-    border-color: rgba(45,106,62,.48);
-    background: rgba(45,106,62,.07);
+    border-color: rgba(45,106,62,.42);
     color: var(--a-accent);
-    box-shadow: 0 8px 18px rgba(12,61,66,.09);
   }
-  :is(.a-chip.is-active, .a-slot.is-selected, .a-cal__day.is-selected):hover {
-    transform: translateY(-2px);
-    box-shadow: 0 9px 20px rgba(28,31,29,.2);
-  }
+  :is(.a-chip.is-active, .a-slot.is-selected, .a-cal__day.is-selected):hover { filter: brightness(1.08); }
+  .tab-btn:not(.is-active):not(.active):hover { color: var(--a-ink); }
   .a-mood__btn:not(.is-selected):hover .a-mood__emoji { transform: translateY(-2px) scale(1.1); }
   .a-mood__btn:hover { border-color: rgba(45,106,62,.24); box-shadow: 0 8px 18px rgba(12,61,66,.08); }
   .learning-module:not(:disabled):hover { transform: translateY(-2px); }
