@@ -235,7 +235,7 @@
   }
   function renderContactCard(card) {
     const name = String(card.displayName || "");
-    const initials = name.trim().split(/s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "?";
+    const initials = name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "?";
     const esp = String(card.especialidade || "");
     const place = [card.cidade, card.uf].filter(Boolean).join(" / ");
     const sub = [esp ? esp.charAt(0).toUpperCase() + esp.slice(1) : "", card.conselho, place].filter(Boolean).join(" · ");
