@@ -644,7 +644,8 @@ function mountHelpBubble() {
           message: text,
           history: history.slice(0, -1).map(m => ({ role: m.role, content: m.content })),
           page: location.pathname,
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          locale: document.documentElement.lang || "pt-BR"
         })
       });
       thinking.remove();
