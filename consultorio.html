@@ -101,25 +101,8 @@
           </svg>
           <span data-i18n="consultorio:ambient.btn">Ajustar ambiente</span>
         </button>
-        <div class="ep-ambient__panel" id="ambientPanel" data-i18n-aria-label="consultorio:ambient.panelLabel" aria-label="Ajustes de ambiente">
-          <div class="ep-ambient__section">
-            <div class="ep-ambient__label" data-i18n="consultorio:ambient.moodLabel">Clima da sala</div>
-            <div class="ep-ambient__pills" role="group" data-i18n-aria-label="consultorio:ambient.moodGroup" aria-label="Modo de clima">
-              <button class="ep-ambient__pill" type="button" data-mode="foco" data-i18n="consultorio:ambient.moodFocus">Foco</button>
-              <button class="ep-ambient__pill" type="button" data-mode="entardecer" data-i18n="consultorio:ambient.moodSunset">Entardecer</button>
-              <button class="ep-ambient__pill" type="button" data-mode="calmo" data-i18n="consultorio:ambient.moodCalm">Calmo</button>
-            </div>
-          </div>
-          <div class="ep-ambient__section">
-            <div class="ep-ambient__label" data-i18n="consultorio:ambient.soundLabel">Som ambiente</div>
-            <div class="ep-ambient__pills" role="group" data-i18n-aria-label="consultorio:ambient.soundGroup" aria-label="Som ambiente">
-              <button class="ep-ambient__pill" type="button" data-sound="off" data-i18n="consultorio:ambient.soundOff">Silêncio</button>
-              <button class="ep-ambient__pill" type="button" data-sound="brown" data-i18n="consultorio:ambient.soundWarm">Acolhedor</button>
-            </div>
-            <input type="range" data-ambient-volume class="ep-ambient__slider" min="0" max="100" value="40" data-i18n-aria-label="consultorio:ambient.volumeAria" aria-label="Volume do som ambiente">
-          </div>
-          <p class="ep-ambient__hint" data-i18n="consultorio:ambient.hint">Suas preferências ficam só neste dispositivo.</p>
-        </div>
+        <!-- Conteúdo montado por js/room-ambient.js quando a sala é criada -->
+        <div class="ep-ambient__panel" id="ambientPanel" role="dialog" aria-label="Ambiente"></div>
       </div>
       <button type="button" id="endSessionBtn" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="consultorio:topbar.endBtn">Encerrar</button>
       <a href="./painel.html" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="consultorio:topbar.dashboardBtn">Painel</a>
@@ -261,7 +244,8 @@
   import { requireTherapist } from "./js/auth-guard.js?v=3-35";
   import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
   import { TOPIC_LIBRARY, ABORDAGEM_LABEL, shuffle } from "./js/topics.js";
-  import { initAtmosphere } from "./js/atmosphere.js";
+  import { applyMode, readMode } from "./js/atmosphere.js";
+  import { initRoomAmbient } from "./js/room-ambient.js?v=1";
   import { searchCID10 } from "./js/cid10.js?v=1";
 
   // tr(): i18n helper com fallback PT-BR.
@@ -306,9 +290,9 @@
     document.addEventListener("ep:i18n-ready", moveLangSwitcher, { once: true });
   }
 
-  // Inicializa clima + som ambiente + painel "Ajustar ambiente".
-  // Todo o estado fica em localStorage; nada disso vai pro servidor.
-  await initAtmosphere({ buttonId: "ambientBtn", panelId: "ambientPanel" });
+  // Clima da tela aplicado já (evita piscar); o painel "Ambiente" completo
+  // (fundo, luz, dispositivos, ruído) é montado quando a sala existe.
+  applyMode(readMode());
 
   // LiveKit via esm.sh — pin de versão para reprodutibilidade.
   const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack } = await import('./js/consultation-media.js?v=1');
@@ -564,6 +548,12 @@
     ...consultationRoomOptions(livekitMod),
     e2ee: useE2EE ? { keyProvider, worker: e2eeWorker } : undefined
   });
+
+  initRoomAmbient({
+    room, livekitMod, lkVersion: LIVEKIT_VERSION,
+    buttonId: "ambientBtn", panelId: "ambientPanel",
+    localTileEl: document.getElementById("tileLocal")
+  }).catch(err => console.warn("room_ambient_init_error", err));
 
   let sessionClockOffsetMs = Number(tokenData.serverNow || Date.now()) - Date.now();
   let sessionStartTs = Number(tokenData.sessionStartedAt) || null;

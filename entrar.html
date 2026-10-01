@@ -30,8 +30,10 @@
   <script src="./js/monitoring.js?v=3" defer></script>
   <style>
     /* Cápsula de idioma no canto direito do topbar da sessão do paciente */
+    @media (max-width: 640px) { .ep-ambient__btn-text { display: none; } .ep-ambient__btn { padding: 7px 9px; } }
+    .ep-ambient--topbar { margin-left: auto; }
     #top-lang-slot {
-      margin-left: auto !important;
+      margin-left: 8px !important;
       flex-shrink: 0;
     }
     #top-lang-slot #ep-lang-switcher {
@@ -132,6 +134,14 @@
     </div>
     <!-- Slot da cápsula de idioma — init.js cria #ep-lang-switcher no body;
          movemos via JS para cá assim que aparecer. -->
+    <!-- Ambiente (fundo, luz, câmera/som) — conteúdo montado por js/room-ambient.js -->
+    <div class="ep-ambient ep-ambient--topbar" style="position:relative;z-index:70;isolation:isolate;flex-shrink:0;">
+      <button id="ambientBtn" class="ep-ambient__btn" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="ambientPanel" title="Ajustar fundo, luz, câmera e som">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><circle cx="9" cy="9" r="2.2"/><circle cx="15" cy="15" r="2.2"/></svg>
+        <span class="ep-ambient__btn-text" data-i18n="consultorio:ambient.btn">Ajustar ambiente</span>
+      </button>
+      <div class="ep-ambient__panel" id="ambientPanel" role="dialog" aria-label="Ambiente"></div>
+    </div>
     <div id="top-lang-slot" style="position:relative;flex-shrink:0;"></div>
   </header>
 
@@ -500,6 +510,12 @@
       ...consultationRoomOptions(livekitMod),
       e2ee: useE2EE ? { keyProvider, worker: e2eeWorker } : undefined
     });
+
+    import("./js/room-ambient.js?v=1").then(({ initRoomAmbient }) => initRoomAmbient({
+      room, livekitMod, lkVersion: LIVEKIT_VERSION,
+      buttonId: "ambientBtn", panelId: "ambientPanel",
+      localTileEl: document.getElementById("tileLocal"), showMood: false
+    })).catch(err => console.warn("room_ambient_init_error", err));
 
     // ─── Anotações pessoais — duas formas de armazenar ──────────────────
     // mode "logged" → POST /paciente/notas (cifrado E2EE com DEK do paciente)
