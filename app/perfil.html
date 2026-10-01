@@ -60,6 +60,7 @@
     .menu-item__label { font-size: 14px; font-weight: 600; }
     .menu-item__sub   { font-size: 12px; color: var(--a-ink2); margin-top: 1px; }
     .menu-item__arrow { color: var(--a-ink3); }
+    .lang-select { border: 1px solid var(--a-line, rgba(0,0,0,.12)); border-radius: 10px; padding: 7px 10px; font: inherit; font-size: 13px; background: var(--a-surface, #fff); color: var(--a-ink); cursor: pointer; }
     .menu-item--danger .menu-item__label { color: #b8453d; }
     .toggle-switch {
       width: 44px; height: 26px; border-radius: 13px;
@@ -80,7 +81,7 @@
   <script src="./sw-register.js" defer></script>
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(!l){var n=(navigator.language||"").toLowerCase();if(n.indexOf("en")===0)l="en-US";else if(n.indexOf("es")===0)l="es-ES";}if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
-  <script src="/i18n/init.js?v=2-0" defer></script>
+  <script src="/i18n/init.js?v=2-1" defer></script>
 </head>
 <body class="a-portal-authenticated">
 <div class="a-shell">
@@ -128,6 +129,18 @@
           </div>
           <div class="menu-item__arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
         </div>
+        <label class="menu-item" for="langSelect">
+          <div class="menu-item__icon" style="background:rgba(201,164,92,.16);">🌐</div>
+          <div class="menu-item__text">
+            <div class="menu-item__label" data-i18n="p-app-perfil:idioma_lang1">Idioma</div>
+            <div class="menu-item__sub" data-i18n="p-app-perfil:idioma_sub_lang2">Português, English ou Español</div>
+          </div>
+          <select id="langSelect" class="lang-select" aria-label="Idioma / Language / Idioma" data-no-i18n>
+            <option value="pt-BR">Português</option>
+            <option value="en-US">English</option>
+            <option value="es-ES">Español</option>
+          </select>
+        </label>
       </div>
     </div>
 
@@ -525,6 +538,22 @@
       sub.textContent = "Erro: " + (e.message || "tente novamente");
     }
   };
+</script>
+<script>
+  // Seletor de idioma do portal (o botão flutuante fica desligado nas telas internas).
+  (function () {
+    var sel = document.getElementById('langSelect');
+    if (!sel) return;
+    var cur = 'pt-BR';
+    try { cur = localStorage.getItem('ep_lang') || document.documentElement.lang || 'pt-BR'; } catch (_) {}
+    if (['pt-BR', 'en-US', 'es-ES'].indexOf(cur) === -1) cur = 'pt-BR';
+    sel.value = cur;
+    sel.addEventListener('change', function () {
+      try { localStorage.setItem('ep_lang', sel.value); } catch (_) {}
+      try { var u = new URL(location.href); u.searchParams.delete('lang'); history.replaceState(null, '', u.toString()); } catch (_) {}
+      location.reload();
+    });
+  })();
 </script>
 </body>
 </html>

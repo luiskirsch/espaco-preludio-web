@@ -24,6 +24,7 @@
   const STORAGE_KEY = 'ep_lang';
   const I18NEXT_CDN = '/i18n/i18next.min.js';
   const BACKEND_CDN = '/i18n/i18nextHttpBackend.min.js';
+  const I18N_VERSION = '2-1';
 
   // Some pages mark <html class="ep-i18n-pending"> inline (before any CSS/JS
   // loads) to hide <body> via CSS while a non-default locale is being applied,
@@ -194,6 +195,20 @@
     });
   }
 
+  // Textos montados por JavaScript: dicionário pt → idioma aplicado no DOM
+  // (ver i18n/dynamic.js). Uma falha aqui nunca bloqueia a página.
+  async function startDynamic(basePath, locale) {
+    try {
+      const [dict] = await Promise.all([
+        fetch(`${basePath}/locales/${locale}/js.json?v=${I18N_VERSION}`).then(r => (r.ok ? r.json() : {})),
+        window.EP_I18N_DYNAMIC_API ? null : loadScript(`${basePath}/dynamic.js?v=${I18N_VERSION}`)
+      ]);
+      if (window.EP_I18N_DYNAMIC_API) window.EP_I18N_DYNAMIC_API.start(dict || {});
+    } catch (err) {
+      console.warn('[ep-i18n] dynamic translation unavailable:', err);
+    }
+  }
+
   async function bootstrap() {
     const locale = detectLocale();
     const namespaces = getNamespaces();
@@ -211,7 +226,7 @@
       defaultNS: namespaces.find(n => n !== 'common') || 'common',
       // Versão explícita evita que o navegador reaplique traduções antigas
       // depois de uma mudança de nomenclatura na navegação.
-      backend: { loadPath: `${basePath}/locales/{{lng}}/{{ns}}.json?v=2-0` },
+      backend: { loadPath: `${basePath}/locales/{{lng}}/{{ns}}.json?v=${I18N_VERSION}` },
       interpolation: { escapeValue: false },
       load: 'currentOnly',
       partialBundledLanguages: false,
@@ -220,6 +235,7 @@
 
     applyTranslations();
     createSwitcher();
+    if (locale !== DEFAULT_LOCALE) await startDynamic(basePath, locale);
 
     window.EP_I18N = {
       t: (key, opts) => window.i18next.t(key, opts),
