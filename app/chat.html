@@ -67,6 +67,18 @@
     .msg--in .msg__reply-btn { right: -36px; }
     .msg--out .msg__reply-btn { left: -36px; }
     .msg:hover .msg__reply-btn, .msg__reply-btn:focus-visible { opacity: 1; }
+    .msg--in .msg__react-btn { right: -70px; }
+    .msg--out .msg__react-btn { left: -70px; }
+    .msg__reactions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: -8px; padding: 0 6px; position: relative; z-index: 1; }
+    .msg--out .msg__reactions { justify-content: flex-end; }
+    .msg__reaction { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--a-line); background: var(--a-surface); font-size: 13px; line-height: 1.3; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+    .msg__reaction b { font-size: 11px; font-weight: 600; color: var(--a-ink2); }
+    .msg__reaction.is-mine { border-color: #c9a45c; background: rgba(201,164,92,.14); }
+    .react-picker { position: fixed; z-index: 50; display: flex; gap: 4px; padding: 6px 8px; border-radius: 999px; background: var(--a-surface); border: 1px solid var(--a-line); box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+    .react-picker[hidden] { display: none; }
+    .react-picker button { border: 0; background: none; font-size: 22px; line-height: 1; padding: 4px; border-radius: 50%; cursor: pointer; transition: transform .12s ease; }
+    .react-picker button:hover, .react-picker button:focus-visible { transform: scale(1.25); }
+    .react-picker button.is-mine { background: rgba(201,164,92,.22); }
     @media (hover: none) { .msg__reply-btn { display: none; } }
     .msg__quote { display: block; width: 100%; text-align: left; border: 0; border-left: 3px solid #c9a45c; border-radius: 6px; padding: 5px 8px; margin: 0 0 6px; background: rgba(0,0,0,.06); color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
     .msg--out .msg__quote { background: rgba(255,255,255,.14); }
@@ -198,6 +210,7 @@
     </div>
 
     <div class="chat-messages" id="chatMessages"></div>
+    <div class="react-picker" id="reactPicker" role="menu" aria-label="Reagir" hidden></div>
     <button type="button" class="chat-jump" id="chatJump" aria-label="Ir para a última mensagem" title="Ir para a última mensagem" data-i18n-aria-label="p-app-chat:ir_para_a_ultima_mensagem_81cf9" data-i18n-title="p-app-chat:ir_para_a_ultima_mensagem_81cf9">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       <span class="chat-jump__badge" id="chatJumpBadge"></span>
@@ -591,7 +604,7 @@
 
     const container = document.getElementById("chatMessages");
     // Sem mudança, não re-renderiza (evita saltos enquanto o usuário rola).
-    const sig = decrypted.map(m => m.messageId + ":" + (m.deleted ? 1 : 0)).join("|");
+    const sig = decrypted.map(m => m.messageId + ":" + (m.deleted ? 1 : 0) + ":" + (m.reactions || []).map(r => r.emoji + r.count + (r.mine ? "*" : "")).join(",")).join("|");
     if (sig === lastRenderSig) return;
     const isFirstRender = lastRenderSig === null;
     const prevIds = new Set(lastRenderIds);
@@ -612,9 +625,11 @@
       return `${dateSep}
         <div class="msg ${isOut ? "msg--out" : "msg--in"}" data-mid="${esc(m.messageId || "")}">
           <button type="button" class="msg__reply-btn" data-reply="${esc(m.messageId || "")}" aria-label="Responder" title="Responder">↩</button>
+          <button type="button" class="msg__reply-btn msg__react-btn" data-react-open="${esc(m.messageId || "")}" aria-label="Reagir" title="Reagir">☺</button>
           ${(() => { const card = parseContactCard(m.plain); return card
             ? `<div class="msg__bubble msg__bubble--card">${quoteHtml(m, isOut)}${renderContactCard(card)}</div>`
             : `<div class="msg__bubble">${quoteHtml(m, isOut)}<span data-no-i18n>${esc(m.plain)}</span></div>`; })()}
+          ${reactionsHtml(m)}
           <div class="${isOut ? "msg__status" : "msg__time"}">${fmtTime(m.createdAt)}</div>
         </div>`;
     }).join("") || "";
@@ -669,6 +684,63 @@
     const orig = messagesById.get(m.replyToMessageId);
     return `<button type="button" class="msg__quote" data-goto="${esc(m.replyToMessageId)}"><strong>${esc(orig ? authorOf(orig) : "")}</strong><span data-no-i18n>${esc(snippet(orig))}</span></button>`;
   }
+  // ── Reações (toggle por emoji, como no WhatsApp) ──
+  const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+  const picker = document.getElementById("reactPicker");
+  let pickerFor = null;
+  function reactionsHtml(m) {
+    const list = (m.reactions || []).filter(r => r.count > 0);
+    if (!list.length) return "";
+    return `<div class="msg__reactions">${list.map(r =>
+      `<button type="button" class="msg__reaction${r.mine ? " is-mine" : ""}" data-react="${esc(r.emoji)}" data-rmid="${esc(m.messageId)}" aria-pressed="${r.mine}">${esc(r.emoji)}${r.count > 1 ? `<b>${r.count}</b>` : ""}</button>`
+    ).join("")}</div>`;
+  }
+  function openPicker(messageId, anchor) {
+    const m = messagesById.get(messageId);
+    if (!m) return;
+    pickerFor = messageId;
+    const mine = new Set((m.reactions || []).filter(r => r.mine).map(r => r.emoji));
+    picker.innerHTML = QUICK_REACTIONS.map(e => `<button type="button" role="menuitem" data-pick="${e}" class="${mine.has(e) ? "is-mine" : ""}" aria-label="${e}">${e}</button>`).join("");
+    picker.hidden = false;
+    const r = anchor.getBoundingClientRect();
+    const w = picker.offsetWidth, h = picker.offsetHeight;
+    picker.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + "px";
+    picker.style.top = Math.max(8, r.top - h - 8) + "px";
+  }
+  function closePicker() { picker.hidden = true; pickerFor = null; }
+  async function toggleReaction(messageId, emoji) {
+    closePicker();
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/messages/${encodeURIComponent(messageId)}/react`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ emoji })
+      });
+      if (!r.ok) return;
+      const key = threadKeyCache.get(currentThreadId);
+      if (key) await refreshMessages(key);
+    } catch { /* sem rede: a reação não muda */ }
+  }
+  picker.addEventListener("click", e => {
+    const b = e.target.closest("[data-pick]");
+    if (b && pickerFor) toggleReaction(pickerFor, b.dataset.pick);
+  });
+  document.addEventListener("click", e => {
+    if (!picker.hidden && !e.target.closest("#reactPicker") && !e.target.closest("[data-react-open]")) closePicker();
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closePicker(); });
+  messagesEl.addEventListener("scroll", () => { if (!picker.hidden) closePicker(); }, { passive: true });
+  // Celular: toque longo na mensagem abre as reações.
+  let pressTimer = null;
+  messagesEl.addEventListener("touchstart", e => {
+    const bubble = e.target.closest(".msg__bubble");
+    const msg = e.target.closest(".msg[data-mid]");
+    if (!bubble || !msg) return;
+    clearTimeout(pressTimer);
+    pressTimer = setTimeout(() => { swipe = null; msg.style.transform = ""; openPicker(msg.dataset.mid, bubble); }, 500);
+  }, { passive: true });
+  ["touchmove", "touchend", "touchcancel"].forEach(t => messagesEl.addEventListener(t, () => clearTimeout(pressTimer), { passive: true }));
+
   function startReply(messageId) {
     const m = messagesById.get(messageId);
     if (!m) return;
@@ -684,6 +756,10 @@
   }
   document.getElementById("chatReplyClose").addEventListener("click", cancelReply);
   messagesEl.addEventListener("click", e => {
+    const reactOpen = e.target.closest("[data-react-open]");
+    if (reactOpen) { openPicker(reactOpen.dataset.reactOpen, reactOpen.closest(".msg").querySelector(".msg__bubble") || reactOpen); return; }
+    const chip = e.target.closest("[data-react]");
+    if (chip) { toggleReaction(chip.dataset.rmid, chip.dataset.react); return; }
     const replyBtn = e.target.closest("[data-reply]");
     if (replyBtn) { startReply(replyBtn.dataset.reply); return; }
     const quote = e.target.closest("[data-goto]");
