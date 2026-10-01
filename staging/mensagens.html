@@ -729,7 +729,7 @@
           </div>
           <div id="supportMsgList" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;">
             ${msgs.map(m => {
-              const isMe = m.senderRole === "therapist";
+              const isMe = m.senderUid ? m.senderUid === myUid : m.senderRole === "therapist";
               const time = m.createdAt ? fmtTime(m.createdAt) : "";
               return `
                 <div style="display:flex;flex-direction:column;align-items:${isMe ? "flex-end" : "flex-start"};">
@@ -928,7 +928,7 @@
     list.innerHTML = "";
     renderPinnedBanner(sorted);
     for (const m of sorted) {
-      const mine = m.senderRole === "therapist";
+      const mine = m.senderUid ? m.senderUid === myUid : m.senderRole === "therapist";
       const div = document.createElement("div");
       div.dataset.msgId = m.messageId;
       div.className = `ep-chat-bubble ${mine ? "ep-chat-bubble--mine" : "ep-chat-bubble--theirs"}`;
@@ -1151,7 +1151,7 @@
     ctxMenuMsgId = messageId;
 
     // Atualiza visibilidade dos items dependentes de "minha msg".
-    const isMine = m.senderRole === "therapist";
+    const isMine = m.senderUid ? m.senderUid === myUid : m.senderRole === "therapist";
     ctxMenu.querySelectorAll("[data-only-mine]").forEach(btn => {
       btn.style.display = isMine ? "flex" : "none";
     });

@@ -526,7 +526,7 @@
     }
 
     $("msgList").innerHTML = decrypted.map(m => {
-      const mine = m.senderRole === "patient";
+      const mine = m.senderUid ? m.senderUid === myUid : m.senderRole === "patient";
       return `
         <div class="ep-msg-bubble ${mine ? "is-mine" : "is-theirs"}">
           ${renderBubbleContent(m.plain)}
