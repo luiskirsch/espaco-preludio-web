@@ -471,7 +471,7 @@
   let _lastThreads = [];
   async function loadThreads() {
     try {
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads`, {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads?as=patient`, {
         headers: { Authorization: `Bearer ${idToken}` }
       });
       const d = await r.json().catch(() => ({}));
@@ -572,7 +572,7 @@
     document.getElementById("chatView").style.display = "flex";
     document.getElementById("chatMessages").innerHTML = "";
 
-    const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(threadId)}`, {
+    const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(threadId)}?as=patient`, {
       headers: { Authorization: `Bearer ${idToken}` }
     });
     const d = await r.json().catch(() => ({}));
@@ -588,7 +588,7 @@
     const threadKeyBytes = await unwrapThreadKey(currentThread);
     await refreshMessages(threadKeyBytes);
 
-    fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(threadId)}/read`, {
+    fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(threadId)}/read?as=patient`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({ until: Date.now() })
@@ -882,7 +882,7 @@
     try {
       const enc = await encryptNote(text, threadKeyBytes);
       const body = replyingTo?.messageId ? { ...enc, replyToMessageId: replyingTo.messageId } : enc;
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/messages`, {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/messages?as=patient`, {
         method: "POST",
         headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
         body: JSON.stringify(body)
