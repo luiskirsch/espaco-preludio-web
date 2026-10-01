@@ -298,7 +298,7 @@
   applyMode(readMode());
 
   // LiveKit via esm.sh — pin de versão para reprodutibilidade.
-  const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack, setupCodecNegotiation } = await import('./js/consultation-media.js?v=2');
+  const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack, setupCodecNegotiation } = await import('./js/consultation-media.js?v=3');
   const livekitMod = await import(`https://esm.sh/livekit-client@${LIVEKIT_VERSION}`);
   const { Room, RoomEvent, Track, ExternalE2EEKeyProvider } = livekitMod;
 
@@ -548,7 +548,7 @@
   }
 
   room = new Room({
-    ...consultationRoomOptions(livekitMod),
+    ...consultationRoomOptions(livekitMod, undefined, { pauseVideoInBackground: false }),
     e2ee: useE2EE ? { keyProvider, worker: e2eeWorker } : undefined
   });
 
@@ -827,7 +827,7 @@
   endSessionBtn.addEventListener("click", endSessionFlow);
 
   // ─── Gravação local cifrada ──────────────────────────────────
-  const { SessionRecorder, downloadRecording } = await import("./js/session-record.js?v=3");
+  const { SessionRecorder, downloadRecording } = await import("./js/session-record.js?v=4");
   const ctrlRecord       = document.getElementById("ctrlRecord");
   const recConsentModal  = document.getElementById("recConsentModal");
   const recConsentCheck  = document.getElementById("recConsentCheck");

@@ -46,10 +46,13 @@ function mobilePublishOptions(VideoPreset) {
   };
 }
 
-export function consultationRoomOptions({ VideoPreset }, pixelDensity = globalThis.devicePixelRatio || 1) {
-  const premium = videoProfile() === 'premium';
+// pauseVideoInBackground: no celular do paciente economiza dados/bateria. No
+// consultório fica desligado — o profissional troca de aba (prontuário, PDF)
+// e a gravação/IA não podem perder o vídeo do paciente nesse meio-tempo.
+export function consultationRoomOptions({ VideoPreset }, pixelDensity = globalThis.devicePixelRatio || 1, { pauseVideoInBackground = true } = {}) {
+  const premium = videoProfile() === "premium";
   return {
-    adaptiveStream: { pixelDensity, pauseVideoInBackground: true },
+    adaptiveStream: { pixelDensity, pauseVideoInBackground },
     dynacast: true,
     videoCaptureDefaults: {
       facingMode: 'user',
