@@ -1,0 +1,54 @@
+name: Traduções automáticas
+
+# Toda alteração publicada na main entra traduzida (en-US / es-ES): textos
+# novos de páginas e de JavaScript são marcados, traduzidos pelo servidor do
+# Espaço Prelúdio e gravados de volta no repositório. A execução diária pega
+# conteúdos que mudam no servidor (trilhas educativas).
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: i18n-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    # O próprio commit de traduções não dispara outra rodada.
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Marcar e traduzir textos novos
+        env:
+          I18N_CI_TOKEN: ${{ secrets.I18N_CI_TOKEN }}
+        run: node scripts/i18n/sync.mjs
+
+      - name: Publicar traduções
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nada novo para traduzir."
+            exit 0
+          fi
+          git commit -m "chore(i18n): traduções automáticas en-US/es-ES"
+          git pull --rebase origin main
+          git push origin HEAD:main
