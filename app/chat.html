@@ -30,6 +30,7 @@
     .chat-header__info { flex: 1; min-width: 0; }
     .chat-header__name { font-size: 15px; font-weight: 700; color: var(--a-ink); }
     .chat-header__esp  { font-size: 12px; color: var(--a-ink2); }
+    .chat-header__esp.is-online { color: var(--a-accent); font-weight: 600; }
     .chat-messages {
       flex: 1; overflow-y: auto; padding: 16px;
       display: flex; flex-direction: column; gap: 10px;
@@ -460,11 +461,44 @@
 
   window.backToList = function backToList() {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    pingPatientPresence(currentThreadId, true);
     currentThreadId = null;
     document.getElementById("chatView").style.display = "none";
     document.getElementById("listView").style.display = "flex";
     loadThreads();
   };
+
+  // "Online agora" quando o profissional deu sinal nos últimos 30s (ele
+  // carimba a cada 8s com a conversa aberta); senão "visto por último".
+  function renderPeerPresence(lastSeenMs) {
+    const el = document.getElementById("chatEsp");
+    el.classList.remove("is-online");
+    if (!lastSeenMs) { el.textContent = ""; return; }
+    const diff = Date.now() - lastSeenMs;
+    if (diff < 30000) { el.textContent = "● Online agora"; el.classList.add("is-online"); return; }
+    const d = new Date(lastSeenMs);
+    const hhmm = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const days = Math.floor((today.getTime() - new Date(d).setHours(0,0,0,0)) / 86400000);
+    el.textContent = days <= 0 ? `Visto por último hoje às ${hhmm}`
+      : days === 1 ? `Visto por último ontem às ${hhmm}`
+      : `Visto por último em ${d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} às ${hhmm}`;
+  }
+  function pingPatientPresence(threadId, offline = false) {
+    if (!threadId || !idToken) return;
+    fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(threadId)}/patient-presence`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify(offline ? { offline: true } : {}),
+      keepalive: offline
+    }).catch(() => {});
+  }
+  document.addEventListener("pagehide", () => pingPatientPresence(currentThreadId, true));
+  document.addEventListener("visibilitychange", () => {
+    if (document.getElementById("chatView").style.display !== "flex") return;
+    if (document.hidden) pingPatientPresence(currentThreadId, true);
+    else pingPatientPresence(currentThreadId);
+  });
 
   async function openThread(threadId) {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
@@ -482,7 +516,7 @@
 
     const name = currentThread.therapistDisplayName || "Profissional";
     document.getElementById("chatName").textContent = name;
-    document.getElementById("chatEsp").textContent = "";
+    renderPeerPresence(currentThread.lastSeenByTherapist || null);
     const initials = name.trim().split(/\s+/).map(w => w[0]).slice(0,2).join("").toUpperCase() || "?";
     document.getElementById("chatAvatar").textContent = initials;
 
@@ -495,7 +529,11 @@
       body: JSON.stringify({ until: Date.now() })
     }).catch(() => {});
 
-    pollTimer = setInterval(() => refreshMessages(threadKeyBytes), 5000);
+    pingPatientPresence(threadId);
+    pollTimer = setInterval(() => {
+      refreshMessages(threadKeyBytes);
+      if (!document.hidden) pingPatientPresence(threadId);
+    }, 5000);
   }
 
   async function refreshMessages(threadKeyBytes) {
@@ -504,6 +542,7 @@
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok || !d.ok) return;
+    if (d.lastSeenByTherapist !== undefined) renderPeerPresence(d.lastSeenByTherapist);
 
     const decrypted = [];
     for (const m of (d.messages || [])) {

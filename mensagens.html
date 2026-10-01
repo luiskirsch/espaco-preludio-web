@@ -855,8 +855,16 @@
       body: JSON.stringify({ until: Date.now() })
     }).catch(() => {});
 
-    // Polling 8s na thread aberta
-    pollTimer = setInterval(() => refreshMessages(threadKeyBytes), 8000);
+    // Polling 8s na thread aberta. Junto, carimba a presença do profissional
+    // (só com a aba visível) para o "visto por último" no portal do paciente.
+    const pingTherapistPresence = () => {
+      if (document.hidden || currentThreadId !== threadId) return;
+      fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(threadId)}/therapist-presence`, {
+        method: "PATCH", headers: { "Authorization": `Bearer ${idToken}` }
+      }).catch(() => {});
+    };
+    pingTherapistPresence();
+    pollTimer = setInterval(() => { refreshMessages(threadKeyBytes); pingTherapistPresence(); }, 8000);
 
     // Atualiza lista de threads (highlight)
     loadThreads();
