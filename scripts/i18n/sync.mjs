@@ -118,12 +118,18 @@ function weakPattern(s) {
   return words.filter(w => !STOP.has(w.toLowerCase())).join("").length < 3;
 }
 function templateFragments(node) {
+  // Caractere a caractere: tags podem conter ${} (ex.: <button class="${c}">Salvar</button>),
+  // então o estado "dentro de tag" atravessa os pedaços do template.
   const parts = [];
-  let buf = "", idx = 0;
-  const flush = () => { if (buf) parts.push(buf); buf = ""; idx = 0; };
+  let buf = "", idx = 0, inTag = false;
+  const flush = () => { if (buf.trim()) parts.push(buf); buf = ""; idx = 0; };
   node.quasis.forEach((q, i) => {
-    (q.value.cooked ?? q.value.raw).split(/(<[^>]*>)/).forEach((p, j) => { if (j % 2) flush(); else buf += p; });
-    if (i < node.expressions.length) buf += `{${idx++}}`;
+    for (const ch of (q.value.cooked ?? q.value.raw)) {
+      if (inTag) { if (ch === ">") inTag = false; continue; }
+      if (ch === "<") { flush(); inTag = true; continue; }
+      buf += ch;
+    }
+    if (i < node.expressions.length && !inTag) buf += `{${idx++}}`;
   });
   flush();
   return parts.map(norm).filter(p => /[A-Za-zÀ-ÿ]{2,}/.test(p.replace(/\{\d+\}/g, " ")) && looksHuman(p) && looksHuman(p.replace(/\{\d+\}/g, " x ")));
