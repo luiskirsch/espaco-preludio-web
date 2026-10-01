@@ -560,7 +560,8 @@
     const container = document.getElementById("chatMessages");
     let lastDate = "";
     container.innerHTML = decrypted.map(m => {
-      const isOut = m.senderRole === "patient";
+      // Pelo remetente, não pelo papel: contas de dupla função enviam como profissional.
+      const isOut = m.senderUid ? m.senderUid === currentUser?.uid : m.senderRole === "patient";
       const dayLabel = fmtDay(m.createdAt);
       let dateSep = "";
       if (dayLabel !== lastDate) { dateSep = `<div class="date-sep">${esc(dayLabel)}</div>`; lastDate = dayLabel; }
