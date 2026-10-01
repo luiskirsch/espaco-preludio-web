@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conte\u00fado s\u00f3 est\u00e1 dispon\u00edvel no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <title>Verificar comprovante · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-292">
+  <script src="./js/monitoring.js?v=3" defer></script>
+  <style>
+    .vc-wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; background: var(--ep-bg); color: var(--ep-ink); }
+    .vc-form { display: flex; gap: 8px; margin-top: 20px; }
+    .vc-form input { flex: 1; min-width: 0; font-family: "JetBrains Mono", monospace; text-transform: uppercase; }
+    .vc-result { margin-top: 20px; border-radius: 12px; padding: 16px; border: 1px solid var(--ep-line, rgba(0,0,0,.12)); }
+    .vc-result--ok  { background: rgba(46,125,50,.08);  border-color: rgba(46,125,50,.35); }
+    .vc-result--bad { background: rgba(176,58,46,.08);  border-color: rgba(176,58,46,.35); }
+    .vc-result h2 { margin: 0 0 12px; font-size: 17px; }
+    .vc-rows { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
+    .vc-rows dt { color: var(--ep-ink-muted, #6b6b6b); }
+    .vc-rows dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+    .vc-note { font-size: 12px; color: var(--ep-ink-muted, #6b6b6b); margin-top: 14px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+<div class="vc-wrap">
+  <div class="ep-auth__panel" style="max-width: 480px; width: 100%;">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead">Espaço</span>
+        <span>Prelúdio</span>
+      </span>
+    </a>
+    <h1 class="ep-auth__title ep-mt-32">Verificar comprovante de comparecimento</h1>
+    <p class="ep-auth__sub">Digite o código impresso no documento (ou leia o QR code) para conferir os dados registrados pela plataforma.</p>
+
+    <form class="vc-form" id="vcForm">
+      <input id="vcCode" class="ep-input" type="text" maxlength="20" placeholder="EP-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" aria-label="Código do comprovante">
+      <button class="ep-btn ep-btn--primary" type="submit" id="vcBtn">Verificar</button>
+    </form>
+
+    <div id="vcResult" aria-live="polite"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { BACKEND_BASE_URL } from "./js/firebase-config.js";
+
+  const TZ = "America/Sao_Paulo";
+  const fmtDate = ms => new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric", timeZone: TZ });
+  const fmtTime = ms => new Date(ms).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+
+  const form = document.getElementById("vcForm");
+  const input = document.getElementById("vcCode");
+  const btn = document.getElementById("vcBtn");
+  const out = document.getElementById("vcResult");
+
+  function bad(title, msg) {
+    out.innerHTML = `<div class="vc-result vc-result--bad"><h2>${esc(title)}</h2><p style="margin:0;font-size:14px;">${esc(msg)}</p></div>`;
+  }
+
+  async function verify(code) {
+    code = String(code || "").trim();
+    if (!code) return;
+    btn.disabled = true;
+    out.innerHTML = `<p class="vc-note">Verificando…</p>`;
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/comparecimento/verificar/${encodeURIComponent(code)}`);
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 429) return bad("Muitas tentativas", "Aguarde alguns minutos e tente de novo.");
+      if (!res.ok || !data.ok) return bad("Comprovante não encontrado", "Este código não corresponde a nenhum comprovante emitido pelo Espaço Prelúdio. O documento pode ter sido digitado errado ou não ser autêntico.");
+      const c = data.comprovante;
+      const p = c.profissional || {};
+      const registro = [p.conselho, p.registro].filter(Boolean).join(" ");
+      if (c.status === "revogado") {
+        return bad("Comprovante revogado", `Este comprovante foi invalidado pelo(a) profissional${c.revokedAt ? ` em ${fmtDate(c.revokedAt)}` : ""}. Não tem mais validade.`);
+      }
+      out.innerHTML = `
+        <div class="vc-result vc-result--ok">
+          <h2>✓ Comprovante autêntico</h2>
+          <dl class="vc-rows">
+            <dt>Código</dt><dd>${esc(c.code)}</dd>
+            <dt>Paciente</dt><dd>${esc(c.patientNameMasked || "—")}</dd>
+            <dt>Data</dt><dd>${c.entrada ? esc(fmtDate(c.entrada)) : "—"}</dd>
+            <dt>Entrada na sala</dt><dd>${c.entrada ? esc(fmtTime(c.entrada)) : "—"}</dd>
+            ${c.termino ? `<dt>Término</dt><dd>${esc(fmtTime(c.termino))}</dd>` : ""}
+            <dt>Profissional</dt><dd>${esc(p.nome || "—")}${registro ? ` · ${esc(registro)}` : ""}</dd>
+            ${c.issuedAt ? `<dt>Emitido em</dt><dd>${esc(fmtDate(c.issuedAt))}</dd>` : ""}
+          </dl>
+          <p class="vc-note">Confira se os dados acima são os mesmos do documento recebido. Qualquer diferença indica que o PDF foi alterado. Horários no fuso de Brasília. Por privacidade (LGPD), o nome do(a) paciente aparece parcialmente.</p>
+        </div>`;
+    } catch {
+      bad("Não foi possível verificar agora", "Falha de conexão. Tente novamente em instantes.");
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  form.addEventListener("submit", e => { e.preventDefault(); verify(input.value); });
+  const initial = new URLSearchParams(location.search).get("c");
+  if (initial) { input.value = initial; verify(initial); }
+</script>
+</body>
+</html>
