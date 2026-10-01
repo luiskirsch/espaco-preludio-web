@@ -179,7 +179,15 @@
     };
     const CODES = { 'pt-BR': 'PT', 'en-US': 'EN', 'es-ES': 'ES' };
     const LABELS = { 'pt-BR': 'Português', 'en-US': 'English', 'es-ES': 'Español' };
-    const flagSvg = FLAG_SVG[cur] || FLAG_SVG[DEFAULT_LOCALE];
+    // <img> com o SVG embutido: o CSS da página não alcança o conteúdo da
+    // imagem (com <svg> inline, regras para rect/svg apagavam as listras).
+    const flagImg = l => {
+      const svg = (FLAG_SVG[l] || FLAG_SVG[DEFAULT_LOCALE])
+        .replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')
+        .replace(/ style="[^"]*"/, '');
+      return `<img src="data:image/svg+xml,${encodeURIComponent(svg)}" width="18" height="13" alt="" style="display:inline-block;vertical-align:middle;border-radius:2px;width:18px;height:13px;object-fit:cover">`;
+    };
+    const flagSvg = flagImg(cur);
     const code = CODES[cur] || CODES[DEFAULT_LOCALE];
 
     const wrap = document.createElement('div');
@@ -189,7 +197,7 @@
       flagSvg + ' ' + code +
       '</button>' +
       '<div id="ep-lang-menu" hidden>' +
-      SUPPORTED.map(l => `<button type="button" data-lang="${l}">${FLAG_SVG[l]} ${LABELS[l]}</button>`).join('') +
+      SUPPORTED.map(l => `<button type="button" data-lang="${l}">${flagImg(l)} ${LABELS[l]}</button>`).join('') +
       '</div>';
 
     const style = document.createElement('style');
