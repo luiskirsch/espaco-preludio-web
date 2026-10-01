@@ -84,7 +84,6 @@
         <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;animation:ep-rec-blink 1.4s infinite ease-in-out;"></span>
         <span data-i18n="p-consultorio:rec_09ebb">REC</span>
         <span id="recTimer">00:00</span>
-        <span id="recChunkInfo" style="opacity:0.75;font-weight:400;" data-i18n="p-consultorio:0_partes_669ca">0 partes</span>
       </div>
     </div>
     <div class="ep-flex ep-gap-8" style="align-items: center;">
@@ -832,7 +831,6 @@
   const recCancelBtn     = document.getElementById("recCancelBtn");
   const recIndicator     = document.getElementById("recIndicator");
   const recTimer         = document.getElementById("recTimer");
-  const recChunkInfo     = document.getElementById("recChunkInfo");
   let recorder = null;
   let recTimerInterval = null;
 
@@ -878,7 +876,6 @@
       recorder = new SessionRecorder({
         sessionId,
         dek,
-        onChunk: (n) => { recChunkInfo.textContent = tr("consultorio:rec.chunks", "{{n}} partes", { n }); },
         onStop: (blob) => {
           downloadRecording(blob, sessionId);
           recorder = null;
@@ -894,7 +891,6 @@
       ctrlRecord.setAttribute("aria-pressed", "true");
       recIndicator.classList.remove("ep-hide");
       recTimer.textContent = "00:00";
-      recChunkInfo.textContent = "0 chunks";
       const startedAt = Date.now();
       recTimerInterval = setInterval(() => {
         recTimer.textContent = fmtRecTime(Date.now() - startedAt);
