@@ -206,8 +206,26 @@
     if (d < 365) return tr("paciente-painel:relative.monthsAgo","há {{n}} meses",  { n: Math.floor(d/30) });
     return tr("paciente-painel:relative.yearsAgo", "há {{n}} anos", { n: Math.floor(d/365) });
   }
+  // Consulta realizada mostra quando aconteceu de fato (entrada na sala);
+  // as demais, o horário agendado.
   function sessionTimestamp(session) {
+    const done = ["completed", "finished"].includes(String(session?.status || "").toLowerCase());
+    if (done && Number(session?.startedAt)) return Number(session.startedAt);
     return Number(session?.scheduledAt || session?.startedAt || session?.endedAt || session?.createdAt) || null;
+  }
+  const LOWER_NAME_WORDS = new Set(["de", "da", "das", "do", "dos", "e"]);
+  // Cadastro em caixa alta ("LUIS HENRIQUE") → "Luis Henrique".
+  function displayName(name) {
+    const n = String(name || "").trim();
+    if (!n || n !== n.toUpperCase()) return n;
+    return n.toLowerCase().split(/\s+/).map((w, i) => (i > 0 && LOWER_NAME_WORDS.has(w)) ? w : w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  }
+  // "terapia-de-casal" → "Terapia de casal"
+  function specialtyLabel(v) {
+    const t = String(v || "").trim();
+    if (!/^[a-z0-9-]+$/.test(t)) return t;
+    const x = t.replace(/-/g, " ");
+    return x.charAt(0).toUpperCase() + x.slice(1);
   }
   function sessionStatus(status) {
     const key = String(status || "scheduled").toLowerCase();
@@ -462,10 +480,14 @@
 
     const timestamp = sessionTimestamp(session);
     const dateParts = sessionDateParts(timestamp);
-    const therapistName = session.therapistName || session.therapistDisplayName || tr("paciente-painel:history.therapistFallback", "Profissional não informado");
-    const specialty = String(session.especialidade || "Atendimento particular").trim();
+    const therapistName = displayName(session.therapistName || session.therapistDisplayName) || tr("paciente-painel:history.therapistFallback", "Profissional não informado");
+    const specialty = specialtyLabel(session.especialidade) || "Atendimento particular";
     const status = sessionStatus(session.status);
-    const duration = Number(session.durationMinutes) > 0 ? `${Number(session.durationMinutes)} min` : null;
+    // Realizada: duração real (entrada → encerramento); senão, a planejada.
+    const realMinutes = (status.cssKey === "completed" && Number(session.startedAt) && Number(session.endedAt) > Number(session.startedAt))
+      ? Math.max(1, Math.round((Number(session.endedAt) - Number(session.startedAt)) / 60000)) : null;
+    const duration = realMinutes ? `${realMinutes} min`
+      : (Number(session.durationMinutes) > 0 ? `${Number(session.durationMinutes)} min` : null);
     const loadingNotes  = tr("paciente-painel:history.loadingNotes", "Carregando suas anotações…");
 
     card.innerHTML = `
@@ -507,9 +529,12 @@
     card.querySelector(".patient-session-status").textContent = status.label;
     card.querySelector(".patient-session-specialty").textContent = specialty;
     card.querySelector("[data-count]").dataset.sessionNoteCount = session.sessionId;
-    card.querySelector("[data-session-time]").textContent = timestamp
-      ? `${fmtDate(timestamp)} às ${fmtTime(timestamp)}`
-      : "Data e horário não informados";
+    const endedAt = Number(session.endedAt);
+    card.querySelector("[data-session-time]").textContent = !timestamp
+      ? "Data e horário não informados"
+      : (realMinutes && endedAt)
+        ? `${fmtDate(timestamp)}, das ${fmtTime(timestamp)} às ${fmtTime(endedAt)}`
+        : `${fmtDate(timestamp)} às ${fmtTime(timestamp)}`;
 
     const head = card.querySelector(".ep-session-card__head");
     const body = card.querySelector(".ep-session-card__body");
