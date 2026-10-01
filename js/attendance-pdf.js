@@ -7,6 +7,7 @@ const fmtDate = ms => new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit",
 const fmtTime = ms => new Date(ms).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
 
 const VERIFY_BASE = "https://espacopreludio.com.br/verificar-comprovante.html";
+const LOGO_URL = new URL("../logo_oficial_fundo_transparente.png?v=2", import.meta.url).href;
 const LOWER_WORDS = new Set(["de", "da", "das", "do", "dos", "e"]);
 
 // Nome todo em caixa alta (como alguns cadastros vêm) → "Luis Henrique de Souza".
@@ -54,8 +55,17 @@ export async function downloadAttendanceCertificate(c) {
     for (const line of wrap(t, font, size, width)) { page.drawText(line, { x: margin, y, size, font, color }); y -= size * gap; }
   };
 
-  page.drawText("ESPAÇO PRELÚDIO", { x: margin, y, size: 10, font: bold, color: gold });
-  y -= 30;
+  // Logo antes do nome; se não carregar, o cabeçalho sai só com o texto.
+  let brandX = margin;
+  try {
+    const logoBytes = await fetch(LOGO_URL).then(r => (r.ok ? r.arrayBuffer() : Promise.reject(r.status)));
+    const logo = await pdf.embedPng(logoBytes);
+    const logoSize = 26;
+    page.drawImage(logo, { x: margin, y: y - 9, width: logoSize, height: logoSize });
+    brandX = margin + logoSize + 8;
+  } catch { /* sem logo */ }
+  page.drawText("ESPAÇO PRELÚDIO", { x: brandX, y, size: 10, font: bold, color: gold });
+  y -= brandX > margin ? 36 : 30;
   text("Comprovante de comparecimento", { font: bold, size: 20 });
   y -= 6;
   page.drawLine({ start: { x: margin, y }, end: { x: margin + width, y }, thickness: 1, color: gold });
