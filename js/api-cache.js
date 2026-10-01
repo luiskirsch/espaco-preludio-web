@@ -60,7 +60,7 @@ function writeIdb(scope, uid, data) {
 }
 
 function removeIdb(scope, uid) {
-  db.apiCache.delete(makeIdbKey(scope, uid)).catch(() => {});
+  return db.apiCache.delete(makeIdbKey(scope, uid)).catch(() => {});
 }
 
 async function removeIdbByPrefix(prefix, uid) {
@@ -74,10 +74,12 @@ async function removeIdbByPrefix(prefix, uid) {
 }
 
 // ── Invalidação pública ───────────────────────────────────────────────────
+// Retornam Promise: quem recarrega logo em seguida deve aguardar, senão o
+// cachedGet ainda lê a cópia antiga do IndexedDB e a tela pisca o estado velho.
 
 export function invalidate(scope, uid) {
   try { sessionStorage.removeItem(makeKey(scope, uid)); } catch {}
-  removeIdb(scope, uid);
+  return removeIdb(scope, uid);
 }
 
 export function invalidatePrefix(prefix, uid) {
@@ -91,7 +93,7 @@ export function invalidatePrefix(prefix, uid) {
     }
     toRemove.forEach(k => sessionStorage.removeItem(k));
   } catch {}
-  removeIdbByPrefix(prefix, uid);
+  return removeIdbByPrefix(prefix, uid);
 }
 
 // ── cachedGet ─────────────────────────────────────────────────────────────

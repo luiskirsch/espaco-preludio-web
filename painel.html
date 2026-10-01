@@ -642,7 +642,7 @@
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist, refreshIdToken } from "./js/auth-guard.js?v=3-35";
-  import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=4";
+  import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=5";
   import { clearDek, recallUser, decryptNote } from "./js/crypto.js";
   import { downloadAttendanceCertificate } from "./js/attendance-pdf.js?v=4";
   import { createNewSessionModal } from "./js/new-session-modal.js?v=4";
@@ -1426,15 +1426,29 @@
     }
   }
 
+  // Cache só acelera a 1ª pintura. Depois que a lista do servidor (ou uma
+  // mutação local) já está na tela, um snapshot do cache é sempre mais velho:
+  // renderizá-lo fazia botões (ex.: "Revogar comprovante") sumirem e voltarem.
+  let sessionsLoadSeq = 0;
+  let sessionsFreshSeq = 0;
   async function loadSessions() {
     // SWR: mostra cache imediato + revalida em background. Loading banner
     // só fica visível se NÃO houver cache (1ª carga).
     loadingBanner.classList.remove("ep-hide");
+    const seq = ++sessionsLoadSeq;
     try {
       await cachedGet({
         url: `${BACKEND_BASE_URL}/therapy/sessoes`,
         idToken, uid, key: "sessoes", ttl: 30_000, getFreshToken,
-        onData: (data) => renderSessionsFromData(data)
+        onData: (data, src) => {
+          if (src === "fresh") {
+            if (seq < sessionsFreshSeq) return; // resposta atrasada de um load anterior
+            sessionsFreshSeq = seq;
+          } else if (sessionsFreshSeq > 0) {
+            return;
+          }
+          renderSessionsFromData(data);
+        }
       });
     } catch (error) {
       console.error("load_sessions_error", error);
@@ -1635,6 +1649,8 @@
           const sess = allSessions.find(x => x.sessionId === id);
           if (sess && sess.attendanceCertCode !== d.comprovante.verificationCode) {
             sess.attendanceCertCode = d.comprovante.verificationCode || null;
+            sessionsFreshSeq = Math.max(sessionsFreshSeq, 1);
+            await invalidateApi("sessoes", uid);
             renderSessionsFromData({ sessions: allSessions });
           }
         }
@@ -1657,6 +1673,8 @@ Quem verificar esse código passará a ver que ele foi invalidado. Se precisar, 
         const d = await r.json().catch(() => ({}));
         if (!r.ok || !d.ok) throw new Error(d.error || r.status);
         if (sess) sess.attendanceCertCode = null;
+        sessionsFreshSeq = Math.max(sessionsFreshSeq, 1);
+        await invalidateApi("sessoes", uid);
         renderSessionsFromData({ sessions: allSessions });
       } catch {
         alert("Não foi possível revogar o comprovante agora.");
@@ -2067,7 +2085,7 @@ Quem verificar esse código passará a ver que ele foi invalidado. Se precisar, 
   document.addEventListener("visibilitychange", async () => {
     if (document.visibilityState !== "visible") return;
     try { await getFreshToken(); } catch { /* cachedGet faz retry de fallback */ }
-    invalidatePrefix("sessoes", uid);
+    await invalidatePrefix("sessoes", uid);
     loadSessions();
   });
 
