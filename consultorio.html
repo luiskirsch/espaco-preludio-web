@@ -24,6 +24,23 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=2" defer></script>
+  <style>
+    /* Gravar sessão: vermelho mesmo parado, pra ser achado de relance.
+       Gravando: preenchido + pulso, impossível não perceber. */
+    #ctrlRecord.ep-ctrl { color: #ef4444; background: rgba(239, 68, 68, 0.12); box-shadow: inset 0 0 0 1.5px rgba(239, 68, 68, 0.55); transition: background-color .15s ease, color .15s ease, box-shadow .15s ease; }
+    #ctrlRecord.ep-ctrl svg { color: #ef4444; }
+    #ctrlRecord.ep-ctrl:hover { color: #f87171; background: rgba(239, 68, 68, 0.22); box-shadow: inset 0 0 0 1.5px rgba(239, 68, 68, 0.85); }
+    #ctrlRecord.ep-ctrl:hover svg { color: #f87171; }
+    #ctrlRecord.ep-ctrl.is-recording { color: #ffffff; background: #dc2626; box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); animation: ep-rec-pulse 1.6s ease-out infinite; }
+    #ctrlRecord.ep-ctrl.is-recording svg { color: #ffffff; }
+    #ctrlRecord.ep-ctrl.is-recording:hover { color: #ffffff; background: #b91c1c; }
+    @keyframes ep-rec-pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); }
+      70%  { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+    }
+    @media (prefers-reduced-motion: reduce) { #ctrlRecord.ep-ctrl.is-recording { animation: none; } }
+  </style>
 </head>
 <body class="ep-consult">
 
