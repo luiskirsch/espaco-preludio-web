@@ -176,7 +176,7 @@
     <span data-i18n="p-mensagens:contato_56661">Contato</span>
   </button>
 </div>
-<input type="file" id="attachFileInput" accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.csv,.zip" style="display:none;">
+<input type="file" id="attachFileInput" accept="image/*,application/pdf" style="display:none;">
 
 <!-- Modal: compartilhar contato de profissional -->
 <div class="ep-modal" id="contactPickerModal" role="dialog" aria-modal="true">
@@ -418,6 +418,8 @@
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist } from "./js/auth-guard.js?v=3-35";
+  import { parseFileCard, fileLabel, renderFileCard, hydrateAttachments, uploadAttachment, FILE_CSS } from "./js/chat-files.js?v=1";
+  document.head.insertAdjacentHTML("beforeend", `<style>${FILE_CSS}</style>`);
   import {
     recallDek, clearDek,
     generateEcdhKeypair, generateThreadKey,
@@ -881,6 +883,8 @@
 
   // Renderiza o conteúdo de uma mensagem — texto normal ou cartão de contato.
   function renderMessageBody(plain) {
+    const file = parseFileCard(plain);
+    if (file) return renderFileCard(file);
     if (plain && plain.startsWith("CONTACT_CARD:")) {
       try {
         const card = JSON.parse(plain.slice(13));
@@ -904,6 +908,8 @@
 
   // Retorna preview legível de uma mensagem (usado na sidebar e reply quote).
   function plainForPreview(plain) {
+    const file = parseFileCard(plain);
+    if (file) return fileLabel(file);
     if (plain && plain.startsWith("CONTACT_CARD:")) {
       try {
         const card = JSON.parse(plain.slice(13));
@@ -995,6 +1001,18 @@
 
       div.innerHTML = `${chevron}${forwardedTag}${replyBlock}${renderMessageBody(m.plain)}<span class="ep-wb-meta">${fmtTime(m.createdAt)}${pinIcon}${favIcon}${tick}</span>${reactionsOverlay}`;
       list.appendChild(div);
+    }
+    // Anexos (foto/PDF): miniaturas e abertura decifrada no navegador.
+    const fileCards = new Map();
+    for (const m of messageCache.values()) { const f = parseFileCard(m.plain); if (f) fileCards.set(f.fileId, f); }
+    const fileKey = threadKeyCache.get(currentThreadId);
+    if (fileCards.size && fileKey) {
+      hydrateAttachments(list, {
+        cards: fileCards,
+        threadKeyBytes: fileKey,
+        downloadUrlFor: id => `${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/files/${encodeURIComponent(id)}`,
+        getToken: () => ctx.user.getIdToken()
+      });
     }
     if (opts.scroll !== false) list.scrollTop = list.scrollHeight;
   }
@@ -1446,12 +1464,24 @@
     if (btn.dataset.attach === "documento") attachFileInput.click();
     if (btn.dataset.attach === "contato") openContactPicker();
   });
-  attachFileInput.addEventListener("change", () => {
+  attachFileInput.addEventListener("change", async () => {
     const file = attachFileInput.files?.[0];
-    if (!file) return;
-    // Insere o nome do arquivo no campo como texto por enquanto (upload E2EE a implementar)
-    insertAtCursor($("msgInput"), `[Arquivo: ${file.name}]`);
     attachFileInput.value = "";
+    if (!file || !currentThreadId) return;
+    const threadKeyBytes = threadKeyCache.get(currentThreadId);
+    if (!threadKeyBytes) return;
+    $("msgStatus").textContent = "Enviando arquivo…";
+    try {
+      const freshToken = await ctx.user.getIdToken();
+      const text = await uploadAttachment({
+        file, threadKeyBytes, idToken: freshToken,
+        uploadUrl: `${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/files`
+      });
+      $("msgStatus").textContent = "";
+      await sendText(text);
+    } catch (err) {
+      $("msgStatus").textContent = err?.message || "Não foi possível enviar o arquivo.";
+    }
   });
   document.addEventListener("click", (e) => {
     if (attachMenu.style.display !== "none" && !attachMenu.contains(e.target) && e.target !== attachToggleBtn) closeAttachMenu();

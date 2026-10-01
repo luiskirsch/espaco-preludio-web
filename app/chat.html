@@ -101,9 +101,14 @@
       background: var(--a-surface); border-top: 1px solid var(--a-line);
       display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; flex-shrink: 0;
     }
+    .chat-tool { border: 0; background: none; color: var(--a-ink3); cursor: pointer; padding: 4px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; }
+    .chat-tool:hover, .chat-tool:focus-visible { color: var(--a-ink); background: rgba(0,0,0,.05); }
+    .chat-tool[disabled] { opacity: .4; cursor: progress; }
+    .chat-upload-status { flex: 0 0 100%; font-size: 12px; color: var(--a-ink2); padding: 0 6px; }
+    .chat-upload-status[hidden] { display: none; }
     .chat-input-wrap {
       flex: 1; background: var(--a-bg); border-radius: 22px;
-      padding: 10px 16px; display: flex; align-items: center;
+      padding: 10px 10px; display: flex; align-items: center; gap: 6px;
       min-height: 44px; max-height: 120px;
     }
     .chat-input {
@@ -221,8 +226,16 @@
         <div class="chat-reply-bar__text"><strong id="chatReplyWho">—</strong><span id="chatReplyText" data-no-i18n></span></div>
         <button type="button" class="chat-reply-bar__close" id="chatReplyClose" aria-label="Cancelar resposta" data-i18n-aria-label="p-app-chat:cancelar_resposta_93692">×</button>
       </div>
+      <div class="chat-upload-status" id="chatUploadStatus" role="status" hidden></div>
       <div class="chat-input-wrap">
+        <button type="button" class="chat-tool" id="chatEmojiBtn" aria-label="Emojis" title="Emojis">
+          <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        </button>
         <textarea class="chat-input" id="chatInput" placeholder="Mensagem…" rows="1"></textarea>
+        <button type="button" class="chat-tool" id="chatAttachBtn" aria-label="Enviar foto ou PDF" title="Enviar foto ou PDF">
+          <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+        <input type="file" id="chatFileInput" accept="image/*,application/pdf" hidden>
       </div>
       <button class="chat-send" id="chatSendBtn" disabled>
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -257,6 +270,8 @@
     unwrapThreadKeyFromPeer, encryptNote, decryptNote, unwrapDek
   } from "../js/crypto.js";
   import { recallPatientDek, recallPatientUser, rememberPatientDek, rememberPatientUser } from "../js/patient-session.js";
+  import { parseFileCard, fileLabel, renderFileCard, hydrateAttachments, uploadAttachment, attachEmojiPicker, FILE_CSS, EMOJI_CSS } from "../js/chat-files.js?v=1";
+  document.head.insertAdjacentHTML("beforeend", `<style>${FILE_CSS}${EMOJI_CSS}</style>`);
 
   let currentUser = null;
   let idToken = null;
@@ -278,6 +293,8 @@
     } catch { return null; }
   }
   function messagePreview(plain) {
+    const file = parseFileCard(plain);
+    if (file) return fileLabel(file);
     const card = parseContactCard(plain);
     return card ? `👤 Contato: ${card.displayName}` : plain;
   }
@@ -626,13 +643,24 @@
         <div class="msg ${isOut ? "msg--out" : "msg--in"}" data-mid="${esc(m.messageId || "")}">
           <button type="button" class="msg__reply-btn" data-reply="${esc(m.messageId || "")}" aria-label="Responder" title="Responder">↩</button>
           <button type="button" class="msg__reply-btn msg__react-btn" data-react-open="${esc(m.messageId || "")}" aria-label="Reagir" title="Reagir">☺</button>
-          ${(() => { const card = parseContactCard(m.plain); return card
+          ${(() => { const file = parseFileCard(m.plain); if (file) return `<div class="msg__bubble msg__bubble--file">${quoteHtml(m, isOut)}${renderFileCard(file)}</div>`;
+            const card = parseContactCard(m.plain); return card
             ? `<div class="msg__bubble msg__bubble--card">${quoteHtml(m, isOut)}${renderContactCard(card)}</div>`
             : `<div class="msg__bubble">${quoteHtml(m, isOut)}<span data-no-i18n>${esc(m.plain)}</span></div>`; })()}
           ${reactionsHtml(m)}
           <div class="${isOut ? "msg__status" : "msg__time"}">${fmtTime(m.createdAt)}</div>
         </div>`;
     }).join("") || "";
+    const fileCards = new Map();
+    decrypted.forEach(m => { const f = parseFileCard(m.plain); if (f) fileCards.set(f.fileId, f); });
+    if (fileCards.size) {
+      hydrateAttachments(container, {
+        cards: fileCards,
+        threadKeyBytes,
+        downloadUrlFor: id => `${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/files/${encodeURIComponent(id)}`,
+        getToken: () => currentUser.getIdToken()
+      });
+    }
     if (isFirstRender || forceScrollBottom || atBottom) {
       container.scrollTop = container.scrollHeight;
       unreadBelow = 0;
@@ -676,6 +704,8 @@
   function snippet(m) {
     if (!m) return "Mensagem original indisponível";
     if (m.deleted) return "Mensagem apagada";
+    const file = parseFileCard(m.plain);
+    if (file) return fileLabel(file);
     const card = parseContactCard(m.plain);
     return card ? `👤 ${card.displayName}` : String(m.plain || "").slice(0, 140);
   }
@@ -809,14 +839,46 @@
   chatInput.addEventListener("keydown", e => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   });
-  sendBtn.addEventListener("click", sendMessage);
+  sendBtn.addEventListener("click", () => sendMessage());
 
-  async function sendMessage() {
-    const text = chatInput.value.trim();
+  // ── Emojis e anexos (foto/PDF cifrados) ──
+  attachEmojiPicker({ button: document.getElementById("chatEmojiBtn"), input: chatInput });
+  const attachBtn = document.getElementById("chatAttachBtn");
+  const fileInput = document.getElementById("chatFileInput");
+  const uploadStatus = document.getElementById("chatUploadStatus");
+  attachBtn.addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", async () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = "";
+    if (!file || !currentThreadId) return;
+    const threadKeyBytes = threadKeyCache.get(currentThreadId);
+    if (!threadKeyBytes) return;
+    attachBtn.disabled = true;
+    uploadStatus.hidden = false;
+    uploadStatus.textContent = "Enviando arquivo…";
+    try {
+      idToken = await currentUser.getIdToken();
+      const text = await uploadAttachment({
+        file, threadKeyBytes, idToken,
+        uploadUrl: `${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/files`
+      });
+      await sendMessage(text);
+      uploadStatus.hidden = true;
+    } catch (err) {
+      uploadStatus.textContent = err?.message || "Não foi possível enviar o arquivo.";
+      setTimeout(() => { uploadStatus.hidden = true; }, 5000);
+    } finally {
+      attachBtn.disabled = false;
+    }
+  });
+
+  async function sendMessage(attachmentText) {
+    const fromInput = typeof attachmentText !== "string";
+    const text = fromInput ? chatInput.value.trim() : attachmentText;
     if (!text || !currentThreadId) return;
     const threadKeyBytes = threadKeyCache.get(currentThreadId);
     if (!threadKeyBytes) return;
-    chatInput.value = ""; chatInput.style.height = "auto"; sendBtn.disabled = true;
+    if (fromInput) { chatInput.value = ""; chatInput.style.height = "auto"; sendBtn.disabled = true; }
     try {
       const enc = await encryptNote(text, threadKeyBytes);
       const body = replyingTo?.messageId ? { ...enc, replyToMessageId: replyingTo.messageId } : enc;
