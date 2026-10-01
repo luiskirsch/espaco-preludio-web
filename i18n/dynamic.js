@@ -169,6 +169,12 @@
       walk(document.body || document.documentElement);
       observe();
     },
+    // Troca de idioma sem recarregar (telas com data-i18n-live): textos que o
+    // JS gerar daqui pra frente usam o dicionário novo.
+    setDict(dict) {
+      load(dict || {});
+      walk(document.body || document.documentElement);
+    },
     translate
   };
 })();

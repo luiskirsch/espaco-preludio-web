@@ -241,9 +241,37 @@
           url.searchParams.delete('lang');
           history.replaceState(null, '', url.toString());
         } catch (_) { /* empty */ }
+        // Telas que não podem recarregar (sala de consulta) trocam no lugar.
+        if (document.documentElement.getAttribute('data-i18n-live') === 'on') {
+          menu.hidden = true;
+          liveChange(lang).then(() => {
+            btn.innerHTML = flagImg(lang) + ' ' + (CODES[lang] || CODES[DEFAULT_LOCALE]);
+          }).catch(err => {
+            console.error('[ep-i18n] live change failed:', err);
+          });
+          return;
+        }
         location.reload();
       });
     });
+  }
+
+  let dynamicStarted = false;
+
+  async function liveChange(lang) {
+    await window.i18next.changeLanguage(lang);
+    document.documentElement.lang = lang;
+    applyTranslations();
+    const basePath = getBasePath();
+    if (lang !== DEFAULT_LOCALE || dynamicStarted) {
+      const dict = lang === DEFAULT_LOCALE ? {} : await fetch(`${basePath}/locales/${lang}/js.json?v=${I18N_VERSION}`)
+        .then(r => (r.ok ? r.json() : {})).catch(() => ({}));
+      const api = window.EP_I18N_DYNAMIC_API;
+      if (dynamicStarted && api) { if (typeof api.setDict === 'function') api.setDict(dict); }
+      else await startDynamic(basePath, lang);
+    }
+    // A página reescreve os textos que monta em JS (status, listas…).
+    document.dispatchEvent(new CustomEvent('ep:i18n-changed', { detail: { lang } }));
   }
 
   // Textos montados por JavaScript: dicionário pt → idioma aplicado no DOM
@@ -254,7 +282,7 @@
         fetch(`${basePath}/locales/${locale}/js.json?v=${I18N_VERSION}`).then(r => (r.ok ? r.json() : {})),
         window.EP_I18N_DYNAMIC_API ? null : loadScript(`${basePath}/dynamic.js?v=${I18N_VERSION}`)
       ]);
-      if (window.EP_I18N_DYNAMIC_API) window.EP_I18N_DYNAMIC_API.start(dict || {});
+      if (window.EP_I18N_DYNAMIC_API) { window.EP_I18N_DYNAMIC_API.start(dict || {}); dynamicStarted = true; }
     } catch (err) {
       console.warn('[ep-i18n] dynamic translation unavailable:', err);
     }
