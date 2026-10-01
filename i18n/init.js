@@ -24,7 +24,26 @@
   const STORAGE_KEY = 'ep_lang';
   const I18NEXT_CDN = '/i18n/i18next.min.js';
   const BACKEND_CDN = '/i18n/i18nextHttpBackend.min.js';
-  const I18N_VERSION = '2-1';
+  const I18N_VERSION = '2-2';
+
+  // Datas e horas que o código formata com 'pt-BR' (ou sem locale) passam a
+  // usar o idioma ativo — "30 de set." vira "Sep 30" / "30 sept". Números e
+  // moeda não mudam: valores em R$ seguem no formato brasileiro.
+  function localizeDates(locale) {
+    const swap = l => (l === undefined || l === 'pt-BR' || l === 'pt' || (Array.isArray(l) && l[0] === 'pt-BR')) ? locale : l;
+    const D = Date.prototype;
+    for (const m of ['toLocaleDateString', 'toLocaleTimeString', 'toLocaleString']) {
+      const orig = D[m];
+      D[m] = function (l, opts) { return orig.call(this, swap(l), opts); };
+    }
+    const OrigDTF = Intl.DateTimeFormat;
+    function DTF(l, opts) { return new OrigDTF(swap(l), opts); }
+    DTF.prototype = OrigDTF.prototype;
+    DTF.supportedLocalesOf = OrigDTF.supportedLocalesOf;
+    Intl.DateTimeFormat = DTF;
+  }
+
+  if (detectLocale() !== DEFAULT_LOCALE) localizeDates(detectLocale());
 
   // Some pages mark <html class="ep-i18n-pending"> inline (before any CSS/JS
   // loads) to hide <body> via CSS while a non-default locale is being applied,
