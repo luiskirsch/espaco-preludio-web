@@ -116,8 +116,10 @@
             <dt>Código</dt><dd>${esc(c.code)}</dd>
             <dt>Paciente</dt><dd>${esc(c.patientNameMasked || "—")}</dd>
             <dt>Atendimento</dt><dd>${c.entrada ? esc(fmtDateShort(c.entrada)) + ", " + esc(fmtTime(c.entrada)) + (c.termino ? " às " + esc(fmtTime(c.termino)) : "") : "—"}</dd>
+            <dt>Modalidade</dt><dd>Telessaúde (vídeo)</dd>
             <dt>Profissional</dt><dd>${esc(displayName(p.nome) || "—")}${registro ? ` · ${esc(registro)}` : ""}</dd>
             ${c.issuedAt ? `<dt>Assinatura</dt><dd>${esc(fmtDateShort(c.issuedAt))}, ${esc(fmtTime(c.issuedAt))}</dd>` : ""}
+            <dt>Emissor</dt><dd>Espaço Prelúdio · CNPJ 67.092.881/0001-99</dd>
           </dl>
           <p class="vc-note">Os dados devem ser iguais aos do documento; qualquer diferença indica PDF alterado. Horário de Brasília. Nome do(a) paciente parcial por privacidade (LGPD).</p>
         </div>`;
