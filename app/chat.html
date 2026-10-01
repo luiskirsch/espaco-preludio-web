@@ -69,11 +69,11 @@
     .msg:hover .msg__reply-btn, .msg__reply-btn:focus-visible { opacity: 1; }
     .msg--in .msg__react-btn { right: -70px; }
     .msg--out .msg__react-btn { left: -70px; }
-    .msg__reactions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: -8px; padding: 0 6px; position: relative; z-index: 1; }
+    /* Reação como no WhatsApp: pílula única sobre a borda inferior do balão. */
+    .msg__reactions { display: flex; margin-top: -11px; padding: 0 10px; position: relative; z-index: 1; }
     .msg--out .msg__reactions { justify-content: flex-end; }
-    .msg__reaction { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--a-line); background: var(--a-surface); font-size: 13px; line-height: 1.3; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
-    .msg__reaction b { font-size: 11px; font-weight: 600; color: var(--a-ink2); }
-    .msg__reaction.is-mine { border-color: #c9a45c; background: rgba(201,164,92,.14); }
+    .msg__reaction { display: inline-flex; align-items: center; gap: 1px; height: 24px; padding: 0 7px; border-radius: 999px; border: 2px solid var(--a-bg, #f4efe6); background: var(--a-surface, #fff); font-size: 14px; line-height: 1; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.16); }
+    .msg__reaction b { margin-left: 4px; font-size: 12px; font-weight: 600; color: var(--a-ink2); }
     .react-picker { position: fixed; z-index: 50; display: flex; gap: 4px; padding: 6px 8px; border-radius: 999px; background: var(--a-surface); border: 1px solid var(--a-line); box-shadow: 0 10px 30px rgba(0,0,0,.18); }
     .react-picker[hidden] { display: none; }
     .react-picker button { border: 0; background: none; font-size: 22px; line-height: 1; padding: 4px; border-radius: 50%; cursor: pointer; transition: transform .12s ease; }
@@ -691,9 +691,10 @@
   function reactionsHtml(m) {
     const list = (m.reactions || []).filter(r => r.count > 0);
     if (!list.length) return "";
-    return `<div class="msg__reactions">${list.map(r =>
-      `<button type="button" class="msg__reaction${r.mine ? " is-mine" : ""}" data-react="${esc(r.emoji)}" data-rmid="${esc(m.messageId)}" aria-pressed="${r.mine}">${esc(r.emoji)}${r.count > 1 ? `<b>${r.count}</b>` : ""}</button>`
-    ).join("")}</div>`;
+    // Uma pílula só, com os emojis usados e o total quando passar de 1.
+    const total = list.reduce((n, r) => n + r.count, 0);
+    const emojis = list.slice(0, 3).map(r => esc(r.emoji)).join("");
+    return `<div class="msg__reactions"><button type="button" class="msg__reaction" data-react-open="${esc(m.messageId)}" aria-label="Reações">${emojis}${total > 1 ? `<b>${total}</b>` : ""}</button></div>`;
   }
   function openPicker(messageId, anchor) {
     const m = messagesById.get(messageId);
@@ -704,8 +705,11 @@
     picker.hidden = false;
     const r = anchor.getBoundingClientRect();
     const w = picker.offsetWidth, h = picker.offsetHeight;
-    picker.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + "px";
-    picker.style.top = Math.max(8, r.top - h - 8) + "px";
+    const area = messagesEl.getBoundingClientRect();
+    const minLeft = area.left + 8, maxLeft = area.right - w - 8;
+    picker.style.left = Math.max(minLeft, Math.min(maxLeft, r.left + r.width / 2 - w / 2)) + "px";
+    const above = r.top - h - 8;
+    picker.style.top = (above >= area.top + 4 ? above : r.bottom + 8) + "px";
   }
   function closePicker() { picker.hidden = true; pickerFor = null; }
   async function toggleReaction(messageId, emoji) {
