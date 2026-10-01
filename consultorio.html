@@ -25,6 +25,10 @@
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=2" defer></script>
   <style>
+    /* REC fica no fluxo do grupo da direita (o CSS global o posicionava absoluto). */
+    body.ep-consult #recIndicator.ep-rec-indicator--right { position: static; transform: none; right: auto; top: auto; margin-right: 4px; }
+    /* Notebook: "Ajustar ambiente" vira só ícone para o grupo da direita não encostar nos controles centrais. */
+    @media (max-width: 1440px) { .ep-ambient--topbar .ep-ambient__btn > span { display: none; } .ep-ambient--topbar .ep-ambient__btn { padding: 7px 10px; } }
     /* Gravar sessão: vermelho mesmo parado, pra ser achado de relance.
        Gravando: preenchido + pulso, impossível não perceber. */
     #ctrlRecord.ep-ctrl { color: #ef4444; background: rgba(239, 68, 68, 0.12); box-shadow: inset 0 0 0 1.5px rgba(239, 68, 68, 0.55); transition: background-color .15s ease, color .15s ease, box-shadow .15s ease; }
@@ -79,19 +83,19 @@
         </button>
       </div>
 
-      <!-- Indicador REC — inline ao lado dos botões, sem position:fixed -->
-      <div id="recIndicator" class="ep-hide" style="display:flex;align-items:center;gap:8px;padding:5px 13px;background:rgba(220,38,38,0.92);color:#fff;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(220,38,38,0.35);flex-shrink:0;">
+    </div>
+    <div class="ep-flex ep-gap-8" style="align-items: center;">
+      <!-- Indicador REC no grupo da direita: à esquerda dos controles centrais cobria os selos de status -->
+      <div id="recIndicator" class="ep-hide ep-rec-indicator--right" style="display:flex;align-items:center;gap:8px;padding:5px 13px;background:rgba(220,38,38,0.92);color:#fff;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(220,38,38,0.35);flex-shrink:0;">
         <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;animation:ep-rec-blink 1.4s infinite ease-in-out;"></span>
         <span data-i18n="p-consultorio:rec_09ebb">REC</span>
         <span id="recTimer">00:00</span>
       </div>
-    </div>
-    <div class="ep-flex ep-gap-8" style="align-items: center;">
       <!-- Cronômetro à direita: no grupo da esquerda colidia com os controles centralizados -->
       <span class="ep-text-xs ep-text-muted" id="infoDuration" style="margin-right:6px;" data-i18n="p-consultorio:0min_00s_c325c">0min 00s</span>
       <!-- Ajustar ambiente na topbar — painel abre pra baixo -->
       <div class="ep-ambient ep-ambient--topbar">
-        <button id="ambientBtn" class="ep-ambient__btn" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="ambientPanel">
+        <button id="ambientBtn" class="ep-ambient__btn" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="ambientPanel" title="Ajustar ambiente">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
             <line x1="4" y1="9" x2="20" y2="9"/>
             <line x1="4" y1="15" x2="20" y2="15"/>
