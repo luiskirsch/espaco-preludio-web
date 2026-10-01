@@ -295,7 +295,7 @@
   applyMode(readMode());
 
   // LiveKit via esm.sh — pin de versão para reprodutibilidade.
-  const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack } = await import('./js/consultation-media.js?v=1');
+  const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack, setupCodecNegotiation } = await import('./js/consultation-media.js?v=2');
   const livekitMod = await import(`https://esm.sh/livekit-client@${LIVEKIT_VERSION}`);
   const { Room, RoomEvent, Track, ExternalE2EEKeyProvider } = livekitMod;
 
@@ -548,6 +548,10 @@
     ...consultationRoomOptions(livekitMod),
     e2ee: useE2EE ? { keyProvider, worker: e2eeWorker } : undefined
   });
+
+  // VP9 premium com volta automática a VP8 se o outro lado não decodificar.
+
+  setupCodecNegotiation(room, livekitMod);
 
   initRoomAmbient({
     room, livekitMod, lkVersion: LIVEKIT_VERSION,

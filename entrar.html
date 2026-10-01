@@ -233,7 +233,7 @@
   import { encryptNote, decryptNote } from "./js/crypto.js";
   import { recallPatientDek, recallPatientUser } from "./js/patient-session.js";
 
-  const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack } = await import('./js/consultation-media.js?v=1');
+  const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack, setupCodecNegotiation } = await import('./js/consultation-media.js?v=2');
 
   // tr(key, fallback): retorna tradução do i18next (se já carregou) ou
   // fallback PT. Mesmo padrão de paciente-login.html — robusto a status
@@ -510,6 +510,10 @@
       ...consultationRoomOptions(livekitMod),
       e2ee: useE2EE ? { keyProvider, worker: e2eeWorker } : undefined
     });
+
+    // VP9 premium com volta automática a VP8 se o outro lado não decodificar.
+
+    setupCodecNegotiation(room, livekitMod);
 
     import("./js/room-ambient.js?v=3").then(({ initRoomAmbient }) => initRoomAmbient({
       room, livekitMod, lkVersion: LIVEKIT_VERSION,
