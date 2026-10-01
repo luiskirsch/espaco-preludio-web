@@ -174,6 +174,8 @@
           </span>
           <span class="ep-text-xs ep-text-muted" id="patientNotesStatus">&nbsp;</span>
         </div>
+        <!-- Logado(a) sem a chave nesta aba: desbloqueia e envia as notas já escritas pra conta -->
+        <div id="notesUnlock" class="ep-hide" style="padding:8px 12px;font-size:12.5px;line-height:1.4;border-bottom:1px solid rgba(215,176,107,.18);"></div>
         <div class="ep-patient-notes__list" id="patientNotesList"></div>
         <div class="ep-patient-notes__composer">
           <textarea id="patientNoteInput" placeholder="Anote o que quiser lembrar dessa sessão…" data-i18n-placeholder="entrar:session.notesPlaceholder" maxlength="2000"></textarea>
@@ -230,8 +232,8 @@
 <script type="module">
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { encryptNote, decryptNote } from "./js/crypto.js";
-  import { recallPatientDek, recallPatientUser } from "./js/patient-session.js";
+  import { encryptNote, decryptNote, unwrapDek } from "./js/crypto.js";
+  import { recallPatientDek, recallPatientUser, rememberPatientDek, rememberPatientUser } from "./js/patient-session.js";
 
   const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack, setupCodecNegotiation } = await import('./js/consultation-media.js?v=2');
 
@@ -280,10 +282,62 @@
   const nameEl    = document.getElementById("patientName");
   const statusEl  = document.getElementById("prejoinStatus");
 
+  // "logged": conta + chave desbloqueada (notas vão cifradas pra conta)
+  // "locked": logado(a) no Firebase, mas a chave não está nesta aba (ela fica
+  //           em sessionStorage — link aberto em outra aba cai aqui). Pede a
+  //           senha pra desbloquear; até lá, notas ficam só nesta aba.
+  // "anon":   visitante
   let authMode = "anon";
   let patientUser = null;
   let patientDek  = null;
   let patientIdToken = null;
+  let patientAccount = null; // perfil com a chave embrulhada (modo "locked")
+
+  // ID token vence em 1h; sessão + pré-join passa disso. Sempre pede um fresco.
+  async function freshIdToken() {
+    try { return (await auth.currentUser?.getIdToken()) || patientIdToken; } catch { return patientIdToken; }
+  }
+
+  async function unlockWithPassword(password) {
+    const dek = await unwrapDek({
+      wrappedDEK:   patientAccount.wrappedDEK,
+      wrappedDEKIv: patientAccount.wrappedDEKIv,
+      e2eeSalt:     patientAccount.e2eeSalt
+    }, password);
+    rememberPatientDek(dek);
+    rememberPatientUser(patientUser);
+    patientDek = dek;
+    authMode = "logged";
+    document.dispatchEvent(new Event("ep:patient-unlocked"));
+  }
+
+  function buildUnlockForm({ compact = false } = {}) {
+    const form = document.createElement("form");
+    form.className = "ep-unlock-form";
+    form.style.cssText = "display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap;";
+    form.innerHTML = `
+      <input type="password" class="ep-input" autocomplete="current-password" required
+             placeholder="${escapeHtml(tr("entrar:unlock.passwordPlaceholder", "Sua senha"))}"
+             style="flex:1;min-width:140px;${compact ? "padding:6px 10px;font-size:13px;" : ""}">
+      <button type="submit" class="ep-btn ep-btn--primary ep-btn--sm">${escapeHtml(tr("entrar:unlock.btn", "Desbloquear"))}</button>
+      <span class="ep-text-xs" data-unlock-status style="flex-basis:100%;min-height:1em;"></span>`;
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const input = form.querySelector("input");
+      const st = form.querySelector("[data-unlock-status]");
+      const btn = form.querySelector("button");
+      btn.disabled = true;
+      st.textContent = tr("entrar:unlock.working", "Desbloqueando…");
+      try {
+        await unlockWithPassword(input.value);
+        input.value = "";
+      } catch {
+        st.textContent = tr("entrar:unlock.wrong", "Senha incorreta.");
+        btn.disabled = false;
+      }
+    });
+    return form;
+  }
 
   function authReady() {
     return new Promise((resolve) => {
@@ -298,22 +352,35 @@
     const fbUser = await authReady();
     if (!fbUser) return;
 
-    const cachedUser = recallPatientUser();
-    if (!cachedUser || cachedUser.uid !== fbUser.uid) return;
-
-    const dek = recallPatientDek();
-    if (!dek) return;
-
     try {
       patientIdToken = await fbUser.getIdToken();
     } catch {
       return;
     }
-    patientUser = cachedUser;
-    patientDek  = dek;
-    authMode = "logged";
 
-    if (cachedUser.displayName) nameEl.value = cachedUser.displayName;
+    const cachedUser = recallPatientUser();
+    const dek = recallPatientDek();
+    if (cachedUser && cachedUser.uid === fbUser.uid && dek) {
+      patientUser = cachedUser;
+      patientDek  = dek;
+      authMode = "logged";
+      if (cachedUser.displayName) nameEl.value = cachedUser.displayName;
+      return;
+    }
+
+    // Logado(a), mas sem a chave nesta aba: confere se é conta de paciente.
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/me`, {
+        headers: { "Authorization": `Bearer ${await freshIdToken()}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      const a = data?.account;
+      if (!res.ok || !a?.wrappedDEK || !a?.wrappedDEKIv || !a?.e2eeSalt) return;
+      patientAccount = a;
+      patientUser = { uid: fbUser.uid, email: fbUser.email || "", displayName: a.displayName || "" };
+      authMode = "locked";
+      if (a.displayName && !nameEl.value) nameEl.value = a.displayName;
+    } catch {}
   }
 
   function escapeHtml(str) {
@@ -342,6 +409,18 @@
         `Suas anotações desta sessão ficarão salvas na sua conta. <a href="./paciente-painel.html" target="_blank" style="color: var(--ep-accent); text-decoration: underline;">Ver minhas anotações</a>`
       );
       accountSlot.appendChild(sub);
+    } else if (authMode === "locked") {
+      const box = document.createElement("div");
+      box.className = "ep-alert ep-alert--info";
+      box.style.background = "rgba(215,176,107,0.12)";
+      box.style.borderColor = "rgba(215,176,107,0.30)";
+      box.style.color = "var(--ep-ink)";
+      box.innerHTML = `
+        <strong>${escapeHtml(tr("entrar:unlock.title", "Confirme sua senha para salvar suas anotações"))}</strong><br>
+        ${escapeHtml(tr("entrar:unlock.text", "Você está logado(a) como"))} <strong>${escapeHtml(patientUser.displayName || patientUser.email || "")}</strong>.
+        ${escapeHtml(tr("entrar:unlock.why", "Suas anotações são cifradas com a sua chave; sem a senha nesta aba, elas não vão para a sua conta."))}`;
+      box.appendChild(buildUnlockForm());
+      accountSlot.appendChild(box);
     } else {
       const cta = document.createElement("div");
       cta.className = "ep-alert ep-alert--info";
@@ -367,6 +446,8 @@
 
   await detectAuthMode();
   renderAccountSlot();
+  // Desbloqueou no pré-join → mostra o selo de conta logada.
+  document.addEventListener("ep:patient-unlocked", () => { if (!prejoin.classList.contains("ep-hide")) renderAccountSlot(); });
 
   // ─── Reentrada no mesmo aparelho ──────────────────────────────────────
   // O link é de uso único; no primeiro join o servidor devolve um
@@ -416,8 +497,9 @@
       // Manda whichever param veio na URL — backend aceita os 2.
       if (joinCode) body.joinCode = joinCode;
       else body.joinToken = joinToken;
-      if (authMode === "logged" && patientIdToken) {
-        body.patientIdToken = patientIdToken;
+      if (authMode === "logged" || authMode === "locked") {
+        const tok = await freshIdToken();
+        if (tok) body.patientIdToken = tok;
       }
       const rejoin = readRejoin();
       if (rejoin?.secret) body.rejoinSecret = rejoin.secret;
@@ -537,9 +619,49 @@
     // só comporta a primeira linha). Desktop: texto longo c/ reassurance
     // completo de privacidade + persistência.
     const isMobileViewport = window.matchMedia('(max-width: 640px)').matches;
-    notesScopeLbl.textContent = isMobileViewport
-      ? tr("entrar:session.notesScopeShort", "Suas anotações · só você vê")
-      : tr("entrar:session.notesScopeLong", "Suas anotações · só você vê · ficam salvas na sua conta");
+    // Só promete "salvas na sua conta" quando é verdade.
+    function scopeText() {
+      if (isMobileViewport) return tr("entrar:session.notesScopeShort", "Suas anotações · só você vê");
+      return authMode === "logged"
+        ? tr("entrar:session.notesScopeLong", "Suas anotações · só você vê · ficam salvas na sua conta")
+        : tr("entrar:session.notesScopeTab", "Suas anotações · só você vê · somem ao fechar esta aba");
+    }
+    notesScopeLbl.textContent = scopeText();
+
+    const notesUnlock = document.getElementById("notesUnlock");
+    function renderNotesUnlock() {
+      if (authMode !== "locked") { notesUnlock.classList.add("ep-hide"); notesUnlock.innerHTML = ""; return; }
+      notesUnlock.classList.remove("ep-hide");
+      notesUnlock.textContent = tr("entrar:unlock.inSession", "Suas anotações ainda não estão indo para a sua conta. Confirme sua senha para salvá-las:");
+      notesUnlock.appendChild(buildUnlockForm({ compact: true }));
+    }
+    renderNotesUnlock();
+
+    // Desbloqueou durante a sessão: manda pra conta o que já foi escrito aqui.
+    document.addEventListener("ep:patient-unlocked", async () => {
+      renderNotesUnlock();
+      notesScopeLbl.textContent = scopeText();
+      let sent = 0;
+      for (const n of notes) {
+        if (n.noteId) continue;
+        try {
+          const { ciphertext, iv } = await encryptNote(n.text, patientDek);
+          const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/notas`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshIdToken()}` },
+            body: JSON.stringify({ sessionId, ciphertext, iv })
+          });
+          const j = await res.json().catch(() => ({}));
+          if (res.ok && j.ok) { n.noteId = j.noteId; sent++; }
+        } catch (e) { console.warn("note_migrate_failed", e); }
+      }
+      if (notes.every(n => n.noteId)) { try { sessionStorage.removeItem(NOTES_KEY); } catch {} }
+      else persistAnonNotes();
+      noteStatus.textContent = sent
+        ? tr("entrar:unlock.migrated", "anotações salvas na sua conta")
+        : tr("entrar:session.notesSavedAccount", "salva na sua conta");
+      setTimeout(() => { noteStatus.textContent = " "; }, 2500);
+    });
 
     let notes = []; // [{ noteId?, text, createdAt }]
 
@@ -547,7 +669,7 @@
       if (authMode === "logged") {
         try {
           const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/notas?sessionId=${encodeURIComponent(sessionId)}`, {
-            headers: { "Authorization": `Bearer ${patientIdToken}` }
+            headers: { "Authorization": `Bearer ${await freshIdToken()}` }
           });
           const j = await res.json().catch(() => ({}));
           if (res.ok && j.ok) {
@@ -603,7 +725,7 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${patientIdToken}`
+            "Authorization": `Bearer ${await freshIdToken()}`
           },
           body: JSON.stringify({ sessionId, ciphertext, iv })
         });
@@ -787,9 +909,8 @@
     // textos montados em JS.
     document.addEventListener("ep:i18n-changed", () => {
       if (statusKey) connStatus.textContent = tr(statusKey, statusFallback);
-      notesScopeLbl.textContent = isMobileViewport
-        ? tr("entrar:session.notesScopeShort", "Suas anotações · só você vê")
-        : tr("entrar:session.notesScopeLong", "Suas anotações · só você vê · ficam salvas na sua conta");
+      notesScopeLbl.textContent = scopeText();
+      renderNotesUnlock();
       renderNotes();
     });
 
