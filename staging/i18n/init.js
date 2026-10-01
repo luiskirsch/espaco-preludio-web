@@ -82,12 +82,15 @@
     root = root || document;
     if (!window.i18next || !window.i18next.t) return;
     const t = window.i18next.t.bind(window.i18next);
+    // Sem tradução o i18next devolve a chave sem o namespace ("k_x" para "ns:k_x");
+    // nesse caso mantém o texto original do HTML em vez de exibir a chave.
+    const ok = (value, key) => typeof value === 'string' && value !== key && value !== key.split(':').pop();
 
     root.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
       if (!key) return;
       const value = t(key);
-      if (typeof value === 'string' && value !== key) el.textContent = value;
+      if (ok(value, key)) el.textContent = value;
     });
 
     // data-i18n-html: usa innerHTML pra preservar tags inline. Translations
@@ -96,7 +99,7 @@
       const key = el.getAttribute('data-i18n-html');
       if (!key) return;
       const value = t(key);
-      if (typeof value === 'string' && value !== key) el.innerHTML = value;
+      if (ok(value, key)) el.innerHTML = value;
     });
 
     const attrs = ['title', 'placeholder', 'alt', 'value', 'aria-label', 'content', 'label'];
@@ -105,7 +108,7 @@
         const key = el.getAttribute(`data-i18n-${attr}`);
         if (!key) return;
         const value = t(key);
-        if (typeof value === 'string' && value !== key) el.setAttribute(attr, value);
+        if (ok(value, key)) el.setAttribute(attr, value);
       });
     });
 
@@ -113,12 +116,14 @@
     if (titleEl) {
       const key = titleEl.getAttribute('data-i18n');
       const value = t(key);
-      if (typeof value === 'string' && value !== key) document.title = value;
+      if (ok(value, key)) document.title = value;
     }
   }
 
   function createSwitcher() {
     if (document.getElementById('ep-lang-switcher')) return;
+    // Telas com seletor de idioma próprio (ex.: portal do colaborador) desligam o flutuante.
+    if (document.documentElement.getAttribute('data-i18n-switcher') === 'off') return;
     const cur = window.i18next.language;
     // SVG inline em vez de emoji 🇧🇷/🇺🇸/🇪🇸 — Windows nao renderiza emoji
     // regional flag, mostra os 2 letras do codigo (BR/US/ES). SVG inline
@@ -206,7 +211,7 @@
       defaultNS: namespaces.find(n => n !== 'common') || 'common',
       // Versão explícita evita que o navegador reaplique traduções antigas
       // depois de uma mudança de nomenclatura na navegação.
-      backend: { loadPath: `${basePath}/locales/{{lng}}/{{ns}}.json?v=1-10` },
+      backend: { loadPath: `${basePath}/locales/{{lng}}/{{ns}}.json?v=2-0` },
       interpolation: { escapeValue: false },
       load: 'currentOnly',
       partialBundledLanguages: false,

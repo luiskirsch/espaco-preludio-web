@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-ns="p-app-agendar" data-i18n-switcher="off">
 <head>
 
 <script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conte\u00fado s\u00f3 est\u00e1 dispon\u00edvel no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Agendar · Espaço Prelúdio</title>
+  <title data-i18n="p-app-agendar:agendar_espaco_preludio_666ad">Agendar · Espaço Prelúdio</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,6 +48,9 @@
   </style>
   <script src="./portal-shell.js?v=3" defer></script>
   <script src="./sw-register.js" defer></script>
+  <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(!l){var n=(navigator.language||"").toLowerCase();if(n.indexOf("en")===0)l="en-US";else if(n.indexOf("es")===0)l="es-ES";}if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
+  <style>html.ep-i18n-pending body{visibility:hidden}</style>
+  <script src="/i18n/init.js?v=2-0" defer></script>
 </head>
 <body class="a-portal-authenticated">
 <div class="a-shell">
@@ -57,7 +60,7 @@
     <button class="a-header__back" id="btnBack">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div class="a-header__title">Agendar consulta</div>
+    <div class="a-header__title" data-i18n="p-app-agendar:agendar_consulta_c2716">Agendar consulta</div>
   </div>
 
   <div class="a-page a-page--no-nav a-page-enter">
@@ -91,15 +94,15 @@
     <!-- STEP 1: Escolha o dia -->
     <div id="step1">
       <div class="step-header">
-        <div class="step-header__title">📅 Escolha o dia</div>
+        <div class="step-header__title" data-i18n="p-app-agendar:escolha_o_dia_f5d09">📅 Escolha o dia</div>
         <div class="step-header__sub" id="noticeText"></div>
       </div>
       <div class="a-section" style="padding-top:8px;">
         <div class="a-cal__days" id="calDays"></div>
         <div class="a-empty a-hide" id="calendarEmpty">
           <div class="a-empty__icon">📅</div>
-          <div class="a-empty__title">Sem datas disponíveis</div>
-          <div class="a-empty__sub">Este profissional não possui horários livres nos próximos 30 dias.</div>
+          <div class="a-empty__title" data-i18n="p-app-agendar:sem_datas_disponiveis_564e0">Sem datas disponíveis</div>
+          <div class="a-empty__sub" data-i18n="p-app-agendar:este_profissional_nao_possui_horarios_35919">Este profissional não possui horários livres nos próximos 30 dias.</div>
         </div>
       </div>
     </div>
@@ -107,7 +110,7 @@
     <!-- STEP 2: Escolha o horário -->
     <div id="step2" class="a-hide">
       <div class="step-header">
-        <div class="step-header__title">🕐 Escolha o horário</div>
+        <div class="step-header__title" data-i18n="p-app-agendar:escolha_o_horario_363de">🕐 Escolha o horário</div>
         <div class="step-header__sub" id="step2Sub"></div>
       </div>
       <div class="a-section" style="padding-top:8px;">
@@ -118,8 +121,8 @@
         <div class="a-slots a-hide" id="slotsGrid"></div>
         <div class="a-empty a-hide" id="slotsEmpty">
           <div class="a-empty__icon">😔</div>
-          <div class="a-empty__title">Sem horários</div>
-          <div class="a-empty__sub">Não há horários disponíveis neste dia. Tente outro.</div>
+          <div class="a-empty__title" data-i18n="p-app-agendar:sem_horarios_6043e">Sem horários</div>
+          <div class="a-empty__sub" data-i18n="p-app-agendar:nao_ha_horarios_disponiveis_neste_82515">Não há horários disponíveis neste dia. Tente outro.</div>
         </div>
       </div>
     </div>
@@ -127,24 +130,24 @@
     <!-- STEP 3: Dados e observação -->
     <div id="step3" class="a-hide">
       <div class="step-header">
-        <div class="step-header__title">📝 Seus dados</div>
-        <div class="step-header__sub">Informe seus dados para o profissional.</div>
+        <div class="step-header__title" data-i18n="p-app-agendar:seus_dados_52056">📝 Seus dados</div>
+        <div class="step-header__sub" data-i18n="p-app-agendar:informe_seus_dados_para_o_20fb3">Informe seus dados para o profissional.</div>
       </div>
       <div class="a-section" style="padding-top:8px;">
         <div class="a-field">
-          <label class="a-field__label">Seu nome *</label>
-          <input id="patName" class="a-input" type="text" placeholder="Nome completo" autocomplete="name">
+          <label class="a-field__label" data-i18n="p-app-agendar:seu_nome_34032">Seu nome *</label>
+          <input id="patName" class="a-input" type="text" placeholder="Nome completo" autocomplete="name" data-i18n-placeholder="p-app-agendar:nome_completo_695fc">
         </div>
         <div class="a-field">
-          <label class="a-field__label">E-mail *</label>
+          <label class="a-field__label" data-i18n="p-app-agendar:e_mail_a3fb0">E-mail *</label>
           <input id="patEmail" class="a-input" type="email" placeholder="seu@email.com" autocomplete="email" inputmode="email">
         </div>
         <div class="a-field">
-          <label class="a-field__label">WhatsApp *</label>
+          <label class="a-field__label" data-i18n="p-app-agendar:whatsapp_7ad9d">WhatsApp *</label>
           <input id="patPhone" class="a-input" type="tel" placeholder="(11) 99999-9999" autocomplete="tel" inputmode="tel">
         </div>
         <div class="a-field">
-          <label class="a-field__label">Observação (opcional)</label>
+          <label class="a-field__label" data-i18n="p-app-agendar:observacao_opcional_9e849">Observação (opcional)</label>
           <textarea id="patNotes" class="a-input a-textarea" rows="3" placeholder="Ex.: primeira consulta, prefiro videochamada…"></textarea>
         </div>
         <div id="step3Erro" class="a-alert a-alert--err a-hide a-mt-8"></div>
@@ -154,16 +157,16 @@
     <!-- STEP 4: Confirmação -->
     <div id="step4" class="a-hide">
       <div class="step-header">
-        <div class="step-header__title">✅ Confirmar pedido</div>
-        <div class="step-header__sub">Revise antes de enviar.</div>
+        <div class="step-header__title" data-i18n="p-app-agendar:confirmar_pedido_8b222">✅ Confirmar pedido</div>
+        <div class="step-header__sub" data-i18n="p-app-agendar:revise_antes_de_enviar_b88dc">Revise antes de enviar.</div>
       </div>
       <div class="a-section" style="padding-top:8px;">
         <div class="a-card a-card--pad">
-          <div class="confirm-row"><span class="confirm-row__label">Profissional</span><span class="confirm-row__val" id="confProf">—</span></div>
-          <div class="confirm-row"><span class="confirm-row__label">Data</span><span class="confirm-row__val" id="confData">—</span></div>
-          <div class="confirm-row"><span class="confirm-row__label">Horário</span><span class="confirm-row__val" id="confHora">—</span></div>
-          <div class="confirm-row"><span class="confirm-row__label">Paciente</span><span class="confirm-row__val" id="confPac">—</span></div>
-          <div class="confirm-row" id="confValorRow" style="display:none;"><span class="confirm-row__label">Valor</span><span class="confirm-row__val" id="confValor" style="color:#1a7a4a;">—</span></div>
+          <div class="confirm-row"><span class="confirm-row__label" data-i18n="p-app-agendar:profissional_b5e48">Profissional</span><span class="confirm-row__val" id="confProf">—</span></div>
+          <div class="confirm-row"><span class="confirm-row__label" data-i18n="p-app-agendar:data_e5e42">Data</span><span class="confirm-row__val" id="confData">—</span></div>
+          <div class="confirm-row"><span class="confirm-row__label" data-i18n="p-app-agendar:horario_3bd85">Horário</span><span class="confirm-row__val" id="confHora">—</span></div>
+          <div class="confirm-row"><span class="confirm-row__label" data-i18n="p-app-agendar:paciente_1c858">Paciente</span><span class="confirm-row__val" id="confPac">—</span></div>
+          <div class="confirm-row" id="confValorRow" style="display:none;"><span class="confirm-row__label" data-i18n="p-app-agendar:valor_4271e">Valor</span><span class="confirm-row__val" id="confValor" style="color:#1a7a4a;">—</span></div>
         </div>
         <div id="step4Erro" class="a-alert a-alert--err a-hide a-mt-12"></div>
       </div>
@@ -172,8 +175,8 @@
     <!-- STEP 5: Pagamento PIX -->
     <div id="step5" class="a-hide">
       <div class="step-header">
-        <div class="step-header__title">💚 Pagamento via PIX</div>
-        <div class="step-header__sub">Escaneie o QR code ou copie o código para pagar.</div>
+        <div class="step-header__title" data-i18n="p-app-agendar:pagamento_via_pix_d0f28">💚 Pagamento via PIX</div>
+        <div class="step-header__sub" data-i18n="p-app-agendar:escaneie_o_qr_code_ou_5d4ec">Escaneie o QR code ou copie o código para pagar.</div>
       </div>
       <div class="a-section" style="padding-top:8px;">
 
@@ -181,30 +184,30 @@
         <div id="pixPendente">
           <div class="pix-qr-wrap">
             <div class="pix-valor" id="pixValorText">R$ —</div>
-            <img class="pix-qr-img" id="pixQrImg" src="" alt="QR Code PIX">
-            <p class="pix-timer">Expira em <span id="pixTimerText">30:00</span></p>
+            <img class="pix-qr-img" id="pixQrImg" src="" alt="QR Code PIX" data-i18n-alt="p-app-agendar:qr_code_pix_52a38">
+            <p class="pix-timer"><span data-i18n="p-app-agendar:expira_em_03f32">Expira em</span> <span id="pixTimerText">30:00</span></p>
           </div>
           <div class="pix-copy-box a-mt-8">
             <div class="pix-copy-code" id="pixCopiaCola"></div>
             <button class="a-btn a-btn--ghost" style="padding:6px 12px;font-size:12px;flex-shrink:0;" id="btnCopiar">Copiar</button>
           </div>
-          <p class="a-sub a-mt-12" style="text-align:center;font-size:12px;">O pagamento vai <strong>diretamente</strong> para o profissional. Assim que confirmado, seu pedido é registrado automaticamente.</p>
+          <p class="a-sub a-mt-12" style="text-align:center;font-size:12px;" data-i18n-html="p-app-agendar:o_pagamento_vai_diretamente_para_95fce">O pagamento vai <strong>diretamente</strong> para o profissional. Assim que confirmado, seu pedido é registrado automaticamente.</p>
         </div>
 
         <!-- Estado: pago -->
         <div id="pixConfirmado" class="a-hide">
           <div class="pix-paid-badge a-mt-8">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a7a4a" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-            Pagamento confirmado!
+            <span data-i18n="p-app-agendar:pagamento_confirmado_1ec2b">Pagamento confirmado!</span>
           </div>
-          <p class="a-sub a-mt-12" style="text-align:center;">Pedido registrado com sucesso. O profissional vai confirmar em breve.</p>
-          <a href="./consultas.html" class="a-btn a-btn--accent a-btn--block a-mt-16">Ver minhas consultas</a>
-          <a href="./home.html" class="a-btn a-btn--ghost a-btn--block a-mt-8">Voltar ao início</a>
+          <p class="a-sub a-mt-12" style="text-align:center;" data-i18n="p-app-agendar:pedido_registrado_com_sucesso_o_31071">Pedido registrado com sucesso. O profissional vai confirmar em breve.</p>
+          <a href="./consultas.html" class="a-btn a-btn--accent a-btn--block a-mt-16" data-i18n="p-app-agendar:ver_minhas_consultas_3d14f">Ver minhas consultas</a>
+          <a href="./home.html" class="a-btn a-btn--ghost a-btn--block a-mt-8" data-i18n="p-app-agendar:voltar_ao_inicio_b2096">Voltar ao início</a>
         </div>
 
         <!-- Opção de pular para depois -->
         <div id="pixPularWrap" class="a-mt-16" style="text-align:center;">
-          <button class="a-btn a-btn--ghost" style="font-size:13px;color:var(--a-ink3);" id="btnPagarDepois">Pagar antes da consulta</button>
+          <button class="a-btn a-btn--ghost" style="font-size:13px;color:var(--a-ink3);" id="btnPagarDepois" data-i18n="p-app-agendar:pagar_antes_da_consulta_df0fc">Pagar antes da consulta</button>
         </div>
 
       </div>
@@ -214,10 +217,10 @@
     <div id="stepSuccess" class="a-hide">
       <div class="success-wrap">
         <div class="success-icon">🎉</div>
-        <h2 class="a-h2">Pedido enviado!</h2>
-        <p class="a-sub" style="max-width:280px;">O profissional vai analisar seu pedido e confirmar em breve. Você receberá uma notificação.</p>
-        <a href="./consultas.html" class="a-btn a-btn--accent a-btn--block a-mt-8">Ver minhas consultas</a>
-        <a href="./home.html" class="a-btn a-btn--ghost a-btn--block">Voltar ao início</a>
+        <h2 class="a-h2" data-i18n="p-app-agendar:pedido_enviado_fb355">Pedido enviado!</h2>
+        <p class="a-sub" style="max-width:280px;" data-i18n="p-app-agendar:o_profissional_vai_analisar_seu_26c94">O profissional vai analisar seu pedido e confirmar em breve. Você receberá uma notificação.</p>
+        <a href="./consultas.html" class="a-btn a-btn--accent a-btn--block a-mt-8" data-i18n="p-app-agendar:ver_minhas_consultas_3d14f">Ver minhas consultas</a>
+        <a href="./home.html" class="a-btn a-btn--ghost a-btn--block" data-i18n="p-app-agendar:voltar_ao_inicio_b2096">Voltar ao início</a>
       </div>
     </div>
 

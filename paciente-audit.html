@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-i18n-ns="paciente-audit">
+<html lang="pt-BR" data-i18n-ns="paciente-audit,p-paciente-audit">
 <head>
 <script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conte\u00fado s\u00f3 est\u00e1 dispon\u00edvel no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
   <meta charset="UTF-8">
@@ -31,7 +31,7 @@
     @media(max-width:900px){.audit-content{grid-template-columns:1fr}.audit-summary{grid-template-columns:1fr 1fr}.audit-summary__card:last-child{grid-column:1/-1}}
     @media(max-width:640px){.audit-topbar{height:auto;min-height:64px;padding:9px 15px}.audit-main{width:min(100% - 24px,1180px);padding:18px 0 50px}.audit-hero{padding:25px 21px;border-radius:21px}.audit-summary{grid-template-columns:1fr}.audit-summary__card:last-child{grid-column:auto}.audit-content{gap:14px}.audit-panel{padding:16px}.audit-panel__head{align-items:flex-start;flex-direction:column}.audit-event{grid-template-columns:42px minmax(0,1fr);padding:14px;gap:11px}.audit-event__icon{width:42px;height:42px;border-radius:12px}.audit-event__time{grid-column:2;text-align:left;display:flex;gap:7px;align-items:center}.audit-event__time span{margin:0}}
   </style>
-  <script src="./i18n/init.js?v=1-3" defer></script>
+  <script src="./i18n/init.js?v=2-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
 <body class="audit-portal">
@@ -57,24 +57,24 @@
         <a href="./paciente-painel.html" class="audit-back" data-i18n="paciente-audit:back">← Voltar ao painel</a>
         <div class="ep-eyebrow" data-i18n="paciente-audit:eyebrow">Privacidade e transparência</div>
         <h1 data-i18n="paciente-audit:h1">Histórico da sua conta</h1>
-        <p>Veja quando sua conta foi criada, recuperada ou utilizada para entrar em uma consulta. Este registro ajuda você a reconhecer a própria atividade e identificar acessos inesperados.</p>
+        <p data-i18n="p-paciente-audit:veja_quando_sua_conta_foi_541d9">Veja quando sua conta foi criada, recuperada ou utilizada para entrar em uma consulta. Este registro ajuda você a reconhecer a própria atividade e identificar acessos inesperados.</p>
       </div>
     </section>
 
-    <section class="audit-summary" aria-label="Resumo da atividade">
-      <article class="audit-summary__card"><div class="audit-summary__label">Atividades registradas</div><div class="audit-summary__value" id="summaryTotal">—</div><div class="audit-summary__sub">Eventos recentes desta conta</div></article>
-      <article class="audit-summary__card"><div class="audit-summary__label">Última atividade</div><div class="audit-summary__value" id="summaryLast">—</div><div class="audit-summary__sub" id="summaryLastDate">Aguardando dados</div></article>
-      <article class="audit-summary__card"><div class="audit-summary__label">Proteção da conta</div><div class="audit-summary__value">Acesso protegido</div><div class="audit-summary__sub">Autenticação exigida para visualizar</div></article>
+    <section class="audit-summary" aria-label="Resumo da atividade" data-i18n-aria-label="p-paciente-audit:resumo_da_atividade_c0753">
+      <article class="audit-summary__card"><div class="audit-summary__label" data-i18n="p-paciente-audit:atividades_registradas_aa754">Atividades registradas</div><div class="audit-summary__value" id="summaryTotal">—</div><div class="audit-summary__sub" data-i18n="p-paciente-audit:eventos_recentes_desta_conta_31da8">Eventos recentes desta conta</div></article>
+      <article class="audit-summary__card"><div class="audit-summary__label" data-i18n="p-paciente-audit:ultima_atividade_c83c0">Última atividade</div><div class="audit-summary__value" id="summaryLast">—</div><div class="audit-summary__sub" id="summaryLastDate">Aguardando dados</div></article>
+      <article class="audit-summary__card"><div class="audit-summary__label" data-i18n="p-paciente-audit:protecao_da_conta_56dc0">Proteção da conta</div><div class="audit-summary__value" data-i18n="p-paciente-audit:acesso_protegido_4f088">Acesso protegido</div><div class="audit-summary__sub" data-i18n="p-paciente-audit:autenticacao_exigida_para_visualizar_3846e">Autenticação exigida para visualizar</div></article>
     </section>
 
     <div class="audit-content">
       <section class="audit-panel">
         <div class="audit-panel__head">
-          <div><div class="ep-eyebrow">Linha do tempo</div><h2>Atividade recente</h2></div>
-          <div class="audit-filters" role="group" aria-label="Filtrar histórico">
-            <button class="audit-filter is-active" type="button" data-filter="all">Tudo</button>
-            <button class="audit-filter" type="button" data-filter="account">Conta</button>
-            <button class="audit-filter" type="button" data-filter="care">Consultas</button>
+          <div><div class="ep-eyebrow" data-i18n="p-paciente-audit:linha_do_tempo_0a60d">Linha do tempo</div><h2 data-i18n="p-paciente-audit:atividade_recente_0b7b1">Atividade recente</h2></div>
+          <div class="audit-filters" role="group" aria-label="Filtrar histórico" data-i18n-aria-label="p-paciente-audit:filtrar_historico_4fa57">
+            <button class="audit-filter is-active" type="button" data-filter="all" data-i18n="p-paciente-audit:tudo_b3baf">Tudo</button>
+            <button class="audit-filter" type="button" data-filter="account" data-i18n="p-paciente-audit:conta_4d075">Conta</button>
+            <button class="audit-filter" type="button" data-filter="care" data-i18n="p-paciente-audit:consultas_8988d">Consultas</button>
           </div>
         </div>
         <div id="loading" class="ep-skeleton ep-mt-16" data-i18n="paciente-audit:loading">Carregando…</div>
@@ -83,15 +83,15 @@
       </section>
 
       <aside class="privacy-card">
-        <div class="ep-eyebrow">Seus dados, suas escolhas</div>
-        <h2>Central de privacidade</h2>
-        <p>Exerça seus direitos de acesso, correção, portabilidade ou exclusão. A equipe confirma sua identidade antes de atender à solicitação.</p>
+        <div class="ep-eyebrow" data-i18n="p-paciente-audit:seus_dados_suas_escolhas_f2de0">Seus dados, suas escolhas</div>
+        <h2 data-i18n="p-paciente-audit:central_de_privacidade_b4e24">Central de privacidade</h2>
+        <p data-i18n="p-paciente-audit:exerca_seus_direitos_de_acesso_b94e5">Exerça seus direitos de acesso, correção, portabilidade ou exclusão. A equipe confirma sua identidade antes de atender à solicitação.</p>
         <div class="privacy-actions">
-          <a class="privacy-action" href="mailto:contato@espacopreludio.com.br?subject=Solicita%C3%A7%C3%A3o%20de%20c%C3%B3pia%20dos%20meus%20dados">Solicitar cópia dos dados <span>→</span></a>
-          <a class="privacy-action" href="mailto:contato@espacopreludio.com.br?subject=Solicita%C3%A7%C3%A3o%20de%20corre%C3%A7%C3%A3o%20de%20dados">Corrigir meus dados <span>→</span></a>
-          <a class="privacy-action" href="mailto:contato@espacopreludio.com.br?subject=Solicita%C3%A7%C3%A3o%20de%20exclus%C3%A3o%20de%20conta">Solicitar exclusão <span>→</span></a>
+          <a class="privacy-action" href="mailto:contato@espacopreludio.com.br?subject=Solicita%C3%A7%C3%A3o%20de%20c%C3%B3pia%20dos%20meus%20dados" data-i18n-html="p-paciente-audit:solicitar_copia_dos_dados_4b65d">Solicitar cópia dos dados <span>→</span></a>
+          <a class="privacy-action" href="mailto:contato@espacopreludio.com.br?subject=Solicita%C3%A7%C3%A3o%20de%20corre%C3%A7%C3%A3o%20de%20dados" data-i18n-html="p-paciente-audit:corrigir_meus_dados_3cb90">Corrigir meus dados <span>→</span></a>
+          <a class="privacy-action" href="mailto:contato@espacopreludio.com.br?subject=Solicita%C3%A7%C3%A3o%20de%20exclus%C3%A3o%20de%20conta" data-i18n-html="p-paciente-audit:solicitar_exclusao_85406">Solicitar exclusão <span>→</span></a>
         </div>
-        <div class="privacy-note">LGPD, art. 18. Algumas informações podem precisar ser preservadas durante o prazo legal ou regulatório aplicável.</div>
+        <div class="privacy-note" data-i18n="p-paciente-audit:lgpd_art_18_algumas_informacoes_4a756">LGPD, art. 18. Algumas informações podem precisar ser preservadas durante o prazo legal ou regulatório aplicável.</div>
       </aside>
     </div>
   </main>

@@ -124,8 +124,8 @@ async function connectCdp(url) {
 
 test('entrada principal aponta para o portal institucional', async () => {
   const html = await readFile(resolve(root, 'index.html'), 'utf8');
-  assert.match(html, /<a href="\.\/instituicao-login\.html" class="nav-login">Entrar<\/a>/);
-  assert.doesNotMatch(html, /<a href="\.\/entrar\.html" class="nav-login">Entrar<\/a>/);
+  assert.match(html, /<a href="\.\/instituicao-login\.html" class="nav-login"(?: data-i18n[-a-z]*="[^"]*")*>Entrar<\/a>/);
+  assert.doesNotMatch(html, /<a href="\.\/entrar\.html" class="nav-login"(?: data-i18n[-a-z]*="[^"]*")*>Entrar<\/a>/);
 });
 
 test('portal do colaborador usa layout amplo no desktop e preserva a navegacao movel', { timeout: 30000, skip: chromePath ? false : 'Chrome ou Edge nao encontrado' }, async () => {
@@ -289,7 +289,7 @@ test('portal do colaborador integra jornada, NR-1 e ajuda imediata sem prometer 
   ]);
   assert.doesNotMatch(home, /class="quick-actions"/);
   assert.doesNotMatch(home, /id="nextSessionEmpty"[\s\S]*?Buscar profissional/);
-  assert.match(home, /href="\.\/humor\.html"[^>]*>Ver histórico/);
+  assert.match(home, /href="\.\/humor\.html"[^>]*>(?:<span[^>]*>)?Ver histórico/);
   assert.match(home, /Sua jornada profissional/);
   assert.match(home, /Escuta sobre o trabalho/);
   assert.match(journey, /therapy\/paciente\/colaborador\/jornada/);
@@ -341,7 +341,7 @@ test('login do aluno apresenta a mensagem institucional na animação', async ()
 test('saudação de retorno aparece somente depois de um acesso concluído', async () => {
   const html = await readFile(resolve(root, 'instituicao-login.html'), 'utf8');
   const script = await readFile(resolve(root, 'js/instituicao-login.js'), 'utf8');
-  assert.match(html, /<h2 id="institutionLoginHeading">Acesse o portal<\/h2>/);
+  assert.match(html, /<h2 id="institutionLoginHeading"(?: data-i18n[-a-z]*="[^"]*")*>Acesse o portal<\/h2>/);
   assert.doesNotMatch(html, /<h2[^>]*>Bem-vindo de volta<\/h2>/);
   assert.match(script, /localStorage\.getItem\(RETURNING_ACCESS_KEY\) === "true"[\s\S]*?loginHeading\.textContent = "Bem-vindo de volta"/);
   assert.match(script, /await validateInstitutionAccess\(credential\.user\);\s*rememberCompletedAccess\(\);/);

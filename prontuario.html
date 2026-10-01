@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-i18n-ns="prontuario">
+<html lang="pt-BR" data-i18n-ns="prontuario,p-prontuario">
 <head>
 <script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conte\u00fado s\u00f3 est\u00e1 dispon\u00edvel no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
   <meta charset="UTF-8">
@@ -18,7 +18,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
-  <script src="./i18n/init.js?v=1-6" defer></script>
+  <script src="./i18n/init.js?v=2-0" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
@@ -218,7 +218,7 @@
         <span data-i18n="common:brand.tail">Prelúdio</span>
       </span>
     </a>
-    <nav class="ep-nav" aria-label="Painel">
+    <nav class="ep-nav" aria-label="Painel" data-i18n-aria-label="p-prontuario:painel_78b1d">
       <a href="./painel.html" data-i18n="prontuario:nav.consultas">Consultas</a>
       <a href="./agenda.html" data-i18n="prontuario:nav.agenda">Agenda</a>
       <a href="./pacientes.html" class="is-active" data-i18n="prontuario:nav.pacientes">Pacientes</a>
@@ -304,10 +304,10 @@
   <!-- Jornada do paciente — timeline de eventos marcantes por ano, gerada a
        partir dos sinais clínicos extraídos por IA dos resumos de sessão.
        Só aparece se houver pelo menos 1 sessão com resumo concluído. -->
-  <section class="ep-mt-32 ep-hide" id="jornadaBlock" aria-label="Jornada do paciente">
-    <div class="ep-eyebrow ep-mb-12">Jornada do paciente</div>
-    <h2 class="ep-h2 ep-mt-12">Linha do tempo</h2>
-    <p class="ep-text-muted ep-text-sm ep-mt-8">
+  <section class="ep-mt-32 ep-hide" id="jornadaBlock" aria-label="Jornada do paciente" data-i18n-aria-label="p-prontuario:jornada_do_paciente_11b0f">
+    <div class="ep-eyebrow ep-mb-12" data-i18n="p-prontuario:jornada_do_paciente_11b0f">Jornada do paciente</div>
+    <h2 class="ep-h2 ep-mt-12" data-i18n="p-prontuario:linha_do_tempo_0a60d">Linha do tempo</h2>
+    <p class="ep-text-muted ep-text-sm ep-mt-8" data-i18n="p-prontuario:eventos_marcantes_identificados_automaticamente_a_5fc12">
       Eventos marcantes identificados automaticamente a partir dos resumos de IA das sessões, agrupados por ano.
     </p>
     <div id="jornadaContent" class="ep-mt-16"></div>
@@ -316,10 +316,10 @@
   <!-- Mapa emocional — evolução de humor, ansiedade, sono e autoestima ao
        longo do tempo + risco por sessão, a partir dos sinais clínicos
        extraídos por IA. Só aparece com pelo menos 2 sessões com resumo. -->
-  <section class="ep-mt-32 ep-hide" id="mapaEmocionalBlock" aria-label="Mapa emocional">
-    <div class="ep-eyebrow ep-mb-12">Mapa emocional</div>
-    <h2 class="ep-h2 ep-mt-12">Evolução ao longo do tempo</h2>
-    <p class="ep-text-muted ep-text-sm ep-mt-8">
+  <section class="ep-mt-32 ep-hide" id="mapaEmocionalBlock" aria-label="Mapa emocional" data-i18n-aria-label="p-prontuario:mapa_emocional_af57c">
+    <div class="ep-eyebrow ep-mb-12" data-i18n="p-prontuario:mapa_emocional_af57c">Mapa emocional</div>
+    <h2 class="ep-h2 ep-mt-12" data-i18n="p-prontuario:evolucao_ao_longo_do_tempo_fa7bd">Evolução ao longo do tempo</h2>
+    <p class="ep-text-muted ep-text-sm ep-mt-8" data-i18n="p-prontuario:estimativas_geradas_por_ia_a_fc2ef">
       Estimativas geradas por IA a partir dos resumos de sessão. Apoio para identificar tendências — não substitui avaliação clínica.
     </p>
     <div id="mapaEmocionalChartWrap" class="ep-card ep-mt-16" style="padding: 14px 16px;">
@@ -331,15 +331,15 @@
   <!-- Gêmeo Clínico — pergunta livre sobre o histórico do paciente,
        respondida por IA com base nos resumos de sessão. Só aparece se
        houver pelo menos 1 sessão com resumo concluído. -->
-  <section class="ep-mt-32 ep-hide" id="gemeoClinicoBlock" aria-label="Gêmeo Clínico">
-    <div class="ep-eyebrow ep-mb-12">Gêmeo Clínico</div>
-    <h2 class="ep-h2 ep-mt-12">Pergunte sobre o histórico</h2>
-    <p class="ep-text-muted ep-text-sm ep-mt-8">
+  <section class="ep-mt-32 ep-hide" id="gemeoClinicoBlock" aria-label="Gêmeo Clínico" data-i18n-aria-label="p-prontuario:gemeo_clinico_8df95">
+    <div class="ep-eyebrow ep-mb-12" data-i18n="p-prontuario:gemeo_clinico_8df95">Gêmeo Clínico</div>
+    <h2 class="ep-h2 ep-mt-12" data-i18n="p-prontuario:pergunte_sobre_o_historico_96b85">Pergunte sobre o histórico</h2>
+    <p class="ep-text-muted ep-text-sm ep-mt-8" data-i18n="p-prontuario:respostas_geradas_por_ia_com_5a070">
       Respostas geradas por IA com base nos resumos de sessão deste paciente. Apoio à memória — não substitui sua avaliação clínica.
     </p>
     <div id="gemeoChips" class="ep-mt-16" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
     <div class="ep-mt-12" style="display:flex; gap:8px;">
-      <input type="text" id="gemeoInput" class="ep-input" style="flex:1;" maxlength="500" placeholder="Ex: o que mudou desde a última consulta?">
+      <input type="text" id="gemeoInput" class="ep-input" style="flex:1;" maxlength="500" placeholder="Ex: o que mudou desde a última consulta?" data-i18n-placeholder="p-prontuario:ex_o_que_mudou_desde_540a1">
       <button type="button" class="ep-btn ep-btn--primary" id="gemeoAsk">Perguntar</button>
     </div>
     <div id="gemeoAnswer" class="ep-mt-16 ep-hide"></div>
@@ -383,21 +383,21 @@
 
   <!-- Gravações de sessão — arquivo .ep-rec local, descriptografado no browser -->
   <section class="ep-mt-32" id="gravacaoSection">
-    <div class="ep-eyebrow">Gravações de sessão</div>
-    <h2 class="ep-h2 ep-mt-12">Reproduzir gravação</h2>
-    <p class="ep-text-muted ep-text-sm ep-mt-8">
+    <div class="ep-eyebrow" data-i18n="p-prontuario:gravacoes_de_sessao_ff36c">Gravações de sessão</div>
+    <h2 class="ep-h2 ep-mt-12" data-i18n="p-prontuario:reproduzir_gravacao_ffe08">Reproduzir gravação</h2>
+    <p class="ep-text-muted ep-text-sm ep-mt-8" data-i18n-html="p-prontuario:abra_um_arquivo_ep_rec_c5b16">
       Abra um arquivo <strong>.ep-rec</strong> salvo durante a consulta.
       A descriptografia acontece no seu navegador — nada é enviado ao servidor.
     </p>
 
-    <div id="recDropzone" class="rec-drop ep-mt-16" role="button" tabindex="0" aria-label="Selecionar arquivo .ep-rec">
+    <div id="recDropzone" class="rec-drop ep-mt-16" role="button" tabindex="0" aria-label="Selecionar arquivo .ep-rec" data-i18n-aria-label="p-prontuario:selecionar_arquivo_ep_rec_e6921">
       <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" flex-shrink="0" style="flex-shrink:0"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/><line x1="12" y1="17" x2="12" y2="3"/></svg>
-      <span>Arraste o arquivo aqui ou <strong>clique para selecionar</strong> (.ep-rec)</span>
+      <span data-i18n-html="p-prontuario:arraste_o_arquivo_aqui_ou_24b41">Arraste o arquivo aqui ou <strong>clique para selecionar</strong> (.ep-rec)</span>
       <input id="recFileInput" type="file" accept=".ep-rec,application/json" style="display:none">
     </div>
 
     <div id="recProgress" class="ep-hide" style="margin-top:16px;">
-      <div class="ep-text-sm ep-text-muted" id="recProgressLabel">Descriptografando…</div>
+      <div class="ep-text-sm ep-text-muted" id="recProgressLabel" data-i18n="p-prontuario:descriptografando_1ff3a">Descriptografando…</div>
       <div class="rec-bar-track"><div class="rec-bar-fill" id="recBarFill"></div></div>
     </div>
 
@@ -406,14 +406,14 @@
       <div class="rec-player-footer">
         <span class="ep-text-xs ep-text-muted" id="recMetaText"></span>
         <div style="display:flex;gap:8px;">
-          <a id="recDownloadBtn" class="ep-btn ep-btn--ghost ep-btn--sm" download>Baixar .webm</a>
-          <button id="recCloseBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm">Fechar</button>
+          <a id="recDownloadBtn" class="ep-btn ep-btn--ghost ep-btn--sm" download data-i18n="p-prontuario:baixar_webm_6e9ab">Baixar .webm</a>
+          <button id="recCloseBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="p-prontuario:fechar_7b200">Fechar</button>
         </div>
       </div>
     </div>
 
     <div id="recError" class="ep-alert ep-alert--danger ep-mt-16 ep-hide" role="alert">
-      <strong id="recErrorTitle">Erro ao processar o arquivo.</strong>
+      <strong id="recErrorTitle" data-i18n="p-prontuario:erro_ao_processar_o_arquivo_2f1b9">Erro ao processar o arquivo.</strong>
       <p style="margin:4px 0 0;" id="recErrorMsg"></p>
     </div>
   </section>
@@ -1927,6 +1927,6 @@
   renderReceitas().then(() => loadReceitasDecrypted());
 </script>
 
-<a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" aria-label="Abrir suporte"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
+<a id="epHelpBubble" class="ep-help-bubble" href="./suporte.html" title="Suporte e ajuda" aria-label="Abrir suporte" data-i18n-aria-label="p-prontuario:abrir_suporte_1f630" data-i18n-title="p-prontuario:suporte_e_ajuda_02595"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
 </body>
 </html>

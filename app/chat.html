@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-i18n-ns="p-app-chat" data-i18n-switcher="off">
 <head>
 
 <script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conte\u00fado s\u00f3 est\u00e1 dispon\u00edvel no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Mensagens · Espaço Prelúdio</title>
+  <title data-i18n="p-app-chat:mensagens_espaco_preludio_af126">Mensagens · Espaço Prelúdio</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="/logo_oficial_fundo_transparente.png?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -134,6 +134,9 @@
   </style>
   <script src="./portal-shell.js?v=3" defer></script>
   <script src="./sw-register.js" defer></script>
+  <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(!l){var n=(navigator.language||"").toLowerCase();if(n.indexOf("en")===0)l="en-US";else if(n.indexOf("es")===0)l="es-ES";}if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
+  <style>html.ep-i18n-pending body{visibility:hidden}</style>
+  <script src="/i18n/init.js?v=2-0" defer></script>
 </head>
 <body class="a-portal-authenticated">
 <div class="a-shell">
@@ -141,7 +144,7 @@
   <!-- Vista: lista de conversas -->
   <div id="listView" style="display:flex;flex-direction:column;height:100dvh;">
     <div class="a-header">
-      <div class="a-header__title">Mensagens</div>
+      <div class="a-header__title" data-i18n="p-app-chat:mensagens_d3b29">Mensagens</div>
     </div>
 
     <div id="convLoading" class="chat-loading">
@@ -152,9 +155,9 @@
     <div id="convList" class="chat-list" style="display:none;"></div>
     <div id="convEmpty" class="chat-empty a-hide">
       <div style="font-size:48px;">💬</div>
-      <div style="font-family:var(--ff-serif);font-size:20px;">Nenhuma conversa ainda</div>
-      <div class="a-sub" style="max-width:280px;margin-top:8px;">As conversas aparecem aqui quando o profissional iniciar contato, depois que sua consulta for confirmada.</div>
-      <a href="./buscar.html" class="a-btn a-btn--accent a-mt-16">Buscar profissional</a>
+      <div style="font-family:var(--ff-serif);font-size:20px;" data-i18n="p-app-chat:nenhuma_conversa_ainda_b66c3">Nenhuma conversa ainda</div>
+      <div class="a-sub" style="max-width:280px;margin-top:8px;" data-i18n="p-app-chat:as_conversas_aparecem_aqui_quando_23e62">As conversas aparecem aqui quando o profissional iniciar contato, depois que sua consulta for confirmada.</div>
+      <a href="./buscar.html" class="a-btn a-btn--accent a-mt-16" data-i18n="p-app-chat:buscar_profissional_ee571">Buscar profissional</a>
     </div>
   </div>
 
@@ -191,13 +194,13 @@
       <h1 id="chatUnlockTitle">Desbloquear mensagens</h1>
       <p id="chatUnlockDescription">Sua sessão no portal continua ativa. Confirme sua senha apenas para abrir localmente a chave das mensagens protegidas.</p>
       <div id="chatUnlockControls">
-        <label class="a-field__label" for="chatUnlockPassword">Senha</label>
+        <label class="a-field__label" for="chatUnlockPassword" data-i18n="p-app-chat:senha_deba0">Senha</label>
         <input id="chatUnlockPassword" class="a-input" type="password" autocomplete="current-password" required>
-        <button id="chatUnlockButton" class="a-btn a-btn--primary a-btn--block a-mt-16" type="submit">Desbloquear chat</button>
+        <button id="chatUnlockButton" class="a-btn a-btn--primary a-btn--block a-mt-16" type="submit" data-i18n="p-app-chat:desbloquear_chat_e9b1c">Desbloquear chat</button>
       </div>
       <a id="chatSetupButton" class="a-btn a-btn--accent a-btn--block a-mt-16 a-hide" href="./login.html?reauth=1&amp;setup=chat&amp;redirect=./chat.html">Configurar chat seguro</a>
       <div id="chatUnlockError" class="chat-unlock__error a-hide" role="alert"></div>
-      <a class="chat-unlock__back" href="./home.html">← Voltar ao início</a>
+      <a class="chat-unlock__back" href="./home.html" data-i18n="p-app-chat:voltar_ao_inicio_5320b">← Voltar ao início</a>
     </form>
   </section>
 </div>
