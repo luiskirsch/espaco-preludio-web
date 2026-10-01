@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./app.css?v=20260930m">
   <style>
-    .chat-shell { display: flex; flex-direction: column; height: 100dvh; }
+    .chat-shell { display: flex; flex-direction: column; height: 100dvh; position: relative; }
     .chat-header {
       display: flex; align-items: center; gap: 12px; padding: 12px 16px;
       background: var(--a-surface); border-bottom: 1px solid var(--a-line);
@@ -60,11 +60,34 @@
     .msg--out .contact-card__action { border-color: rgba(255,255,255,.16); color: #e4c27a; }
     .contact-card__action:hover { background: rgba(45,106,62,.07); }
     .msg__time { font-size: 10px; color: var(--a-ink3); padding: 0 4px; }
+    /* Responder (estilo WhatsApp) e volta ao fim da conversa */
+    .msg { position: relative; transition: transform .15s ease; }
+    .msg.is-flash .msg__bubble { box-shadow: 0 0 0 3px rgba(201,164,92,.55); }
+    .msg__reply-btn { position: absolute; top: 6px; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--a-line); background: var(--a-surface); color: var(--a-ink2); cursor: pointer; opacity: 0; transition: opacity .15s ease; display: grid; place-items: center; font-size: 14px; }
+    .msg--in .msg__reply-btn { right: -36px; }
+    .msg--out .msg__reply-btn { left: -36px; }
+    .msg:hover .msg__reply-btn, .msg__reply-btn:focus-visible { opacity: 1; }
+    @media (hover: none) { .msg__reply-btn { display: none; } }
+    .msg__quote { display: block; width: 100%; text-align: left; border: 0; border-left: 3px solid #c9a45c; border-radius: 6px; padding: 5px 8px; margin: 0 0 6px; background: rgba(0,0,0,.06); color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
+    .msg--out .msg__quote { background: rgba(255,255,255,.14); }
+    .msg__quote strong { display: block; font-size: 11px; color: #b08a3e; }
+    .msg--out .msg__quote strong { color: #e4c27a; }
+    .msg__quote span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; opacity: .85; }
+    .chat-reply-bar { display: none; flex: 0 0 100%; align-items: center; gap: 10px; margin: 0 0 8px; padding: 8px 10px; border-left: 3px solid #c9a45c; border-radius: 8px; background: var(--a-bg2); font-size: 12px; }
+    .chat-reply-bar.is-open { display: flex; }
+    .chat-reply-bar__text { flex: 1; min-width: 0; }
+    .chat-reply-bar__text strong { display: block; color: #b08a3e; font-size: 11px; }
+    .chat-reply-bar__text span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--a-ink2); }
+    .chat-reply-bar__close { border: 0; background: none; font-size: 18px; line-height: 1; color: var(--a-ink3); cursor: pointer; padding: 4px; }
+    .chat-jump { position: absolute; right: 18px; bottom: 86px; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--a-line); background: var(--a-surface); color: var(--a-ink); box-shadow: 0 6px 18px rgba(0,0,0,.14); cursor: pointer; display: none; place-items: center; z-index: 5; }
+    .chat-jump.is-visible { display: grid; }
+    .chat-jump__badge { position: absolute; top: -6px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #2d6a3e; color: #fff; font-size: 11px; font-weight: 700; display: none; align-items: center; justify-content: center; }
+    .chat-jump__badge.is-visible { display: inline-flex; }
     .msg__status { font-size: 10px; color: rgba(255,255,255,.6); padding: 0 4px; }
     .chat-input-bar {
       padding: 10px 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom));
       background: var(--a-surface); border-top: 1px solid var(--a-line);
-      display: flex; align-items: flex-end; gap: 8px; flex-shrink: 0;
+      display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; flex-shrink: 0;
     }
     .chat-input-wrap {
       flex: 1; background: var(--a-bg); border-radius: 22px;
@@ -175,8 +198,16 @@
     </div>
 
     <div class="chat-messages" id="chatMessages"></div>
+    <button type="button" class="chat-jump" id="chatJump" aria-label="Ir para a última mensagem" title="Ir para a última mensagem">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      <span class="chat-jump__badge" id="chatJumpBadge"></span>
+    </button>
 
     <div class="chat-input-bar">
+      <div class="chat-reply-bar" id="chatReplyBar">
+        <div class="chat-reply-bar__text"><strong id="chatReplyWho">—</strong><span id="chatReplyText" data-no-i18n></span></div>
+        <button type="button" class="chat-reply-bar__close" id="chatReplyClose" aria-label="Cancelar resposta">×</button>
+      </div>
       <div class="chat-input-wrap">
         <textarea class="chat-input" id="chatInput" placeholder="Mensagem…" rows="1"></textarea>
       </div>
@@ -506,6 +537,7 @@
   async function openThread(threadId) {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     currentThreadId = threadId;
+    lastRenderSig = null; lastRenderIds = []; unreadBelow = 0; cancelReply();
     document.getElementById("listView").style.display = "none";
     document.getElementById("chatView").style.display = "flex";
     document.getElementById("chatMessages").innerHTML = "";
@@ -558,6 +590,18 @@
     }
 
     const container = document.getElementById("chatMessages");
+    // Sem mudança, não re-renderiza (evita saltos enquanto o usuário rola).
+    const sig = decrypted.map(m => m.messageId + ":" + (m.deleted ? 1 : 0)).join("|");
+    if (sig === lastRenderSig) return;
+    const isFirstRender = lastRenderSig === null;
+    const prevIds = new Set(lastRenderIds);
+    lastRenderSig = sig;
+    lastRenderIds = decrypted.map(m => m.messageId);
+    messagesById = new Map(decrypted.map(m => [m.messageId, m]));
+    const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
+    const prevTop = container.scrollTop;
+    const myUid = currentUser?.uid;
+    const incoming = isFirstRender ? 0 : decrypted.filter(m => !prevIds.has(m.messageId) && m.senderUid !== myUid).length;
     let lastDate = "";
     container.innerHTML = decrypted.map(m => {
       // Pelo remetente, não pelo papel: contas de dupla função enviam como profissional.
@@ -566,15 +610,113 @@
       let dateSep = "";
       if (dayLabel !== lastDate) { dateSep = `<div class="date-sep">${esc(dayLabel)}</div>`; lastDate = dayLabel; }
       return `${dateSep}
-        <div class="msg ${isOut ? "msg--out" : "msg--in"}">
+        <div class="msg ${isOut ? "msg--out" : "msg--in"}" data-mid="${esc(m.messageId || "")}">
+          <button type="button" class="msg__reply-btn" data-reply="${esc(m.messageId || "")}" aria-label="Responder" title="Responder">↩</button>
           ${(() => { const card = parseContactCard(m.plain); return card
-            ? `<div class="msg__bubble msg__bubble--card">${renderContactCard(card)}</div>`
-            : `<div class="msg__bubble" data-no-i18n>${esc(m.plain)}</div>`; })()}
+            ? `<div class="msg__bubble msg__bubble--card">${quoteHtml(m, isOut)}${renderContactCard(card)}</div>`
+            : `<div class="msg__bubble">${quoteHtml(m, isOut)}<span data-no-i18n>${esc(m.plain)}</span></div>`; })()}
           <div class="${isOut ? "msg__status" : "msg__time"}">${fmtTime(m.createdAt)}</div>
         </div>`;
     }).join("") || "";
-    container.scrollTop = container.scrollHeight;
+    if (isFirstRender || forceScrollBottom || atBottom) {
+      container.scrollTop = container.scrollHeight;
+      unreadBelow = 0;
+    } else {
+      container.scrollTop = prevTop;
+      unreadBelow += incoming;
+    }
+    forceScrollBottom = false;
+    updateJump();
   }
+
+  // ── Rolagem livre, seta para o fim e responder ───────────────────────
+  let lastRenderSig = null;
+  let lastRenderIds = [];
+  let messagesById = new Map();
+  let forceScrollBottom = false;
+  let unreadBelow = 0;
+  let replyingTo = null;
+
+  const messagesEl = document.getElementById("chatMessages");
+  const jumpBtn = document.getElementById("chatJump");
+  const jumpBadge = document.getElementById("chatJumpBadge");
+
+  function nearBottom() { return messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 80; }
+  function updateJump() {
+    const show = !nearBottom();
+    if (!show) unreadBelow = 0;
+    jumpBtn.classList.toggle("is-visible", show);
+    jumpBadge.textContent = unreadBelow > 99 ? "99+" : String(unreadBelow);
+    jumpBadge.classList.toggle("is-visible", show && unreadBelow > 0);
+  }
+  messagesEl.addEventListener("scroll", updateJump, { passive: true });
+  jumpBtn.addEventListener("click", () => {
+    messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: "smooth" });
+    unreadBelow = 0;
+    updateJump();
+  });
+
+  function peerName() { return currentThread?.therapistDisplayName || "Profissional"; }
+  function authorOf(m) { return m.senderUid === currentUser?.uid ? "Você" : peerName(); }
+  function snippet(m) {
+    if (!m) return "Mensagem original indisponível";
+    if (m.deleted) return "Mensagem apagada";
+    const card = parseContactCard(m.plain);
+    return card ? `👤 ${card.displayName}` : String(m.plain || "").slice(0, 140);
+  }
+  function quoteHtml(m, isOut) {
+    if (!m.replyToMessageId) return "";
+    const orig = messagesById.get(m.replyToMessageId);
+    return `<button type="button" class="msg__quote" data-goto="${esc(m.replyToMessageId)}"><strong>${esc(orig ? authorOf(orig) : "")}</strong><span data-no-i18n>${esc(snippet(orig))}</span></button>`;
+  }
+  function startReply(messageId) {
+    const m = messagesById.get(messageId);
+    if (!m) return;
+    replyingTo = m;
+    document.getElementById("chatReplyWho").textContent = authorOf(m);
+    document.getElementById("chatReplyText").textContent = snippet(m);
+    document.getElementById("chatReplyBar").classList.add("is-open");
+    chatInput.focus();
+  }
+  function cancelReply() {
+    replyingTo = null;
+    document.getElementById("chatReplyBar").classList.remove("is-open");
+  }
+  document.getElementById("chatReplyClose").addEventListener("click", cancelReply);
+  messagesEl.addEventListener("click", e => {
+    const replyBtn = e.target.closest("[data-reply]");
+    if (replyBtn) { startReply(replyBtn.dataset.reply); return; }
+    const quote = e.target.closest("[data-goto]");
+    if (quote) {
+      const target = messagesEl.querySelector(`[data-mid="${CSS.escape(quote.dataset.goto)}"]`);
+      if (!target) return;
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      target.classList.add("is-flash");
+      setTimeout(() => target.classList.remove("is-flash"), 1400);
+    }
+  });
+  // Celular: arrastar a mensagem para a direita responde (como no WhatsApp).
+  let swipe = null;
+  messagesEl.addEventListener("touchstart", e => {
+    const msg = e.target.closest(".msg[data-mid]");
+    if (!msg || e.touches.length !== 1) return;
+    swipe = { msg, x: e.touches[0].clientX, y: e.touches[0].clientY, dx: 0 };
+  }, { passive: true });
+  messagesEl.addEventListener("touchmove", e => {
+    if (!swipe) return;
+    const dx = e.touches[0].clientX - swipe.x;
+    const dy = Math.abs(e.touches[0].clientY - swipe.y);
+    if (dy > 30) { swipe.msg.style.transform = ""; swipe = null; return; }
+    swipe.dx = Math.max(0, Math.min(dx, 80));
+    swipe.msg.style.transform = `translateX(${swipe.dx}px)`;
+  }, { passive: true });
+  messagesEl.addEventListener("touchend", () => {
+    if (!swipe) return;
+    const { msg, dx } = swipe;
+    msg.style.transform = "";
+    swipe = null;
+    if (dx > 60) startReply(msg.dataset.mid);
+  });
 
   const chatInput = document.getElementById("chatInput");
   const sendBtn   = document.getElementById("chatSendBtn");
@@ -597,12 +739,15 @@
     chatInput.value = ""; chatInput.style.height = "auto"; sendBtn.disabled = true;
     try {
       const enc = await encryptNote(text, threadKeyBytes);
+      const body = replyingTo?.messageId ? { ...enc, replyToMessageId: replyingTo.messageId } : enc;
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/chat/threads/${encodeURIComponent(currentThreadId)}/messages`, {
         method: "POST",
         headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify(enc)
+        body: JSON.stringify(body)
       });
       if (!r.ok) throw new Error("send failed");
+      cancelReply();
+      forceScrollBottom = true;
       await refreshMessages(threadKeyBytes);
     } catch { /* mensagem fica no campo perdida — usuário pode reenviar */ }
   }
