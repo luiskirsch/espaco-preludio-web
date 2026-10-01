@@ -93,6 +93,35 @@ export async function downloadAttendanceCertificate(c) {
   y -= 16;
   text("Os horários acima foram registrados automaticamente pelo servidor da plataforma (entrada do(a) paciente na sala de vídeo e encerramento do atendimento), no fuso horário de Brasília. Este documento declara apenas a presença no atendimento; não contém informação clínica nem justifica afastamento por motivo de saúde.", { size: 9, color: muted, gap: 1.5 });
 
+  // Assinatura eletrônica simples (Lei 14.063/2020, art. 4º, I): emitido pela
+  // conta autenticada do profissional; data/hora vêm do servidor. Substitui a
+  // antiga linha de "assinatura" em branco, que não provava nada.
+  const issuedAt = c.issuedAt || Date.now();
+  {
+    y -= 26;
+    const boxX = margin, boxW = width, padX = 14;
+    const lines = [
+      { t: "ASSINADO ELETRONICAMENTE", font: bold, size: 8, color: gold },
+      { t: [p.nome || "Profissional responsável", registro].filter(Boolean).join(" · "), font: bold, size: 12, color: ink },
+      { t: `via Espaço Prelúdio em ${fmtDate(issuedAt)}, às ${fmtTime(issuedAt)} (horário de Brasília)`, font: reg, size: 9.5, color: ink },
+      { t: c.verificationCode
+          ? `Assinatura eletrônica simples (Lei nº 14.063/2020, art. 4º, I). Autenticidade verificável pelo código ${c.verificationCode}.`
+          : "Assinatura eletrônica simples (Lei nº 14.063/2020, art. 4º, I).", font: reg, size: 8.5, color: muted }
+    ];
+    const wrapped = lines.flatMap(l => wrap(l.t, l.font, l.size, boxW - padX * 2 - 4).map(t => ({ ...l, t })));
+    const boxH = wrapped.reduce((h, l) => h + l.size * 1.55, 0) + 16;
+    const top = y;
+    page.drawRectangle({ x: boxX, y: top - boxH, width: boxW, height: boxH, borderColor: rgb(0.85, 0.8, 0.7), borderWidth: 0.8 });
+    page.drawRectangle({ x: boxX, y: top - boxH, width: 3, height: boxH, color: gold });
+    let ly = top - 8;
+    for (const l of wrapped) {
+      ly -= l.size * 1.2;
+      page.drawText(l.t, { x: boxX + padX + 4, y: ly, size: l.size, font: l.font, color: l.color });
+      ly -= l.size * 0.35;
+    }
+    y = top - boxH;
+  }
+
   // Autenticidade: código + QR para a página pública de verificação.
   if (c.verificationCode) {
     const verifyUrl = `${VERIFY_BASE}?c=${encodeURIComponent(c.verificationCode)}`;
@@ -114,13 +143,7 @@ export async function downloadAttendanceCertificate(c) {
     y = top - qrSize;
   }
 
-  y = Math.min(y - 40, 200);
-  page.drawLine({ start: { x: margin, y }, end: { x: margin + 240, y }, thickness: 0.8, color: ink });
-  y -= 14;
-  page.drawText(p.nome || "Profissional responsável", { x: margin, y, size: 10, font: bold, color: ink });
-  if (registro) { y -= 13; page.drawText(registro, { x: margin, y, size: 9, font: reg, color: muted }); }
-
-  page.drawText(`Emitido em ${fmtDate(Date.now())} · Espaço Prelúdio · CNPJ 67.092.881/0001-99 · espacopreludio.com.br`, { x: margin, y: 40, size: 8, font: reg, color: muted });
+  page.drawText(`Emitido em ${fmtDate(issuedAt)} · Espaço Prelúdio · CNPJ 67.092.881/0001-99 · espacopreludio.com.br`, { x: margin, y: 40, size: 8, font: reg, color: muted });
 
   const bytes = await pdf.save();
   const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
