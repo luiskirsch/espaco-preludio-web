@@ -1,7 +1,7 @@
 // Espaço Prelúdio — painel "Ambiente" da sala de vídeo.
 //
 // Como você aparece e é ouvido(a) na consulta: fundo (desfoque / fundo
-// neutro), luz de tela, câmera, microfone, saída de som, redução de ruído e
+// neutro), câmera, microfone, saída de som, redução de ruído e
 // "esconder minha imagem". Usado no consultório (profissional) e na sala do
 // paciente. Tudo roda no navegador; as preferências ficam neste dispositivo.
 //
@@ -22,7 +22,7 @@ const SLOW_FRAME_WINDOW = 60;
 const SLOW_WARMUP_FRAMES = 120;
 const SLOW_WINDOWS_TO_DISABLE = 3;
 
-const DEFAULTS = { background: "none", screenLight: 0, hideSelf: false, noise: "standard" };
+const DEFAULTS = { background: "none", hideSelf: false, noise: "standard" };
 
 function tr(key, fallback) {
   try {
@@ -92,7 +92,6 @@ function injectStyle() {
     .ep-room-ambient__warn { margin-top: 8px; padding: 8px 10px; border-radius: 8px; font-size: 12px; line-height: 1.4;
       background: rgba(239,68,68,.12); color: #fca5a5; border: 1px solid rgba(239,68,68,.35); }
     .ep-room-ambient__status { font-size: 11.5px; color: rgba(215,176,107,.9); margin-top: 6px; min-height: 1em; }
-    #ep-screen-light { position: fixed; inset: 0; pointer-events: none; z-index: 2147483000; transition: box-shadow .2s ease; }
     .ep-room-ambient--hide-self { display: none !important; }
   `;
   document.head.appendChild(s);
@@ -186,14 +185,6 @@ export async function initRoomAmbient({
     }
   }
 
-  // Luz de tela: moldura clara em volta da tela que ilumina o rosto.
-  function applyScreenLight(level) {
-    let el = document.getElementById("ep-screen-light");
-    if (!el) { el = document.createElement("div"); el.id = "ep-screen-light"; el.setAttribute("aria-hidden", "true"); document.body.appendChild(el); }
-    const n = Math.max(0, Math.min(100, Number(level) || 0));
-    el.style.boxShadow = n ? `inset 0 0 0 ${Math.round(8 + n * 0.9)}px rgba(255, 248, 235, ${(0.55 + n * 0.0045).toFixed(3)})` : "none";
-  }
-
   function applyHideSelf(hide) {
     localTileEl?.classList.toggle("ep-room-ambient--hide-self", !!hide);
   }
@@ -252,12 +243,6 @@ export async function initRoomAmbient({
       </div>
 
       <div class="ep-ambient__section">
-        <div class="ep-ambient__label">${esc(tr("roomAmbient:light.label", "Luz de tela"))}</div>
-        <input type="range" class="ep-ambient__slider" data-screen-light min="0" max="100" value="${prefs.screenLight}" aria-label="${esc(tr("roomAmbient:light.label", "Luz de tela"))}">
-        <p class="ep-room-ambient__sub">${esc(tr("roomAmbient:light.hint", "Moldura clara que ilumina seu rosto no escuro."))}</p>
-      </div>
-
-      <div class="ep-ambient__section">
         <div class="ep-ambient__label">${esc(tr("roomAmbient:devices.label", "Câmera e som"))}</div>
         ${deviceRows ? `<div class="ep-room-ambient__devices">${deviceRows}</div>` : `<p class="ep-room-ambient__sub" style="margin:0;">${esc(tr("roomAmbient:devices.single", "Um dispositivo de cada. Conecte fone ou webcam e eles aparecem aqui."))}</p>`}
         ${supportsIsolation ? `
@@ -298,12 +283,6 @@ export async function initRoomAmbient({
     else if (b.dataset.noise) setNoise(b.dataset.noise);
     else if (b.dataset.mode) { applyMode(b.dataset.mode); render(); }
   });
-  panel.addEventListener("input", e => {
-    if (e.target.matches("[data-screen-light]")) {
-      prefs.screenLight = Number(e.target.value) || 0; savePrefs(prefs);
-      applyScreenLight(prefs.screenLight);
-    }
-  });
   panel.addEventListener("change", e => {
     const t = e.target;
     if (t.matches("[data-device-kind]")) switchDevice(t.dataset.deviceKind, t.value);
@@ -334,7 +313,8 @@ export async function initRoomAmbient({
 
   // Estado inicial
   if (showMood) applyMode(readMode());
-  applyScreenLight(prefs.screenLight);
+  // Luz de tela foi removida: limpa a preferência antiga.
+  if ("screenLight" in prefs) { delete prefs.screenLight; savePrefs(prefs); }
   applyHideSelf(prefs.hideSelf);
   if (prefs.noise === "strong" && supportsIsolation) setNoise("strong");
   if (prefs.background !== "none") setBackground(prefs.background);
