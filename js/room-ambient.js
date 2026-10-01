@@ -13,9 +13,14 @@ import { applyMode, readMode, stopBrownNoise } from "./atmosphere.js";
 
 const PREFS_KEY = "ep_room_ambient_v1";
 const TRACK_PROCESSORS_VERSION = "0.8.1";
-// Média de processamento por quadro acima disso → aparelho não acompanha 30fps.
-const SLOW_FRAME_MS = 45;
-const SLOW_FRAME_WINDOW = 90;
+// Detecção de aparelho lento. Mede filterTimeMs (tempo real do quadro: a
+// biblioteca soma a segmentação duas vezes em processingTimeMs). Ignora o
+// aquecimento (modelo + shaders da GPU) e só desliga se a mediana passar de
+// ~15fps por várias janelas seguidas — pico isolado não conta.
+const SLOW_FRAME_MS = 66;
+const SLOW_FRAME_WINDOW = 60;
+const SLOW_WARMUP_FRAMES = 120;
+const SLOW_WINDOWS_TO_DISABLE = 3;
 
 const DEFAULTS = { background: "none", screenLight: 0, hideSelf: false, noise: "standard" };
 
@@ -114,7 +119,11 @@ export async function initRoomAmbient({
   let tp = null;            // módulo track-processors (carregado sob demanda)
   let processor = null;
   let slowFrames = [];
+  let warmupLeft = SLOW_WARMUP_FRAMES;
+  let slowWindows = 0;
+  let autoDisabledOnce = false; // se a pessoa religar depois, respeita a escolha
   let bgWarning = "";
+  const resetSlowDetection = () => { slowFrames = []; warmupLeft = SLOW_WARMUP_FRAMES; slowWindows = 0; };
 
   const camTrack = () => room.localParticipant.getTrackPublication(Track.Source.Camera)?.videoTrack || null;
   const micTrack = () => room.localParticipant.getTrackPublication(Track.Source.Microphone)?.audioTrack || null;
@@ -126,14 +135,21 @@ export async function initRoomAmbient({
   }
 
   function onFrameStats(stats) {
-    slowFrames.push(stats.processingTimeMs);
+    if (prefs.background === "none" || document.hidden) return; // aba em 2º plano é limitada pelo navegador
+    if (warmupLeft > 0) { warmupLeft--; return; }
+    slowFrames.push(stats.filterTimeMs);
     if (slowFrames.length < SLOW_FRAME_WINDOW) return;
-    const avg = slowFrames.reduce((a, b) => a + b, 0) / slowFrames.length;
+    const sorted = slowFrames.slice().sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
     slowFrames = [];
-    if (avg > SLOW_FRAME_MS && prefs.background !== "none") {
-      bgWarning = tr("roomAmbient:bg.tooSlow", "Este aparelho não está dando conta do efeito de fundo — desligamos para manter o vídeo fluido.");
-      setBackground("none", { keepWarning: true });
-    }
+    slowWindows = median > SLOW_FRAME_MS ? slowWindows + 1 : 0;
+    if (slowWindows < SLOW_WINDOWS_TO_DISABLE) return;
+    console.info("[room-ambient] fundo lento", { medianMs: Math.round(median) });
+    slowWindows = 0;
+    if (autoDisabledOnce) return;
+    autoDisabledOnce = true;
+    bgWarning = tr("roomAmbient:bg.tooSlow", "O efeito de fundo estava deixando seu vídeo lento e foi desligado. Pode ligar de novo se preferir.");
+    setBackground("none", { keepWarning: true });
   }
 
   async function setBackground(mode, { keepWarning = false } = {}) {
@@ -156,11 +172,11 @@ export async function initRoomAmbient({
       const opts = mode === "blur"
         ? { mode: "background-blur", blurRadius: 14 }
         : { mode: "virtual-background", imagePath: neutralBackground(mode === "dark" ? "dark" : "light") };
+      resetSlowDetection();
       if (processor && track.getProcessor?.() === processor) {
         await processor.switchTo(opts);
       } else {
         processor = lib.BackgroundProcessor({ ...opts, onFrameProcessed: onFrameStats });
-        slowFrames = [];
         await track.setProcessor(processor);
       }
     } catch (err) {
