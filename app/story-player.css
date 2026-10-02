@@ -70,6 +70,7 @@
 .story-note p { margin: 0; font-size: 14.5px; line-height: 1.5; }
 
 /* ── Ações ───────────────────────────────────────────────────────────── */
+.story-actions[hidden] { display: none !important; }
 .story-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
 .story-next, .story-retry { font: inherit; font-weight: 700; font-size: 14.5px; border-radius: 99px; padding: 11px 18px; cursor: pointer; border: 0; }
 .story-next { background: var(--s-ink); color: #fff; box-shadow: 0 8px 18px rgba(18, 60, 64, .2); }
@@ -144,3 +145,59 @@
 .learning-modal.is-story .module-quiz,
 .learning-modal.is-story .module-feedback,
 .learning-modal.is-story .learning-modal__foot { display: none; }
+
+/* ── Cena ilustrada ──────────────────────────────────────────────────── */
+.story-visual { border-radius: 14px; overflow: hidden; border: 1px solid var(--s-line); background: #e9f0ee; animation: story-visual-in .7s cubic-bezier(.2, .8, .2, 1) both; }
+.story-visual svg { display: block; width: 100%; height: auto; }
+.sv-person .sv-body { transform-box: fill-box; transform-origin: 50% 100%; transition: opacity .4s ease, filter .4s ease; }
+.sv-person .sv-glow { fill: rgba(224, 181, 83, 0); transition: fill .4s ease; }
+/* Alguém falando: os demais esmaecem, quem fala brilha e "respira". */
+.story-visual:not([data-speaker=""]) .sv-person .sv-body { opacity: .55; filter: saturate(.6); }
+.story-visual[data-speaker="voce"] .sv-person[data-who="voce"] .sv-body,
+.story-visual[data-speaker="carla"] .sv-person[data-who="carla"] .sv-body,
+.story-visual[data-speaker="rafael"] .sv-person[data-who="rafael"] .sv-body,
+.story-visual[data-speaker="bruno"] .sv-person[data-who="bruno"] .sv-body { opacity: 1; filter: none; animation: sv-talk .9s ease-in-out infinite; }
+.story-visual[data-speaker="voce"] .sv-person[data-who="voce"] .sv-glow,
+.story-visual[data-speaker="carla"] .sv-person[data-who="carla"] .sv-glow,
+.story-visual[data-speaker="rafael"] .sv-person[data-who="rafael"] .sv-glow,
+.story-visual[data-speaker="bruno"] .sv-person[data-who="bruno"] .sv-glow { fill: rgba(224, 181, 83, .32); }
+/* Carla se inclina para frente ao interromper. */
+.story-visual[data-speaker="carla"] .sv-person[data-who="carla"] .sv-body { animation: sv-lean .5s ease-out both, sv-talk .9s ease-in-out .5s infinite; }
+.sv-bar { transform-box: fill-box; transform-origin: 0 50%; animation: sv-bar 2.6s ease-in-out infinite alternate; }
+.sv-bar2 { animation-delay: -.8s; } .sv-bar3 { animation-delay: -1.6s; }
+.sv-tile-ring { fill: none; stroke: transparent; stroke-width: 4; transition: stroke .3s ease; }
+.story-visual[data-speaker="rafael"] .sv-tile[data-who="rafael"] .sv-tile-ring,
+.story-visual[data-speaker="voce"] .sv-tile[data-who="voce"] .sv-tile-ring { stroke: #e0b553; }
+.sv-mail { transform-box: fill-box; transform-origin: 50% 50%; animation: sv-mail 1.6s ease-in-out infinite; }
+
+/* ── Digitando e interrupção ─────────────────────────────────────────── */
+.story-typing { display: inline-flex; gap: 4px; align-self: flex-start; margin-left: 42px; padding: 10px 12px; border-radius: 14px; background: #f3eee3; }
+.story-typing.is-mine { align-self: flex-end; margin: 0 42px 0 0; background: var(--s-ink); }
+.story-typing i { width: 7px; height: 7px; border-radius: 50%; background: #9aa7a5; animation: story-dot 1s ease-in-out infinite; }
+.story-typing.is-mine i { background: rgba(255, 255, 255, .7); }
+.story-typing i:nth-child(2) { animation-delay: .15s; } .story-typing i:nth-child(3) { animation-delay: .3s; }
+.story-bubble p.is-typing::after { content: "▍"; margin-left: 1px; animation: story-caret .7s steps(1) infinite; opacity: .6; }
+.story-line.is-interrupted .story-bubble { opacity: .78; }
+.story-line.is-interrupted .story-bubble p::after { content: "—"; margin-left: 2px; }
+.story-cut { display: inline-block; margin-top: 6px; font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #ffd9cf; background: rgba(192, 86, 63, .55); padding: 2px 8px; border-radius: 99px; animation: story-pop .3s ease; }
+.story-line.is-cutin.is-in { animation: story-cutin .45s cubic-bezier(.3, 1.4, .5, 1) both; }
+
+@keyframes story-visual-in { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes sv-talk { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+@keyframes sv-lean { from { transform: translateX(0) rotate(0); } to { transform: translateX(-10px) rotate(-5deg); } }
+@keyframes sv-bar { from { transform: scaleX(.55); } to { transform: scaleX(1); } }
+@keyframes sv-mail { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+@keyframes story-dot { 0%, 80%, 100% { transform: translateY(0); opacity: .5; } 40% { transform: translateY(-4px); opacity: 1; } }
+@keyframes story-caret { 50% { opacity: 0; } }
+@keyframes story-cutin { 0% { opacity: 0; transform: translateX(-36px) rotate(-1.5deg); } 60% { transform: translateX(6px) rotate(.5deg); } 100% { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .story-visual, .sv-person .sv-body, .sv-bar, .sv-mail, .story-typing i, .story-line.is-cutin.is-in { animation: none !important; }
+}
+
+.sv-cloud { animation: sv-cloud 9s ease-in-out infinite alternate; }
+.sv-leaf { transform-box: fill-box; transform-origin: 50% 100%; animation: sv-leaf 3.2s ease-in-out infinite alternate; }
+.sv-leaf2 { animation-delay: -1.4s; }
+@keyframes sv-cloud { from { transform: translateX(0); } to { transform: translateX(46px); } }
+@keyframes sv-leaf { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+@media (prefers-reduced-motion: reduce) { .sv-cloud, .sv-leaf { animation: none !important; } }

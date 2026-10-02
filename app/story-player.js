@@ -12,6 +12,82 @@ const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&
 const reduceMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, reduceMotion() ? 0 : ms));
 
+// Pessoa ilustrada (cabeça + tronco) — data-who liga ao destaque de quem fala.
+const person = (who, x, y, color, scale = 1) => `
+  <g class="sv-person" data-who="${who}" transform="translate(${x} ${y}) scale(${scale})">
+    <g class="sv-body">
+      <ellipse class="sv-glow" cx="0" cy="-6" rx="34" ry="40"/>
+      <path d="M-24 34 C-24 8 -14 0 0 0 C14 0 24 8 24 34 Z" fill="${color}"/>
+      <circle cx="0" cy="-14" r="13" fill="#f2d7c2"/>
+      <path d="M-13 -17 C-12 -30 12 -31 13 -17 C8 -24 -6 -24 -13 -17 Z" fill="#3b2a22"/>
+    </g>
+  </g>`;
+
+// Cenários ilustrados (SVG leve, animado via CSS). Sem imagens externas.
+const VISUALS = {
+  meeting: `<svg viewBox="0 0 640 230" role="img" aria-label="Sala de reunião">
+    <defs><linearGradient id="svWall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9f0ee"/><stop offset="1" stop-color="#dfe8e5"/></linearGradient></defs>
+    <rect width="640" height="230" fill="url(#svWall)"/>
+    <rect x="0" y="176" width="640" height="54" fill="#d4c7b0"/>
+    <rect x="0" y="174" width="640" height="4" fill="#c4b59b"/>
+    <g class="sv-window"><rect x="300" y="22" width="150" height="78" rx="6" fill="#bfe0ea" stroke="#d9e4e1" stroke-width="5"/>
+      <circle class="sv-sun" cx="420" cy="44" r="10" fill="#f6d27a"/>
+      <path class="sv-cloud" d="M318 70 q8 -12 20 -4 q8 -10 18 0 q10 -2 10 8 h-48 z" fill="#ffffff" opacity=".9"/>
+      <line x1="375" y1="22" x2="375" y2="100" stroke="#d9e4e1" stroke-width="4"/></g>
+    <g transform="translate(590 120)"><rect x="-14" y="38" width="28" height="22" rx="4" fill="#b98a5e"/>
+      <path class="sv-leaf" d="M0 40 C-24 22 -20 4 -4 0 C-2 14 2 28 0 40 Z" fill="#4f8f6a"/>
+      <path class="sv-leaf sv-leaf2" d="M0 40 C24 20 22 2 6 -2 C4 14 0 28 0 40 Z" fill="#3f7d5b"/>
+      <path d="M0 40 C-6 26 -2 14 2 8" stroke="#2f6a4b" stroke-width="2" fill="none"/></g>
+    <ellipse cx="452" cy="196" rx="170" ry="10" fill="rgba(0,0,0,.08)"/>
+    <ellipse cx="268" cy="182" rx="30" ry="6" fill="rgba(0,0,0,.08)"/>
+    <g class="sv-screen"><rect x="44" y="26" width="190" height="112" rx="8" fill="#123c40"/>
+      <rect x="62" y="44" width="80" height="9" rx="4" fill="#e0b553"/>
+      <rect class="sv-bar sv-bar1" x="62" y="66" width="120" height="7" rx="3" fill="#7fb6ae"/>
+      <rect class="sv-bar sv-bar2" x="62" y="82" width="96" height="7" rx="3" fill="#7fb6ae"/>
+      <rect class="sv-bar sv-bar3" x="62" y="98" width="140" height="7" rx="3" fill="#7fb6ae"/>
+      <path d="M190 124 L206 104 L218 114 L226 96" stroke="#e0b553" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+    <rect x="132" y="138" width="14" height="40" fill="#8a7a62"/>
+    ${person("voce", 268, 132, "#1d6b67", 1.05)}
+    <rect x="356" y="120" width="48" height="40" rx="10" fill="#6f6255"/>
+    <rect x="500" y="120" width="48" height="40" rx="10" fill="#6f6255"/>
+    <rect x="428" y="108" width="48" height="44" rx="10" fill="#6f6255"/>
+    ${person("outro1", 380, 140, "#8aa0a3", .9)}
+    ${person("outro2", 524, 140, "#a7958a", .9)}
+    ${person("carla", 452, 128, "#c46a52", 1)}
+    <ellipse cx="452" cy="170" rx="164" ry="22" fill="#c9ad84"/>
+    <rect x="404" y="156" width="34" height="9" rx="2" fill="#f7f3ea" opacity=".9"/>
+    <rect x="478" y="158" width="26" height="7" rx="2" fill="#f7f3ea" opacity=".8"/>
+    <g transform="translate(506 148)"><rect width="34" height="20" rx="2" fill="#2b3a3c"/><rect x="-4" y="20" width="42" height="4" rx="2" fill="#5b6a6c"/><rect x="4" y="4" width="26" height="12" rx="1" fill="#7fb6ae" opacity=".7"/></g>
+    <g transform="translate(370 156)"><rect width="18" height="14" rx="3" fill="#f7f3ea"/><path d="M18 3 q6 1 0 8" stroke="#f7f3ea" stroke-width="2" fill="none"/></g>
+  </svg>`,
+  call: `<svg viewBox="0 0 640 230" role="img" aria-label="Chamada de vídeo">
+    <rect width="640" height="230" fill="#1b2b2e"/>
+    <g class="sv-tile" data-who="rafael"><rect x="40" y="22" width="390" height="186" rx="14" fill="#2c4245"/>
+      ${person("rafael", 235, 128, "#3f6fb0", 1.6)}
+      <rect class="sv-tile-ring" x="40" y="22" width="390" height="186" rx="14"/>
+      <rect x="54" y="180" width="84" height="18" rx="9" fill="rgba(0,0,0,.45)"/><text x="66" y="193" fill="#fff" font-size="11" font-family="Inter,sans-serif">Rafael</text></g>
+    <g class="sv-tile" data-who="voce"><rect x="452" y="22" width="148" height="104" rx="12" fill="#2c4245"/>
+      ${person("voce", 526, 82, "#1d6b67", .9)}
+      <rect class="sv-tile-ring" x="452" y="22" width="148" height="104" rx="12"/>
+      <rect x="462" y="100" width="44" height="16" rx="8" fill="rgba(0,0,0,.45)"/><text x="470" y="112" fill="#fff" font-size="10" font-family="Inter,sans-serif">Você</text></g>
+    <g transform="translate(452 144)"><rect width="148" height="64" rx="12" fill="#243538"/>
+      <circle cx="40" cy="32" r="14" fill="#c0563f"/><rect x="34" y="28" width="12" height="8" rx="2" fill="#fff"/>
+      <circle cx="80" cy="32" r="14" fill="#3a5154"/><circle cx="118" cy="32" r="14" fill="#3a5154"/></g>
+  </svg>`,
+  office: `<svg viewBox="0 0 640 230" role="img" aria-label="Escritório">
+    <rect width="640" height="230" fill="#efe9dc"/>
+    <rect x="0" y="170" width="640" height="60" fill="#d8ccb6"/>
+    <rect x="70" y="28" width="120" height="84" rx="6" fill="#dfe8e5" stroke="#c7d3cf"/>
+    <path d="M70 84 L110 56 L140 76 L190 46" stroke="#9fc0b9" stroke-width="3" fill="none"/>
+    ${person("voce", 220, 126, "#1d6b67", 1)}
+    <rect x="160" y="150" width="140" height="10" rx="3" fill="#b89c74"/>
+    ${person("bruno", 430, 126, "#b58a2c", 1)}
+    <rect x="370" y="150" width="190" height="10" rx="3" fill="#b89c74"/>
+    <g transform="translate(470 98)"><rect width="76" height="50" rx="6" fill="#123c40"/>
+      <g class="sv-mail"><rect x="20" y="13" width="36" height="24" rx="3" fill="#fffdf8"/><path d="M20 15 L38 28 L56 15" stroke="#c0563f" stroke-width="2.5" fill="none"/></g></g>
+  </svg>`
+};
+
 /**
  * @param {HTMLElement} root
  * @param {object} module   módulo do catálogo (story, cast, quiz, takeaway…)
@@ -75,15 +151,50 @@ export function mountStory(root, module, { completed = false, onSubmit, onClose 
     </div>`;
   }
 
-  // Mostra falas uma a uma (efeito de conversa acontecendo).
-  async function playLines(container, lines) {
-    for (const line of lines) {
+  // Texto aparecendo letra a letra (instantâneo com "reduzir movimento").
+  async function typewrite(el, text, speed = 24) {
+    if (reduceMotion()) { el.textContent = text; return; }
+    el.textContent = "";
+    el.classList.add("is-typing");
+    for (let i = 0; i < text.length; i++) {
       if (destroyed) return;
+      el.textContent = text.slice(0, i + 1);
+      await new Promise((r) => setTimeout(r, speed));
+    }
+    el.classList.remove("is-typing");
+  }
+
+  // Conversa acontecendo: "digitando…", texto letra a letra, destaque de
+  // quem fala na ilustração e interrupção visível (a fala é cortada por quem
+  // entra por cima — intencional, não erro de texto).
+  async function playLines(container, lines, visual = null) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (destroyed) return;
+      const narration = line.who === "narrador" || !(cast[line.who] && cast[line.who].name);
+      if (visual) visual.dataset.speaker = narration ? "" : line.who;
+      const cutIn = i > 0 && lines[i - 1].interrupted;
+      if (!narration && !cutIn) {
+        container.insertAdjacentHTML("beforeend", `<div class="story-typing ${line.who === "voce" ? "is-mine" : ""}"><i></i><i></i><i></i></div>`);
+        const typing = container.lastElementChild;
+        await wait(650);
+        typing.remove();
+      }
       container.insertAdjacentHTML("beforeend", bubble(line));
       const el = container.lastElementChild;
+      if (cutIn) el.classList.add("is-cutin");
       requestAnimationFrame(() => el.classList.add("is-in"));
-      await wait(line.who === "narrador" ? 650 : 900);
+      if (narration) { await wait(900); continue; }
+      await typewrite(el.querySelector(".story-bubble p"), line.text, line.interrupted ? 32 : 22);
+      if (line.interrupted) {
+        el.classList.add("is-interrupted");
+        el.querySelector(".story-bubble").insertAdjacentHTML("beforeend", `<span class="story-cut">fala interrompida</span>`);
+        await wait(150);
+      } else {
+        await wait(450);
+      }
     }
+    if (visual) visual.dataset.speaker = "";
   }
 
   function nextButton(label = "Continuar") {
@@ -113,11 +224,12 @@ export function mountStory(root, module, { completed = false, onSubmit, onClose 
   async function renderScene(step) {
     stage.innerHTML = `<div class="story-card">
       ${step.title ? `<span class="story-chip">${esc(step.title)}</span>` : ""}
+      ${VISUALS[step.visual] ? `<div class="story-visual" data-visual="${esc(step.visual)}">${VISUALS[step.visual]}</div>` : ""}
       <div class="story-dialog"></div>
       <div class="story-actions" hidden>${nextButton()}</div>
     </div>`;
     requestAnimationFrame(() => stage.classList.add("is-in"));
-    await playLines(stage.querySelector(".story-dialog"), step.lines || []);
+    await playLines(stage.querySelector(".story-dialog"), step.lines || [], stage.querySelector(".story-visual"));
     const actions = stage.querySelector(".story-actions");
     if (!actions) return;
     actions.hidden = false;
