@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./app.css?v=20260930m">
-  <link rel="stylesheet" href="./weather-hero.css?v=20261002d">
+  <link rel="stylesheet" href="./weather-hero.css?v=20261002e">
   <style>
     .home-hero {
       background: linear-gradient(135deg, #1c1f1d 0%, #2d3a30 100%);
@@ -209,13 +209,13 @@
   let skyCoords = { lat: -23.55, lon: -46.63 };
   try { const c = JSON.parse(localStorage.getItem("ep.skyCoords") || "null"); if (c && Number.isFinite(c.lat)) skyCoords = c; } catch {}
   // Nascer/pôr do sol do dia (NOAA simplificado), em ms. Muda diariamente.
-  function sunTimes(date, { lat, lon }) {
+  function sunTimes(date, { lat, lon }, zenith = 90.833) {
     const rad = Math.PI / 180;
     const day = Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(date.getFullYear(), 0, 0)) / 864e5);
     const g = 2 * Math.PI / 365 * (day - 1);
     const eqTime = 229.18 * (.000075 + .001868 * Math.cos(g) - .032077 * Math.sin(g) - .014615 * Math.cos(2 * g) - .040849 * Math.sin(2 * g));
     const decl = .006918 - .399912 * Math.cos(g) + .070257 * Math.sin(g) - .006758 * Math.cos(2 * g) + .000907 * Math.sin(2 * g) - .002697 * Math.cos(3 * g) + .00148 * Math.sin(3 * g);
-    const cosH = Math.cos(90.833 * rad) / (Math.cos(lat * rad) * Math.cos(decl)) - Math.tan(lat * rad) * Math.tan(decl);
+    const cosH = Math.cos(zenith * rad) / (Math.cos(lat * rad) * Math.cos(decl)) - Math.tan(lat * rad) * Math.tan(decl);
     const ha = Math.acos(Math.max(-1, Math.min(1, cosH))) / rad;
     const midnight = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
     return {
@@ -224,17 +224,21 @@
     };
   }
   // Fases: sol baixo ~1h antes do pôr; depois do pôr, só o brilho do
-  // horizonte (crepúsculo, sem sol) por ~45 min; o mesmo, invertido, no amanhecer.
+  // horizonte, que esmaece até o fim do crepúsculo náutico (sol 12° abaixo
+  // do horizonte = céu escuro de fato); a partir daí, noite. Idem no amanhecer.
   function skyPhase(now = new Date()) {
     const t = now.getTime();
     const { sunrise, sunset } = sunTimes(now, skyCoords);
+    const dark = sunTimes(now, skyCoords, 102);
     const min = 6e4;
-    if (t < sunrise - 45 * min || t >= sunset + 45 * min) return { phase: "night", sun: false };
-    if (t < sunrise) return { phase: "dawn", sun: false };
-    if (t < sunrise + 60 * min) return { phase: "dawn", sun: true };
+    const fade = (from, to) => Math.max(0, Math.min(1, (t - from) / (to - from)));
+    if (t < dark.sunrise || t >= dark.sunset) return { phase: "night", sun: false, glow: 0 };
+    if (t < sunrise) return { phase: "dawn", sun: false, glow: fade(dark.sunrise, sunrise) };
+    if (t >= sunset) return { phase: "dusk", sun: false, glow: 1 - fade(sunset, dark.sunset) };
+    if (t < sunrise + 60 * min) return { phase: "dawn", sun: true, glow: 1 };
     if (t >= sunset) return { phase: "dusk", sun: false };
-    if (t >= sunset - 60 * min) return { phase: "dusk", sun: true };
-    return { phase: now.getHours() < 12 ? "morning" : "afternoon", sun: true };
+    if (t >= sunset - 60 * min) return { phase: "dusk", sun: true, glow: 1 };
+    return { phase: now.getHours() < 12 ? "morning" : "afternoon", sun: true, glow: 1 };
   }
   function fillParticles(container, count, build) {
     const frag = document.createDocumentFragment();
@@ -307,13 +311,14 @@
   }
   function renderSky(weather, reveal = true) {
     const hour = new Date().getHours();
-    const { phase, sun } = skyPhase();
+    const { phase, sun, glow } = skyPhase();
     hero.dataset.phase = phase;
+    hero.style.setProperty("--horizon-glow", glow.toFixed(2));
     hero.dataset.sun = sun ? "up" : "down";
     document.querySelector(".home-hero__greeting").textContent = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
     if (weather) hero.dataset.weather = weather; else delete hero.dataset.weather;
     const stars = hero.querySelector(".sky-stars");
-    if (phase === "night" || phase === "dawn") {
+    if (phase === "night" || (!sun && glow < .5)) {
       if (!stars.childElementCount) fillParticles(stars, 46, el => {
         el.style.left = `${Math.random() * 100}%`;
         el.style.top = `${Math.random() * 78}%`;
@@ -387,6 +392,7 @@
     }
   }
   renderSky(null, false);
+  setInterval(() => { const p = skyPhase(); if (p.phase !== hero.dataset.phase || String(p.sun ? "up" : "down") !== hero.dataset.sun) renderSky(hero.dataset.weather || null, false); else hero.style.setProperty("--horizon-glow", p.glow.toFixed(2)); }, 60 * 1000);
   setInterval(() => {
     renderSky(hero.dataset.weather || null);
     if (activeSkyUser && !document.hidden) loadSky(activeSkyUser, { force: true });
