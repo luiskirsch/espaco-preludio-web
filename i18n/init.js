@@ -317,7 +317,13 @@
     if (locale !== DEFAULT_LOCALE) await startDynamic(basePath, locale);
 
     window.EP_I18N = {
-      t: (key, opts) => window.i18next.t(key, opts),
+      // Sem tradução, o i18next devolve a chave SEM o namespace ("unlock.btn"
+      // para "entrar:unlock.btn"). As páginas comparam com a chave completa
+      // para cair no texto em português; devolve a completa para isso funcionar.
+      t: (key, opts) => {
+        const v = window.i18next.t(key, opts);
+        return (typeof v === 'string' && v === String(key).split(':').pop()) ? key : v;
+      },
       apply: applyTranslations,
       locale: () => window.i18next.language,
       change: async (lng) => {
