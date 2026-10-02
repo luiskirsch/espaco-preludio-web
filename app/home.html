@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./app.css?v=20260930m">
-  <link rel="stylesheet" href="./weather-hero.css?v=20261002e">
+  <link rel="stylesheet" href="./weather-hero.css?v=20261002f">
   <style>
     .home-hero {
       background: linear-gradient(135deg, #1c1f1d 0%, #2d3a30 100%);
@@ -79,6 +79,7 @@
         <span class="sky-haze"></span>
         <span class="sky-orb"></span>
         <span class="sky-stars"></span>
+        <span class="sky-moon"></span>
         <span class="sky-clouds"><i></i><i></i><i></i><i></i></span>
         <span class="sky-fog"></span>
         <span class="sky-drops"></span>
@@ -240,6 +241,73 @@
     if (t >= sunset - 60 * min) return { phase: "dusk", sun: true, glow: 1 };
     return { phase: now.getHours() < 12 ? "morning" : "afternoon", sun: true, glow: 1 };
   }
+  // Lua: posição (alt/az), fração iluminada e lado iluminado voltado para o
+  // sol — algoritmo das efemérides simplificadas (precisão ~1°, fase exata).
+  const astro = (() => {
+    const rad = Math.PI / 180, e = rad * 23.4397;
+    const days = (ms) => ms / 864e5 - .5 + 2440588 - 2451545;
+    const ra = (l, b) => Math.atan2(Math.sin(l) * Math.cos(e) - Math.tan(b) * Math.sin(e), Math.cos(l));
+    const dec = (l, b) => Math.asin(Math.sin(b) * Math.cos(e) + Math.cos(b) * Math.sin(e) * Math.sin(l));
+    const sidereal = (d, lw) => rad * (280.16 + 360.9856235 * d) - lw;
+    function sun(d) {
+      const M = rad * (357.5291 + .98560028 * d);
+      const L = M + rad * (1.9148 * Math.sin(M) + .02 * Math.sin(2 * M) + .0003 * Math.sin(3 * M)) + rad * 102.9372 + Math.PI;
+      return { ra: ra(L, 0), dec: dec(L, 0) };
+    }
+    function moon(d) {
+      const L = rad * (218.316 + 13.176396 * d), M = rad * (134.963 + 13.064993 * d), F = rad * (93.272 + 13.22935 * d);
+      const l = L + rad * 6.289 * Math.sin(M), b = rad * 5.128 * Math.sin(F);
+      return { ra: ra(l, b), dec: dec(l, b), dist: 385001 - 20905 * Math.cos(M) };
+    }
+    function horizontal(c, d, lat, lon) {
+      const H = sidereal(d, rad * -lon) - c.ra, phi = rad * lat;
+      return {
+        alt: Math.asin(Math.sin(phi) * Math.sin(c.dec) + Math.cos(phi) * Math.cos(c.dec) * Math.cos(H)),
+        az: Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(phi) - Math.tan(c.dec) * Math.cos(phi)) + Math.PI // a partir do norte
+      };
+    }
+    return function moonState(date, { lat, lon }) {
+      const d = days(date.getTime()), s = sun(d), m = moon(d);
+      const mp = horizontal(m, d, lat, lon), sp = horizontal(s, d, lat, lon);
+      const phi = Math.acos(Math.sin(s.dec) * Math.sin(m.dec) + Math.cos(s.dec) * Math.cos(m.dec) * Math.cos(s.ra - m.ra));
+      const inc = Math.atan2(149598000 * Math.sin(phi), m.dist - 149598000 * Math.cos(phi));
+      // direção do sol vista da lua, no céu local (0 = zênite, horário = azimute crescente)
+      const dAz = sp.az - mp.az;
+      const limb = Math.atan2(Math.sin(dAz) * Math.cos(sp.alt), Math.cos(mp.alt) * Math.sin(sp.alt) - Math.sin(mp.alt) * Math.cos(sp.alt) * Math.cos(dAz));
+      return { alt: mp.alt / rad, az: mp.az / rad, fraction: (1 + Math.cos(inc)) / 2, limb: limb / rad };
+    };
+  })();
+  function renderMoon(sunUp) {
+    const el = hero.querySelector(".sky-moon");
+    const m = astro(new Date(), skyCoords);
+    if (sunUp || m.alt < 1) { el.hidden = true; return; }
+    // olhando para o equador (norte no hemisfério sul): leste à direita no sul, à esquerda no norte
+    const facing = skyCoords.lat < 0 ? 0 : 180;
+    let rel = ((m.az - facing + 540) % 360) - 180;
+    const x = Math.max(8, Math.min(92, 50 + rel / 100 * 46));
+    const y = Math.max(12, Math.min(78, 80 - m.alt / 70 * 68));
+    el.style.left = x + "%";
+    el.style.top = y + "%";
+    el.style.setProperty("--moon-glow", (.15 + m.fraction * .55).toFixed(2));
+    const k = m.fraction, ry = (50 * Math.abs(1 - 2 * k)).toFixed(2);
+    const lit = k > .995 ? "M0 50 A50 50 0 1 1 100 50 A50 50 0 1 1 0 50Z"
+      : `M0 50 A50 50 0 0 1 100 50 A50 ${ry} 0 0 ${k < .5 ? 0 : 1} 0 50Z`;
+    const sig = `${k.toFixed(3)}|${Math.round(m.limb)}`;
+    if (el.dataset.sig !== sig) {
+      el.dataset.sig = sig;
+      el.innerHTML = `<svg viewBox="-4 -4 108 108" style="transform:rotate(${m.limb.toFixed(1)}deg)"><defs>
+        <radialGradient id="moonLit" cx="50%" cy="38%" r="62%"><stop offset="0" stop-color="#fbf8ee"/><stop offset=".7" stop-color="#e6e1d2"/><stop offset="1" stop-color="#c9c4b4"/></radialGradient>
+        <clipPath id="moonClip"><path d="${lit}"/></clipPath></defs>
+        <circle cx="50" cy="50" r="50" fill="#1c2232" opacity=".55"/>
+        <path d="${lit}" fill="url(#moonLit)"/>
+        <g clip-path="url(#moonClip)" fill="#8f8b80" opacity=".28">
+          <ellipse cx="34" cy="32" rx="15" ry="11"/><ellipse cx="58" cy="26" rx="11" ry="8"/><ellipse cx="66" cy="46" rx="13" ry="10"/>
+          <ellipse cx="44" cy="55" rx="9" ry="12"/><ellipse cx="30" cy="62" rx="7" ry="5"/><circle cx="57" cy="80" r="4"/>
+          <circle cx="57" cy="80" r="9" fill="none" stroke="#f4f0e4" stroke-width="1.2" opacity=".6"/>
+        </g></svg>`;
+    }
+    el.hidden = false;
+  }
   function fillParticles(container, count, build) {
     const frag = document.createDocumentFragment();
     for (let i = 0; i < count; i++) {
@@ -315,6 +383,7 @@
     hero.dataset.phase = phase;
     hero.style.setProperty("--horizon-glow", glow.toFixed(2));
     hero.dataset.sun = sun ? "up" : "down";
+    renderMoon(sun);
     document.querySelector(".home-hero__greeting").textContent = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
     if (weather) hero.dataset.weather = weather; else delete hero.dataset.weather;
     const stars = hero.querySelector(".sky-stars");
@@ -392,7 +461,7 @@
     }
   }
   renderSky(null, false);
-  setInterval(() => { const p = skyPhase(); if (p.phase !== hero.dataset.phase || String(p.sun ? "up" : "down") !== hero.dataset.sun) renderSky(hero.dataset.weather || null, false); else hero.style.setProperty("--horizon-glow", p.glow.toFixed(2)); }, 60 * 1000);
+  setInterval(() => { const p = skyPhase(); if (p.phase !== hero.dataset.phase || String(p.sun ? "up" : "down") !== hero.dataset.sun) renderSky(hero.dataset.weather || null, false); else { hero.style.setProperty("--horizon-glow", p.glow.toFixed(2)); renderMoon(p.sun); } }, 60 * 1000);
   setInterval(() => {
     renderSky(hero.dataset.weather || null);
     if (activeSkyUser && !document.hidden) loadSky(activeSkyUser, { force: true });
