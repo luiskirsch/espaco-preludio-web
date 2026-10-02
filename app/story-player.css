@@ -250,9 +250,11 @@
 .chat-app__unsent { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: #c0563f; padding: 2px 8px; border-radius: 99px; animation: story-pop .3s ease; }
 /* Ilustrativo: a simulação não aceita cliques — sem cursor nem hover. */
 .chat-app__send, .chat-app__input { pointer-events: none; cursor: default; user-select: none; }
-.chat-app__send { flex: 0 0 40px; height: 40px; border-radius: 50%; border: 0; display: grid; place-items: center; color: #fff; background: #123c40; transition: transform .15s ease, background .2s ease; }
+.chat-app__send { flex: 0 0 40px; height: 40px; border-radius: 50%; border: 0; display: grid; place-items: center; color: #f6f2e9; background: #cfc8ba; transition: transform .15s ease, background .25s ease, color .25s ease; }
+/* Só "acende" enquanto há texto no campo, como nos apps de mensagem. */
+.chat-app__send.is-ready { color: #fff; background: #123c40; }
 .chat-app__send.is-pressed { transform: scale(.82); background: #1d6b67; }
-.chat-app__composer.is-idle .chat-app__send { opacity: .5; }
+.chat-app__composer.is-idle .chat-app__send { color: #f6f2e9; background: #cfc8ba; }
 
 @keyframes chat-cutin { 0% { opacity: 0; transform: translateX(-30px) scale(.9); } 55% { transform: translateX(8px) scale(1.03); } 100% { opacity: 1; transform: none; } }
 @keyframes chat-jolt { 0%, 100% { transform: none; } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }

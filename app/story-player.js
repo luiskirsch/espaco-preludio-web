@@ -276,7 +276,7 @@ export function mountStory(root, module, { completed = false, onSubmit, onClose 
     const send = stage.querySelector(".chat-app__send");
     const status = stage.querySelector(".chat-app__status");
     const scroll = () => { feed.scrollTop = feed.scrollHeight; };
-    const setDraft = (text) => { draft.textContent = text; input.classList.toggle("has-text", text.length > 0); };
+    const setDraft = (text) => { draft.textContent = text; input.classList.toggle("has-text", text.length > 0); send.classList.toggle("is-ready", text.length > 0); };
 
     const typingRow = (who) => {
       const c = cast[who] || {};
