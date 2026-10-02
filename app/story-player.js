@@ -222,6 +222,7 @@ export function mountStory(root, module, { completed = false, onSubmit, onClose 
   }
 
   async function renderScene(step) {
+    if (step.chat) return renderChatScene(step);
     stage.innerHTML = `<div class="story-card">
       ${step.title ? `<span class="story-chip">${esc(step.title)}</span>` : ""}
       ${VISUALS[step.visual] ? `<div class="story-visual" data-visual="${esc(step.visual)}">${VISUALS[step.visual]}</div>` : ""}
@@ -230,6 +231,160 @@ export function mountStory(root, module, { completed = false, onSubmit, onClose 
     </div>`;
     requestAnimationFrame(() => stage.classList.add("is-in"));
     await playLines(stage.querySelector(".story-dialog"), step.lines || [], stage.querySelector(".story-visual"));
+    const actions = stage.querySelector(".story-actions");
+    if (!actions) return;
+    actions.hidden = false;
+    bindNext(stage);
+  }
+
+  // ─── Cena em chat: simulação realista de mensageiro ───────────────────────
+  // Digitação humana no campo (velocidade variável, pausas na pontuação,
+  // erro corrigido com backspace), envio com ✓ → ✓✓, "fulano está
+  // digitando…" e, numa fala interrompida, a mensagem do outro chegando
+  // enquanto você ainda digita — o seu texto fica como rascunho não enviado.
+  const now = () => new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const human = (ch) => {
+    if (/[.!?]/.test(ch)) return 260 + Math.random() * 180;
+    if (/[,:;]/.test(ch)) return 170 + Math.random() * 120;
+    if (ch === " ") return 55 + Math.random() * 50;
+    return 34 + Math.random() * 46;
+  };
+
+  async function renderChatScene(step) {
+    const chat = step.chat;
+    const others = Object.entries(cast).filter(([id, c]) => id !== "voce" && id !== "narrador" && c.name);
+    stage.innerHTML = `<div class="story-card story-card--chat">
+      ${step.title ? `<span class="story-chip">${esc(step.title)}</span>` : ""}
+      <div class="chat-app">
+        <header class="chat-app__head">
+          <div class="chat-app__avatars">${others.map(([id, c]) => `<span data-tone="${esc(c.tone)}">${esc(c.name.slice(0, 1))}</span>`).join("")}<span data-tone="muted">+2</span></div>
+          <div><strong>${esc(chat.title)}</strong><small class="chat-app__status">${esc(chat.subtitle || "")}</small></div>
+          <i class="chat-app__live">● ao vivo</i>
+        </header>
+        <div class="chat-app__feed"></div>
+        <footer class="chat-app__composer">
+          <div class="chat-app__input"><span class="chat-app__draft"></span><span class="chat-app__placeholder">Escreva uma mensagem…</span></div>
+          <button type="button" class="chat-app__send" tabindex="-1" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 11.5 20 4l-6.5 17-2.6-7.1z" fill="currentColor"/></svg></button>
+        </footer>
+      </div>
+      <div class="story-actions" hidden>${nextButton()}</div>
+    </div>`;
+    requestAnimationFrame(() => stage.classList.add("is-in"));
+    const feed = stage.querySelector(".chat-app__feed");
+    const draft = stage.querySelector(".chat-app__draft");
+    const input = stage.querySelector(".chat-app__input");
+    const send = stage.querySelector(".chat-app__send");
+    const status = stage.querySelector(".chat-app__status");
+    const scroll = () => { feed.scrollTop = feed.scrollHeight; };
+    const setDraft = (text) => { draft.textContent = text; input.classList.toggle("has-text", text.length > 0); };
+
+    const typingRow = (who) => {
+      const c = cast[who] || {};
+      feed.insertAdjacentHTML("beforeend", `<div class="chat-typing" data-tone="${esc(c.tone)}"><span class="chat-avatar">${esc((c.name || "?").slice(0, 1))}</span><div class="chat-typing__dots"><i></i><i></i><i></i></div></div>`);
+      status.textContent = `${c.name} está digitando…`;
+      status.classList.add("is-typing");
+      scroll();
+      return () => {
+        feed.querySelectorAll(".chat-typing").forEach((el) => el.remove());
+        status.textContent = chat.subtitle || "";
+        status.classList.remove("is-typing");
+      };
+    };
+
+    const addMessage = (line, { mine = false, cutIn = false } = {}) => {
+      const c = cast[line.who] || {};
+      feed.insertAdjacentHTML("beforeend", mine
+        ? `<div class="chat-msg is-mine"><div class="chat-msg__bubble"><p>${esc(line.text)}</p><small>${now()} <b class="chat-ticks">✓</b></small></div></div>`
+        : `<div class="chat-msg ${cutIn ? "is-cutin" : ""}" data-tone="${esc(c.tone)}"><span class="chat-avatar">${esc((c.name || "?").slice(0, 1))}</span><div class="chat-msg__bubble"><strong>${esc(c.name)}</strong><p>${esc(line.text)}</p><small>${now()}</small></div></div>`);
+      const el = feed.lastElementChild;
+      requestAnimationFrame(() => el.classList.add("is-in"));
+      scroll();
+      return el;
+    };
+
+    async function typeIntoComposer(line, stopAt = null, prefix = "") {
+      const text = line.text;
+      const typo = line.typo && text.includes(line.typo.right) ? line.typo : null;
+      const typoAt = typo ? text.indexOf(typo.right) : -1;
+      let typed = prefix;
+      for (let i = 0; i < text.length; i++) {
+        if (destroyed) return typed;
+        if (stopAt !== null && i >= stopAt) return typed;
+        if (i === typoAt && !reduceMotion()) {
+          for (const ch of typo.wrong) { typed += ch; setDraft(typed); await wait(human(ch)); }
+          await wait(420);
+          for (let k = 0; k < typo.wrong.length; k++) { typed = typed.slice(0, -1); setDraft(typed); await wait(55); }
+          await wait(160);
+        }
+        typed += text[i];
+        setDraft(typed);
+        await wait(human(text[i]));
+      }
+      return typed;
+    }
+
+    for (let i = 0; i < (step.lines || []).length; i++) {
+      const line = step.lines[i];
+      if (destroyed) return;
+      const narration = line.who === "narrador" || !(cast[line.who] && cast[line.who].name);
+      if (narration) {
+        feed.insertAdjacentHTML("beforeend", `<p class="chat-system">${esc(line.text)}</p>`);
+        const el = feed.lastElementChild;
+        requestAnimationFrame(() => el.classList.add("is-in"));
+        scroll();
+        await wait(1500);
+        continue;
+      }
+      if (line.who === "voce" && !line.interrupted) {
+        input.classList.add("is-focused");
+        await wait(500);
+        await typeIntoComposer(line);
+        await wait(380);
+        send.classList.add("is-pressed");
+        await wait(160);
+        send.classList.remove("is-pressed");
+        setDraft("");
+        const msg = addMessage(line, { mine: true });
+        await wait(700);
+        const ticks = msg.querySelector(".chat-ticks");
+        if (ticks) { ticks.textContent = "✓✓"; }
+        await wait(500);
+        if (ticks) ticks.classList.add("is-read");
+        await wait(500);
+        continue;
+      }
+      if (line.who === "voce" && line.interrupted) {
+        // Você digita… e no meio a outra pessoa começa a digitar e envia antes.
+        input.classList.add("is-focused");
+        const cutAt = Math.floor(line.text.length * 0.62);
+        const firstPart = await typeIntoComposer(line, cutAt);
+        const clearTyping = typingRow(step.lines[i + 1]?.who || "carla");
+        // continua digitando mais um pouco enquanto ela digita
+        await typeIntoComposer({ text: line.text.slice(cutAt) }, null, firstPart);
+        await wait(250);
+        clearTyping();
+        const cut = step.lines[i + 1];
+        if (cut) {
+          addMessage(cut, { cutIn: true });
+          stage.querySelector(".chat-app").classList.add("is-jolt");
+          setTimeout(() => stage.querySelector(".chat-app")?.classList.remove("is-jolt"), 500);
+          i += 1;
+        }
+        input.classList.add("is-stalled");
+        await wait(900);
+        // rascunho fica parado, marcado como não enviado
+        input.insertAdjacentHTML("beforeend", `<span class="chat-app__unsent">não enviado</span>`);
+        await wait(700);
+        continue;
+      }
+      // mensagem de outra pessoa: digitando… e chega
+      const clearTyping = typingRow(line.who);
+      await wait(Math.min(2600, 700 + line.text.length * 22));
+      clearTyping();
+      addMessage(line);
+      await wait(900);
+    }
+    stage.querySelector(".chat-app__composer")?.classList.add("is-idle");
     const actions = stage.querySelector(".story-actions");
     if (!actions) return;
     actions.hidden = false;
