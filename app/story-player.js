@@ -264,7 +264,7 @@ export function mountStory(root, module, { completed = false, onSubmit, onClose 
         <div class="chat-app__feed"></div>
         <footer class="chat-app__composer">
           <div class="chat-app__input"><span class="chat-app__draft"></span><span class="chat-app__placeholder">Escreva uma mensagem…</span></div>
-          <button type="button" class="chat-app__send" tabindex="-1" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 11.5 20 4l-6.5 17-2.6-7.1z" fill="currentColor"/></svg></button>
+          <span class="chat-app__send" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 11.5 20 4l-6.5 17-2.6-7.1z" fill="currentColor"/></svg></span>
         </footer>
       </div>
       <div class="story-actions" hidden>${nextButton()}</div>
