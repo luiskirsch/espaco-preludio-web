@@ -14,8 +14,9 @@ import { createAiSummaryEnvelope } from "./ai-summary-crypto.js";
 // sessão. Até lá, cada trecho de 2 s fica no IndexedDB desta máquina cifrado
 // com a DEK do profissional, para que recarregar a página ou reentrar na sala
 // não descarte o que já foi falado: cada entrada vira um segmento e todos
-// sobem juntos no fim. Após o envio os trechos são apagados; sobras de
-// sessões abandonadas expiram em 3 dias. Áudio é deletado do servidor logo
+// sobem juntos no fim. Os trechos só são apagados quando o resumo fica PRONTO
+// (o prontuário confirma e chama clearStoredAiAudio) — se o servidor reiniciar
+// no meio do processamento, o prontuário reenvia daqui. Sobras expiram em 3 dias. Áudio é deletado do servidor logo
 // após processamento.
 
 // Numa recarga, o que ainda não virou trecho se perde (a gravação no
@@ -227,7 +228,6 @@ export class SessionAiCapture {
     }
 
     const mime = this.recorder.mimeType || "audio/webm";
-    const blob = new Blob(segments, { type: mime });
     const durationSec = Math.round((Date.now() - this.startedAt) / 1000);
 
     this._setState("uploading");
@@ -235,47 +235,18 @@ export class SessionAiCapture {
     try {
       const idToken = await this.idTokenGetter();
       if (!idToken) throw new Error("no_id_token");
-      const dek = this.dek || recallDek();
-      const encryption = await createAiSummaryEnvelope(dek);
-
-      // O áudio só existe neste aparelho: falhas de rede/servidor ganham novas
-      // tentativas antes de desistir.
-      let r;
-      try {
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            r = await fetch(
-              `${this.backendBaseUrl}/therapy/session/${encodeURIComponent(this.sessionId)}/ai-summarize`,
-              {
-                method: "POST",
-                headers: {
-                  "Authorization": `Bearer ${idToken}`,
-                  "Content-Type": mime,
-                  "X-AI-Segments": segments.map((segment) => segment.size).join(","),
-                  ...encryption.headers,
-                },
-                body: blob
-              }
-            );
-            if (r.status < 500 && r.status !== 429) break;
-          } catch (networkErr) {
-            if (attempt === 3) throw networkErr;
-          }
-          if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 1500 * attempt));
-        }
-      } finally {
-        encryption.key.fill(0);
-      }
-      const data = await r.json().catch(() => ({}));
-      if (r.status === 409 && data?.error === "AI_SUMMARY_JA_CONCLUIDO") await this._clearStored();
-      if (!r.ok || !data.ok) {
+      const result = await uploadAiSummary({
+        backendBaseUrl: this.backendBaseUrl, sessionId: this.sessionId, idToken,
+        dek: this.dek || recallDek(), segments, mime
+      });
+      if (result.status === 409 && result.error === "AI_SUMMARY_JA_CONCLUIDO") await this._clearStored();
+      if (!result.ok) {
         this._setState("error");
-        return { ok: false, error: data?.error || `http_${r.status}`, status: r.status };
+        return result;
       }
-
-      await this._clearStored();
+      // Não apaga o áudio aqui: o servidor só confirmou o recebimento.
       this._setState("done");
-      return { ok: true, status: data.status, durationSec, segments: segments.length };
+      return { ok: true, status: result.status, durationSec, segments: segments.length };
     } catch (err) {
       this._setState("error");
       return { ok: false, error: err.message };
@@ -299,6 +270,89 @@ export class SessionAiCapture {
   durationMs() {
     return this.startedAt ? Date.now() - this.startedAt : 0;
   }
+}
+
+// Envio compartilhado (fim da sessão e "Tentar de novo" no prontuário).
+// O áudio só existe neste aparelho: falhas de rede/servidor ganham novas
+// tentativas antes de desistir.
+async function uploadAiSummary({ backendBaseUrl, sessionId, idToken, dek, segments, mime }) {
+  const blob = new Blob(segments, { type: mime });
+  const encryption = await createAiSummaryEnvelope(dek);
+  let r;
+  try {
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        r = await fetch(`${backendBaseUrl}/therapy/session/${encodeURIComponent(sessionId)}/ai-summarize`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${idToken}`,
+            "Content-Type": mime,
+            "X-AI-Segments": segments.map((segment) => segment.size).join(","),
+            ...encryption.headers,
+          },
+          body: blob
+        });
+        if (r.status < 500 && r.status !== 429) break;
+      } catch (networkErr) {
+        if (attempt === 3) throw networkErr;
+      }
+      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 1500 * attempt));
+    }
+  } finally {
+    encryption.key.fill(0);
+  }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok || !data.ok) return { ok: false, error: data?.error || `http_${r.status}`, status: r.status };
+  return { ok: true, status: data.status, segments: segments.length };
+}
+
+// Trechos guardados de uma sessão, decifrados e agrupados por entrada na sala.
+async function readStoredSegments(storage, sessionId, dek) {
+  if (!storage || !(dek instanceof Uint8Array) || dek.length !== 32) return [];
+  const key = await crypto.subtle.importKey("raw", dek, "AES-GCM", false, ["decrypt"]);
+  const records = await storage.list(sessionId);
+  const bySegment = new Map();
+  for (const record of records) {
+    if (!bySegment.has(record.segmentId)) bySegment.set(record.segmentId, []);
+    bySegment.get(record.segmentId).push(record);
+  }
+  const segments = [];
+  for (const [, parts] of [...bySegment].sort((a, b) => a[0] - b[0])) {
+    parts.sort((a, b) => a.seq - b.seq);
+    try {
+      const plain = [];
+      for (const part of parts) plain.push(await crypto.subtle.decrypt({ name: "AES-GCM", iv: part.iv }, key, part.data));
+      segments.push(new Blob(plain, { type: parts[0].mime }));
+    } catch (err) {
+      console.warn("[ai-capture] segmento guardado ilegível — ignorado", err);
+    }
+  }
+  return segments;
+}
+
+/** O áudio desta sessão ainda está guardado neste aparelho? */
+export async function hasStoredAiAudio(sessionId) {
+  const storage = createIndexedDbStorage();
+  if (!storage) return false;
+  try { return (await storage.list(sessionId)).length > 0; } catch { return false; }
+}
+
+/** Reenvia o áudio guardado (resumo interrompido por reinício do servidor). */
+export async function retryAiSummaryUpload({ sessionId, backendBaseUrl, idToken, dek }) {
+  const storage = createIndexedDbStorage();
+  const segments = await readStoredSegments(storage, sessionId, dek || recallDek());
+  if (!segments.length) return { ok: false, error: "AUDIO_NAO_ENCONTRADO" };
+  return uploadAiSummary({
+    backendBaseUrl: String(backendBaseUrl || "").replace(/\/+$/, ""), sessionId, idToken,
+    dek: dek || recallDek(), segments, mime: segments[0].type || "audio/webm"
+  });
+}
+
+/** Resumo pronto: o áudio guardado já não é necessário. */
+export async function clearStoredAiAudio(sessionId) {
+  const storage = createIndexedDbStorage();
+  if (!storage) return;
+  try { await storage.deleteSession(sessionId); } catch {}
 }
 
 function pickSupportedMime() {

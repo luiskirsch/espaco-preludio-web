@@ -443,6 +443,7 @@
   import { requireTherapist } from "./js/auth-guard.js?v=3-35";
   import { decryptNote, clearDek } from "./js/crypto.js";
   import { decryptAiSummaryPayload, migrateLegacyAiSummary } from "./js/ai-summary-crypto.js";
+  import { hasStoredAiAudio, retryAiSummaryUpload, clearStoredAiAudio } from "./js/session-ai-capture.js?v=5";
 
   // tr(): tenta EP_I18N.t(key); fallback PT-BR se i18n nao carregou ainda.
   function tr(key, fallback, opts) {
@@ -813,10 +814,12 @@
     // Resumo IA: só busca quando o card abre pela primeira vez. Sessões
     // sem resumo retornam { exists: false, status: "none" } — UI fica vazia.
     let aiSummaryLoaded = false;
+    let aiPollTimer = null;
     const aiBox = card.querySelector("[data-ai-summary]");
-    async function loadAiSummary() {
-      if (aiSummaryLoaded) return;
+    async function loadAiSummary({ refresh = false } = {}) {
+      if (aiSummaryLoaded && !refresh) return;
       aiSummaryLoaded = true;
+      clearTimeout(aiPollTimer);
       try {
         const res = await fetch(
           `${BACKEND_BASE_URL}/therapy/session/${encodeURIComponent(s.sessionId)}/ai-summary`,
@@ -837,9 +840,35 @@
             dek,
           }).catch((err) => console.warn("ai_summary_legacy_migration_error", err));
         }
-        renderAiSummary(aiBox, data);
+        if (data.status === "completed") {
+          // Resumo pronto: o áudio guardado neste aparelho já não serve.
+          clearStoredAiAudio(s.sessionId).catch(() => {});
+        }
+        const canRetry = (data.status === "interrupted" || (data.status === "failed" && data.error !== "TRANSCRIPT_ALUCINADO"))
+          && await hasStoredAiAudio(s.sessionId);
+        renderAiSummary(aiBox, data, { canRetry, onRetry: retryAiSummary });
+        // Enquanto processa, atualiza sozinho se o card continuar aberto.
+        if (data.status === "processing") {
+          aiPollTimer = setTimeout(() => { if (card.classList.contains("is-open")) loadAiSummary({ refresh: true }); }, 30_000);
+        }
       } catch (err) {
         console.warn("ai_summary_load_error", err);
+      }
+    }
+
+    // Reenvia o áudio guardado neste aparelho (processamento interrompido).
+    async function retryAiSummary(btn) {
+      btn.disabled = true;
+      btn.textContent = tr("prontuario:aiSummary.retrying", "Reenviando…");
+      try {
+        const token = (await sess.user?.getIdToken?.()) || idToken;
+        const result = await retryAiSummaryUpload({ sessionId: s.sessionId, backendBaseUrl: BACKEND_BASE_URL, idToken: token, dek });
+        if (!result.ok && result.error !== "AI_SUMMARY_EM_PROCESSAMENTO") throw new Error(result.error);
+        await loadAiSummary({ refresh: true });
+      } catch (err) {
+        console.warn("ai_summary_retry_error", err);
+        btn.disabled = false;
+        btn.textContent = tr("prontuario:aiSummary.retryFailed", "Não foi possível reenviar — tentar de novo");
       }
     }
 
@@ -852,8 +881,23 @@
     return card;
   }
 
-  function renderAiSummary(box, data) {
+  function renderAiSummary(box, data, { canRetry = false, onRetry = null } = {}) {
     const status = data.status || "completed";
+    if (status === "interrupted") {
+      box.innerHTML = `
+        <div class="ep-ai-summary ep-ai-summary--failed">
+          <div class="ep-ai-summary__head">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>${escapeHtml(tr("prontuario:aiSummary.interrupted", "A geração do resumo IA foi interrompida."))}</span>
+          </div>
+          <div class="ep-text-xs ep-text-muted">${escapeHtml(canRetry
+            ? tr("prontuario:aiSummary.interruptedRetryHint", "O áudio desta sessão ainda está guardado neste computador. Você pode reenviar.")
+            : tr("prontuario:aiSummary.interruptedNoAudio", "O áudio desta sessão não está mais disponível neste computador, então o resumo não pode ser refeito."))}</div>
+          ${canRetry ? `<button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-ai-retry style="margin-top:10px;">${escapeHtml(tr("prontuario:aiSummary.retry", "Tentar de novo"))}</button>` : ""}
+        </div>`;
+      box.querySelector("[data-ai-retry]")?.addEventListener("click", e => onRetry?.(e.currentTarget));
+      return;
+    }
     if (status === "processing") {
       box.innerHTML = `
         <div class="ep-ai-summary ep-ai-summary--processing">
@@ -877,7 +921,9 @@
             <span>${escapeHtml(failedMsg)}</span>
           </div>
           ${data.error ? `<div class="ep-text-xs ep-text-muted">${escapeHtml(data.error)}</div>` : ""}
+          ${canRetry ? `<button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-ai-retry style="margin-top:10px;">${escapeHtml(tr("prontuario:aiSummary.retry", "Tentar de novo"))}</button>` : ""}
         </div>`;
+      box.querySelector("[data-ai-retry]")?.addEventListener("click", e => onRetry?.(e.currentTarget));
       return;
     }
     const summary = data.summary || {};

@@ -83,7 +83,9 @@ test("recarregar a página não perde o áudio: todas as entradas sobem em ordem
   assert.equal(result.segments, 2);
   assert.equal(calls[0].body, "inicio-da-sessao|depois-da-recarga");
   assert.equal(calls[0].init.headers["X-AI-Segments"], "17,17");
-  assert.equal(storage.rows.length, 0, "trechos apagados do aparelho após o envio");
+  // O servidor só confirmou o recebimento: o áudio fica até o resumo ficar
+  // pronto (o prontuário apaga), para reenvio se o processamento cair.
+  assert.ok(storage.rows.length > 0, "trechos mantidos no aparelho até o resumo ficar pronto");
 });
 
 test("áudio guardado no aparelho fica cifrado", async () => {
