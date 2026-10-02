@@ -72,9 +72,19 @@ body.a-route-home .home-hero::after {
 
 .home-hero[data-weather="clear"][data-phase="morning"] .home-hero__sky,
 .home-hero[data-weather="clear"][data-phase="afternoon"] .home-hero__sky {
+  /* Azul de céu aberto: mais fundo à esquerda (texto branco legível), mais
+     claro perto do sol, com um véu quente leve no horizonte. */
   background:
-    radial-gradient(circle at 84% 12%, rgba(255, 221, 132, .42), transparent 24rem),
-    linear-gradient(125deg, #0a4a4d 0%, #1a6e66 51%, #4f8063 100%);
+    radial-gradient(circle at 84% 12%, rgba(255, 236, 170, .55), rgba(255, 236, 170, .12) 9rem, transparent 22rem),
+    linear-gradient(180deg, transparent 62%, rgba(214, 232, 240, .28) 100%),
+    linear-gradient(115deg, #0f3f78 0%, #1f63ad 38%, #3f8fd2 70%, #79b9e6 100%);
+}
+
+.home-hero[data-weather="clear"][data-phase="morning"] .home-hero__sky {
+  background:
+    radial-gradient(circle at 84% 12%, rgba(255, 240, 190, .5), rgba(255, 240, 190, .1) 9rem, transparent 22rem),
+    linear-gradient(180deg, transparent 60%, rgba(226, 238, 244, .3) 100%),
+    linear-gradient(115deg, #134a86 0%, #2a70ba 40%, #4f9bdb 72%, #8cc6ee 100%);
 }
 
 .home-hero[data-weather="partly"] .sky-atmosphere {
