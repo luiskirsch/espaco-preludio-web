@@ -442,8 +442,8 @@
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist } from "./js/auth-guard.js?v=3-35";
   import { decryptNote, clearDek } from "./js/crypto.js";
-  import { decryptAiSummaryPayload, migrateLegacyAiSummary } from "./js/ai-summary-crypto.js";
-  import { hasStoredAiAudio, retryAiSummaryUpload, clearStoredAiAudio } from "./js/session-ai-capture.js?v=5";
+  import { decryptAiSummaryPayload, migrateLegacyAiSummary } from "./js/ai-summary-crypto.js?v=2";
+  import { hasStoredAiAudio, retryAiSummaryUpload, clearStoredAiAudio } from "./js/session-ai-capture.js?v=6";
 
   // tr(): tenta EP_I18N.t(key); fallback PT-BR se i18n nao carregou ainda.
   function tr(key, fallback, opts) {
@@ -845,7 +845,9 @@
           clearStoredAiAudio(s.sessionId).catch(() => {});
         }
         const canRetry = (data.status === "interrupted" || (data.status === "failed" && data.error !== "TRANSCRIPT_ALUCINADO"))
-          && await hasStoredAiAudio(s.sessionId);
+          // Pedaços já transcritos no servidor também permitem refazer, mesmo sem
+          // áudio neste computador.
+          && (data.piecesStored === true || await hasStoredAiAudio(s.sessionId));
         renderAiSummary(aiBox, data, { canRetry, onRetry: retryAiSummary });
         // Enquanto processa, atualiza sozinho se o card continuar aberto.
         if (data.status === "processing") {

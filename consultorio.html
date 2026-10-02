@@ -702,7 +702,7 @@
     // só áudio mixado pro Whisper. Web Audio API consome ~1-2% CPU.
     if (tokenData.aiSummaryReady) {
       try {
-        const { SessionAiCapture } = await import("./js/session-ai-capture.js?v=5");
+        const { SessionAiCapture } = await import("./js/session-ai-capture.js?v=6");
         const aiCaptureBadge = document.getElementById("aiCaptureBadge");
         aiCapture = new SessionAiCapture({
           room,
@@ -815,7 +815,7 @@
     const aiUpload = aiUploadResult.value;
     if (aiUpload && aiUpload.ok === false) {
       console.error("ai_summary_upload_failed", aiUpload);
-      alert(tr("consultorio:alerts.aiUploadFailed", "A consulta foi encerrada, mas o áudio para o Resumo IA não pôde ser enviado. Esta sessão ficará sem resumo automático.") + `\n(${aiUpload.error})`);
+      alert(tr("consultorio:alerts.aiUploadFailed", "A consulta foi encerrada, mas o pedido do Resumo IA não pôde ser enviado agora. O áudio ficou guardado neste computador: abra o prontuário desta sessão e use \"Tentar de novo\".") + `\n(${aiUpload.error})`);
     }
 
     try { await room?.disconnect(); } catch {}
