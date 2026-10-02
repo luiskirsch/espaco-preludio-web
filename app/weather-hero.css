@@ -400,3 +400,14 @@ body.a-route-home .home-hero::after {
   .sky-atmosphere::before { opacity: 1; transform: scale(1.08); }
   .sky-atmosphere::after { display: none; }
 }
+
+/* Crepúsculo civil: sol já abaixo do horizonte — sem disco, só o brilho na linha do horizonte. */
+.home-hero[data-sun="down"] .sky-orb { opacity: 0 !important; }
+.home-hero[data-sun="down"]:is([data-phase="dusk"], [data-phase="dawn"]) .home-hero__sky {
+  background:
+    radial-gradient(ellipse 120% 38% at 70% 108%, rgba(244, 132, 84, .62), transparent 70%),
+    linear-gradient(180deg, #0e1a38 0%, #1f2a5a 38%, #4b3d73 64%, #a4587a 84%, #e5875f 100%) !important;
+}
+.home-hero[data-sun="down"]:is([data-phase="dusk"], [data-phase="dawn"]) .sky-atmosphere {
+  filter: brightness(.55) sepia(.35) hue-rotate(-20deg) saturate(1.3);
+}

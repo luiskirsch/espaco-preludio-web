@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./app.css?v=20260930m">
-  <link rel="stylesheet" href="./weather-hero.css?v=20261002c">
+  <link rel="stylesheet" href="./weather-hero.css?v=20261002d">
   <style>
     .home-hero {
       background: linear-gradient(135deg, #1c1f1d 0%, #2d3a30 100%);
@@ -205,12 +205,36 @@
   let activeSkyUser = null;
   let skyRequestInFlight = false;
   let lastSkyCheck = 0;
-  function skyPhase(hour) {
-    if (hour >= 5 && hour < 7) return "dawn";
-    if (hour >= 7 && hour < 12) return "morning";
-    if (hour >= 12 && hour < 17) return "afternoon";
-    if (hour >= 17 && hour < 19) return "dusk";
-    return "night";
+  // Coordenadas do aparelho (fallback: São Paulo) para nascer/pôr do sol reais.
+  let skyCoords = { lat: -23.55, lon: -46.63 };
+  try { const c = JSON.parse(localStorage.getItem("ep.skyCoords") || "null"); if (c && Number.isFinite(c.lat)) skyCoords = c; } catch {}
+  // Nascer/pôr do sol do dia (NOAA simplificado), em ms. Muda diariamente.
+  function sunTimes(date, { lat, lon }) {
+    const rad = Math.PI / 180;
+    const day = Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(date.getFullYear(), 0, 0)) / 864e5);
+    const g = 2 * Math.PI / 365 * (day - 1);
+    const eqTime = 229.18 * (.000075 + .001868 * Math.cos(g) - .032077 * Math.sin(g) - .014615 * Math.cos(2 * g) - .040849 * Math.sin(2 * g));
+    const decl = .006918 - .399912 * Math.cos(g) + .070257 * Math.sin(g) - .006758 * Math.cos(2 * g) + .000907 * Math.sin(2 * g) - .002697 * Math.cos(3 * g) + .00148 * Math.sin(3 * g);
+    const cosH = Math.cos(90.833 * rad) / (Math.cos(lat * rad) * Math.cos(decl)) - Math.tan(lat * rad) * Math.tan(decl);
+    const ha = Math.acos(Math.max(-1, Math.min(1, cosH))) / rad;
+    const midnight = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+    return {
+      sunrise: midnight + (720 - 4 * (lon + ha) - eqTime) * 6e4,
+      sunset: midnight + (720 - 4 * (lon - ha) - eqTime) * 6e4
+    };
+  }
+  // Fases: sol baixo ~1h antes do pôr; depois do pôr, só o brilho do
+  // horizonte (crepúsculo, sem sol) por ~45 min; o mesmo, invertido, no amanhecer.
+  function skyPhase(now = new Date()) {
+    const t = now.getTime();
+    const { sunrise, sunset } = sunTimes(now, skyCoords);
+    const min = 6e4;
+    if (t < sunrise - 45 * min || t >= sunset + 45 * min) return { phase: "night", sun: false };
+    if (t < sunrise) return { phase: "dawn", sun: false };
+    if (t < sunrise + 60 * min) return { phase: "dawn", sun: true };
+    if (t >= sunset) return { phase: "dusk", sun: false };
+    if (t >= sunset - 60 * min) return { phase: "dusk", sun: true };
+    return { phase: now.getHours() < 12 ? "morning" : "afternoon", sun: true };
   }
   function fillParticles(container, count, build) {
     const frag = document.createDocumentFragment();
@@ -283,8 +307,9 @@
   }
   function renderSky(weather, reveal = true) {
     const hour = new Date().getHours();
-    const phase = skyPhase(hour);
+    const { phase, sun } = skyPhase();
     hero.dataset.phase = phase;
+    hero.dataset.sun = sun ? "up" : "down";
     document.querySelector(".home-hero__greeting").textContent = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
     if (weather) hero.dataset.weather = weather; else delete hero.dataset.weather;
     const stars = hero.querySelector(".sky-stars");
@@ -326,6 +351,8 @@
     return new Promise(resolve => navigator.geolocation.getCurrentPosition(position => {
       const { latitude, longitude, accuracy } = position.coords || {};
       if (![latitude, longitude, accuracy].every(Number.isFinite) || accuracy > 50000) return resolve(null);
+      skyCoords = { lat: latitude, lon: longitude };
+      try { localStorage.setItem("ep.skyCoords", JSON.stringify(skyCoords)); } catch {}
       resolve({ lat: latitude, lon: longitude });
     }, () => resolve(null), {
       enableHighAccuracy: false,
