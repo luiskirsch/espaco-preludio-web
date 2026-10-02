@@ -853,15 +853,34 @@
     let sessionEndTimer = null;
     let leavingOnPurpose = false;
     let sessionEndHandled = false;
+    // Visitante (sem conta) sai da consulta direto para criar a conta de
+    // paciente. Leva na aba (sessionStorage sobrevive à navegação) as notas
+    // escritas e a prova de participação (rejoinSecret) — o painel, já com a
+    // chave da conta nova, vincula a consulta e guarda as notas cifradas.
+    const POST_SESSION_KEY = "ep_post_session";
+    function destinationAfterSession() {
+      if (authMode !== "anon") return "./paciente-painel.html";
+      try {
+        sessionStorage.setItem(POST_SESSION_KEY, JSON.stringify({
+          sessionId,
+          rejoinSecret: readRejoin()?.secret || null,
+          name: nameEl.value.trim().slice(0, 80),
+          notes: notes.map(n => ({ text: n.text, createdAt: n.createdAt })),
+          at: Date.now()
+        }));
+      } catch {}
+      return "./paciente-cadastro.html?from=consulta";
+    }
+
     function showSessionEnded() {
       if (sessionEndHandled) return;
       sessionEndHandled = true;
+      const destination = destinationAfterSession(); // antes de apagar a credencial
       clearRejoin();
       clearTimeout(sessionEndTimer);
       document.getElementById("sessionEndedOverlay")?.classList.remove("ep-hide");
       try { room.disconnect(); } catch {}
-      const destination = (authMode !== "anon") ? "./paciente-painel.html" : "./index.html";
-      setTimeout(() => { window.location.href = destination; }, 4000);
+      setTimeout(() => { window.location.href = destination; }, authMode === "anon" ? 600 : 4000);
     }
     function scheduleSessionEnd() {
       clearTimeout(sessionEndTimer);
@@ -1004,9 +1023,10 @@
     ctrlLeave.addEventListener("click", async () => {
       if (!confirm(tr("entrar:session.confirmLeave", "Sair da consulta?"))) return;
       leavingOnPurpose = true;
+      const destination = destinationAfterSession();
       clearRejoin();
       try { await room.disconnect(); } catch {}
-      window.location.href = (authMode !== "anon") ? "./paciente-painel.html" : "./index.html";
+      window.location.href = destination;
     });
 
     // ─── Anotações collapse/expand (mobile) ───────────────────────────

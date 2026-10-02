@@ -59,6 +59,8 @@
       <div id="stepData">
         <h2 class="ep-auth__title ep-mt-0" data-i18n="paciente-cadastro:stepData.h2">Seus dados</h2>
         <p class="ep-auth__sub" data-i18n="paciente-cadastro:stepData.sub">Use o nome pelo qual quer ser chamado(a). Tudo é editável depois.</p>
+        <!-- Vindo de uma consulta como visitante: preenchido por JS -->
+        <div id="postSessionBanner" class="ep-alert ep-alert--info ep-hide" style="background:rgba(215,176,107,0.12);border-color:rgba(215,176,107,0.30);color:var(--ep-ink);margin-bottom:12px;"></div>
 
         <form id="formData" class="ep-stack" novalidate>
           <div class="ep-field">
@@ -185,6 +187,25 @@
   const params = new URLSearchParams(location.search);
   const next = params.get("next"); // ex.: redirecionar de volta a entrar.html?t=...
 
+  // Visitante que acabou de sair de uma consulta (entrar.html guarda isto na
+  // aba). As notas são importadas pelo painel, já com a chave da conta nova.
+  let postSession = null;
+  try { postSession = JSON.parse(sessionStorage.getItem("ep_post_session") || "null"); } catch {}
+  if (postSession?.sessionId) {
+    const banner = document.getElementById("postSessionBanner");
+    const n = Array.isArray(postSession.notes) ? postSession.notes.length : 0;
+    const strong = document.createElement("strong");
+    strong.textContent = tr("paciente-cadastro:postSession.title", "Sua consulta terminou.");
+    banner.appendChild(strong);
+    banner.appendChild(document.createElement("br"));
+    banner.appendChild(document.createTextNode(n > 0
+      ? (n === 1
+          ? tr("paciente-cadastro:postSession.oneNote", "Crie sua conta para guardar a anotação que você fez e o registro desta consulta.")
+          : tr("paciente-cadastro:postSession.manyNotes", "Crie sua conta para guardar as {{n}} anotações que você fez e o registro desta consulta.").replace("{{n}}", String(n)))
+      : tr("paciente-cadastro:postSession.noNotes", "Crie sua conta para guardar o registro desta consulta e acompanhar as próximas.")));
+    banner.classList.remove("ep-hide");
+  }
+
   const stepData     = document.getElementById("stepData");
   const stepRecovery = document.getElementById("stepRecovery");
   const stepDone     = document.getElementById("stepDone");
@@ -198,6 +219,7 @@
   const consentLgpdEl    = document.getElementById("consentLgpd");
   const submitData       = document.getElementById("submitData");
   const statusData       = document.getElementById("statusData");
+  if (postSession?.name && !displayNameEl.value) displayNameEl.value = postSession.name;
 
   const recoveryEl       = document.getElementById("recoveryPhrase");
   const copyRecoveryBtn  = document.getElementById("copyRecovery");

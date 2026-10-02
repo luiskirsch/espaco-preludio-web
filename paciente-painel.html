@@ -445,6 +445,37 @@
     return ecdhPrivPromise;
   }
 
+  async function importPostSession() {
+    let pending = null;
+    try { pending = JSON.parse(sessionStorage.getItem("ep_post_session") || "null"); } catch {}
+    if (!pending?.sessionId) return;
+    try {
+      if (pending.rejoinSecret) {
+        await api("/therapy/paciente/vincular-sessao", {
+          method: "POST",
+          body: JSON.stringify({ sessionId: pending.sessionId, rejoinSecret: pending.rejoinSecret })
+        }).catch(err => console.warn("post_session_link_failed", err));
+      }
+      const notes = Array.isArray(pending.notes) ? pending.notes : [];
+      const left = [];
+      for (const n of notes) {
+        if (!n?.text) continue;
+        try {
+          const { ciphertext, iv } = await encryptNote(String(n.text), dek);
+          await api("/therapy/paciente/notas", { method: "POST", body: JSON.stringify({ sessionId: pending.sessionId, ciphertext, iv }) });
+        } catch (err) {
+          console.warn("post_session_note_failed", err);
+          left.push(n);
+        }
+      }
+      // Falhou alguma? Mantém só as pendentes para tentar no próximo carregamento.
+      if (left.length) sessionStorage.setItem("ep_post_session", JSON.stringify({ ...pending, rejoinSecret: null, notes: left }));
+      else sessionStorage.removeItem("ep_post_session");
+    } catch (err) {
+      console.warn("post_session_import_failed", err);
+    }
+  }
+
   async function loadSessionNotes(sessionId) {
     if (notesCache.has(sessionId)) return notesCache.get(sessionId);
     const { notes } = await api("/therapy/paciente/notas?sessionId=" + encodeURIComponent(sessionId));
@@ -723,6 +754,9 @@
       api("/therapy/paciente/auto-link", { method: "POST" }).catch(() => {});
       // Garante o par de chaves: notas da próxima consulta salvam sem senha.
       getEcdhPriv().catch(() => {});
+      // Veio de uma consulta como visitante (entrar.html → cadastro/login):
+      // vincula a consulta e guarda as notas antes de montar o histórico.
+      await importPostSession();
       renderHeader();
       loadAvatarPhoto();
       await loadSessions();
