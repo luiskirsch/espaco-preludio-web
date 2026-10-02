@@ -473,7 +473,7 @@ html, body {
     letter-spacing: .16em;
     text-transform: uppercase;
   }
-  .a-nav__links { display: flex; flex-direction: column; gap: 2px; }
+  .a-nav__links { display: flex; flex: 1 1 auto; min-height: 0; flex-direction: column; justify-content: space-evenly; gap: 2px; }
   body.a-portal-authenticated .a-nav__item,
   body.a-portal-authenticated .a-nav__item--secondary {
     flex: 0 0 auto;
@@ -482,7 +482,7 @@ html, body {
     align-items: center;
     justify-content: flex-start;
     gap: 12px;
-    min-height: 43px;
+    min-height: clamp(38px, 5.4dvh, 54px);
     padding: 0 14px;
     border: 1px solid transparent;
     border-radius: 13px;
@@ -508,9 +508,9 @@ html, body {
   .a-nav__meta {
     display: flex;
     flex-direction: column;
-    gap: 7px;
-    margin-top: auto;
-    padding: 12px 10px 0;
+    gap: clamp(6px, 1dvh, 10px);
+    margin-top: 0;
+    padding: clamp(10px, 1.8dvh, 18px) 10px 0;
     border-top: 1px solid rgba(255, 255, 255, .12);
     color: rgba(248, 242, 230, .55);
   }
@@ -1182,12 +1182,8 @@ body.a-route-home .home-hero::before, body.a-route-home .home-hero::after { z-in
   .sky-drops i { top: auto; bottom: calc(var(--y, 50) * 1%); }
 }
 
-/* Sidebar sem rolagem em telas baixas: compacta espaçamentos, não as fontes. */
-@media (min-width: 900px) and (max-height: 860px) {
-  .a-nav__links { gap: 2px; }
-  body.a-portal-authenticated .a-nav__item,
-  body.a-portal-authenticated .a-nav__item--secondary { min-height: 42px; }
-  .a-nav__meta { gap: 7px; padding-top: 12px; }
-  .a-nav__meta small { line-height: 1.4; }
-  .a-nav__urgent { margin-bottom: 4px; padding: 10px 12px !important; }
+/* Sidebar ocupa toda a altura: itens se distribuem; nunca rola. */
+@media (min-width: 900px) {
+  body.a-portal-authenticated .a-nav { overflow: hidden; }
+  .a-nav__meta small { line-height: 1.45; }
 }
