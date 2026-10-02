@@ -13,6 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./app.css?v=20260930m">
+  <link rel="stylesheet" href="./story-player.css?v=1">
   <script src="./portal-shell.js?v=3" defer></script>
   <script src="./sw-register.js" defer></script>
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(!l){var n=(navigator.language||"").toLowerCase();if(n.indexOf("en")===0)l="en-US";else if(n.indexOf("es")===0)l="es-ES";}if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
@@ -58,6 +59,7 @@
         <div id="moduleOptions"></div>
       </fieldset>
       <div id="moduleFeedback" class="module-feedback" role="status" aria-live="polite"></div>
+      <div id="moduleStory"></div>
     </div>
     <footer class="learning-modal__foot">
       <span id="moduleDuration"></span>
@@ -69,11 +71,13 @@
 <script type="module">
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+  import { mountStory } from "./story-player.js?v=1";
 
   const $ = id => document.getElementById(id);
   let user = null;
   let catalog = null;
   let current = null;
+  let story = null;
 
   async function api(path, options = {}) {
     const token = await user.getIdToken();
@@ -121,7 +125,7 @@
           </button>`;
         }).join("");
         return `<article class="learning-course">
-          <div class="learning-course__head"><div><span>Curso · ${course.durationMinutes} min</span><h4>${esc(course.title)}</h4><p>${esc(course.description)}</p></div><strong>${course.progressPercent}%</strong></div>
+          <div class="learning-course__head"><div><span>${course.interactive ? 'Interativo · ' : 'Curso · '}${course.durationMinutes} min</span><h4>${esc(course.title)}</h4><p>${esc(course.description)}</p></div><strong>${course.progressPercent}%</strong></div>
           <div class="learning-progress"><i style="width:${course.progressPercent}%"></i></div>
           <div class="learning-modules">${modules}</div>
         </article>`;
@@ -141,6 +145,28 @@
       const module = course.modules.find(item => item.id === id);
       if (!module) continue;
       current = { course, module };
+      story?.destroy(); story = null;
+      $("learningModal").classList.toggle("is-story", Boolean(module.story));
+      if (module.story) {
+        $("moduleCourse").textContent = course.title;
+        $("moduleTitle").textContent = module.title;
+        story = mountStory($("moduleStory"), module, {
+          completed: Boolean(module.completedAt),
+          onSubmit: async (answer) => {
+            try {
+              const data = await api(`/therapy/paciente/colaborador/jornada/modules/${encodeURIComponent(module.id)}/complete`, { method: "POST", body: JSON.stringify({ answer }) });
+              catalog = data;
+              return { ok: true, explanation: data.explanation };
+            } catch (error) {
+              return { ok: false, error: error.message, explanation: error.message === "RESPOSTA_INCORRETA" ? (error.details?.explanation || "Revise e tente novamente.") : null };
+            }
+          },
+          onClose: (refresh) => { closeModule(); if (refresh) render(); }
+        });
+        $("learningModal").hidden = false;
+        document.body.style.overflow = "hidden";
+        return;
+      }
       $("moduleCourse").textContent = course.title;
       $("moduleTitle").textContent = module.title;
       $("moduleObjective").textContent = module.objective;
@@ -159,7 +185,7 @@
       return;
     }
   }
-  function closeModule() { $("learningModal").hidden = true; document.body.style.overflow = ""; current = null; }
+  function closeModule() { story?.destroy(); story = null; $("learningModal").hidden = true; $("learningModal").classList.remove("is-story"); document.body.style.overflow = ""; current = null; }
   $("moduleClose").addEventListener("click", closeModule);
   $("learningModal").addEventListener("click", event => { if (event.target === $("learningModal")) closeModule(); });
   $("moduleSubmit").addEventListener("click", async () => {
