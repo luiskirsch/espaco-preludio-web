@@ -64,10 +64,17 @@ body.a-route-home .home-hero::after {
   animation-delay: -19s;
 }
 
+/* Céu limpo é céu limpo: a foto de nuvens some (antes ficava a 34% e o card
+   parecia nublado mesmo com sol) e o sol ganha um halo mais aberto. */
 .home-hero[data-weather="clear"] .sky-atmosphere {
-  opacity: .34;
-  filter: saturate(.72) contrast(1.04) brightness(1.06);
-  mix-blend-mode: normal;
+  opacity: 0;
+}
+
+.home-hero[data-weather="clear"][data-phase="morning"] .home-hero__sky,
+.home-hero[data-weather="clear"][data-phase="afternoon"] .home-hero__sky {
+  background:
+    radial-gradient(circle at 84% 12%, rgba(255, 221, 132, .42), transparent 24rem),
+    linear-gradient(125deg, #0a4a4d 0%, #1a6e66 51%, #4f8063 100%);
 }
 
 .home-hero[data-weather="partly"] .sky-atmosphere {
