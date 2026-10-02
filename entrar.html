@@ -232,7 +232,7 @@
 <script type="module">
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { encryptNote, decryptNote, unwrapDek } from "./js/crypto.js";
+  import { encryptNote, decryptNote, unwrapDek, sealToPublicKey } from "./js/crypto.js?v=2";
   import { recallPatientDek, recallPatientUser, rememberPatientDek, rememberPatientUser } from "./js/patient-session.js";
 
   const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack, setupCodecNegotiation } = await import('./js/consultation-media.js?v=3');
@@ -283,15 +283,19 @@
   const statusEl  = document.getElementById("prejoinStatus");
 
   // "logged": conta + chave desbloqueada (notas vão cifradas pra conta)
-  // "locked": logado(a) no Firebase, mas a chave não está nesta aba (ela fica
-  //           em sessionStorage — link aberto em outra aba cai aqui). Pede a
-  //           senha pra desbloquear; até lá, notas ficam só nesta aba.
+  // "sealed": logado(a), mas a chave não está nesta aba (ela fica em
+  //           sessionStorage — link aberto em outra aba cai aqui). As notas são
+  //           seladas com a chave pública da conta: vão pra conta sem pedir senha.
+  // "locked": como "sealed", mas a conta ainda não tem par de chaves; só aí a
+  //           sala pede a senha (dentro da sessão, no painel de notas).
   // "anon":   visitante
   let authMode = "anon";
   let patientUser = null;
   let patientDek  = null;
   let patientIdToken = null;
   let patientAccount = null; // perfil com a chave embrulhada (modo "locked")
+  let patientSealPub = null; // chave pública ECDH da conta (modo "sealed")
+  const savesToAccount = () => authMode === "logged" || authMode === "sealed";
 
   // ID token vence em 1h; sessão + pré-join passa disso. Sempre pede um fresco.
   async function freshIdToken() {
@@ -379,6 +383,14 @@
       patientAccount = a;
       patientUser = { uid: fbUser.uid, email: fbUser.email || "", displayName: a.displayName || "" };
       authMode = "locked";
+      // Com par de chaves na conta, dá pra salvar notas sem senha (seladas).
+      try {
+        const kr = await fetch(`${BACKEND_BASE_URL}/therapy/chat/keypair`, {
+          headers: { "Authorization": `Bearer ${patientIdToken}` }
+        });
+        const kd = kr.ok ? await kr.json().catch(() => ({})) : null;
+        if (kd?.ecdhPublicJwk) { patientSealPub = kd.ecdhPublicJwk; authMode = "sealed"; }
+      } catch {}
       if (a.displayName && !nameEl.value) nameEl.value = a.displayName;
     } catch {}
   }
@@ -391,7 +403,7 @@
 
   function renderAccountSlot() {
     accountSlot.innerHTML = "";
-    if (authMode === "logged") {
+    if (authMode === "logged" || authMode === "sealed" || authMode === "locked") {
       const wrap = document.createElement("div");
       wrap.className = "ep-account-badge";
       const loggedPrefix = escapeHtml(tr("entrar:prejoin.accountLoggedAsPrefix", "Logado(a) como"));
@@ -408,19 +420,8 @@
         "entrar:prejoin.accountNotesNoteHtml",
         `Suas anotações desta sessão ficarão salvas na sua conta. <a href="./paciente-painel.html" target="_blank" style="color: var(--ep-accent); text-decoration: underline;">Ver minhas anotações</a>`
       );
+      if (authMode === "locked") sub.textContent = tr("entrar:prejoin.accountLockedNote", "Para salvar suas anotações na sua conta, você confirma sua senha dentro da sala.");
       accountSlot.appendChild(sub);
-    } else if (authMode === "locked") {
-      const box = document.createElement("div");
-      box.className = "ep-alert ep-alert--info";
-      box.style.background = "rgba(215,176,107,0.12)";
-      box.style.borderColor = "rgba(215,176,107,0.30)";
-      box.style.color = "var(--ep-ink)";
-      box.innerHTML = `
-        <strong>${escapeHtml(tr("entrar:unlock.title", "Confirme sua senha para salvar suas anotações"))}</strong><br>
-        ${escapeHtml(tr("entrar:unlock.text", "Você está logado(a) como"))} <strong>${escapeHtml(patientUser.displayName || patientUser.email || "")}</strong>.
-        ${escapeHtml(tr("entrar:unlock.why", "Suas anotações são cifradas com a sua chave; sem a senha nesta aba, elas não vão para a sua conta."))}`;
-      box.appendChild(buildUnlockForm());
-      accountSlot.appendChild(box);
     } else {
       const cta = document.createElement("div");
       cta.className = "ep-alert ep-alert--info";
@@ -497,7 +498,7 @@
       // Manda whichever param veio na URL — backend aceita os 2.
       if (joinCode) body.joinCode = joinCode;
       else body.joinToken = joinToken;
-      if (authMode === "logged" || authMode === "locked") {
+      if (authMode !== "anon") {
         const tok = await freshIdToken();
         if (tok) body.patientIdToken = tok;
       }
@@ -622,7 +623,7 @@
     // Só promete "salvas na sua conta" quando é verdade.
     function scopeText() {
       if (isMobileViewport) return tr("entrar:session.notesScopeShort", "Suas anotações · só você vê");
-      return authMode === "logged"
+      return savesToAccount()
         ? tr("entrar:session.notesScopeLong", "Suas anotações · só você vê · ficam salvas na sua conta")
         : tr("entrar:session.notesScopeTab", "Suas anotações · só você vê · somem ao fechar esta aba");
     }
@@ -732,6 +733,20 @@
         const j = await res.json().catch(() => ({}));
         if (!res.ok || !j.ok) throw new Error(j?.error || ("HTTP_" + res.status));
         notes.push({ noteId: j.noteId, text, createdAt });
+      } else if (authMode === "sealed") {
+        // Selada com a chave pública da conta: vai pra conta sem precisar da senha.
+        const sealed = await sealToPublicKey(text, patientSealPub);
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/notas`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshIdToken()}` },
+          body: JSON.stringify({ sessionId, ...sealed })
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok || !j.ok) throw new Error(j?.error || ("HTTP_" + res.status));
+        notes.push({ noteId: j.noteId, text, createdAt });
+        // Cópia legível só nesta aba: notas seladas não se abrem aqui sem a
+        // senha, então é isso que mostra a lista se a página recarregar.
+        persistAnonNotes();
       } else {
         console.warn("[ep-debug] saveNote ANON — nota fica em sessionStorage e some ao fechar");
         notes.push({ text, createdAt });
@@ -747,7 +762,7 @@
       try {
         await saveNote(t);
         noteInput.value = "";
-        noteStatus.textContent = (authMode === "logged")
+        noteStatus.textContent = savesToAccount()
           ? tr("entrar:session.notesSavedAccount", "salva na sua conta")
           : tr("entrar:session.notesSavedSession", "salva (sessão atual)");
         setTimeout(() => { noteStatus.textContent = " "; }, 1800);
@@ -845,7 +860,7 @@
       clearTimeout(sessionEndTimer);
       document.getElementById("sessionEndedOverlay")?.classList.remove("ep-hide");
       try { room.disconnect(); } catch {}
-      const destination = (authMode === "logged") ? "./paciente-painel.html" : "./index.html";
+      const destination = (authMode !== "anon") ? "./paciente-painel.html" : "./index.html";
       setTimeout(() => { window.location.href = destination; }, 4000);
     }
     function scheduleSessionEnd() {
@@ -991,7 +1006,7 @@
       leavingOnPurpose = true;
       clearRejoin();
       try { await room.disconnect(); } catch {}
-      window.location.href = (authMode === "logged") ? "./paciente-painel.html" : "./index.html";
+      window.location.href = (authMode !== "anon") ? "./paciente-painel.html" : "./index.html";
     });
 
     // ─── Anotações collapse/expand (mobile) ───────────────────────────

@@ -316,6 +316,33 @@ export async function unwrapThreadKeyFromPeer({ ciphertext, iv }, myEcdhPrivByte
   }
 }
 
+// ─── Nota selada (só escrita) ───────────────────────────────
+//
+// Para escrever uma nota sem a DEK desbloqueada (link da consulta aberto em
+// outra aba): ECIES com a chave pública ECDH do próprio paciente. Gera um par
+// efêmero, deriva AES-GCM com ECDH(efêmera_priv, paciente_pub) e descarta a
+// efêmera privada. Só quem tem a privada do paciente (embrulhada pela DEK)
+// refaz a derivação e lê.
+
+export async function sealToPublicKey(plaintext, recipientPubJwk) {
+  const eph = await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey"]);
+  const recipient = await importEcdhPublic(recipientPubJwk);
+  const aesKey = await crypto.subtle.deriveKey(
+    { name: "ECDH", public: recipient }, eph.privateKey,
+    { name: "AES-GCM", length: AES_LENGTH }, false, ["encrypt"]
+  );
+  const iv = generateIv();
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, aesKey, new TextEncoder().encode(plaintext));
+  const { kty, crv, x, y } = await crypto.subtle.exportKey("jwk", eph.publicKey);
+  return { ciphertext: bytesToB64(new Uint8Array(ct)), iv: bytesToB64(iv), ephemeralPubJwk: { kty, crv, x, y } };
+}
+
+export async function openSealed({ ciphertext, iv, ephemeralPubJwk }, myEcdhPrivBytes) {
+  const aesKey = await deriveSharedAesKey(myEcdhPrivBytes, ephemeralPubJwk);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64ToBytes(iv) }, aesKey, b64ToBytes(ciphertext));
+  return new TextDecoder().decode(plain);
+}
+
 // ─── Chat E2EE: wrap/unwrap de threadKey ────────────────────
 //
 // Modelo:

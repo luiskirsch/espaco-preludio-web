@@ -137,7 +137,7 @@
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requirePatient } from "./js/patient-auth-guard.js?v=2";
-  import { encryptNote, decryptNote } from "./js/crypto.js";
+  import { encryptNote, decryptNote, openSealed, generateEcdhKeypair, wrapKey, unwrapKey } from "./js/crypto.js?v=2";
   import { clearPatientDek } from "./js/patient-session.js";
 
   // tr(): mesma helper de paciente-login.html. Tenta EP_I18N.t(key); se nao
@@ -421,11 +421,45 @@
     } catch (e) { /* silencioso */ }
   }
 
+  // Par de chaves ECDH da conta (o mesmo do chat). A sala da consulta usa a
+  // chave pública para selar notas quando a senha não está na aba; aqui, com
+  // a DEK, abrimos a privada. Criado se ainda não existir, para que a próxima
+  // consulta salve notas sem pedir senha.
+  let ecdhPrivPromise = null;
+  function getEcdhPriv() {
+    if (!ecdhPrivPromise) {
+      ecdhPrivPromise = (async () => {
+        const res = await fetch(BACKEND_BASE_URL + "/therapy/chat/keypair", { headers: { "Authorization": `Bearer ${idToken}` } });
+        if (res.ok) {
+          const d = await res.json();
+          return unwrapKey(d.ecdhPrivateWrapped, dek);
+        }
+        if (res.status !== 404) throw new Error("KEYPAIR_HTTP_" + res.status);
+        const kp = await generateEcdhKeypair();
+        const privWrapped = await wrapKey(kp.privateRaw, dek);
+        await api("/therapy/chat/keypair", { method: "POST", body: JSON.stringify({ ecdhPublicJwk: kp.publicJwk, ecdhPrivateWrapped: privWrapped }) });
+        return kp.privateRaw;
+      })();
+      ecdhPrivPromise.catch(() => { ecdhPrivPromise = null; });
+    }
+    return ecdhPrivPromise;
+  }
+
   async function loadSessionNotes(sessionId) {
     if (notesCache.has(sessionId)) return notesCache.get(sessionId);
     const { notes } = await api("/therapy/paciente/notas?sessionId=" + encodeURIComponent(sessionId));
     const decoded = [];
     for (const n of notes) {
+      if (n.ephemeralPubJwk) {
+        // Nota selada na sala: abre com a chave privada e regrava com a DEK
+        // (vira nota comum; não depende mais do par de chaves).
+        const text = await openSealed(n, await getEcdhPriv());
+        decoded.push({ ...n, ephemeralPubJwk: null, text });
+        encryptNote(text, dek)
+          .then(({ ciphertext, iv }) => api(`/therapy/paciente/notas/${encodeURIComponent(n.noteId)}`, { method: "PATCH", body: JSON.stringify({ ciphertext, iv }) }))
+          .catch(() => {});
+        continue;
+      }
       const text = await decryptNote({ ciphertext: n.ciphertext, iv: n.iv }, dek);
       decoded.push({ ...n, text });
     }
@@ -687,6 +721,8 @@
       // conta criada depois). Idempotente, falha silenciosa. Roda em
       // paralelo — não bloqueia o load principal.
       api("/therapy/paciente/auto-link", { method: "POST" }).catch(() => {});
+      // Garante o par de chaves: notas da próxima consulta salvam sem senha.
+      getEcdhPriv().catch(() => {});
       renderHeader();
       loadAvatarPhoto();
       await loadSessions();
