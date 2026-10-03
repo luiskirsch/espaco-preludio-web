@@ -105,40 +105,6 @@
       <div class="mood-hero__date" id="heroDate"></div>
     </div>
 
-    <!-- Picker -->
-    <div class="a-section">
-      <div class="mood-picker-card">
-        <div class="mood-picker-label" data-i18n="p-app-humor:toque_para_registrar_seu_humor_f13d8">Toque para registrar seu humor</div>
-        <div class="mood-picker-row" id="moodPicker">
-          <button class="mood-btn" data-mood="1" data-emoji="😞" data-label="Mal" data-i18n-html="p-app-humor:mal_4af02">
-            <span class="mood-btn__emoji">😞</span>
-            <span class="mood-btn__label">Mal</span>
-          </button>
-          <button class="mood-btn" data-mood="2" data-emoji="😔" data-label="Cansado" data-i18n-html="p-app-humor:cansado_fbc2f">
-            <span class="mood-btn__emoji">😔</span>
-            <span class="mood-btn__label">Cansado</span>
-          </button>
-          <button class="mood-btn" data-mood="3" data-emoji="😐" data-label="Ok" data-i18n-html="p-app-humor:ok_77d05">
-            <span class="mood-btn__emoji">😐</span>
-            <span class="mood-btn__label">Ok</span>
-          </button>
-          <button class="mood-btn" data-mood="4" data-emoji="🙂" data-label="Bem" data-i18n-html="p-app-humor:bem_6467c">
-            <span class="mood-btn__emoji">🙂</span>
-            <span class="mood-btn__label">Bem</span>
-          </button>
-          <button class="mood-btn" data-mood="5" data-emoji="😄" data-label="Ótimo" data-i18n-html="p-app-humor:otimo_d769f">
-            <span class="mood-btn__emoji">😄</span>
-            <span class="mood-btn__label">Ótimo</span>
-          </button>
-        </div>
-        <label class="humor-note a-hide" id="noteWrap"><span data-i18n-html="p-app-humor:quer_contar_algo_sobre_hoje_8cb87">Quer contar algo sobre hoje? <small>(opcional · só você vê)</small></span>
-          <textarea id="noteText" maxlength="600" rows="3" placeholder="Algo que chateou, alegrou, preocupou… escreva do seu jeito."></textarea></label>
-        <div class="save-row">
-          <button class="a-btn a-btn--accent a-hide" id="saveBtn" style="min-width:140px;" data-i18n="p-app-humor:salvar_humor_ea9d0">Salvar humor</button>
-          <span class="a-hide" id="savedMsg" style="font-size:13px;color:var(--a-accent);font-weight:600;">✓ Registrado hoje!</span>
-        </div>
-      </div>
-    </div>
 
     <!-- Streak -->
     <div class="a-section" style="padding-top:0;" id="streakSection">
@@ -191,12 +157,10 @@
   const DAYS   = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
   const MONTHS = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
 
-  let selectedMood = null;
   let currentUser  = null;
   let humorData    = {};
   let humorNotes   = {};
   let chartInstance = null;
-  let todayLocked  = false;
 
   // Data em horário de São Paulo, não UTC — toISOString() usaria UTC e, entre
   // 21h e 23h59 em SP (UTC-3), o UTC já teria virado o dia seguinte, fazendo
@@ -235,15 +199,6 @@
     } catch {}
   }
 
-  function lockPicker() {
-    todayLocked = true;
-    document.querySelectorAll(".mood-btn").forEach(b => {
-      b.disabled = true;
-      b.style.opacity = b.classList.contains("is-selected") ? "1" : ".55";
-      b.style.cursor = "default";
-    });
-  }
-
   onAuthStateChanged(auth, async user => {
     if (!user) { window.location.href = "./login.html"; return; }
     currentUser = user;
@@ -262,21 +217,6 @@
       renderAll();
     }
 
-    document.querySelectorAll(".mood-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        if (todayLocked) return;
-        selectedMood = Number(btn.dataset.mood);
-        markBtn(selectedMood);
-        const m = MOODS[selectedMood];
-        document.getElementById("heroEmoji").textContent = m.emoji;
-        document.getElementById("heroLabel").textContent = m.label;
-        document.getElementById("saveBtn").classList.remove("a-hide");
-        document.getElementById("noteWrap").classList.remove("a-hide");
-        document.getElementById("savedMsg").classList.add("a-hide");
-      });
-    });
-
-    document.getElementById("saveBtn").addEventListener("click", saveHumor);
 
     await loadFromBackend();
   });
@@ -303,53 +243,8 @@
       renderAll();
     } catch {
       if (!Object.keys(humorData).length) {
-        document.getElementById("savedMsg").textContent = "Não foi possível carregar o histórico.";
+        document.getElementById("heroLabel").textContent = "Não foi possível carregar o histórico.";
       }
-    }
-  }
-
-  async function saveHumor() {
-    if (!selectedMood || todayLocked) return;
-    const date = todayStr();
-    humorData[date] = selectedMood;
-    const note = document.getElementById("noteText").value.trim();
-    if (note) humorNotes[date] = note;
-    document.getElementById("noteWrap").classList.add("a-hide");
-    document.getElementById("saveBtn").classList.add("a-hide");
-    document.getElementById("savedMsg").classList.remove("a-hide");
-    lockPicker();
-    renderAll();
-    writeSessionCache(humorData);
-    try {
-      const token = await currentUser.getIdToken();
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify(note ? { mood: selectedMood, note } : { mood: selectedMood })
-      });
-      const response = await r.json().catch(() => ({}));
-      if (!r.ok || !response.ok) throw new Error(response.error || "fail");
-      if (response.date && response.date !== date) {
-        delete humorData[date];
-        humorData[response.date] = response.mood;
-        writeSessionCache(humorData);
-        renderAll();
-      }
-    } catch {
-      delete humorData[date];
-      delete humorNotes[date];
-      document.getElementById("noteWrap").classList.remove("a-hide");
-      todayLocked = false;
-      document.querySelectorAll(".mood-btn").forEach(b => {
-        b.disabled = false; b.style.opacity = ""; b.style.cursor = "";
-      });
-      document.getElementById("savedMsg").textContent = "Não foi possível salvar. Tente novamente.";
-      document.getElementById("saveBtn").classList.remove("a-hide");
-      writeSessionCache(humorData);
-      markBtn(selectedMood);
-      buildChart();
-      buildStreak();
-      loadHistory();
     }
   }
 
@@ -360,15 +255,9 @@
       const m = MOODS[todayMood];
       document.getElementById("heroEmoji").textContent = m.emoji;
       document.getElementById("heroLabel").textContent = m.label;
-      document.getElementById("savedMsg").classList.remove("a-hide");
-      document.getElementById("saveBtn").classList.add("a-hide");
-      markBtn(todayMood);
-      if (!todayLocked) lockPicker();
-    } else if (!todayLocked) {
-      selectedMood = null;
-      markBtn(null);
+    } else {
       document.getElementById("heroEmoji").textContent = "😐";
-      document.getElementById("heroLabel").textContent = "Como está você hoje?";
+      document.getElementById("heroLabel").innerHTML = 'Ainda sem registro hoje · <a href="./home.html" style="color:inherit;text-decoration:underline">registrar no início</a>';
     }
     buildChart();
     buildMonth();
@@ -413,12 +302,6 @@
   }
   function bindMonthSelect() {
     document.getElementById("monthSelect")?.addEventListener("change", e => { monthChoice = e.target.value; buildMonth(); });
-  }
-
-  function markBtn(mood) {
-    document.querySelectorAll(".mood-btn").forEach(b => {
-      b.classList.toggle("is-selected", Number(b.dataset.mood) === mood);
-    });
   }
 
   function buildChart() {
