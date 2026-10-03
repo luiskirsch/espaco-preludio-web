@@ -85,7 +85,7 @@
     }
     .streak-num { font-family: var(--ff-serif); font-size: 40px; font-weight: 500; color: var(--a-accent); line-height: 1; }
   </style>
-  <script src="./portal-shell.js?v=3" defer></script>
+  <script src="./portal-shell.js?v=4" defer></script>
   <script src="./sw-register.js" defer></script>
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(!l){var n=(navigator.language||"").toLowerCase();if(n.indexOf("en")===0)l="en-US";else if(n.indexOf("es")===0)l="es-ES";}if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
@@ -192,7 +192,10 @@
   function dateFromKey(dateStr) {
     return new Date(`${dateStr}T12:00:00Z`);
   }
-  const sessionKey = () => currentUser ? `ep:humor:session:${currentUser.uid}` : null;
+  // uid da última sessão desta aba: permite desenhar o cache antes do login confirmar
+  let lastUid = null;
+  try { lastUid = sessionStorage.getItem("ep:lastUid"); } catch {}
+  const sessionKey = () => (currentUser?.uid || lastUid) ? `ep:humor:session:${currentUser?.uid || lastUid}` : null;
 
   function readSessionCache() {
     try {
@@ -202,19 +205,22 @@
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       if (parsed.date !== todayStr()) return null;
+      humorNotes = parsed.notes || {};
       return parsed.data;
     } catch { return null; }
   }
   function writeSessionCache(data) {
     try {
       const key = sessionKey();
-      if (key) sessionStorage.setItem(key, JSON.stringify({ date: todayStr(), data }));
+      if (key) sessionStorage.setItem(key, JSON.stringify({ date: todayStr(), data, notes: humorNotes }));
     } catch {}
   }
 
   onAuthStateChanged(auth, async user => {
     if (!user) { window.location.href = "./login.html"; return; }
     currentUser = user;
+    try { sessionStorage.setItem("ep:lastUid", user.uid); } catch {}
+    if (lastUid && lastUid !== user.uid) { humorData = {}; humorNotes = {}; }
     // Remove a antiga chave compartilhada entre contas, usada antes do cache
     // ser isolado por usuário neste dispositivo.
     try { sessionStorage.removeItem("ep:humor:session"); } catch {}
@@ -410,6 +416,16 @@
       box.style.maxHeight = items[7].offsetTop + "px";
       box.classList.add("is-scrollable");
     }
+  }
+
+  // Desenha o último estado desta aba antes de o login confirmar (sem piscar).
+  {
+    const t0 = dateFromKey(todayStr());
+    document.getElementById("heroDate").textContent = `${DAYS_FULL[t0.getUTCDay()]}, ${t0.getUTCDate()} de ${MONTHS[t0.getUTCMonth()]}`;
+  }
+  if (lastUid) {
+    const early = readSessionCache();
+    if (early) { humorData = early; try { renderAll(); } catch {} }
   }
 </script>
 </body>

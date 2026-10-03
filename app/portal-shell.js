@@ -46,4 +46,22 @@
     </div>`;
 
   if (!nav.isConnected) document.querySelector(".a-shell")?.appendChild(nav);
+
+  // Navegação instantânea: ao parar o mouse num item do menu (ou tocar nele),
+  // o navegador já abre a página escondida — login, dados e tudo — e a troca
+  // é imediata, já atualizada. Só páginas cuja abertura apenas LÊ dados
+  // (sem efeitos colaterais) são pré-renderizadas; as demais só pré-buscam.
+  if (HTMLScriptElement.supports?.("speculationrules") && !document.querySelector("script[data-ep-speculation]")) {
+    const safe = ["home", "buscar", "consultas", "jornada", "humor", "documentos", "perfil"]
+      .filter(name => name !== route)
+      .map(name => ({ href_matches: { pathname: `{/staging}?/app/${name}.html` } }));
+    const rules = document.createElement("script");
+    rules.type = "speculationrules";
+    rules.dataset.epSpeculation = "";
+    rules.textContent = JSON.stringify({
+      prerender: [{ source: "document", where: { or: safe }, eagerness: "moderate" }],
+      prefetch: [{ source: "document", where: { href_matches: { pathname: "{/staging}?/app/*.html" } }, eagerness: "moderate" }]
+    });
+    document.head.append(rules);
+  }
 })();

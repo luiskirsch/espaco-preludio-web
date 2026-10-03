@@ -62,7 +62,7 @@
     .tips-card__title { font-size: 13px; font-weight: 700; color: var(--a-accent); margin-bottom: 6px; }
     .tips-card__text { font-size: 13px; color: var(--a-ink2); line-height: 1.5; }
   </style>
-  <script src="./portal-shell.js?v=3" defer></script>
+  <script src="./portal-shell.js?v=4" defer></script>
   <script src="./sw-register.js" defer></script>
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(!l){var n=(navigator.language||"").toLowerCase();if(n.indexOf("en")===0)l="en-US";else if(n.indexOf("es")===0)l="es-ES";}if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
@@ -595,8 +595,20 @@ body.mood-note-open{overflow:hidden}
       });
     }
 
+    // Último estado conhecido na sessão: aparece na hora, sem piscar "não marcado".
+    const TODAY_KEY = `ep:humor:today:${user.uid}`;
+    const applyMood = (mood) => {
+      document.querySelectorAll(".a-mood__btn").forEach(b => b.classList.toggle("is-selected", b.dataset.mood === mood));
+      document.getElementById("moodFooter").classList.add("is-visible");
+      lockMoodPicker();
+    };
+    try {
+      const c = JSON.parse(sessionStorage.getItem(TODAY_KEY) || "null");
+      if (c?.date === todayInSaoPaulo() && c.mood) applyMood(String(c.mood));
+    } catch {}
     const savedMood = await loadTodayMood();
-    if (savedMood) {
+    if (savedMood) { try { sessionStorage.setItem(TODAY_KEY, JSON.stringify({ date: todayInSaoPaulo(), mood: savedMood })); } catch {} }
+    if (savedMood && !moodLocked) {
       document.querySelectorAll(".a-mood__btn").forEach(b => { if (b.dataset.mood === savedMood) b.classList.add("is-selected"); });
       document.getElementById("moodFooter").classList.add("is-visible");
       lockMoodPicker();
@@ -659,6 +671,7 @@ body.mood-note-open{overflow:hidden}
             throw new Error(data.error || "Não foi possível confirmar o registro.");
           }
           moodSaved.textContent = "✓ Registrado";
+          try { sessionStorage.setItem(TODAY_KEY, JSON.stringify({ date: data.date, mood: String(mood) })); } catch {}
         } catch {
           moodLocked = false;
           moodSaved.textContent = "Não foi possível salvar. Toque novamente para tentar.";
