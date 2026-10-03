@@ -46,7 +46,12 @@
     .history-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--a-line); }
     .history-item:last-child { border-bottom: none; }
     .history-emoji { font-size: 28px; flex-shrink: 0; }
-    .history-info  { flex: 1; }
+    .history-info  { flex: 1; min-width: 0; }
+    .history-note  { margin: 6px 0 0; padding: 8px 11px; border-radius: 10px; background: #f6f1e6; color: var(--a-ink2); font-size: 13.5px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .humor-note { display: grid; gap: 6px; margin: 4px 0 12px; font-size: 14px; font-weight: 600; color: var(--a-ink); }
+    .humor-note small { font-weight: 500; color: var(--a-ink3); }
+    .humor-note textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 84px; padding: 11px 13px; border: 1.5px solid #dbe3df; border-radius: 13px; font: inherit; font-size: 15px; font-weight: 400; line-height: 1.5; background: #fff; outline: none; }
+    .humor-note textarea:focus { border-color: #1d6b67; box-shadow: 0 0 0 3px rgba(29,107,103,.12); }
     .history-day   { font-size: 13px; font-weight: 600; color: var(--a-ink); }
     .history-label { font-size: 12px; color: var(--a-ink2); }
     .history-date  { font-family: var(--ff-mono); font-size: 11px; color: var(--a-ink3); }
@@ -107,6 +112,8 @@
             <span class="mood-btn__label">Ótimo</span>
           </button>
         </div>
+        <label class="humor-note a-hide" id="noteWrap"><span>Quer contar algo sobre hoje? <small>(opcional · só você vê)</small></span>
+          <textarea id="noteText" maxlength="600" rows="3" placeholder="Algo que chateou, alegrou, preocupou… escreva do seu jeito."></textarea></label>
         <div class="save-row">
           <button class="a-btn a-btn--accent a-hide" id="saveBtn" style="min-width:140px;" data-i18n="p-app-humor:salvar_humor_ea9d0">Salvar humor</button>
           <span class="a-hide" id="savedMsg" style="font-size:13px;color:var(--a-accent);font-weight:600;">✓ Registrado hoje!</span>
@@ -167,6 +174,7 @@
   let selectedMood = null;
   let currentUser  = null;
   let humorData    = {};
+  let humorNotes   = {};
   let chartInstance = null;
   let todayLocked  = false;
 
@@ -243,6 +251,7 @@
         document.getElementById("heroEmoji").textContent = m.emoji;
         document.getElementById("heroLabel").textContent = m.label;
         document.getElementById("saveBtn").classList.remove("a-hide");
+        document.getElementById("noteWrap").classList.remove("a-hide");
         document.getElementById("savedMsg").classList.add("a-hide");
       });
     });
@@ -268,7 +277,8 @@
       const d = await r.json().catch(() => ({}));
       if (!d.ok) throw new Error(d.error || "api");
       humorData = {};
-      d.items.forEach(item => { humorData[item.date] = item.mood; });
+      humorNotes = {};
+      d.items.forEach(item => { humorData[item.date] = item.mood; if (item.note) humorNotes[item.date] = item.note; });
       writeSessionCache(humorData);
       renderAll();
     } catch {
@@ -282,6 +292,9 @@
     if (!selectedMood || todayLocked) return;
     const date = todayStr();
     humorData[date] = selectedMood;
+    const note = document.getElementById("noteText").value.trim();
+    if (note) humorNotes[date] = note;
+    document.getElementById("noteWrap").classList.add("a-hide");
     document.getElementById("saveBtn").classList.add("a-hide");
     document.getElementById("savedMsg").classList.remove("a-hide");
     lockPicker();
@@ -292,7 +305,7 @@
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ mood: selectedMood })
+        body: JSON.stringify(note ? { mood: selectedMood, note } : { mood: selectedMood })
       });
       const response = await r.json().catch(() => ({}));
       if (!r.ok || !response.ok) throw new Error(response.error || "fail");
@@ -304,6 +317,8 @@
       }
     } catch {
       delete humorData[date];
+      delete humorNotes[date];
+      document.getElementById("noteWrap").classList.remove("a-hide");
       todayLocked = false;
       document.querySelectorAll(".mood-btn").forEach(b => {
         b.disabled = false; b.style.opacity = ""; b.style.cursor = "";
@@ -384,6 +399,9 @@
     document.getElementById("streakNum").textContent = streak;
   }
 
+  function escapeNote(t) {
+    return String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
   function loadHistory() {
     const sorted = Object.entries(humorData).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 30);
     const list = document.getElementById("historyList");
@@ -399,6 +417,7 @@
         <div class="history-info">
           <div class="history-day">${m.label}</div>
           <div class="history-label">${DAYS[d.getUTCDay()]}</div>
+          ${humorNotes[dateStr] ? `<p class="history-note">${escapeNote(humorNotes[dateStr])}</p>` : ""}
         </div>
         <div class="history-date">${d.getUTCDate()} de ${MONTHS[d.getUTCMonth()]}</div>
       </div>`;

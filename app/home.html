@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app.css?v=20261002s">
+  <link rel="stylesheet" href="./app.css?v=20261002t">
   <link rel="stylesheet" href="./weather-hero.css?v=20261002f">
   <style>
     .home-hero {
@@ -67,6 +67,32 @@
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(!l){var n=(navigator.language||"").toLowerCase();if(n.indexOf("en")===0)l="en-US";else if(n.indexOf("es")===0)l="es-ES";}if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
   <script src="/i18n/init.js?v=2-6" defer></script>
+<style>
+.mood-note{position:fixed;inset:0;z-index:1000;display:grid;grid-template-columns:minmax(0,1fr);place-items:center;padding:16px}
+.mood-note__panel,.mood-note textarea{min-width:0;max-width:100%}
+.mood-note[hidden]{display:none}
+.mood-note__backdrop{position:absolute;inset:0;background:rgba(8,30,32,.45);backdrop-filter:blur(3px);animation:mnFade .2s ease}
+.mood-note__panel{position:relative;box-sizing:border-box;width:min(420px,100%);padding:22px 20px 18px;border-radius:20px;background:#fffdf8;box-shadow:0 24px 60px rgba(0,0,0,.25);animation:mnUp .24s cubic-bezier(.2,.8,.2,1)}
+.mood-note__x{position:absolute;top:10px;right:12px;width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:#6b7a78;font-size:24px;line-height:1;cursor:pointer}
+.mood-note__x:hover{background:#f1ece2}
+.mood-note__head{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-right:28px}
+.mood-note__emoji{font-size:34px;line-height:1;display:grid;place-items:center;width:44px;height:44px}
+.mood-note__emoji img{width:40px;height:40px}
+.mood-note__head strong{display:block;font-family:var(--ff-serif,serif);font-size:19px;color:#123c40}
+.mood-note__head small{display:block;margin-top:2px;font-size:12.5px;color:#6b7a78}
+.mood-note textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:104px;padding:12px 14px;border:1.5px solid #dbe3df;border-radius:14px;font:inherit;font-size:15px;line-height:1.5;color:#1d2b2a;background:#fff;outline:none}
+.mood-note textarea:focus{border-color:#1d6b67;box-shadow:0 0 0 3px rgba(29,107,103,.12)}
+.mood-note__count{margin-top:4px;text-align:right;font-size:11.5px;color:#93a09e}
+.mood-note__actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+.mood-note__actions button{min-height:44px;padding:0 18px;border-radius:12px;font:inherit;font-size:14.5px;font-weight:700;cursor:pointer}
+.mood-note__skip{border:1px solid #dbe3df;background:#fff;color:#3d5856}
+.mood-note__save{border:0;background:#123c40;color:#fff}
+.mood-note__save:hover{background:#1d5458}
+body.mood-note-open{overflow:hidden}
+@keyframes mnFade{from{opacity:0}}
+@keyframes mnUp{from{opacity:0;transform:translateY(14px) scale(.98)}}
+@media (max-width:520px){.mood-note{align-items:end;padding:0}.mood-note__panel{width:100%;border-radius:20px 20px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom))}.mood-note__actions button{flex:1}}
+</style>
 </head>
 <body class="a-portal-authenticated">
 <div class="a-shell">
@@ -111,6 +137,20 @@
           <button class="a-mood__btn" data-mood="3" title="Ok" data-i18n-html="p-app-home:ok_dd355"><span class="a-mood__emoji">😐</span><span class="a-mood__name">Ok</span></button>
           <button class="a-mood__btn" data-mood="2" title="Cansado" data-i18n-html="p-app-home:cansado_bb0f7" data-i18n-title="p-app-home:cansado_80251"><span class="a-mood__emoji">😔</span><span class="a-mood__name">Cansado</span></button>
           <button class="a-mood__btn" data-mood="1" title="Mal" data-i18n-html="p-app-home:mal_c645e" data-i18n-title="p-app-home:mal_33b24"><span class="a-mood__emoji">😞</span><span class="a-mood__name">Mal</span></button>
+        </div>
+        <div class="mood-note" id="moodNote" hidden role="dialog" aria-modal="true" aria-labelledby="moodNoteTitle">
+          <div class="mood-note__backdrop" data-close></div>
+          <form class="mood-note__panel" id="moodNoteForm">
+            <button type="button" class="mood-note__x" data-close aria-label="Fechar">×</button>
+            <div class="mood-note__head"><span class="mood-note__emoji" id="moodNoteEmoji"></span>
+              <div><strong id="moodNoteTitle">Quer contar algo sobre hoje?</strong><small>Opcional · só você vê esta anotação</small></div></div>
+            <textarea id="moodNoteText" maxlength="600" rows="4" placeholder="Algo que chateou, alegrou, preocupou… escreva do seu jeito."></textarea>
+            <div class="mood-note__count"><span id="moodNoteCount">0</span>/600</div>
+            <div class="mood-note__actions">
+              <button type="button" class="mood-note__skip" id="moodNoteSkip">Pular</button>
+              <button type="submit" class="mood-note__save">Salvar registro</button>
+            </div>
+          </form>
         </div>
         <div class="mood-card__footer" id="moodFooter">
           <span class="mood-card__saved" id="moodSaved">✓ Registrado</span>
@@ -562,10 +602,44 @@
       lockMoodPicker();
     }
 
+    // Ao tocar num humor, abre um modal curto para uma observação opcional.
+    const noteBox = document.getElementById("moodNote");
+    document.body.appendChild(noteBox);
+    const noteText = document.getElementById("moodNoteText");
+    let pendingBtn = null;
+    function openNote(btn) {
+      pendingBtn = btn;
+      document.querySelectorAll(".a-mood__btn").forEach(b => b.classList.toggle("is-selected", b === btn));
+      document.getElementById("moodNoteEmoji").innerHTML = btn.querySelector(".a-mood__emoji").innerHTML;
+      noteText.value = "";
+      document.getElementById("moodNoteCount").textContent = "0";
+      noteBox.hidden = false;
+      document.body.classList.add("mood-note-open");
+      setTimeout(() => noteText.focus(), 60);
+    }
+    function closeNote(cancel) {
+      noteBox.hidden = true;
+      document.body.classList.remove("mood-note-open");
+      if (cancel && pendingBtn) pendingBtn.classList.remove("is-selected");
+      pendingBtn = null;
+    }
+    noteText.addEventListener("input", () => { document.getElementById("moodNoteCount").textContent = noteText.value.length; });
+    noteBox.querySelectorAll("[data-close]").forEach(el => el.addEventListener("click", () => closeNote(true)));
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !noteBox.hidden) closeNote(true); });
+    document.getElementById("moodNoteSkip").addEventListener("click", () => { const b = pendingBtn; closeNote(false); saveMood(b, ""); });
+    document.getElementById("moodNoteForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const b = pendingBtn, note = noteText.value.trim();
+      closeNote(false);
+      saveMood(b, note);
+    });
+
     document.querySelectorAll(".a-mood__btn").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        if (moodLocked) return;
-        document.querySelectorAll(".a-mood__btn").forEach(b => b.classList.remove("is-selected"));
+      btn.addEventListener("click", () => { if (!moodLocked) openNote(btn); });
+    });
+    async function saveMood(btn, note) {
+      {
+        if (moodLocked || !btn) return;
         btn.classList.add("is-selected");
         const mood = btn.dataset.mood;
         const moodFooter = document.getElementById("moodFooter");
@@ -578,7 +652,7 @@
           const response = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
             method: "POST",
             headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ mood: Number(mood) })
+            body: JSON.stringify(note ? { mood: Number(mood), note } : { mood: Number(mood) })
           });
           const data = await response.json().catch(() => ({}));
           if (!response.ok || !data.ok || data.date !== todayInSaoPaulo()) {
@@ -592,8 +666,8 @@
             b.disabled = false; b.style.opacity = ""; b.style.cursor = "";
           });
         }
-      });
-    });
+      }
+    }
 
     // Próxima consulta
     try {
