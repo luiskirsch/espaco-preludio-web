@@ -13,6 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./app.css?v=20261003a">
+  <link rel="stylesheet" href="./mood-face.css?v=1">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer></script>
   <style>
     .mood-hero {
@@ -102,7 +103,7 @@
 
     <!-- Hero humor do dia -->
     <div class="mood-hero" id="moodHero">
-      <span class="mood-hero__emoji" id="heroEmoji">😐</span>
+      <span class="mood-hero__emoji" id="heroEmoji"></span>
       <div class="mood-hero__label" id="heroLabel">Como está você hoje?</div>
       <div class="mood-hero__date" id="heroDate"></div>
       <div class="mood-hero__done" id="heroDone" hidden>✓ Registrado hoje</div>
@@ -149,6 +150,14 @@
 <script type="module">
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+  import { mountMoodFace } from "./mood-face.js?v=1";
+  let heroFace = null, heroFaceMood = null;
+  function setHeroFace(mood) {
+    if (heroFaceMood === mood) return;
+    heroFace?.destroy();
+    heroFaceMood = mood;
+    heroFace = mountMoodFace(document.getElementById("heroEmoji"), mood);
+  }
 
   const MOODS = {
     1: { emoji:"😞", label:"Mal",     color:"#b8453d" },
@@ -257,12 +266,12 @@
     const todayMood = humorData[today];
     if (todayMood) {
       const m = MOODS[todayMood];
-      document.getElementById("heroEmoji").textContent = m.emoji;
+      setHeroFace(Number(todayMood));
       document.getElementById("heroLabel").textContent = m.label;
       document.getElementById("heroDone").hidden = false;
     } else {
       document.getElementById("heroDone").hidden = true;
-      document.getElementById("heroEmoji").textContent = "😐";
+      setHeroFace(3);
       document.getElementById("heroLabel").innerHTML = 'Ainda sem registro hoje · <a href="./home.html" style="color:inherit;text-decoration:underline">registrar no início</a>';
     }
     buildChart();

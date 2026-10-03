@@ -1,0 +1,79 @@
+/* Carinha de humor animada (mood-face.js) */
+.mf { position: relative; display: inline-block; width: 112px; height: 112px; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
+.mf:focus-visible { border-radius: 50%; box-shadow: 0 0 0 3px rgba(143, 220, 170, .6); }
+.mf svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.mf-head { transform-origin: 50% 90%; transform-box: view-box; }
+.mf-body { transform-origin: 50% 96%; transform-box: view-box; animation: mf-breathe 4.2s ease-in-out infinite; }
+.mf[data-mood="5"] .mf-body { animation: mf-bob 2.6s ease-in-out infinite; }
+.mf[data-mood="2"] .mf-body { animation-duration: 6s; }
+.mf[data-mood="1"] .mf-body { animation-duration: 5.4s; }
+.mf-shadow { transform-origin: 50% 97%; transform-box: view-box; animation: mf-shadow 4.2s ease-in-out infinite; }
+.mf[data-mood="5"] .mf-shadow { animation-duration: 2.6s; }
+.mf-happyeyes, .mf-yawn, .mf-tear { opacity: 0; }
+.mf-yawn { transform-origin: 50% 68%; transform-box: view-box; transform: scale(.2); }
+.mf-mouthwrap { transform-origin: 50% 66%; transform-box: view-box; }
+
+@keyframes mf-breathe { 0%, 100% { transform: translateY(0) scale(1, 1); } 50% { transform: translateY(-1.6px) scale(1.012, .992); } }
+@keyframes mf-bob { 0%, 100% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-3px) rotate(-2deg); } 75% { transform: translateY(-3px) rotate(2deg); } }
+@keyframes mf-shadow { 0%, 100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(.9); opacity: .7; } }
+
+/* Reações ao clique */
+.mf.is-react .mf-body { animation: none; }
+/* Ótimo: pulo com squash, ri de olhos fechados */
+.mf[data-mood="5"].is-react .mf-body { animation: mf-jump .9s cubic-bezier(.3, .7, .3, 1); }
+.mf[data-mood="5"].is-react .mf-eye { opacity: 0; transition: opacity .08s; }
+.mf[data-mood="5"].is-react .mf-happyeyes { opacity: 1; transition: opacity .08s; }
+.mf[data-mood="5"].is-react .mf-mouthwrap { animation: mf-laugh .9s ease; }
+@keyframes mf-jump {
+  0% { transform: translateY(0) scale(1, 1); }
+  14% { transform: translateY(2px) scale(1.12, .86); }
+  40% { transform: translateY(-26px) scale(.94, 1.08) rotate(-6deg); }
+  62% { transform: translateY(-14px) scale(1, 1) rotate(5deg); }
+  82% { transform: translateY(1px) scale(1.08, .92); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+@keyframes mf-laugh { 0%, 100% { transform: scale(1); } 30%, 60% { transform: scale(1.15, 1.25); } 45%, 75% { transform: scale(1.1, 1.05); } }
+
+/* Bem: pulinho e piscadela (JS fecha o olho direito) */
+.mf[data-mood="4"].is-react .mf-body { animation: mf-hop .7s ease; }
+.mf[data-mood="4"].is-react .mf-mouthwrap { animation: mf-grin .9s ease; }
+@keyframes mf-hop { 0%, 100% { transform: translateY(0) rotate(0); } 35% { transform: translateY(-10px) rotate(-5deg); } 65% { transform: translateY(0) rotate(3deg); } }
+@keyframes mf-grin { 0%, 100% { transform: scale(1); } 40%, 80% { transform: scale(1.18, 1.3); } }
+
+/* Ok: balança "tanto faz" */
+.mf[data-mood="3"].is-react .mf-body { animation: mf-meh 1s ease-in-out; }
+.mf[data-mood="3"].is-react .mf-mouthwrap { animation: mf-wiggle 1s ease-in-out; }
+@keyframes mf-meh { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-9deg) translateX(-3px); } 45% { transform: rotate(8deg) translateX(3px); } 70% { transform: rotate(-4deg); } }
+@keyframes mf-wiggle { 0%, 100% { transform: none; } 25% { transform: translateX(-3px) rotate(-6deg); } 55% { transform: translateX(3px) rotate(6deg); } }
+
+/* Cansado: bocejo */
+.mf[data-mood="2"].is-react .mf-body { animation: mf-stretch 1.6s ease; }
+.mf[data-mood="2"].is-react .mf-mouthwrap { opacity: 0; transition: opacity .2s; }
+.mf[data-mood="2"].is-react .mf-yawn { animation: mf-yawn 1.6s ease forwards; }
+@keyframes mf-stretch { 0%, 100% { transform: none; } 35%, 70% { transform: translateY(-3px) scale(.97, 1.06) rotate(-4deg); } }
+@keyframes mf-yawn { 0% { opacity: 1; transform: scale(.25); } 35%, 75% { opacity: 1; transform: scale(1.1, 1.25); } 100% { opacity: 0; transform: scale(.3); } }
+
+/* Mal: encolhe e escorre uma lágrima */
+.mf[data-mood="1"].is-react .mf-body { animation: mf-sink 1.1s ease; }
+.mf[data-mood="1"].is-react .mf-tear { animation: mf-tear 1.1s ease-in forwards; }
+.mf[data-mood="1"].is-react .mf-brows { animation: mf-brow 1.1s ease; transform-origin: 50% 30%; transform-box: view-box; }
+@keyframes mf-sink { 0%, 100% { transform: none; } 30%, 75% { transform: translateY(4px) scale(.94, .9); } }
+@keyframes mf-tear { 0% { opacity: 0; transform: translateY(-4px); } 20% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(26px); } }
+@keyframes mf-brow { 0%, 100% { transform: none; } 30%, 75% { transform: translateY(2px) scaleX(.92); } }
+
+/* Efeitos que saem do rosto */
+.mf-fx { position: absolute; inset: 0; pointer-events: none; }
+.mf-fx i { position: absolute; left: 50%; top: 35%; font-style: normal; font-weight: 800; animation: mf-fly 1.2s cubic-bezier(.2, .7, .3, 1) forwards; opacity: 0; }
+.mf-spark { color: #ffe27a; font-size: 18px; text-shadow: 0 0 10px rgba(255, 226, 122, .8); }
+.mf-heart { color: #ff6f8e; font-size: 24px; --dx: 34px !important; --dy: -62px !important; }
+.mf-zzz { color: #cfe2ff; font-size: 20px; --dx: 40px !important; }
+.mf-zzz:nth-child(2) { font-size: 26px; --dx: 58px !important; --dy: -80px !important; }
+@keyframes mf-fly {
+  0% { opacity: 0; transform: translate(-50%, 0) scale(.4) rotate(0); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), var(--dy)) scale(1.1) rotate(var(--rot, 0deg)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-body, .mf-shadow { animation: none !important; }
+}
