@@ -43,6 +43,20 @@
     .chart-title { font-size: 14px; font-weight: 700; color: var(--a-ink); margin-bottom: 4px; }
     .chart-sub   { font-size: 12px; color: var(--a-ink3); margin-bottom: 16px; }
     .chart-wrap  { height: 160px; position: relative; }
+    .month-stats { margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(12,61,66,.08); }
+    .month-stats__head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+    .month-stats__head strong { font-size: 15px; color: var(--a-ink); }
+    .month-stats__head span { font-size: 13px; color: var(--a-ink3); }
+    .month-bar { display: flex; height: 12px; border-radius: 99px; overflow: hidden; background: #f1ece2; margin-bottom: 14px; }
+    .month-bar i { display: block; height: 100%; transition: width .6s ease; }
+    .month-rows { display: grid; gap: 9px; }
+    .month-row { display: grid; grid-template-columns: 28px 74px 1fr 46px; align-items: center; gap: 10px; font-size: 14px; color: var(--a-ink); }
+    .month-row__emoji { font-size: 22px; line-height: 1; }
+    .month-row__track { height: 8px; border-radius: 99px; background: #f4efe5; overflow: hidden; }
+    .month-row__track i { display: block; height: 100%; border-radius: 99px; }
+    .month-row b { text-align: right; font-variant-numeric: tabular-nums; }
+    .month-row.is-zero { opacity: .45; }
+    .month-stats__empty { font-size: 13.5px; color: var(--a-ink3); }
     .history-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--a-line); }
     .history-item:last-child { border-bottom: none; }
     .history-emoji { font-size: 28px; flex-shrink: 0; }
@@ -140,6 +154,7 @@
         <div class="chart-wrap">
           <canvas id="moodChart"></canvas>
         </div>
+        <div class="month-stats" id="monthStats"></div>
       </div>
     </div>
 
@@ -271,7 +286,7 @@
 
     try {
       const token = await currentUser.getIdToken();
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor?days=30`, {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor?days=31`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const d = await r.json().catch(() => ({}));
@@ -351,8 +366,35 @@
       document.getElementById("heroLabel").textContent = "Como está você hoje?";
     }
     buildChart();
+    buildMonth();
     buildStreak();
     loadHistory();
+  }
+
+  // Resumo do mês corrente: % de dias registrados em cada humor.
+  function buildMonth() {
+    const box = document.getElementById("monthStats");
+    if (!box) return;
+    const prefix = todayStr().slice(0, 7);
+    const monthIdx = Number(prefix.slice(5, 7)) - 1;
+    const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    Object.entries(humorData).forEach(([date, mood]) => { if (date.startsWith(prefix) && counts[mood] !== undefined) counts[mood]++; });
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+    const monthName = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"][monthIdx];
+    if (!total) {
+      box.innerHTML = `<div class="month-stats__head"><strong>Resumo de ${monthName}</strong></div><p class="month-stats__empty">Registre seu humor para ver o resumo do mês.</p>`;
+      return;
+    }
+    // porcentagens que somam 100 (maior resto)
+    const raw = [5, 4, 3, 2, 1].map(k => ({ k, exact: counts[k] * 100 / total }));
+    raw.forEach(r => { r.pct = Math.floor(r.exact); });
+    let rest = 100 - raw.reduce((a, r) => a + r.pct, 0);
+    [...raw].sort((a, b) => (b.exact - b.pct) - (a.exact - a.pct)).forEach(r => { if (rest > 0 && counts[r.k]) { r.pct++; rest--; } });
+    box.innerHTML = `<div class="month-stats__head"><strong>Resumo de ${monthName}</strong><span>${total} ${total === 1 ? "dia registrado" : "dias registrados"}</span></div>
+      <div class="month-bar">${raw.filter(r => counts[r.k]).map(r => `<i style="width:${r.exact}%;background:${MOODS[r.k].color}" title="${MOODS[r.k].label}: ${r.pct}%"></i>`).join("")}</div>
+      <div class="month-rows">${raw.map(r => `<div class="month-row${counts[r.k] ? "" : " is-zero"}">
+        <span class="month-row__emoji">${MOODS[r.k].emoji}</span><span>${MOODS[r.k].label}</span>
+        <span class="month-row__track"><i style="width:${r.exact}%;background:${MOODS[r.k].color}"></i></span><b>${r.pct}%</b></div>`).join("")}</div>`;
   }
 
   function markBtn(mood) {
