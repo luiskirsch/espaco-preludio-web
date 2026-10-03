@@ -65,6 +65,8 @@
     .history-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--a-line); }
     .history-item:last-child { border-bottom: none; }
     .history-emoji { font-size: 28px; flex-shrink: 0; }
+    .mood-hero__done { margin-top: 16px; padding: 7px 14px; border-radius: 99px; background: rgba(102,201,138,.14); color: #8fdcaa; font-size: 14px; font-weight: 700; }
+    .mood-hero__done[hidden] { display: none; }
     .history-info  { flex: 1; min-width: 0; }
     .history-note  { margin: 6px 0 0; padding: 8px 11px; border-radius: 10px; background: #f6f1e6; color: var(--a-ink2); font-size: 13.5px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
     .humor-note { display: grid; gap: 6px; margin: 4px 0 12px; font-size: 14px; font-weight: 600; color: var(--a-ink); }
@@ -103,6 +105,7 @@
       <span class="mood-hero__emoji" id="heroEmoji">😐</span>
       <div class="mood-hero__label" id="heroLabel">Como está você hoje?</div>
       <div class="mood-hero__date" id="heroDate"></div>
+      <div class="mood-hero__done" id="heroDone" hidden>✓ Registrado hoje</div>
     </div>
 
 
@@ -208,7 +211,7 @@
 
     const today = dateFromKey(todayStr());
     document.getElementById("heroDate").textContent =
-      `${DAYS[today.getUTCDay()]}, ${today.getUTCDate()} de ${MONTHS[today.getUTCMonth()]}`;
+      `${["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"][today.getUTCDay()]}, ${today.getUTCDate()} de ${MONTHS[today.getUTCMonth()]}`;
 
     // Render do cache de sessão imediatamente
     const cached = readSessionCache();
@@ -255,7 +258,9 @@
       const m = MOODS[todayMood];
       document.getElementById("heroEmoji").textContent = m.emoji;
       document.getElementById("heroLabel").textContent = m.label;
+      document.getElementById("heroDone").hidden = false;
     } else {
+      document.getElementById("heroDone").hidden = true;
       document.getElementById("heroEmoji").textContent = "😐";
       document.getElementById("heroLabel").innerHTML = 'Ainda sem registro hoje · <a href="./home.html" style="color:inherit;text-decoration:underline">registrar no início</a>';
     }
