@@ -124,7 +124,7 @@
     <!-- Gráfico semanal -->
     <div class="a-section" style="padding-top:0;">
       <div class="chart-card">
-        <div class="chart-title" data-i18n="p-app-humor:ultimos_7_dias_0c7f5">Últimos 7 dias</div>
+        <div class="chart-title" id="chartPick"></div>
         <div class="chart-sub" data-i18n="p-app-humor:seu_indice_de_bem_estar_36dd1">Seu índice de bem-estar</div>
         <div class="chart-wrap">
           <canvas id="moodChart"></canvas>
@@ -319,28 +319,51 @@
     document.getElementById("monthSelect")?.addEventListener("change", e => { monthChoice = e.target.value; buildMonth(); });
   }
 
+  // Período do gráfico: "7d" (padrão) ou um mês "AAAA-MM" com registros.
+  let chartChoice = "7d";
+  function renderChartPicker() {
+    const box = document.getElementById("chartPick");
+    const current = todayStr().slice(0, 7);
+    const months = [...new Set([current, ...Object.keys(humorData).map(d => d.slice(0, 7))])].sort().reverse();
+    if (chartChoice !== "7d" && !months.includes(chartChoice)) chartChoice = "7d";
+    const labelOf = (v) => v === "7d" ? "Últimos 7 dias"
+      : MONTH_NAMES[Number(v.slice(5, 7)) - 1].replace(/^./, c => c.toUpperCase()) + (v.slice(0, 4) !== current.slice(0, 4) ? " de " + v.slice(0, 4) : "");
+    box.innerHTML = `<label class="month-pick"><span class="month-pick__txt">${chartChoice === "7d" ? labelOf("7d") : `<em>${labelOf(chartChoice)}</em>`}</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      <select aria-label="Escolher período do gráfico"><option value="7d"${chartChoice === "7d" ? " selected" : ""}>Últimos 7 dias</option>${months.map(m => `<option value="${m}"${m === chartChoice ? " selected" : ""}>${labelOf(m)}</option>`).join("")}</select></label>`;
+    box.querySelector("select").addEventListener("change", e => { chartChoice = e.target.value; buildChart(); });
+  }
   function buildChart() {
-    const labels = [], data = [], colors = [];
+    renderChartPicker();
+    const labels = [], data = [], colors = [], dates = [];
     const today = todayStr();
-    for (let i = 6; i >= 0; i--) {
-      const dateStr = shiftDate(today, -i);
-      const d = dateFromKey(dateStr);
-      labels.push(DAYS[d.getUTCDay()]);
+    const push = (dateStr, label) => {
       const val = humorData[dateStr] || 0;
-      data.push(val);
+      labels.push(label); dates.push(dateStr); data.push(val);
       colors.push(val ? (MOODS[val]?.color || "#ccc") : "rgba(0,0,0,.06)");
+    };
+    if (chartChoice === "7d") {
+      for (let i = 6; i >= 0; i--) {
+        const dateStr = shiftDate(today, -i);
+        push(dateStr, DAYS[dateFromKey(dateStr).getUTCDay()]);
+      }
+    } else {
+      const [y, m] = chartChoice.split("-").map(Number);
+      const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+      for (let day = 1; day <= last; day++) push(`${chartChoice}-${String(day).padStart(2, "0")}`, String(day));
     }
+    const isMonth = chartChoice !== "7d";
     const ctx = document.getElementById("moodChart").getContext("2d");
     if (chartInstance) chartInstance.destroy();
     chartInstance = new Chart(ctx, {
       type: "bar",
-      data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 8, borderSkipped: false }] },
+      data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: isMonth ? 4 : 8, borderSkipped: false, maxBarThickness: isMonth ? 18 : undefined }] },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => MOODS[c.raw]?.label || "Sem registro" } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { title: items => { const d = dateFromKey(dates[items[0].dataIndex]); return `${DAYS_FULL[d.getUTCDay()]}, ${d.getUTCDate()} de ${MONTHS[d.getUTCMonth()]}`; }, label: c => MOODS[c.raw]?.label || "Sem registro" } } },
         scales: {
           y: { min: 0, max: 5, ticks: { display: false }, grid: { color: "rgba(0,0,0,.04)" } },
-          x: { ticks: { font: { size: 11, weight: "600" } }, grid: { display: false } }
+          x: { ticks: { font: { size: isMonth ? 10 : 11, weight: "600" }, autoSkip: isMonth, maxRotation: 0 }, grid: { display: false } }
         }
       }
     });
