@@ -1206,3 +1206,10 @@ body.a-route-home .home-hero::before, body.a-route-home .home-hero::after { z-in
   .a-nav__meta { gap: 6px; padding-top: 10px; }
   .a-nav__urgent { margin-bottom: 2px; padding: 8px 10px !important; }
 }
+
+/* Troca de página contínua: a navegação fica parada e só o conteúdo esmaece
+   (View Transitions entre documentos; navegadores sem suporte trocam normal). */
+@view-transition { navigation: auto; }
+body.a-portal-authenticated .a-nav { view-transition-name: ep-nav; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .16s; }
+@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }

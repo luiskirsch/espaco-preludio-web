@@ -59,9 +59,19 @@
     rules.type = "speculationrules";
     rules.dataset.epSpeculation = "";
     rules.textContent = JSON.stringify({
-      prerender: [{ source: "document", where: { or: safe }, eagerness: "moderate" }],
+      // "immediate": as páginas do menu ficam prontas logo que o portal abre.
+      prerender: [{ source: "document", where: { or: safe }, eagerness: "immediate" }],
       prefetch: [{ source: "document", where: { href_matches: { pathname: "{/staging}?/app/*.html" } }, eagerness: "moderate" }]
     });
     document.head.append(rules);
+  }
+
+  // Página pré-renderizada há muito tempo: atualiza ao ser aberta para nunca
+  // mostrar dado velho.
+  if (document.prerendering) {
+    const bornAt = Date.now();
+    document.addEventListener("prerenderingchange", () => {
+      if (Date.now() - bornAt > 3 * 60 * 1000) location.reload();
+    }, { once: true });
   }
 })();
