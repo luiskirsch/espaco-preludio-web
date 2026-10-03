@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app.css?v=20261002s">
+  <link rel="stylesheet" href="./app.css?v=20261002t">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer></script>
   <style>
     .mood-hero {
@@ -63,6 +63,7 @@
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(!l){var n=(navigator.language||"").toLowerCase();if(n.indexOf("en")===0)l="en-US";else if(n.indexOf("es")===0)l="es-ES";}if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
   <script src="/i18n/init.js?v=2-6" defer></script>
+<style>.history-scroll{position:relative}.history-scroll.is-scrollable{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;-webkit-mask-image:linear-gradient(#000 calc(100% - 28px),transparent);mask-image:linear-gradient(#000 calc(100% - 28px),transparent);padding-bottom:20px}</style>
 </head>
 <body class="a-portal-authenticated">
 <div class="a-shell">
@@ -390,7 +391,7 @@
       list.innerHTML = `<div class="a-empty" style="padding:24px 0;"><div class="a-empty__icon" style="font-size:32px;">📝</div><div class="a-empty__sub">Seus registros de humor aparecerão aqui.</div></div>`;
       return;
     }
-    list.innerHTML = sorted.map(([dateStr, val]) => {
+    list.innerHTML = `<div class="history-scroll">${sorted.map(([dateStr, val]) => {
       const d = dateFromKey(dateStr);
       const m = MOODS[val] || MOODS[3];
       return `<div class="history-item">
@@ -401,7 +402,14 @@
         </div>
         <div class="history-date">${d.getUTCDate()} de ${MONTHS[d.getUTCMonth()]}</div>
       </div>`;
-    }).join("");
+    }).join("")}</div>`;
+    // Até 7 registros visíveis; o restante rola dentro do card.
+    const box = list.querySelector(".history-scroll");
+    const items = box.querySelectorAll(".history-item");
+    if (items.length > 7) {
+      box.style.maxHeight = items[7].offsetTop + "px";
+      box.classList.add("is-scrollable");
+    }
   }
 </script>
 </body>
