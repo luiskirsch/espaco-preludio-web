@@ -35,8 +35,8 @@ export function mountMoodFace(host, mood) {
         <clipPath id="${id}cl"><ellipse cx="35" cy="43" rx="9" ry="10.5"/></clipPath>
         <clipPath id="${id}cr"><ellipse cx="65" cy="43" rx="9" ry="10.5"/></clipPath>
       </defs>
+      <ellipse class="mf-shadow" cx="50" cy="97" rx="26" ry="3" fill="rgba(0,0,0,.25)"/>
       <g class="mf-body">
-        <ellipse class="mf-shadow" cx="50" cy="97" rx="26" ry="3" fill="rgba(0,0,0,.25)"/>
         <g class="mf-head">
           <circle cx="50" cy="50" r="45" fill="url(#${id}g)"/>
           <circle cx="50" cy="50" r="45" fill="url(#${id}b)"/>
