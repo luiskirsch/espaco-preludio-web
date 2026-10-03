@@ -45,7 +45,12 @@
     .chart-wrap  { height: 160px; position: relative; }
     .month-stats { margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(12,61,66,.08); }
     .month-stats__head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 12px; }
-    .month-stats__head strong { font-size: 15px; color: var(--a-ink); }
+    .month-pick { position: relative; display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; margin: -8px 0 -8px -12px; border-radius: 11px; font-size: 15px; font-weight: 700; color: var(--a-ink); cursor: pointer; transition: background .15s ease; }
+    .month-pick:hover, .month-pick:focus-within { background: #f3eee3; }
+    .month-pick .month-pick__txt { color: var(--a-ink, #1d2b2a); font-size: 15px; font-weight: 700; }
+    .month-pick em { font-style: normal; color: #1d6b67; }
+    .month-pick svg { color: #1d6b67; flex: none; }
+    .month-pick select { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
     .month-stats__head span { font-size: 13px; color: var(--a-ink3); }
     .month-bar { display: flex; height: 12px; border-radius: 99px; overflow: hidden; background: #f1ece2; margin-bottom: 14px; }
     .month-bar i { display: block; height: 100%; transition: width .6s ease; }
@@ -286,7 +291,7 @@
 
     try {
       const token = await currentUser.getIdToken();
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor?days=31`, {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor?all=1`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const d = await r.json().catch(() => ({}));
@@ -372,17 +377,26 @@
   }
 
   // Resumo do mês corrente: % de dias registrados em cada humor.
+  let monthChoice = null;
+  const MONTH_NAMES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
   function buildMonth() {
     const box = document.getElementById("monthStats");
     if (!box) return;
-    const prefix = todayStr().slice(0, 7);
-    const monthIdx = Number(prefix.slice(5, 7)) - 1;
+    const current = todayStr().slice(0, 7);
+    // meses com registro (mais recente primeiro) + o mês atual sempre
+    const months = [...new Set([current, ...Object.keys(humorData).map(d => d.slice(0, 7))])].sort().reverse();
+    if (!monthChoice || !months.includes(monthChoice)) monthChoice = current;
+    const prefix = monthChoice;
+    const labelOf = (ym) => MONTH_NAMES[Number(ym.slice(5, 7)) - 1] + (ym.slice(0, 4) !== current.slice(0, 4) ? " de " + ym.slice(0, 4) : "");
+    const picker = `<label class="month-pick"><span class="month-pick__txt">Resumo de <em>${labelOf(prefix)}</em></span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      <select id="monthSelect" aria-label="Escolher mês">${months.map(m => `<option value="${m}"${m === prefix ? " selected" : ""}>${labelOf(m)}</option>`).join("")}</select></label>`;
     const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
     Object.entries(humorData).forEach(([date, mood]) => { if (date.startsWith(prefix) && counts[mood] !== undefined) counts[mood]++; });
     const total = Object.values(counts).reduce((a, b) => a + b, 0);
-    const monthName = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"][monthIdx];
     if (!total) {
-      box.innerHTML = `<div class="month-stats__head"><strong>Resumo de ${monthName}</strong></div><p class="month-stats__empty">Registre seu humor para ver o resumo do mês.</p>`;
+      box.innerHTML = `<div class="month-stats__head">${picker}</div><p class="month-stats__empty">Registre seu humor para ver o resumo do mês.</p>`;
+      bindMonthSelect();
       return;
     }
     // porcentagens que somam 100 (maior resto)
@@ -390,11 +404,15 @@
     raw.forEach(r => { r.pct = Math.floor(r.exact); });
     let rest = 100 - raw.reduce((a, r) => a + r.pct, 0);
     [...raw].sort((a, b) => (b.exact - b.pct) - (a.exact - a.pct)).forEach(r => { if (rest > 0 && counts[r.k]) { r.pct++; rest--; } });
-    box.innerHTML = `<div class="month-stats__head"><strong>Resumo de ${monthName}</strong><span>${total} ${total === 1 ? "dia registrado" : "dias registrados"}</span></div>
+    box.innerHTML = `<div class="month-stats__head">${picker}<span>${total} ${total === 1 ? "dia registrado" : "dias registrados"}</span></div>
       <div class="month-bar">${raw.filter(r => counts[r.k]).map(r => `<i style="width:${r.exact}%;background:${MOODS[r.k].color}" title="${MOODS[r.k].label}: ${r.pct}%"></i>`).join("")}</div>
       <div class="month-rows">${raw.map(r => `<div class="month-row${counts[r.k] ? "" : " is-zero"}">
         <span class="month-row__emoji">${MOODS[r.k].emoji}</span><span>${MOODS[r.k].label}</span>
         <span class="month-row__track"><i style="width:${r.exact}%;background:${MOODS[r.k].color}"></i></span><b>${r.pct}%</b></div>`).join("")}</div>`;
+    bindMonthSelect();
+  }
+  function bindMonthSelect() {
+    document.getElementById("monthSelect")?.addEventListener("change", e => { monthChoice = e.target.value; buildMonth(); });
   }
 
   function markBtn(mood) {
