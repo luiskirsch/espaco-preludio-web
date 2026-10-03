@@ -157,6 +157,7 @@
     4: { emoji:"🙂", label:"Bem",     color:"#4a9e66" },
     5: { emoji:"😄", label:"Ótimo",   color:"#2d6a3e" },
   };
+  const DAYS_FULL = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
   const DAYS   = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
   const MONTHS = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
 
@@ -211,7 +212,7 @@
 
     const today = dateFromKey(todayStr());
     document.getElementById("heroDate").textContent =
-      `${["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"][today.getUTCDay()]}, ${today.getUTCDate()} de ${MONTHS[today.getUTCMonth()]}`;
+      `${DAYS_FULL[today.getUTCDay()]}, ${today.getUTCDate()} de ${MONTHS[today.getUTCMonth()]}`;
 
     // Render do cache de sessão imediatamente
     const cached = readSessionCache();
@@ -363,7 +364,7 @@
       return `<div class="history-item">
         <div class="history-emoji">${m.emoji}</div>
         <div class="history-info">
-          <div class="history-label">${DAYS[d.getUTCDay()]}</div>
+          <div class="history-label">${DAYS_FULL[d.getUTCDay()]}</div>
           <div class="history-day">${m.label}</div>
           ${humorNotes[dateStr] ? `<p class="history-note">${escapeNote(humorNotes[dateStr])}</p>` : ""}
         </div>
