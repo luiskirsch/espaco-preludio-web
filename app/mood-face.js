@@ -83,6 +83,9 @@ export function mountMoodFace(host, mood) {
   if (reduce) return { destroy() {} };
 
   let target = { x: 0, y: 0 }, cur = { x: 0, y: 0 }, raf = 0, alive = true, busy = false;
+  // olhar individual de cada olho (converge/vesgo quando o ponteiro está sobre o rosto)
+  const EYES = [{ x: 35, y: 43 }, { x: 65, y: 43 }];
+  let eyeT = EYES.map(() => ({ x: 0, y: 0 })), eyeC = EYES.map(() => ({ x: 0, y: 0 }));
   const fine = matchMedia("(pointer: fine)").matches;
 
   function onMove(e) {
@@ -91,13 +94,26 @@ export function mountMoodFace(host, mood) {
     const dist = Math.hypot(dx, dy) || 1;
     const k = Math.min(1, dist / 260);
     target = { x: dx / dist * k, y: dy / dist * k };
+    // Cada olho mira o ponteiro a partir da própria posição: longe, os dois
+    // ficam paralelos; sobre o rosto, convergem (vesgo).
+    eyeT = EYES.map(eye => {
+      const vx = e.clientX - (r.left + eye.x / 100 * r.width);
+      const vy = e.clientY - (r.top + eye.y / 100 * r.height);
+      const d = Math.hypot(vx, vy) || 1;
+      const kk = Math.min(1, d / 42);
+      return { x: vx / d * kk, y: vy / d * kk };
+    });
   }
-  function onLeave() { target = { x: 0, y: 0 }; }
+  function onLeave() { target = { x: 0, y: 0 }; eyeT = EYES.map(() => ({ x: 0, y: 0 })); }
   function tick() {
     if (!alive) return;
     cur.x += (target.x - cur.x) * .14;
     cur.y += (target.y - cur.y) * .14;
-    pupils.forEach(p => p.setAttribute("transform", `translate(${(cur.x * 3.6).toFixed(2)} ${(cur.y * 4).toFixed(2)})`));
+    pupils.forEach((p, i) => {
+      eyeC[i].x += (eyeT[i].x - eyeC[i].x) * .18;
+      eyeC[i].y += (eyeT[i].y - eyeC[i].y) * .18;
+      p.setAttribute("transform", `translate(${(eyeC[i].x * 3.8).toFixed(2)} ${(eyeC[i].y * 4.2).toFixed(2)})`);
+    });
     face.setAttribute("transform", `translate(${(cur.x * 3).toFixed(2)} ${(cur.y * 2.4).toFixed(2)})`);
     head.style.transform = `rotate(${(cur.x * 7).toFixed(2)}deg)`;
     raf = requestAnimationFrame(tick);
