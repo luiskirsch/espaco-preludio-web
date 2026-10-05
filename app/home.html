@@ -62,7 +62,7 @@
     .tips-card__title { font-size: 13px; font-weight: 700; color: var(--a-accent); margin-bottom: 6px; }
     .tips-card__text { font-size: 13px; color: var(--a-ink2); line-height: 1.5; }
   </style>
-  <script src="./portal-shell.js?v=5" defer></script>
+  <script src="./portal-shell.js?v=6" defer></script>
   <script src="./sw-register.js" defer></script>
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(!l){var n=(navigator.language||"").toLowerCase();if(n.indexOf("en")===0)l="en-US";else if(n.indexOf("es")===0)l="es-ES";}if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
@@ -672,6 +672,8 @@ body.mood-note-open{overflow:hidden}
           }
           moodSaved.textContent = "✓ Registrado";
           try { sessionStorage.setItem(TODAY_KEY, JSON.stringify({ date: data.date, mood: String(mood) })); } catch {}
+          // Páginas do menu já pré-renderizadas (ex.: Meu humor) recarregam ao abrir.
+          try { localStorage.setItem("ep:dirtyAt", String(Date.now())); } catch {}
         } catch {
           moodLocked = false;
           moodSaved.textContent = "Não foi possível salvar. Toque novamente para tentar.";

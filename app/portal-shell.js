@@ -66,12 +66,15 @@
     document.head.append(rules);
   }
 
-  // Página pré-renderizada há muito tempo: atualiza ao ser aberta para nunca
-  // mostrar dado velho.
+  // Página pré-renderizada há muito tempo, ou com dados alterados por outra
+  // página depois que nasceu (ex.: humor registrado no início): atualiza ao
+  // ser aberta para nunca mostrar dado velho. Quem grava marca "ep:dirtyAt".
   if (document.prerendering) {
     const bornAt = Date.now();
     document.addEventListener("prerenderingchange", () => {
-      if (Date.now() - bornAt > 3 * 60 * 1000) location.reload();
+      let dirtyAt = 0;
+      try { dirtyAt = Number(localStorage.getItem("ep:dirtyAt")) || 0; } catch {}
+      if (Date.now() - bornAt > 3 * 60 * 1000 || dirtyAt > bornAt) location.reload();
     }, { once: true });
   }
 })();
