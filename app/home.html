@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app.css?v=20261003b">
+  <link rel="stylesheet" href="./app.css?v=20261005a">
   <link rel="stylesheet" href="./weather-hero.css?v=20261002f">
   <style>
     .home-hero {
@@ -687,7 +687,7 @@ body.mood-note-open{overflow:hidden}
     // Próxima consulta
     try {
       const token = await user.getIdToken();
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/sessoes`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json().catch(() => ({}));
@@ -718,8 +718,8 @@ body.mood-note-open{overflow:hidden}
             <div class="a-h3 a-mt-8">${nameHtml}</div>
             <div class="a-sub a-mt-4">${dateStr}</div>
             ${live
-              ? `<a href="./consultas.html" class="a-btn a-btn--block a-btn--sm a-mt-12" style="border-radius:10px;border:none;background:linear-gradient(135deg,#e9cf87,#c8963a);color:#1c1a16;font-weight:700;">Entrar na consulta</a>`
-              : `<a href="./consultas.html" class="a-btn a-btn--ghost a-btn--block a-btn--sm a-mt-12" style="border-radius:10px;">Ver detalhes</a>`}
+              ? `<a href="./consultas.html" class="a-btn a-btn--block a-btn--sm a-mt-12 next-session-cta" style="border-radius:10px;border:none;background:linear-gradient(135deg,#e9cf87,#c8963a);color:#1c1a16;font-weight:700;">Entrar na consulta</a>`
+              : `<a href="./consultas.html" class="a-btn a-btn--ghost a-btn--block a-btn--sm a-mt-12 next-session-cta" style="border-radius:10px;">Ver detalhes</a>`}
           </div>`;
         document.getElementById("nextSessionCard").classList.remove("a-hide");
       }
