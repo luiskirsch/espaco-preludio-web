@@ -693,7 +693,10 @@ body.mood-note-open{overflow:hidden}
       const data = await res.json().catch(() => ({}));
       document.getElementById("nextSessionLoading").style.display = "none";
       const upcoming = (data.sessions || [])
-        .filter(s => s.status === "scheduled" && Number(s.scheduledAt) > Date.now())
+        // Inclui a consulta em andamento até o fim previsto (antes sumia assim
+        // que o profissional abria a sala ou o horário chegava).
+        .filter(s => ["scheduled", "in_progress"].includes(s.status)
+          && Date.now() < (Number(s.overdueAt) || Number(s.scheduledAt) + 60 * 60 * 1000))
         .sort((a, b) => Number(a.scheduledAt) - Number(b.scheduledAt));
 
       if (upcoming.length === 0) {
@@ -703,16 +706,20 @@ body.mood-note-open{overflow:hidden}
         const dt = new Date(Number(s.scheduledAt));
         const dateStr = dt.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
         const timeStr = dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+        const live = s.status === "in_progress" || Date.now() >= Number(s.scheduledAt) - 15 * 60 * 1000;
+        const nameHtml = String(s.therapistName || "Profissional").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
         document.getElementById("nextSessionCard").innerHTML = `
           <div class="a-card a-card--pad" style="height:100%;">
             <div class="section-title">Próxima consulta</div>
             <div class="a-flex a-items-center a-justify-between">
-              <span class="a-badge a-badge--ok">Confirmada</span>
+              <span class="a-badge ${live ? "a-badge--warn" : "a-badge--ok"}">${live ? "Sala aberta" : "Confirmada"}</span>
               <span style="font-family:var(--ff-mono);font-size:13px;color:var(--a-accent);font-weight:700;">${timeStr}</span>
             </div>
-            <div class="a-h3 a-mt-8">${s.therapistName || "Profissional"}</div>
+            <div class="a-h3 a-mt-8">${nameHtml}</div>
             <div class="a-sub a-mt-4">${dateStr}</div>
-            <a href="./consultas.html" class="a-btn a-btn--ghost a-btn--block a-btn--sm a-mt-12" style="border-radius:10px;">Ver detalhes</a>
+            ${live
+              ? `<a href="./consultas.html" class="a-btn a-btn--block a-btn--sm a-mt-12" style="border-radius:10px;border:none;background:linear-gradient(135deg,#e9cf87,#c8963a);color:#1c1a16;font-weight:700;">Entrar na consulta</a>`
+              : `<a href="./consultas.html" class="a-btn a-btn--ghost a-btn--block a-btn--sm a-mt-12" style="border-radius:10px;">Ver detalhes</a>`}
           </div>`;
         document.getElementById("nextSessionCard").classList.remove("a-hide");
       }
