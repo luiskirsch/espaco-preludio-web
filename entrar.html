@@ -257,13 +257,16 @@
   // continua mostrando o texto do portal nesta aba.
   const viaKey = `ep:via:${params.get("c") || params.get("t") || ""}`;
   try {
-    if (params.get("via") === "portal") sessionStorage.setItem(viaKey, JSON.stringify({ pro: params.get("pro") || "" }));
+    if (["portal", "aluno"].includes(params.get("via"))) sessionStorage.setItem(viaKey, JSON.stringify({ via: params.get("via"), pro: params.get("pro") || "" }));
     else {
       const saved = JSON.parse(sessionStorage.getItem(viaKey) || "null");
-      if (saved) { params.set("via", "portal"); if (saved.pro) params.set("pro", saved.pro); }
+      if (saved) { params.set("via", saved.via || "portal"); if (saved.pro) params.set("pro", saved.pro); }
     }
   } catch {}
-  if (params.get("via") === "portal") {
+  // Para onde voltar ao fim da consulta: portal do paciente/colaborador ou
+  // painel do aluno. Sem origem, segue o fluxo do link de convite.
+  const portalVia = params.get("via");
+  if (["portal", "aluno"].includes(portalVia)) {
     const h1 = document.querySelector(".ep-auth__title");
     const sub = document.getElementById("prejoinHello");
     const pro = String(params.get("pro") || "").slice(0, 80);
@@ -888,6 +891,8 @@
     // chave da conta nova, vincula a consulta e guarda as notas cifradas.
     const POST_SESSION_KEY = "ep_post_session";
     function destinationAfterSession() {
+      if (portalVia === "portal") return "./app/home.html";
+      if (portalVia === "aluno") return "./aluno-painel.html";
       if (authMode !== "anon") return "./paciente-painel.html";
       try {
         sessionStorage.setItem(POST_SESSION_KEY, JSON.stringify({
