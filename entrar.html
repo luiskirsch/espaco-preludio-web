@@ -253,6 +253,16 @@
   // (~500 chars), mantido pra retro-compat com links já enviados pré-mudança.
   // Veio do portal (paciente/aluno/colaborador logado), não de um link de
   // convite: troca o texto de "você foi convidado" pelo da consulta marcada.
+  // Lembra a origem por código: um recarregar ou link copiado sem "via"
+  // continua mostrando o texto do portal nesta aba.
+  const viaKey = `ep:via:${params.get("c") || params.get("t") || ""}`;
+  try {
+    if (params.get("via") === "portal") sessionStorage.setItem(viaKey, JSON.stringify({ pro: params.get("pro") || "" }));
+    else {
+      const saved = JSON.parse(sessionStorage.getItem(viaKey) || "null");
+      if (saved) { params.set("via", "portal"); if (saved.pro) params.set("pro", saved.pro); }
+    }
+  } catch {}
   if (params.get("via") === "portal") {
     const h1 = document.querySelector(".ep-auth__title");
     const sub = document.getElementById("prejoinHello");
