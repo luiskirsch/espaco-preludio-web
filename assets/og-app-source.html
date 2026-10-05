@@ -1,40 +1,63 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><style>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=block" rel="stylesheet">
+<style>
 *{box-sizing:border-box}html,body{margin:0;width:1200px;height:630px;overflow:hidden}
-body{font-family:Arial,sans-serif;color:#1f1a14;background:#f7ecd8}
-.c{position:relative;width:1200px;height:630px;padding:64px 72px;background:radial-gradient(circle at 78% 40%,rgba(217,173,69,.28),transparent 45%),linear-gradient(135deg,#fbf3e4,#f3e2c4)}
-.copy{position:relative;width:640px;z-index:2}
-.brand{display:flex;align-items:center;gap:16px;margin-bottom:52px}
-.brand img{width:68px;height:68px;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,.18)}
-.brand b{font-family:Georgia,serif;font-size:30px}
-.eb{color:#a77b25;font-size:15px;font-weight:700;letter-spacing:3px;text-transform:uppercase}
-h1{margin:14px 0 22px;font-family:Georgia,serif;font-size:62px;line-height:1.03;letter-spacing:-2px;font-weight:600}
-.sub{font-size:22px;line-height:1.45;color:#5b5044;max-width:560px}
-.gp{display:inline-flex;align-items:center;gap:12px;margin-top:34px;padding:13px 22px;background:#111;color:#fff;border-radius:12px;font-size:15px}
-.gp svg{width:26px;height:26px}.gp span{display:grid;line-height:1.1}.gp small{font-size:11px;opacity:.75}.gp strong{font-size:20px;font-weight:600}
-.ph{position:absolute;right:96px;top:48px;width:290px;height:600px;background:#111;border-radius:44px;padding:12px;box-shadow:0 40px 80px rgba(70,45,10,.35);transform:rotate(4deg)}
-.sc{width:100%;height:100%;background:#fffaf1;border-radius:34px;padding:34px 18px;overflow:hidden}
-.sc .hi{font-family:Georgia,serif;font-size:22px;margin-bottom:4px}.sc .mu{font-size:12px;color:#8a7d6c;margin-bottom:18px}
-.card{background:#fff;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 4px 14px rgba(0,0,0,.06);display:flex;gap:12px;align-items:center}
-.av{width:44px;height:44px;border-radius:50%;flex:none}
-.card b{display:block;font-size:14px}.card i{font-style:normal;font-size:11px;color:#8a7d6c}
-.btn{margin-top:6px;background:#1f1a14;color:#fff;text-align:center;border-radius:12px;padding:12px;font-size:13px;font-weight:700}
-.next{background:#0d4449;color:#fff;border-radius:16px;padding:16px;margin-bottom:14px}
-.next small{font-size:10px;letter-spacing:1.5px;opacity:.7}.next b{display:block;font-size:17px;margin:6px 0 2px}.next i{font-style:normal;font-size:12px;opacity:.8}
+body{font-family:Inter,Arial,sans-serif;color:#fff;background:#041f22}
+.c{position:relative;width:1200px;height:630px;padding:60px 72px;overflow:hidden;
+background:radial-gradient(ellipse 60% 80% at 80% 50%,rgba(214,170,74,.22),transparent 60%),radial-gradient(ellipse 50% 60% at 0% 100%,rgba(30,110,110,.35),transparent 60%),linear-gradient(140deg,#052a2e 0%,#06363b 55%,#041f22 100%)}
+.c:after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px);background-size:22px 22px;pointer-events:none}
+.ring{position:absolute;right:120px;top:50%;border-radius:50%;border:1px solid rgba(241,216,142,.18);transform:translate(50%,-50%)}
+.copy{position:relative;z-index:3;width:620px}
+.brand{display:flex;align-items:center;gap:14px;margin-bottom:46px}
+.brand img{width:58px;height:58px;border-radius:15px;box-shadow:0 0 0 1px rgba(241,216,142,.35),0 10px 24px rgba(0,0,0,.4)}
+.brand b{font-family:Fraunces,Georgia,serif;font-weight:500;font-size:27px;letter-spacing:-.3px}
+.eb{display:flex;align-items:center;gap:12px;color:#e9cf87;font-size:13px;font-weight:600;letter-spacing:3.2px;text-transform:uppercase}
+.eb:before{content:"";width:34px;height:1px;background:#e9cf87}
+h1{margin:16px 0 20px;font-family:Fraunces,Georgia,serif;font-weight:500;font-size:64px;line-height:1.02;letter-spacing:-2.2px}
+h1 em{font-style:italic;color:#f1d88e}
+.sub{font-size:20px;line-height:1.5;color:rgba(255,255,255,.72);max-width:540px}
+.chips{display:flex;gap:10px;margin-top:26px}
+.chip{padding:9px 16px;border:1px solid rgba(241,216,142,.35);border-radius:999px;font-size:14px;font-weight:500;color:#f6e7bd;background:rgba(241,216,142,.07)}
+.gp{position:absolute;left:72px;bottom:56px;z-index:3;display:flex;align-items:center;gap:12px;padding:11px 20px 11px 16px;background:#000;border:1px solid rgba(255,255,255,.25);border-radius:12px}
+.gp svg{width:26px;height:26px}.gp span{display:grid;line-height:1.1}.gp small{font-size:10px;letter-spacing:.8px;opacity:.8}.gp strong{font-size:19px;font-weight:600}
+.ph{position:absolute;z-index:2;right:96px;top:44px;width:282px;height:590px;border-radius:46px;padding:10px;
+background:linear-gradient(145deg,#3a3a3c,#0b0b0c 40%,#1c1c1e);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 50px 90px rgba(0,0,0,.55),0 0 120px rgba(214,170,74,.18);transform:rotate(-5deg)}
+.isl{position:absolute;top:22px;left:50%;width:84px;height:24px;margin-left:-42px;background:#000;border-radius:20px;z-index:5}
+.sc{position:relative;width:100%;height:100%;border-radius:37px;overflow:hidden;background:#fbf6ec;color:#1d1a16;padding:54px 16px 16px}
+.sb{position:absolute;top:18px;left:26px;right:24px;display:flex;justify-content:space-between;font-size:12px;font-weight:600}
+.hi{font-family:Fraunces,Georgia,serif;font-size:21px;font-weight:500}.mu{font-size:11.5px;color:#8a7d6c;margin:2px 0 14px}
+.mood{display:flex;justify-content:space-between;background:#fff;border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:20px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.mood span{opacity:.45}.mood span.on{opacity:1;transform:scale(1.2)}
+.next{position:relative;overflow:hidden;background:linear-gradient(135deg,#0b4a50,#062f33);color:#fff;border-radius:18px;padding:15px;margin-bottom:12px}
+.next:after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:radial-gradient(rgba(241,216,142,.45),transparent 70%)}
+.next small{font-size:9.5px;letter-spacing:1.6px;color:#e9cf87;font-weight:600}.next b{display:block;font-size:17px;margin:6px 0 3px}.next i{font-style:normal;font-size:11.5px;opacity:.75}
+.join{margin-top:12px;background:#f1d88e;color:#1d1a16;text-align:center;border-radius:10px;padding:9px;font-size:12px;font-weight:700}
+.pro{display:flex;gap:11px;align-items:center;background:#fff;border-radius:14px;padding:11px;margin-bottom:9px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.av{width:38px;height:38px;border-radius:50%;flex:none;position:relative}
+.av:after{content:"";position:absolute;right:0;bottom:0;width:10px;height:10px;border-radius:50%;background:#3bb273;border:2px solid #fff}
+.pro b{display:block;font-size:13px}.pro i{font-style:normal;font-size:10.5px;color:#8a7d6c}
+.pro em{margin-left:auto;font-style:normal;font-size:10px;font-weight:700;color:#0b4a50;background:#e3efe9;padding:5px 8px;border-radius:8px}
+.float{position:absolute;z-index:4;right:330px;bottom:96px;display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(255,255,255,.96);color:#1d1a16;border-radius:14px;box-shadow:0 20px 40px rgba(0,0,0,.35);font-size:13px}
+.float .dot{width:30px;height:30px;border-radius:50%;background:#e3efe9;display:grid;place-items:center;font-size:15px}
+.float b{display:block;font-size:13px}.float i{font-style:normal;font-size:11px;color:#8a7d6c}
 </style></head><body><div class="c">
+<div class="ring" style="width:520px;height:520px"></div><div class="ring" style="width:760px;height:760px"></div>
 <div class="copy">
 <div class="brand"><img src="app-icon.png"><b>Espaço Prelúdio</b></div>
-<div class="eb">App para pacientes</div>
-<h1>Sua terapia no bolso.</h1>
-<div class="sub">Encontre psicólogos, agende e faça sua sessão por videochamada — tudo pelo celular.</div>
-<div class="gp"><svg viewBox="0 0 24 24"><path fill="#34a853" d="M3.6 1.8 13.8 12 3.6 22.2c-.4-.2-.6-.7-.6-1.2V3c0-.5.2-1 .6-1.2z"/><path fill="#fbbc04" d="m17.2 8.6 3.3 1.9c1 .6 1 2.4 0 3l-3.3 1.9L13.8 12z"/><path fill="#4285f4" d="M3.6 1.8c.3-.2.8-.2 1.2 0l12.4 6.8-3.4 3.4z"/><path fill="#ea4335" d="M13.8 12l3.4 3.4-12.4 6.8c-.4.2-.9.2-1.2 0z"/></svg><span><small>DISPONÍVEL NO</small><strong>Google Play</strong></span></div>
+<div class="eb">Psicologia online</div>
+<h1>Cuidado que cabe<br>na <em>sua rotina.</em></h1>
+<div class="sub">Psicólogos verificados, agendamento e sessão por vídeo — direto do celular.</div>
+<div class="chips"><div class="chip">Pacientes</div><div class="chip">Alunos</div><div class="chip">Colaboradores</div></div>
 </div>
-<div class="ph"><div class="sc">
-<div class="hi">Olá, Ana 👋</div><div class="mu">Como você está hoje?</div>
-<div class="next"><small>PRÓXIMA SESSÃO</small><b>Quinta, 19:00</b><i>Videochamada · 50 min</i></div>
-<div class="card"><div class="av" style="background:linear-gradient(135deg,#d9ad45,#a77b25)"></div><div><b>Dra. Marina Costa</b><i>Psicóloga · TCC</i></div></div>
-<div class="card"><div class="av" style="background:linear-gradient(135deg,#6aa59b,#0d4449)"></div><div><b>Dr. Rafael Lima</b><i>Psicólogo · Ansiedade</i></div></div>
-<div class="card"><div class="av" style="background:linear-gradient(135deg,#c99b8a,#8a5a4a)"></div><div><b>Dra. Júlia Rocha</b><i>Psicóloga · Casal</i></div></div>
-<div class="btn">Agendar sessão</div>
+<div class="gp"><svg viewBox="0 0 24 24"><path fill="#34a853" d="M3.6 1.8 13.8 12 3.6 22.2c-.4-.2-.6-.7-.6-1.2V3c0-.5.2-1 .6-1.2z"/><path fill="#fbbc04" d="m17.2 8.6 3.3 1.9c1 .6 1 2.4 0 3l-3.3 1.9L13.8 12z"/><path fill="#4285f4" d="M3.6 1.8c.3-.2.8-.2 1.2 0l12.4 6.8-3.4 3.4z"/><path fill="#ea4335" d="M13.8 12l3.4 3.4-12.4 6.8c-.4.2-.9.2-1.2 0z"/></svg><span><small>DISPONÍVEL NO</small><strong>Google Play</strong></span></div>
+<div class="ph"><div class="isl"></div><div class="sc">
+<div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+<div class="hi">Olá, Ana</div><div class="mu">Como você está hoje?</div>
+<div class="mood"><span>😔</span><span>😐</span><span class="on">🙂</span><span>😄</span><span>🤩</span></div>
+<div class="next"><small>PRÓXIMA SESSÃO</small><b>Quinta · 19:00</b><i>Dra. Marina Costa · Vídeo 50 min</i><div class="join">Entrar na sala</div></div>
+<div class="pro"><div class="av" style="background:linear-gradient(135deg,#6aa59b,#0d4449)"></div><div><b>Dr. Rafael Lima</b><i>Ansiedade · TCC</i></div><em>Hoje</em></div>
+<div class="pro"><div class="av" style="background:linear-gradient(135deg,#d9ad45,#a77b25)"></div><div><b>Dra. Júlia Rocha</b><i>Adolescentes</i></div><em>Amanhã</em></div>
 </div></div>
+<div class="float"><div class="dot">🔒</div><div><b>Sessão protegida</b><i>Criptografia ponta a ponta</i></div></div>
 </div></body></html>
