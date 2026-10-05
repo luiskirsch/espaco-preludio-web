@@ -13,6 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./app.css?v=20261005a">
+  <link rel="stylesheet" href="./session-card.css?v=1">
   <style>
     .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--a-line); padding: 0 16px; }
     .tab-btn {
@@ -27,44 +28,6 @@
       height: 2px; background: var(--a-ink); border-radius: 2px 2px 0 0;
     }
     .sessions-list { display: flex; flex-direction: column; gap: 10px; padding: 16px; }
-    .sess-card { position: relative; background: var(--a-surface); border-radius: 20px; overflow: hidden;
-      box-shadow: 0 1px 0 rgba(28,31,29,.04), 0 10px 30px rgba(28,31,29,.08); border: 1px solid rgba(28,31,29,.06); width: 100%; max-width: 560px; min-width: 0; }
-    .sess-card__main { display: flex; gap: 16px; padding: 18px; align-items: stretch; }
-    .sess-date { flex: none; align-self: flex-start; width: 74px; height: 92px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 10px 0; color: #fff; background: radial-gradient(circle at 80% 0%, rgba(233,207,135,.35), transparent 60%), linear-gradient(150deg, #0b4a50, #062f33); }
-    .sess-date__wd { font-size: 11px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; color: #e9cf87; }
-    .sess-date__d  { font-family: var(--ff-serif); font-size: 32px; font-weight: 500; line-height: 1.05; margin: 2px 0; }
-    .sess-date__m  { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; opacity: .75; }
-    .sess-card--completed .sess-date, .sess-card--canceled .sess-date { background: var(--a-bg2); color: var(--a-ink2); }
-    .sess-card--completed .sess-date__wd, .sess-card--canceled .sess-date__wd { color: var(--a-ink3); }
-    .sess-card--pending .sess-date { background: linear-gradient(150deg, #d9ad45, #a77b25); }
-    .sess-card--pending .sess-date__wd { color: #fff6dc; }
-    .sess-card__info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-    .sess-card__prof { font-family: var(--ff-serif); font-size: 19px; font-weight: 500; color: var(--a-ink); line-height: 1.2; letter-spacing: -.2px; }
-    .sess-card__esp  { font-size: 12.5px; color: var(--a-ink2); }
-    .sess-card__meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-    .sess-chip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
-      background: var(--a-bg); color: var(--a-ink2); }
-    .sess-chip svg { width: 13px; height: 13px; }
-    .sess-chip--time { background: #1c1f1d; color: #fff; }
-    .sess-chip--soon { background: rgba(200,150,58,.14); color: #8a6020; }
-    .sess-status { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }
-    .sess-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-    .sess-status--scheduled, .sess-status--in_progress { background: rgba(45,106,62,.1); color: var(--a-accent); }
-    .sess-status--completed { background: var(--a-bg2); color: var(--a-ink2); }
-    .sess-status--canceled { background: rgba(184,69,61,.1); color: #b8453d; }
-    .sess-status--pending { background: rgba(200,150,58,.14); color: #8a6020; }
-    .sess-card__actions { display: flex; gap: 8px; padding: 12px 18px 16px; border-top: 1px dashed rgba(28,31,29,.12); }
-    .sess-card__actions .a-btn { flex: 1; border-radius: 12px; }
-    .sess-btn-join { flex: 2 !important; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none;
-      background: linear-gradient(135deg, #e9cf87, #c8963a) !important; color: #1c1a16 !important; font-weight: 700; box-shadow: 0 6px 18px rgba(200,150,58,.35); }
-    .sess-btn-join svg { width: 16px; height: 16px; }
-    .sess-card--live { box-shadow: 0 0 0 2px rgba(200,150,58,.55), 0 14px 34px rgba(200,150,58,.22); }
-    .sess-status--live { background: rgba(224,85,85,.1); color: #c43d3d; }
-    .sess-status--live::before { animation: sessPulse 1.4s ease-in-out infinite; }
-    @keyframes sessPulse { 50% { opacity: .25; } }
-    .sess-btn-cancel { background: transparent !important; color: #b8453d !important; border: 1px solid rgba(184,69,61,.25) !important; }
-    @media (max-width: 380px) { .sess-date { width: 62px; } .sess-date__d { font-size: 27px; } .sess-card__prof { font-size: 17px; } }
     .countdown { font-size: 11px; color: var(--a-ink3); margin-top: 4px; }
   </style>
   <script src="./portal-shell.js?v=6" defer></script>
@@ -144,131 +107,13 @@
 <script type="module">
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+  import { renderCard, canJoin, isActive, joinSession as joinSessionLink } from "./session-card.js?v=1";
+  const joinSession = btn => joinSessionLink(btn, { auth, backendUrl: BACKEND_BASE_URL, onError: () => loadSessions() });
 
   let allSessions = [];
   let cancellingId = null;
 
-  const STATUS_LABEL = { scheduled:"Confirmada", completed:"Realizada", canceled:"Cancelada", in_progress:"Em andamento", pending:"Aguardando" };
-  const STATUS_BADGE = { scheduled:"a-badge--ok", completed:"a-badge--pend", canceled:"a-badge--err", in_progress:"a-badge--ok", pending:"a-badge--warn" };
-  const STATUS_BAR   = { scheduled:"scheduled", completed:"completed", canceled:"canceled", in_progress:"scheduled", pending:"pending" };
-
-  function esc(s) { return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-
-  function fmtDt(ms) {
-    const d = new Date(Number(ms));
-    const weekday = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][d.getDay()];
-    const months  = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-    return `${weekday}, ${d.getDate()} de ${months[d.getMonth()]} · ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
-  }
-
-  function countdown(ms) {
-    const diff = Number(ms) - Date.now();
-    if (diff < 0) return "";
-    const h = Math.floor(diff / 3600000);
-    const d = Math.floor(h / 24);
-    if (d > 0) return `em ${d} dia${d>1?"s":""}`;
-    if (h > 0) return `em ${h}h`;
-    return "em breve";
-  }
-
-  // Nomes chegam em CAIXA ALTA do cadastro; exibimos em formato de nome.
-  function niceName(n) {
-    const low = new Set(["da","de","do","das","dos","e"]);
-    return String(n||"").toLowerCase().split(/\s+/).filter(Boolean)
-      .map((w,i) => i && low.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-  }
-
-  // Sala liberada: profissional já abriu (in_progress) ou faltam ≤15 min,
-  // até o fim previsto. Calculado no cliente para o botão surgir na hora certa.
-  function canJoin(s) {
-    if (!["scheduled", "in_progress"].includes(s.status)) return false;
-    const now = Date.now();
-    const at = Number(s.scheduledAt);
-    const opens = Number(s.joinOpensAt) || at - 15 * 60 * 1000;
-    const ends = Number(s.overdueAt) || at + 60 * 60 * 1000;
-    if (now >= ends) return false;
-    return s.status === "in_progress" || now >= opens;
-  }
-  function isActive(s) {
-    if (!["scheduled", "in_progress"].includes(s.status)) return false;
-    return Date.now() < (Number(s.overdueAt) || Number(s.scheduledAt) + 60 * 60 * 1000);
-  }
-
-  function renderCard(s) {
-    const status = STATUS_BAR[s.status] || "pending";
-    const label = STATUS_LABEL[s.status] || s.status;
-    const live = canJoin(s);
-    const isUpcoming = isActive(s);
-    const cd = isUpcoming && !live ? countdown(s.scheduledAt) : "";
-    const d = new Date(Number(s.scheduledAt));
-    const wd = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][d.getDay()];
-    const mo = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"][d.getMonth()];
-    const hh = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
-    const clock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
-    const video = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg>';
-    return `
-      <div class="sess-card sess-card--${status}${live ? " sess-card--live" : ""}">
-        <div class="sess-card__main">
-          <div class="sess-date" aria-hidden="true">
-            <span class="sess-date__wd">${wd}</span>
-            <span class="sess-date__d">${d.getDate()}</span>
-            <span class="sess-date__m">${mo}</span>
-          </div>
-          <div class="sess-card__info">
-            <span class="sess-status sess-status--${live ? "live" : esc(s.status)}">${esc(live ? (s.status === "in_progress" ? "Profissional na sala" : "Sala aberta") : label)}</span>
-            <div class="sess-card__prof">${esc(niceName(s.therapistName) || "Profissional")}</div>
-            ${s.especialidade ? `<div class="sess-card__esp">${esc(s.especialidade)}</div>` : ""}
-            <div class="sess-card__meta">
-              <span class="sess-chip sess-chip--time">${clock}${hh}</span>
-              <span class="sess-chip">${video}Videochamada</span>
-              ${cd ? `<span class="sess-chip sess-chip--soon">${cd}</span>` : ""}
-            </div>
-          </div>
-        </div>
-        ${live ? `
-        <div class="sess-card__actions">
-          <button type="button" class="a-btn a-btn--sm sess-btn-join" data-join-id="${esc(s.sessionId||s.id||"")}">${video}Entrar na consulta</button>
-        </div>` : ""}
-        ${isUpcoming && !live ? `
-        <div class="sess-card__actions">
-          <a href="./agendar.html?p=${encodeURIComponent(s.therapistSlug||"")}" class="a-btn a-btn--ghost a-btn--sm">Reagendar</a>
-          <button type="button" class="a-btn a-btn--sm sess-btn-cancel" data-cancel-id="${esc(s.sessionId||s.id||"")}">Cancelar</button>
-        </div>` : ""}
-        ${s.status === "completed" ? `
-        <div class="sess-card__actions">
-          <a href="./documentos.html" class="a-btn a-btn--ghost a-btn--sm">Ver documentos</a>
-          <a href="./buscar.html?p=${encodeURIComponent(s.therapistSlug||"")}" class="a-btn a-btn--ghost a-btn--sm">Repetir consulta</a>
-        </div>` : ""}
-      </div>`;
-  }
-
   let currentTab = "prox";
-  const JOIN_ERRORS = {
-    SALA_AINDA_NAO_DISPONIVEL: "A sala abre 15 minutos antes do horário.",
-    SESSAO_EXPIRADA: "O horário desta consulta já terminou.",
-    SESSAO_CANCELADA: "Esta consulta foi cancelada.",
-    SESSAO_ENCERRADA: "Esta consulta já foi encerrada."
-  };
-  async function joinSession(btn) {
-    const label = btn.innerHTML;
-    btn.disabled = true;
-    btn.textContent = "Abrindo a sala…";
-    try {
-      const token = await auth.currentUser.getIdToken();
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/sessoes/${encodeURIComponent(btn.dataset.joinId)}/join-link`, {
-        method: "POST", headers: { Authorization: `Bearer ${token}` }
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok || !d.joinUrl) throw new Error(d.error || "ERRO");
-      location.href = d.joinUrl;
-    } catch (e) {
-      btn.disabled = false;
-      btn.innerHTML = label;
-      alert(JOIN_ERRORS[e.message] || "Não foi possível abrir a sala. Tente novamente.");
-      loadSessions();
-    }
-  }
-
   window.showTab = function(tab) {
     currentTab = tab;
     ["prox","hist","pend"].forEach(t => {
