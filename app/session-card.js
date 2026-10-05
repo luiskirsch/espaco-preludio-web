@@ -46,6 +46,12 @@ export function isActive(s) {
 }
 
 // opts.summary: versão do Início — sem reagendar/cancelar, com "Ver detalhes".
+function liveLabel(s) {
+  if (s.status === "in_progress") return "Profissional na sala";
+  if (s.therapistPreparing) return "Profissional se preparando";
+  return "Sala aberta";
+}
+
 export function renderCard(s, opts = {}) {
   const status = STATUS_BAR[s.status] || "pending";
   const label = STATUS_LABEL[s.status] || s.status;
@@ -67,7 +73,7 @@ export function renderCard(s, opts = {}) {
           <span class="sess-date__m">${mo}</span>
         </div>
         <div class="sess-card__info">
-          <span class="sess-status sess-status--${live ? "live" : esc(s.status)}">${esc(live ? (s.status === "in_progress" ? "Profissional na sala" : "Sala aberta") : label)}</span>
+          <span class="sess-status sess-status--${live ? "live" : esc(s.status)}">${esc(live ? liveLabel(s) : label)}</span>
           <div class="sess-card__prof">${esc(niceName(s.therapistName) || "Profissional")}</div>
           ${s.especialidade ? `<div class="sess-card__esp">${esc(s.especialidade)}</div>` : ""}
           <div class="sess-card__meta">

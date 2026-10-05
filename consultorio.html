@@ -325,6 +325,43 @@
     throw new Error("TOKEN_FAIL");
   }
 
+  // ─── Modo preparação ────────────────────────────────────────
+  // Entrou antes de T-15min: o paciente ainda não foi liberado. Mostra o
+  // aviso com a hora da liberação e o atalho para liberar agora.
+  if (tokenData.preparing && tokenData.patientReleaseAt) {
+    const releaseAt = Number(tokenData.patientReleaseAt);
+    const hhmm = new Date(releaseAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    const bar = document.createElement("div");
+    bar.id = "prepBanner";
+    bar.setAttribute("role", "status");
+    bar.style.cssText = "position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;isolation:isolate;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 32px);padding:12px 14px 12px 18px;border-radius:16px;background:#fffaf0;color:#1c1f1d;border:1px solid rgba(200,150,58,.45);box-shadow:0 18px 40px rgba(0,0,0,.35);font:500 14px/1.4 Inter,system-ui,sans-serif";
+    bar.innerHTML = `<span><strong style="color:#8a6020">Modo preparação.</strong> O paciente será liberado às <strong>${hhmm}</strong>.</span>
+      <button type="button" id="prepRelease" style="border:none;cursor:pointer;padding:9px 14px;border-radius:10px;background:#c8963a;color:#1c1a16;font:700 13px Inter,system-ui,sans-serif">Liberar paciente agora</button>`;
+    document.body.appendChild(bar);
+    const closeBar = () => bar.remove();
+    const autoClose = setTimeout(closeBar, Math.max(0, releaseAt - Date.now()));
+    bar.querySelector("#prepRelease").addEventListener("click", async (ev) => {
+      if (!confirm("Liberar a entrada do paciente agora?")) return;
+      const btn = ev.currentTarget;
+      btn.disabled = true;
+      btn.textContent = "Liberando…";
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/liberar-paciente`, {
+          method: "POST", headers: { Authorization: `Bearer ${await getFreshToken()}` }
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d.error || r.status);
+        clearTimeout(autoClose);
+        bar.innerHTML = '<span><strong style="color:#2d6a3e">Paciente liberado.</strong> Ele já pode entrar na sala.</span>';
+        setTimeout(closeBar, 4000);
+      } catch (e) {
+        btn.disabled = false;
+        btn.textContent = "Liberar paciente agora";
+        alert("Não foi possível liberar o paciente: " + e.message);
+      }
+    });
+  }
+
   // ─── DOM refs ───────────────────────────────────────────────
   const topPatientName    = document.getElementById("topPatientName");
   const connectionStatus  = document.getElementById("connectionStatus");
