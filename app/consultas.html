@@ -27,18 +27,37 @@
       height: 2px; background: var(--a-ink); border-radius: 2px 2px 0 0;
     }
     .sessions-list { display: flex; flex-direction: column; gap: 10px; padding: 16px; }
-    .sess-card { background: var(--a-surface); border-radius: var(--a-radius); box-shadow: var(--a-shadow); overflow: hidden; }
-    .sess-card__bar { height: 4px; }
-    .sess-card__bar--scheduled { background: var(--a-accent); }
-    .sess-card__bar--completed { background: #888; }
-    .sess-card__bar--canceled  { background: #e88; }
-    .sess-card__bar--pending   { background: var(--a-gold); }
-    .sess-card__body { padding: 14px 16px; }
-    .sess-card__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-    .sess-card__prof { font-size: 15px; font-weight: 600; color: var(--a-ink); }
-    .sess-card__esp  { font-size: 12px; color: var(--a-ink2); margin-top: 2px; }
-    .sess-card__time { font-family: var(--ff-mono); font-size: 12px; font-weight: 600; color: var(--a-accent); margin-top: 8px; }
-    .sess-card__actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--a-line); }
+    .sess-card { position: relative; background: var(--a-surface); border-radius: 20px; overflow: hidden;
+      box-shadow: 0 1px 0 rgba(28,31,29,.04), 0 10px 30px rgba(28,31,29,.08); border: 1px solid rgba(28,31,29,.06); width: 100%; max-width: 560px; min-width: 0; }
+    .sess-card__main { display: flex; gap: 16px; padding: 18px; align-items: stretch; }
+    .sess-date { flex: none; align-self: flex-start; width: 74px; height: 92px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 10px 0; color: #fff; background: radial-gradient(circle at 80% 0%, rgba(233,207,135,.35), transparent 60%), linear-gradient(150deg, #0b4a50, #062f33); }
+    .sess-date__wd { font-size: 11px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; color: #e9cf87; }
+    .sess-date__d  { font-family: var(--ff-serif); font-size: 32px; font-weight: 500; line-height: 1.05; margin: 2px 0; }
+    .sess-date__m  { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; opacity: .75; }
+    .sess-card--completed .sess-date, .sess-card--canceled .sess-date { background: var(--a-bg2); color: var(--a-ink2); }
+    .sess-card--completed .sess-date__wd, .sess-card--canceled .sess-date__wd { color: var(--a-ink3); }
+    .sess-card--pending .sess-date { background: linear-gradient(150deg, #d9ad45, #a77b25); }
+    .sess-card--pending .sess-date__wd { color: #fff6dc; }
+    .sess-card__info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+    .sess-card__prof { font-family: var(--ff-serif); font-size: 19px; font-weight: 500; color: var(--a-ink); line-height: 1.2; letter-spacing: -.2px; }
+    .sess-card__esp  { font-size: 12.5px; color: var(--a-ink2); }
+    .sess-card__meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .sess-chip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+      background: var(--a-bg); color: var(--a-ink2); }
+    .sess-chip svg { width: 13px; height: 13px; }
+    .sess-chip--time { background: #1c1f1d; color: #fff; }
+    .sess-chip--soon { background: rgba(200,150,58,.14); color: #8a6020; }
+    .sess-status { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }
+    .sess-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .sess-status--scheduled, .sess-status--in_progress { background: rgba(45,106,62,.1); color: var(--a-accent); }
+    .sess-status--completed { background: var(--a-bg2); color: var(--a-ink2); }
+    .sess-status--canceled { background: rgba(184,69,61,.1); color: #b8453d; }
+    .sess-status--pending { background: rgba(200,150,58,.14); color: #8a6020; }
+    .sess-card__actions { display: flex; gap: 8px; padding: 12px 18px 16px; border-top: 1px dashed rgba(28,31,29,.12); }
+    .sess-card__actions .a-btn { flex: 1; border-radius: 12px; }
+    .sess-btn-cancel { background: transparent !important; color: #b8453d !important; border: 1px solid rgba(184,69,61,.25) !important; }
+    @media (max-width: 380px) { .sess-date { width: 62px; } .sess-date__d { font-size: 27px; } .sess-card__prof { font-size: 17px; } }
     .countdown { font-size: 11px; color: var(--a-ink3); margin-top: 4px; }
   </style>
   <script src="./portal-shell.js?v=6" defer></script>
@@ -145,36 +164,53 @@
     return "em breve";
   }
 
+  // Nomes chegam em CAIXA ALTA do cadastro; exibimos em formato de nome.
+  function niceName(n) {
+    const low = new Set(["da","de","do","das","dos","e"]);
+    return String(n||"").toLowerCase().split(/\s+/).filter(Boolean)
+      .map((w,i) => i && low.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  }
+
   function renderCard(s) {
-    const bar = STATUS_BAR[s.status] || "pending";
-    const badge = STATUS_BADGE[s.status] || "a-badge--pend";
+    const status = STATUS_BAR[s.status] || "pending";
     const label = STATUS_LABEL[s.status] || s.status;
     const isUpcoming = s.status === "scheduled" && Number(s.scheduledAt) > Date.now();
     const cd = isUpcoming ? countdown(s.scheduledAt) : "";
+    const d = new Date(Number(s.scheduledAt));
+    const wd = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][d.getDay()];
+    const mo = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"][d.getMonth()];
+    const hh = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    const clock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+    const video = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg>';
     return `
-      <div class="sess-card">
-        <div class="sess-card__bar sess-card__bar--${bar}"></div>
-        <div class="sess-card__body">
-          <div class="sess-card__header">
-            <div>
-              <div class="sess-card__prof">${esc(s.therapistName||"Profissional")}</div>
-              <div class="sess-card__esp">${esc(s.especialidade||"")}</div>
-            </div>
-            <span class="a-badge ${badge}" style="flex-shrink:0;">${esc(label)}</span>
+      <div class="sess-card sess-card--${status}">
+        <div class="sess-card__main">
+          <div class="sess-date" aria-hidden="true">
+            <span class="sess-date__wd">${wd}</span>
+            <span class="sess-date__d">${d.getDate()}</span>
+            <span class="sess-date__m">${mo}</span>
           </div>
-          <div class="sess-card__time">${fmtDt(s.scheduledAt)}</div>
-          ${cd ? `<div class="countdown">⏰ ${cd}</div>` : ""}
-          ${isUpcoming ? `
-          <div class="sess-card__actions">
-            <a href="./agendar.html?p=${encodeURIComponent(s.therapistSlug||"")}" class="a-btn a-btn--ghost a-btn--sm" style="flex:1;">Reagendar</a>
-            <button type="button" class="a-btn a-btn--sm" style="flex:1;background:rgba(184,69,61,.1);color:#b8453d;border:none;" data-cancel-id="${esc(s.sessionId||s.id||"")}">Cancelar</button>
-          </div>` : ""}
-          ${s.status === "completed" ? `
-          <div class="sess-card__actions">
-            <a href="./documentos.html" class="a-btn a-btn--ghost a-btn--sm" style="flex:1;">Ver documentos</a>
-            <a href="./buscar.html?p=${encodeURIComponent(s.therapistSlug||"")}" class="a-btn a-btn--ghost a-btn--sm" style="flex:1;">Repetir consulta</a>
-          </div>` : ""}
+          <div class="sess-card__info">
+            <span class="sess-status sess-status--${esc(s.status)}">${esc(label)}</span>
+            <div class="sess-card__prof">${esc(niceName(s.therapistName) || "Profissional")}</div>
+            ${s.especialidade ? `<div class="sess-card__esp">${esc(s.especialidade)}</div>` : ""}
+            <div class="sess-card__meta">
+              <span class="sess-chip sess-chip--time">${clock}${hh}</span>
+              <span class="sess-chip">${video}Videochamada</span>
+              ${cd ? `<span class="sess-chip sess-chip--soon">${cd}</span>` : ""}
+            </div>
+          </div>
         </div>
+        ${isUpcoming ? `
+        <div class="sess-card__actions">
+          <a href="./agendar.html?p=${encodeURIComponent(s.therapistSlug||"")}" class="a-btn a-btn--ghost a-btn--sm">Reagendar</a>
+          <button type="button" class="a-btn a-btn--sm sess-btn-cancel" data-cancel-id="${esc(s.sessionId||s.id||"")}">Cancelar</button>
+        </div>` : ""}
+        ${s.status === "completed" ? `
+        <div class="sess-card__actions">
+          <a href="./documentos.html" class="a-btn a-btn--ghost a-btn--sm">Ver documentos</a>
+          <a href="./buscar.html?p=${encodeURIComponent(s.therapistSlug||"")}" class="a-btn a-btn--ghost a-btn--sm">Repetir consulta</a>
+        </div>` : ""}
       </div>`;
   }
 
