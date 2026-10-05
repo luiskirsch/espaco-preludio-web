@@ -1182,7 +1182,11 @@
     const staleNext = isSessionOverdue(data.nextSession || {}) ? data.nextSession : null;
     const activeNext = staleNext ? null : data.nextSession;
     const s = activeNext || data.overdueSession || staleNext;
-    if (s) {
+    // Em sessão: a própria lista já mostra "Em sessão" + Entrar; o destaque
+    // de "Próxima consulta" seria redundante.
+    const liveDetail = s && (allSessions.find(item => item.sessionId === s.sessionId) || s);
+    const inSessionNow = Boolean(liveDetail && liveDetail.status === "in_progress" && !isSessionOverdue(liveDetail));
+    if (s && !inSessionNow) {
       const sessionDetail = allSessions.find(item => item.sessionId === s.sessionId) || s;
       const overdue = isSessionOverdue(sessionDetail);
       const publicSchool = isPublicSchoolSession(sessionDetail);
