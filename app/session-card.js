@@ -85,7 +85,7 @@ export function renderCard(s, opts = {}) {
       </div>
       ${live ? `
       <div class="sess-card__actions">
-        <button type="button" class="a-btn a-btn--sm sess-btn-join" data-join-id="${esc(s.sessionId||s.id||"")}">${video}Entrar na consulta</button>
+        <button type="button" class="a-btn a-btn--sm sess-btn-join" data-join-id="${esc(s.sessionId||s.id||"")}" data-pro="${esc(niceName(s.therapistName))}">${video}Entrar na consulta</button>
       </div>` : ""}
       ${isUpcoming && !live && opts.summary ? `
       <div class="sess-card__actions">
@@ -121,7 +121,11 @@ export async function joinSession(btn, { auth, backendUrl, onError } = {}) {
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok || !d.joinUrl) throw new Error(d.error || "ERRO");
-    location.href = d.joinUrl;
+    // Entrada pelo portal: a tela de pré-sala troca o texto de "convite".
+    const url = new URL(d.joinUrl, location.href);
+    url.searchParams.set("via", "portal");
+    if (btn.dataset.pro) url.searchParams.set("pro", btn.dataset.pro);
+    location.href = url.toString();
   } catch (e) {
     btn.disabled = false;
     btn.innerHTML = label;

@@ -251,6 +251,25 @@
   const params = new URLSearchParams(location.search);
   // `c` é o short code (~8 chars, link bonito). `t` é o joinToken JWT legado
   // (~500 chars), mantido pra retro-compat com links já enviados pré-mudança.
+  // Veio do portal (paciente/aluno/colaborador logado), não de um link de
+  // convite: troca o texto de "você foi convidado" pelo da consulta marcada.
+  if (params.get("via") === "portal") {
+    const h1 = document.querySelector(".ep-auth__title");
+    const sub = document.getElementById("prejoinHello");
+    const pro = String(params.get("pro") || "").slice(0, 80);
+    [h1, sub].forEach(el => { el?.removeAttribute("data-i18n"); el?.removeAttribute("data-i18n-html"); });
+    if (h1) h1.textContent = "Sua consulta está pronta.";
+    if (sub) {
+      sub.textContent = "";
+      if (pro) {
+        sub.append("Consulta com ");
+        const b = document.createElement("strong"); b.textContent = pro; sub.append(b, ". ");
+      }
+      sub.append("Antes de entrar, confira como protegemos seus dados.");
+    }
+    const lbl = document.querySelector('label[for="patientName"]');
+    if (lbl) { lbl.removeAttribute("data-i18n"); lbl.textContent = "Como prefere ser chamado(a) na sessão?"; }
+  }
   const joinCode  = params.get("c");
   const joinToken = params.get("t");
 
