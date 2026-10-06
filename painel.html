@@ -1004,6 +1004,14 @@
     const originLine = publicSchool
       ? `<div class="ep-mt-8">${publicSchoolOriginTag()}</div>${schoolDetails ? `<div class="ep-text-xs ep-text-muted ep-mt-8">${schoolDetails}</div>` : ""}`
       : "";
+    // Colaborador de empresa: selo de cobertura e, se o pedido ainda está fora
+    // do banco/franquia, o atalho de acolhimento de urgência.
+    const corp = r.corporate;
+    const corpLine = !corp ? "" : corp.urgent
+      ? `<div class="ep-mt-8"><span class="ep-badge ep-badge--warn">Acolhimento de urgência · coberto pela empresa</span></div>`
+      : corp.awaitingPayment
+        ? `<div class="ep-mt-8"><span class="ep-badge">Fora do banco · aguardando pagamento do colaborador</span></div>`
+        : `<div class="ep-mt-8"><span class="ep-badge ep-badge--ok">Coberto pela empresa</span></div>`;
     const notesLine = r.notes
       ? `<div class="ep-text-sm ep-mt-8" style="padding: 8px 10px; background: var(--ep-bg-2); border-radius: 6px; color: var(--ep-ink-2);">${escapeHtmlBasic(r.notes)}</div>`
       : "";
@@ -1014,11 +1022,13 @@
           <span>${tr("painel:sched.askedFor","Pediu para")} <strong>${escapeHtmlBasic(fmtSchedRequestSlot(r.requestedSlot))}</strong></span>
         </div>
         ${originLine}
+        ${corpLine}
         <div class="ep-text-xs ep-text-muted ep-mt-8">${escapeHtmlBasic(r.patientEmail)}${phoneLine}</div>
         ${notesLine}
       </div>
       <div class="ep-session__actions">
-        <button class="ep-btn ep-btn--primary ep-btn--sm" data-sched-action="approve">${tr("painel:sched.approve","Aprovar")}</button>
+        <button class="ep-btn ep-btn--primary ep-btn--sm" data-sched-action="approve"${corp?.awaitingPayment ? ' disabled title="Aguardando pagamento do colaborador"' : ""}>${tr("painel:sched.approve","Aprovar")}</button>
+        ${corp && !corp.urgent ? `<button class="ep-btn ep-btn--ghost ep-btn--sm" data-sched-action="urgent">Acolhimento de urgência</button>` : ""}
         <button class="ep-btn ep-btn--ghost ep-btn--sm"   data-sched-action="reject">${tr("painel:sched.reject","Recusar")}</button>
       </div>
     `;
@@ -1048,6 +1058,29 @@
         }
         invalidatePrefix("sessoes", uid);
         await Promise.all([loadSchedulingRequests(), loadSessions()]);
+      } catch (e) {
+        alert(tr("painel:sched.netErr","Erro de rede."));
+        btn.disabled = false;
+      }
+    } else if (action === "urgent") {
+      const reason = prompt("Acolhimento de urgência: a sessão fica coberta pela empresa sem descontar do banco (até 2 por pessoa/mês). Descreva brevemente o motivo (fica no registro, não vai para a empresa):");
+      if (reason === null) return;
+      if (reason.trim().length < 10) { alert("Descreva o motivo em pelo menos 10 caracteres."); return; }
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/agendamentos/solicitacoes/${encodeURIComponent(id)}/urgencia`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+          body: JSON.stringify({ reason: reason.trim() })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          const msgs = { LIMITE_URGENCIA_ATINGIDO: "Esta pessoa já usou os 2 acolhimentos de urgência do mês.", EXTRA_JA_PAGO: "O colaborador já pagou esta sessão." };
+          alert(msgs[data?.error] || ("Não foi possível marcar como urgência: " + (data?.error || res.status)));
+          btn.disabled = false;
+          return;
+        }
+        await loadSchedulingRequests();
       } catch (e) {
         alert(tr("painel:sched.netErr","Erro de rede."));
         btn.disabled = false;
