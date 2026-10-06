@@ -257,7 +257,7 @@
         <div class="corp-kpi__icon">📅</div>
         <div class="corp-kpi__label" data-i18n="p-empresa-painel:consultas_este_mes_df1fa">Consultas este mês</div>
         <div class="corp-kpi__value corp-kpi__value--gold" id="kpiSessoesMes">—</div>
-        <div class="corp-kpi__sub" data-i18n="p-empresa-painel:mes_atual_1d9d0">mês atual</div>
+        <div class="corp-kpi__sub" id="kpiSessoesSub" data-i18n="p-empresa-painel:mes_atual_1d9d0">mês atual</div>
       </div>
       <div class="corp-kpi">
         <div class="corp-kpi__icon">📊</div>
@@ -384,6 +384,15 @@
       document.getElementById("kpiCadastrados").textContent = k.totalCadastrados ?? "—";
       document.getElementById("kpiAtivos").textContent      = k.totalAtivos ?? "—";
       document.getElementById("kpiSessoesMes").textContent  = k.sessoesMes ?? "—";
+      // Banco mensal da equipe: mostra o uso contra o limite contratado.
+      if (d.banco) {
+        const sub = document.getElementById("kpiSessoesSub");
+        sub.removeAttribute("data-i18n");
+        sub.textContent = d.banco.usadas != null
+          ? `${d.banco.usadas} de ${d.banco.limite} do banco do mês${d.banco.emAlerta ? " · acima de 80%" : ""}`
+          : `banco de ${d.banco.limite} sessões/mês`;
+        if (d.banco.emAlerta) sub.style.color = "#a0522d";
+      }
       document.getElementById("kpiAdesao").textContent      = k.taxaAdesao != null ? k.taxaAdesao + "%" : "—";
 
       // Barra de adesão
