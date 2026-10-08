@@ -1,7 +1,7 @@
 // Sidebar premium do produto profissional — single source of truth.
 // Cada página logged-in só precisa de:
 //   1. <body class="ep-has-sidebar"> (pra CSS aplicar layout sem FOUC)
-//   2. <script src="./js/sidebar.js?v=N" defer></script>
+//   2. <script src="./js/sidebar.js?v=28" defer></script>
 // O script injeta o <aside> no início do body, marca link ativo pelo
 // pathname, e sincroniza avatar/nome/TISS do topbar (Firebase logic vive
 // em auth-guard.js → topUserName / topUserAvatar).
@@ -90,12 +90,27 @@
   } catch (e) { /* sem cache, mantém hidden */ }
   var tissExtra = 'id="sidebarTissLink" class="ep-sidebar__tiss' + (tissCachedEnabled ? '' : ' is-hidden') + '"';
 
+  // "Escolas" só para quem está na rede dos programas (visível no diretório
+  // de alunos e colaboradores, controlado pelo admin). Escondido por padrão;
+  // auth-guard reaplica com o perfil fresco (applyProgramNetworkVisibility).
+  var programCached = false;
+  try {
+    var pRaw = sessionStorage.getItem('ep:profile:v2');
+    if (pRaw) {
+      var pEntry = JSON.parse(pRaw);
+      programCached = !!(pEntry && pEntry.profile && pEntry.profile.therapist && pEntry.profile.therapist.programNetwork);
+    } else {
+      programCached = localStorage.getItem('ep:programNetwork') === '1';
+    }
+  } catch (e) { /* sem cache, mantém escondido */ }
+  var schoolsExtra = 'id="sidebarSchoolsLink" class="ep-sidebar__schools' + (programCached ? '' : ' is-hidden') + '"';
+
   // i18n keys vivem em common.json (sempre carregado) — namespace `painel`
   // só existe em painel.html, então usá-lo aqui quebra o menu em todas as
   // outras páginas (i18next devolve key parcial e o init substitui textContent).
   const NAV = [
     { labelKey: 'common:sidebar.groupClinico', label: 'Clínico', items: [
-      ['casos-publicos.html', 'users', 'Escolas', 'common:sidebar.programasPublicos', 'class="ep-sidebar__schools"'],
+      ['casos-publicos.html', 'users', 'Escolas', 'common:sidebar.programasPublicos', schoolsExtra],
       ['painel.html', 'video', 'Consultas', 'common:sidebar.consultas'],
       ['agenda.html', 'calendar', 'Agenda', 'common:sidebar.agenda'],
       ['pacientes.html', 'users', 'Pacientes', 'common:sidebar.pacientes'],
