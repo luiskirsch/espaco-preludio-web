@@ -2001,6 +2001,15 @@ Direito de portabilidade — LGPD Art. 18, V.
     st.textContent = mp === "conectado" ? "Mercado Pago conectado com sucesso." : "Não foi possível conectar o Mercado Pago. Tente novamente.";
     st.className = `ep-status ${mp === "conectado" ? "is-ok" : "is-err"}`;
     history.replaceState(null, "", location.pathname);
+    // Perfil em cache é de antes da conexão: limpa e busca o estado real.
+    try { sessionStorage.removeItem("ep:profile:v2"); } catch {}
+    (async () => {
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, { headers: { Authorization: `Bearer ${await freshToken()}` } });
+        const d = await r.json().catch(() => ({}));
+        if (d?.therapist) renderMpConnect(d.therapist);
+      } catch {}
+    })();
     setTimeout(() => $("mpConnectBox")?.scrollIntoView({ behavior: "smooth", block: "center" }), 400);
   })();
   $("mpConnectBtn").addEventListener("click", async () => {
