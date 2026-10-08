@@ -335,8 +335,20 @@
         </div>
       </section>
 
-      <!-- PIX para agendamento público -->
-      <section class="ep-receita-form">
+      <!-- Valor da consulta (pagantes da mensalidade definem e cobram por conta própria) -->
+      <section class="ep-receita-form ep-hide" id="ownPriceSection">
+        <h2 class="ep-h3 ep-mt-0">Valor da sua consulta</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          É o valor que aparece para os pacientes no seu perfil público. A cobrança é feita por você, do jeito que preferir — a plataforma não cobra comissão.
+        </p>
+        <div class="ep-field ep-mt-12" style="max-width: 260px;">
+          <label class="ep-label" for="ownPrice">Valor (R$)</label>
+          <input id="ownPrice" class="ep-input" type="number" min="10" max="100000" step="0.01" placeholder="ex: 180,00">
+        </div>
+      </section>
+
+      <!-- PIX para agendamento público — só no plano institucional (R$ 60 fixo, repasse pela plataforma) -->
+      <section class="ep-receita-form ep-hide" id="pixInstitutionalSection">
         <h2 class="ep-h3 ep-mt-0" data-i18n="p-perfil:pagamento_via_pix_no_agendamento_ab221">Pagamento via PIX no agendamento</h2>
         <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="p-perfil:configure_sua_chave_pix_para_83e0c">
           Configure sua chave PIX para receber o pagamento da consulta direto na sua conta. O paciente paga ao marcar ou antes de entrar — você recebe sem intermediário.
@@ -1002,6 +1014,12 @@
     // PIX para agendamento público.
     if (t.pixKeyType) $("pixKeyType").value = t.pixKeyType;
     $("pixKeyConfigured").textContent = t.pixKey ? "✓ configurada" : "";
+    // Institucional: PIX + valor fixo da plataforma. Pagante: define o próprio valor.
+    const isInstitutional = !!t.institutional;
+    $("pixInstitutionalSection").classList.toggle("ep-hide", !isInstitutional);
+    $("ownPriceSection").classList.toggle("ep-hide", isInstitutional);
+    if (!isInstitutional && t.valorConsulta) $("ownPrice").value = (Number(t.valorConsulta) / 100).toFixed(2);
+    window._epInstitutional = isInstitutional;
 
     // Asaas.
     // Tópicos personalizados da sessão.
@@ -2272,8 +2290,21 @@ Direito de portabilidade — LGPD Art. 18, V.
       body.pixKey     = pixKeyTyped;
       body.pixKeyType = pixKeyTypeVal;
     }
-    // Valor fixo: R$60 — sem campo editável.
-    body.valorConsulta = 6000;
+    // Institucional: R$60 fixo. Pagante: valor definido por ele (opcional).
+    if (window._epInstitutional) {
+      body.valorConsulta = 6000;
+    } else {
+      const ownRaw = String($("ownPrice").value || "").replace(",", ".").trim();
+      if (ownRaw) {
+        const cents = Math.round(Number(ownRaw) * 100);
+        if (!Number.isFinite(cents) || cents < 1000 || cents > 10000000) {
+          setStatus("Informe um valor de consulta entre R$ 10 e R$ 100.000.", "err");
+          $("saveBtn").disabled = false;
+          return;
+        }
+        body.valorConsulta = cents;
+      }
+    }
 
     if (pendingLogo && pendingLogo.dirty) {
       if (pendingLogo.removed) {
