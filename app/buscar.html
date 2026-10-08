@@ -96,6 +96,15 @@
 <script type="module">
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+  // Diretório depende do público (colaborador/aluno vê a rede dos programas;
+  // paciente particular vê só pagantes): envia o login quando houver.
+  async function directoryHeaders() {
+    try {
+      await auth.authStateReady();
+      const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    } catch { return {}; }
+  }
 
   onAuthStateChanged(auth, u => {
     if (!u) { window.location.href = "./login.html"; return; }
@@ -187,7 +196,7 @@
       const params = new URLSearchParams();
       if (currentEsp) params.set("especialidade", currentEsp);
       if (q) params.set("q", q);
-      const res = await fetch(`${BACKEND_BASE_URL}/public/profissionais?${params}`);
+      const res = await fetch(`${BACKEND_BASE_URL}/public/profissionais?${params}`, { headers: await directoryHeaders() });
       const data = await res.json().catch(() => ({}));
       updateSpecialtyChips(data.especialidades);
       renderResults(data.items || []);
