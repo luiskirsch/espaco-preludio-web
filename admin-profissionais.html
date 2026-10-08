@@ -407,9 +407,15 @@
       </div>
 
       <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
-        <div class="ep-eyebrow">Rede de Psicologia</div>
-        <div class="ep-text-sm ep-text-muted">Apenas a administração controla esta exibição. Ocultar não suspende a conta nem impede atendimentos por link direto.</div>
+        <div class="ep-eyebrow">Rede dos programas (alunos e colaboradores)</div>
+        <div class="ep-text-sm ep-text-muted">Quem está nesta rede nunca aparece no diretório de pacientes. Ocultar não suspende a conta nem impede atendimentos por link direto.</div>
         <button class="ep-btn ${it.adminDirectoryVisible ? "ep-btn--ghost" : "ep-btn--primary"} ep-btn--sm" data-action="toggleDirectory" style="align-self: flex-start;${it.adminDirectoryVisible ? " color:#b8453d;border-color:#b8453d;" : ""}">${it.adminDirectoryVisible ? "Ocultar da rede" : "Exibir na rede"}</button>
+      </div>
+
+      <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
+        <div class="ep-eyebrow">Diretório de pacientes</div>
+        <div class="ep-text-sm ep-text-muted">Aparecem automaticamente os profissionais pagantes e verificados que não estão na rede dos programas.</div>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="togglePatientDirectory" style="align-self: flex-start;${it.adminPatientDirectoryHidden ? "" : " color:#b8453d;border-color:#b8453d;"}">${it.adminPatientDirectoryHidden ? "Voltar a exibir para pacientes" : "Ocultar dos pacientes"}</button>
       </div>
 
       <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
@@ -461,6 +467,14 @@
         return;
       }
       body.setAdminDirectoryVisible = willShow;
+    } else if (action === "togglePatientDirectory") {
+      const it = allItems.find(x => x.uid === uid);
+      const willHide = !it?.adminPatientDirectoryHidden;
+      if (!confirm(willHide ? "Ocultar este profissional do diretório de pacientes?" : "Voltar a exibir este profissional no diretório de pacientes?")) {
+        statusEl.textContent = "";
+        return;
+      }
+      body.setPatientDirectoryHidden = willHide;
     } else if (action === "note") {
       body.setAdminNote = document.getElementById("adminNote").value || "";
     }
