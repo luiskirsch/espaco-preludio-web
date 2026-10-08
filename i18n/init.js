@@ -24,7 +24,7 @@
   const STORAGE_KEY = 'ep_lang';
   const I18NEXT_CDN = '/i18n/i18next.min.js';
   const BACKEND_CDN = '/i18n/i18nextHttpBackend.min.js';
-  const I18N_VERSION = 'a393d7b6c';
+  const I18N_VERSION = 'af0a02f71';
 
   // Datas e horas que o código formata com 'pt-BR' (ou sem locale) passam a
   // usar o idioma ativo — "30 de set." vira "Sep 30" / "30 sept". Números e
