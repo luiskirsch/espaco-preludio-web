@@ -202,6 +202,19 @@
       box-shadow: 0 18px 36px -24px rgba(7,63,66,.48), 0 2px 6px rgba(7,63,66,.10);
     }
     #planos .ep-plan-card--institutional { border-color: #b58a31; }
+    /* Plano profissional em formato horizontal */
+    #planos .ep-plan-wide { display: grid; grid-template-columns: 330px 1fr; gap: 0; padding: 0 !important; }
+    #planos .ep-plan-wide__side { display: flex; flex-direction: column; padding: 32px 28px; border-right: 1px solid rgba(23,96,98,.14); background: rgba(23,96,98,.04); }
+    #planos .ep-plan-wide__perks { list-style: none; padding: 0; margin: 0 0 22px; display: grid; gap: 8px; font-size: 13.5px; font-weight: 600; }
+    #planos .ep-plan-wide__perks li::before { content: "✓ "; color: #176062; font-weight: 800; }
+    #planos .ep-plan-wide__features { display: grid; grid-template-columns: 1fr 1fr; align-content: center; gap: 30px 36px; padding: 36px; }
+    #planos .ep-plan-wide__group h3 { font-size: 12px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; color: #b58a31; margin: 0 0 10px; }
+    #planos .ep-plan-wide__group .ep-card__features { margin: 0; }
+    @media (max-width: 860px) {
+      #planos .ep-plan-wide { grid-template-columns: 1fr; }
+      #planos .ep-plan-wide__side { border-right: 0; border-bottom: 1px solid rgba(23,96,98,.14); }
+      #planos .ep-plan-wide__features { grid-template-columns: 1fr; padding: 24px; }
+    }
     #planos .ep-plan-card--professional { border-color: #176062; }
     #planos .ep-plan-stripe {
       position: absolute;
@@ -470,40 +483,71 @@
         </div>
       </div>
 
-      <div class="ep-mt-32" style="max-width: 460px; margin-left: auto; margin-right: auto;">
+      <div class="ep-mt-32" style="max-width: 1120px; margin-left: auto; margin-right: auto;">
 
-        <article class="ep-card ep-card--strong ep-plan-card--professional" style="position:relative;overflow:hidden;">
-
-          <!-- Faixa decorativa superior -->
+        <article class="ep-card ep-card--strong ep-plan-card--professional ep-plan-wide" style="position:relative;overflow:hidden;">
           <div class="ep-plan-stripe ep-plan-stripe--professional" aria-hidden="true"></div>
 
-          <!-- Badge + Ícone -->
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <span class="ep-badge ep-plan-badge--professional" data-i18n="index:plans.pro.badge">⭐ Profissional</span>
-            <span class="ep-plan-popular" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;" data-i18n="index:plans.pro.mostPopular">Mais popular</span>
+          <div class="ep-plan-wide__side">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;">
+              <span class="ep-badge ep-plan-badge--professional" data-i18n="index:plans.pro.badge">⭐ Profissional</span>
+              <span class="ep-plan-popular" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;" data-i18n="index:plans.pro.mostPopular">Mais popular</span>
+            </div>
+            <div>
+              <span class="ep-plan-price" style="font-size:32px;font-weight:800;line-height:1.1;white-space:nowrap;" data-price-monthly-i18n="index:plans.pro.priceMonthly" data-price-yearly-i18n="index:plans.pro.priceYearly" data-price-monthly="R$ 60,00 / mês" data-price-yearly="R$ 604,80 / Anual" data-i18n="index:plans.pro.priceMonthly">R$ 60,00 / mês</span>
+              <div class="ep-plan-price-note" style="font-size:13px;margin-top:4px;" data-i18n="index:plans.pro.priceNote">após 30 dias grátis</div>
+            </div>
+            <p class="ep-card__sub" style="margin:16px 0;" data-i18n-html="index:plans.pro.subHtml">Profissionais regulamentados com inscrição ativa em qualquer conselho aceito — ou <strong>Psicanalistas, Terapeutas integrativos e Hipnoterapeutas</strong>.</p>
+            <ul class="ep-plan-wide__perks">
+              <li>Tudo incluso, sem módulos extras</li>
+              <li>Sem comissão ou taxa por sessão</li>
+              <li data-i18n="index:plans.pro.paymentTrial">30 dias grátis com meio de pagamento cadastrado</li>
+            </ul>
+            <a href="./cadastro.html?plano=profissional" class="ep-btn ep-btn--primary ep-btn--block ep-plan-cta" style="margin-top:auto;" data-i18n="index:plans.pro.cta">Comece grátis agora</a>
+            <p class="ep-plan-note" style="font-size:11px;margin-top:10px;text-align:center;" data-i18n="index:plans.pro.note">Cancele a qualquer momento sem fidelidade.</p>
           </div>
 
-          <!-- Preço -->
-          <div style="margin-bottom:6px;">
-            <span class="ep-plan-price" style="font-size:28px;font-weight:800;" data-price-monthly-i18n="index:plans.pro.priceMonthly" data-price-yearly-i18n="index:plans.pro.priceYearly" data-price-monthly="R$ 60,00 / mês" data-price-yearly="R$ 604,80 / Anual" data-i18n="index:plans.pro.priceMonthly">R$ 60,00 / mês</span>
-            <span class="ep-plan-price-note" style="font-size:13px;margin-left:6px;" data-i18n="index:plans.pro.priceNote">após 30 dias grátis</span>
+          <div class="ep-plan-wide__features">
+            <div class="ep-plan-wide__group">
+              <h3>Atendimento</h3>
+              <ul class="ep-card__features">
+                <li>Vídeo cifrado ponta a ponta, sem gravação</li>
+                <li>Agenda online e link de agendamento</li>
+                <li>Lembretes por e-mail e WhatsApp</li>
+                <li>Chat seguro com pacientes</li>
+                <li>Resumo de sessão com IA <span class="ep-text-muted">(opcional, com consentimento)</span></li>
+              </ul>
+            </div>
+            <div class="ep-plan-wide__group">
+              <h3>Clínico</h3>
+              <ul class="ep-card__features">
+                <li>Prontuário cifrado no seu dispositivo</li>
+                <li>Anamnese e escalas clínicas <span class="ep-text-muted">(PHQ-9, GAD-7)</span></li>
+                <li data-i18n-html="index:plans.pro.f2Html">Receita digital ICP-Brasil <span class="ep-text-muted">(CRM e CREFITO)</span></li>
+                <li data-i18n-html="index:plans.pro.f3Html">Atestados, encaminhamentos, relatórios e laudos clínicos</li>
+                <li>Calculadora clínica</li>
+              </ul>
+            </div>
+            <div class="ep-plan-wide__group">
+              <h3>Gestão</h3>
+              <ul class="ep-card__features">
+                <li>Financeiro e recibos</li>
+                <li>NFS-e e TISS/TUSS para convênios</li>
+                <li>Relatórios do consultório</li>
+                <li data-i18n-html="index:plans.pro.f5Html"><strong>Clínica multi-profissional</strong> <span class="ep-text-muted">(equipe + repasse mensal)</span></li>
+                <li>Estoque, aniversariantes e marketing</li>
+              </ul>
+            </div>
+            <div class="ep-plan-wide__group">
+              <h3>Visibilidade e suporte</h3>
+              <ul class="ep-card__features">
+                <li data-i18n-html="index:plans.pro.f4Html"><strong>Selo "Verificado" azul</strong> + diretório público com agendamento direto</li>
+                <li>App do paciente na Google Play</li>
+                <li>Conformidade LGPD para dados de saúde</li>
+                <li data-i18n-html="index:plans.pro.f6Html">Suporte prioritário em 24h via <strong>e-mail e WhatsApp</strong></li>
+              </ul>
+            </div>
           </div>
-          <p class="ep-card__sub" style="margin-bottom:16px;" data-i18n-html="index:plans.pro.subHtml">Profissionais regulamentados com inscrição ativa em qualquer conselho aceito — ou <strong>Psicanalistas, Terapeutas integrativos e Hipnoterapeutas</strong>.</p>
-
-          <!-- Features agrupadas -->
-          <ul class="ep-card__features" style="margin-bottom:8px;">
-            <li data-i18n="index:plans.pro.paymentTrial">30 dias grátis com meio de pagamento cadastrado</li>
-            <li data-i18n-html="index:plans.pro.f2Html">Receita digital ICP-Brasil <span class="ep-text-muted">(CRM e CREFITO)</span></li>
-            <li data-i18n-html="index:plans.pro.f3Html">Atestados, encaminhamentos, relatórios e laudos clínicos</li>
-            <li data-i18n-html="index:plans.pro.f4Html"><strong>Selo "Verificado" azul</strong> + diretório público com agendamento direto</li>
-            <li data-i18n-html="index:plans.pro.f5Html"><strong>Clínica multi-profissional</strong> <span class="ep-text-muted">(equipe + repasse mensal)</span></li>
-            <li data-i18n-html="index:plans.pro.f6Html">Suporte prioritário em 24h via <strong>e-mail e WhatsApp</strong></li>
-          </ul>
-
-          <!-- Nota cancelamento -->
-          <p class="ep-plan-note" style="font-size:11px;margin-bottom:16px;text-align:center;" data-i18n="index:plans.pro.note">Cancele a qualquer momento sem fidelidade.</p>
-
-          <a href="./cadastro.html?plano=profissional" class="ep-btn ep-btn--primary ep-btn--block ep-plan-cta" data-i18n="index:plans.pro.cta">Comece grátis agora</a>
         </article>
 
       </div>
