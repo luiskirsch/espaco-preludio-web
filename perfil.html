@@ -337,18 +337,30 @@
 
       <!-- Valor da consulta (pagantes da mensalidade definem e cobram por conta própria) -->
       <section class="ep-receita-form ep-hide" id="ownPriceSection">
-        <h2 class="ep-h3 ep-mt-0" data-i18n="p-perfil:valor_da_sua_consulta_1edf1">Valor da sua consulta</h2>
-        <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="p-perfil:e_o_valor_que_aparece_695a6">
-          É o valor que aparece para os pacientes no seu perfil público. A cobrança é feita por você, do jeito que preferir — a plataforma não cobra comissão.
+        <h2 class="ep-h3 ep-mt-0">Recebimento dos pacientes</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0">
+          Ao criar uma consulta você informa o valor e o paciente recebe, no link, um QR Code PIX para pagar. O dinheiro cai direto na sua conta — a plataforma não cobra comissão.
         </p>
+
+        <div id="mpConnectBox" class="ep-mt-12" style="padding: 14px 16px; border: 1px solid var(--ep-line); border-radius: 10px;">
+          <div class="ep-flex" style="gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+            <div>
+              <div style="font-weight: 600;">Mercado Pago <span id="mpConnectBadge" class="ep-badge" style="margin-left: 6px;">Não conectado</span></div>
+              <div id="mpConnectHint" class="ep-text-xs ep-text-muted" style="margin-top: 4px;">Conecte sua conta para gerar o PIX e ver o pagamento confirmado automaticamente.</div>
+            </div>
+            <button type="button" class="ep-btn ep-btn--primary ep-btn--sm" id="mpConnectBtn">Conectar Mercado Pago</button>
+          </div>
+          <div class="ep-status" id="mpConnectStatus" style="margin-top: 8px;"></div>
+        </div>
+        <p class="ep-text-xs ep-text-muted ep-mt-8">Sem Mercado Pago conectado, o QR Code é gerado com a sua chave PIX (abaixo) e você confirma o pagamento no painel.</p>
         <div class="ep-field ep-mt-12" style="max-width: 260px;">
-          <label class="ep-label" for="ownPrice" data-i18n="p-perfil:valor_r_362fb">Valor (R$)</label>
+          <label class="ep-label" for="ownPrice">Valor padrão da consulta (R$)</label>
           <input id="ownPrice" class="ep-input" type="number" min="10" max="100000" step="0.01" placeholder="ex: 180,00" data-i18n-placeholder="p-perfil:ex_180_00_c22d1">
         </div>
       </section>
 
       <!-- PIX para agendamento público — só no plano institucional (R$ 60 fixo, repasse pela plataforma) -->
-      <section class="ep-receita-form ep-hide" id="pixInstitutionalSection">
+      <section class="ep-receita-form" id="pixInstitutionalSection">
         <h2 class="ep-h3 ep-mt-0" data-i18n="p-perfil:pagamento_via_pix_no_agendamento_ab221">Pagamento via PIX no agendamento</h2>
         <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="p-perfil:configure_sua_chave_pix_para_83e0c">
           Configure sua chave PIX para receber o pagamento da consulta direto na sua conta. O paciente paga ao marcar ou antes de entrar — você recebe sem intermediário.
@@ -373,7 +385,7 @@
           </div>
         </div>
 
-        <div class="ep-field ep-mt-8">
+        <div class="ep-field ep-mt-8" id="pixFixedRow">
           <label class="ep-label" data-i18n="p-perfil:valor_da_consulta_a8728">Valor da consulta</label>
           <div style="padding: 10px 14px; background: var(--ep-bg-2); border-radius: 8px; font-size: 15px; font-weight: 600; color: var(--ep-accent);" data-i18n-html="p-perfil:r_60_00_valor_fixo_89611">R$ 60,00 <span style="font-size:12px;font-weight:400;color:var(--ep-ink-3);">(valor fixo da plataforma)</span></div>
         </div>
@@ -1016,8 +1028,9 @@
     $("pixKeyConfigured").textContent = t.pixKey ? "✓ configurada" : "";
     // Institucional: PIX + valor fixo da plataforma. Pagante: define o próprio valor.
     const isInstitutional = !!t.institutional;
-    $("pixInstitutionalSection").classList.toggle("ep-hide", !isInstitutional);
+    $("pixFixedRow").classList.toggle("ep-hide", !isInstitutional);
     $("ownPriceSection").classList.toggle("ep-hide", isInstitutional);
+    renderMpConnect(t);
     if (!isInstitutional && t.valorConsulta) $("ownPrice").value = (Number(t.valorConsulta) / 100).toFixed(2);
     window._epInstitutional = isInstitutional;
 
@@ -1957,6 +1970,61 @@ Direito de portabilidade — LGPD Art. 18, V.
       btn.textContent = "Copiado!";
       setTimeout(() => { btn.textContent = orig; }, 1200);
     } catch {}
+  });
+
+  // ─── Mercado Pago (cobrança do paciente na conta do profissional) ─────
+  var mpConnected = false; // var: renderMpConnect pode rodar antes desta linha (carga do perfil)
+  function renderMpConnect(t) {
+    mpConnected = !!t.mpConnected;
+    const badge = $("mpConnectBadge"), btn = $("mpConnectBtn"), hint = $("mpConnectHint");
+    if (mpConnected) {
+      badge.textContent = "Conectado";
+      badge.className = "ep-badge ep-badge--ok";
+      hint.textContent = `Conta ${t.mpConnected.nickname || ""} — o pagamento aparece como Pago automaticamente.`.replace("Conta  —", "Conta conectada —");
+      btn.textContent = "Desconectar";
+      btn.className = "ep-btn ep-btn--ghost ep-btn--sm";
+    } else {
+      badge.textContent = "Não conectado";
+      badge.className = "ep-badge";
+      btn.textContent = "Conectar Mercado Pago";
+      btn.className = "ep-btn ep-btn--primary ep-btn--sm";
+      if (t.mpConnectAvailable === false) {
+        btn.disabled = true;
+        hint.textContent = "Conexão com o Mercado Pago em configuração. Enquanto isso, use sua chave PIX abaixo.";
+      }
+    }
+  }
+  (function showMpReturn() {
+    const mp = new URLSearchParams(location.search).get("mp");
+    if (!mp) return;
+    const st = $("mpConnectStatus");
+    st.textContent = mp === "conectado" ? "Mercado Pago conectado com sucesso." : "Não foi possível conectar o Mercado Pago. Tente novamente.";
+    st.className = `ep-status ${mp === "conectado" ? "is-ok" : "is-err"}`;
+    history.replaceState(null, "", location.pathname);
+    setTimeout(() => $("mpConnectBox")?.scrollIntoView({ behavior: "smooth", block: "center" }), 400);
+  })();
+  $("mpConnectBtn").addEventListener("click", async () => {
+    const btn = $("mpConnectBtn"), st = $("mpConnectStatus");
+    btn.disabled = true;
+    try {
+      const tok = await freshToken();
+      if (mpConnected) {
+        if (!confirm("Desconectar o Mercado Pago? As próximas cobranças usarão sua chave PIX, com confirmação manual.")) { btn.disabled = false; return; }
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/mp/desconectar`, { method: "POST", headers: { Authorization: `Bearer ${tok}` } });
+        if (!r.ok) throw new Error();
+        renderMpConnect({ mpConnected: null });
+        st.textContent = "Mercado Pago desconectado."; st.className = "ep-status is-ok";
+      } else {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/mp/conectar`, { method: "POST", headers: { Authorization: `Bearer ${tok}` } });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.url) throw new Error(d.error || "");
+        location.href = d.url;
+        return;
+      }
+    } catch (e) {
+      st.textContent = "Não foi possível concluir. Tente novamente."; st.className = "ep-status is-err";
+    }
+    btn.disabled = false;
   });
 
   // ─── 2FA ─────────────────────────────────────────────────────────────

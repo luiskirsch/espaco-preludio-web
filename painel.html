@@ -645,7 +645,7 @@
   import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=5";
   import { clearDek, recallUser, decryptNote } from "./js/crypto.js";
   import { downloadAttendanceCertificate } from "./js/attendance-pdf.js?v=4";
-  import { createNewSessionModal } from "./js/new-session-modal.js?v=4";
+  import { createNewSessionModal } from "./js/new-session-modal.js?v=5";
   import { runOnboarding } from "./js/onboarding.js?v=3-15";
 
   // ─── i18n helper ────────────────────────────────────────────
@@ -1496,6 +1496,16 @@
     }
   }
 
+  // Cobrança do paciente pelo link (PIX do profissional).
+  function chargeBadge(s) {
+    const c = s.patientCharge;
+    if (!c) return "";
+    const brl = (Number(c.amountCents) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    if (c.status === "paid") return `<span class="ep-badge ep-badge--ok" title="Pagamento recebido">Pago · ${brl}</span>`;
+    if (c.patientReportedAt) return `<span class="ep-badge ep-badge--warn" title="O paciente informou que pagou — confira sua conta e confirme">Paciente informou pagamento · ${brl}</span>`;
+    return `<span class="ep-badge" title="Aguardando o PIX do paciente">Aguardando pagamento · ${brl}</span>`;
+  }
+
   function renderSession(s) {
     const div = document.createElement("article");
     const publicSchool = isPublicSchoolSession(s);
@@ -1549,11 +1559,14 @@
           <span>${tr("painel:list.createdAt","Criada {{date}}",{date:fmtDate(s.createdAt)})}</span>
           ${s.scheduledAt ? `<span>${tr("painel:list.scheduledAt","· Agendada {{date}}",{date:fmtDate(s.scheduledAt)})}</span>` : ""}
           ${s.completedAt ? `<span>${tr("painel:list.completedAt","· Encerrada {{date}}",{date:fmtDate(s.completedAt)})}</span>` : ""}
+          ${chargeBadge(s)}
         </div>
         ${overdueBlock}
         ${preNoteBlock}
       </div>
       <div class="ep-session__actions">
+        ${s.patientCharge && s.patientCharge.status !== "paid" && s.patientCharge.provider !== "mercadopago" ? `
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="confirmar-pagamento" data-id="${s.sessionId}" title="Confirme quando o PIX cair na sua conta">Confirmar pagamento</button>` : ""}
         ${isOpen && !overdue ? `
           <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="enter" data-id="${s.sessionId}">${s.demoTechnicalRoom?'Abrir sala demo':tr("painel:list.enter","Entrar")}</button>
         ` : ""}
@@ -1715,6 +1728,26 @@ Quem verificar esse código passará a ver que ele foi invalidado. Se precisar, 
         renderSessionsFromData({ sessions: allSessions });
       } catch {
         alert("Não foi possível revogar o comprovante agora.");
+        btn.disabled = false;
+      }
+    } else if (action === "confirmar-pagamento") {
+      if (!confirm("Confirmar que o PIX deste paciente caiu na sua conta?")) return;
+      btn.disabled = true;
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/cobranca/confirmar`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getFreshToken()}` },
+          body: JSON.stringify({ paid: true })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d.error || r.status);
+        const sess = allSessions.find(x => x.sessionId === id);
+        if (sess?.patientCharge) sess.patientCharge.status = "paid";
+        sessionsFreshSeq = Math.max(sessionsFreshSeq, 1);
+        await invalidateApi("sessoes", uid);
+        renderSessionsFromData({ sessions: allSessions });
+      } catch {
+        alert("Não foi possível confirmar o pagamento agora.");
         btn.disabled = false;
       }
     } else if (action === "recibo") {

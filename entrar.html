@@ -76,6 +76,28 @@
     <!-- Status da conta: badge (logado) ou CTA (anônimo) -->
     <div id="accountSlot" class="ep-mt-12"></div>
 
+    <!-- Pagamento da consulta (PIX do profissional) — não bloqueia a entrada -->
+    <div id="chargeCard" class="ep-hide ep-mt-12" style="border: 1px solid var(--ep-line); border-radius: 14px; padding: 16px; background: var(--ep-surface);">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap;">
+        <strong style="font-size: 15px;">Pagamento da consulta</strong>
+        <span id="chargeAmount" style="font-family: var(--ep-font-serif); font-size: 22px; font-weight: 600;"></span>
+      </div>
+      <div id="chargePaid" class="ep-hide" style="margin-top: 10px; padding: 12px 14px; border-radius: 10px; background: rgba(45,106,62,.1); color: #2d6a3e; font-weight: 600;">✓ Pagamento confirmado. Obrigado!</div>
+      <div id="chargePending">
+        <p class="ep-text-xs ep-text-muted" style="margin: 6px 0 12px;">Pague por PIX para <strong id="chargeReceiver"></strong>. Aponte a câmera do app do seu banco para o QR Code ou use o código copia e cola.</p>
+        <div style="display: flex; justify-content: center;"><div id="chargeQr" style="background: #fff; padding: 10px; border-radius: 10px; line-height: 0;"></div></div>
+        <label class="ep-label ep-mt-12" for="chargeCopy">PIX copia e cola</label>
+        <div style="display: flex; gap: 8px;">
+          <input id="chargeCopy" class="ep-input" readonly style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+          <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="chargeCopyBtn">Copiar</button>
+        </div>
+        <div id="chargeKeyRow" class="ep-hide ep-text-xs ep-text-muted ep-mt-8">Chave PIX: <strong id="chargeKey"></strong></div>
+        <div id="chargeAutoHint" class="ep-hide ep-text-xs ep-text-muted ep-mt-8">A confirmação aparece aqui automaticamente assim que o pagamento for aprovado.</div>
+        <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm ep-btn--block ep-mt-12 ep-hide" id="chargeReportBtn">Já paguei</button>
+        <div id="chargeReported" class="ep-hide ep-text-xs ep-mt-8" style="color: #8a6020;">Avisamos o profissional. Ele confirma assim que o PIX cair na conta.</div>
+      </div>
+    </div>
+
     <div class="ep-stack ep-mt-12">
       <div class="ep-field">
         <label class="ep-label" for="patientName" data-i18n="entrar:prejoin.nameLabel">Como o profissional deve te chamar?</label>
@@ -283,6 +305,89 @@
     const lbl = document.querySelector('label[for="patientName"]');
     if (lbl) { lbl.removeAttribute("data-i18n"); lbl.textContent = "Como prefere ser chamado(a) na sessão?"; }
   }
+  // ─── Pagamento da consulta (PIX do profissional) ───────────────────────
+  // Não bloqueia a entrada: só mostra QR, copia e cola e o status.
+  async function loadPatientCharge() {
+    const qs = new URLSearchParams();
+    if (params.get("c")) qs.set("c", params.get("c"));
+    if (params.get("t")) qs.set("t", params.get("t"));
+    if (![...qs.keys()].length) return null;
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/pre-join?${qs}`);
+      const d = await r.json().catch(() => ({}));
+      return r.ok && d.patientCharge ? d.patientCharge : null;
+    } catch { return null; }
+  }
+  function drawQr(el, payload, base64) {
+    el.innerHTML = "";
+    if (base64) {
+      const img = new Image(); img.alt = "QR Code PIX"; img.width = 200; img.height = 200;
+      img.src = `data:image/png;base64,${base64}`;
+      el.appendChild(img);
+      return;
+    }
+    if (!payload || !window.qrcode) return;
+    const qr = window.qrcode(0, "M"); qr.addData(payload); qr.make();
+    el.innerHTML = qr.createImgTag(5, 0);
+  }
+  function renderCharge(c) {
+    const card = document.getElementById("chargeCard");
+    if (!c) { card.classList.add("ep-hide"); return; }
+    card.classList.remove("ep-hide");
+    document.getElementById("chargeAmount").textContent =
+      (Number(c.amountCents) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const paid = c.status === "paid";
+    document.getElementById("chargePaid").classList.toggle("ep-hide", !paid);
+    document.getElementById("chargePending").classList.toggle("ep-hide", paid);
+    if (paid) return;
+    document.getElementById("chargeReceiver").textContent = c.receiverName || "o profissional";
+    document.getElementById("chargeCopy").value = c.pixPayload || "";
+    drawQr(document.getElementById("chargeQr"), c.pixPayload, c.qrBase64);
+    document.getElementById("chargeKeyRow").classList.toggle("ep-hide", !c.pixKey);
+    document.getElementById("chargeKey").textContent = c.pixKey || "";
+    document.getElementById("chargeAutoHint").classList.toggle("ep-hide", !c.automatic);
+    const reported = !!c.patientReportedAt;
+    document.getElementById("chargeReportBtn").classList.toggle("ep-hide", c.automatic || reported);
+    document.getElementById("chargeReported").classList.toggle("ep-hide", c.automatic || !reported);
+  }
+  (async () => {
+    if (!window.qrcode) {
+      await new Promise(res => {
+        const sc = document.createElement("script");
+        sc.src = "https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js";
+        sc.onload = res; sc.onerror = res; document.head.appendChild(sc);
+      });
+    }
+    let charge = await loadPatientCharge();
+    renderCharge(charge);
+    // Mercado Pago: confere o status a cada 10 s até aprovar (pare se pago).
+    if (charge?.automatic && charge.status !== "paid") {
+      const timer = setInterval(async () => {
+        const next = await loadPatientCharge();
+        if (next) { charge = next; renderCharge(next); }
+        if (next?.status === "paid") clearInterval(timer);
+      }, 10000);
+    }
+  })();
+  document.getElementById("chargeCopyBtn").addEventListener("click", async () => {
+    const v = document.getElementById("chargeCopy").value;
+    try { await navigator.clipboard.writeText(v); } catch { document.getElementById("chargeCopy").select(); }
+    const b = document.getElementById("chargeCopyBtn"); b.textContent = "Copiado!";
+    setTimeout(() => { b.textContent = "Copiar"; }, 1500);
+  });
+  document.getElementById("chargeReportBtn").addEventListener("click", async () => {
+    const b = document.getElementById("chargeReportBtn"); b.disabled = true;
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/cobranca/informar-pago`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ c: params.get("c") || undefined, t: params.get("t") || undefined })
+      });
+      if (!r.ok) throw new Error();
+      b.classList.add("ep-hide");
+      document.getElementById("chargeReported").classList.remove("ep-hide");
+    } catch { b.disabled = false; alert("Não foi possível avisar agora. Tente de novo."); }
+  });
+
   const joinCode  = params.get("c");
   const joinToken = params.get("t");
 
