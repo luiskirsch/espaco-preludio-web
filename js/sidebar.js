@@ -33,10 +33,15 @@
       '@keyframes ep-schools-breathe{0%,100%{border-color:rgba(226,183,106,.38);box-shadow:inset 0 1px 0 rgba(255,244,220,.07),0 8px 22px -16px rgba(226,183,106,.58)}50%{border-color:rgba(226,183,106,.62);box-shadow:inset 0 1px 0 rgba(255,244,220,.11),0 12px 30px -13px rgba(226,183,106,.82),0 0 15px -10px rgba(226,183,106,.7)}}',
       '@keyframes ep-schools-shine{0%,58%{left:-42%;opacity:0}68%{opacity:1}84%,100%{left:118%;opacity:0}}',
       'body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools.is-hidden{display:none!important;}',
+      // Desktop: o espaço que sobrar na coluna se divide entre logo↔menu e
+      // menu↔rodapé (margens auto). Menu longo (CRM + TISS + Escolas) não tem
+      // sobra e fica idêntico; menus curtos (CRP) ganham respiro sob a logo.
+      // Sem risco de rolagem: margem auto só usa espaço livre.
+      '@media (min-width:900px){body.ep-has-sidebar .ep-sidebar__brand{margin-bottom:auto;}body.ep-has-sidebar .ep-sidebar__footer{margin-top:auto;}}',
       // Monitores (altura >= 900px): afasta o menu da logo e abre os grupos.
       // Notebook 14" (~720-820px) fica intocado — layout travado e aprovado.
-      '@media (min-width:900px) and (min-height:900px){body.ep-has-sidebar .ep-sidebar__brand{margin-bottom:clamp(10px,2.6vh,36px);}body.ep-has-sidebar .ep-sidebar__nav{gap:clamp(24px,3vh,36px);}}',
-      '@media (min-width:900px) and (min-height:1000px){body.ep-has-sidebar .ep-sidebar__brand{margin-bottom:clamp(24px,3.4vh,48px);}body.ep-has-sidebar .ep-sidebar__nav{gap:clamp(30px,3.4vh,48px);}body.ep-has-sidebar .ep-sidebar__nav a{padding-top:clamp(12px,1.4vh,18px);padding-bottom:clamp(12px,1.4vh,18px);}}',
+      '@media (min-width:900px) and (min-height:900px){body.ep-has-sidebar .ep-sidebar__nav{gap:clamp(24px,3vh,36px);}}',
+      '@media (min-width:900px) and (min-height:1000px){body.ep-has-sidebar .ep-sidebar__nav{gap:clamp(30px,3.4vh,48px);}body.ep-has-sidebar .ep-sidebar__nav a{padding-top:clamp(12px,1.4vh,18px);padding-bottom:clamp(12px,1.4vh,18px);}}',
       '@media (prefers-reduced-motion:reduce){body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools,body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools::before{animation:none;}}',
       'body.ep-has-sidebar .ep-sidebar__brand .ep-brand__name{row-gap:4px;line-height:1;}'
     ].join('');
