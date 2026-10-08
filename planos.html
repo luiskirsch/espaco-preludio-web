@@ -144,30 +144,9 @@
     <span class="ep-text-xs ep-text-muted" data-i18n="planos:currency.usdNote">USD · Stripe · Cartão internacional</span>
   </div>
 
-  <!-- Cards lado-a-lado: empresa + profissional -->
-  <div id="tiersGrid" style="display: none; grid-template-columns: 1fr 1fr; gap: 16px;" class="ep-mt-16">
+  <!-- Plano profissional (acesso de programas é liberado só pelo admin) -->
+  <div id="tiersGrid" style="display: none; grid-template-columns: minmax(0, 460px); justify-content: center; gap: 16px;" class="ep-mt-16">
 
-    <!-- Tier Programas institucionais -->
-    <section id="empresaCard" class="ep-plan-card ep-plan-card--institutional">
-      <div class="ep-plan-card__content">
-        <span class="ep-plan-card__label" data-i18n="p-planos:plano_institucional_7f79c">Plano institucional</span>
-        <div class="ep-plan-card__head">
-          <h2 class="ep-h2 ep-mt-0" data-i18n="planos:empresa.h2">Programas institucionais</h2>
-          <div class="ep-plan-card__price">
-            <span class="ep-plan-card__amount" data-i18n="planos:empresa.amount">Sem mensalidade</span>
-          </div>
-        </div>
-        <p class="ep-plan-card__description ep-text-sm ep-text-muted" data-i18n="planos:empresa.sub">Para profissionais vinculados a programas contratados por escolas, empresas ou redes públicas.</p>
-        <ul class="ep-plan-card__features">
-          <li data-i18n="planos:empresa.f1">✓ Acesso custeado pelo programa contratante</li>
-          <li data-i18n="planos:empresa.paymentRequired">✓ Sem cartão ou assinatura para o profissional</li>
-          <li data-i18n="planos:empresa.f2">✓ Repasse por atendimento conforme o programa institucional</li>
-          <li data-i18n="planos:empresa.f3">✓ Vídeo cifrado E2EE + prontuário completo + documentos clínicos</li>
-          <li data-i18n="planos:empresa.f4">✓ Indicadores operacionais agregados, sem conteúdo clínico individual</li>
-          <li data-i18n="planos:empresa.f5">✓ Agendamento direto pelo link do profissional</li>
-        </ul>
-      </div>
-    </section>
 
     <!-- Tier Profissional -->
     <section id="profCard" class="ep-plan-card">
@@ -175,7 +154,7 @@
         <h2 class="ep-h2 ep-mt-0" data-i18n="planos:prof.h2">Profissional</h2>
         <div class="ep-plan-card__price">
           <span class="ep-plan-card__currency" data-i18n="planos:prof.currency">R$</span>
-          <span class="ep-plan-card__amount" data-i18n="planos:prof.amount">99,00</span>
+          <span class="ep-plan-card__amount" data-i18n="planos:prof.amount">60,00</span>
           <span class="ep-plan-card__per" data-i18n="planos:prof.per">/mês</span>
         </div>
       </div>
@@ -270,7 +249,6 @@
   const manageCardSub    = document.getElementById("manageCardSub");
   const cancelBtn        = document.getElementById("cancelBtn");
   const tiersGrid        = document.getElementById("tiersGrid");
-  const empresaCard      = document.getElementById("empresaCard");
   const profCard         = document.getElementById("profCard");
   const subscribeEmpresaBtn = document.getElementById("subscribeEmpresaBtn");
   const empresaPayerEmail = document.getElementById("empresaPayerEmail");
@@ -297,7 +275,7 @@
       profPerEl.textContent     = per;
       subscribeProfUsdBtn.textContent = `${t("prof.subscribeBtn", null, "Cadastrar meio de pagamento")} — $${parseFloat(p.prof)}${per}`;
     } else if (billingCycle === "year") {
-      profAmountEl.textContent  = t("prof.amountYearly", null, "997,92");
+      profAmountEl.textContent  = t("prof.amountYearly", null, "604,80");
       profPerEl.textContent     = t("prof.perYearly", null, "/Anual");
     } else {
       profAmountEl.textContent  = t("prof.amount", null, "99,00");
