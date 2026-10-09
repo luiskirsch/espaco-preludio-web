@@ -355,7 +355,15 @@
   const ICON_ERR     = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>`;
 
   // ─── Status banner + which tier cards to show ───────────────────
-  if (plano === "pro") {
+  if (therapist.legacyExempt) {
+    showStatus(
+      "ep-status-card--ok",
+      ICON_OK,
+      "Você está isento da mensalidade",
+      "Seu acesso é completo e sem cobrança, por fazer parte dos profissionais cadastrados antes da nova cobrança. Não é preciso cadastrar cartão."
+    );
+    tiersGrid.style.display = "none";
+  } else if (plano === "pro") {
     const proTitle = therapist.proTier === "empresa"
       ? t("status.proTitleEmpresa", null, "Você está no plano Atendimento a Empresas")
       : t("status.proTitleProf", null, "Você está no plano Pro (Profissional)");

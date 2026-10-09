@@ -851,7 +851,13 @@
 
     const dateOpts = { day: "2-digit", month: "long", year: "numeric" };
     let title = "Plano Trial", sub = "—", eyebrow = tr("perfil:plano.labelDefault","Plano"), cta = tr("perfil:plano.managePlan","Gerenciar plano"), danger = false;
-    if (plano === "pro") {
+    if (t.legacyExempt) {
+      // Cadastrados antes da cobrança nova: isentos para sempre.
+      eyebrow = "Plano · Isento";
+      title = "Acesso completo, sem mensalidade";
+      sub = "Você está isento da mensalidade por fazer parte dos profissionais cadastrados antes da nova cobrança. Nenhuma ação necessária.";
+      cta = "";
+    } else if (plano === "pro") {
       eyebrow = tr("perfil:plano.proLabel","Plano · Ativo");
       const tierLabel = t.proTier === "recem-formado" ? tr("perfil:plano.tierRecem","Recém-formado") : t.proTier === "profissional" ? tr("perfil:plano.tierProf","Profissional") : tr("perfil:plano.tierPro","Pro");
       const priceTxt = t.proPriceCents ? tr("perfil:plano.monthlyPrice"," (R$ {{price}}/mês)",{price:(t.proPriceCents / 100).toFixed(2).replace(".", ",")}) : "";
