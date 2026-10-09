@@ -418,6 +418,12 @@
         <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="togglePatientDirectory" style="align-self: flex-start;${it.adminPatientDirectoryHidden ? "" : " color:#b8453d;border-color:#b8453d;"}">${it.adminPatientDirectoryHidden ? "Voltar a exibir para pacientes" : "Ocultar dos pacientes"}</button>
       </div>
 
+      <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid #b8453d; border-radius: 8px;">
+        <div class="ep-eyebrow" style="color:#b8453d;">Excluir conta definitivamente</div>
+        <div class="ep-text-sm ep-text-muted">Cancela a assinatura no Mercado Pago, apaga o login e o cadastro. Não pode ser desfeito. Prontuários e sessões cifrados ficam guardados pela obrigação legal de registro clínico.</div>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="deletePermanent" style="align-self:flex-start;color:#b8453d;border-color:#b8453d;">Excluir conta definitivamente</button>
+      </div>
+
       <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
         <div class="ep-eyebrow">Nota administrativa</div>
         <textarea id="adminNote" class="ep-input" rows="2" placeholder="ex.: Cortesia 3 meses por indicação" style="font-family: inherit;">${escapeHtml(it.adminNote || "")}</textarea>
@@ -475,6 +481,27 @@
         return;
       }
       body.setPatientDirectoryHidden = willHide;
+    } else if (action === "deletePermanent") {
+      const it = allItems.find(x => x.uid === uid);
+      const typed = prompt(`Excluir DEFINITIVAMENTE a conta de ${it?.displayName || uid}?
+
+Isso cancela a assinatura, apaga o login e o cadastro. Não pode ser desfeito.
+
+Para confirmar, digite EXCLUIR:`);
+      if (typed !== "EXCLUIR") { statusEl.textContent = ""; return; }
+      try {
+        const d = await api(`/therapy/admin/profissionais/${encodeURIComponent(uid)}/excluir-definitivo`, {
+          method: "POST", body: JSON.stringify({ confirmUid: uid })
+        });
+        allItems = allItems.filter(x => x.uid !== uid);
+        renderList(filterLocal(allItems, searchBox.value));
+        editModal.classList.remove("is-open");
+        alert(`Conta excluída.${d.subscriptionCanceled ? " Assinatura cancelada no Mercado Pago." : ""}`);
+      } catch (e) {
+        statusEl.className = "ep-status is-err";
+        statusEl.textContent = "Não foi possível excluir: " + (e.message || "erro");
+      }
+      return;
     } else if (action === "note") {
       body.setAdminNote = document.getElementById("adminNote").value || "";
     }
