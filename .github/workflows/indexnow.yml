@@ -1,0 +1,34 @@
+name: Avisar buscadores (IndexNow)
+
+# A cada publicação de páginas públicas, avisa Bing, Yandex e demais
+# buscadores compatíveis com IndexNow. O Google não usa IndexNow; para ele,
+# o sitemap.xml registrado no Search Console é o canal.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**.html"
+      - "sitemap.xml"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # O GitHub Pages leva alguns instantes para publicar; espera antes de avisar.
+      - name: Aguardar publicação
+        run: sleep 90
+
+      - name: Enviar URLs alteradas
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            node scripts/seo/indexnow.mjs
+          else
+            files=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" -- '*.html' sitemap.xml | grep -v '^staging/' || true)
+            node scripts/seo/indexnow.mjs $files
+          fi
