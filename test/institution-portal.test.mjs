@@ -157,6 +157,10 @@ test('portal do colaborador usa layout amplo no desktop e preserva a navegacao m
         scrollWidth: document.documentElement.scrollWidth,
         shell: rect('.a-shell').toJSON(),
         nav: rect('.a-nav').toJSON(),
+        navLinks: rect('.a-nav__links').toJSON(),
+        firstNavItem: rect('.a-nav__links .a-nav__item:first-child').toJSON(),
+        lastNavItem: rect('.a-nav__links .a-nav__item:last-child').toJSON(),
+        navMeta: rect('.a-nav__meta').toJSON(),
         navPosition: style('.a-nav').position,
         brandDisplay: style('.a-nav__brand').display,
         hero: rect('.home-hero').toJSON(),
@@ -171,12 +175,32 @@ test('portal do colaborador usa layout amplo no desktop e preserva a navegacao m
     assert.equal(desktop.navPosition, 'fixed');
     assert.ok(desktop.nav.width >= 250, JSON.stringify(desktop));
     assert.ok(desktop.shell.left >= desktop.nav.right - 1, JSON.stringify(desktop));
+    assert.ok(desktop.firstNavItem.top - desktop.navLinks.top <= 12, JSON.stringify(desktop));
+    assert.ok(desktop.navLinks.bottom - desktop.lastNavItem.bottom <= 18, JSON.stringify(desktop));
+    assert.ok(desktop.lastNavItem.bottom <= desktop.navMeta.top, JSON.stringify(desktop));
     assert.ok(desktop.hero.width >= 850, JSON.stringify(desktop));
     assert.ok(desktop.journey.width >= 850, JSON.stringify(desktop));
     assert.ok(Math.abs(desktop.survey.top - desktop.safety.top) < 3, JSON.stringify(desktop));
     assert.ok(desktop.safetyPadding >= 24, JSON.stringify(desktop));
     assert.equal(desktop.duplicateQuickActions, false);
     assert.notEqual(desktop.brandDisplay, 'none');
+
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 768, mobile: false, deviceScaleFactor: 1 });
+    const shortDesktop = await cdp.evaluate(`(() => {
+      const nav = document.querySelector('.a-nav');
+      const meta = document.querySelector('.a-nav__meta').getBoundingClientRect();
+      const lastItem = document.querySelector('.a-nav__links .a-nav__item:last-child').getBoundingClientRect();
+      return {
+        nav: nav.getBoundingClientRect().toJSON(),
+        clientHeight: nav.clientHeight,
+        scrollHeight: nav.scrollHeight,
+        meta: meta.toJSON(),
+        lastItem: lastItem.toJSON()
+      };
+    })()`);
+    assert.ok(shortDesktop.scrollHeight <= shortDesktop.clientHeight, JSON.stringify(shortDesktop));
+    assert.ok(shortDesktop.lastItem.bottom <= shortDesktop.meta.top, JSON.stringify(shortDesktop));
+    assert.ok(shortDesktop.meta.bottom <= shortDesktop.nav.bottom, JSON.stringify(shortDesktop));
 
     await cdp.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, mobile: true, deviceScaleFactor: 1 });
     const mobile = await cdp.evaluate(`(() => {
@@ -260,7 +284,7 @@ test('chat desbloqueia a chave local sem encerrar a sessão válida do portal', 
 test('aba Todos carrega o diretório completo de profissionais', async () => {
   const search = await readFile(resolve(root, 'app/buscar.html'), 'utf8');
   assert.match(search, /if \(!u\) \{ window\.location\.href = "\.\/login\.html"; return; \}\s*buscar\(\);/);
-  assert.match(search, /fetch\(`\$\{BACKEND_BASE_URL\}\/public\/profissionais\?\$\{params\}`\)/);
+  assert.match(search, /fetch\(`\$\{BACKEND_BASE_URL\}\/public\/profissionais\?\$\{params\}`, \{ headers: await directoryHeaders\(\) \}\)/);
   assert.doesNotMatch(search, /if \(!q && !currentEsp\)/);
   assert.match(search, /updateSpecialtyChips\(data\.especialidades\)/);
   assert.match(search, /chip\.hidden = !available\.has/);
@@ -268,12 +292,20 @@ test('aba Todos carrega o diretório completo de profissionais', async () => {
 
 test('todas as telas autenticadas do colaborador usam a estrutura responsiva compartilhada', async () => {
   const authenticatedPages = ['home', 'buscar', 'consultas', 'perfil', 'agendar', 'chat', 'dependentes', 'documentos', 'humor', 'jornada', 'nr1', 'emergencia'];
+  const shellVersions = new Set();
+  const cssVersions = new Set();
   for (const page of authenticatedPages) {
     const html = await readFile(resolve(root, `app/${page}.html`), 'utf8');
     assert.match(html, /<body class="a-portal-authenticated">/, page);
-    assert.match(html, /portal-shell\.js\?v=3/, page);
-    assert.match(html, /app\.css\?v=20260930m/, page);
+    const shellVersion = html.match(/portal-shell\.js\?v=(\w+)/);
+    const cssVersion = html.match(/app\.css\?v=(\w+)/);
+    assert.ok(shellVersion, `${page}: portal-shell.js sem versão`);
+    assert.ok(cssVersion, `${page}: app.css sem versão`);
+    shellVersions.add(shellVersion[1]);
+    cssVersions.add(cssVersion[1]);
   }
+  assert.equal(shellVersions.size, 1, `telas com versões diferentes de portal-shell.js: ${[...shellVersions]}`);
+  assert.equal(cssVersions.size, 1, `telas com versões diferentes de app.css: ${[...cssVersions]}`);
   const shell = await readFile(resolve(root, 'app/portal-shell.js'), 'utf8');
   assert.match(shell, /Portal do colaborador/);
   assert.match(shell, /a-nav__item--secondary/);
@@ -315,7 +347,7 @@ test('portal do colaborador integra jornada, NR-1 e ajuda imediata sem prometer 
 test('plano institucional não cobra nem pede meio de pagamento ao profissional', async () => {
   const html = await readFile(resolve(root, 'planos.html'), 'utf8');
   assert.match(html, /Sem mensalidade/);
-  assert.match(html, /Acesso custeado pelo programa contratante/);
+  assert.match(html, /acesso é custeado pelo programa contratante/);
   assert.doesNotMatch(html, /id="empresaPayerEmail"/);
   assert.doesNotMatch(html, /startSubscription\("empresa"/);
 });
@@ -765,7 +797,7 @@ test('login do RT permanece fixo e sem rolagem em desktop ou celular', { timeout
       await once(browser, 'exit');
     }
     server.close();
-    await rm(userData, { recursive: true, force: true });
+    await rm(userData, { recursive: true, force: true, maxRetries: 6, retryDelay: 150 });
   }
 });
 
@@ -811,6 +843,6 @@ test('descrições do Chat ficam em uma linha no desktop', { timeout: 30000, ski
       await once(browser, 'exit');
     }
     server.close();
-    await rm(userData, { recursive: true, force: true });
+    await rm(userData, { recursive: true, force: true, maxRetries: 6, retryDelay: 150 });
   }
 });

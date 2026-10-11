@@ -123,7 +123,7 @@ test('atividades novas exigem conclusão e atividades feitas abrem em revisão',
       subtitle: 'Programa Institucional de Cuidado Emocional'
     });
     assert.deepEqual(await cdp.evaluate("({href:document.querySelector('.appointment__join')?.getAttribute('href'),label:document.querySelector('.appointment__join')?.textContent.trim(),notice:document.querySelector('.demo-note--room')?.textContent.trim()})"), {
-      href: './entrar.html?c=DEMO2026',
+      href: './entrar.html?c=DEMO2026&via=aluno',
       label: 'Abrir sala de demonstração ↗',
       notice: 'Ambiente demonstrativo: a sala de vídeo funciona de ponta a ponta para apresentação, sem constituir atendimento clínico ou gerar cobrança.'
     });
@@ -142,7 +142,7 @@ test('atividades novas exigem conclusão e atividades feitas abrem em revisão',
     assert.deepEqual(await cdp.evaluate("[...document.querySelectorAll('#view-safety .emergency-card a[href^=tel]')].map(link=>link.getAttribute('href'))"), ['tel:192', 'tel:190', 'tel:188']);
     assert.deepEqual(await cdp.evaluate("({href:document.querySelector('#view-care .safety-strip a')?.getAttribute('href'),label:document.querySelector('#view-care .safety-strip a')?.textContent,copy:document.querySelector('#view-care .safety-strip p')?.textContent})"), { href: 'tel:188', label: 'CVV 188', copy: 'Precisa conversar agora? O CVV oferece apoio emocional gratuito e sigiloso, 24 horas por dia, por telefone ou chat.' });
     await cdp.evaluate("document.querySelector('#desktopNav [data-view=care]').click()");
-    assert.equal(await cdp.evaluate("document.querySelector('#view-care .session__join')?.getAttribute('href')"), './entrar.html?c=DEMO2026');
+    assert.equal(await cdp.evaluate("document.querySelector('#view-care .session__join')?.getAttribute('href')"), './entrar.html?c=DEMO2026&via=aluno');
     await cdp.evaluate("document.querySelector('#desktopNav [data-view=safety]').click()");
     assert.equal(await cdp.evaluate("document.querySelector('#view-safety .source-link[href=\"https://cvv.org.br/\"]')?.textContent.includes('CVV 188')"), true);
     assert.equal(await cdp.evaluate("document.querySelector('#view-safety .source-link[href=\"https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/s/saude-mental\"]')?.textContent.includes('Saúde Mental')"), true);
@@ -192,6 +192,6 @@ test('atividades novas exigem conclusão e atividades feitas abrem em revisão',
       await once(browser, 'exit');
     }
     await new Promise(resolveClose => server.close(resolveClose));
-    await rm(userData, { recursive: true, force: true });
+    await rm(userData, { recursive: true, force: true, maxRetries: 6, retryDelay: 150 });
   }
 });

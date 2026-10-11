@@ -138,7 +138,7 @@ test("NR-1 mostra login, explica acesso negado e libera painel para administrado
     if (browser.exitCode === null) { browser.kill(); await once(browser, "exit"); }
     await new Promise(resolveClose => server.close(resolveClose));
     if (resolve(profile).startsWith(resolve(tmpdir()) + sep) && basename(profile).startsWith("ep-nr1-auth-")) {
-      await rm(profile, { recursive: true, force: true });
+      await rm(profile, { recursive: true, force: true, maxRetries: 6, retryDelay: 150 });
     }
   }
 });

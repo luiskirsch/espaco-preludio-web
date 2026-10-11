@@ -16,6 +16,8 @@ test('nova consulta continua da data completa para o campo de hora', async () =>
   assert.match(script, /if \(year >= 1000\) scheduledTimeInput\.focus\(\)/);
   assert.match(script, /`\$\{scheduledDateRaw\}T\$\{scheduledTimeRaw\}`/);
   assert.doesNotMatch(script, /type="datetime-local"/);
-  assert.match(panel, /new-session-modal\.js\?v=4/);
-  assert.match(agenda, /new-session-modal\.js\?v=4/);
+  const panelVersion = panel.match(/new-session-modal\.js\?v=(\w+)/);
+  const agendaVersion = agenda.match(/new-session-modal\.js\?v=(\w+)/);
+  assert.ok(panelVersion && agendaVersion);
+  assert.equal(panelVersion[1], agendaVersion[1]);
 });

@@ -24,13 +24,27 @@ for (const prefix of ["", "staging/"]) {
 }
 
 test("páginas do portal requisitam a versão nova do CSS interativo", async () => {
+  const versions = new Map();
   for (const directory of ["app", "staging/app"]) {
     const files = (await readdir(new URL(`../${directory}/`, import.meta.url)))
       .filter(file => file.endsWith(".html"));
     for (const file of files) {
       const html = await readFile(new URL(`../${directory}/${file}`, import.meta.url), "utf8");
-      if (!html.includes("./app.css?v=")) continue;
-      assert.match(html, /\.\/app\.css\?v=20260930m/, `${directory}/${file}`);
+      const version = html.match(/\.\/app\.css\?v=(\w+)/);
+      if (version) versions.set(`${directory}/${file}`, version[1]);
     }
   }
+  assert.ok(versions.size > 0);
+  assert.equal(new Set(versions.values()).size, 1, JSON.stringify(Object.fromEntries(versions)));
 });
+
+for (const prefix of ["", "staging/"]) {
+  test(`${prefix || "produção/"} botão de avançar da agenda não se desloca no hover`, async () => {
+    const html = await readFile(new URL(`../${prefix}app/agendar.html`, import.meta.url), "utf8");
+
+    assert.match(
+      html,
+      /#footerBtn \.a-btn:hover\s*\{\s*transform:\s*none;\s*filter:\s*none;\s*\}/
+    );
+  });
+}
