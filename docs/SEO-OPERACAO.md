@@ -63,6 +63,27 @@ Texto preparado para uma escola parceira, sem envio:
 
 Pauta preparada para imprensa, sem envio: “Como escolas podem organizar acesso ao cuidado psicológico sem expor prontuários de estudantes”. Usar o guia de saúde mental de estudantes como referência. Estudos de caso exigem resultados documentados e autorização antes de divulgar instituições, profissionais ou participantes.
 
+## Segunda rodada (11/10/2026): marca, profissionais e pacientes
+
+- Home: nó `WebSite` (nome do site exibido nos resultados), `Organization` com `sameAs` da Play Store, `contactPoint` e `foundingDate`, e `MobileApplication`.
+- Seis páginas novas indexáveis: `guias-profissionais.html` (índice), `consultorio-online-psicologo.html`, `resolucao-cfp-9-2024-atendimento-online.html`, `prontuario-eletronico-psicologia.html`, `receita-digital-icp-brasil.html` e `psicologo-online.html` (pacientes). Vinculadas pelo rodapé da home e de `profissional.html`.
+- `profissionais.html`: título com termo de busca nos três idiomas, canonical e Open Graph.
+- `politica.html` e `termos.html`: o `noindex` herdado da migração inicial saiu, porque as duas estavam no sitemap e o Search Console acusa a contradição.
+- `noindex` nas telas do app PWA (`app/*`), em `verificado.html` e em `colaborador-cadastro.html`, que dependem de login ou de parâmetro na URL.
+- `404.html` com links para as áreas principais e `llms.txt` com o resumo do site para assistentes de IA.
+
+### IndexNow
+
+Chave pública em `/ddde45fdfbad5c8aad4da2af89d890cc.txt`. O workflow `.github/workflows/indexnow.yml` roda a cada push na `main` que altere HTML ou o sitemap e envia só as URLs do sitemap que mudaram (`scripts/seo/indexnow.mjs`). Para reenviar tudo: Actions → "Avisar buscadores (IndexNow)" → Run workflow. Bing, Yandex, Seznam e Naver usam o protocolo. O Google não usa; para ele, o canal é o sitemap no Search Console.
+
+### Pendências que exigem a conta do responsável
+
+- Search Console: abrir a propriedade, enviar o sitemap e pedir indexação manual da home, de `profissional.html`, `profissionais.html` e `psicologo-online.html`.
+- Bing Webmaster Tools: importar a propriedade a partir do Search Console.
+- Cloudflare: ligar "Always Use HTTPS". Hoje `http://espacopreludio.com.br/` responde 200 em vez de redirecionar.
+- Play Console: conferir se o campo de site da ficha aponta para `https://espacopreludio.com.br/`.
+- Perfis oficiais da marca (Instagram, LinkedIn): quando existirem, apontar para o site e adicionar as URLs ao `sameAs` da home.
+
 ## FAQ e medição
 
 O Google encerrou os resultados enriquecidos de FAQ a partir de 07/05/2026. A marcação descreve as perguntas existentes, mas não promete destaque visual ou melhora de ranking. [Atualização oficial](https://developers.google.com/search/updates#may-2026).
