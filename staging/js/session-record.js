@@ -29,10 +29,10 @@ function base64FromArrayBuffer(buffer) {
   return btoa(bin);
 }
 
-// Desenha `vid` cobrindo a área (x, y, w, h) como object-fit:cover + clip.
-function drawCover(ctx, vid, x, y, w, h) {
-  const vw = vid.videoWidth, vh = vid.videoHeight;
+// Desenha a imagem cobrindo a área (x, y, w, h) como object-fit:cover + clip.
+function drawCover(ctx, { img, w: vw, h: vh }, x, y, w, h) {
   if (!vw || !vh) return;
+  const vid = img;
   const scale = Math.max(w / vw, h / vh);
   const sw = vw * scale, sh = vh * scale;
   ctx.save();
@@ -66,6 +66,67 @@ function makeOffscreenVideo(mediaStreamTrack) {
   return v;
 }
 
+// ─── Fonte de quadros que não para em aba oculta ───────────────────────────
+// Com a aba do consultório em segundo plano (profissional abre outra aba ou
+// janela), o Chrome limita timers a 1/s e pode pausar <video>. A gravação caía
+// para 1 quadro/s enquanto a chamada seguia normal. MediaStreamTrackProcessor
+// lê os quadros direto da track, sem depender de renderização da página.
+function makeFrameSource(mst) {
+  if (!mst) return null;
+  if (typeof MediaStreamTrackProcessor === "function") {
+    const track = mst.clone();
+    const reader = new MediaStreamTrackProcessor({ track }).readable.getReader();
+    let stopped = false;
+    const src = {
+      frame: null,
+      current() { return src.frame ? { img: src.frame, w: src.frame.displayWidth, h: src.frame.displayHeight } : null; },
+      ready: Promise.resolve(),
+      stop() {
+        stopped = true;
+        reader.cancel().catch(() => {});
+        track.stop();
+        try { src.frame?.close(); } catch {}
+        src.frame = null;
+      },
+    };
+    (async () => {
+      while (!stopped) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        if (stopped) { value.close(); break; }
+        try { src.frame?.close(); } catch {}
+        src.frame = value;
+      }
+    })().catch(() => {});
+    return src;
+  }
+  // Fallback (navegadores sem MediaStreamTrackProcessor): <video> off-screen.
+  const v = makeOffscreenVideo(mst);
+  return {
+    current() { return v.readyState >= 2 && v.videoWidth ? { img: v, w: v.videoWidth, h: v.videoHeight } : null; },
+    ready: waitMetadata(v),
+    stop() { v.srcObject = null; v.remove(); },
+  };
+}
+
+// Relógio da gravação num Worker: timers de Worker não sofrem o limite de
+// 1/s que o navegador aplica à página em segundo plano.
+function startTicker(fps, onTick) {
+  const ms = Math.round(1000 / fps);
+  try {
+    const code = "let id;onmessage=e=>{clearInterval(id);if(e.data>0)id=setInterval(()=>postMessage(0),e.data)}";
+    const url = URL.createObjectURL(new Blob([code], { type: "text/javascript" }));
+    const worker = new Worker(url);
+    URL.revokeObjectURL(url);
+    worker.onmessage = onTick;
+    worker.postMessage(ms);
+    return () => worker.terminate();
+  } catch {
+    const id = setInterval(onTick, ms);
+    return () => clearInterval(id);
+  }
+}
+
 // Aguarda loadedmetadata (ou retorna imediatamente se já carregou).
 function waitMetadata(videoEl) {
   return new Promise(resolve => {
@@ -87,10 +148,10 @@ export class SessionRecorder {
     this.chunks     = [];
     this.startedAt  = null;
     this.mimeType   = "video/webm;codecs=vp9,opus";
-    this._drawInterval     = null;
+    this._stopTicker       = null;
+    this._frameSources     = [];
     this._audioCtx         = null;
     this._localAudioStream = null;
-    this._offscreenEls     = []; // <video> off-screen criados aqui — removidos no stop
   }
 
   // room          — instância LiveKit Room (fonte de tracks locais e áudio remoto)
@@ -118,9 +179,9 @@ export class SessionRecorder {
       }
     }
 
-    // ── Elementos off-screen para decodificação de frames ───────
+    // ── Fontes de quadros ────────────────────────────────────────
     // Vídeo local: track direto do room (pré-E2EE, sem problema)
-    const localSrc = makeOffscreenVideo(localVideoMST);
+    const localSrc = makeFrameSource(localVideoMST);
 
     // Vídeo remoto: NÃO usar pub.track.mediaStreamTrack com E2EE (pode ser stream
     // cifrado antes de decodificação). Usar srcObject do elemento <video> que o
@@ -129,12 +190,11 @@ export class SessionRecorder {
     let remoteSrc = null;
     if (remoteVideoEl?.srcObject) {
       const videoTracks = remoteVideoEl.srcObject.getVideoTracks().filter(t => t.readyState === "live");
-      if (videoTracks.length) remoteSrc = makeOffscreenVideo(videoTracks[0]);
+      if (videoTracks.length) remoteSrc = makeFrameSource(videoTracks[0]);
     }
 
-    if (localSrc)  this._offscreenEls.push(localSrc);
-    if (remoteSrc) this._offscreenEls.push(remoteSrc);
-    await Promise.all([waitMetadata(localSrc), waitMetadata(remoteSrc)]);
+    this._frameSources = [localSrc, remoteSrc].filter(Boolean);
+    await Promise.all(this._frameSources.map(src => src.ready));
 
     // ── Áudio local (microfone) ──────────────────────────────────
     this._localAudioStream = await navigator.mediaDevices.getUserMedia({
@@ -160,27 +220,32 @@ export class SessionRecorder {
     const ctx = canvas.getContext("2d", { alpha: false });
 
     const drawFrame = () => {
-      const hasLocal  = localSrc  && localSrc.readyState  >= 2 && localSrc.videoWidth  > 0;
-      const hasRemote = remoteSrc && remoteSrc.readyState >= 2 && remoteSrc.videoWidth > 0;
+      const local  = localSrc?.current()  || null;
+      const remote = remoteSrc?.current() || null;
+      const hasLocal = !!local, hasRemote = !!remote;
 
       ctx.fillStyle = "#0a0805";
       ctx.fillRect(0, 0, W, H);
 
       if (hasLocal && hasRemote) {
-        drawCover(ctx, remoteSrc, 0,     0, W / 2, H); // paciente à esquerda
-        drawCover(ctx, localSrc,  W / 2, 0, W / 2, H); // terapeuta à direita
+        drawCover(ctx, remote, 0,     0, W / 2, H); // paciente à esquerda
+        drawCover(ctx, local,  W / 2, 0, W / 2, H); // terapeuta à direita
         ctx.fillStyle = "rgba(0,0,0,0.5)";
         ctx.fillRect(W / 2 - 1, 0, 2, H);              // divisor central
       } else if (hasLocal) {
-        drawCover(ctx, localSrc,  0, 0, W, H);
+        drawCover(ctx, local,  0, 0, W, H);
       } else if (hasRemote) {
-        drawCover(ctx, remoteSrc, 0, 0, W, H);
+        drawCover(ctx, remote, 0, 0, W, H);
       }
+      // captureStream(0) + requestFrame: cada quadro desenhado vira um quadro
+      // gravado, sem depender da pintura da página (que para em aba oculta).
+      canvasVideoTrack?.requestFrame?.();
     };
-    this._drawInterval = setInterval(drawFrame, Math.round(1000 / 24));
 
     // ── MediaRecorder VP9 + Opus ─────────────────────────────────
-    const canvasStream = canvas.captureStream(24);
+    const canvasStream = canvas.captureStream(0);
+    const canvasVideoTrack = canvasStream.getVideoTracks()[0];
+    this._stopTicker = startTicker(24, drawFrame);
     const mixedStream  = new MediaStream([
       ...canvasStream.getVideoTracks(),
       ...dest.stream.getAudioTracks(),
@@ -211,9 +276,9 @@ export class SessionRecorder {
     };
 
     this.recorder.onstop = () => {
-      clearInterval(this._drawInterval);
-      this._offscreenEls.forEach(v => { v.srcObject = null; v.remove(); });
-      this._offscreenEls = [];
+      this._stopTicker?.();
+      this._frameSources.forEach(src => src.stop());
+      this._frameSources = [];
       this._localAudioStream?.getTracks().forEach(t => t.stop());
       this._audioCtx?.close().catch(() => {});
       this.onStop(this._buildBlob());

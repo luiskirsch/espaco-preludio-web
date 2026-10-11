@@ -46,4 +46,35 @@
     </div>`;
 
   if (!nav.isConnected) document.querySelector(".a-shell")?.appendChild(nav);
+
+  // Navegação instantânea: ao parar o mouse num item do menu (ou tocar nele),
+  // o navegador já abre a página escondida — login, dados e tudo — e a troca
+  // é imediata, já atualizada. Só páginas cuja abertura apenas LÊ dados
+  // (sem efeitos colaterais) são pré-renderizadas; as demais só pré-buscam.
+  if (HTMLScriptElement.supports?.("speculationrules") && !document.querySelector("script[data-ep-speculation]")) {
+    const safe = ["home", "buscar", "consultas", "jornada", "humor", "documentos", "perfil"]
+      .filter(name => name !== route)
+      .map(name => ({ href_matches: { pathname: `{/staging}?/app/${name}.html` } }));
+    const rules = document.createElement("script");
+    rules.type = "speculationrules";
+    rules.dataset.epSpeculation = "";
+    rules.textContent = JSON.stringify({
+      // "immediate": as páginas do menu ficam prontas logo que o portal abre.
+      prerender: [{ source: "document", where: { or: safe }, eagerness: "immediate" }],
+      prefetch: [{ source: "document", where: { href_matches: { pathname: "{/staging}?/app/*.html" } }, eagerness: "moderate" }]
+    });
+    document.head.append(rules);
+  }
+
+  // Página pré-renderizada há muito tempo, ou com dados alterados por outra
+  // página depois que nasceu (ex.: humor registrado no início): atualiza ao
+  // ser aberta para nunca mostrar dado velho. Quem grava marca "ep:dirtyAt".
+  if (document.prerendering) {
+    const bornAt = Date.now();
+    document.addEventListener("prerenderingchange", () => {
+      let dirtyAt = 0;
+      try { dirtyAt = Number(localStorage.getItem("ep:dirtyAt")) || 0; } catch {}
+      if (Date.now() - bornAt > 3 * 60 * 1000 || dirtyAt > bornAt) location.reload();
+    }, { once: true });
+  }
 })();

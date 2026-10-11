@@ -5,6 +5,7 @@
 <script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conte\u00fado s\u00f3 est\u00e1 dispon\u00edvel no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title data-i18n="p-app-home:inicio_espaco_preludio_07713">Início · Espaço Prelúdio</title>
@@ -13,8 +14,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app.css?v=20261002t">
-  <link rel="stylesheet" href="./weather-hero.css?v=20260929a">
+  <link rel="stylesheet" href="./app.css?v=20261005b">
+  <link rel="stylesheet" href="./session-card.css?v=2">
+  <link rel="stylesheet" href="./weather-hero.css?v=20261002f">
   <style>
     .home-hero {
       background: linear-gradient(135deg, #1c1f1d 0%, #2d3a30 100%);
@@ -62,11 +64,37 @@
     .tips-card__title { font-size: 13px; font-weight: 700; color: var(--a-accent); margin-bottom: 6px; }
     .tips-card__text { font-size: 13px; color: var(--a-ink2); line-height: 1.5; }
   </style>
-  <script src="./portal-shell.js?v=3" defer></script>
+  <script src="./portal-shell.js?v=6" defer></script>
   <script src="./sw-register.js" defer></script>
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(!l){var n=(navigator.language||"").toLowerCase();if(n.indexOf("en")===0)l="en-US";else if(n.indexOf("es")===0)l="es-ES";}if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
-  <script src="/i18n/init.js?v=2-4" defer></script>
+  <script src="/i18n/init.js?v=2-6" defer></script>
+<style>
+.mood-note{position:fixed;inset:0;z-index:1000;display:grid;grid-template-columns:minmax(0,1fr);place-items:center;padding:16px}
+.mood-note__panel,.mood-note textarea{min-width:0;max-width:100%}
+.mood-note[hidden]{display:none}
+.mood-note__backdrop{position:absolute;inset:0;background:rgba(8,30,32,.45);backdrop-filter:blur(3px);animation:mnFade .2s ease}
+.mood-note__panel{position:relative;box-sizing:border-box;width:min(420px,100%);padding:22px 20px 18px;border-radius:20px;background:#fffdf8;box-shadow:0 24px 60px rgba(0,0,0,.25);animation:mnUp .24s cubic-bezier(.2,.8,.2,1)}
+.mood-note__x{position:absolute;top:10px;right:12px;width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:#6b7a78;font-size:24px;line-height:1;cursor:pointer}
+.mood-note__x:hover{background:#f1ece2}
+.mood-note__head{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-right:28px}
+.mood-note__emoji{font-size:34px;line-height:1;display:grid;place-items:center;width:44px;height:44px}
+.mood-note__emoji img{width:40px;height:40px}
+.mood-note__head strong{display:block;font-family:var(--ff-serif,serif);font-size:19px;color:#123c40}
+.mood-note__head small{display:block;margin-top:2px;font-size:12.5px;color:#6b7a78}
+.mood-note textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:104px;padding:12px 14px;border:1.5px solid #dbe3df;border-radius:14px;font:inherit;font-size:15px;line-height:1.5;color:#1d2b2a;background:#fff;outline:none}
+.mood-note textarea:focus{border-color:#1d6b67;box-shadow:0 0 0 3px rgba(29,107,103,.12)}
+.mood-note__count{margin-top:4px;text-align:right;font-size:11.5px;color:#93a09e}
+.mood-note__actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+.mood-note__actions button{min-height:44px;padding:0 18px;border-radius:12px;font:inherit;font-size:14.5px;font-weight:700;cursor:pointer}
+.mood-note__skip{border:1px solid #dbe3df;background:#fff;color:#3d5856}
+.mood-note__save{border:0;background:#123c40;color:#fff}
+.mood-note__save:hover{background:#1d5458}
+body.mood-note-open{overflow:hidden}
+@keyframes mnFade{from{opacity:0}}
+@keyframes mnUp{from{opacity:0;transform:translateY(14px) scale(.98)}}
+@media (max-width:520px){.mood-note{align-items:end;padding:0}.mood-note__panel{width:100%;border-radius:20px 20px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom))}.mood-note__actions button{flex:1}}
+</style>
 </head>
 <body class="a-portal-authenticated">
 <div class="a-shell">
@@ -79,6 +107,7 @@
         <span class="sky-haze"></span>
         <span class="sky-orb"></span>
         <span class="sky-stars"></span>
+        <span class="sky-moon"></span>
         <span class="sky-clouds"><i></i><i></i><i></i><i></i></span>
         <span class="sky-fog"></span>
         <span class="sky-drops"></span>
@@ -110,6 +139,20 @@
           <button class="a-mood__btn" data-mood="3" title="Ok" data-i18n-html="p-app-home:ok_dd355"><span class="a-mood__emoji">😐</span><span class="a-mood__name">Ok</span></button>
           <button class="a-mood__btn" data-mood="2" title="Cansado" data-i18n-html="p-app-home:cansado_bb0f7" data-i18n-title="p-app-home:cansado_80251"><span class="a-mood__emoji">😔</span><span class="a-mood__name">Cansado</span></button>
           <button class="a-mood__btn" data-mood="1" title="Mal" data-i18n-html="p-app-home:mal_c645e" data-i18n-title="p-app-home:mal_33b24"><span class="a-mood__emoji">😞</span><span class="a-mood__name">Mal</span></button>
+        </div>
+        <div class="mood-note" id="moodNote" hidden role="dialog" aria-modal="true" aria-labelledby="moodNoteTitle">
+          <div class="mood-note__backdrop" data-close></div>
+          <form class="mood-note__panel" id="moodNoteForm">
+            <button type="button" class="mood-note__x" data-close aria-label="Fechar" data-i18n-aria-label="p-app-home:fechar_7b200">×</button>
+            <div class="mood-note__head"><span class="mood-note__emoji" id="moodNoteEmoji"></span>
+              <div><strong id="moodNoteTitle" data-i18n="p-app-home:quer_contar_algo_sobre_hoje_b702e">Quer contar algo sobre hoje?</strong><small data-i18n="p-app-home:opcional_so_voce_ve_esta_9fb3d">Opcional · só você vê esta anotação</small></div></div>
+            <textarea id="moodNoteText" maxlength="600" rows="4" placeholder="Algo que chateou, alegrou, preocupou… escreva do seu jeito."></textarea>
+            <div class="mood-note__count"><span id="moodNoteCount">0</span>/600</div>
+            <div class="mood-note__actions">
+              <button type="button" class="mood-note__skip" id="moodNoteSkip" data-i18n="p-app-home:pular_6ec31">Pular</button>
+              <button type="submit" class="mood-note__save" data-i18n="p-app-home:salvar_registro_069d2">Salvar registro</button>
+            </div>
+          </form>
         </div>
         <div class="mood-card__footer" id="moodFooter">
           <span class="mood-card__saved" id="moodSaved">✓ Registrado</span>
@@ -178,6 +221,7 @@
 </div>
 
 <script type="module">
+  import { renderCard, isActive, joinSession } from "./session-card.js?v=3";
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
 
@@ -205,12 +249,107 @@
   let activeSkyUser = null;
   let skyRequestInFlight = false;
   let lastSkyCheck = 0;
-  function skyPhase(hour) {
-    if (hour >= 5 && hour < 7) return "dawn";
-    if (hour >= 7 && hour < 12) return "morning";
-    if (hour >= 12 && hour < 17) return "afternoon";
-    if (hour >= 17 && hour < 19) return "dusk";
-    return "night";
+  // Coordenadas do aparelho (fallback: São Paulo) para nascer/pôr do sol reais.
+  let skyCoords = { lat: -23.55, lon: -46.63 };
+  try { const c = JSON.parse(localStorage.getItem("ep.skyCoords") || "null"); if (c && Number.isFinite(c.lat)) skyCoords = c; } catch {}
+  // Nascer/pôr do sol do dia (NOAA simplificado), em ms. Muda diariamente.
+  function sunTimes(date, { lat, lon }, zenith = 90.833) {
+    const rad = Math.PI / 180;
+    const day = Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(date.getFullYear(), 0, 0)) / 864e5);
+    const g = 2 * Math.PI / 365 * (day - 1);
+    const eqTime = 229.18 * (.000075 + .001868 * Math.cos(g) - .032077 * Math.sin(g) - .014615 * Math.cos(2 * g) - .040849 * Math.sin(2 * g));
+    const decl = .006918 - .399912 * Math.cos(g) + .070257 * Math.sin(g) - .006758 * Math.cos(2 * g) + .000907 * Math.sin(2 * g) - .002697 * Math.cos(3 * g) + .00148 * Math.sin(3 * g);
+    const cosH = Math.cos(zenith * rad) / (Math.cos(lat * rad) * Math.cos(decl)) - Math.tan(lat * rad) * Math.tan(decl);
+    const ha = Math.acos(Math.max(-1, Math.min(1, cosH))) / rad;
+    const midnight = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+    return {
+      sunrise: midnight + (720 - 4 * (lon + ha) - eqTime) * 6e4,
+      sunset: midnight + (720 - 4 * (lon - ha) - eqTime) * 6e4
+    };
+  }
+  // Fases: sol baixo ~1h antes do pôr; depois do pôr, só o brilho do
+  // horizonte, que esmaece até o fim do crepúsculo náutico (sol 12° abaixo
+  // do horizonte = céu escuro de fato); a partir daí, noite. Idem no amanhecer.
+  function skyPhase(now = new Date()) {
+    const t = now.getTime();
+    const { sunrise, sunset } = sunTimes(now, skyCoords);
+    const dark = sunTimes(now, skyCoords, 102);
+    const min = 6e4;
+    const fade = (from, to) => Math.max(0, Math.min(1, (t - from) / (to - from)));
+    if (t < dark.sunrise || t >= dark.sunset) return { phase: "night", sun: false, glow: 0 };
+    if (t < sunrise) return { phase: "dawn", sun: false, glow: fade(dark.sunrise, sunrise) };
+    if (t >= sunset) return { phase: "dusk", sun: false, glow: 1 - fade(sunset, dark.sunset) };
+    if (t < sunrise + 60 * min) return { phase: "dawn", sun: true, glow: 1 };
+    if (t >= sunset) return { phase: "dusk", sun: false };
+    if (t >= sunset - 60 * min) return { phase: "dusk", sun: true, glow: 1 };
+    return { phase: now.getHours() < 12 ? "morning" : "afternoon", sun: true, glow: 1 };
+  }
+  // Lua: posição (alt/az), fração iluminada e lado iluminado voltado para o
+  // sol — algoritmo das efemérides simplificadas (precisão ~1°, fase exata).
+  const astro = (() => {
+    const rad = Math.PI / 180, e = rad * 23.4397;
+    const days = (ms) => ms / 864e5 - .5 + 2440588 - 2451545;
+    const ra = (l, b) => Math.atan2(Math.sin(l) * Math.cos(e) - Math.tan(b) * Math.sin(e), Math.cos(l));
+    const dec = (l, b) => Math.asin(Math.sin(b) * Math.cos(e) + Math.cos(b) * Math.sin(e) * Math.sin(l));
+    const sidereal = (d, lw) => rad * (280.16 + 360.9856235 * d) - lw;
+    function sun(d) {
+      const M = rad * (357.5291 + .98560028 * d);
+      const L = M + rad * (1.9148 * Math.sin(M) + .02 * Math.sin(2 * M) + .0003 * Math.sin(3 * M)) + rad * 102.9372 + Math.PI;
+      return { ra: ra(L, 0), dec: dec(L, 0) };
+    }
+    function moon(d) {
+      const L = rad * (218.316 + 13.176396 * d), M = rad * (134.963 + 13.064993 * d), F = rad * (93.272 + 13.22935 * d);
+      const l = L + rad * 6.289 * Math.sin(M), b = rad * 5.128 * Math.sin(F);
+      return { ra: ra(l, b), dec: dec(l, b), dist: 385001 - 20905 * Math.cos(M) };
+    }
+    function horizontal(c, d, lat, lon) {
+      const H = sidereal(d, rad * -lon) - c.ra, phi = rad * lat;
+      return {
+        alt: Math.asin(Math.sin(phi) * Math.sin(c.dec) + Math.cos(phi) * Math.cos(c.dec) * Math.cos(H)),
+        az: Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(phi) - Math.tan(c.dec) * Math.cos(phi)) + Math.PI // a partir do norte
+      };
+    }
+    return function moonState(date, { lat, lon }) {
+      const d = days(date.getTime()), s = sun(d), m = moon(d);
+      const mp = horizontal(m, d, lat, lon), sp = horizontal(s, d, lat, lon);
+      const phi = Math.acos(Math.sin(s.dec) * Math.sin(m.dec) + Math.cos(s.dec) * Math.cos(m.dec) * Math.cos(s.ra - m.ra));
+      const inc = Math.atan2(149598000 * Math.sin(phi), m.dist - 149598000 * Math.cos(phi));
+      // direção do sol vista da lua, no céu local (0 = zênite, horário = azimute crescente)
+      const dAz = sp.az - mp.az;
+      const limb = Math.atan2(Math.sin(dAz) * Math.cos(sp.alt), Math.cos(mp.alt) * Math.sin(sp.alt) - Math.sin(mp.alt) * Math.cos(sp.alt) * Math.cos(dAz));
+      return { alt: mp.alt / rad, az: mp.az / rad, fraction: (1 + Math.cos(inc)) / 2, limb: limb / rad };
+    };
+  })();
+  function renderMoon(sunUp) {
+    const el = hero.querySelector(".sky-moon");
+    const m = astro(new Date(), skyCoords);
+    if (sunUp || m.alt < 1) { el.hidden = true; return; }
+    // olhando para o equador (norte no hemisfério sul): leste à direita no sul, à esquerda no norte
+    const facing = skyCoords.lat < 0 ? 0 : 180;
+    let rel = ((m.az - facing + 540) % 360) - 180;
+    const x = Math.max(8, Math.min(92, 50 + rel / 100 * 46));
+    const y = Math.max(12, Math.min(78, 80 - m.alt / 70 * 68));
+    el.style.left = x + "%";
+    el.style.top = y + "%";
+    el.style.setProperty("--moon-glow", (.15 + m.fraction * .55).toFixed(2));
+    const k = m.fraction, ry = (50 * Math.abs(1 - 2 * k)).toFixed(2);
+    const lit = k > .995 ? "M0 50 A50 50 0 1 1 100 50 A50 50 0 1 1 0 50Z"
+      : `M0 50 A50 50 0 0 1 100 50 A50 ${ry} 0 0 ${k < .5 ? 0 : 1} 0 50Z`;
+    const sig = `${k.toFixed(3)}|${Math.round(m.limb)}`;
+    if (el.dataset.sig !== sig) {
+      el.dataset.sig = sig;
+      el.innerHTML = `<svg viewBox="-4 -4 108 108" style="transform:rotate(${m.limb.toFixed(1)}deg)"><defs>
+        <radialGradient id="moonLit" cx="50%" cy="38%" r="62%"><stop offset="0" stop-color="#fbf8ee"/><stop offset=".7" stop-color="#e6e1d2"/><stop offset="1" stop-color="#c9c4b4"/></radialGradient>
+        <clipPath id="moonClip"><path d="${lit}"/></clipPath></defs>
+        <circle cx="50" cy="50" r="50" fill="#1c2232" opacity=".55"/>
+        <path d="${lit}" fill="url(#moonLit)"/>
+        <g clip-path="url(#moonClip)" fill="#8f8b80" opacity=".28">
+          <ellipse cx="34" cy="32" rx="15" ry="11"/><ellipse cx="58" cy="26" rx="11" ry="8"/><ellipse cx="66" cy="46" rx="13" ry="10"/>
+          <ellipse cx="44" cy="55" rx="9" ry="12"/><ellipse cx="30" cy="62" rx="7" ry="5"/><circle cx="57" cy="80" r="4"/>
+          <circle cx="57" cy="80" r="9" fill="none" stroke="#f4f0e4" stroke-width="1.2" opacity=".6"/>
+        </g></svg>`;
+    }
+    el.hidden = false;
   }
   function fillParticles(container, count, build) {
     const frag = document.createDocumentFragment();
@@ -283,12 +422,15 @@
   }
   function renderSky(weather, reveal = true) {
     const hour = new Date().getHours();
-    const phase = skyPhase(hour);
+    const { phase, sun, glow } = skyPhase();
     hero.dataset.phase = phase;
+    hero.style.setProperty("--horizon-glow", glow.toFixed(2));
+    hero.dataset.sun = sun ? "up" : "down";
+    renderMoon(sun);
     document.querySelector(".home-hero__greeting").textContent = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
     if (weather) hero.dataset.weather = weather; else delete hero.dataset.weather;
     const stars = hero.querySelector(".sky-stars");
-    if (phase === "night" || phase === "dawn") {
+    if (phase === "night" || (!sun && glow < .5)) {
       if (!stars.childElementCount) fillParticles(stars, 46, el => {
         el.style.left = `${Math.random() * 100}%`;
         el.style.top = `${Math.random() * 78}%`;
@@ -326,6 +468,8 @@
     return new Promise(resolve => navigator.geolocation.getCurrentPosition(position => {
       const { latitude, longitude, accuracy } = position.coords || {};
       if (![latitude, longitude, accuracy].every(Number.isFinite) || accuracy > 50000) return resolve(null);
+      skyCoords = { lat: latitude, lon: longitude };
+      try { localStorage.setItem("ep.skyCoords", JSON.stringify(skyCoords)); } catch {}
       resolve({ lat: latitude, lon: longitude });
     }, () => resolve(null), {
       enableHighAccuracy: false,
@@ -360,6 +504,7 @@
     }
   }
   renderSky(null, false);
+  setInterval(() => { const p = skyPhase(); if (p.phase !== hero.dataset.phase || String(p.sun ? "up" : "down") !== hero.dataset.sun) renderSky(hero.dataset.weather || null, false); else { hero.style.setProperty("--horizon-glow", p.glow.toFixed(2)); renderMoon(p.sun); } }, 60 * 1000);
   setInterval(() => {
     renderSky(hero.dataset.weather || null);
     if (activeSkyUser && !document.hidden) loadSky(activeSkyUser, { force: true });
@@ -453,17 +598,63 @@
       });
     }
 
+    // Último estado conhecido na sessão: aparece na hora, sem piscar "não marcado".
+    const TODAY_KEY = `ep:humor:today:${user.uid}`;
+    const applyMood = (mood) => {
+      document.querySelectorAll(".a-mood__btn").forEach(b => b.classList.toggle("is-selected", b.dataset.mood === mood));
+      document.getElementById("moodFooter").classList.add("is-visible");
+      lockMoodPicker();
+    };
+    try {
+      const c = JSON.parse(sessionStorage.getItem(TODAY_KEY) || "null");
+      if (c?.date === todayInSaoPaulo() && c.mood) applyMood(String(c.mood));
+    } catch {}
     const savedMood = await loadTodayMood();
-    if (savedMood) {
+    if (savedMood) { try { sessionStorage.setItem(TODAY_KEY, JSON.stringify({ date: todayInSaoPaulo(), mood: savedMood })); } catch {} }
+    if (savedMood && !moodLocked) {
       document.querySelectorAll(".a-mood__btn").forEach(b => { if (b.dataset.mood === savedMood) b.classList.add("is-selected"); });
       document.getElementById("moodFooter").classList.add("is-visible");
       lockMoodPicker();
     }
 
+    // Ao tocar num humor, abre um modal curto para uma observação opcional.
+    const noteBox = document.getElementById("moodNote");
+    document.body.appendChild(noteBox);
+    const noteText = document.getElementById("moodNoteText");
+    let pendingBtn = null;
+    function openNote(btn) {
+      pendingBtn = btn;
+      document.querySelectorAll(".a-mood__btn").forEach(b => b.classList.toggle("is-selected", b === btn));
+      document.getElementById("moodNoteEmoji").innerHTML = btn.querySelector(".a-mood__emoji").innerHTML;
+      noteText.value = "";
+      document.getElementById("moodNoteCount").textContent = "0";
+      noteBox.hidden = false;
+      document.body.classList.add("mood-note-open");
+      setTimeout(() => noteText.focus(), 60);
+    }
+    function closeNote(cancel) {
+      noteBox.hidden = true;
+      document.body.classList.remove("mood-note-open");
+      if (cancel && pendingBtn) pendingBtn.classList.remove("is-selected");
+      pendingBtn = null;
+    }
+    noteText.addEventListener("input", () => { document.getElementById("moodNoteCount").textContent = noteText.value.length; });
+    noteBox.querySelectorAll("[data-close]").forEach(el => el.addEventListener("click", () => closeNote(true)));
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !noteBox.hidden) closeNote(true); });
+    document.getElementById("moodNoteSkip").addEventListener("click", () => { const b = pendingBtn; closeNote(false); saveMood(b, ""); });
+    document.getElementById("moodNoteForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const b = pendingBtn, note = noteText.value.trim();
+      closeNote(false);
+      saveMood(b, note);
+    });
+
     document.querySelectorAll(".a-mood__btn").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        if (moodLocked) return;
-        document.querySelectorAll(".a-mood__btn").forEach(b => b.classList.remove("is-selected"));
+      btn.addEventListener("click", () => { if (!moodLocked) openNote(btn); });
+    });
+    async function saveMood(btn, note) {
+      {
+        if (moodLocked || !btn) return;
         btn.classList.add("is-selected");
         const mood = btn.dataset.mood;
         const moodFooter = document.getElementById("moodFooter");
@@ -476,13 +667,16 @@
           const response = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
             method: "POST",
             headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ mood: Number(mood) })
+            body: JSON.stringify(note ? { mood: Number(mood), note } : { mood: Number(mood) })
           });
           const data = await response.json().catch(() => ({}));
           if (!response.ok || !data.ok || data.date !== todayInSaoPaulo()) {
             throw new Error(data.error || "Não foi possível confirmar o registro.");
           }
           moodSaved.textContent = "✓ Registrado";
+          try { sessionStorage.setItem(TODAY_KEY, JSON.stringify({ date: data.date, mood: String(mood) })); } catch {}
+          // Páginas do menu já pré-renderizadas (ex.: Meu humor) recarregam ao abrir.
+          try { localStorage.setItem("ep:dirtyAt", String(Date.now())); } catch {}
         } catch {
           moodLocked = false;
           moodSaved.textContent = "Não foi possível salvar. Toque novamente para tentar.";
@@ -490,40 +684,28 @@
             b.disabled = false; b.style.opacity = ""; b.style.cursor = "";
           });
         }
-      });
-    });
+      }
+    }
 
     // Próxima consulta
     try {
       const token = await user.getIdToken();
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessoes`, {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/sessoes`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json().catch(() => ({}));
       document.getElementById("nextSessionLoading").style.display = "none";
-      const upcoming = (data.sessions || [])
-        .filter(s => s.status === "scheduled" && Number(s.scheduledAt) > Date.now())
+      const upcoming = (data.sessions || []).filter(isActive)
         .sort((a, b) => Number(a.scheduledAt) - Number(b.scheduledAt));
 
       if (upcoming.length === 0) {
         document.getElementById("nextSessionEmpty").classList.remove("a-hide");
       } else {
-        const s = upcoming[0];
-        const dt = new Date(Number(s.scheduledAt));
-        const dateStr = dt.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
-        const timeStr = dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-        document.getElementById("nextSessionCard").innerHTML = `
-          <div class="a-card a-card--pad" style="height:100%;">
-            <div class="section-title">Próxima consulta</div>
-            <div class="a-flex a-items-center a-justify-between">
-              <span class="a-badge a-badge--ok">Confirmada</span>
-              <span style="font-family:var(--ff-mono);font-size:13px;color:var(--a-accent);font-weight:700;">${timeStr}</span>
-            </div>
-            <div class="a-h3 a-mt-8">${s.therapistName || "Profissional"}</div>
-            <div class="a-sub a-mt-4">${dateStr}</div>
-            <a href="./consultas.html" class="a-btn a-btn--ghost a-btn--block a-btn--sm a-mt-12" style="border-radius:10px;">Ver detalhes</a>
-          </div>`;
-        document.getElementById("nextSessionCard").classList.remove("a-hide");
+        const box = document.getElementById("nextSessionCard");
+        box.innerHTML = `${renderCard(upcoming[0], { summary: true })}`;
+        box.querySelectorAll("[data-join-id]").forEach(btn => btn.addEventListener("click", () =>
+          joinSession(btn, { auth, backendUrl: BACKEND_BASE_URL })));
+        box.classList.remove("a-hide");
       }
     } catch {
       document.getElementById("nextSessionLoading").style.display = "none";

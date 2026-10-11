@@ -147,6 +147,7 @@ function writeProfileCache(uid, profile) {
   db.profile.put({ uid, t: Date.now(), profile }).catch(() => {});
   // Flag sync para sidebar.js: preflight TISS antes do primeiro auth async.
   try { localStorage.setItem("ep:tiss:enabled", profile?.therapist?.tissEnabled ? "1" : "0"); } catch {}
+  try { localStorage.setItem("ep:programNetwork", profile?.therapist?.programNetwork ? "1" : "0"); } catch {}
 }
 
 export function invalidateProfileCache() {
@@ -216,6 +217,9 @@ export async function fetchTherapistProfile(idToken, uid) {
         if (!!cached.therapist?.tissEnabled !== !!fresh.therapist?.tissEnabled) {
           applyTissVisibility(fresh.therapist);
         }
+        if (!!cached.therapist?.programNetwork !== !!fresh.therapist?.programNetwork) {
+          applyProgramNetworkVisibility(fresh.therapist);
+        }
       })
       .catch(() => {});
     return cached;
@@ -246,6 +250,17 @@ function applyTissVisibility(therapist) {
   // Controla sidebar diretamente — não depende do MutationObserver/syncTiss
   const sideTiss = document.getElementById("sidebarTissLink");
   if (sideTiss) sideTiss.classList.toggle("is-hidden", !enabled);
+}
+
+// "Escolas" aparece só para quem está na rede dos programas (admin libera ou
+// oculta no diretório de alunos e colaboradores).
+function applyProgramNetworkVisibility(therapist) {
+  const member = !!therapist?.programNetwork;
+  const side = document.getElementById("sidebarSchoolsLink");
+  if (side) side.classList.toggle("is-hidden", !member);
+  document.querySelectorAll('a[href$="casos-publicos.html"]:not(#sidebarSchoolsLink)').forEach(el => {
+    el.style.display = member ? "" : "none";
+  });
 }
 
 function applyCapabilityVisibility(capabilities) {
@@ -1102,6 +1117,7 @@ export async function requireTherapist({ requireDek = true } = {}) {
   mountCapabilityFabs(profile.conselho?.capabilities);
   // TISS opt-in: mostra/esconde links com [data-tiss-only] (link "TISS" no nav).
   applyTissVisibility(profile.therapist);
+  applyProgramNetworkVisibility(profile.therapist);
 
   // Prefetch da nav pra navegação subsequente parecer instantânea.
   prefetchNavLinks();

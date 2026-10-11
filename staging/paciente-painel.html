@@ -17,12 +17,32 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
-  <script src="./i18n/init.js?v=2-4" defer></script>
+  <style>
+    .patient-portal{background:radial-gradient(circle at 88% 4%,rgba(218,185,112,.18),transparent 24%),#f2eddf;color:#173a39}
+    .patient-portal .ep-shell{min-height:100vh}
+    .patient-topbar{height:76px;padding:0 clamp(24px,5vw,76px);background:rgba(255,250,240,.9);border-bottom:1px solid rgba(155,113,28,.2);backdrop-filter:blur(18px);position:sticky;top:0;z-index:40}
+    .patient-topbar .ep-brand__mark{width:46px;height:46px;background:url('/logo_oficial_fundo_transparente.png?v=2') center/contain no-repeat;border:0;box-shadow:none;font-size:0}
+    .patient-topbar .ep-brand__name{font-family:Fraunces,serif;font-size:20px;color:#123f40}
+    .patient-topbar .ep-nav{gap:8px}.patient-topbar .ep-nav a{padding:10px 14px;border-radius:999px;color:#355452;text-decoration:none}.patient-topbar .ep-nav a:hover{background:#e9e2d3;color:#123f40}
+    .patient-topbar #navUser{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .patient-main{width:min(1500px,calc(100% - 48px));margin:0 auto;padding:34px 0 72px}
+    .patient-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:32px;align-items:center;padding:clamp(28px,4vw,52px);border:1px solid rgba(217,180,95,.32);border-radius:28px;background:linear-gradient(125deg,#0d4142 0%,#164d48 54%,#496447 100%);box-shadow:0 28px 65px -42px rgba(13,45,43,.75);color:#fff}
+    .patient-hero:before,.patient-hero:after{content:"";position:absolute;border:1px solid rgba(226,190,104,.22);border-radius:50%;pointer-events:none}.patient-hero:before{width:390px;height:390px;right:-90px;top:-250px}.patient-hero:after{width:270px;height:270px;right:16px;top:-190px}
+    .patient-identity{position:relative;z-index:1;display:flex;align-items:center;gap:22px;min-width:0}.patient-avatar{position:relative;width:92px;height:92px;padding:0;flex:0 0 auto;display:grid;place-items:center;border-radius:26px;background:linear-gradient(145deg,#f3ce79,#b8842d);background-size:cover;background-position:center;color:#123534;font:600 27px Fraunces,serif;border:1px solid rgba(255,255,255,.34);box-shadow:0 18px 35px rgba(4,28,27,.25);cursor:pointer;overflow:visible;transition:transform .18s ease,box-shadow .18s ease}.patient-avatar:hover{transform:translateY(-2px);box-shadow:0 22px 38px rgba(4,28,27,.32)}.patient-avatar:focus-visible{outline:3px solid #f1c968;outline-offset:4px}.patient-avatar.has-photo .patient-avatar__initials{opacity:0}.patient-avatar__camera{position:absolute;right:-7px;bottom:-7px;width:31px;height:31px;display:grid;place-items:center;border-radius:11px;background:#fffaf0;color:#15544f;border:2px solid #15544f;box-shadow:0 7px 16px rgba(5,34,32,.24)}.patient-avatar__status{position:absolute;left:0;top:calc(100% + 13px);min-width:180px;padding:7px 10px;border-radius:9px;background:#fffaf0;color:#254b47;box-shadow:0 8px 24px rgba(4,28,27,.22);font:600 10px/1.35 Inter,sans-serif;text-align:left;opacity:0;pointer-events:none;transform:translateY(-4px);transition:opacity .18s ease,transform .18s ease}.patient-avatar__status.is-visible{opacity:1;transform:translateY(0)}.patient-avatar.is-loading{cursor:progress;opacity:.72}
+    .patient-copy{min-width:0}.patient-copy .ep-eyebrow{color:#f1c968}.patient-copy h1{margin:8px 0 10px;color:#fff;font-size:clamp(31px,4vw,55px);line-height:1.02;overflow-wrap:anywhere}.patient-copy .ep-pill{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.2);color:#e8eee9}
+    .patient-hero__actions{position:relative;z-index:1;display:grid;gap:10px;min-width:210px}.patient-hero__actions a{justify-content:center}.patient-primary{background:#edbd58!important;border-color:#edbd58!important;color:#173a39!important}.patient-secondary{background:rgba(255,255,255,.07)!important;border-color:rgba(255,255,255,.22)!important;color:#fff!important}
+    .patient-dashboard{display:grid;grid-template-columns:1fr;gap:18px;margin-top:18px}.patient-overview{padding:22px;border:1px solid rgba(22,77,72,.11);border-radius:22px;background:rgba(255,252,245,.88);box-shadow:0 18px 45px -38px rgba(26,55,52,.45)}
+    .patient-overview__head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:14px}.patient-overview__head h2{margin:4px 0 0;font:600 23px Fraunces,serif}.patient-overview__head span{font-size:12px;color:#75807b}
+    .patient-overview .ep-stats-strip{margin:0;gap:10px}.patient-overview .ep-stat{min-height:142px;padding:20px;border:1px solid rgba(22,77,72,.1);border-radius:17px;background:#fff}.patient-overview .ep-stat__label{color:#95701d}.patient-overview .ep-stat__value{font:600 29px Fraunces,serif;color:#123f40;margin-top:14px}.patient-overview .ep-stat__sub{color:#76817d;margin-top:5px}
+    .patient-preferences{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr);gap:24px;align-items:center;margin-top:18px;padding:25px 28px;border:1px solid rgba(22,77,72,.11);border-radius:22px;background:#fffaf0}.patient-preferences h2{margin:7px 0 0;font:600 24px Fraunces,serif}.patient-preferences__control{padding:18px 20px;border:1px solid rgba(22,77,72,.12);border-radius:16px;background:#f4efe4}.patient-preferences__control>div:first-child{font-weight:700;color:#173a39}.patient-consent{display:flex;align-items:flex-start;gap:11px;margin-top:13px;cursor:pointer;line-height:1.45}.patient-consent input{width:19px;height:19px;margin-top:1px;accent-color:#176257;flex:0 0 auto}
+    .patient-history{margin-top:32px}.patient-history__head{display:flex;align-items:end;justify-content:space-between;gap:18px;padding-bottom:13px;border-bottom:1px solid rgba(22,77,72,.14)}.patient-history__head h2{margin:5px 0 0;font:600 30px Fraunces,serif}.patient-history .ep-timeline{margin-top:18px}.patient-history .ep-session-card{border-radius:19px;border-color:rgba(22,77,72,.12);background:#fffaf0;box-shadow:0 12px 35px -31px rgba(16,59,56,.55)}.patient-history .ep-timeline-month__label{color:#9b711c}.patient-history .ep-session-card__head{grid-template-columns:68px minmax(0,1fr) auto;padding:17px 19px;gap:17px}.patient-history .ep-session-card__head:hover{background:#f8f2e6}.patient-session-date{width:68px;min-height:67px;display:grid;align-content:center;justify-items:center;border-radius:15px;background:#e8f0e9;color:#14544e;border:1px solid rgba(20,84,78,.1)}.patient-session-date strong{font:600 25px/1 Fraunces,serif}.patient-session-date span{margin-top:4px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.patient-session-main{min-width:0}.patient-session-title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.patient-session-title{font-size:16px;font-weight:700;color:#143f3c}.patient-session-specialty{margin-top:4px;color:#65736f;font-size:13px}.patient-session-details{display:flex;align-items:center;gap:8px 16px;flex-wrap:wrap;margin-top:10px;color:#53645f;font-size:12px}.patient-session-detail{display:inline-flex;align-items:center;gap:6px}.patient-session-detail svg{color:#9b711c;flex:0 0 auto}.patient-session-status{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:#e9eee9;color:#365f59}.patient-session-status--scheduled{background:#e7f1ed;color:#17665c}.patient-session-status--completed{background:#e9efe2;color:#44672e}.patient-session-status--pending{background:#fff0cf;color:#8a5d08}.patient-session-status--canceled,.patient-session-status--no-show{background:#f5e3df;color:#9a4134}.patient-session-aside{display:flex;align-items:center;gap:12px;padding-left:15px}.patient-session-aside .ep-session-card__count{min-width:92px;justify-content:flex-end;color:#49615c}.patient-history .ep-session-card__body{background:rgba(248,242,230,.68)}
+    @media(max-width:900px){.patient-dashboard{grid-template-columns:1fr}.patient-preferences{grid-template-columns:1fr}.patient-hero{grid-template-columns:1fr}.patient-hero__actions{display:flex;flex-wrap:wrap}.patient-hero__actions a{flex:1 1 180px}}
+    @media(max-width:640px){.patient-topbar{height:auto;min-height:64px;padding:9px 15px}.patient-topbar #navUser{display:none}.patient-topbar .ep-nav a{padding:8px;font-size:12px}.patient-main{width:min(100% - 24px,1500px);padding:18px 0 50px}.patient-hero{padding:24px 20px;border-radius:21px}.patient-identity{align-items:flex-start;gap:15px}.patient-avatar{width:62px;height:62px;border-radius:18px;font-size:20px}.patient-copy h1{font-size:29px}.patient-overview{padding:15px}.patient-overview .ep-stats-strip{grid-template-columns:1fr}.patient-overview .ep-stat{min-height:auto}.patient-preferences{padding:20px}.patient-history__head{align-items:flex-start;flex-direction:column}.patient-history__head h2{font-size:26px}.patient-history .ep-session-card__head{grid-template-columns:54px minmax(0,1fr);gap:13px;padding:14px}.patient-session-date{width:54px;min-height:59px;border-radius:13px}.patient-session-date strong{font-size:21px}.patient-session-aside{grid-column:2;padding:0;justify-content:space-between}.patient-session-aside .ep-session-card__count{min-width:0;justify-content:flex-start}}
+  </style>
+  <script src="./i18n/init.js?v=2-6" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
-<body>
-<div class="ep-staging-banner" data-i18n="p-paciente-painel:ambiente_de_teste_espaco_preludio_ae9ee">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
-
+<body class="patient-portal">
 <script>
 (function () {
   var stack = document.createElement("div");
@@ -43,7 +63,7 @@
 </script>
 
 <div class="ep-shell">
-  <header class="ep-topbar">
+  <header class="ep-topbar patient-topbar">
     <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
       <span class="ep-brand__mark">EP</span>
       <span class="ep-brand__name">
@@ -52,48 +72,55 @@
       </span>
     </a>
     <nav class="ep-nav">
-      <a href="./profissionais.html" class="ep-text-sm" data-i18n="paciente-painel:nav.find">Encontrar profissional</a>
-      <a href="./paciente-audit.html" class="ep-text-sm" data-i18n="paciente-painel:nav.audit">Auditoria</a>
       <span id="navUser" class="ep-text-sm ep-text-muted" data-i18n="paciente-painel:nav.loading">…</span>
       <button class="ep-btn ep-btn--ghost ep-btn--sm" type="button" id="logoutBtn" data-i18n="paciente-painel:nav.logout">Sair</button>
     </nav>
   </header>
 
-  <main class="ep-main">
-    <section class="ep-prontuario__header" style="grid-template-columns: auto 1fr;">
-      <div class="ep-prontuario__avatar" id="avatar" aria-hidden="true">P</div>
-      <div class="ep-prontuario__title">
+  <main class="patient-main">
+    <section class="patient-hero">
+      <div class="patient-identity">
+      <button class="patient-avatar" id="avatar" type="button" aria-label="Adicionar ou trocar foto do perfil" title="Adicionar ou trocar foto" data-i18n-aria-label="p-paciente-painel:adicionar_ou_trocar_foto_do_6a017" data-i18n-title="p-paciente-painel:adicionar_ou_trocar_foto_62f1d">
+        <span class="patient-avatar__initials" id="avatarInitials" aria-hidden="true">P</span>
+        <span class="patient-avatar__camera" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4 16 6h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l1.5-2z"/><circle cx="12" cy="13" r="3"/></svg></span>
+        <span class="patient-avatar__status" id="avatarStatus" role="status" aria-live="polite"></span>
+      </button>
+      <input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+      <div class="patient-copy">
         <div class="ep-eyebrow" data-i18n="paciente-painel:header.eyebrow">Seu painel</div>
         <h1 class="ep-h1" id="patientName">…</h1>
         <div class="ep-pill-row" id="pillRow"></div>
       </div>
+      </div>
+      <div class="patient-hero__actions">
+        <a class="ep-btn patient-primary" href="./profissionais.html" data-i18n="p-paciente-painel:encontrar_profissional_55eb3">Encontrar profissional</a>
+        <a class="ep-btn ep-btn--ghost patient-secondary" href="./paciente-audit.html" data-i18n="p-paciente-painel:meu_historico_e9128">Meu histórico</a>
+      </div>
     </section>
 
-    <section class="ep-stats-strip" id="statsStrip"></section>
-
-    <section class="ep-card ep-mt-24">
-      <div class="ep-eyebrow" data-i18n="p-paciente-painel:seu_ambiente_de_trabalho_61ea3">Seu ambiente de trabalho</div>
-      <h2 class="ep-h2 ep-mt-8" data-i18n="p-paciente-painel:escuta_sobre_as_condicoes_de_71c8d">Escuta sobre as condições de trabalho</h2>
-      <p class="ep-text-sm ep-text-muted" data-i18n="p-paciente-painel:se_sua_empresa_abriu_uma_63b96">Se sua empresa abriu uma pesquisa, compartilhe sua experiência. O empregador recebe somente resultados agrupados, nunca suas respostas individuais.</p>
-      <a class="ep-btn ep-btn--primary ep-mt-12" href="./paciente-nr1.html" data-i18n="p-paciente-painel:ver_pesquisas_abertas_296ec">Ver pesquisas abertas</a>
+    <div class="patient-dashboard" id="patientDashboard">
+    <section class="patient-overview">
+      <div class="patient-overview__head"><div><div class="ep-eyebrow" data-i18n="p-paciente-painel:visao_geral_d3083">Visão geral</div><h2 data-i18n="p-paciente-painel:sua_jornada_de_cuidado_b559a">Sua jornada de cuidado</h2></div><span data-i18n="p-paciente-painel:informacoes_privadas_da_sua_conta_dcb09">Informações privadas da sua conta</span></div>
+      <div class="ep-stats-strip" id="statsStrip"></div>
     </section>
 
-    <section class="ep-card ep-mt-24" id="prefsCard">
-      <div class="ep-eyebrow" data-i18n="paciente-painel:prefs.eyebrow">Suas preferências</div>
-      <div class="ep-text-sm ep-mt-8" style="font-weight: 600;" data-i18n="paciente-painel:prefs.aiSummary.title">Resumo IA das sessões</div>
-      <p class="ep-text-xs ep-text-muted ep-mt-4" data-i18n="paciente-painel:prefs.aiSummary.description">Quando ligado, o(a) profissional pode gerar um resumo automático após cada consulta para revisar antes da próxima — só ele(a) tem acesso. O áudio é deletado do servidor logo após o processamento.</p>
-      <div class="ep-flex ep-gap-8 ep-mt-12" style="align-items: center;">
-        <label class="ep-flex ep-gap-8" style="align-items: center; cursor: pointer;">
+    </div>
+
+    <section class="patient-preferences" id="prefsCard">
+      <div><div class="ep-eyebrow" data-i18n="paciente-painel:prefs.eyebrow">Suas preferências</div><h2 data-i18n="p-paciente-painel:voce_controla_como_sua_consulta_53e15">Você controla como sua consulta é processada</h2></div>
+      <div class="patient-preferences__control"><div data-i18n="paciente-painel:prefs.aiSummary.title">Resumo IA das sessões</div>
+      <p class="ep-text-xs ep-text-muted ep-mt-4" data-i18n="paciente-painel:prefs.aiSummary.description">Quando ligado, o(a) profissional pode gerar um resumo automático após cada consulta para revisar antes da próxima — só ele(a) tem acesso. A transcrição é feita em servidor do Espaço Prelúdio e o resumo pela Anthropic (Claude), que não usa os dados para treinar modelos. O áudio é apagado dos servidores logo após o processamento.</p>
+        <label class="patient-consent">
           <input type="checkbox" id="consentAiSummaryToggle">
           <span data-i18n="paciente-painel:prefs.aiSummary.enable">Aceito a transcrição e o resumo IA das minhas sessões</span>
         </label>
-      </div>
       <div id="prefsStatus" class="ep-text-xs ep-text-muted ep-mt-8">&nbsp;</div>
+      </div>
     </section>
 
-    <section class="ep-stack ep-mt-24">
-      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
-        <h2 class="ep-h2 ep-mt-0" data-i18n="paciente-painel:history.h2">Histórico de consultas</h2>
+    <section class="patient-history">
+      <div class="patient-history__head">
+        <div><div class="ep-eyebrow" data-i18n="p-paciente-painel:seu_arquivo_pessoal_4b7ca">Seu arquivo pessoal</div><h2 data-i18n="paciente-painel:history.h2">Histórico de consultas</h2></div>
         <span class="ep-text-xs ep-text-muted ep-lock">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
           <span data-i18n="paciente-painel:history.lock">Cifradas com a sua chave — só você lê</span>
@@ -109,8 +136,8 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requirePatient } from "./js/patient-auth-guard.js?v=2";
-  import { encryptNote, decryptNote } from "./js/crypto.js";
+  import { requirePatient } from "./js/patient-auth-guard.js?v=3-36";
+  import { encryptNote, decryptNote, openSealed, generateEcdhKeypair, wrapKey, unwrapKey } from "./js/crypto.js?v=2";
   import { clearPatientDek } from "./js/patient-session.js";
 
   // tr(): mesma helper de paciente-login.html. Tenta EP_I18N.t(key); se nao
@@ -135,6 +162,9 @@
 
   const navUser     = document.getElementById("navUser");
   const avatar      = document.getElementById("avatar");
+  const avatarInitials = document.getElementById("avatarInitials");
+  const avatarFile  = document.getElementById("avatarFile");
+  const avatarStatus = document.getElementById("avatarStatus");
   const patientName = document.getElementById("patientName");
   const pillRow     = document.getElementById("pillRow");
   const statsStrip  = document.getElementById("statsStrip");
@@ -176,12 +206,57 @@
     if (d < 365) return tr("paciente-painel:relative.monthsAgo","há {{n}} meses",  { n: Math.floor(d/30) });
     return tr("paciente-painel:relative.yearsAgo", "há {{n}} anos", { n: Math.floor(d/365) });
   }
+  // Consulta realizada mostra quando aconteceu de fato (entrada na sala);
+  // as demais, o horário agendado.
+  function sessionTimestamp(session) {
+    const done = ["completed", "finished"].includes(String(session?.status || "").toLowerCase());
+    if (done && Number(session?.startedAt)) return Number(session.startedAt);
+    return Number(session?.scheduledAt || session?.startedAt || session?.endedAt || session?.createdAt) || null;
+  }
+  const LOWER_NAME_WORDS = new Set(["de", "da", "das", "do", "dos", "e"]);
+  // Cadastro em caixa alta ("LUIS HENRIQUE") → "Luis Henrique".
+  function displayName(name) {
+    const n = String(name || "").trim();
+    if (!n || n !== n.toUpperCase()) return n;
+    return n.toLowerCase().split(/\s+/).map((w, i) => (i > 0 && LOWER_NAME_WORDS.has(w)) ? w : w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  }
+  // "terapia-de-casal" → "Terapia de casal"
+  function specialtyLabel(v) {
+    const t = String(v || "").trim();
+    if (!/^[a-z0-9-]+$/.test(t)) return t;
+    const x = t.replace(/-/g, " ");
+    return x.charAt(0).toUpperCase() + x.slice(1);
+  }
+  function sessionStatus(status) {
+    const key = String(status || "scheduled").toLowerCase();
+    const labels = {
+      scheduled: "Agendada", approved: "Agendada", pending: "Aguardando confirmação",
+      in_progress: "Em andamento", completed: "Realizada", finished: "Realizada",
+      canceled: "Cancelada", cancelled: "Cancelada", no_show: "Não realizada"
+    };
+    const cssKey = key === "approved" ? "scheduled" : (key === "finished" ? "completed" : (key === "cancelled" ? "canceled" : key));
+    return { label: labels[key] || "Registrada", cssKey: cssKey.replace(/_/g, "-").replace(/[^a-z-]/g, "") || "registered" };
+  }
+  function sessionDateParts(ms) {
+    if (!ms) return { day: "—", month: "Data" };
+    const date = new Date(ms);
+    return {
+      day: date.toLocaleDateString(currentLocale(), { day: "2-digit" }),
+      month: date.toLocaleDateString(currentLocale(), { month: "short" }).replace(".", "")
+    };
+  }
+  function noteCountLabel(count) {
+    if (!Number.isFinite(count)) return "Ver anotações";
+    if (count === 0) return "Sem anotações";
+    return count === 1 ? "1 anotação" : `${count} anotações`;
+  }
 
   let dek = null;
   let idToken = null;
   let account = null;
   let allSessions = [];
   const notesCache = new Map(); // sessionId → array de notas decifradas
+  const noteCounts = new Map(); // sessionId → quantidade, sem expor o conteúdo
 
   logoutBtn.addEventListener("click", async () => {
     if (!confirm(tr("paciente-painel:logout.confirm", "Sair da sua conta?"))) return;
@@ -201,12 +276,12 @@
 
   async function loadSessions() {
     const data = await api("/therapy/paciente/sessoes");
-    allSessions = data.sessions || [];
+    allSessions = (data.sessions || []).sort((a, b) => (sessionTimestamp(b) || 0) - (sessionTimestamp(a) || 0));
   }
 
   function renderHeader() {
     patientName.textContent = account.displayName || tr("paciente-painel:header.fallbackName", "Você");
-    avatar.textContent = initials(account.displayName);
+    avatarInitials.textContent = initials(account.displayName);
     navUser.textContent = account.displayName
       ? tr("paciente-painel:nav.greeting", "Olá, {{name}}", { name: account.displayName })
       : tr("paciente-painel:nav.loading", "…");
@@ -223,9 +298,86 @@
     }
   }
 
+  function showAvatarStatus(message, isError = false) {
+    avatarStatus.textContent = message;
+    avatarStatus.style.color = isError ? "#963f32" : "#254b47";
+    avatarStatus.classList.add("is-visible");
+    clearTimeout(showAvatarStatus.timer);
+    showAvatarStatus.timer = setTimeout(() => avatarStatus.classList.remove("is-visible"), 4000);
+  }
+
+  function applyAvatarPhoto(dataUrl) {
+    avatar.style.backgroundImage = dataUrl ? `url("${dataUrl}")` : "";
+    avatar.classList.toggle("has-photo", Boolean(dataUrl));
+  }
+
+  async function resizeAvatar(file) {
+    if (!file.type.startsWith("image/")) throw new Error("Selecione uma imagem válida.");
+    if (file.size > 8 * 1024 * 1024) throw new Error("A imagem deve ter no máximo 8 MB.");
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = objectUrl;
+      await image.decode();
+      if (Math.max(image.naturalWidth, image.naturalHeight) > 12000) throw new Error("A resolução da imagem é muito alta.");
+      const side = Math.min(image.naturalWidth, image.naturalHeight);
+      if (!side) throw new Error("Não foi possível ler esta imagem.");
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 512;
+      const context = canvas.getContext("2d", { alpha: false });
+      context.fillStyle = "#f2eddf";
+      context.fillRect(0, 0, 512, 512);
+      context.drawImage(image, (image.naturalWidth - side) / 2, (image.naturalHeight - side) / 2, side, side, 0, 0, 512, 512);
+      return canvas.toDataURL("image/jpeg", .86);
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
+
+  async function loadAvatarPhoto() {
+    try {
+      const data = await api("/therapy/paciente/foto");
+      applyAvatarPhoto(data.foto || null);
+    } catch (_) { /* mantém as iniciais quando a foto não puder ser carregada */ }
+  }
+
+  avatar.addEventListener("click", () => {
+    if (!avatar.classList.contains("is-loading")) avatarFile.click();
+  });
+  avatarFile.addEventListener("change", async () => {
+    const file = avatarFile.files?.[0];
+    avatarFile.value = "";
+    if (!file) return;
+    avatar.classList.add("is-loading");
+    avatar.disabled = true;
+    showAvatarStatus("Preparando sua foto…");
+    try {
+      const dataUrl = await resizeAvatar(file);
+      applyAvatarPhoto(dataUrl);
+      const [, base64] = dataUrl.split(",", 2);
+      await api("/therapy/paciente/foto", {
+        method: "POST",
+        body: JSON.stringify({ base64, contentType: "image/jpeg" })
+      });
+      showAvatarStatus("Foto atualizada com sucesso.");
+    } catch (error) {
+      await loadAvatarPhoto();
+      showAvatarStatus(error?.message || "Não foi possível atualizar a foto.", true);
+    } finally {
+      avatar.disabled = false;
+      avatar.classList.remove("is-loading");
+    }
+  });
+
   function renderStats() {
     const total = allSessions.length;
-    const last  = allSessions[0]?.createdAt || null;
+    const latestPastSession = allSessions.find(s => {
+      const timestamp = sessionTimestamp(s);
+      return timestamp && timestamp <= Date.now() && !["canceled", "cancelled"].includes(String(s.status || "").toLowerCase());
+    });
+    const last = sessionTimestamp(latestPastSession || allSessions[0]);
     const lblConsultas = tr("paciente-painel:stats.consultas", "Consultas");
     const lblUltima    = tr("paciente-painel:stats.ultima",    "Última");
     const lblNotas     = tr("paciente-painel:stats.anotacoes", "Anotações");
@@ -256,9 +408,72 @@
   async function refreshTotalNotes() {
     try {
       const { notes } = await api("/therapy/paciente/notas");
+      noteCounts.clear();
+      for (const note of (notes || [])) {
+        if (!note.sessionId) continue;
+        noteCounts.set(note.sessionId, (noteCounts.get(note.sessionId) || 0) + 1);
+      }
       const el = document.getElementById("totalNotesValue");
-      if (el) el.textContent = String(notes.length);
+      if (el) el.textContent = String((notes || []).length);
+      document.querySelectorAll("[data-session-note-count]").forEach(countEl => {
+        countEl.textContent = noteCountLabel(noteCounts.get(countEl.dataset.sessionNoteCount) || 0);
+      });
     } catch (e) { /* silencioso */ }
+  }
+
+  // Par de chaves ECDH da conta (o mesmo do chat). A sala da consulta usa a
+  // chave pública para selar notas quando a senha não está na aba; aqui, com
+  // a DEK, abrimos a privada. Criado se ainda não existir, para que a próxima
+  // consulta salve notas sem pedir senha.
+  let ecdhPrivPromise = null;
+  function getEcdhPriv() {
+    if (!ecdhPrivPromise) {
+      ecdhPrivPromise = (async () => {
+        const res = await fetch(BACKEND_BASE_URL + "/therapy/chat/keypair", { headers: { "Authorization": `Bearer ${idToken}` } });
+        if (res.ok) {
+          const d = await res.json();
+          return unwrapKey(d.ecdhPrivateWrapped, dek);
+        }
+        if (res.status !== 404) throw new Error("KEYPAIR_HTTP_" + res.status);
+        const kp = await generateEcdhKeypair();
+        const privWrapped = await wrapKey(kp.privateRaw, dek);
+        await api("/therapy/chat/keypair", { method: "POST", body: JSON.stringify({ ecdhPublicJwk: kp.publicJwk, ecdhPrivateWrapped: privWrapped }) });
+        return kp.privateRaw;
+      })();
+      ecdhPrivPromise.catch(() => { ecdhPrivPromise = null; });
+    }
+    return ecdhPrivPromise;
+  }
+
+  async function importPostSession() {
+    let pending = null;
+    try { pending = JSON.parse(sessionStorage.getItem("ep_post_session") || "null"); } catch {}
+    if (!pending?.sessionId) return;
+    try {
+      if (pending.rejoinSecret) {
+        await api("/therapy/paciente/vincular-sessao", {
+          method: "POST",
+          body: JSON.stringify({ sessionId: pending.sessionId, rejoinSecret: pending.rejoinSecret })
+        }).catch(err => console.warn("post_session_link_failed", err));
+      }
+      const notes = Array.isArray(pending.notes) ? pending.notes : [];
+      const left = [];
+      for (const n of notes) {
+        if (!n?.text) continue;
+        try {
+          const { ciphertext, iv } = await encryptNote(String(n.text), dek);
+          await api("/therapy/paciente/notas", { method: "POST", body: JSON.stringify({ sessionId: pending.sessionId, ciphertext, iv }) });
+        } catch (err) {
+          console.warn("post_session_note_failed", err);
+          left.push(n);
+        }
+      }
+      // Falhou alguma? Mantém só as pendentes para tentar no próximo carregamento.
+      if (left.length) sessionStorage.setItem("ep_post_session", JSON.stringify({ ...pending, rejoinSecret: null, notes: left }));
+      else sessionStorage.removeItem("ep_post_session");
+    } catch (err) {
+      console.warn("post_session_import_failed", err);
+    }
   }
 
   async function loadSessionNotes(sessionId) {
@@ -266,6 +481,16 @@
     const { notes } = await api("/therapy/paciente/notas?sessionId=" + encodeURIComponent(sessionId));
     const decoded = [];
     for (const n of notes) {
+      if (n.ephemeralPubJwk) {
+        // Nota selada na sala: abre com a chave privada e regrava com a DEK
+        // (vira nota comum; não depende mais do par de chaves).
+        const text = await openSealed(n, await getEcdhPriv());
+        decoded.push({ ...n, ephemeralPubJwk: null, text });
+        encryptNote(text, dek)
+          .then(({ ciphertext, iv }) => api(`/therapy/paciente/notas/${encodeURIComponent(n.noteId)}`, { method: "PATCH", body: JSON.stringify({ ciphertext, iv }) }))
+          .catch(() => {});
+        continue;
+      }
       const text = await decryptNote({ ciphertext: n.ciphertext, iv: n.iv }, dek);
       decoded.push({ ...n, text });
     }
@@ -293,8 +518,9 @@
     // Agrupa por mês
     const groups = new Map();
     for (const s of allSessions) {
-      const k = monthKey(s.createdAt);
-      if (!groups.has(k)) groups.set(k, { label: fmtMonthYear(s.createdAt), items: [] });
+      const timestamp = sessionTimestamp(s);
+      const k = monthKey(timestamp);
+      if (!groups.has(k)) groups.set(k, { label: timestamp ? fmtMonthYear(timestamp) : "Data não informada", items: [] });
       groups.get(k).items.push(s);
     }
 
@@ -317,20 +543,43 @@
     card.className = "ep-session-card";
     card.dataset.sessionId = session.sessionId;
 
-    const dateLine = `${fmtDate(session.createdAt)} · ${fmtTime(session.createdAt)}`;
-    const therapistName = session.therapistDisplayName || tr("paciente-painel:history.therapistFallback", "Profissional");
-    const withLine      = tr("paciente-painel:history.withTherapist", "com {{name}}", { name: therapistName });
-    const dash          = tr("paciente-painel:stats.dash", "—");
+    const timestamp = sessionTimestamp(session);
+    const dateParts = sessionDateParts(timestamp);
+    const therapistName = displayName(session.therapistName || session.therapistDisplayName) || tr("paciente-painel:history.therapistFallback", "Profissional não informado");
+    const specialty = specialtyLabel(session.especialidade) || "Atendimento particular";
+    const status = sessionStatus(session.status);
+    // Realizada: duração real (entrada → encerramento); senão, a planejada.
+    const realMinutes = (status.cssKey === "completed" && Number(session.startedAt) && Number(session.endedAt) > Number(session.startedAt))
+      ? Math.max(1, Math.round((Number(session.endedAt) - Number(session.startedAt)) / 60000)) : null;
+    const duration = realMinutes ? `${realMinutes} min`
+      : (Number(session.durationMinutes) > 0 ? `${Number(session.durationMinutes)} min` : null);
     const loadingNotes  = tr("paciente-painel:history.loadingNotes", "Carregando suas anotações…");
 
     card.innerHTML = `
       <button class="ep-session-card__head" type="button" aria-expanded="false">
-        <div>
-          <div class="ep-session-card__date">${dateLine}</div>
-          <div class="ep-session-card__therapist">${withLine}</div>
+        <span class="patient-session-date" aria-hidden="true">
+          <strong></strong><span></span>
+        </span>
+        <div class="patient-session-main">
+          <div class="patient-session-title-row">
+            <span class="patient-session-title"></span>
+            <span class="patient-session-status patient-session-status--${status.cssKey}"></span>
+          </div>
+          <div class="patient-session-specialty"></div>
+          <div class="patient-session-details">
+            <span class="patient-session-detail">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              <span data-session-time></span>
+            </span>
+            ${duration ? `<span class="patient-session-detail"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2h8M9 2v3m6-3v3"/><circle cx="12" cy="14" r="7"/></svg><span>${duration}</span></span>` : ""}
+            <span class="patient-session-detail">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5V5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2.5"/><path d="M8 7h6"/></svg>
+              Arquivo pessoal cifrado
+            </span>
+          </div>
         </div>
-        <div class="ep-session-card__meta">
-          <span class="ep-session-card__count" data-count>${dash}</span>
+        <div class="patient-session-aside">
+          <span class="ep-session-card__count" data-count>${noteCountLabel(noteCounts.get(session.sessionId))}</span>
           <svg class="ep-session-card__chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
         </div>
       </button>
@@ -338,6 +587,19 @@
         <div class="ep-skeleton">${loadingNotes}</div>
       </div>
     `;
+
+    card.querySelector(".patient-session-date strong").textContent = dateParts.day;
+    card.querySelector(".patient-session-date span").textContent = dateParts.month;
+    card.querySelector(".patient-session-title").textContent = therapistName;
+    card.querySelector(".patient-session-status").textContent = status.label;
+    card.querySelector(".patient-session-specialty").textContent = specialty;
+    card.querySelector("[data-count]").dataset.sessionNoteCount = session.sessionId;
+    const endedAt = Number(session.endedAt);
+    card.querySelector("[data-session-time]").textContent = !timestamp
+      ? "Data e horário não informados"
+      : (realMinutes && endedAt)
+        ? `${fmtDate(timestamp)}, das ${fmtTime(timestamp)} às ${fmtTime(endedAt)}`
+        : `${fmtDate(timestamp)} às ${fmtTime(timestamp)}`;
 
     const head = card.querySelector(".ep-session-card__head");
     const body = card.querySelector(".ep-session-card__body");
@@ -360,8 +622,9 @@
       try {
         const notes = await loadSessionNotes(session.sessionId);
         countEl.textContent = notes.length === 1
-          ? tr("paciente-painel:history.countOne", "1 nota")
-          : tr("paciente-painel:history.countMany", "{{count}} notas", { count: notes.length });
+          ? tr("paciente-painel:history.countOne", "1 anotação")
+          : tr("paciente-painel:history.countMany", "{{count}} anotações", { count: notes.length });
+        noteCounts.set(session.sessionId, notes.length);
         renderNotesIntoBody(body, session.sessionId, notes);
       } catch (e) {
         const msg = tr("paciente-painel:history.loadNotesError", "Erro ao carregar suas anotações: {{message}}", { message: e.message });
@@ -429,6 +692,11 @@
         await api(`/therapy/paciente/notas/${encodeURIComponent(note.noteId)}`, { method: "DELETE" });
         const arr = notesCache.get(sessionId).filter(n => n.noteId !== note.noteId);
         notesCache.set(sessionId, arr);
+        noteCounts.set(sessionId, arr.length);
+        const countEl = document.querySelector(`[data-session-note-count="${CSS.escape(sessionId)}"]`);
+        if (countEl) countEl.textContent = noteCountLabel(arr.length);
+        const totalEl = document.getElementById("totalNotesValue");
+        if (totalEl && /^\d+$/.test(totalEl.textContent)) totalEl.textContent = String(Math.max(0, Number(totalEl.textContent) - 1));
         row.remove();
       } catch (e) {
         alert(tr("paciente-painel:note.deleteError", "Erro ao apagar: {{message}}", { message: e.message }));
@@ -484,7 +752,13 @@
       // conta criada depois). Idempotente, falha silenciosa. Roda em
       // paralelo — não bloqueia o load principal.
       api("/therapy/paciente/auto-link", { method: "POST" }).catch(() => {});
+      // Garante o par de chaves: notas da próxima consulta salvam sem senha.
+      getEcdhPriv().catch(() => {});
+      // Veio de uma consulta como visitante (entrar.html → cadastro/login):
+      // vincula a consulta e guarda as notas antes de montar o histórico.
+      await importPostSession();
       renderHeader();
+      loadAvatarPhoto();
       await loadSessions();
       renderStats();
       renderTimeline();

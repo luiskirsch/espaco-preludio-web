@@ -5,6 +5,7 @@
 <script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conte\u00fado s\u00f3 est\u00e1 dispon\u00edvel no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title data-i18n="p-app-humor:humor_espaco_preludio_a2e08">Humor · Espaço Prelúdio</title>
   <link rel="manifest" href="./manifest.json">
@@ -12,7 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app.css?v=20261002t">
+  <link rel="stylesheet" href="./app.css?v=20261005b">
+  <link rel="stylesheet" href="./mood-face.css?v=2">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer></script>
   <style>
     .mood-hero {
@@ -43,10 +45,36 @@
     .chart-title { font-size: 14px; font-weight: 700; color: var(--a-ink); margin-bottom: 4px; }
     .chart-sub   { font-size: 12px; color: var(--a-ink3); margin-bottom: 16px; }
     .chart-wrap  { height: 160px; position: relative; }
+    .month-stats { margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(12,61,66,.08); }
+    .month-stats__head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+    .month-pick { position: relative; display: inline-flex; align-items: center; gap: 7px; padding: 3px 10px; margin: -3px 0 -3px -10px; border-radius: 9px; font-size: 15px; font-weight: 700; color: var(--a-ink); cursor: pointer; transition: background .15s ease; }
+    .month-pick:hover, .month-pick:focus-within { background: #f3eee3; }
+    .month-pick .month-pick__txt { color: var(--a-ink, #1d2b2a); font-size: 15px; font-weight: 700; }
+    .month-pick em { font-style: normal; color: #1d6b67; }
+    .month-pick svg { color: #1d6b67; flex: none; }
+    .month-pick select { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
+    .month-stats__head span { font-size: 13px; color: var(--a-ink3); }
+    .month-bar { display: flex; height: 12px; border-radius: 99px; overflow: hidden; background: #f1ece2; margin-bottom: 14px; }
+    .month-bar i { display: block; height: 100%; transition: width .6s ease; }
+    .month-rows { display: grid; gap: 9px; }
+    .month-row { display: grid; grid-template-columns: 28px 74px 1fr 46px; align-items: center; gap: 10px; font-size: 14px; color: var(--a-ink); }
+    .month-row__emoji { font-size: 22px; line-height: 1; }
+    .month-row__track { height: 8px; border-radius: 99px; background: #f4efe5; overflow: hidden; }
+    .month-row__track i { display: block; height: 100%; border-radius: 99px; }
+    .month-row b { text-align: right; font-variant-numeric: tabular-nums; }
+    .month-row.is-zero { opacity: .45; }
+    .month-stats__empty { font-size: 13.5px; color: var(--a-ink3); }
     .history-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--a-line); }
     .history-item:last-child { border-bottom: none; }
     .history-emoji { font-size: 28px; flex-shrink: 0; }
-    .history-info  { flex: 1; }
+    .mood-hero__done { align-self: center; margin-top: 16px; padding: 7px 14px; border-radius: 99px; background: rgba(102,201,138,.14); color: #8fdcaa; font-size: 14px; font-weight: 700; }
+    .mood-hero__done[hidden] { display: none; }
+    .history-info  { flex: 1; min-width: 0; }
+    .history-note  { margin: 6px 0 0; padding: 8px 11px; border-radius: 10px; background: #f6f1e6; color: var(--a-ink2); font-size: 13.5px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .humor-note { display: grid; gap: 6px; margin: 4px 0 12px; font-size: 14px; font-weight: 600; color: var(--a-ink); }
+    .humor-note small { font-weight: 500; color: var(--a-ink3); }
+    .humor-note textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 84px; padding: 11px 13px; border: 1.5px solid #dbe3df; border-radius: 13px; font: inherit; font-size: 15px; font-weight: 400; line-height: 1.5; background: #fff; outline: none; }
+    .humor-note textarea:focus { border-color: #1d6b67; box-shadow: 0 0 0 3px rgba(29,107,103,.12); }
     .history-day   { font-size: 13px; font-weight: 600; color: var(--a-ink); }
     .history-label { font-size: 12px; color: var(--a-ink2); }
     .history-date  { font-family: var(--ff-mono); font-size: 11px; color: var(--a-ink3); }
@@ -58,11 +86,12 @@
     }
     .streak-num { font-family: var(--ff-serif); font-size: 40px; font-weight: 500; color: var(--a-accent); line-height: 1; }
   </style>
-  <script src="./portal-shell.js?v=3" defer></script>
+  <script src="./portal-shell.js?v=6" defer></script>
   <script src="./sw-register.js" defer></script>
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(!l){var n=(navigator.language||"").toLowerCase();if(n.indexOf("en")===0)l="en-US";else if(n.indexOf("es")===0)l="es-ES";}if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
-  <script src="/i18n/init.js?v=2-4" defer></script>
+  <script src="/i18n/init.js?v=2-6" defer></script>
+<style>.history-scroll{position:relative}.history-scroll.is-scrollable{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;-webkit-mask-image:linear-gradient(#000 calc(100% - 28px),transparent);mask-image:linear-gradient(#000 calc(100% - 28px),transparent);padding-bottom:20px}</style>
 </head>
 <body class="a-portal-authenticated">
 <div class="a-shell">
@@ -75,43 +104,12 @@
 
     <!-- Hero humor do dia -->
     <div class="mood-hero" id="moodHero">
-      <span class="mood-hero__emoji" id="heroEmoji">😐</span>
+      <span class="mood-hero__emoji" id="heroEmoji"></span>
       <div class="mood-hero__label" id="heroLabel">Como está você hoje?</div>
       <div class="mood-hero__date" id="heroDate"></div>
+      <div class="mood-hero__done" id="heroDone" hidden>✓ Registrado hoje</div>
     </div>
 
-    <!-- Picker -->
-    <div class="a-section">
-      <div class="mood-picker-card">
-        <div class="mood-picker-label" data-i18n="p-app-humor:toque_para_registrar_seu_humor_f13d8">Toque para registrar seu humor</div>
-        <div class="mood-picker-row" id="moodPicker">
-          <button class="mood-btn" data-mood="1" data-emoji="😞" data-label="Mal" data-i18n-html="p-app-humor:mal_4af02">
-            <span class="mood-btn__emoji">😞</span>
-            <span class="mood-btn__label">Mal</span>
-          </button>
-          <button class="mood-btn" data-mood="2" data-emoji="😔" data-label="Cansado" data-i18n-html="p-app-humor:cansado_fbc2f">
-            <span class="mood-btn__emoji">😔</span>
-            <span class="mood-btn__label">Cansado</span>
-          </button>
-          <button class="mood-btn" data-mood="3" data-emoji="😐" data-label="Ok" data-i18n-html="p-app-humor:ok_77d05">
-            <span class="mood-btn__emoji">😐</span>
-            <span class="mood-btn__label">Ok</span>
-          </button>
-          <button class="mood-btn" data-mood="4" data-emoji="🙂" data-label="Bem" data-i18n-html="p-app-humor:bem_6467c">
-            <span class="mood-btn__emoji">🙂</span>
-            <span class="mood-btn__label">Bem</span>
-          </button>
-          <button class="mood-btn" data-mood="5" data-emoji="😄" data-label="Ótimo" data-i18n-html="p-app-humor:otimo_d769f">
-            <span class="mood-btn__emoji">😄</span>
-            <span class="mood-btn__label">Ótimo</span>
-          </button>
-        </div>
-        <div class="save-row">
-          <button class="a-btn a-btn--accent a-hide" id="saveBtn" style="min-width:140px;" data-i18n="p-app-humor:salvar_humor_ea9d0">Salvar humor</button>
-          <span class="a-hide" id="savedMsg" style="font-size:13px;color:var(--a-accent);font-weight:600;">✓ Registrado hoje!</span>
-        </div>
-      </div>
-    </div>
 
     <!-- Streak -->
     <div class="a-section" style="padding-top:0;" id="streakSection">
@@ -127,11 +125,12 @@
     <!-- Gráfico semanal -->
     <div class="a-section" style="padding-top:0;">
       <div class="chart-card">
-        <div class="chart-title" data-i18n="p-app-humor:ultimos_7_dias_0c7f5">Últimos 7 dias</div>
+        <div class="chart-title" id="chartPick"></div>
         <div class="chart-sub" data-i18n="p-app-humor:seu_indice_de_bem_estar_36dd1">Seu índice de bem-estar</div>
         <div class="chart-wrap">
           <canvas id="moodChart"></canvas>
         </div>
+        <div class="month-stats" id="monthStats"></div>
       </div>
     </div>
 
@@ -152,6 +151,14 @@
 <script type="module">
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+  import { mountMoodFace } from "./mood-face.js?v=3";
+  let heroFace = null, heroFaceMood = null;
+  function setHeroFace(mood) {
+    if (heroFaceMood === mood) return;
+    heroFace?.destroy();
+    heroFaceMood = mood;
+    heroFace = mountMoodFace(document.getElementById("heroEmoji"), mood);
+  }
 
   const MOODS = {
     1: { emoji:"😞", label:"Mal",     color:"#b8453d" },
@@ -160,14 +167,14 @@
     4: { emoji:"🙂", label:"Bem",     color:"#4a9e66" },
     5: { emoji:"😄", label:"Ótimo",   color:"#2d6a3e" },
   };
+  const DAYS_FULL = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
   const DAYS   = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
   const MONTHS = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
 
-  let selectedMood = null;
   let currentUser  = null;
   let humorData    = {};
+  let humorNotes   = {};
   let chartInstance = null;
-  let todayLocked  = false;
 
   // Data em horário de São Paulo, não UTC — toISOString() usaria UTC e, entre
   // 21h e 23h59 em SP (UTC-3), o UTC já teria virado o dia seguinte, fazendo
@@ -186,7 +193,10 @@
   function dateFromKey(dateStr) {
     return new Date(`${dateStr}T12:00:00Z`);
   }
-  const sessionKey = () => currentUser ? `ep:humor:session:${currentUser.uid}` : null;
+  // uid da última sessão desta aba: permite desenhar o cache antes do login confirmar
+  let lastUid = null;
+  try { lastUid = sessionStorage.getItem("ep:lastUid"); } catch {}
+  const sessionKey = () => (currentUser?.uid || lastUid) ? `ep:humor:session:${currentUser?.uid || lastUid}` : null;
 
   function readSessionCache() {
     try {
@@ -196,35 +206,29 @@
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       if (parsed.date !== todayStr()) return null;
+      humorNotes = parsed.notes || {};
       return parsed.data;
     } catch { return null; }
   }
   function writeSessionCache(data) {
     try {
       const key = sessionKey();
-      if (key) sessionStorage.setItem(key, JSON.stringify({ date: todayStr(), data }));
+      if (key) sessionStorage.setItem(key, JSON.stringify({ date: todayStr(), data, notes: humorNotes }));
     } catch {}
-  }
-
-  function lockPicker() {
-    todayLocked = true;
-    document.querySelectorAll(".mood-btn").forEach(b => {
-      b.disabled = true;
-      b.style.opacity = b.classList.contains("is-selected") ? "1" : ".55";
-      b.style.cursor = "default";
-    });
   }
 
   onAuthStateChanged(auth, async user => {
     if (!user) { window.location.href = "./login.html"; return; }
     currentUser = user;
+    try { sessionStorage.setItem("ep:lastUid", user.uid); } catch {}
+    if (lastUid && lastUid !== user.uid) { humorData = {}; humorNotes = {}; }
     // Remove a antiga chave compartilhada entre contas, usada antes do cache
     // ser isolado por usuário neste dispositivo.
     try { sessionStorage.removeItem("ep:humor:session"); } catch {}
 
     const today = dateFromKey(todayStr());
     document.getElementById("heroDate").textContent =
-      `${DAYS[today.getUTCDay()]}, ${today.getUTCDate()} de ${MONTHS[today.getUTCMonth()]}`;
+      `${DAYS_FULL[today.getUTCDay()]}, ${today.getUTCDate()} de ${MONTHS[today.getUTCMonth()]}`;
 
     // Render do cache de sessão imediatamente
     const cached = readSessionCache();
@@ -233,20 +237,6 @@
       renderAll();
     }
 
-    document.querySelectorAll(".mood-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        if (todayLocked) return;
-        selectedMood = Number(btn.dataset.mood);
-        markBtn(selectedMood);
-        const m = MOODS[selectedMood];
-        document.getElementById("heroEmoji").textContent = m.emoji;
-        document.getElementById("heroLabel").textContent = m.label;
-        document.getElementById("saveBtn").classList.remove("a-hide");
-        document.getElementById("savedMsg").classList.add("a-hide");
-      });
-    });
-
-    document.getElementById("saveBtn").addEventListener("click", saveHumor);
 
     await loadFromBackend();
   });
@@ -261,59 +251,20 @@
 
     try {
       const token = await currentUser.getIdToken();
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor?days=30`, {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor?all=1`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const d = await r.json().catch(() => ({}));
       if (!d.ok) throw new Error(d.error || "api");
       humorData = {};
-      d.items.forEach(item => { humorData[item.date] = item.mood; });
+      humorNotes = {};
+      d.items.forEach(item => { humorData[item.date] = item.mood; if (item.note) humorNotes[item.date] = item.note; });
       writeSessionCache(humorData);
       renderAll();
     } catch {
       if (!Object.keys(humorData).length) {
-        document.getElementById("savedMsg").textContent = "Não foi possível carregar o histórico.";
+        document.getElementById("heroLabel").textContent = "Não foi possível carregar o histórico.";
       }
-    }
-  }
-
-  async function saveHumor() {
-    if (!selectedMood || todayLocked) return;
-    const date = todayStr();
-    humorData[date] = selectedMood;
-    document.getElementById("saveBtn").classList.add("a-hide");
-    document.getElementById("savedMsg").classList.remove("a-hide");
-    lockPicker();
-    renderAll();
-    writeSessionCache(humorData);
-    try {
-      const token = await currentUser.getIdToken();
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ mood: selectedMood })
-      });
-      const response = await r.json().catch(() => ({}));
-      if (!r.ok || !response.ok) throw new Error(response.error || "fail");
-      if (response.date && response.date !== date) {
-        delete humorData[date];
-        humorData[response.date] = response.mood;
-        writeSessionCache(humorData);
-        renderAll();
-      }
-    } catch {
-      delete humorData[date];
-      todayLocked = false;
-      document.querySelectorAll(".mood-btn").forEach(b => {
-        b.disabled = false; b.style.opacity = ""; b.style.cursor = "";
-      });
-      document.getElementById("savedMsg").textContent = "Não foi possível salvar. Tente novamente.";
-      document.getElementById("saveBtn").classList.remove("a-hide");
-      writeSessionCache(humorData);
-      markBtn(selectedMood);
-      buildChart();
-      buildStreak();
-      loadHistory();
     }
   }
 
@@ -322,51 +273,104 @@
     const todayMood = humorData[today];
     if (todayMood) {
       const m = MOODS[todayMood];
-      document.getElementById("heroEmoji").textContent = m.emoji;
+      setHeroFace(Number(todayMood));
       document.getElementById("heroLabel").textContent = m.label;
-      document.getElementById("savedMsg").classList.remove("a-hide");
-      document.getElementById("saveBtn").classList.add("a-hide");
-      markBtn(todayMood);
-      if (!todayLocked) lockPicker();
-    } else if (!todayLocked) {
-      selectedMood = null;
-      markBtn(null);
-      document.getElementById("heroEmoji").textContent = "😐";
-      document.getElementById("heroLabel").textContent = "Como está você hoje?";
+      document.getElementById("heroDone").hidden = false;
+    } else {
+      document.getElementById("heroDone").hidden = true;
+      setHeroFace(3);
+      document.getElementById("heroLabel").innerHTML = 'Ainda sem registro hoje · <a href="./home.html" style="color:inherit;text-decoration:underline">registrar no início</a>';
     }
     buildChart();
+    buildMonth();
     buildStreak();
     loadHistory();
   }
 
-  function markBtn(mood) {
-    document.querySelectorAll(".mood-btn").forEach(b => {
-      b.classList.toggle("is-selected", Number(b.dataset.mood) === mood);
-    });
+  // Resumo do mês corrente: % de dias registrados em cada humor.
+  let monthChoice = null;
+  const MONTH_NAMES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  function buildMonth() {
+    const box = document.getElementById("monthStats");
+    if (!box) return;
+    const current = todayStr().slice(0, 7);
+    // meses com registro (mais recente primeiro) + o mês atual sempre
+    const months = [...new Set([current, ...Object.keys(humorData).map(d => d.slice(0, 7))])].sort().reverse();
+    if (!monthChoice || !months.includes(monthChoice)) monthChoice = current;
+    const prefix = monthChoice;
+    const labelOf = (ym) => MONTH_NAMES[Number(ym.slice(5, 7)) - 1] + (ym.slice(0, 4) !== current.slice(0, 4) ? " de " + ym.slice(0, 4) : "");
+    const picker = `<label class="month-pick"><span class="month-pick__txt">Resumo de <em>${labelOf(prefix)}</em></span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      <select id="monthSelect" aria-label="Escolher mês">${months.map(m => `<option value="${m}"${m === prefix ? " selected" : ""}>${labelOf(m)}</option>`).join("")}</select></label>`;
+    const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    Object.entries(humorData).forEach(([date, mood]) => { if (date.startsWith(prefix) && counts[mood] !== undefined) counts[mood]++; });
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+    if (!total) {
+      box.innerHTML = `<div class="month-stats__head">${picker}</div><p class="month-stats__empty">Registre seu humor para ver o resumo do mês.</p>`;
+      bindMonthSelect();
+      return;
+    }
+    // porcentagens que somam 100 (maior resto)
+    const raw = [5, 4, 3, 2, 1].map(k => ({ k, exact: counts[k] * 100 / total }));
+    raw.forEach(r => { r.pct = Math.floor(r.exact); });
+    let rest = 100 - raw.reduce((a, r) => a + r.pct, 0);
+    [...raw].sort((a, b) => (b.exact - b.pct) - (a.exact - a.pct)).forEach(r => { if (rest > 0 && counts[r.k]) { r.pct++; rest--; } });
+    box.innerHTML = `<div class="month-stats__head">${picker}<span>${total} ${total === 1 ? "dia registrado" : "dias registrados"}</span></div>
+      <div class="month-bar">${raw.filter(r => counts[r.k]).map(r => `<i style="width:${r.exact}%;background:${MOODS[r.k].color}" title="${MOODS[r.k].label}: ${r.pct}%"></i>`).join("")}</div>
+      <div class="month-rows">${raw.map(r => `<div class="month-row${counts[r.k] ? "" : " is-zero"}">
+        <span class="month-row__emoji">${MOODS[r.k].emoji}</span><span>${MOODS[r.k].label}</span>
+        <span class="month-row__track"><i style="width:${r.exact}%;background:${MOODS[r.k].color}"></i></span><b>${r.pct}%</b></div>`).join("")}</div>`;
+    bindMonthSelect();
+  }
+  function bindMonthSelect() {
+    document.getElementById("monthSelect")?.addEventListener("change", e => { monthChoice = e.target.value; buildMonth(); });
   }
 
+  // Período do gráfico: "7d" (padrão) ou um mês "AAAA-MM" com registros.
+  let chartChoice = "7d";
+  function renderChartPicker() {
+    const box = document.getElementById("chartPick");
+    const current = todayStr().slice(0, 7);
+    const months = [...new Set([current, ...Object.keys(humorData).map(d => d.slice(0, 7))])].sort().reverse();
+    if (chartChoice !== "7d" && !months.includes(chartChoice)) chartChoice = "7d";
+    const labelOf = (v) => v === "7d" ? "Últimos 7 dias"
+      : MONTH_NAMES[Number(v.slice(5, 7)) - 1].replace(/^./, c => c.toUpperCase()) + (v.slice(0, 4) !== current.slice(0, 4) ? " de " + v.slice(0, 4) : "");
+    box.innerHTML = `<label class="month-pick"><span class="month-pick__txt">${chartChoice === "7d" ? labelOf("7d") : `<em>${labelOf(chartChoice)}</em>`}</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      <select aria-label="Escolher período do gráfico"><option value="7d"${chartChoice === "7d" ? " selected" : ""}>Últimos 7 dias</option>${months.map(m => `<option value="${m}"${m === chartChoice ? " selected" : ""}>${labelOf(m)}</option>`).join("")}</select></label>`;
+    box.querySelector("select").addEventListener("change", e => { chartChoice = e.target.value; buildChart(); });
+  }
   function buildChart() {
-    const labels = [], data = [], colors = [];
+    renderChartPicker();
+    const labels = [], data = [], colors = [], dates = [];
     const today = todayStr();
-    for (let i = 6; i >= 0; i--) {
-      const dateStr = shiftDate(today, -i);
-      const d = dateFromKey(dateStr);
-      labels.push(DAYS[d.getUTCDay()]);
+    const push = (dateStr, label) => {
       const val = humorData[dateStr] || 0;
-      data.push(val);
+      labels.push(label); dates.push(dateStr); data.push(val);
       colors.push(val ? (MOODS[val]?.color || "#ccc") : "rgba(0,0,0,.06)");
+    };
+    if (chartChoice === "7d") {
+      for (let i = 6; i >= 0; i--) {
+        const dateStr = shiftDate(today, -i);
+        push(dateStr, DAYS[dateFromKey(dateStr).getUTCDay()]);
+      }
+    } else {
+      const [y, m] = chartChoice.split("-").map(Number);
+      const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+      for (let day = 1; day <= last; day++) push(`${chartChoice}-${String(day).padStart(2, "0")}`, String(day));
     }
+    const isMonth = chartChoice !== "7d";
     const ctx = document.getElementById("moodChart").getContext("2d");
     if (chartInstance) chartInstance.destroy();
     chartInstance = new Chart(ctx, {
       type: "bar",
-      data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 8, borderSkipped: false }] },
+      data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: isMonth ? 4 : 8, borderSkipped: false, maxBarThickness: isMonth ? 18 : undefined }] },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => MOODS[c.raw]?.label || "Sem registro" } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { title: items => { const d = dateFromKey(dates[items[0].dataIndex]); return `${DAYS_FULL[d.getUTCDay()]}, ${d.getUTCDate()} de ${MONTHS[d.getUTCMonth()]}`; }, label: c => MOODS[c.raw]?.label || "Sem registro" } } },
         scales: {
           y: { min: 0, max: 5, ticks: { display: false }, grid: { color: "rgba(0,0,0,.04)" } },
-          x: { ticks: { font: { size: 11, weight: "600" } }, grid: { display: false } }
+          x: { ticks: { font: { size: isMonth ? 10 : 11, weight: "600" }, autoSkip: isMonth, maxRotation: 0 }, grid: { display: false } }
         }
       }
     });
@@ -383,6 +387,9 @@
     document.getElementById("streakNum").textContent = streak;
   }
 
+  function escapeNote(t) {
+    return String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
   function loadHistory() {
     const sorted = Object.entries(humorData).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 30);
     const list = document.getElementById("historyList");
@@ -390,18 +397,36 @@
       list.innerHTML = `<div class="a-empty" style="padding:24px 0;"><div class="a-empty__icon" style="font-size:32px;">📝</div><div class="a-empty__sub">Seus registros de humor aparecerão aqui.</div></div>`;
       return;
     }
-    list.innerHTML = sorted.map(([dateStr, val]) => {
+    list.innerHTML = `<div class="history-scroll">${sorted.map(([dateStr, val]) => {
       const d = dateFromKey(dateStr);
       const m = MOODS[val] || MOODS[3];
       return `<div class="history-item">
         <div class="history-emoji">${m.emoji}</div>
         <div class="history-info">
+          <div class="history-label">${DAYS_FULL[d.getUTCDay()]}</div>
           <div class="history-day">${m.label}</div>
-          <div class="history-label">${DAYS[d.getUTCDay()]}</div>
+          ${humorNotes[dateStr] ? `<p class="history-note">${escapeNote(humorNotes[dateStr])}</p>` : ""}
         </div>
         <div class="history-date">${d.getUTCDate()} de ${MONTHS[d.getUTCMonth()]}</div>
       </div>`;
-    }).join("");
+    }).join("")}</div>`;
+    // Até 7 registros visíveis; o restante rola dentro do card.
+    const box = list.querySelector(".history-scroll");
+    const items = box.querySelectorAll(".history-item");
+    if (items.length > 7) {
+      box.style.maxHeight = items[7].offsetTop + "px";
+      box.classList.add("is-scrollable");
+    }
+  }
+
+  // Desenha o último estado desta aba antes de o login confirmar (sem piscar).
+  {
+    const t0 = dateFromKey(todayStr());
+    document.getElementById("heroDate").textContent = `${DAYS_FULL[t0.getUTCDay()]}, ${t0.getUTCDate()} de ${MONTHS[t0.getUTCMonth()]}`;
+  }
+  if (lastUid) {
+    const early = readSessionCache();
+    if (early) { humorData = early; try { renderAll(); } catch {} }
   }
 </script>
 </body>

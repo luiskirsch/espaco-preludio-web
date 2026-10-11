@@ -27,12 +27,16 @@
         updateViaCache: "none"
       });
 
+      // Páginas de videochamada nunca avisam nem recarregam por atualização:
+      // um reload derruba a consulta. A versão nova vale na próxima navegação.
+      const inCallPage = /\/(consultorio|entrar)\.html$/.test(location.pathname);
+
       // Detect update
       reg.addEventListener("updatefound", () => {
         const newWorker = reg.installing;
         if (!newWorker) return;
         newWorker.addEventListener("statechange", () => {
-          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller && !inCallPage) {
             // Já existe SW ativo + novo está pronto → atualização disponível
             showUpdateToast(() => {
               newWorker.postMessage({ type: "SKIP_WAITING" });
@@ -44,7 +48,7 @@
       // Quando o novo SW assumir o controle, mostra aviso e recarrega após 2s
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
-        if (refreshing) return;
+        if (refreshing || inCallPage) return;
         refreshing = true;
         injectStyles();
         const notice = document.createElement("div");

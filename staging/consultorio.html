@@ -19,15 +19,32 @@
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-293">
   <link rel="stylesheet" href="./css/consultation-video.css?v=2">
-  <script src="./i18n/init.js?v=2-4" defer></script>
+  <script src="./i18n/init.js?v=2-6" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
-  <script src="./js/pwa.js?v=2" defer></script>
+  <script src="./js/pwa.js?v=3" defer></script>
+  <style>
+    /* REC fica no fluxo do grupo da direita (o CSS global o posicionava absoluto). */
+    body.ep-consult #recIndicator.ep-rec-indicator--right { position: static; transform: none; right: auto; top: auto; margin-right: 4px; }
+    /* Gravar sessão: vermelho mesmo parado, pra ser achado de relance.
+       Gravando: preenchido + pulso, impossível não perceber. */
+    #ctrlRecord.ep-ctrl { color: #ef4444; background: rgba(239, 68, 68, 0.12); box-shadow: inset 0 0 0 1.5px rgba(239, 68, 68, 0.55); transition: background-color .15s ease, color .15s ease, box-shadow .15s ease; }
+    #ctrlRecord.ep-ctrl svg { color: #ef4444; }
+    #ctrlRecord.ep-ctrl:hover { color: #f87171; background: rgba(239, 68, 68, 0.22); box-shadow: inset 0 0 0 1.5px rgba(239, 68, 68, 0.85); }
+    #ctrlRecord.ep-ctrl:hover svg { color: #f87171; }
+    #ctrlRecord.ep-ctrl.is-recording { color: #ffffff; background: #dc2626; box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); animation: ep-rec-pulse 1.6s ease-out infinite; }
+    #ctrlRecord.ep-ctrl.is-recording svg { color: #ffffff; }
+    #ctrlRecord.ep-ctrl.is-recording:hover { color: #ffffff; background: #b91c1c; }
+    @keyframes ep-rec-pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); }
+      70%  { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+    }
+    @media (prefers-reduced-motion: reduce) { #ctrlRecord.ep-ctrl.is-recording { animation: none; } }
+  </style>
 </head>
 <body class="ep-consult">
-<div class="ep-staging-banner" data-i18n="p-consultorio:ambiente_de_teste_espaco_preludio_ae9ee">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
-
 
 <div class="ep-shell">
 
@@ -43,7 +60,6 @@
       <span id="connectionStatus" class="ep-consult__status" data-i18n="consultorio:status.connecting">conectando…</span>
       <span id="e2eeBadge" class="ep-badge ep-badge--ok ep-hide" data-i18n-title="consultorio:e2ee.title" title="End-to-end encrypted" data-i18n="consultorio:e2ee.badge">E2EE ativo</span>
       <span id="aiCaptureBadge" class="ep-badge ep-badge--ok ep-hide" data-i18n-title="consultorio:aiCapture.title" title="Áudio sendo capturado para resumo IA pós-sessão" data-i18n="consultorio:aiCapture.badge">Áudio → IA</span>
-      <span class="ep-text-xs ep-text-muted" id="infoDuration" data-i18n="p-consultorio:0min_00s_c325c">0min 00s</span>
 
       <!-- Controles centrais (mic / cam / rec / hangup) na topbar -->
       <div class="ep-controls-bar ep-controls-bar--topbar">
@@ -65,18 +81,19 @@
         </button>
       </div>
 
-      <!-- Indicador REC — inline ao lado dos botões, sem position:fixed -->
-      <div id="recIndicator" class="ep-hide" style="display:flex;align-items:center;gap:8px;padding:5px 13px;background:rgba(220,38,38,0.92);color:#fff;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(220,38,38,0.35);flex-shrink:0;">
+    </div>
+    <div class="ep-flex ep-gap-8" style="align-items: center;">
+      <!-- Indicador REC no grupo da direita: à esquerda dos controles centrais cobria os selos de status -->
+      <div id="recIndicator" class="ep-hide ep-rec-indicator--right" style="display:flex;align-items:center;gap:8px;padding:5px 13px;background:rgba(220,38,38,0.92);color:#fff;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(220,38,38,0.35);flex-shrink:0;">
         <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;animation:ep-rec-blink 1.4s infinite ease-in-out;"></span>
         <span data-i18n="p-consultorio:rec_09ebb">REC</span>
         <span id="recTimer">00:00</span>
-        <span id="recChunkInfo" style="opacity:0.75;font-weight:400;" data-i18n="p-consultorio:0_partes_669ca">0 partes</span>
       </div>
-    </div>
-    <div class="ep-flex ep-gap-8" style="align-items: center;">
+      <!-- Cronômetro à direita: no grupo da esquerda colidia com os controles centralizados -->
+      <span class="ep-text-xs ep-text-muted" id="infoDuration" style="margin-right:6px;" data-i18n="p-consultorio:0min_00s_c325c">0min 00s</span>
       <!-- Ajustar ambiente na topbar — painel abre pra baixo -->
       <div class="ep-ambient ep-ambient--topbar">
-        <button id="ambientBtn" class="ep-ambient__btn" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="ambientPanel">
+        <button id="ambientBtn" class="ep-ambient__btn" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="ambientPanel" title="Ajustar ambiente" data-i18n-title="p-consultorio:ajustar_ambiente_208c6">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
             <line x1="4" y1="9" x2="20" y2="9"/>
             <line x1="4" y1="15" x2="20" y2="15"/>
@@ -85,25 +102,8 @@
           </svg>
           <span data-i18n="consultorio:ambient.btn">Ajustar ambiente</span>
         </button>
-        <div class="ep-ambient__panel" id="ambientPanel" data-i18n-aria-label="consultorio:ambient.panelLabel" aria-label="Ajustes de ambiente">
-          <div class="ep-ambient__section">
-            <div class="ep-ambient__label" data-i18n="consultorio:ambient.moodLabel">Clima da sala</div>
-            <div class="ep-ambient__pills" role="group" data-i18n-aria-label="consultorio:ambient.moodGroup" aria-label="Modo de clima">
-              <button class="ep-ambient__pill" type="button" data-mode="foco" data-i18n="consultorio:ambient.moodFocus">Foco</button>
-              <button class="ep-ambient__pill" type="button" data-mode="entardecer" data-i18n="consultorio:ambient.moodSunset">Entardecer</button>
-              <button class="ep-ambient__pill" type="button" data-mode="calmo" data-i18n="consultorio:ambient.moodCalm">Calmo</button>
-            </div>
-          </div>
-          <div class="ep-ambient__section">
-            <div class="ep-ambient__label" data-i18n="consultorio:ambient.soundLabel">Som ambiente</div>
-            <div class="ep-ambient__pills" role="group" data-i18n-aria-label="consultorio:ambient.soundGroup" aria-label="Som ambiente">
-              <button class="ep-ambient__pill" type="button" data-sound="off" data-i18n="consultorio:ambient.soundOff">Silêncio</button>
-              <button class="ep-ambient__pill" type="button" data-sound="brown" data-i18n="consultorio:ambient.soundWarm">Acolhedor</button>
-            </div>
-            <input type="range" data-ambient-volume class="ep-ambient__slider" min="0" max="100" value="40" data-i18n-aria-label="consultorio:ambient.volumeAria" aria-label="Volume do som ambiente">
-          </div>
-          <p class="ep-ambient__hint" data-i18n="consultorio:ambient.hint">Suas preferências ficam só neste dispositivo.</p>
-        </div>
+        <!-- Conteúdo montado por js/room-ambient.js quando a sala é criada -->
+        <div class="ep-ambient__panel" id="ambientPanel" role="dialog" aria-label="Ambiente" data-i18n-aria-label="p-consultorio:ambiente_e6fef"></div>
       </div>
       <button type="button" id="endSessionBtn" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="consultorio:topbar.endBtn">Encerrar</button>
       <a href="./painel.html" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n="consultorio:topbar.dashboardBtn">Painel</a>
@@ -242,10 +242,11 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=3-35";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-36";
   import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
   import { TOPIC_LIBRARY, ABORDAGEM_LABEL, shuffle } from "./js/topics.js";
-  import { initAtmosphere } from "./js/atmosphere.js";
+  import { applyMode, readMode } from "./js/atmosphere.js";
+  import { initRoomAmbient } from "./js/room-ambient.js?v=3";
   import { searchCID10 } from "./js/cid10.js?v=1";
 
   // tr(): i18n helper com fallback PT-BR.
@@ -290,12 +291,12 @@
     document.addEventListener("ep:i18n-ready", moveLangSwitcher, { once: true });
   }
 
-  // Inicializa clima + som ambiente + painel "Ajustar ambiente".
-  // Todo o estado fica em localStorage; nada disso vai pro servidor.
-  await initAtmosphere({ buttonId: "ambientBtn", panelId: "ambientPanel" });
+  // Clima da tela aplicado já (evita piscar); o painel "Ambiente" completo
+  // (fundo, luz, dispositivos, ruído) é montado quando a sala existe.
+  applyMode(readMode());
 
   // LiveKit via esm.sh — pin de versão para reprodutibilidade.
-  const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack } = await import('./js/consultation-media.js?v=1');
+  const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack, setupCodecNegotiation } = await import('./js/consultation-media.js?v=3');
   const livekitMod = await import(`https://esm.sh/livekit-client@${LIVEKIT_VERSION}`);
   const { Room, RoomEvent, Track, ExternalE2EEKeyProvider } = livekitMod;
 
@@ -322,6 +323,43 @@
     alert(tr("consultorio:alerts.tokenError", "Erro ao entrar na consulta: ") + (tokenData?.error || tokenRes.status));
     window.location.href = "./painel.html";
     throw new Error("TOKEN_FAIL");
+  }
+
+  // ─── Modo preparação ────────────────────────────────────────
+  // Entrou antes de T-15min: o paciente ainda não foi liberado. Mostra o
+  // aviso com a hora da liberação e o atalho para liberar agora.
+  if (tokenData.preparing && tokenData.patientReleaseAt) {
+    const releaseAt = Number(tokenData.patientReleaseAt);
+    const hhmm = new Date(releaseAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    const bar = document.createElement("div");
+    bar.id = "prepBanner";
+    bar.setAttribute("role", "status");
+    bar.style.cssText = "position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;isolation:isolate;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 32px);padding:12px 14px 12px 18px;border-radius:16px;background:#fffaf0;color:#1c1f1d;border:1px solid rgba(200,150,58,.45);box-shadow:0 18px 40px rgba(0,0,0,.35);font:500 14px/1.4 Inter,system-ui,sans-serif";
+    bar.innerHTML = `<span><strong style="color:#8a6020">Modo preparação.</strong> O paciente será liberado às <strong>${hhmm}</strong>.</span>
+      <button type="button" id="prepRelease" style="border:none;cursor:pointer;padding:9px 14px;border-radius:10px;background:#c8963a;color:#1c1a16;font:700 13px Inter,system-ui,sans-serif">Liberar paciente agora</button>`;
+    document.body.appendChild(bar);
+    const closeBar = () => bar.remove();
+    const autoClose = setTimeout(closeBar, Math.max(0, releaseAt - Date.now()));
+    bar.querySelector("#prepRelease").addEventListener("click", async (ev) => {
+      if (!confirm("Liberar a entrada do paciente agora?")) return;
+      const btn = ev.currentTarget;
+      btn.disabled = true;
+      btn.textContent = "Liberando…";
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/liberar-paciente`, {
+          method: "POST", headers: { Authorization: `Bearer ${await getFreshToken()}` }
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d.error || r.status);
+        clearTimeout(autoClose);
+        bar.innerHTML = '<span><strong style="color:#2d6a3e">Paciente liberado.</strong> Ele já pode entrar na sala.</span>';
+        setTimeout(closeBar, 4000);
+      } catch (e) {
+        btn.disabled = false;
+        btn.textContent = "Liberar paciente agora";
+        alert("Não foi possível liberar o paciente: " + e.message);
+      }
+    });
   }
 
   // ─── DOM refs ───────────────────────────────────────────────
@@ -545,9 +583,19 @@
   }
 
   room = new Room({
-    ...consultationRoomOptions(livekitMod),
+    ...consultationRoomOptions(livekitMod, undefined, { pauseVideoInBackground: false }),
     e2ee: useE2EE ? { keyProvider, worker: e2eeWorker } : undefined
   });
+
+  // VP9 premium com volta automática a VP8 se o outro lado não decodificar.
+
+  setupCodecNegotiation(room, livekitMod);
+
+  initRoomAmbient({
+    room, livekitMod, lkVersion: LIVEKIT_VERSION,
+    buttonId: "ambientBtn", panelId: "ambientPanel",
+    localTileEl: document.getElementById("tileLocal")
+  }).catch(err => console.warn("room_ambient_init_error", err));
 
   let sessionClockOffsetMs = Number(tokenData.serverNow || Date.now()) - Date.now();
   let sessionStartTs = Number(tokenData.sessionStartedAt) || null;
@@ -691,7 +739,7 @@
     // só áudio mixado pro Whisper. Web Audio API consome ~1-2% CPU.
     if (tokenData.aiSummaryReady) {
       try {
-        const { SessionAiCapture } = await import("./js/session-ai-capture.js?v=4");
+        const { SessionAiCapture } = await import("./js/session-ai-capture.js?v=6");
         const aiCaptureBadge = document.getElementById("aiCaptureBadge");
         aiCapture = new SessionAiCapture({
           room,
@@ -804,7 +852,7 @@
     const aiUpload = aiUploadResult.value;
     if (aiUpload && aiUpload.ok === false) {
       console.error("ai_summary_upload_failed", aiUpload);
-      alert(tr("consultorio:alerts.aiUploadFailed", "A consulta foi encerrada, mas o áudio para o Resumo IA não pôde ser enviado. Esta sessão ficará sem resumo automático.") + `\n(${aiUpload.error})`);
+      alert(tr("consultorio:alerts.aiUploadFailed", "A consulta foi encerrada, mas o pedido do Resumo IA não pôde ser enviado agora. O áudio ficou guardado neste computador: abra o prontuário desta sessão e use \"Tentar de novo\".") + `\n(${aiUpload.error})`);
     }
 
     try { await room?.disconnect(); } catch {}
@@ -814,7 +862,7 @@
   endSessionBtn.addEventListener("click", endSessionFlow);
 
   // ─── Gravação local cifrada ──────────────────────────────────
-  const { SessionRecorder, downloadRecording } = await import("./js/session-record.js?v=3");
+  const { SessionRecorder, downloadRecording } = await import("./js/session-record.js?v=4");
   const ctrlRecord       = document.getElementById("ctrlRecord");
   const recConsentModal  = document.getElementById("recConsentModal");
   const recConsentCheck  = document.getElementById("recConsentCheck");
@@ -822,7 +870,6 @@
   const recCancelBtn     = document.getElementById("recCancelBtn");
   const recIndicator     = document.getElementById("recIndicator");
   const recTimer         = document.getElementById("recTimer");
-  const recChunkInfo     = document.getElementById("recChunkInfo");
   let recorder = null;
   let recTimerInterval = null;
 
@@ -868,7 +915,6 @@
       recorder = new SessionRecorder({
         sessionId,
         dek,
-        onChunk: (n) => { recChunkInfo.textContent = tr("consultorio:rec.chunks", "{{n}} partes", { n }); },
         onStop: (blob) => {
           downloadRecording(blob, sessionId);
           recorder = null;
@@ -884,7 +930,6 @@
       ctrlRecord.setAttribute("aria-pressed", "true");
       recIndicator.classList.remove("ep-hide");
       recTimer.textContent = "00:00";
-      recChunkInfo.textContent = "0 chunks";
       const startedAt = Date.now();
       recTimerInterval = setInterval(() => {
         recTimer.textContent = fmtRecTime(Date.now() - startedAt);

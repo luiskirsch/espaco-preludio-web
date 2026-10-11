@@ -1,4 +1,4 @@
-name: Traduções automáticas
+name: Traduções automáticas e espelho do staging
 
 # Toda alteração publicada na main entra traduzida (en-US / es-ES): textos
 # novos de páginas e de JavaScript são marcados, traduzidos pelo servidor do
@@ -40,6 +40,10 @@ jobs:
           I18N_CI_TOKEN: ${{ secrets.I18N_CI_TOKEN }}
         run: node scripts/i18n/sync.mjs
 
+      # Regra do projeto: staging/ é cópia idêntica da produção (raiz).
+      - name: Espelhar produção no staging
+        run: node scripts/sync-staging.mjs
+
       - name: Publicar traduções
         run: |
           git config user.name "github-actions[bot]"
@@ -49,6 +53,10 @@ jobs:
             echo "Nada novo para traduzir."
             exit 0
           fi
-          git commit -m "chore(i18n): traduções automáticas en-US/es-ES"
+          if git diff --cached --name-only | grep -q "^i18n/locales/"; then
+            git commit -m "chore(i18n): traduções automáticas en-US/es-ES"
+          else
+            git commit -m "chore(staging): espelhar produção"
+          fi
           git pull --rebase origin main
           git push origin HEAD:main

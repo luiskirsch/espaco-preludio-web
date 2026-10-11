@@ -18,11 +18,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
-  <script src="./i18n/init.js?v=2-4" defer></script>
+  <script src="./i18n/init.js?v=2-6" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
-  <script src="./js/pwa.js?v=2" defer></script>
+  <script src="./js/pwa.js?v=3" defer></script>
   <style>
     .rec-drop {
       display: flex;
@@ -207,9 +207,7 @@
   </style>
 </head>
 <body class="ep-has-sidebar">
-<div class="ep-staging-banner" data-i18n="p-prontuario:ambiente_de_teste_espaco_preludio_ae9ee">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
-
-<script src="./js/sidebar.js?v=27"></script>
+<script src="./js/sidebar.js?v=31"></script>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
@@ -442,9 +440,10 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=3-35";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-36";
   import { decryptNote, clearDek } from "./js/crypto.js";
-  import { decryptAiSummaryPayload, migrateLegacyAiSummary } from "./js/ai-summary-crypto.js";
+  import { decryptAiSummaryPayload, migrateLegacyAiSummary } from "./js/ai-summary-crypto.js?v=2";
+  import { hasStoredAiAudio, retryAiSummaryUpload, clearStoredAiAudio } from "./js/session-ai-capture.js?v=6";
 
   // tr(): tenta EP_I18N.t(key); fallback PT-BR se i18n nao carregou ainda.
   function tr(key, fallback, opts) {
@@ -612,10 +611,30 @@
     return Promise.all((data.notes || []).map(async n => ({ ...n, text: await decryptNote(n, dek) })));
   }
 
+  // Foto que o paciente pôs na própria conta (quando a conta está vinculada
+  // às sessões). Sem foto, ficam as iniciais.
+  async function loadPatientPhoto(avatarEl) {
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patientId)}/foto`, {
+        headers: { "Authorization": `Bearer ${idToken}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      const foto = data?.foto;
+      if (!res.ok || typeof foto !== "string" || !/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(foto)) return;
+      const img = document.createElement("img");
+      img.src = foto;
+      img.alt = "";
+      img.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;";
+      avatarEl.textContent = "";
+      avatarEl.appendChild(img);
+    } catch {}
+  }
+
   // ─── Renders ────────────────────────────────────────────────
   function renderHeader(patient) {
     const avatarEl = document.getElementById("patientAvatar");
     avatarEl.textContent = initialsFromName(patient.name);
+    loadPatientPhoto(avatarEl);
 
     document.getElementById("patientName").textContent = patient.name || tr("prontuario:stats.dash", "—");
 
@@ -676,16 +695,20 @@
       document.getElementById("statLastHint").textContent = tr("prontuario:stats.noSessions", "sem sessões");
     }
 
-    // Tempo total = soma de (completedAt - createdAt) das encerradas
+    // Tempo total = soma de (encerramento - início real) das encerradas.
+    // Antes usava createdAt (quando a consulta foi criada, às vezes dias antes),
+    // o que inflava o total. Sem início real registrado, a sessão não entra.
     let totalMs = 0;
+    let timed = 0;
     for (const s of completed) {
-      if (s.completedAt && s.createdAt) {
-        totalMs += Math.max(0, s.completedAt - s.createdAt);
+      if (s.completedAt && s.startedAt && s.completedAt > s.startedAt) {
+        totalMs += s.completedAt - s.startedAt;
+        timed++;
       }
     }
     document.getElementById("statTotal").textContent = fmtDuration(totalMs);
-    document.getElementById("statTotalHint").textContent = completed.length
-      ? tr("prontuario:stats.avgPerSession", "média {{value}}/sessão", { value: fmtDuration(Math.round(totalMs / completed.length)) })
+    document.getElementById("statTotalHint").textContent = timed
+      ? tr("prontuario:stats.avgPerSession", "média {{value}}/sessão", { value: fmtDuration(Math.round(totalMs / timed)) })
       : tr("prontuario:stats.dash", "—");
   }
 
@@ -696,8 +719,8 @@
     // Agrupa por mês (já ordenado desc por createdAt)
     const groups = new Map();
     for (const s of sessions) {
-      const k = monthKey(s.createdAt || Date.now());
-      if (!groups.has(k)) groups.set(k, { label: fmtMonthYear(s.createdAt || Date.now()), items: [] });
+      const k = monthKey(s.startedAt || s.createdAt || Date.now());
+      if (!groups.has(k)) groups.set(k, { label: fmtMonthYear(s.startedAt || s.createdAt || Date.now()), items: [] });
       groups.get(k).items.push(s);
     }
 
@@ -739,18 +762,19 @@
         ? `<span class="ep-badge ep-badge--ok">${escapeHtml(tr("prontuario:sessionCard.inProgress", "Em sessão"))}</span>`
         : `<span class="ep-badge">${escapeHtml(tr("prontuario:sessionCard.scheduled", "Agendada"))}</span>`;
 
-    const duration = (s.completedAt && s.createdAt)
-      ? fmtDuration(s.completedAt - s.createdAt)
+    const startMs = s.startedAt || s.createdAt;
+    const duration = (s.completedAt && s.startedAt && s.completedAt > s.startedAt)
+      ? fmtDuration(s.completedAt - s.startedAt)
       : null;
 
     const timeRange = s.completedAt
-      ? `${fmtTime(s.createdAt)} — ${fmtTime(s.completedAt)}${duration ? ` · ${duration}` : ""}`
-      : fmtTime(s.createdAt);
+      ? `${fmtTime(startMs)} — ${fmtTime(s.completedAt)}${duration ? ` · ${duration}` : ""}`
+      : fmtTime(startMs);
 
     card.innerHTML = `
       <button type="button" class="ep-session-card__head" aria-expanded="false">
         <div>
-          <div class="ep-session-card__date">${escapeHtml(fmtDateLong(s.createdAt))}</div>
+          <div class="ep-session-card__date">${escapeHtml(fmtDateLong(startMs))}</div>
           <div class="ep-session-card__time">${escapeHtml(timeRange)}</div>
           ${overdue ? `<div class="ep-session-card__overdue">${escapeHtml(tr("prontuario:sessionCard.overdueDetail", "Horário encerrado · status ainda não atualizado"))}</div>` : ""}
         </div>
@@ -790,10 +814,12 @@
     // Resumo IA: só busca quando o card abre pela primeira vez. Sessões
     // sem resumo retornam { exists: false, status: "none" } — UI fica vazia.
     let aiSummaryLoaded = false;
+    let aiPollTimer = null;
     const aiBox = card.querySelector("[data-ai-summary]");
-    async function loadAiSummary() {
-      if (aiSummaryLoaded) return;
+    async function loadAiSummary({ refresh = false } = {}) {
+      if (aiSummaryLoaded && !refresh) return;
       aiSummaryLoaded = true;
+      clearTimeout(aiPollTimer);
       try {
         const res = await fetch(
           `${BACKEND_BASE_URL}/therapy/session/${encodeURIComponent(s.sessionId)}/ai-summary`,
@@ -814,9 +840,37 @@
             dek,
           }).catch((err) => console.warn("ai_summary_legacy_migration_error", err));
         }
-        renderAiSummary(aiBox, data);
+        if (data.status === "completed") {
+          // Resumo pronto: o áudio guardado neste aparelho já não serve.
+          clearStoredAiAudio(s.sessionId).catch(() => {});
+        }
+        const canRetry = (data.status === "interrupted" || (data.status === "failed" && data.error !== "TRANSCRIPT_ALUCINADO"))
+          // Pedaços já transcritos no servidor também permitem refazer, mesmo sem
+          // áudio neste computador.
+          && (data.piecesStored === true || await hasStoredAiAudio(s.sessionId));
+        renderAiSummary(aiBox, data, { canRetry, onRetry: retryAiSummary });
+        // Enquanto processa, atualiza sozinho se o card continuar aberto.
+        if (data.status === "processing") {
+          aiPollTimer = setTimeout(() => { if (card.classList.contains("is-open")) loadAiSummary({ refresh: true }); }, 30_000);
+        }
       } catch (err) {
         console.warn("ai_summary_load_error", err);
+      }
+    }
+
+    // Reenvia o áudio guardado neste aparelho (processamento interrompido).
+    async function retryAiSummary(btn) {
+      btn.disabled = true;
+      btn.textContent = tr("prontuario:aiSummary.retrying", "Reenviando…");
+      try {
+        const token = (await sess.user?.getIdToken?.()) || idToken;
+        const result = await retryAiSummaryUpload({ sessionId: s.sessionId, backendBaseUrl: BACKEND_BASE_URL, idToken: token, dek });
+        if (!result.ok && result.error !== "AI_SUMMARY_EM_PROCESSAMENTO") throw new Error(result.error);
+        await loadAiSummary({ refresh: true });
+      } catch (err) {
+        console.warn("ai_summary_retry_error", err);
+        btn.disabled = false;
+        btn.textContent = tr("prontuario:aiSummary.retryFailed", "Não foi possível reenviar — tentar de novo");
       }
     }
 
@@ -829,8 +883,23 @@
     return card;
   }
 
-  function renderAiSummary(box, data) {
+  function renderAiSummary(box, data, { canRetry = false, onRetry = null } = {}) {
     const status = data.status || "completed";
+    if (status === "interrupted") {
+      box.innerHTML = `
+        <div class="ep-ai-summary ep-ai-summary--failed">
+          <div class="ep-ai-summary__head">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>${escapeHtml(tr("prontuario:aiSummary.interrupted", "A geração do resumo IA foi interrompida."))}</span>
+          </div>
+          <div class="ep-text-xs ep-text-muted">${escapeHtml(canRetry
+            ? tr("prontuario:aiSummary.interruptedRetryHint", "O áudio desta sessão ainda está guardado neste computador. Você pode reenviar.")
+            : tr("prontuario:aiSummary.interruptedNoAudio", "O áudio desta sessão não está mais disponível neste computador, então o resumo não pode ser refeito."))}</div>
+          ${canRetry ? `<button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-ai-retry style="margin-top:10px;">${escapeHtml(tr("prontuario:aiSummary.retry", "Tentar de novo"))}</button>` : ""}
+        </div>`;
+      box.querySelector("[data-ai-retry]")?.addEventListener("click", e => onRetry?.(e.currentTarget));
+      return;
+    }
     if (status === "processing") {
       box.innerHTML = `
         <div class="ep-ai-summary ep-ai-summary--processing">
@@ -854,7 +923,9 @@
             <span>${escapeHtml(failedMsg)}</span>
           </div>
           ${data.error ? `<div class="ep-text-xs ep-text-muted">${escapeHtml(data.error)}</div>` : ""}
+          ${canRetry ? `<button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" data-ai-retry style="margin-top:10px;">${escapeHtml(tr("prontuario:aiSummary.retry", "Tentar de novo"))}</button>` : ""}
         </div>`;
+      box.querySelector("[data-ai-retry]")?.addEventListener("click", e => onRetry?.(e.currentTarget));
       return;
     }
     const summary = data.summary || {};
@@ -1838,7 +1909,7 @@
       for (let i = 0; i < sessionsAsc.length; i++) {
         const s = sessionsAsc[i];
         ensure(60);
-        txt(tr("prontuario:pdf.sessionLabel", "Sessão {{n}} — {{date}} {{time}}", { n: i + 1, date: fmtDate(s.createdAt), time: fmtTime(s.createdAt) }), { font: fontBold, size: 12 });
+        txt(tr("prontuario:pdf.sessionLabel", "Sessão {{n}} — {{date}} {{time}}", { n: i + 1, date: fmtDate(s.startedAt || s.createdAt), time: fmtTime(s.startedAt || s.createdAt) }), { font: fontBold, size: 12 });
         const statusMap = {
           completed: tr("prontuario:sessionCard.completed", "Encerrada"),
           in_progress: tr("prontuario:sessionCard.inProgress", "Em sessão"),

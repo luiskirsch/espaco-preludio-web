@@ -18,17 +18,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
-  <link rel="stylesheet" href="./css/planos.css?v=20260926b">
-  <script src="./i18n/init.js?v=2-4" defer></script>
+  <link rel="stylesheet" href="./css/planos.css?v=20261008a">
+  <script src="./i18n/init.js?v=2-6" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
-  <script src="./js/pwa.js?v=2" defer></script>
+  <script src="./js/pwa.js?v=3" defer></script>
 </head>
 <body class="ep-has-sidebar">
-<div class="ep-staging-banner" data-i18n="p-planos:ambiente_de_teste_espaco_preludio_ae9ee">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
-
-<script src="./js/sidebar.js?v=27"></script>
+<script src="./js/sidebar.js?v=31"></script>
 
 <div class="ep-shell">
 <header class="ep-topbar">
@@ -146,61 +144,71 @@
     <span class="ep-text-xs ep-text-muted" data-i18n="planos:currency.usdNote">USD · Stripe · Cartão internacional</span>
   </div>
 
-  <!-- Cards lado-a-lado: empresa + profissional -->
-  <div id="tiersGrid" style="display: none; grid-template-columns: 1fr 1fr; gap: 16px;" class="ep-mt-16">
+  <!-- Plano profissional (acesso de programas é liberado só pelo admin) -->
+  <div id="tiersGrid" style="display: none; grid-template-columns: minmax(0, 1120px); justify-content: center; gap: 16px;" class="ep-mt-16">
 
-    <!-- Tier Programas institucionais -->
-    <section id="empresaCard" class="ep-plan-card ep-plan-card--institutional">
-      <div class="ep-plan-card__content">
-        <span class="ep-plan-card__label" data-i18n="p-planos:plano_institucional_7f79c">Plano institucional</span>
-        <div class="ep-plan-card__head">
-          <h2 class="ep-h2 ep-mt-0" data-i18n="planos:empresa.h2">Programas institucionais</h2>
-          <div class="ep-plan-card__price">
-            <span class="ep-plan-card__amount" data-i18n="planos:empresa.amount">Sem mensalidade</span>
-          </div>
-        </div>
-        <p class="ep-plan-card__description ep-text-sm ep-text-muted" data-i18n="planos:empresa.sub">Para profissionais vinculados a programas contratados por escolas, empresas ou redes públicas.</p>
-        <ul class="ep-plan-card__features">
-          <li data-i18n="planos:empresa.f1">✓ Acesso custeado pelo programa contratante</li>
-          <li data-i18n="planos:empresa.paymentRequired">✓ Sem cartão ou assinatura para o profissional</li>
-          <li data-i18n="planos:empresa.f2">✓ Repasse por atendimento conforme o programa institucional</li>
-          <li data-i18n="planos:empresa.f3">✓ Vídeo cifrado E2EE + prontuário completo + documentos clínicos</li>
-          <li data-i18n="planos:empresa.f4">✓ Indicadores operacionais agregados, sem conteúdo clínico individual</li>
-          <li data-i18n="planos:empresa.f5">✓ Agendamento direto pelo link do profissional</li>
-        </ul>
-      </div>
-    </section>
 
     <!-- Tier Profissional -->
-    <section id="profCard" class="ep-plan-card">
-      <div class="ep-plan-card__head">
-        <h2 class="ep-h2 ep-mt-0" data-i18n="planos:prof.h2">Profissional</h2>
-        <div class="ep-plan-card__price">
-          <span class="ep-plan-card__currency" data-i18n="planos:prof.currency">R$</span>
-          <span class="ep-plan-card__amount" data-i18n="planos:prof.amount">99,00</span>
-          <span class="ep-plan-card__per" data-i18n="planos:prof.per">/mês</span>
+    <section id="profCard" class="ep-plan-card ep-plan-wide">
+      <div class="ep-plan-wide__side">
+        <div class="ep-plan-card__head">
+          <h2 class="ep-h2 ep-mt-0" data-i18n="planos:prof.h2">Profissional</h2>
+          <div class="ep-plan-card__price">
+            <span class="ep-plan-card__currency" data-i18n="planos:prof.currency">R$</span>
+            <span class="ep-plan-card__amount" data-i18n="planos:prof.amount">60,00</span>
+            <span class="ep-plan-card__per" data-i18n="planos:prof.per">/mês</span>
+          </div>
+        </div>
+        <ul class="ep-plan-wide__perks">
+          <li data-i18n="p-planos:tudo_incluso_sem_modulos_extras_52d6b">Tudo incluso, sem módulos extras</li>
+          <li data-i18n="p-planos:sem_comissao_ou_taxa_por_c74df">Sem comissão ou taxa por sessão</li>
+          <li data-i18n="planos:prof.paymentTrial">✓ Meio de pagamento obrigatório; 30 dias grátis antes da primeira cobrança</li>
+        </ul>
+        <div class="ep-plan-wide__cta">
+          <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-btn-brl" id="subscribeProfBtn" data-i18n="planos:prof.subscribeBtn">
+            Cadastrar meio de pagamento
+          </button>
+          <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-8 ep-btn-usd ep-hide" id="subscribeProfUsdBtn" data-i18n="p-planos:subscribe_49_month_f5697">
+            Subscribe — $12 / month
+          </button>
         </div>
       </div>
-      <ul class="ep-plan-card__features ep-mt-12">
-        <li data-i18n="planos:prof.paymentTrial">✓ Meio de pagamento obrigatório; 30 dias grátis antes da primeira cobrança</li>
-        <li data-i18n="planos:prof.f1">✓ Consultas ilimitadas com vídeo cifrado E2EE + gravação local</li>
-        <li data-i18n="planos:prof.f2">✓ Pacientes ilimitados com prontuário cifrado + tags</li>
-        <li data-i18n="planos:prof.f3">✓ Anamnese e escalas validadas (PHQ-9, GAD-7)</li>
-        <li data-i18n="planos:prof.f4">✓ Receita digital ICP-Brasil + documentos clínicos (atestado, encaminhamento, relatório, laudo)</li>
-        <li data-i18n-html="planos:prof.f5Html">✓ <strong>Selo "Verificado" azul</strong> + diretório público com agendamento direto</li>
-        <li data-i18n="planos:prof.f6">✓ Recibos automáticos com TUSS (reembolso convênio)</li>
-        <li data-i18n-html="planos:prof.f7Html">✓ <strong>NFS-e via NFE.io</strong> (~5.500 municípios)</li>
-        <li data-i18n="planos:prof.f8">✓ Financeiro com convênios + cobrança Pix</li>
-        <li data-i18n-html="planos:prof.f9Html">✓ <strong>Clínica multi-profissional</strong> (equipe + repasse mensal)</li>
-        <li data-i18n-html="planos:prof.f10Html">✓ Suporte prioritário 24h via <strong>e-mail e WhatsApp</strong></li>
-        <li data-i18n="planos:prof.f11">✓ Sem reverificação periódica</li>
-      </ul>
-      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-16 ep-btn-brl" id="subscribeProfBtn" data-i18n="planos:prof.subscribeBtn">
-        Cadastrar meio de pagamento
-      </button>
-      <button type="button" class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block ep-mt-8 ep-btn-usd ep-hide" id="subscribeProfUsdBtn" data-i18n="p-planos:subscribe_49_month_f5697">
-        Subscribe — $49 / month
-      </button>
+      <div class="ep-plan-wide__features">
+        <div class="ep-plan-wide__group">
+          <h3 data-i18n="p-planos:atendimento_fff9e">Atendimento</h3>
+          <ul class="ep-plan-card__features">
+            <li data-i18n="planos:prof.f1">✓ Consultas ilimitadas com vídeo cifrado E2EE + gravação local</li>
+            <li data-i18n="p-planos:agenda_online_link_de_agendamento_f9ed2">✓ Agenda online, link de agendamento e lembretes por e-mail e WhatsApp</li>
+            <li data-i18n="p-planos:chat_seguro_com_pacientes_98df5">✓ Chat seguro com pacientes</li>
+          </ul>
+        </div>
+        <div class="ep-plan-wide__group">
+          <h3 data-i18n="p-planos:clinico_a9592">Clínico</h3>
+          <ul class="ep-plan-card__features">
+            <li data-i18n="planos:prof.f2">✓ Pacientes ilimitados com prontuário cifrado + tags</li>
+            <li data-i18n="planos:prof.f3">✓ Anamnese e escalas validadas (PHQ-9, GAD-7)</li>
+            <li data-i18n="planos:prof.f4">✓ Receita digital ICP-Brasil + documentos clínicos (atestado, encaminhamento, relatório, laudo)</li>
+          </ul>
+        </div>
+        <div class="ep-plan-wide__group">
+          <h3 data-i18n="p-planos:gestao_15a54">Gestão</h3>
+          <ul class="ep-plan-card__features">
+            <li data-i18n="planos:prof.f6">✓ Recibos automáticos com TUSS (reembolso convênio)</li>
+            <li data-i18n-html="planos:prof.f7Html">✓ <strong>NFS-e via NFE.io</strong> (~5.500 municípios)</li>
+            <li data-i18n="planos:prof.f8">✓ Financeiro com convênios + cobrança Pix</li>
+            <li data-i18n-html="planos:prof.f9Html">✓ <strong>Clínica multi-profissional</strong> (equipe + repasse mensal)</li>
+          </ul>
+        </div>
+        <div class="ep-plan-wide__group">
+          <h3 data-i18n="p-planos:visibilidade_e_suporte_3a265">Visibilidade e suporte</h3>
+          <ul class="ep-plan-card__features">
+            <li data-i18n-html="planos:prof.f5Html">✓ <strong>Selo "Verificado" azul</strong> + diretório público com agendamento direto</li>
+            <li data-i18n="p-planos:app_do_paciente_na_google_8aea8">✓ App do paciente na Google Play</li>
+            <li data-i18n-html="planos:prof.f10Html">✓ Suporte prioritário 24h via <strong>e-mail e WhatsApp</strong></li>
+            <li data-i18n="planos:prof.f11">✓ Sem reverificação periódica</li>
+          </ul>
+        </div>
+      </div>
     </section>
 
   </div>
@@ -223,7 +231,7 @@
 <script type="module">
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { requireTherapist } from "./js/auth-guard.js?v=3-35";
+  import { requireTherapist } from "./js/auth-guard.js?v=3-36";
 
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     await signOut(auth);
@@ -272,7 +280,6 @@
   const manageCardSub    = document.getElementById("manageCardSub");
   const cancelBtn        = document.getElementById("cancelBtn");
   const tiersGrid        = document.getElementById("tiersGrid");
-  const empresaCard      = document.getElementById("empresaCard");
   const profCard         = document.getElementById("profCard");
   const subscribeEmpresaBtn = document.getElementById("subscribeEmpresaBtn");
   const empresaPayerEmail = document.getElementById("empresaPayerEmail");
@@ -285,8 +292,8 @@
 
   // Preços USD (Stripe) — anual = mensal x 12 x 0.84 (16% off)
   const USD_PRICES = {
-    month: { prof: "49.00" },
-    year:  { prof: "494.00" }
+    month: { prof: "12.00" },
+    year:  { prof: "120.96" }
   };
 
   function updatePricing() {
@@ -299,7 +306,7 @@
       profPerEl.textContent     = per;
       subscribeProfUsdBtn.textContent = `${t("prof.subscribeBtn", null, "Cadastrar meio de pagamento")} — $${parseFloat(p.prof)}${per}`;
     } else if (billingCycle === "year") {
-      profAmountEl.textContent  = t("prof.amountYearly", null, "997,92");
+      profAmountEl.textContent  = t("prof.amountYearly", null, "604,80");
       profPerEl.textContent     = t("prof.perYearly", null, "/Anual");
     } else {
       profAmountEl.textContent  = t("prof.amount", null, "99,00");
@@ -348,7 +355,15 @@
   const ICON_ERR     = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>`;
 
   // ─── Status banner + which tier cards to show ───────────────────
-  if (plano === "pro") {
+  if (therapist.legacyExempt) {
+    showStatus(
+      "ep-status-card--ok",
+      ICON_OK,
+      "Você está isento da mensalidade",
+      "Seu acesso é completo e sem cobrança, por fazer parte dos profissionais cadastrados antes da nova cobrança. Não é preciso cadastrar cartão."
+    );
+    tiersGrid.style.display = "none";
+  } else if (plano === "pro") {
     const proTitle = therapist.proTier === "empresa"
       ? t("status.proTitleEmpresa", null, "Você está no plano Atendimento a Empresas")
       : t("status.proTitleProf", null, "Você está no plano Pro (Profissional)");

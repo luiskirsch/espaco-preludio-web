@@ -18,16 +18,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
-  <script src="./i18n/init.js?v=2-4" defer></script>
+  <script src="./i18n/init.js?v=2-6" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
-  <script src="./js/pwa.js?v=2" defer></script>
+  <script src="./js/pwa.js?v=3" defer></script>
 </head>
 <body class="ep-has-sidebar">
-<div class="ep-staging-banner" data-i18n="p-perfil:ambiente_de_teste_espaco_preludio_ae9ee">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
-
-<script src="./js/sidebar.js?v=27"></script>
+<script src="./js/sidebar.js?v=31"></script>
 
 <div class="ep-shell">
   <header class="ep-topbar">
@@ -306,48 +304,20 @@
       <!-- Agendamento público -->
       <section class="ep-receita-form">
         <h2 class="ep-h3 ep-mt-0" data-i18n="perfil:sched.h2">Agendamento online</h2>
-        <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="perfil:sched.sub">
-          Compartilhe um link público pra pacientes solicitarem horário direto.
+        <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="p-perfil:este_e_o_seu_link_162e3">
+          Este é o seu link de agendamento, criado a partir do seu nome. Copie e compartilhe com seus pacientes.
           Você aprova ou recusa cada pedido pelo painel — nada é confirmado sozinho.
         </p>
 
-        <div class="ep-field ep-mt-12">
-          <label class="ep-label" for="schedSlug" data-i18n="perfil:sched.slug">Identificador do seu link</label>
-          <div class="ep-flex" style="gap: 0; align-items: stretch;">
-            <span class="ep-input" style="display: inline-flex; align-items: center; padding: 9px 12px; background: var(--ep-bg-2); border-right: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; color: var(--ep-ink-2); font-size: 13.5px; white-space: nowrap;" data-i18n="p-perfil:espacopreludio_com_br_agendar_html_85adf">espacopreludio.com.br/agendar.html?p=</span>
-            <input id="schedSlug" class="ep-input" type="text" maxlength="40" placeholder="dr-roberto-fernandes" data-i18n-placeholder="perfil:sched.slugPlaceholder" style="border-top-left-radius: 0; border-bottom-left-radius: 0; font-family: 'JetBrains Mono', monospace; font-size: 13.5px;">
-          </div>
-          <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n-html="perfil:sched.slugHint">
-            Use letras minúsculas, números e hífens (3-40 caracteres). Ex.: <code>dr-roberto-fernandes</code>.
-          </p>
-        </div>
-
-        <div id="schedActiveLinkBox" class="ep-hide ep-mt-12" style="padding: 12px 14px; background: var(--ep-accent-soft); border-radius: 8px;">
+        <div id="schedActiveLinkBox" class="ep-hide ep-mt-12" style="padding: 14px 16px; background: var(--ep-accent-soft); border-radius: 10px;">
           <div class="ep-text-xs ep-text-muted" data-i18n="perfil:sched.publicLinkLabel">Seu link público:</div>
-          <div class="ep-flex" style="gap: 8px; align-items: center; margin-top: 4px;">
-            <a id="schedActiveLink" href="#" target="_blank" rel="noopener" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ep-accent); word-break: break-all; flex: 1;">—</a>
-            <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="schedCopyLinkBtn" data-i18n="perfil:sched.copy">Copiar</button>
+          <div class="ep-flex" style="gap: 10px; align-items: center; margin-top: 6px; flex-wrap: wrap;">
+            <a id="schedActiveLink" href="#" target="_blank" rel="noopener" style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--ep-accent); word-break: break-all; flex: 1; min-width: 200px;">—</a>
+            <button type="button" class="ep-btn ep-btn--primary ep-btn--sm" id="schedCopyLinkBtn" data-i18n="perfil:sched.copy">Copiar</button>
           </div>
         </div>
-
-        <div class="ep-row ep-mt-16">
-          <div class="ep-field">
-            <label class="ep-label" for="schedMinNotice"><span data-i18n="perfil:sched.minNotice">Antecedência mínima (horas)</span> <span class="ep-text-xs" style="color: var(--ep-danger, #c2410c);" aria-hidden="true">*</span></label>
-            <input id="schedMinNotice" class="ep-input" type="number" min="0" max="720" step="1" placeholder="ex: 24" data-i18n-placeholder="p-perfil:ex_24_80e91">
-            <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="perfil:sched.minNoticeHint">Quanto tempo antes o paciente precisa marcar. Obrigatório se aceitar agendamento online.</p>
-          </div>
-          <div class="ep-field">
-            <label class="ep-label" for="schedMaxAdvance"><span data-i18n="perfil:sched.maxAdvance">Janela máxima (dias à frente)</span> <span class="ep-text-xs" style="color: var(--ep-danger, #c2410c);" aria-hidden="true">*</span></label>
-            <input id="schedMaxAdvance" class="ep-input" type="number" min="1" max="180" step="1" placeholder="ex: 60" data-i18n-placeholder="p-perfil:ex_60_87f53">
-            <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="perfil:sched.maxAdvanceHint">Até quantos dias à frente aceita pedidos. Obrigatório se aceitar agendamento online.</p>
-          </div>
-        </div>
-
-        <div class="ep-flex ep-mt-12" style="gap: 8px; align-items: center;">
-          <input id="schedEnabled" type="checkbox" style="width: 18px; height: 18px;">
-          <label for="schedEnabled" class="ep-text-sm" style="cursor: pointer;" data-i18n="perfil:sched.acceptToggle">
-            Aceitar pedidos de agendamento online (link ativo)
-          </label>
+        <div id="schedPendingBox" class="ep-hide ep-mt-12 ep-text-sm ep-text-muted" style="padding: 14px 16px; background: var(--ep-bg-2); border-radius: 10px;">
+          <span data-i18n="p-perfil:seu_link_fica_pronto_assim_cf51d">Seu link fica pronto assim que o meio de pagamento for cadastrado em</span> <a href="./planos.html" data-i18n="p-perfil:planos_2f985">Planos</a>.
         </div>
 
         <!-- Grade de disponibilidade semanal -->
@@ -365,8 +335,32 @@
         </div>
       </section>
 
-      <!-- PIX para agendamento público -->
-      <section class="ep-receita-form">
+      <!-- Valor da consulta (pagantes da mensalidade definem e cobram por conta própria) -->
+      <section class="ep-receita-form ep-hide" id="ownPriceSection">
+        <h2 class="ep-h3 ep-mt-0" data-i18n="p-perfil:recebimento_dos_pacientes_37624">Recebimento dos pacientes</h2>
+        <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="p-perfil:ao_criar_uma_consulta_voce_6d9e7">
+          Ao criar uma consulta você informa o valor e o paciente recebe, no link, um QR Code PIX para pagar. O dinheiro cai direto na sua conta — a plataforma não cobra comissão.
+        </p>
+
+        <div id="mpConnectBox" class="ep-mt-12" style="padding: 14px 16px; border: 1px solid var(--ep-line); border-radius: 10px;">
+          <div class="ep-flex" style="gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+            <div>
+              <div style="font-weight: 600;"><span data-i18n="p-perfil:mercado_pago_27fbc">Mercado Pago</span> <span id="mpConnectBadge" class="ep-badge" style="margin-left: 6px;">Não conectado</span></div>
+              <div id="mpConnectHint" class="ep-text-xs ep-text-muted" style="margin-top: 4px;">Conecte sua conta para gerar o PIX e ver o pagamento confirmado automaticamente.</div>
+            </div>
+            <button type="button" class="ep-btn ep-btn--primary ep-btn--sm" id="mpConnectBtn">Conectar Mercado Pago</button>
+          </div>
+          <div class="ep-status" id="mpConnectStatus" style="margin-top: 8px;"></div>
+        </div>
+        <p class="ep-text-xs ep-text-muted ep-mt-8" data-i18n="p-perfil:sem_mercado_pago_conectado_o_fabfd">Sem Mercado Pago conectado, o QR Code é gerado com a sua chave PIX (abaixo) e você confirma o pagamento no painel.</p>
+        <div class="ep-field ep-mt-12" style="max-width: 260px;">
+          <label class="ep-label" for="ownPrice" data-i18n="p-perfil:valor_padrao_da_consulta_r_95d4a">Valor padrão da consulta (R$)</label>
+          <input id="ownPrice" class="ep-input" type="number" min="10" max="100000" step="0.01" placeholder="ex: 180,00" data-i18n-placeholder="p-perfil:ex_180_00_c22d1">
+        </div>
+      </section>
+
+      <!-- PIX para agendamento público — só no plano institucional (R$ 60 fixo, repasse pela plataforma) -->
+      <section class="ep-receita-form" id="pixInstitutionalSection">
         <h2 class="ep-h3 ep-mt-0" data-i18n="p-perfil:pagamento_via_pix_no_agendamento_ab221">Pagamento via PIX no agendamento</h2>
         <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="p-perfil:configure_sua_chave_pix_para_83e0c">
           Configure sua chave PIX para receber o pagamento da consulta direto na sua conta. O paciente paga ao marcar ou antes de entrar — você recebe sem intermediário.
@@ -391,7 +385,7 @@
           </div>
         </div>
 
-        <div class="ep-field ep-mt-8">
+        <div class="ep-field ep-mt-8" id="pixFixedRow">
           <label class="ep-label" data-i18n="p-perfil:valor_da_consulta_a8728">Valor da consulta</label>
           <div style="padding: 10px 14px; background: var(--ep-bg-2); border-radius: 8px; font-size: 15px; font-weight: 600; color: var(--ep-accent);" data-i18n-html="p-perfil:r_60_00_valor_fixo_89611">R$ 60,00 <span style="font-size:12px;font-weight:400;color:var(--ep-ink-3);">(valor fixo da plataforma)</span></div>
         </div>
@@ -786,7 +780,7 @@
 <script type="module">
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-35";
+  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-36";
 
   // ─── i18n helper ────────────────────────────────────────────
   function tr(key, fallback, opts) {
@@ -857,7 +851,13 @@
 
     const dateOpts = { day: "2-digit", month: "long", year: "numeric" };
     let title = "Plano Trial", sub = "—", eyebrow = tr("perfil:plano.labelDefault","Plano"), cta = tr("perfil:plano.managePlan","Gerenciar plano"), danger = false;
-    if (plano === "pro") {
+    if (t.legacyExempt) {
+      // Cadastrados antes da cobrança nova: isentos para sempre.
+      eyebrow = "Plano · Isento";
+      title = "Acesso completo, sem mensalidade";
+      sub = "Você está isento da mensalidade por fazer parte dos profissionais cadastrados antes da nova cobrança. Nenhuma ação necessária.";
+      cta = "";
+    } else if (plano === "pro") {
       eyebrow = tr("perfil:plano.proLabel","Plano · Ativo");
       const tierLabel = t.proTier === "recem-formado" ? tr("perfil:plano.tierRecem","Recém-formado") : t.proTier === "profissional" ? tr("perfil:plano.tierProf","Profissional") : tr("perfil:plano.tierPro","Pro");
       const priceTxt = t.proPriceCents ? tr("perfil:plano.monthlyPrice"," (R$ {{price}}/mês)",{price:(t.proPriceCents / 100).toFixed(2).replace(".", ",")}) : "";
@@ -884,7 +884,7 @@
       sub = tr("perfil:plano.pendingSub","Trial vigente até a revisão. Em até 48h te avisamos por e-mail.");
     } else if (plano === "recem-formado-eligible") {
       eyebrow = tr("perfil:plano.recemElig","Plano · Recém-formado");
-      title = tr("perfil:plano.recemEligTitle","Habilitado para R$ 99,50/mês");
+      title = tr("perfil:plano.recemEligTitle","Inscrição confirmada");
       const days = trialUntil ? Math.max(0, Math.ceil((trialUntil - Date.now()) / 86_400_000)) : null;
       const unit = days === 1 ? tr("perfil:plano.trialOneDay","dia restante") : tr("perfil:plano.trialManyDays","dias restantes");
       sub = trialAinda
@@ -1026,15 +1026,19 @@
     if (aiTog) aiTog.checked = !!t.aiSummaryEnabled;
 
     // Agendamento público.
-    $("schedSlug").value        = t.publicSchedulingSlug || "";
-    $("schedEnabled").checked   = !!t.publicSchedulingEnabled;
-    $("schedMinNotice").value   = t.publicSchedulingMinNoticeHours ?? "";
-    $("schedMaxAdvance").value  = t.publicSchedulingMaxAdvanceDays ?? "";
-    renderSchedActiveLink(t.publicSchedulingSlug || "", !!t.publicSchedulingEnabled);
+    // Link pronto pelo nome (gerado pelo backend); sem campos para configurar.
+    renderSchedActiveLink(t.publicSchedulingSlug || "", !!(t.publicSchedulingActive ?? t.publicSchedulingEnabled));
 
     // PIX para agendamento público.
     if (t.pixKeyType) $("pixKeyType").value = t.pixKeyType;
     $("pixKeyConfigured").textContent = t.pixKey ? "✓ configurada" : "";
+    // Institucional: PIX + valor fixo da plataforma. Pagante: define o próprio valor.
+    const isInstitutional = !!t.institutional;
+    $("pixFixedRow").classList.toggle("ep-hide", !isInstitutional);
+    $("ownPriceSection").classList.toggle("ep-hide", isInstitutional);
+    renderMpConnect(t);
+    if (!isInstitutional && t.valorConsulta) $("ownPrice").value = (Number(t.valorConsulta) / 100).toFixed(2);
+    window._epInstitutional = isInstitutional;
 
     // Asaas.
     // Tópicos personalizados da sessão.
@@ -1952,34 +1956,18 @@ Direito de portabilidade — LGPD Art. 18, V.
 
   function renderSchedActiveLink(slug, enabled) {
     const box = $("schedActiveLinkBox");
+    const pending = $("schedPendingBox");
     if (slug && enabled) {
       const url = `${location.origin}${location.pathname.replace(/\/perfil\.html.*/, "")}/agendar.html?p=${encodeURIComponent(slug)}`;
       $("schedActiveLink").textContent = url;
       $("schedActiveLink").href = url;
       box.classList.remove("ep-hide");
+      pending.classList.add("ep-hide");
     } else {
       box.classList.add("ep-hide");
+      pending.classList.remove("ep-hide");
     }
   }
-  function sanitizeSlug(v) {
-    return v.toLowerCase()
-      .replace(/\s+/g, "-")          // espaços → hífens
-      .replace(/[^a-z0-9-]/g, "")   // remove caracteres inválidos
-      .replace(/-+/g, "-")           // hífens duplos → simples
-      .replace(/^-+|-+$/g, "");      // remove hífens no início/fim
-  }
-  $("schedSlug").addEventListener("input", () => {
-    const clean = sanitizeSlug($("schedSlug").value);
-    if (clean !== $("schedSlug").value) {
-      const pos = $("schedSlug").selectionStart;
-      $("schedSlug").value = clean;
-      $("schedSlug").setSelectionRange(pos, pos);
-    }
-    renderSchedActiveLink(clean, $("schedEnabled").checked);
-  });
-  $("schedEnabled").addEventListener("change", () => {
-    renderSchedActiveLink($("schedSlug").value.trim().toLowerCase(), $("schedEnabled").checked);
-  });
   $("schedCopyLinkBtn").addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText($("schedActiveLink").href);
@@ -1988,6 +1976,70 @@ Direito de portabilidade — LGPD Art. 18, V.
       btn.textContent = "Copiado!";
       setTimeout(() => { btn.textContent = orig; }, 1200);
     } catch {}
+  });
+
+  // ─── Mercado Pago (cobrança do paciente na conta do profissional) ─────
+  var mpConnected = false; // var: renderMpConnect pode rodar antes desta linha (carga do perfil)
+  function renderMpConnect(t) {
+    mpConnected = !!t.mpConnected;
+    const badge = $("mpConnectBadge"), btn = $("mpConnectBtn"), hint = $("mpConnectHint");
+    if (mpConnected) {
+      badge.textContent = "Conectado";
+      badge.className = "ep-badge ep-badge--ok";
+      hint.textContent = `Conta ${t.mpConnected.nickname || ""} — o pagamento aparece como Pago automaticamente.`.replace("Conta  —", "Conta conectada —");
+      btn.textContent = "Desconectar";
+      btn.className = "ep-btn ep-btn--ghost ep-btn--sm";
+    } else {
+      badge.textContent = "Não conectado";
+      badge.className = "ep-badge";
+      btn.textContent = "Conectar Mercado Pago";
+      btn.className = "ep-btn ep-btn--primary ep-btn--sm";
+      if (t.mpConnectAvailable === false) {
+        btn.disabled = true;
+        hint.textContent = "Conexão com o Mercado Pago em configuração. Enquanto isso, use sua chave PIX abaixo.";
+      }
+    }
+  }
+  (function showMpReturn() {
+    const mp = new URLSearchParams(location.search).get("mp");
+    if (!mp) return;
+    const st = $("mpConnectStatus");
+    st.textContent = mp === "conectado" ? "Mercado Pago conectado com sucesso." : "Não foi possível conectar o Mercado Pago. Tente novamente.";
+    st.className = `ep-status ${mp === "conectado" ? "is-ok" : "is-err"}`;
+    history.replaceState(null, "", location.pathname);
+    // Perfil em cache é de antes da conexão: limpa e busca o estado real.
+    try { sessionStorage.removeItem("ep:profile:v2"); } catch {}
+    (async () => {
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, { headers: { Authorization: `Bearer ${await freshToken()}` } });
+        const d = await r.json().catch(() => ({}));
+        if (d?.therapist) renderMpConnect(d.therapist);
+      } catch {}
+    })();
+    setTimeout(() => $("mpConnectBox")?.scrollIntoView({ behavior: "smooth", block: "center" }), 400);
+  })();
+  $("mpConnectBtn").addEventListener("click", async () => {
+    const btn = $("mpConnectBtn"), st = $("mpConnectStatus");
+    btn.disabled = true;
+    try {
+      const tok = await freshToken();
+      if (mpConnected) {
+        if (!confirm("Desconectar o Mercado Pago? As próximas cobranças usarão sua chave PIX, com confirmação manual.")) { btn.disabled = false; return; }
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/mp/desconectar`, { method: "POST", headers: { Authorization: `Bearer ${tok}` } });
+        if (!r.ok) throw new Error();
+        renderMpConnect({ mpConnected: null });
+        st.textContent = "Mercado Pago desconectado."; st.className = "ep-status is-ok";
+      } else {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/mp/conectar`, { method: "POST", headers: { Authorization: `Bearer ${tok}` } });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.url) throw new Error(d.error || "");
+        location.href = d.url;
+        return;
+      }
+    } catch (e) {
+      st.textContent = "Não foi possível concluir. Tente novamente."; st.className = "ep-status is-err";
+    }
+    btn.disabled = false;
   });
 
   // ─── 2FA ─────────────────────────────────────────────────────────────
@@ -2088,7 +2140,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
       // Salva session 2FA token (evita redirect imediato após ativar).
-      const { save2faSession } = await import("./js/auth-guard.js?v=3-35");
+      const { save2faSession } = await import("./js/auth-guard.js?v=3-36");
       save2faSession(data.sessionToken);
       therapist.twoFactorEnabled = true;
       twofaModal.classList.remove("is-open");
@@ -2135,7 +2187,7 @@ Direito de portabilidade — LGPD Art. 18, V.
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
       therapist.twoFactorEnabled = false;
-      const { clear2faSession } = await import("./js/auth-guard.js?v=3-35");
+      const { clear2faSession } = await import("./js/auth-guard.js?v=3-36");
       clear2faSession();
       twofaDisableModal.classList.remove("is-open");
       renderTwoFactorStatus();
@@ -2273,24 +2325,6 @@ Direito de portabilidade — LGPD Art. 18, V.
   $("perfilForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // Validação: se "agendamento online" tá ligado, antecedência mínima e
-    // janela máxima são OBRIGATÓRIOS. Antes deixar vazio aplicava defaults
-    // (24h/60d) silenciosamente — usuário não sabia que tava recebendo
-    // valores não-escolhidos. Agora força decisão consciente.
-    if ($("schedEnabled").checked) {
-      const minNoticeRaw = $("schedMinNotice").value.trim();
-      const maxAdvRaw    = $("schedMaxAdvance").value.trim();
-      if (minNoticeRaw === "" || maxAdvRaw === "") {
-        const missing = minNoticeRaw === "" ? "schedMinNotice" : "schedMaxAdvance";
-        $("saveBtn").disabled = false;
-        setStatus(tr("perfil:save.schedRequired", "Pra aceitar agendamento online, preencha antecedência mínima E janela máxima."), "err");
-        const el = $(missing);
-        el.focus();
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        return;
-      }
-    }
-
     $("saveBtn").disabled = true;
     setStatus(tr("perfil:save.saving","Salvando…"));
 
@@ -2320,15 +2354,6 @@ Direito de portabilidade — LGPD Art. 18, V.
       },
       sessionTopics:                   customTopics,
       aiSummaryEnabled:                $("aiSummaryEnabledToggle")?.checked || false,
-      publicSchedulingSlug:            sanitizeSlug($("schedSlug").value),
-      publicSchedulingEnabled:         $("schedEnabled").checked,
-      // Campos obrigatórios quando publicSchedulingEnabled=true (validado
-      // antes deste body montar — se enabled+vazio, save é bloqueado).
-      // Se enabled=false, vazio é permitido e backend pode ignorar o campo.
-      // Number("") = 0, então mando 0 explicitamente quando vazio + disabled
-      // pra backend tratar como "não configurado".
-      publicSchedulingMinNoticeHours:  Number($("schedMinNotice").value) || 0,
-      publicSchedulingMaxAdvanceDays:  Number($("schedMaxAdvance").value) || 0,
       asaasEnv:                        $("asaasEnv").value,
       asaasEnabled:                    $("asaasEnabled").checked
     };
@@ -2348,8 +2373,21 @@ Direito de portabilidade — LGPD Art. 18, V.
       body.pixKey     = pixKeyTyped;
       body.pixKeyType = pixKeyTypeVal;
     }
-    // Valor fixo: R$60 — sem campo editável.
-    body.valorConsulta = 6000;
+    // Institucional: R$60 fixo. Pagante: valor definido por ele (opcional).
+    if (window._epInstitutional) {
+      body.valorConsulta = 6000;
+    } else {
+      const ownRaw = String($("ownPrice").value || "").replace(",", ".").trim();
+      if (ownRaw) {
+        const cents = Math.round(Number(ownRaw) * 100);
+        if (!Number.isFinite(cents) || cents < 1000 || cents > 10000000) {
+          setStatus("Informe um valor de consulta entre R$ 10 e R$ 100.000.", "err");
+          $("saveBtn").disabled = false;
+          return;
+        }
+        body.valorConsulta = cents;
+      }
+    }
 
     if (pendingLogo && pendingLogo.dirty) {
       if (pendingLogo.removed) {

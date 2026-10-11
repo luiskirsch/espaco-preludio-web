@@ -1,0 +1,39 @@
+/* Card de consulta — compartilhado por Início e Minhas consultas. */
+.sess-card { position: relative; background: var(--a-surface); border-radius: 20px; overflow: hidden;
+  box-shadow: 0 1px 0 rgba(28,31,29,.04), 0 10px 30px rgba(28,31,29,.08); border: 1px solid rgba(28,31,29,.06); width: 100%; max-width: 560px; min-width: 0; }
+.sess-card__main { display: flex; gap: 16px; padding: 18px; align-items: stretch; }
+.sess-date { flex: none; align-self: flex-start; width: 74px; height: 92px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 10px 0; color: #fff; background: radial-gradient(circle at 80% 0%, rgba(233,207,135,.35), transparent 60%), linear-gradient(150deg, #0b4a50, #062f33); }
+.sess-date__wd { font-size: 11px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; color: #e9cf87; }
+.sess-date__d  { font-family: var(--ff-serif); font-size: 32px; font-weight: 500; line-height: 1.05; margin: 2px 0; }
+.sess-date__m  { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; opacity: .75; }
+.sess-card--completed .sess-date, .sess-card--canceled .sess-date { background: var(--a-bg2); color: var(--a-ink2); }
+.sess-card--completed .sess-date__wd, .sess-card--canceled .sess-date__wd { color: var(--a-ink3); }
+.sess-card--pending .sess-date { background: linear-gradient(150deg, #d9ad45, #a77b25); }
+.sess-card--pending .sess-date__wd { color: #fff6dc; }
+.sess-card__info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.sess-card__prof { font-family: var(--ff-serif); font-size: 19px; font-weight: 500; color: var(--a-ink); line-height: 1.2; letter-spacing: -.2px; }
+.sess-card__esp  { font-size: 12.5px; color: var(--a-ink2); }
+.sess-card__meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.sess-chip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  background: var(--a-bg); color: var(--a-ink2); }
+.sess-chip svg { width: 13px; height: 13px; }
+.sess-chip--time { background: #1c1f1d; color: #fff; }
+.sess-chip--soon { background: rgba(200,150,58,.14); color: #8a6020; }
+.sess-status { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }
+.sess-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.sess-status--scheduled, .sess-status--in_progress { background: rgba(45,106,62,.1); color: var(--a-accent); }
+.sess-status--completed { background: var(--a-bg2); color: var(--a-ink2); }
+.sess-status--canceled { background: rgba(184,69,61,.1); color: #b8453d; }
+.sess-status--pending { background: rgba(200,150,58,.14); color: #8a6020; }
+.sess-card__actions { display: flex; gap: 8px; padding: 12px 18px 16px; border-top: 1px dashed rgba(28,31,29,.12); }
+.sess-card__actions .a-btn { flex: 1; border-radius: 12px; }
+.sess-btn-join { flex: 2 !important; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none;
+  background: linear-gradient(135deg, #e9cf87, #c8963a) !important; color: #1c1a16 !important; font-weight: 700; box-shadow: 0 6px 18px rgba(200,150,58,.35); }
+.sess-btn-join svg { width: 16px; height: 16px; }
+.sess-card--live { box-shadow: 0 0 0 2px rgba(200,150,58,.55), 0 14px 34px rgba(200,150,58,.22); }
+.sess-status--live { background: rgba(224,85,85,.1); color: #c43d3d; }
+.sess-status--live::before { animation: sessPulse 1.4s ease-in-out infinite; }
+@keyframes sessPulse { 50% { opacity: .25; } }
+.sess-btn-cancel { background: transparent !important; color: #b8453d !important; border: 1px solid rgba(184,69,61,.25) !important; }
+@media (max-width: 380px) { .sess-date { width: 62px; } .sess-date__d { font-size: 27px; } .sess-card__prof { font-size: 17px; } }

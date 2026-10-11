@@ -96,3 +96,19 @@
   .ep-plan-card__features li { font-size: 12.5px; }
   .ep-plan-checkout__heading { align-items: flex-start; flex-direction: column; }
 }
+
+/* Plano profissional em formato horizontal */
+.ep-plan-card.ep-plan-wide { display: grid; grid-template-columns: 340px 1fr; padding: 0; }
+.ep-plan-wide__side { display: flex; flex-direction: column; gap: 18px; padding: 32px 30px; border-right: 1px solid color-mix(in srgb, var(--ep-ink) 10%, transparent); background: color-mix(in srgb, var(--ep-gold) 6%, transparent); }
+.ep-plan-wide__side .ep-plan-card__head { flex-direction: column; align-items: flex-start; gap: 6px; }
+.ep-plan-wide__perks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; font-weight: 600; }
+.ep-plan-wide__perks li:not([data-i18n])::before { content: "✓ "; color: #2d6a3e; font-weight: 800; }
+.ep-plan-wide__cta { margin-top: auto; }
+.ep-plan-wide__features { display: grid; grid-template-columns: 1fr 1fr; align-content: center; gap: 28px 36px; padding: 32px 36px; }
+.ep-plan-wide__group h3 { margin: 0 0 10px; font-size: 12px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; color: var(--ep-gold); }
+.ep-plan-wide__group .ep-plan-card__features { margin: 0; }
+@media (max-width: 860px) {
+  .ep-plan-card.ep-plan-wide { grid-template-columns: 1fr; }
+  .ep-plan-wide__side { border-right: 0; border-bottom: 1px solid color-mix(in srgb, var(--ep-ink) 10%, transparent); }
+  .ep-plan-wide__features { grid-template-columns: 1fr; padding: 24px; }
+}

@@ -17,12 +17,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
-  <script src="./i18n/init.js?v=2-4" defer></script>
+  <script src="./i18n/init.js?v=2-6" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
 </head>
 <body>
-<div class="ep-staging-banner" data-i18n="p-admin-profissionais:ambiente_de_teste_espaco_preludio_ae9ee">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
-
 <script src="./js/admin-sidebar.js?v=1"></script>
 
 <div class="ep-shell">
@@ -375,10 +373,8 @@
             <select id="newPlano" class="ep-input">
               <option value="">—</option>
               <option value="trial">Trial</option>
-              <option value="trial">Trial</option>
               <option value="pro">Pro (assinante)</option>
-              <option value="empresa-pending-review">Empresa (pendente revisão)</option>
-              <option value="empresa">Empresa (aprovado)</option>
+                            <option value="empresa">Programa institucional (acesso liberado, sem mensalidade)</option>
               <option value="student-pending-review">Estudante (pendente)</option>
               <option value="student-active">Estudante (ativo)</option>
               <option value="canceled">Cancelado</option>
@@ -411,9 +407,21 @@
       </div>
 
       <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
-        <div class="ep-eyebrow">Rede de Psicologia</div>
-        <div class="ep-text-sm ep-text-muted">Apenas a administração controla esta exibição. Ocultar não suspende a conta nem impede atendimentos por link direto.</div>
+        <div class="ep-eyebrow">Rede dos programas (alunos e colaboradores)</div>
+        <div class="ep-text-sm ep-text-muted">Quem está nesta rede nunca aparece no diretório de pacientes. Ocultar não suspende a conta nem impede atendimentos por link direto.</div>
         <button class="ep-btn ${it.adminDirectoryVisible ? "ep-btn--ghost" : "ep-btn--primary"} ep-btn--sm" data-action="toggleDirectory" style="align-self: flex-start;${it.adminDirectoryVisible ? " color:#b8453d;border-color:#b8453d;" : ""}">${it.adminDirectoryVisible ? "Ocultar da rede" : "Exibir na rede"}</button>
+      </div>
+
+      <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
+        <div class="ep-eyebrow">Diretório de pacientes</div>
+        <div class="ep-text-sm ep-text-muted">Aparecem automaticamente os profissionais pagantes e verificados que não estão na rede dos programas.</div>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="togglePatientDirectory" style="align-self: flex-start;${it.adminPatientDirectoryHidden ? "" : " color:#b8453d;border-color:#b8453d;"}">${it.adminPatientDirectoryHidden ? "Voltar a exibir para pacientes" : "Ocultar dos pacientes"}</button>
+      </div>
+
+      <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid #b8453d; border-radius: 8px;">
+        <div class="ep-eyebrow" style="color:#b8453d;">Excluir conta definitivamente</div>
+        <div class="ep-text-sm ep-text-muted">Cancela a assinatura no Mercado Pago, apaga o login e o cadastro. Não pode ser desfeito. Prontuários e sessões cifrados ficam guardados pela obrigação legal de registro clínico.</div>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="deletePermanent" style="align-self:flex-start;color:#b8453d;border-color:#b8453d;">Excluir conta definitivamente</button>
       </div>
 
       <div class="ep-stack" style="gap: 8px; padding: 12px; border: 1px solid var(--ep-border); border-radius: 8px;">
@@ -465,6 +473,35 @@
         return;
       }
       body.setAdminDirectoryVisible = willShow;
+    } else if (action === "togglePatientDirectory") {
+      const it = allItems.find(x => x.uid === uid);
+      const willHide = !it?.adminPatientDirectoryHidden;
+      if (!confirm(willHide ? "Ocultar este profissional do diretório de pacientes?" : "Voltar a exibir este profissional no diretório de pacientes?")) {
+        statusEl.textContent = "";
+        return;
+      }
+      body.setPatientDirectoryHidden = willHide;
+    } else if (action === "deletePermanent") {
+      const it = allItems.find(x => x.uid === uid);
+      const typed = prompt(`Excluir DEFINITIVAMENTE a conta de ${it?.displayName || uid}?
+
+Isso cancela a assinatura, apaga o login e o cadastro. Não pode ser desfeito.
+
+Para confirmar, digite EXCLUIR:`);
+      if (typed !== "EXCLUIR") { statusEl.textContent = ""; return; }
+      try {
+        const d = await api(`/therapy/admin/profissionais/${encodeURIComponent(uid)}/excluir-definitivo`, {
+          method: "POST", body: JSON.stringify({ confirmUid: uid })
+        });
+        allItems = allItems.filter(x => x.uid !== uid);
+        renderList(filterLocal(allItems, searchBox.value));
+        editModal.classList.remove("is-open");
+        alert(`Conta excluída.${d.subscriptionCanceled ? " Assinatura cancelada no Mercado Pago." : ""}`);
+      } catch (e) {
+        statusEl.className = "ep-status is-err";
+        statusEl.textContent = "Não foi possível excluir: " + (e.message || "erro");
+      }
+      return;
     } else if (action === "note") {
       body.setAdminNote = document.getElementById("adminNote").value || "";
     }

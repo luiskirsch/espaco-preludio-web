@@ -5,6 +5,7 @@
 <script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conte\u00fado s\u00f3 est\u00e1 dispon\u00edvel no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title data-i18n="p-app-consultas:consultas_espaco_preludio_7515f">Consultas · Espaço Prelúdio</title>
   <link rel="manifest" href="./manifest.json">
@@ -12,7 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app.css?v=20261002t">
+  <link rel="stylesheet" href="./app.css?v=20261005b">
+  <link rel="stylesheet" href="./session-card.css?v=2">
   <style>
     .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--a-line); padding: 0 16px; }
     .tab-btn {
@@ -27,25 +29,13 @@
       height: 2px; background: var(--a-ink); border-radius: 2px 2px 0 0;
     }
     .sessions-list { display: flex; flex-direction: column; gap: 10px; padding: 16px; }
-    .sess-card { background: var(--a-surface); border-radius: var(--a-radius); box-shadow: var(--a-shadow); overflow: hidden; }
-    .sess-card__bar { height: 4px; }
-    .sess-card__bar--scheduled { background: var(--a-accent); }
-    .sess-card__bar--completed { background: #888; }
-    .sess-card__bar--canceled  { background: #e88; }
-    .sess-card__bar--pending   { background: var(--a-gold); }
-    .sess-card__body { padding: 14px 16px; }
-    .sess-card__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-    .sess-card__prof { font-size: 15px; font-weight: 600; color: var(--a-ink); }
-    .sess-card__esp  { font-size: 12px; color: var(--a-ink2); margin-top: 2px; }
-    .sess-card__time { font-family: var(--ff-mono); font-size: 12px; font-weight: 600; color: var(--a-accent); margin-top: 8px; }
-    .sess-card__actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--a-line); }
     .countdown { font-size: 11px; color: var(--a-ink3); margin-top: 4px; }
   </style>
-  <script src="./portal-shell.js?v=3" defer></script>
+  <script src="./portal-shell.js?v=6" defer></script>
   <script src="./sw-register.js" defer></script>
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(!l){var n=(navigator.language||"").toLowerCase();if(n.indexOf("en")===0)l="en-US";else if(n.indexOf("es")===0)l="es-ES";}if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
-  <script src="/i18n/init.js?v=2-4" defer></script>
+  <script src="/i18n/init.js?v=2-6" defer></script>
 </head>
 <body class="a-portal-authenticated">
 <div class="a-shell">
@@ -118,67 +108,15 @@
 <script type="module">
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+  import { renderCard, canJoin, isActive, joinSession as joinSessionLink } from "./session-card.js?v=3";
+  const joinSession = btn => joinSessionLink(btn, { auth, backendUrl: BACKEND_BASE_URL, onError: () => loadSessions() });
 
   let allSessions = [];
   let cancellingId = null;
 
-  const STATUS_LABEL = { scheduled:"Confirmada", completed:"Realizada", canceled:"Cancelada", in_progress:"Em andamento", pending:"Aguardando" };
-  const STATUS_BADGE = { scheduled:"a-badge--ok", completed:"a-badge--pend", canceled:"a-badge--err", in_progress:"a-badge--ok", pending:"a-badge--warn" };
-  const STATUS_BAR   = { scheduled:"scheduled", completed:"completed", canceled:"canceled", in_progress:"scheduled", pending:"pending" };
-
-  function esc(s) { return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-
-  function fmtDt(ms) {
-    const d = new Date(Number(ms));
-    const weekday = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][d.getDay()];
-    const months  = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-    return `${weekday}, ${d.getDate()} de ${months[d.getMonth()]} · ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
-  }
-
-  function countdown(ms) {
-    const diff = Number(ms) - Date.now();
-    if (diff < 0) return "";
-    const h = Math.floor(diff / 3600000);
-    const d = Math.floor(h / 24);
-    if (d > 0) return `em ${d} dia${d>1?"s":""}`;
-    if (h > 0) return `em ${h}h`;
-    return "em breve";
-  }
-
-  function renderCard(s) {
-    const bar = STATUS_BAR[s.status] || "pending";
-    const badge = STATUS_BADGE[s.status] || "a-badge--pend";
-    const label = STATUS_LABEL[s.status] || s.status;
-    const isUpcoming = s.status === "scheduled" && Number(s.scheduledAt) > Date.now();
-    const cd = isUpcoming ? countdown(s.scheduledAt) : "";
-    return `
-      <div class="sess-card">
-        <div class="sess-card__bar sess-card__bar--${bar}"></div>
-        <div class="sess-card__body">
-          <div class="sess-card__header">
-            <div>
-              <div class="sess-card__prof">${esc(s.therapistName||"Profissional")}</div>
-              <div class="sess-card__esp">${esc(s.especialidade||"")}</div>
-            </div>
-            <span class="a-badge ${badge}" style="flex-shrink:0;">${esc(label)}</span>
-          </div>
-          <div class="sess-card__time">${fmtDt(s.scheduledAt)}</div>
-          ${cd ? `<div class="countdown">⏰ ${cd}</div>` : ""}
-          ${isUpcoming ? `
-          <div class="sess-card__actions">
-            <a href="./agendar.html?p=${encodeURIComponent(s.therapistSlug||"")}" class="a-btn a-btn--ghost a-btn--sm" style="flex:1;">Reagendar</a>
-            <button type="button" class="a-btn a-btn--sm" style="flex:1;background:rgba(184,69,61,.1);color:#b8453d;border:none;" data-cancel-id="${esc(s.sessionId||s.id||"")}">Cancelar</button>
-          </div>` : ""}
-          ${s.status === "completed" ? `
-          <div class="sess-card__actions">
-            <a href="./documentos.html" class="a-btn a-btn--ghost a-btn--sm" style="flex:1;">Ver documentos</a>
-            <a href="./buscar.html?p=${encodeURIComponent(s.therapistSlug||"")}" class="a-btn a-btn--ghost a-btn--sm" style="flex:1;">Repetir consulta</a>
-          </div>` : ""}
-        </div>
-      </div>`;
-  }
-
+  let currentTab = "prox";
   window.showTab = function(tab) {
+    currentTab = tab;
     ["prox","hist","pend"].forEach(t => {
       document.getElementById(`tab${t.charAt(0).toUpperCase()+t.slice(1)}`).classList.toggle("is-active", t===tab);
       document.getElementById(`tab${t.charAt(0).toUpperCase()+t.slice(1)}Content`).classList.add("a-hide");
@@ -186,9 +124,9 @@
     document.getElementById("emptyState").classList.add("a-hide");
     const now = Date.now();
     const filtered = {
-      prox: allSessions.filter(s => s.status === "scheduled" && Number(s.scheduledAt) > now),
+      prox: allSessions.filter(isActive).sort((a,b) => Number(a.scheduledAt) - Number(b.scheduledAt)),
       hist: allSessions.filter(s => ["completed","canceled"].includes(s.status)),
-      pend: allSessions.filter(s => s.status === "pending" || (s.status === "scheduled" && Number(s.scheduledAt) <= now))
+      pend: allSessions.filter(s => s.status === "pending" || (s.status === "scheduled" && !isActive(s)))
     }[tab] || [];
     const contentEl = document.getElementById(`tab${tab.charAt(0).toUpperCase()+tab.slice(1)}Content`);
     if (!filtered.length) {
@@ -199,6 +137,9 @@
       contentEl.innerHTML = filtered.map(renderCard).join("");
       contentEl.querySelectorAll("[data-cancel-id]").forEach(btn => {
         btn.addEventListener("click", () => openCancel(btn.dataset.cancelId));
+      });
+      contentEl.querySelectorAll("[data-join-id]").forEach(btn => {
+        btn.addEventListener("click", () => joinSession(btn));
       });
       contentEl.classList.remove("a-hide");
     }
@@ -224,6 +165,32 @@
       showTab("prox");
     } catch { }
   });
+
+  // Estado da sessão muda sem ação do paciente (profissional abre a sala,
+  // chega a janela de 15 min): rebusca a cada 30 s e ao voltar para a aba,
+  // e redesenha a cada 15 s para o botão aparecer na hora exata.
+  let loading = false;
+  async function loadSessions() {
+    const user = auth.currentUser;
+    if (!user || loading) return;
+    loading = true;
+    try {
+      const token = await user.getIdToken();
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/sessoes`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.sessions) {
+        allSessions = d.sessions.sort((a,b) => Number(b.scheduledAt) - Number(a.scheduledAt));
+        if (document.getElementById("cancelModal").style.display !== "grid") showTab(currentTab);
+      }
+    } catch {} finally { loading = false; }
+  }
+  setInterval(() => { if (!document.hidden) loadSessions(); }, 30000);
+  setInterval(() => {
+    if (!document.hidden && allSessions.some(isActive) && document.getElementById("cancelModal").style.display !== "grid") showTab(currentTab);
+  }, 15000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) loadSessions(); });
 
   onAuthStateChanged(auth, async user => {
     if (!user) { window.location.href = "./login.html"; return; }

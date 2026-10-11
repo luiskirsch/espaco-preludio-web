@@ -1,7 +1,7 @@
 // Sidebar premium do produto profissional — single source of truth.
 // Cada página logged-in só precisa de:
 //   1. <body class="ep-has-sidebar"> (pra CSS aplicar layout sem FOUC)
-//   2. <script src="./js/sidebar.js?v=N" defer></script>
+//   2. <script src="./js/sidebar.js?v=28" defer></script>
 // O script injeta o <aside> no início do body, marca link ativo pelo
 // pathname, e sincroniza avatar/nome/TISS do topbar (Firebase logic vive
 // em auth-guard.js → topUserName / topUserAvatar).
@@ -32,6 +32,16 @@
       'body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools:active{transform:scale(.97);box-shadow:inset 0 0 0 2px rgba(255,235,190,.2),0 5px 14px -8px rgba(226,183,106,.8);}',
       '@keyframes ep-schools-breathe{0%,100%{border-color:rgba(226,183,106,.38);box-shadow:inset 0 1px 0 rgba(255,244,220,.07),0 8px 22px -16px rgba(226,183,106,.58)}50%{border-color:rgba(226,183,106,.62);box-shadow:inset 0 1px 0 rgba(255,244,220,.11),0 12px 30px -13px rgba(226,183,106,.82),0 0 15px -10px rgba(226,183,106,.7)}}',
       '@keyframes ep-schools-shine{0%,58%{left:-42%;opacity:0}68%{opacity:1}84%,100%{left:118%;opacity:0}}',
+      'body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools.is-hidden{display:none!important;}',
+      // Desktop: o espaço que sobrar na coluna se divide entre logo↔menu e
+      // menu↔rodapé (margens auto). Menu longo (CRM + TISS + Escolas) não tem
+      // sobra e fica idêntico; menus curtos (CRP) ganham respiro sob a logo.
+      // Sem risco de rolagem: margem auto só usa espaço livre.
+      '@media (min-width:900px){body.ep-has-sidebar .ep-sidebar__brand{margin-bottom:auto;}body.ep-has-sidebar .ep-sidebar__footer{margin-top:auto;}}',
+      // Monitores (altura >= 900px): afasta o menu da logo e abre os grupos.
+      // Notebook 14" (~720-820px) fica intocado — layout travado e aprovado.
+      '@media (min-width:900px) and (min-height:900px){body.ep-has-sidebar .ep-sidebar__nav{gap:clamp(24px,3vh,36px);}}',
+      '@media (min-width:900px) and (min-height:1000px){body.ep-has-sidebar .ep-sidebar__nav{gap:clamp(30px,3.4vh,48px);}body.ep-has-sidebar .ep-sidebar__nav a{padding-top:clamp(12px,1.4vh,18px);padding-bottom:clamp(12px,1.4vh,18px);}}',
       '@media (prefers-reduced-motion:reduce){body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools,body.ep-has-sidebar .ep-sidebar__nav a.ep-sidebar__schools::before{animation:none;}}',
       'body.ep-has-sidebar .ep-sidebar__brand .ep-brand__name{row-gap:4px;line-height:1;}'
     ].join('');
@@ -90,12 +100,27 @@
   } catch (e) { /* sem cache, mantém hidden */ }
   var tissExtra = 'id="sidebarTissLink" class="ep-sidebar__tiss' + (tissCachedEnabled ? '' : ' is-hidden') + '"';
 
+  // "Escolas" só para quem está na rede dos programas (visível no diretório
+  // de alunos e colaboradores, controlado pelo admin). Escondido por padrão;
+  // auth-guard reaplica com o perfil fresco (applyProgramNetworkVisibility).
+  var programCached = false;
+  try {
+    var pRaw = sessionStorage.getItem('ep:profile:v2');
+    if (pRaw) {
+      var pEntry = JSON.parse(pRaw);
+      programCached = !!(pEntry && pEntry.profile && pEntry.profile.therapist && pEntry.profile.therapist.programNetwork);
+    } else {
+      programCached = localStorage.getItem('ep:programNetwork') === '1';
+    }
+  } catch (e) { /* sem cache, mantém escondido */ }
+  var schoolsExtra = 'id="sidebarSchoolsLink" class="ep-sidebar__schools' + (programCached ? '' : ' is-hidden') + '"';
+
   // i18n keys vivem em common.json (sempre carregado) — namespace `painel`
   // só existe em painel.html, então usá-lo aqui quebra o menu em todas as
   // outras páginas (i18next devolve key parcial e o init substitui textContent).
   const NAV = [
     { labelKey: 'common:sidebar.groupClinico', label: 'Clínico', items: [
-      ['casos-publicos.html', 'users', 'Escolas', 'common:sidebar.programasPublicos', 'class="ep-sidebar__schools"'],
+      ['casos-publicos.html', 'users', 'Escolas', 'common:sidebar.programasPublicos', schoolsExtra],
       ['painel.html', 'video', 'Consultas', 'common:sidebar.consultas'],
       ['agenda.html', 'calendar', 'Agenda', 'common:sidebar.agenda'],
       ['pacientes.html', 'users', 'Pacientes', 'common:sidebar.pacientes'],

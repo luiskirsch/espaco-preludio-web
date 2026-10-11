@@ -26,12 +26,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-292">
   <link rel="stylesheet" href="./css/consultation-video.css?v=1">
-  <script src="./i18n/init.js?v=2-4" defer></script>
+  <script src="./i18n/init.js?v=2-6" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <style>
     /* Cápsula de idioma no canto direito do topbar da sessão do paciente */
+    @media (max-width: 640px) { .ep-ambient__btn-text { display: none; } .ep-ambient__btn { padding: 7px 9px; } }
+    .ep-ambient--topbar { margin-left: auto; }
     #top-lang-slot {
-      margin-left: auto !important;
+      margin-left: 8px !important;
       flex-shrink: 0;
     }
     #top-lang-slot #ep-lang-switcher {
@@ -53,8 +55,6 @@
   </style>
 </head>
 <body class="ep-consult">
-<div class="ep-staging-banner" data-i18n="p-entrar:ambiente_de_teste_espaco_preludio_ae9ee">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
-
 
 <!-- Tela 1: pré-entrada com nome + consentimento -->
 <div id="prejoin" style="min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--ep-bg); color: var(--ep-ink);">
@@ -75,6 +75,28 @@
 
     <!-- Status da conta: badge (logado) ou CTA (anônimo) -->
     <div id="accountSlot" class="ep-mt-12"></div>
+
+    <!-- Pagamento da consulta (PIX do profissional) — não bloqueia a entrada -->
+    <div id="chargeCard" class="ep-hide ep-mt-12" style="border: 1px solid var(--ep-line); border-radius: 14px; padding: 16px; background: var(--ep-surface);">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap;">
+        <strong style="font-size: 15px;" data-i18n="p-entrar:pagamento_da_consulta_8cdad">Pagamento da consulta</strong>
+        <span id="chargeAmount" style="font-family: var(--ep-font-serif); font-size: 22px; font-weight: 600;"></span>
+      </div>
+      <div id="chargePaid" class="ep-hide" style="margin-top: 10px; padding: 12px 14px; border-radius: 10px; background: rgba(45,106,62,.1); color: #2d6a3e; font-weight: 600;" data-i18n="p-entrar:pagamento_confirmado_obrigado_68b1b">✓ Pagamento confirmado. Obrigado!</div>
+      <div id="chargePending">
+        <p class="ep-text-xs ep-text-muted" style="margin: 6px 0 12px;"><span data-i18n="p-entrar:pague_por_pix_para_d7061">Pague por PIX para</span> <strong id="chargeReceiver"></strong><span data-i18n="p-entrar:aponte_a_camera_do_app_5f03f">. Aponte a câmera do app do seu banco para o QR Code ou use o código copia e cola.</span></p>
+        <div style="display: flex; justify-content: center;"><div id="chargeQr" style="background: #fff; padding: 10px; border-radius: 10px; line-height: 0;"></div></div>
+        <label class="ep-label ep-mt-12" for="chargeCopy" data-i18n="p-entrar:pix_copia_e_cola_3f57a">PIX copia e cola</label>
+        <div style="display: flex; gap: 8px;">
+          <input id="chargeCopy" class="ep-input" readonly style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+          <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="chargeCopyBtn">Copiar</button>
+        </div>
+        <div id="chargeKeyRow" class="ep-hide ep-text-xs ep-text-muted ep-mt-8">Chave PIX: <strong id="chargeKey"></strong></div>
+        <div id="chargeAutoHint" class="ep-hide ep-text-xs ep-text-muted ep-mt-8" data-i18n="p-entrar:a_confirmacao_aparece_aqui_automaticamente_bcb0e">A confirmação aparece aqui automaticamente assim que o pagamento for aprovado.</div>
+        <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm ep-btn--block ep-mt-12 ep-hide" id="chargeReportBtn" data-i18n="p-entrar:ja_paguei_789e8">Já paguei</button>
+        <div id="chargeReported" class="ep-hide ep-text-xs ep-mt-8" style="color: #8a6020;" data-i18n="p-entrar:avisamos_o_profissional_ele_confirma_d518a">Avisamos o profissional. Ele confirma assim que o PIX cair na conta.</div>
+      </div>
+    </div>
 
     <div class="ep-stack ep-mt-12">
       <div class="ep-field">
@@ -134,6 +156,14 @@
     </div>
     <!-- Slot da cápsula de idioma — init.js cria #ep-lang-switcher no body;
          movemos via JS para cá assim que aparecer. -->
+    <!-- Ambiente (fundo, luz, câmera/som) — conteúdo montado por js/room-ambient.js -->
+    <div class="ep-ambient ep-ambient--topbar" style="position:relative;z-index:70;isolation:isolate;flex-shrink:0;">
+      <button id="ambientBtn" class="ep-ambient__btn" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="ambientPanel" title="Ajustar fundo, luz, câmera e som" data-i18n-title="p-entrar:ajustar_fundo_luz_camera_e_ae9e2">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><circle cx="9" cy="9" r="2.2"/><circle cx="15" cy="15" r="2.2"/></svg>
+        <span class="ep-ambient__btn-text" data-i18n="consultorio:ambient.btn">Ajustar ambiente</span>
+      </button>
+      <div class="ep-ambient__panel" id="ambientPanel" role="dialog" aria-label="Ambiente" data-i18n-aria-label="p-entrar:ambiente_e6fef"></div>
+    </div>
     <div id="top-lang-slot" style="position:relative;flex-shrink:0;"></div>
   </header>
 
@@ -166,6 +196,8 @@
           </span>
           <span class="ep-text-xs ep-text-muted" id="patientNotesStatus">&nbsp;</span>
         </div>
+        <!-- Logado(a) sem a chave nesta aba: desbloqueia e envia as notas já escritas pra conta -->
+        <div id="notesUnlock" class="ep-hide" style="padding:8px 12px;font-size:12.5px;line-height:1.4;border-bottom:1px solid rgba(215,176,107,.18);"></div>
         <div class="ep-patient-notes__list" id="patientNotesList"></div>
         <div class="ep-patient-notes__composer">
           <textarea id="patientNoteInput" placeholder="Anote o que quiser lembrar dessa sessão…" data-i18n-placeholder="entrar:session.notesPlaceholder" maxlength="2000"></textarea>
@@ -222,10 +254,10 @@
 <script type="module">
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { encryptNote, decryptNote } from "./js/crypto.js";
-  import { recallPatientDek, recallPatientUser } from "./js/patient-session.js";
+  import { encryptNote, decryptNote, unwrapDek, sealToPublicKey } from "./js/crypto.js?v=2";
+  import { recallPatientDek, recallPatientUser, rememberPatientDek, rememberPatientUser } from "./js/patient-session.js";
 
-  const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack } = await import('./js/consultation-media.js?v=1');
+  const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack, setupCodecNegotiation } = await import('./js/consultation-media.js?v=3');
 
   // tr(key, fallback): retorna tradução do i18next (se já carregou) ou
   // fallback PT. Mesmo padrão de paciente-login.html — robusto a status
@@ -241,6 +273,121 @@
   const params = new URLSearchParams(location.search);
   // `c` é o short code (~8 chars, link bonito). `t` é o joinToken JWT legado
   // (~500 chars), mantido pra retro-compat com links já enviados pré-mudança.
+  // Veio do portal (paciente/aluno/colaborador logado), não de um link de
+  // convite: troca o texto de "você foi convidado" pelo da consulta marcada.
+  // Lembra a origem por código: um recarregar ou link copiado sem "via"
+  // continua mostrando o texto do portal nesta aba.
+  const viaKey = `ep:via:${params.get("c") || params.get("t") || ""}`;
+  try {
+    if (["portal", "aluno"].includes(params.get("via"))) sessionStorage.setItem(viaKey, JSON.stringify({ via: params.get("via"), pro: params.get("pro") || "" }));
+    else {
+      const saved = JSON.parse(sessionStorage.getItem(viaKey) || "null");
+      if (saved) { params.set("via", saved.via || "portal"); if (saved.pro) params.set("pro", saved.pro); }
+    }
+  } catch {}
+  // Para onde voltar ao fim da consulta: portal do paciente/colaborador ou
+  // painel do aluno. Sem origem, segue o fluxo do link de convite.
+  const portalVia = params.get("via");
+  if (["portal", "aluno"].includes(portalVia)) {
+    const h1 = document.querySelector(".ep-auth__title");
+    const sub = document.getElementById("prejoinHello");
+    const pro = String(params.get("pro") || "").slice(0, 80);
+    [h1, sub].forEach(el => { el?.removeAttribute("data-i18n"); el?.removeAttribute("data-i18n-html"); });
+    if (h1) h1.textContent = "Sua consulta está pronta.";
+    if (sub) {
+      sub.textContent = "";
+      if (pro) {
+        sub.append("Consulta com ");
+        const b = document.createElement("strong"); b.textContent = pro; sub.append(b, ". ");
+      }
+      sub.append("Antes de entrar, confira como protegemos seus dados.");
+    }
+    const lbl = document.querySelector('label[for="patientName"]');
+    if (lbl) { lbl.removeAttribute("data-i18n"); lbl.textContent = "Como prefere ser chamado(a) na sessão?"; }
+  }
+  // ─── Pagamento da consulta (PIX do profissional) ───────────────────────
+  // Não bloqueia a entrada: só mostra QR, copia e cola e o status.
+  async function loadPatientCharge() {
+    const qs = new URLSearchParams();
+    if (params.get("c")) qs.set("c", params.get("c"));
+    if (params.get("t")) qs.set("t", params.get("t"));
+    if (![...qs.keys()].length) return null;
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/pre-join?${qs}`);
+      const d = await r.json().catch(() => ({}));
+      return r.ok && d.patientCharge ? d.patientCharge : null;
+    } catch { return null; }
+  }
+  function drawQr(el, payload, base64) {
+    el.innerHTML = "";
+    if (base64) {
+      const img = new Image(); img.alt = "QR Code PIX"; img.width = 200; img.height = 200;
+      img.src = `data:image/png;base64,${base64}`;
+      el.appendChild(img);
+      return;
+    }
+    if (!payload || !window.qrcode) return;
+    const qr = window.qrcode(0, "M"); qr.addData(payload); qr.make();
+    el.innerHTML = qr.createImgTag(5, 0);
+  }
+  function renderCharge(c) {
+    const card = document.getElementById("chargeCard");
+    if (!c) { card.classList.add("ep-hide"); return; }
+    card.classList.remove("ep-hide");
+    document.getElementById("chargeAmount").textContent =
+      (Number(c.amountCents) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const paid = c.status === "paid";
+    document.getElementById("chargePaid").classList.toggle("ep-hide", !paid);
+    document.getElementById("chargePending").classList.toggle("ep-hide", paid);
+    if (paid) return;
+    document.getElementById("chargeReceiver").textContent = c.receiverName || "o profissional";
+    document.getElementById("chargeCopy").value = c.pixPayload || "";
+    drawQr(document.getElementById("chargeQr"), c.pixPayload, c.qrBase64);
+    document.getElementById("chargeKeyRow").classList.toggle("ep-hide", !c.pixKey);
+    document.getElementById("chargeKey").textContent = c.pixKey || "";
+    document.getElementById("chargeAutoHint").classList.toggle("ep-hide", !c.automatic);
+    const reported = !!c.patientReportedAt;
+    document.getElementById("chargeReportBtn").classList.toggle("ep-hide", c.automatic || reported);
+    document.getElementById("chargeReported").classList.toggle("ep-hide", c.automatic || !reported);
+  }
+  (async () => {
+    if (!window.qrcode) {
+      await new Promise(res => {
+        const sc = document.createElement("script");
+        sc.src = "https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js";
+        sc.onload = res; sc.onerror = res; document.head.appendChild(sc);
+      });
+    }
+    let charge = await loadPatientCharge();
+    renderCharge(charge);
+    // Mercado Pago: confere o status a cada 10 s até aprovar (pare se pago).
+    if (charge?.automatic && charge.status !== "paid") {
+      const timer = setInterval(async () => {
+        const next = await loadPatientCharge();
+        if (next) { charge = next; renderCharge(next); }
+        if (next?.status === "paid") clearInterval(timer);
+      }, 10000);
+    }
+  })();
+  document.getElementById("chargeCopyBtn").addEventListener("click", async () => {
+    const v = document.getElementById("chargeCopy").value;
+    try { await navigator.clipboard.writeText(v); } catch { document.getElementById("chargeCopy").select(); }
+    const b = document.getElementById("chargeCopyBtn"); b.textContent = "Copiado!";
+    setTimeout(() => { b.textContent = "Copiar"; }, 1500);
+  });
+  document.getElementById("chargeReportBtn").addEventListener("click", async () => {
+    const b = document.getElementById("chargeReportBtn"); b.disabled = true;
+    try {
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/cobranca/informar-pago`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ c: params.get("c") || undefined, t: params.get("t") || undefined })
+      });
+      if (!r.ok) throw new Error();
+      b.classList.add("ep-hide");
+      document.getElementById("chargeReported").classList.remove("ep-hide");
+    } catch { b.disabled = false; alert("Não foi possível avisar agora. Tente de novo."); }
+  });
+
   const joinCode  = params.get("c");
   const joinToken = params.get("t");
 
@@ -272,10 +419,66 @@
   const nameEl    = document.getElementById("patientName");
   const statusEl  = document.getElementById("prejoinStatus");
 
+  // "logged": conta + chave desbloqueada (notas vão cifradas pra conta)
+  // "sealed": logado(a), mas a chave não está nesta aba (ela fica em
+  //           sessionStorage — link aberto em outra aba cai aqui). As notas são
+  //           seladas com a chave pública da conta: vão pra conta sem pedir senha.
+  // "locked": como "sealed", mas a conta ainda não tem par de chaves; só aí a
+  //           sala pede a senha (dentro da sessão, no painel de notas).
+  // "anon":   visitante
   let authMode = "anon";
   let patientUser = null;
   let patientDek  = null;
   let patientIdToken = null;
+  let patientAccount = null; // perfil com a chave embrulhada (modo "locked")
+  let patientSealPub = null; // chave pública ECDH da conta (modo "sealed")
+  const savesToAccount = () => authMode === "logged" || authMode === "sealed";
+
+  // ID token vence em 1h; sessão + pré-join passa disso. Sempre pede um fresco.
+  async function freshIdToken() {
+    try { return (await auth.currentUser?.getIdToken()) || patientIdToken; } catch { return patientIdToken; }
+  }
+
+  async function unlockWithPassword(password) {
+    const dek = await unwrapDek({
+      wrappedDEK:   patientAccount.wrappedDEK,
+      wrappedDEKIv: patientAccount.wrappedDEKIv,
+      e2eeSalt:     patientAccount.e2eeSalt
+    }, password);
+    rememberPatientDek(dek);
+    rememberPatientUser(patientUser);
+    patientDek = dek;
+    authMode = "logged";
+    document.dispatchEvent(new Event("ep:patient-unlocked"));
+  }
+
+  function buildUnlockForm({ compact = false } = {}) {
+    const form = document.createElement("form");
+    form.className = "ep-unlock-form";
+    form.style.cssText = "display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap;";
+    form.innerHTML = `
+      <input type="password" class="ep-input" autocomplete="current-password" required
+             placeholder="${escapeHtml(tr("entrar:unlock.passwordPlaceholder", "Sua senha"))}"
+             style="flex:1;min-width:140px;${compact ? "padding:6px 10px;font-size:13px;" : ""}">
+      <button type="submit" class="ep-btn ep-btn--primary ep-btn--sm">${escapeHtml(tr("entrar:unlock.btn", "Desbloquear"))}</button>
+      <span class="ep-text-xs" data-unlock-status style="flex-basis:100%;min-height:1em;"></span>`;
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const input = form.querySelector("input");
+      const st = form.querySelector("[data-unlock-status]");
+      const btn = form.querySelector("button");
+      btn.disabled = true;
+      st.textContent = tr("entrar:unlock.working", "Desbloqueando…");
+      try {
+        await unlockWithPassword(input.value);
+        input.value = "";
+      } catch {
+        st.textContent = tr("entrar:unlock.wrong", "Senha incorreta.");
+        btn.disabled = false;
+      }
+    });
+    return form;
+  }
 
   function authReady() {
     return new Promise((resolve) => {
@@ -290,22 +493,43 @@
     const fbUser = await authReady();
     if (!fbUser) return;
 
-    const cachedUser = recallPatientUser();
-    if (!cachedUser || cachedUser.uid !== fbUser.uid) return;
-
-    const dek = recallPatientDek();
-    if (!dek) return;
-
     try {
       patientIdToken = await fbUser.getIdToken();
     } catch {
       return;
     }
-    patientUser = cachedUser;
-    patientDek  = dek;
-    authMode = "logged";
 
-    if (cachedUser.displayName) nameEl.value = cachedUser.displayName;
+    const cachedUser = recallPatientUser();
+    const dek = recallPatientDek();
+    if (cachedUser && cachedUser.uid === fbUser.uid && dek) {
+      patientUser = cachedUser;
+      patientDek  = dek;
+      authMode = "logged";
+      if (cachedUser.displayName) nameEl.value = cachedUser.displayName;
+      return;
+    }
+
+    // Logado(a), mas sem a chave nesta aba: confere se é conta de paciente.
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/me`, {
+        headers: { "Authorization": `Bearer ${await freshIdToken()}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      const a = data?.account;
+      if (!res.ok || !a?.wrappedDEK || !a?.wrappedDEKIv || !a?.e2eeSalt) return;
+      patientAccount = a;
+      patientUser = { uid: fbUser.uid, email: fbUser.email || "", displayName: a.displayName || "" };
+      authMode = "locked";
+      // Com par de chaves na conta, dá pra salvar notas sem senha (seladas).
+      try {
+        const kr = await fetch(`${BACKEND_BASE_URL}/therapy/chat/keypair`, {
+          headers: { "Authorization": `Bearer ${patientIdToken}` }
+        });
+        const kd = kr.ok ? await kr.json().catch(() => ({})) : null;
+        if (kd?.ecdhPublicJwk) { patientSealPub = kd.ecdhPublicJwk; authMode = "sealed"; }
+      } catch {}
+      if (a.displayName && !nameEl.value) nameEl.value = a.displayName;
+    } catch {}
   }
 
   function escapeHtml(str) {
@@ -316,7 +540,7 @@
 
   function renderAccountSlot() {
     accountSlot.innerHTML = "";
-    if (authMode === "logged") {
+    if (authMode === "logged" || authMode === "sealed" || authMode === "locked") {
       const wrap = document.createElement("div");
       wrap.className = "ep-account-badge";
       const loggedPrefix = escapeHtml(tr("entrar:prejoin.accountLoggedAsPrefix", "Logado(a) como"));
@@ -333,6 +557,7 @@
         "entrar:prejoin.accountNotesNoteHtml",
         `Suas anotações desta sessão ficarão salvas na sua conta. <a href="./paciente-painel.html" target="_blank" style="color: var(--ep-accent); text-decoration: underline;">Ver minhas anotações</a>`
       );
+      if (authMode === "locked") sub.textContent = tr("entrar:prejoin.accountLockedNote", "Para salvar suas anotações na sua conta, você confirma sua senha dentro da sala.");
       accountSlot.appendChild(sub);
     } else {
       const cta = document.createElement("div");
@@ -359,6 +584,33 @@
 
   await detectAuthMode();
   renderAccountSlot();
+  // Desbloqueou no pré-join → mostra o selo de conta logada.
+  document.addEventListener("ep:patient-unlocked", () => { if (!prejoin.classList.contains("ep-hide")) renderAccountSlot(); });
+
+  // ─── Reentrada no mesmo aparelho ──────────────────────────────────────
+  // O link é de uso único; no primeiro join o servidor devolve um
+  // rejoinSecret (rotacionado a cada entrada). Guardado aqui, permite voltar
+  // à sala após queda de rede, aba recarregada ou navegador fechado.
+  const REJOIN_KEY = "ep_rejoin:" + (joinCode || String(joinToken).slice(-40));
+  function readRejoin() {
+    try { return JSON.parse(localStorage.getItem(REJOIN_KEY) || "null"); } catch { return null; }
+  }
+  function saveRejoin(secret, name) {
+    try { localStorage.setItem(REJOIN_KEY, JSON.stringify({ secret, name, at: Date.now() })); } catch {}
+  }
+  function clearRejoin() {
+    try { localStorage.removeItem(REJOIN_KEY); } catch {}
+  }
+  const storedRejoin = readRejoin();
+  if (storedRejoin?.secret) {
+    // Consentimento já foi registrado no primeiro join — um toque para voltar
+    // (o toque também libera o autoplay de áudio no celular).
+    if (storedRejoin.name && !nameEl.value) nameEl.value = storedRejoin.name;
+    consentEl.checked = true;
+    startBtn.disabled = false;
+    startBtn.setAttribute("data-i18n", "entrar:prejoin.rejoinBtn");
+    startBtn.textContent = tr("entrar:prejoin.rejoinBtn", "Voltar para a consulta");
+  }
 
   consentEl.addEventListener("change", () => {
     startBtn.disabled = !consentEl.checked;
@@ -383,9 +635,12 @@
       // Manda whichever param veio na URL — backend aceita os 2.
       if (joinCode) body.joinCode = joinCode;
       else body.joinToken = joinToken;
-      if (authMode === "logged" && patientIdToken) {
-        body.patientIdToken = patientIdToken;
+      if (authMode !== "anon") {
+        const tok = await freshIdToken();
+        if (tok) body.patientIdToken = tok;
       }
+      const rejoin = readRejoin();
+      if (rejoin?.secret) body.rejoinSecret = rejoin.secret;
       joinRes = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -400,7 +655,13 @@
     const data = await joinRes.json().catch(() => ({}));
     if (!joinRes.ok || !data.ok) {
       const code = data?.error || joinRes.status;
-      if (code === "SESSAO_ENCERRADA" || code === "TOKEN_EXPIRADO" || code === 401 || code === 410) {
+      if (code === "JOIN_TOKEN_JA_USADO") {
+        clearRejoin();
+        showError(tr("entrar:error.tokenUsed", "Este link já foi usado em outro aparelho. Peça um novo link ao(à) profissional."));
+      } else if (code === "SESSAO_ENCERRADA" || code === "SESSAO_CANCELADA") {
+        clearRejoin();
+        showError(tr("entrar:error.sessionEnded", "A consulta já foi encerrada ou o link expirou."));
+      } else if (code === "TOKEN_EXPIRADO" || code === 401 || code === 410) {
         showError(tr("entrar:error.sessionEnded", "A consulta já foi encerrada ou o link expirou."));
       } else {
         statusEl.textContent = tr("entrar:status.errorPrefix", "Erro: ") + code;
@@ -409,6 +670,11 @@
       }
       return;
     }
+    if (data.rejoinSecret) saveRejoin(data.rejoinSecret, nameEl.value.trim().slice(0, 80));
+
+    // Na sala, trocar o idioma não recarrega a página (recarregar derrubaria
+    // a chamada) — init.js aplica no lugar e dispara ep:i18n-changed.
+    document.documentElement.setAttribute("data-i18n-live", "on");
 
     document.getElementById("topTherapistName").textContent = data.therapistDisplayName || tr("entrar:session.defaultTherapist", "Profissional");
     prejoin.classList.add("ep-hide");
@@ -436,7 +702,12 @@
     const ctrlCam    = document.getElementById("ctrlCam");
     const ctrlLeave  = document.getElementById("ctrlLeave");
 
-    function setStatus(text) { connStatus.textContent = text; }
+    // Guarda a chave do status atual para retraduzir na troca de idioma.
+    let statusKey = null, statusFallback = "";
+    function setStatus(key, fallback) {
+      statusKey = key; statusFallback = fallback;
+      connStatus.textContent = tr(key, fallback);
+    }
     function b64ToBytes(b64) {
       const bin = atob(b64);
       const out = new Uint8Array(bin.length);
@@ -460,6 +731,16 @@
       e2ee: useE2EE ? { keyProvider, worker: e2eeWorker } : undefined
     });
 
+    // VP9 premium com volta automática a VP8 se o outro lado não decodificar.
+
+    setupCodecNegotiation(room, livekitMod);
+
+    import("./js/room-ambient.js?v=3").then(({ initRoomAmbient }) => initRoomAmbient({
+      room, livekitMod, lkVersion: LIVEKIT_VERSION,
+      buttonId: "ambientBtn", panelId: "ambientPanel",
+      localTileEl: document.getElementById("tileLocal"), showMood: false
+    })).catch(err => console.warn("room_ambient_init_error", err));
+
     // ─── Anotações pessoais — duas formas de armazenar ──────────────────
     // mode "logged" → POST /paciente/notas (cifrado E2EE com DEK do paciente)
     // mode "anon"   → sessionStorage (some ao fechar aba)
@@ -476,9 +757,49 @@
     // só comporta a primeira linha). Desktop: texto longo c/ reassurance
     // completo de privacidade + persistência.
     const isMobileViewport = window.matchMedia('(max-width: 640px)').matches;
-    notesScopeLbl.textContent = isMobileViewport
-      ? tr("entrar:session.notesScopeShort", "Suas anotações · só você vê")
-      : tr("entrar:session.notesScopeLong", "Suas anotações · só você vê · ficam salvas na sua conta");
+    // Só promete "salvas na sua conta" quando é verdade.
+    function scopeText() {
+      if (isMobileViewport) return tr("entrar:session.notesScopeShort", "Suas anotações · só você vê");
+      return savesToAccount()
+        ? tr("entrar:session.notesScopeLong", "Suas anotações · só você vê · ficam salvas na sua conta")
+        : tr("entrar:session.notesScopeTab", "Suas anotações · só você vê · somem ao fechar esta aba");
+    }
+    notesScopeLbl.textContent = scopeText();
+
+    const notesUnlock = document.getElementById("notesUnlock");
+    function renderNotesUnlock() {
+      if (authMode !== "locked") { notesUnlock.classList.add("ep-hide"); notesUnlock.innerHTML = ""; return; }
+      notesUnlock.classList.remove("ep-hide");
+      notesUnlock.textContent = tr("entrar:unlock.inSession", "Suas anotações ainda não estão indo para a sua conta. Confirme sua senha para salvá-las:");
+      notesUnlock.appendChild(buildUnlockForm({ compact: true }));
+    }
+    renderNotesUnlock();
+
+    // Desbloqueou durante a sessão: manda pra conta o que já foi escrito aqui.
+    document.addEventListener("ep:patient-unlocked", async () => {
+      renderNotesUnlock();
+      notesScopeLbl.textContent = scopeText();
+      let sent = 0;
+      for (const n of notes) {
+        if (n.noteId) continue;
+        try {
+          const { ciphertext, iv } = await encryptNote(n.text, patientDek);
+          const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/notas`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshIdToken()}` },
+            body: JSON.stringify({ sessionId, ciphertext, iv })
+          });
+          const j = await res.json().catch(() => ({}));
+          if (res.ok && j.ok) { n.noteId = j.noteId; sent++; }
+        } catch (e) { console.warn("note_migrate_failed", e); }
+      }
+      if (notes.every(n => n.noteId)) { try { sessionStorage.removeItem(NOTES_KEY); } catch {} }
+      else persistAnonNotes();
+      noteStatus.textContent = sent
+        ? tr("entrar:unlock.migrated", "anotações salvas na sua conta")
+        : tr("entrar:session.notesSavedAccount", "salva na sua conta");
+      setTimeout(() => { noteStatus.textContent = " "; }, 2500);
+    });
 
     let notes = []; // [{ noteId?, text, createdAt }]
 
@@ -486,7 +807,7 @@
       if (authMode === "logged") {
         try {
           const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/notas?sessionId=${encodeURIComponent(sessionId)}`, {
-            headers: { "Authorization": `Bearer ${patientIdToken}` }
+            headers: { "Authorization": `Bearer ${await freshIdToken()}` }
           });
           const j = await res.json().catch(() => ({}));
           if (res.ok && j.ok) {
@@ -542,13 +863,27 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${patientIdToken}`
+            "Authorization": `Bearer ${await freshIdToken()}`
           },
           body: JSON.stringify({ sessionId, ciphertext, iv })
         });
         const j = await res.json().catch(() => ({}));
         if (!res.ok || !j.ok) throw new Error(j?.error || ("HTTP_" + res.status));
         notes.push({ noteId: j.noteId, text, createdAt });
+      } else if (authMode === "sealed") {
+        // Selada com a chave pública da conta: vai pra conta sem precisar da senha.
+        const sealed = await sealToPublicKey(text, patientSealPub);
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/notas`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshIdToken()}` },
+          body: JSON.stringify({ sessionId, ...sealed })
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok || !j.ok) throw new Error(j?.error || ("HTTP_" + res.status));
+        notes.push({ noteId: j.noteId, text, createdAt });
+        // Cópia legível só nesta aba: notas seladas não se abrem aqui sem a
+        // senha, então é isso que mostra a lista se a página recarregar.
+        persistAnonNotes();
       } else {
         console.warn("[ep-debug] saveNote ANON — nota fica em sessionStorage e some ao fechar");
         notes.push({ text, createdAt });
@@ -564,7 +899,7 @@
       try {
         await saveNote(t);
         noteInput.value = "";
-        noteStatus.textContent = (authMode === "logged")
+        noteStatus.textContent = savesToAccount()
           ? tr("entrar:session.notesSavedAccount", "salva na sua conta")
           : tr("entrar:session.notesSavedSession", "salva (sessão atual)");
         setTimeout(() => { noteStatus.textContent = " "; }, 1800);
@@ -653,15 +988,38 @@
     // Timer de encerramento — aguarda 8s antes de redirecionar.
     // Se o profissional reconectar (queda de rede), o timer é cancelado.
     let sessionEndTimer = null;
+    let leavingOnPurpose = false;
     let sessionEndHandled = false;
+    // Visitante (sem conta) sai da consulta direto para criar a conta de
+    // paciente. Leva na aba (sessionStorage sobrevive à navegação) as notas
+    // escritas e a prova de participação (rejoinSecret) — o painel, já com a
+    // chave da conta nova, vincula a consulta e guarda as notas cifradas.
+    const POST_SESSION_KEY = "ep_post_session";
+    function destinationAfterSession() {
+      if (portalVia === "portal") return "./app/home.html";
+      if (portalVia === "aluno") return "./aluno-painel.html";
+      if (authMode !== "anon") return "./paciente-painel.html";
+      try {
+        sessionStorage.setItem(POST_SESSION_KEY, JSON.stringify({
+          sessionId,
+          rejoinSecret: readRejoin()?.secret || null,
+          name: nameEl.value.trim().slice(0, 80),
+          notes: notes.map(n => ({ text: n.text, createdAt: n.createdAt })),
+          at: Date.now()
+        }));
+      } catch {}
+      return "./paciente-cadastro.html?from=consulta";
+    }
+
     function showSessionEnded() {
       if (sessionEndHandled) return;
       sessionEndHandled = true;
+      const destination = destinationAfterSession(); // antes de apagar a credencial
+      clearRejoin();
       clearTimeout(sessionEndTimer);
       document.getElementById("sessionEndedOverlay")?.classList.remove("ep-hide");
       try { room.disconnect(); } catch {}
-      const destination = (authMode === "logged") ? "./paciente-painel.html" : "./index.html";
-      setTimeout(() => { window.location.href = destination; }, 4000);
+      setTimeout(() => { window.location.href = destination; }, authMode === "anon" ? 600 : 4000);
     }
     function scheduleSessionEnd() {
       clearTimeout(sessionEndTimer);
@@ -708,10 +1066,26 @@
           if (message?.t === "therapy:session-ended" && message.sessionId === sessionId) showSessionEnded();
         } catch {}
       })
+      .on(RoomEvent.Reconnecting, () => setStatus("entrar:session.statusReconnecting", "conexão perdida — reconectando…"))
+      .on(RoomEvent.Reconnected, () => setStatus("entrar:session.statusInSession", "em sessão"))
       .on(RoomEvent.Disconnected, (reason) => {
-        setStatus(tr("entrar:session.statusDisconnected", "desconectado"));
-        if (reason === DisconnectReason?.ROOM_DELETED) showSessionEnded();
+        setStatus("entrar:session.statusDisconnected", "desconectado");
+        if (reason === DisconnectReason?.ROOM_DELETED) { showSessionEnded(); return; }
+        // Queda que o LiveKit não recuperou sozinho: recarrega e o paciente
+        // volta com um toque em "Voltar para a consulta" (rejoinSecret).
+        const deliberate = [DisconnectReason?.CLIENT_INITIATED, DisconnectReason?.DUPLICATE_IDENTITY,
+          DisconnectReason?.PARTICIPANT_REMOVED].includes(reason);
+        if (!deliberate && !leavingOnPurpose && !sessionEndHandled) setTimeout(() => location.reload(), 2500);
       });
+
+    // Troca de idioma ao vivo: init.js retraduz os data-i18n; aqui refaz os
+    // textos montados em JS.
+    document.addEventListener("ep:i18n-changed", () => {
+      if (statusKey) connStatus.textContent = tr(statusKey, statusFallback);
+      notesScopeLbl.textContent = scopeText();
+      renderNotesUnlock();
+      renderNotes();
+    });
 
     try {
       // Ordem canônica do LiveKit 2.x: setKey + setE2EEEnabled ANTES do connect.
@@ -734,14 +1108,14 @@
         onRemoteConnected(p);
       }
 
-      setStatus(tr("entrar:session.statusEnablingCam", "ligando câmera…"));
+      setStatus("entrar:session.statusEnablingCam", "ligando câmera…");
       await room.localParticipant.enableCameraAndMicrophone();
       const camTrack = Array.from(room.localParticipant.videoTrackPublications.values())[0]?.videoTrack;
       if (camTrack) {
         camTrack.attach(videoLocal);
         tileLocal.classList.add("ep-tile--has-video");
       }
-      setStatus(tr("entrar:session.statusInSession", "em sessão"));
+      setStatus("entrar:session.statusInSession", "em sessão");
 
       // Cronometro da sessao — comeca quando paciente entra (sessao do
       // paciente comeca aqui, antes do terapeuta conectar). Mesmo formato
@@ -757,7 +1131,7 @@
       }, 1000);
     } catch (err) {
       console.error("join_error", err);
-      setStatus(tr("entrar:session.statusError", "erro"));
+      setStatus("entrar:session.statusError", "erro");
       alert(tr("entrar:session.joinErrorPrefix", "Não foi possível entrar na consulta:\n") + (err?.message || err));
       return;
     }
@@ -787,8 +1161,11 @@
     });
     ctrlLeave.addEventListener("click", async () => {
       if (!confirm(tr("entrar:session.confirmLeave", "Sair da consulta?"))) return;
+      leavingOnPurpose = true;
+      const destination = destinationAfterSession();
+      clearRejoin();
       try { await room.disconnect(); } catch {}
-      window.location.href = (authMode === "logged") ? "./paciente-painel.html" : "./index.html";
+      window.location.href = destination;
     });
 
     // ─── Anotações collapse/expand (mobile) ───────────────────────────

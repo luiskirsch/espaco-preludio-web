@@ -333,16 +333,14 @@
       .ep-school-origin__copy small { white-space: normal; }
     }
   </style>
-  <script src="./i18n/init.js?v=2-4" defer></script>
+  <script src="./i18n/init.js?v=2-6" defer></script>
   <script src="./js/monitoring.js?v=3" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
-  <script src="./js/pwa.js?v=2" defer></script>
+  <script src="./js/pwa.js?v=3" defer></script>
 </head>
 <body class="ep-has-sidebar">
-<div class="ep-staging-banner" data-i18n="p-painel:ambiente_de_teste_espaco_preludio_ae9ee">Ambiente de teste &middot; Espaço Prelúdio &middot; staging</div>
-
-<script src="./js/sidebar.js?v=27"></script>
+<script src="./js/sidebar.js?v=31"></script>
 
 <header class="ep-topbar">
   <div class="ep-container ep-topbar__inner">
@@ -643,11 +641,11 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { requireTherapist, refreshIdToken } from "./js/auth-guard.js?v=3-35";
-  import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=4";
+  import { requireTherapist, refreshIdToken } from "./js/auth-guard.js?v=3-36";
+  import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=5";
   import { clearDek, recallUser, decryptNote } from "./js/crypto.js";
-  import { downloadAttendanceCertificate } from "./js/attendance-pdf.js?v=1";
-  import { createNewSessionModal } from "./js/new-session-modal.js?v=4";
+  import { downloadAttendanceCertificate } from "./js/attendance-pdf.js?v=4";
+  import { createNewSessionModal } from "./js/new-session-modal.js?v=5";
   import { runOnboarding } from "./js/onboarding.js?v=3-15";
 
   // ─── i18n helper ────────────────────────────────────────────
@@ -797,7 +795,7 @@
         return setBanner("ep-alert--info", tr("painel:studentBanner.recemPending", "<strong>Comprovante de inscrição em revisão.</strong> Recebemos sua carteira/print do conselho. Nossa equipe revisa em até 48h."));
       }
       if (plano === "recem-formado-eligible") {
-        return setBanner("ep-alert--success", tr("painel:studentBanner.recemEligible", "<strong>Você está habilitado para o plano Recém-formado</strong> (R$ 99,50/mês). Quando contratar a assinatura, esse será seu preço."));
+        return setBanner("ep-alert--success", tr("painel:studentBanner.recemEligible", "<strong>Você está habilitado para a assinatura</strong> (plano Profissional, R$ 60/mês)."));
       }
       if (recemRes?.recemFormadoDoc?.decision === "rejected") {
         const reasons = (recemRes.recemFormadoDoc.reasons || []).map(r => `<li>${r}</li>`).join("");
@@ -1006,6 +1004,14 @@
     const originLine = publicSchool
       ? `<div class="ep-mt-8">${publicSchoolOriginTag()}</div>${schoolDetails ? `<div class="ep-text-xs ep-text-muted ep-mt-8">${schoolDetails}</div>` : ""}`
       : "";
+    // Colaborador de empresa: selo de cobertura e, se o pedido ainda está fora
+    // do banco/franquia, o atalho de acolhimento de urgência.
+    const corp = r.corporate;
+    const corpLine = !corp ? "" : corp.urgent
+      ? `<div class="ep-mt-8"><span class="ep-badge ep-badge--warn">Acolhimento de urgência · coberto pela empresa</span></div>`
+      : corp.awaitingPayment
+        ? `<div class="ep-mt-8"><span class="ep-badge">Fora do banco · aguardando pagamento do colaborador</span></div>`
+        : `<div class="ep-mt-8"><span class="ep-badge ep-badge--ok">Coberto pela empresa</span></div>`;
     const notesLine = r.notes
       ? `<div class="ep-text-sm ep-mt-8" style="padding: 8px 10px; background: var(--ep-bg-2); border-radius: 6px; color: var(--ep-ink-2);">${escapeHtmlBasic(r.notes)}</div>`
       : "";
@@ -1016,11 +1022,13 @@
           <span>${tr("painel:sched.askedFor","Pediu para")} <strong>${escapeHtmlBasic(fmtSchedRequestSlot(r.requestedSlot))}</strong></span>
         </div>
         ${originLine}
+        ${corpLine}
         <div class="ep-text-xs ep-text-muted ep-mt-8">${escapeHtmlBasic(r.patientEmail)}${phoneLine}</div>
         ${notesLine}
       </div>
       <div class="ep-session__actions">
-        <button class="ep-btn ep-btn--primary ep-btn--sm" data-sched-action="approve">${tr("painel:sched.approve","Aprovar")}</button>
+        <button class="ep-btn ep-btn--primary ep-btn--sm" data-sched-action="approve"${corp?.awaitingPayment ? ' disabled title="Aguardando pagamento do colaborador"' : ""}>${tr("painel:sched.approve","Aprovar")}</button>
+        ${corp && !corp.urgent ? `<button class="ep-btn ep-btn--ghost ep-btn--sm" data-sched-action="urgent">Acolhimento de urgência</button>` : ""}
         <button class="ep-btn ep-btn--ghost ep-btn--sm"   data-sched-action="reject">${tr("painel:sched.reject","Recusar")}</button>
       </div>
     `;
@@ -1050,6 +1058,29 @@
         }
         invalidatePrefix("sessoes", uid);
         await Promise.all([loadSchedulingRequests(), loadSessions()]);
+      } catch (e) {
+        alert(tr("painel:sched.netErr","Erro de rede."));
+        btn.disabled = false;
+      }
+    } else if (action === "urgent") {
+      const reason = prompt("Acolhimento de urgência: a sessão fica coberta pela empresa sem descontar do banco (até 2 por pessoa/mês). Descreva brevemente o motivo (fica no registro, não vai para a empresa):");
+      if (reason === null) return;
+      if (reason.trim().length < 10) { alert("Descreva o motivo em pelo menos 10 caracteres."); return; }
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/therapy/agendamentos/solicitacoes/${encodeURIComponent(id)}/urgencia`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+          body: JSON.stringify({ reason: reason.trim() })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          const msgs = { LIMITE_URGENCIA_ATINGIDO: "Esta pessoa já usou os 2 acolhimentos de urgência do mês.", EXTRA_JA_PAGO: "O colaborador já pagou esta sessão." };
+          alert(msgs[data?.error] || ("Não foi possível marcar como urgência: " + (data?.error || res.status)));
+          btn.disabled = false;
+          return;
+        }
+        await loadSchedulingRequests();
       } catch (e) {
         alert(tr("painel:sched.netErr","Erro de rede."));
         btn.disabled = false;
@@ -1184,7 +1215,11 @@
     const staleNext = isSessionOverdue(data.nextSession || {}) ? data.nextSession : null;
     const activeNext = staleNext ? null : data.nextSession;
     const s = activeNext || data.overdueSession || staleNext;
-    if (s) {
+    // Em sessão: a própria lista já mostra "Em sessão" + Entrar; o destaque
+    // de "Próxima consulta" seria redundante.
+    const liveDetail = s && (allSessions.find(item => item.sessionId === s.sessionId) || s);
+    const inSessionNow = Boolean(liveDetail && liveDetail.status === "in_progress" && !isSessionOverdue(liveDetail));
+    if (s && !inSessionNow) {
       const sessionDetail = allSessions.find(item => item.sessionId === s.sessionId) || s;
       const overdue = isSessionOverdue(sessionDetail);
       const publicSchool = isPublicSchoolSession(sessionDetail);
@@ -1428,15 +1463,29 @@
     }
   }
 
+  // Cache só acelera a 1ª pintura. Depois que a lista do servidor (ou uma
+  // mutação local) já está na tela, um snapshot do cache é sempre mais velho:
+  // renderizá-lo fazia botões (ex.: "Revogar comprovante") sumirem e voltarem.
+  let sessionsLoadSeq = 0;
+  let sessionsFreshSeq = 0;
   async function loadSessions() {
     // SWR: mostra cache imediato + revalida em background. Loading banner
     // só fica visível se NÃO houver cache (1ª carga).
     loadingBanner.classList.remove("ep-hide");
+    const seq = ++sessionsLoadSeq;
     try {
       await cachedGet({
         url: `${BACKEND_BASE_URL}/therapy/sessoes`,
         idToken, uid, key: "sessoes", ttl: 30_000, getFreshToken,
-        onData: (data) => renderSessionsFromData(data)
+        onData: (data, src) => {
+          if (src === "fresh") {
+            if (seq < sessionsFreshSeq) return; // resposta atrasada de um load anterior
+            sessionsFreshSeq = seq;
+          } else if (sessionsFreshSeq > 0) {
+            return;
+          }
+          renderSessionsFromData(data);
+        }
       });
     } catch (error) {
       console.error("load_sessions_error", error);
@@ -1445,6 +1494,16 @@
         loadingBanner.className = "ep-alert ep-alert--danger";
       }
     }
+  }
+
+  // Cobrança do paciente pelo link (PIX do profissional).
+  function chargeBadge(s) {
+    const c = s.patientCharge;
+    if (!c) return "";
+    const brl = (Number(c.amountCents) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    if (c.status === "paid") return `<span class="ep-badge ep-badge--ok" title="Pagamento recebido">Pago · ${brl}</span>`;
+    if (c.patientReportedAt) return `<span class="ep-badge ep-badge--warn" title="O paciente informou que pagou — confira sua conta e confirme">Paciente informou pagamento · ${brl}</span>`;
+    return `<span class="ep-badge" title="Aguardando o PIX do paciente">Aguardando pagamento · ${brl}</span>`;
   }
 
   function renderSession(s) {
@@ -1500,11 +1559,14 @@
           <span>${tr("painel:list.createdAt","Criada {{date}}",{date:fmtDate(s.createdAt)})}</span>
           ${s.scheduledAt ? `<span>${tr("painel:list.scheduledAt","· Agendada {{date}}",{date:fmtDate(s.scheduledAt)})}</span>` : ""}
           ${s.completedAt ? `<span>${tr("painel:list.completedAt","· Encerrada {{date}}",{date:fmtDate(s.completedAt)})}</span>` : ""}
+          ${chargeBadge(s)}
         </div>
         ${overdueBlock}
         ${preNoteBlock}
       </div>
       <div class="ep-session__actions">
+        ${s.patientCharge && s.patientCharge.status !== "paid" && s.patientCharge.provider !== "mercadopago" ? `
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="confirmar-pagamento" data-id="${s.sessionId}" title="Confirme quando o PIX cair na sua conta">Confirmar pagamento</button>` : ""}
         ${isOpen && !overdue ? `
           <button class="ep-btn ep-btn--primary ep-btn--sm" data-action="enter" data-id="${s.sessionId}">${s.demoTechnicalRoom?'Abrir sala demo':tr("painel:list.enter","Entrar")}</button>
         ` : ""}
@@ -1528,6 +1590,9 @@
         ` : ""}
         ${s.status === "completed" && !s.demoTechnicalRoom ? `
           <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="comparecimento" data-id="${s.sessionId}" title="Baixar comprovante de comparecimento (PDF) com os horários registrados pela plataforma">Comprovante</button>
+        ` : ""}
+        ${s.status === "completed" && s.attendanceCertCode ? `
+          <button class="ep-btn ep-btn--ghost ep-btn--sm" data-action="revogar-comprovante" data-id="${s.sessionId}" title="Invalidar o comprovante ${escapeHtml(s.attendanceCertCode)}: a verificação pública passa a mostrar que foi revogado">Revogar comprovante</button>
         ` : ""}
         ${(s.status === "completed" || s.status === "canceled") ? `
           <button class="ep-btn-icon" data-action="ocultar" data-id="${s.sessionId}" aria-label="${tr("painel:list.ocultar","Remover da lista")}" title="${tr("painel:list.ocultarTitle","Remover da lista (mantém no prontuário)")}">
@@ -1631,10 +1696,58 @@
             : "Não foi possível gerar o comprovante agora.");
         } else {
           await downloadAttendanceCertificate(d.comprovante);
+          const sess = allSessions.find(x => x.sessionId === id);
+          if (sess && sess.attendanceCertCode !== d.comprovante.verificationCode) {
+            sess.attendanceCertCode = d.comprovante.verificationCode || null;
+            sessionsFreshSeq = Math.max(sessionsFreshSeq, 1);
+            await invalidateApi("sessoes", uid);
+            renderSessionsFromData({ sessions: allSessions });
+          }
         }
       } catch {
         alert("Não foi possível gerar o comprovante agora.");
       } finally {
+        btn.disabled = false;
+      }
+    } else if (action === "revogar-comprovante") {
+      const sess = allSessions.find(x => x.sessionId === id);
+      if (!confirm(`Revogar o comprovante ${sess?.attendanceCertCode || ""}?
+
+Quem verificar esse código passará a ver que ele foi invalidado. Se precisar, você pode emitir um novo comprovante depois.`)) return;
+      btn.disabled = true;
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/comparecimento/revogar`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${await getFreshToken()}` }
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d.error || r.status);
+        if (sess) sess.attendanceCertCode = null;
+        sessionsFreshSeq = Math.max(sessionsFreshSeq, 1);
+        await invalidateApi("sessoes", uid);
+        renderSessionsFromData({ sessions: allSessions });
+      } catch {
+        alert("Não foi possível revogar o comprovante agora.");
+        btn.disabled = false;
+      }
+    } else if (action === "confirmar-pagamento") {
+      if (!confirm("Confirmar que o PIX deste paciente caiu na sua conta?")) return;
+      btn.disabled = true;
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(id)}/cobranca/confirmar`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getFreshToken()}` },
+          body: JSON.stringify({ paid: true })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d.error || r.status);
+        const sess = allSessions.find(x => x.sessionId === id);
+        if (sess?.patientCharge) sess.patientCharge.status = "paid";
+        sessionsFreshSeq = Math.max(sessionsFreshSeq, 1);
+        await invalidateApi("sessoes", uid);
+        renderSessionsFromData({ sessions: allSessions });
+      } catch {
+        alert("Não foi possível confirmar o pagamento agora.");
         btn.disabled = false;
       }
     } else if (action === "recibo") {
@@ -2042,7 +2155,7 @@
   document.addEventListener("visibilitychange", async () => {
     if (document.visibilityState !== "visible") return;
     try { await getFreshToken(); } catch { /* cachedGet faz retry de fallback */ }
-    invalidatePrefix("sessoes", uid);
+    await invalidatePrefix("sessoes", uid);
     loadSessions();
   });
 

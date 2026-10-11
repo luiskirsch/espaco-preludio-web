@@ -63,6 +63,11 @@ const MODAL_HTML = `
         </div>
         <span class="ep-text-xs ep-text-muted" data-i18n="painel:modalNew.scheduledAtHint">Obrigatório — a consulta precisa aparecer na agenda. Você pode entrar antes do horário marcado.</span>
       </div>
+      <div class="ep-field" id="chargeField">
+        <label class="ep-label" for="chargeAmount">Valor a cobrar do paciente (R$)</label>
+        <input id="chargeAmount" class="ep-input" type="number" min="10" max="100000" step="0.01" placeholder="Opcional — ex.: 180,00">
+        <span class="ep-text-xs ep-text-muted">O paciente recebe no link da consulta um QR Code PIX com esse valor. Deixe em branco para não cobrar pela plataforma.</span>
+      </div>
       <div class="ep-field">
         <label class="ep-label" for="recurrenceWeeks" data-i18n="painel:modalNew.recurrence">Repetir semanalmente</label>
         <select id="recurrenceWeeks" class="ep-select">
@@ -271,6 +276,15 @@ export function createNewSessionModal({
   });
 
   function openModal(prefill = {}) {
+    // Cobrança do paciente: não se aplica ao plano institucional (R$ 60 pela plataforma).
+    const chargeField = document.getElementById("chargeField");
+    if (chargeField) {
+      chargeField.style.display = therapist?.institutional ? "none" : "";
+      const input = document.getElementById("chargeAmount");
+      if (input && !input.value && therapist?.valorConsulta && !therapist?.institutional) {
+        input.value = (Number(therapist.valorConsulta) / 100).toFixed(2);
+      }
+    }
     if (prefill.patientId) {
       patientSelect.value = "id:" + prefill.patientId;
     } else if (prefill.patientName) {
@@ -436,6 +450,17 @@ export function createNewSessionModal({
       scheduledAt
     };
     if (recurrenceWeeks > 1) body.recurrence = { weekly: recurrenceWeeks };
+    const chargeRaw = String(document.getElementById("chargeAmount")?.value || "").replace(",", ".").trim();
+    if (chargeRaw && !therapist?.institutional) {
+      const cents = Math.round(Number(chargeRaw) * 100);
+      if (!Number.isFinite(cents) || cents < 1000 || cents > 10000000) {
+        statusEl.textContent = "Informe um valor entre R$ 10 e R$ 100.000, ou deixe em branco.";
+        statusEl.className = "ep-status is-err";
+        createBtn.disabled = false;
+        return;
+      }
+      body.chargeAmountCents = cents;
+    }
 
     try {
       const token = await getToken();
@@ -456,6 +481,12 @@ export function createNewSessionModal({
         return;
       }
       if (!res.ok || !data.ok) {
+        if (data?.error === "RECEBIMENTO_NAO_CONFIGURADO") {
+          statusEl.textContent = "Para cobrar pelo link, conecte o Mercado Pago ou cadastre sua chave PIX em Perfil → Recebimento dos pacientes.";
+          statusEl.className = "ep-status is-err";
+          createBtn.disabled = false;
+          return;
+        }
         statusEl.textContent = tr("painel:modalNew.errPrefix", "Erro: ") + (data?.error || res.status);
         statusEl.className = "ep-status is-err";
         createBtn.disabled = false;

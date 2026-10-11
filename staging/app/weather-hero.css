@@ -64,10 +64,40 @@ body.a-route-home .home-hero::after {
   animation-delay: -19s;
 }
 
+/* Céu limpo é céu limpo: a foto de nuvens some (antes ficava a 34% e o card
+   parecia nublado mesmo com sol) e o sol ganha um halo mais aberto. */
 .home-hero[data-weather="clear"] .sky-atmosphere {
-  opacity: .34;
-  filter: saturate(.72) contrast(1.04) brightness(1.06);
-  mix-blend-mode: normal;
+  opacity: 0;
+}
+
+.home-hero[data-weather="clear"][data-phase="morning"] .home-hero__sky,
+.home-hero[data-weather="clear"][data-phase="afternoon"] .home-hero__sky {
+  /* Azul de céu aberto: mais fundo à esquerda (texto branco legível), mais
+     claro perto do sol, com um véu quente leve no horizonte. */
+  background:
+    radial-gradient(circle at 84% 12%, rgba(255, 236, 170, .55), rgba(255, 236, 170, .12) 9rem, transparent 22rem),
+    linear-gradient(180deg, transparent 62%, rgba(214, 232, 240, .28) 100%),
+    linear-gradient(115deg, #0f3f78 0%, #1f63ad 38%, #3f8fd2 70%, #79b9e6 100%);
+}
+
+/* Pôr do sol com céu limpo: azul-noite no alto à esquerda (texto legível),
+   violeta e rosa no meio, laranja-dourado no horizonte, sol baixo e quente. */
+.home-hero[data-weather="clear"][data-phase="dusk"] .home-hero__sky {
+  background:
+    radial-gradient(ellipse at 84% 112%, rgba(255, 196, 92, .9), rgba(255, 140, 60, .45) 18%, transparent 46%),
+    radial-gradient(ellipse at 70% 120%, rgba(244, 120, 96, .55), transparent 62%),
+    linear-gradient(172deg, #142445 0%, #2b2d5e 30%, #6b3f6e 55%, #c2607a 74%, #f08a5d 90%, #f6b766 100%);
+}
+
+.home-hero[data-weather="clear"][data-phase="dusk"] .sky-orb {
+  background: radial-gradient(circle, rgba(255, 236, 190, .95) 0 10%, rgba(255, 178, 96, .55) 26%, rgba(255, 128, 72, .18) 46%, transparent 68%);
+}
+
+.home-hero[data-weather="clear"][data-phase="morning"] .home-hero__sky {
+  background:
+    radial-gradient(circle at 84% 12%, rgba(255, 240, 190, .5), rgba(255, 240, 190, .1) 9rem, transparent 22rem),
+    linear-gradient(180deg, transparent 60%, rgba(226, 238, 244, .3) 100%),
+    linear-gradient(115deg, #134a86 0%, #2a70ba 40%, #4f9bdb 72%, #8cc6ee 100%);
 }
 
 .home-hero[data-weather="partly"] .sky-atmosphere {
@@ -370,3 +400,34 @@ body.a-route-home .home-hero::after {
   .sky-atmosphere::before { opacity: 1; transform: scale(1.08); }
   .sky-atmosphere::after { display: none; }
 }
+
+/* Crepúsculo civil: sol já abaixo do horizonte — sem disco, só o brilho na linha do horizonte. */
+.home-hero[data-sun="down"] .sky-orb { opacity: 0 !important; }
+.home-hero[data-sun="down"]:is([data-phase="dusk"], [data-phase="dawn"]) .home-hero__sky {
+  background: linear-gradient(180deg, #070d1f 0%, #0d1730 55%, #1a2342 100%) !important;
+}
+/* brilho do horizonte por cima do céu escuro, esmaecendo até a noite */
+.home-hero[data-sun="down"]:is([data-phase="dusk"], [data-phase="dawn"]) .home-hero__sky::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  opacity: var(--horizon-glow, 1); transition: opacity 2s ease;
+  background:
+    radial-gradient(ellipse 120% 38% at 70% 108%, rgba(244, 132, 84, .62), transparent 70%),
+    linear-gradient(180deg, #0e1a38 0%, #1f2a5a 38%, #4b3d73 64%, #a4587a 84%, #e5875f 100%);
+}
+.home-hero[data-sun="down"]:is([data-phase="dusk"], [data-phase="dawn"]) .sky-atmosphere {
+  filter: brightness(.55) sepia(.35) hue-rotate(-20deg) saturate(1.3);
+}
+
+/* Lua real (posição e fase calculadas); a lua decorativa antiga sai. */
+.home-hero[data-phase="night"] .sky-orb { opacity: 0 !important; }
+.home-hero__sky > .sky-moon {
+  position: absolute; inset: auto; z-index: 2; width: 40px; height: 40px;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 10px rgba(240, 236, 220, var(--moon-glow, .5))) drop-shadow(0 0 34px rgba(190, 210, 228, calc(var(--moon-glow, .5) * .45)));
+  transition: opacity 1.2s ease, left 60s linear, top 60s linear;
+}
+.sky-moon[hidden] { display: none; }
+.sky-moon svg { display: block; width: 100%; height: 100%; }
+.home-hero[data-weather="partly"] .sky-moon { opacity: .7; }
+.home-hero:is([data-weather="cloudy"], [data-weather="rain"], [data-weather="storm"], [data-weather="fog"], [data-weather="snow"]) .sky-moon { opacity: 0; }
+@media (max-width: 640px) { .home-hero__sky > .sky-moon { width: 32px; height: 32px; } }
