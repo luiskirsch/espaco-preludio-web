@@ -76,13 +76,17 @@ Pauta preparada para imprensa, sem envio: “Como escolas podem organizar acesso
 
 Chave pública em `/ddde45fdfbad5c8aad4da2af89d890cc.txt`. O workflow `.github/workflows/indexnow.yml` roda a cada push na `main` que altere HTML ou o sitemap e envia só as URLs do sitemap que mudaram (`scripts/seo/indexnow.mjs`). Para reenviar tudo: Actions → "Avisar buscadores (IndexNow)" → Run workflow. Bing, Yandex, Seznam e Naver usam o protocolo. O Google não usa; para ele, o canal é o sitemap no Search Console.
 
-### Pendências que exigem a conta do responsável
+### Situação das pendências externas (11/10/2026)
 
-- Search Console: abrir a propriedade, enviar o sitemap e pedir indexação manual da home, de `profissional.html`, `profissionais.html` e `psicologo-online.html`.
-- Bing Webmaster Tools: importar a propriedade a partir do Search Console.
-- Cloudflare: ligar "Always Use HTTPS". Hoje `http://espacopreludio.com.br/` responde 200 em vez de redirecionar.
-- Play Console: conferir se o campo de site da ficha aponta para `https://espacopreludio.com.br/`.
+- Play Console: concluído. A ficha do app já aponta para `https://espacopreludio.com.br/index.html` e para a política de privacidade (conferido na página pública da Play Store).
+- Bing e demais buscadores do IndexNow: concluído. O envio das 17 URLs foi aceito (HTTP 202) e o sitemap está declarado no `robots.txt`. Uma conta no Bing Webmaster Tools só acrescenta relatórios.
+- Search Console: pendente. Enviar `https://espacopreludio.com.br/sitemap.xml` e pedir indexação da home, de `profissional.html`, `profissionais.html` e `psicologo-online.html`. Exige a conta Google do responsável. A alternativa automática é verificar a conta de serviço do Firebase como proprietária por arquivo HTML na raiz e enviar o sitemap pela API; ela depende de autorização explícita para usar essa credencial.
+- Cloudflare: pendente. Ligar SSL/TLS → Edge Certificates → "Always Use HTTPS". Hoje `http://espacopreludio.com.br/` responde 200. O login OAuth do wrangler não tem permissão para configurações da zona. O impacto em SEO é pequeno, porque todas as páginas têm canonical em https e o servidor envia HSTS.
 - Perfis oficiais da marca (Instagram, LinkedIn): quando existirem, apontar para o site e adicionar as URLs ao `sameAs` da home.
+
+### Staging
+
+Desde 11/10/2026, `staging/` é cópia idêntica da produção (`scripts/sync-staging.mjs`, executado também pelo workflow de traduções). As páginas públicas do staging carregam o mesmo canonical da produção, então não concorrem com ela na busca.
 
 ## FAQ e medição
 
