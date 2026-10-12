@@ -7,7 +7,7 @@
 //
 // Bump SW_VERSION pra forçar refresh do cache em todas as instalações.
 
-const SW_VERSION = "ep-sw-v19-2026-09-18-security-hardening";
+const SW_VERSION = "ep-sw-v20-2026-10-11-logo-leve";
 const PRECACHE   = `precache-${SW_VERSION}`;
 const RUNTIME    = `runtime-${SW_VERSION}`;
 
@@ -26,7 +26,8 @@ const PRECACHE_URLS = [
   "/documento.html",
   "/calculadora.html",
   "/manifest.webmanifest",
-  "/logo_oficial_fundo_transparente.png?v=2"
+  "/logo_oficial_fundo_transparente.png?v=2",
+  "/logo-144.png"
 ];
 
 self.addEventListener("install", (event) => {

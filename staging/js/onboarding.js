@@ -98,7 +98,7 @@ function ensureStyles() {
     .ep-onb-visual::before { width: 360px; height: 360px; right: -210px; top: 70px; }
     .ep-onb-visual::after { width: 230px; height: 230px; right: -118px; top: 135px; box-shadow: 0 0 90px rgba(212,165,83,.09); }
     .ep-onb-brand { display: flex; align-items: center; gap: 12px; color: #f8f1df; }
-    .ep-onb-brand__mark { width: 38px; height: 38px; flex: 0 0 auto; background: url("./logo_oficial_fundo_transparente.png?v=3") center/contain no-repeat; filter: drop-shadow(0 2px 8px rgba(0,0,0,.25)); }
+    .ep-onb-brand__mark { width: 38px; height: 38px; flex: 0 0 auto; background: url("./logo-144.png") center/contain no-repeat; filter: drop-shadow(0 2px 8px rgba(0,0,0,.25)); }
     .ep-onb-brand__text { display: grid; line-height: 1.05; font-family: var(--ep-font-serif); font-size: 16px; font-weight: 600; }
     .ep-onb-brand__text small { margin-bottom: 4px; color: #d9b867; font: 700 9px/1 var(--ep-font-sans); letter-spacing: .2em; text-transform: uppercase; }
     .ep-onb-visual__stage { display: grid; place-items: center; flex: 1; min-height: 0; padding: 24px 0; }

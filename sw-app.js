@@ -2,21 +2,22 @@
 // Documentos usam network-first para nunca prender o app em uma versão antiga.
 // Apenas ativos estáticos do mesmo domínio usam cache com revalidação.
 
-const VERSION = "ep-app-v28-2026-09-28-visible-lightning";
+const VERSION = "ep-app-v29-2026-10-11-logo-leve";
 const STATIC_CACHE = `static-${VERSION}`;
 const PAGE_CACHE = `pages-${VERSION}`;
 const OFFLINE_PAGE = "/app/login.html";
 const PRECACHE = [
   OFFLINE_PAGE,
-  "/app/app.css?v=20260927k",
-  "/app/weather-hero.css?v=20260928k",
+  "/app/app.css?v=20261005b",
+  "/app/weather-hero.css?v=20261002f",
   "/app/assets/home-sky-clouds.webp",
-  "/app/portal-shell.js?v=3",
+  "/app/portal-shell.js?v=6",
   "/app/jornada.html",
   "/app/nr1.html",
   "/app/emergencia.html",
   "/app/manifest.json",
   "/logo_oficial_fundo_transparente.png?v=2",
+  "/logo-144.png",
 ];
 
 self.addEventListener("install", (event) => {

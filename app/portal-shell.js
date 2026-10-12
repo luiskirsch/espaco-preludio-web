@@ -33,7 +33,7 @@
 
   nav.innerHTML = `
     <a class="a-nav__brand" href="./home.html" aria-label="Espaço Prelúdio — início">
-      <img src="/logo_oficial_fundo_transparente.png?v=2" alt="">
+      <img src="/logo-144.png" alt="">
       <span><strong>Espaço Prelúdio</strong><small>Portal do colaborador</small></span>
     </a>
     <div class="a-nav__caption">Seu espaço de cuidado</div>
