@@ -81,12 +81,36 @@ Chave pública em `/ddde45fdfbad5c8aad4da2af89d890cc.txt`. O workflow `.github/w
 - Play Console: concluído. A ficha do app já aponta para `https://espacopreludio.com.br/index.html` e para a política de privacidade (conferido na página pública da Play Store).
 - Bing e demais buscadores do IndexNow: concluído. O envio das 17 URLs foi aceito (HTTP 202) e o sitemap está declarado no `robots.txt`. Uma conta no Bing Webmaster Tools só acrescenta relatórios.
 - Search Console: pendente. Enviar `https://espacopreludio.com.br/sitemap.xml` e pedir indexação da home, de `profissional.html`, `profissionais.html` e `psicologo-online.html`. Exige a conta Google do responsável. A alternativa automática é verificar a conta de serviço do Firebase como proprietária por arquivo HTML na raiz e enviar o sitemap pela API; ela depende de autorização explícita para usar essa credencial.
-- Cloudflare: pendente. Ligar SSL/TLS → Edge Certificates → "Always Use HTTPS". Hoje `http://espacopreludio.com.br/` responde 200. O login OAuth do wrangler não tem permissão para configurações da zona. O impacto em SEO é pequeno, porque todas as páginas têm canonical em https e o servidor envia HSTS.
+- Cloudflare: opcional. Ligar SSL/TLS → Edge Certificates → "Always Use HTTPS". O `init.js` já redireciona http para https no navegador, todas as páginas têm canonical em https e o servidor envia HSTS.
 - Perfis oficiais da marca (Instagram, LinkedIn): quando existirem, apontar para o site e adicionar as URLs ao `sameAs` da home.
 
 ### Staging
 
 Desde 11/10/2026, `staging/` é cópia idêntica da produção (`scripts/sync-staging.mjs`, executado também pelo workflow de traduções). As páginas públicas do staging carregam o mesmo canonical da produção, então não concorrem com ela na busca.
+
+## Terceira rodada (11/10/2026): idioma, velocidade e limpeza
+
+### Idioma: o Google via o site em inglês
+
+O site trocava o idioma pelo idioma do navegador. Renderizado com o navegador em inglês, título, texto e `<html lang>` viravam inglês. O renderizador do Google roda em inglês e sem Accept-Language, então indexava a tradução no lugar do português. Agora o português é o padrão para todos. Inglês e espanhol continuam por escolha explícita (`?lang=` ou seletor). Um teste em `test/public-seo.test.mjs` impede a volta da detecção automática. O Google precisa rastrear as páginas de novo para trocar o que tem indexado; o envio do sitemap no Search Console acelera isso.
+
+### Velocidade no celular (Lighthouse local, rede móvel simulada)
+
+O logo de 511 px e 200 KiB, exibido a 48 px, era baixado duas vezes por página. Agora cabeçalhos, barras laterais e ícone da aba usam `logo-144.png` (13,7 KiB). O original fica nos dados estruturados, no manifesto, no apple-touch-icon, no PDF e nas notificações.
+
+| Página | Antes | Depois |
+| --- | --- | --- |
+| Home | 69 (LCP 5,6 s) | 81 (LCP 3,5 s) |
+| profissional.html | 76 (LCP 4,5 s) | 67 (LCP 5,5 s) |
+| profissionais.html | 60 (LCP 7,7 s) | 78 (LCP 4,1 s) |
+| psicologo-online.html | 96 (LCP 2,7 s) | 98 (LCP 2,2 s) |
+
+Em `profissional.html` o LCP é o título em Fraunces, que é redesenhado quando a fonte chega. O próximo ganho é hospedar as fontes no próprio domínio ou trocar `display=swap` por `display=optional`; as duas opções afetam o visual no primeiro acesso.
+
+### Outros
+
+- Repositório público no GitHub com o site, a descrição e tópicos preenchidos.
+- `i18n/init.js` já redireciona http para https no navegador em todas as páginas que o carregam. O ajuste "Always Use HTTPS" da Cloudflare fica como reforço opcional.
 
 ## FAQ e medição
 
