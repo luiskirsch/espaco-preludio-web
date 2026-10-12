@@ -7,7 +7,7 @@ const STATIC_CACHE = `static-${VERSION}`;
 const PAGE_CACHE = `pages-${VERSION}`;
 const OFFLINE_PAGE = "/app/login.html";
 const PRECACHE = [
-  "/css/responsive.css?v=20261011a",
+  "/css/responsive.css?v=20261011b",
   OFFLINE_PAGE,
   "/app/app.css?v=20261005b",
   "/app/weather-hero.css?v=20261002f",

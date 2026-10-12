@@ -12,7 +12,7 @@ const PRECACHE   = `precache-${SW_VERSION}`;
 const RUNTIME    = `runtime-${SW_VERSION}`;
 
 const PRECACHE_URLS = [
-  "/css/responsive.css?v=20261011a",
+  "/css/responsive.css?v=20261011b",
   "/painel.html",
   "/agenda.html",
   "/pacientes.html",
