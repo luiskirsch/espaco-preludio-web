@@ -53,3 +53,19 @@ test('app login is excluded from indexing and flags remain decorative', () => {
     assert.match(read(`${prefix}i18n/init.js`), /height="13" alt=""/);
   }
 });
+
+// O renderizador do Google roda com o navegador em inglês. Se o idioma seguir
+// navigator.language, o Google indexa a tradução em vez do português.
+test('idioma padrão é português para todos; tradução só por escolha explícita', async () => {
+  const { readdirSync } = await import('node:fs');
+  for (const prefix of ['', 'staging/']) {
+    assert.doesNotMatch(read(`${prefix}i18n/init.js`), /navigator\.language/, `${prefix}i18n/init.js`);
+    for (const dir of ['', 'app']) {
+      for (const file of readdirSync(resolve(root, prefix + dir)).filter(f => f.endsWith('.html'))) {
+        const rel = `${prefix}${dir ? dir + '/' : ''}${file}`;
+        assert.doesNotMatch(read(rel), /navigator\.language/, rel);
+      }
+    }
+  }
+  assert.doesNotMatch(read('scripts/i18n/extract.mjs'), /navigator\.language/);
+});

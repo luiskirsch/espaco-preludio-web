@@ -3,7 +3,8 @@
 // aplica traduções via data-i18n em elementos do DOM. Switcher flutuante
 // no canto inferior direito.
 //
-// Suporta 3 idiomas: pt-BR (default), en-US, es-ES.
+// Suporta 3 idiomas: pt-BR (padrão para todos), en-US, es-ES (só por escolha
+// explícita do visitante: ?lang= ou seletor, gravado em localStorage).
 // Páginas declaram namespaces via <html data-i18n-ns="index,common">.
 // "common" é incluso automaticamente.
 
@@ -88,9 +89,9 @@
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored && SUPPORTED.includes(stored)) return stored;
     } catch (_) { /* empty */ }
-    const nav = (navigator.language || '').toLowerCase();
-    if (nav.startsWith('en')) return 'en-US';
-    if (nav.startsWith('es')) return 'es-ES';
+    // Sem escolha explícita (?lang= ou seletor), o site abre em português para
+    // todos. Não seguir o idioma do navegador: o renderizador do Google roda em
+    // inglês e passaria a indexar a tradução em vez do conteúdo em português.
     return DEFAULT_LOCALE;
   }
 

@@ -151,7 +151,7 @@ export function processHtml(src, rel) {
     else newTag = htmlTag.replace(/>$/, ` data-i18n-ns="${ns}">`);
     out = out.replace(htmlTag, newTag);
     if (!/i18n\/init\.js/.test(out)) {
-      const boot = `  <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(!l){var n=(navigator.language||"").toLowerCase();if(n.indexOf("en")===0)l="en-US";else if(n.indexOf("es")===0)l="es-ES";}if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>\n  <style>html.ep-i18n-pending body{visibility:hidden}</style>\n  <script src="/i18n/init.js?v=2-0" defer></script>\n`;
+      const boot = `  <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>\n  <style>html.ep-i18n-pending body{visibility:hidden}</style>\n  <script src="/i18n/init.js?v=2-7" defer></script>\n`;
       out = out.replace(/<\/head>/i, boot + "</head>");
     }
   }
