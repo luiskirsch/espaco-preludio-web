@@ -7,11 +7,12 @@
 //
 // Bump SW_VERSION pra forçar refresh do cache em todas as instalações.
 
-const SW_VERSION = "ep-sw-v20-2026-10-11-logo-leve";
+const SW_VERSION = "ep-sw-v20-2026-10-11-logo-leve-mobile";
 const PRECACHE   = `precache-${SW_VERSION}`;
 const RUNTIME    = `runtime-${SW_VERSION}`;
 
 const PRECACHE_URLS = [
+  "/css/responsive.css?v=20261011a",
   "/painel.html",
   "/agenda.html",
   "/pacientes.html",

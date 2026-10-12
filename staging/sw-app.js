@@ -2,11 +2,12 @@
 // Documentos usam network-first para nunca prender o app em uma versão antiga.
 // Apenas ativos estáticos do mesmo domínio usam cache com revalidação.
 
-const VERSION = "ep-app-v29-2026-10-11-logo-leve";
+const VERSION = "ep-app-v29-2026-10-11-logo-leve-mobile";
 const STATIC_CACHE = `static-${VERSION}`;
 const PAGE_CACHE = `pages-${VERSION}`;
 const OFFLINE_PAGE = "/app/login.html";
 const PRECACHE = [
+  "/css/responsive.css?v=20261011a",
   OFFLINE_PAGE,
   "/app/app.css?v=20261005b",
   "/app/weather-hero.css?v=20261002f",

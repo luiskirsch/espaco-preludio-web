@@ -1,0 +1,75 @@
+/* Shared mobile safeguards; page-specific layouts keep their own breakpoints. */
+@media screen and (max-width: 899px) {
+  html { -webkit-text-size-adjust: 100%; scrollbar-gutter: auto; }
+  .ep-shell, .a-shell { min-height: 100vh; min-height: 100dvh; }
+  .ep-stack > *, .ep-grid > *, .ep-row > *, .ep-flex > *,
+  .ep-receita-form, .ep-consult__main, .ep-consult__video,
+  .nr-grid > *, .nr-grid-3 > * { min-width: 0; }
+  main :is(p, h1, h2, h3, label), .ep-modal__panel { overflow-wrap: break-word; }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select, textarea { font-size: 16px !important; max-width: 100%; }
+  .ep-modal {
+    padding: 8px !important;
+    padding-top: max(8px, env(safe-area-inset-top)) !important;
+    padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+  }
+  .ep-modal__panel {
+    min-width: 0; margin: 0; max-width: 100%;
+    max-height: calc(100vh - 16px);
+    max-height: calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  .a-page:not(.a-page--no-nav) {
+    padding-bottom: calc(var(--a-nav-h, 64px) + 16px + env(safe-area-inset-bottom));
+  }
+  .a-header {
+    height: auto; min-height: var(--a-header-h, 56px);
+    padding-top: env(safe-area-inset-top);
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+  .a-header__title, .a-nav__item { min-width: 0; }
+  .a-header__back, .a-header__action { width: 44px; height: 44px; flex-shrink: 0; }
+  .a-nav { height: calc(var(--a-nav-h, 64px) + env(safe-area-inset-bottom)); }
+  .chart-wrap canvas { max-width: 100%; }
+  .ep-topbar .ep-nav {
+    min-width: 0; max-width: 100%; flex-wrap: nowrap;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .ep-topbar .ep-nav > a, .ep-topbar .ep-nav > .ep-profile-group { flex-shrink: 0; }
+}
+
+@media screen and (max-width: 640px) {
+  .ep-page-main > .ep-flex, .ep-receita-form .ep-flex { flex-wrap: wrap; }
+  .ep-btn { max-width: 100%; white-space: normal; }
+  #dashboardGrid { grid-template-columns: minmax(0, 1fr) !important; }
+  .corp-top {
+    height: auto !important; min-height: 60px; flex-wrap: wrap;
+    padding: 12px 16px !important; gap: 12px !important;
+  }
+  .corp-top__brand, .corp-top__actions { min-width: 0; }
+  .corp-top__actions { flex-wrap: wrap; gap: 8px !important; }
+  .corp-top__nome-empresa { overflow-wrap: anywhere; }
+  .nr-top { flex-wrap: wrap; }
+  .ep-consult__topbar { min-width: 0; max-width: 100%; }
+  .ep-consult__topbar > .ep-flex { flex-shrink: 0; }
+  .ep-receita-form { max-width: 100%; }
+  .a-nav__item { min-height: 44px; }
+  .ep-billing-switch { max-width: 100%; flex-wrap: wrap; justify-content: center; }
+  .mood-picker-row { flex-wrap: wrap; }
+}
+
+/* Safari versions without dynamic viewport units still get a usable chat. */
+@supports not (height: 100dvh) {
+  @media screen and (max-width: 899px) {
+    .chat-shell { height: 100vh !important; }
+    .ep-chat-shell { height: calc(100vh - 70px) !important; }
+  }
+}
+
+@media screen and (max-width: 360px) {
+  .ep-container, .ep-main { padding-inline: 12px; }
+  .ep-modal__actions .ep-btn { flex-basis: 100%; }
+  .a-section { padding-inline: 12px; }
+  .a-nav__item { font-size: 10px; }
+}
