@@ -867,6 +867,30 @@ html, body {
 .survey-form > header { display: flex; justify-content: space-between; gap: 18px; padding: 22px; border-bottom: 1px solid rgba(12,61,66,.09); }
 .survey-form h2 { margin: 5px 0 0; color: #103d3d; font: 600 25px/1.1 var(--ff-serif); }
 .survey-estimate { align-self: start; padding: 7px 10px; border-radius: 999px; background: #e7eee7; color: #315f53; font-size: 12px; font-weight: 800; white-space: nowrap; }
+
+@media (max-width: 640px) {
+  html[lang="en-US"] .home-feature-empty a,
+  html[lang="es-ES"] .home-feature-empty a,
+  html[lang="en-US"] .home-safety > a,
+  html[lang="es-ES"] .home-safety > a,
+  html[lang="en-US"] .learning-module em,
+  html[lang="es-ES"] .learning-module em,
+  html[lang="en-US"] .survey-estimate,
+  html[lang="es-ES"] .survey-estimate {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+
+  html[lang="en-US"] .learning-module small,
+  html[lang="es-ES"] .learning-module small {
+    display: -webkit-box;
+    overflow: hidden;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+}
 .survey-fields { display: grid; gap: 12px; padding: 20px 22px 0; }
 .survey-fields label { display: grid; gap: 6px; color: var(--a-ink); font-size: 13px; font-weight: 800; }
 .survey-fields select { width: 100%; min-height: 46px; padding: 0 12px; border: 1px solid rgba(12,61,66,.18); border-radius: 11px; background: white; color: var(--a-ink); font: inherit; }

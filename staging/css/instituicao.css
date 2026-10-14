@@ -377,6 +377,23 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
 .privacy-banner p { margin: 0; color: rgba(255,255,255,.6); font-size: .68rem; line-height: 1.55; }
 .privacy-banner > span { padding: 6px 9px; color: var(--institution-gold-light); border: 1px solid rgba(217,173,69,.3); border-radius: 999px; font-size: .56rem; font-weight: 700; letter-spacing: .07em; white-space: nowrap; }
 
+html[lang="en-US"] :is(.portal-capabilities small, .program-strip strong, .metric-card small),
+html[lang="es-ES"] :is(.portal-capabilities small, .program-strip strong, .metric-card small) {
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  html[lang="en-US"] .privacy-banner > span,
+  html[lang="es-ES"] .privacy-banner > span {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+}
+
 @keyframes institution-pulse { 50% { opacity: .58; transform: scale(.96); } }
 @keyframes institution-spin { to { transform: rotate(360deg); } }
 

@@ -70,49 +70,67 @@
   }
 
   const done = new WeakMap(); // nó de texto → último valor aplicado
+  const textSource = new WeakMap(); // fonte pt-BR preservada entre EN/ES/PT
+  const attrSource = new WeakMap();
+  const attrDone = new WeakMap();
 
   function skipped(el) {
     for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
       if (SKIP_TAGS.has(n.tagName) || n.isContentEditable || n.hasAttribute('data-no-i18n') || n.id === 'ep-lang-switcher') return true;
+      if (n.hasAttribute('data-i18n') || n.hasAttribute('data-i18n-html')) return true;
     }
     return false;
   }
 
-  function textNode(node) {
+  function textNode(node, force) {
     const v = node.nodeValue;
-    if (!v || done.get(node) === v) return;
+    if (!v || (!force && done.get(node) === v)) return;
     const parent = node.parentElement;
     if (!parent || skipped(parent)) return;
-    const tr = translate(v);
-    if (tr != null) {
-      const next = keepSpacing(v, tr);
-      done.set(node, next);
-      if (next !== v) node.nodeValue = next;
-    } else {
-      done.set(node, v);
-    }
+    const source = force && textSource.has(node) ? textSource.get(node) : v;
+    if (!force || !textSource.has(node)) textSource.set(node, source);
+    const tr = translate(source);
+    const next = tr != null ? keepSpacing(source, tr) : source;
+    done.set(node, next);
+    if (next !== v) node.nodeValue = next;
   }
 
-  function attrs(el) {
+  function attrs(el, force) {
+    let sources = attrSource.get(el);
+    if (!sources) { sources = new Map(); attrSource.set(el, sources); }
+    let applied = attrDone.get(el);
+    if (!applied) { applied = new Map(); attrDone.set(el, applied); }
     for (const a of ATTRS) {
       const v = el.getAttribute(a);
       if (!v) continue;
-      const tr = translate(v);
-      if (tr != null && tr !== v) el.setAttribute(a, tr);
+      if (el.hasAttribute(`data-i18n-${a}`)) continue;
+      if (!force && applied.get(a) === v) continue;
+      const source = force && sources.has(a) ? sources.get(a) : v;
+      if (!force || !sources.has(a)) sources.set(a, source);
+      const tr = translate(source);
+      const next = tr != null ? tr : source;
+      applied.set(a, next);
+      if (next !== v) el.setAttribute(a, next);
     }
     if (el.tagName === 'INPUT' && /^(button|submit)$/i.test(el.type) && el.value) {
-      const tr = translate(el.value);
-      if (tr != null && tr !== el.value) el.value = tr;
+      if (el.hasAttribute('data-i18n-value')) return;
+      if (!force && applied.get('value') === el.value) return;
+      const source = force && sources.has('value') ? sources.get('value') : el.value;
+      if (!force || !sources.has('value')) sources.set('value', source);
+      const tr = translate(source);
+      const next = tr != null ? tr : source;
+      applied.set('value', next);
+      if (next !== el.value) el.value = next;
     }
   }
 
-  function walk(root) {
+  function walk(root, force) {
     if (!root) return;
-    if (root.nodeType === 3) { textNode(root); return; }
+    if (root.nodeType === 3) { textNode(root, force); return; }
     if (root.nodeType !== 1 && root.nodeType !== 9 && root.nodeType !== 11) return;
     if (root.nodeType === 1) {
       if (skipped(root)) return;
-      attrs(root);
+      attrs(root, force);
     }
     const tw = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
       acceptNode(n) {
@@ -122,17 +140,17 @@
     });
     let n;
     while ((n = tw.nextNode())) {
-      if (n.nodeType === 3) textNode(n);
-      else attrs(n);
+      if (n.nodeType === 3) textNode(n, force);
+      else attrs(n, force);
     }
   }
 
   function observe() {
     const mo = new MutationObserver(records => {
       for (const r of records) {
-        if (r.type === 'characterData') textNode(r.target);
-        else if (r.type === 'attributes') { if (r.target.nodeType === 1 && !skipped(r.target)) attrs(r.target); }
-        else r.addedNodes.forEach(walk);
+        if (r.type === 'characterData') textNode(r.target, false);
+        else if (r.type === 'attributes') { if (r.target.nodeType === 1 && !skipped(r.target)) attrs(r.target, false); }
+        else r.addedNodes.forEach(n => walk(n, false));
       }
     });
     mo.observe(document.documentElement, {
@@ -166,14 +184,14 @@
     start(dict) {
       load(dict);
       wrapDialogs();
-      walk(document.body || document.documentElement);
+      walk(document.body || document.documentElement, false);
       observe();
     },
     // Troca de idioma sem recarregar (telas com data-i18n-live): textos que o
     // JS gerar daqui pra frente usam o dicionário novo.
     setDict(dict) {
       load(dict || {});
-      walk(document.body || document.documentElement);
+      walk(document.body || document.documentElement, true);
     },
     translate
   };

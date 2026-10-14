@@ -25,13 +25,14 @@
   const STORAGE_KEY = 'ep_lang';
   const I18NEXT_CDN = '/i18n/i18next.min.js';
   const BACKEND_CDN = '/i18n/i18nextHttpBackend.min.js';
-  const I18N_VERSION = 'ab190e81a';
+  const I18N_VERSION = 'a20261014b';
+  let activeLocale = detectLocale();
 
   // Datas e horas que o código formata com 'pt-BR' (ou sem locale) passam a
   // usar o idioma ativo — "30 de set." vira "Sep 30" / "30 sept". Números e
   // moeda não mudam: valores em R$ seguem no formato brasileiro.
-  function localizeDates(locale) {
-    const swap = l => (l === undefined || l === 'pt-BR' || l === 'pt' || (Array.isArray(l) && l[0] === 'pt-BR')) ? locale : l;
+  function localizeDates() {
+    const swap = l => (l === undefined || l === 'pt-BR' || l === 'pt' || (Array.isArray(l) && l[0] === 'pt-BR')) ? activeLocale : l;
     const D = Date.prototype;
     for (const m of ['toLocaleDateString', 'toLocaleTimeString', 'toLocaleString']) {
       const orig = D[m];
@@ -44,11 +45,13 @@
     Intl.DateTimeFormat = DTF;
   }
 
-  if (detectLocale() !== DEFAULT_LOCALE) localizeDates(detectLocale());
+  // Instala uma vez e consulta o idioma atual a cada formatação. Isso também
+  // cobre a troca sem recarga feita durante uma teleconsulta.
+  localizeDates();
 
   // Informa o idioma ao servidor em toda chamada (header X-Locale): é assim
   // que e-mails e outras mensagens enviadas depois saem no idioma escolhido.
-  (function tagBackendRequests(locale) {
+  (function tagBackendRequests() {
     const origFetch = window.fetch;
     if (typeof origFetch !== 'function' || origFetch.__epLocale) return;
     const isBackend = url => {
@@ -60,7 +63,7 @@
         const url = typeof input === 'string' ? input : (input && input.url) || '';
         if (isBackend(url)) {
           const headers = new Headers((init && init.headers) || (typeof input !== 'string' && input.headers) || undefined);
-          if (!headers.has('X-Locale')) headers.set('X-Locale', locale);
+          if (!headers.has('X-Locale')) headers.set('X-Locale', activeLocale);
           init = Object.assign({}, init, { headers });
         }
       } catch (_) { /* nunca impede a chamada original */ }
@@ -68,7 +71,7 @@
     };
     wrapped.__epLocale = true;
     window.fetch = wrapped;
-  })(detectLocale());
+  })();
 
   // Some pages mark <html class="ep-i18n-pending"> inline (before any CSS/JS
   // loads) to hide <body> via CSS while a non-default locale is being applied,
@@ -163,6 +166,28 @@
       const value = t(key);
       if (ok(value, key)) document.title = value;
     }
+  }
+
+  function installLocaleLayoutGuards() {
+    if (document.getElementById('ep-i18n-layout-guards')) return;
+    const style = document.createElement('style');
+    style.id = 'ep-i18n-layout-guards';
+    style.textContent =
+      'html[lang="en-US"] :is([data-i18n],[data-i18n-html]),' +
+      'html[lang="es-ES"] :is([data-i18n],[data-i18n-html]){' +
+      'min-width:0;overflow-wrap:anywhere;hyphens:auto}' +
+      'html[lang="en-US"] :is(h1,h2,h3)[data-i18n],' +
+      'html[lang="es-ES"] :is(h1,h2,h3)[data-i18n]{text-wrap:balance}' +
+      '@media(max-width:640px){' +
+      'html[lang="en-US"] button[data-i18n],html[lang="en-US"] .ep-btn[data-i18n],' +
+      'html[lang="es-ES"] button[data-i18n],html[lang="es-ES"] .ep-btn[data-i18n]{' +
+      'white-space:normal;height:auto;min-height:44px;line-height:1.25;text-align:center}' +
+      'html[lang="en-US"] .ep-modal__actions,html[lang="es-ES"] .ep-modal__actions{' +
+      'flex-wrap:wrap}' +
+      'html[lang="en-US"] .ep-modal__actions>*,' +
+      'html[lang="es-ES"] .ep-modal__actions>*{min-width:0;flex:1 1 auto}' +
+      '}';
+    document.head.appendChild(style);
   }
 
   function createSwitcher() {
@@ -260,6 +285,9 @@
   let dynamicStarted = false;
 
   async function liveChange(lang) {
+    if (!SUPPORTED.includes(lang)) lang = DEFAULT_LOCALE;
+    activeLocale = lang;
+    try { localStorage.setItem(STORAGE_KEY, lang); } catch (_) { /* empty */ }
     await window.i18next.changeLanguage(lang);
     document.documentElement.lang = lang;
     applyTranslations();
@@ -290,11 +318,12 @@
   }
 
   async function bootstrap() {
-    const locale = detectLocale();
+    const locale = activeLocale;
     const namespaces = getNamespaces();
     const basePath = getBasePath();
 
     document.documentElement.lang = locale;
+    installLocaleLayoutGuards();
 
     if (!window.i18next) await loadScript(I18NEXT_CDN);
     if (!window.i18nextHttpBackend) await loadScript(BACKEND_CDN);
@@ -327,10 +356,7 @@
       },
       apply: applyTranslations,
       locale: () => window.i18next.language,
-      change: async (lng) => {
-        await window.i18next.changeLanguage(lng);
-        applyTranslations();
-      }
+      change: liveChange
     };
 
     document.dispatchEvent(new Event('ep:i18n-ready'));
