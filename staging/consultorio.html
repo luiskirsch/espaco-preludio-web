@@ -245,7 +245,7 @@
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { requireTherapist } from "./js/auth-guard.js?v=3-36";
   import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
-  import { TOPIC_LIBRARY, ABORDAGEM_LABEL, shuffle } from "./js/topics.js";
+  import { getDeckTopics, ABORDAGEM_LABEL, shuffle } from "./js/topics.js?v=2";
   import { applyMode, readMode } from "./js/atmosphere.js";
   import { initRoomAmbient } from "./js/room-ambient.js?v=3";
   import { searchCID10 } from "./js/cid10.js?v=1";
@@ -1072,13 +1072,14 @@
   const topicsList    = document.getElementById("topicsList");
   const topicsDraw    = document.getElementById("topicsDraw");
 
-  const customTopics = Array.isArray(therapist?.sessionTopics) ? therapist.sessionTopics : [];
+  const deckTopics = getDeckTopics(therapist);
+  const customTopics = deckTopics.filter(t => t.abord === "custom");
   let activeAbord = "all";
 
   function renderFilters() {
     const abords = ["all"];
     if (customTopics.length > 0) abords.push("custom");
-    abords.push(...Object.keys(ABORDAGEM_LABEL));
+    abords.push(...Object.keys(ABORDAGEM_LABEL).filter(a => deckTopics.some(t => t.abord === a)));
     topicsFilters.innerHTML = "";
     abords.forEach(a => {
       const btn = document.createElement("button");
@@ -1098,13 +1099,20 @@
   function renderList() {
     let filtered;
     if (activeAbord === "all") {
-      filtered = [...customTopics, ...TOPIC_LIBRARY];
+      filtered = deckTopics;
     } else if (activeAbord === "custom") {
       filtered = customTopics;
     } else {
-      filtered = TOPIC_LIBRARY.filter(t => t.abord === activeAbord);
+      filtered = deckTopics.filter(t => t.abord === activeAbord);
     }
     topicsList.innerHTML = "";
+    topicsDraw.disabled = filtered.length === 0;
+    if (filtered.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "ep-text-sm ep-text-muted";
+      empty.textContent = "Nenhum tópico selecionado. Escolha seus tópicos em Perfil para as próximas consultas.";
+      topicsList.appendChild(empty);
+    }
     filtered.forEach(t => topicsList.appendChild(buildTopicCard(t)));
   }
   function buildTopicCard(t) {
@@ -1138,9 +1146,9 @@
   });
   topicsDraw.addEventListener("click", () => {
     let pool;
-    if (activeAbord === "all")       pool = [...customTopics, ...TOPIC_LIBRARY];
+    if (activeAbord === "all")       pool = deckTopics;
     else if (activeAbord === "custom") pool = customTopics;
-    else                              pool = TOPIC_LIBRARY.filter(t => t.abord === activeAbord);
+    else                              pool = deckTopics.filter(t => t.abord === activeAbord);
     if (pool.length === 0) return;
     const t = pool[Math.floor(Math.random() * pool.length)];
     const prefix = noteInput.value.trim();

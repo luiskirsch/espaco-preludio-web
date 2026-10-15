@@ -69,6 +69,20 @@ export const ABORDAGEM_LABEL = {
   fechamento: "Fechamento"
 };
 
+// A chave depende do conteúdo original, não da posição na biblioteca.
+export function topicKey(topic) {
+  return `${topic.abord}:${topic.text}`;
+}
+
+export function getDeckTopics(therapist = {}) {
+  const excluded = new Set(Array.isArray(therapist.disabledSessionTopics) ? therapist.disabledSessionTopics : []);
+  const custom = Array.isArray(therapist.sessionTopics) ? therapist.sessionTopics : [];
+  return [
+    ...custom.filter(topic => topic.enabled !== false),
+    ...TOPIC_LIBRARY.filter(topic => !excluded.has(topicKey(topic)))
+  ];
+}
+
 export function shuffle(arr) {
   const copy = [...arr];
   for (let i = copy.length - 1; i > 0; i--) {

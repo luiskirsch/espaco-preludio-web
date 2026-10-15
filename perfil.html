@@ -691,6 +691,16 @@
         <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="p-perfil:aparecem_no_deck_lateral_durante_a589f">
           Aparecem no deck lateral durante suas consultas. Clique num tópico na sessão para inserir nas anotações clínicas.
         </p>
+        <details class="ep-mt-16" id="topicsLibrary">
+          <summary style="cursor:pointer;font-weight:600;">Ver todos os tópicos e escolher o que aparece no deck</summary>
+          <p class="ep-text-sm ep-text-muted">Marque os tópicos que deseja usar. Desmarcar um tópico apenas o retira do deck.</p>
+          <div class="ep-flex ep-flex--wrap ep-gap-8">
+            <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="topicsSelectAll">Selecionar todos da biblioteca</button>
+            <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="topicsClearAll">Desmarcar todos da biblioteca</button>
+          </div>
+          <div id="topicsLibraryList" class="ep-stack ep-mt-16" style="gap:16px;"></div>
+        </details>
+        <h3 class="ep-h3 ep-mt-24">Meus tópicos personalizados</h3>
         <div id="topicsCustomList" class="ep-stack ep-mt-16" style="gap: 8px;"></div>
         <div class="ep-flex ep-gap-8 ep-mt-16" style="align-items: flex-start; flex-wrap: wrap;">
           <input id="topicInput" class="ep-input" type="text" maxlength="300"
@@ -939,6 +949,46 @@
 
   // ─── Tópicos da sessão ─────────────────────────────────────────────────
   let customTopics = [];
+  const { TOPIC_LIBRARY, ABORDAGEM_LABEL, topicKey } = await import("./js/topics.js?v=2");
+  let disabledSessionTopics = new Set();
+
+  function renderTopicLibrary() {
+    const list = $("topicsLibraryList");
+    list.replaceChildren();
+    for (const [abord, name] of Object.entries(ABORDAGEM_LABEL)) {
+      const group = document.createElement("fieldset");
+      group.style.cssText = "border:1px solid var(--ep-line);border-radius:10px;padding:12px;min-width:0;";
+      const legend = document.createElement("legend");
+      legend.textContent = name;
+      group.appendChild(legend);
+      for (const topic of TOPIC_LIBRARY.filter(t => t.abord === abord)) {
+        const label = document.createElement("label");
+        label.style.cssText = "display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer;";
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.style.cssText = "flex-shrink:0;margin-top:4px;";
+        input.checked = !disabledSessionTopics.has(topicKey(topic));
+        input.addEventListener("change", () => {
+          if (input.checked) disabledSessionTopics.delete(topicKey(topic));
+          else disabledSessionTopics.add(topicKey(topic));
+        });
+        const text = document.createElement("span");
+        text.className = "ep-text-sm";
+        text.textContent = topic.text;
+        label.append(input, text);
+        group.appendChild(label);
+      }
+      list.appendChild(group);
+    }
+  }
+  $("topicsSelectAll").addEventListener("click", () => {
+    disabledSessionTopics.clear();
+    renderTopicLibrary();
+  });
+  $("topicsClearAll").addEventListener("click", () => {
+    disabledSessionTopics = new Set(TOPIC_LIBRARY.map(topicKey));
+    renderTopicLibrary();
+  });
 
   function renderTopicsList() {
     const list = $("topicsCustomList");
@@ -955,6 +1005,11 @@
       txt.className = "ep-text-sm";
       txt.style.flex = "1";
       txt.textContent = t.text;
+      const include = document.createElement("input");
+      include.type = "checkbox";
+      include.checked = t.enabled !== false;
+      include.setAttribute("aria-label", "Incluir no deck: " + t.text);
+      include.addEventListener("change", () => { t.enabled = include.checked; });
       const del = document.createElement("button");
       del.type = "button";
       del.className = "ep-btn ep-btn--ghost ep-btn--xs";
@@ -962,6 +1017,7 @@
       del.textContent = "×";
       del.setAttribute("aria-label", "Remover tópico");
       del.addEventListener("click", () => { customTopics.splice(i, 1); renderTopicsList(); });
+      row.appendChild(include);
       row.appendChild(txt);
       row.appendChild(del);
       list.appendChild(row);
@@ -1044,6 +1100,8 @@
     // Asaas.
     // Tópicos personalizados da sessão.
     customTopics = Array.isArray(t.sessionTopics) ? t.sessionTopics.map(x => ({ ...x })) : [];
+    disabledSessionTopics = new Set(Array.isArray(t.disabledSessionTopics) ? t.disabledSessionTopics : []);
+    renderTopicLibrary();
     renderTopicsList();
 
     // Asaas só aparece para planos pagos (pro, empresa, recém-formado).
@@ -2354,6 +2412,7 @@ Direito de portabilidade — LGPD Art. 18, V.
         telefone:    $("telefone").value.trim()
       },
       sessionTopics:                   customTopics,
+      disabledSessionTopics:           [...disabledSessionTopics],
       aiSummaryEnabled:                $("aiSummaryEnabledToggle")?.checked || false,
       asaasEnv:                        $("asaasEnv").value,
       asaasEnabled:                    $("asaasEnabled").checked
