@@ -135,6 +135,36 @@
     Perguntas frequentes e canais diretos pra te ajudar a tirar o máximo da plataforma.
   </p>
 
+  <section id="conta-assinatura" class="ep-mt-24" aria-labelledby="accountTitle">
+    <h2 id="accountTitle" class="ep-h3" data-i18n="suporte:account.title">Conta e assinatura</h2>
+    <div class="ep-stack ep-mt-16" style="gap: 12px;">
+      <div class="ep-contact-card">
+        <div class="ep-contact-card__main">
+          <h3 data-i18n="suporte:account.cancelTitle">Cancelar assinatura</h3>
+          <p id="subscriptionDescription" data-i18n="suporte:account.cancelDescription">Interrompa as próximas cobranças sem excluir seu cadastro profissional.</p>
+        </div>
+        <button type="button" id="cancelSubscriptionBtn" class="ep-btn ep-btn--ghost ep-btn--sm" disabled data-i18n="suporte:account.cancelButton">Cancelar assinatura</button>
+      </div>
+      <div class="ep-contact-card">
+        <div class="ep-contact-card__main">
+          <h3 data-i18n="suporte:account.closeTitle">Encerrar conta profissional</h3>
+          <p data-i18n="suporte:account.closeDescription">Disponível também para contas gratuitas e isentas. Remove seu perfil profissional e cancela a assinatura, se houver.</p>
+        </div>
+        <button type="button" id="showCloseAccountBtn" class="ep-btn ep-btn--ghost ep-btn--sm" aria-expanded="false" aria-controls="closeAccountForm" data-i18n="suporte:account.closeButton">Encerrar conta</button>
+        <form id="closeAccountForm" class="ep-hide ep-stack" style="width: 100%; gap: 12px;">
+          <p class="ep-text-sm" data-i18n="suporte:account.warning">Antes de continuar, exporte os documentos necessários e organize os atendimentos pendentes. Você perderá o acesso profissional. Os registros clínicos e a auditoria são preservados; o login usado em outros serviços permanece.</p>
+          <label class="ep-label" for="closeAccountConfirmation" data-i18n="suporte:account.confirmLabel">Digite ENCERRAR para confirmar</label>
+          <input id="closeAccountConfirmation" class="ep-input" autocomplete="off" spellcheck="false" required>
+          <div class="ep-flex ep-flex--wrap ep-gap-8">
+            <button type="submit" id="closeAccountBtn" class="ep-btn ep-btn--ghost" data-i18n="suporte:account.confirmButton">Confirmar encerramento</button>
+            <button type="button" id="keepAccountBtn" class="ep-btn ep-btn--ghost" data-i18n="suporte:account.keepButton">Manter minha conta</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <p id="accountStatus" class="ep-text-sm" role="status" aria-live="polite"></p>
+  </section>
+
   <!-- Contato -->
   <section class="ep-mt-24">
     <h2 class="ep-h3" data-i18n="suporte:contact.h2">Fale com a gente</h2>
@@ -265,8 +295,8 @@
       <details class="ep-faq-item">
         <summary data-i18n="suporte:faq.q9.q">Como cancelar minha assinatura?</summary>
         <div class="ep-faq-item__body" data-i18n-html="suporte:faq.q9.a">
-          <p>Acesse <a href="./perfil.html">Perfil</a> → seção "Plano" → "Gerenciar plano". Você é redirecionado pro painel do Mercado Pago, onde pode cancelar a recorrência.</p>
-          <p>Após cancelar, você mantém acesso até o fim do ciclo já pago. Os dados continuam armazenados por 60 dias, dando tempo de você reativar ou exportar.</p>
+          <p>Use a seção <a href="#conta-assinatura">Conta e assinatura</a> no início desta página. Clique em "Cancelar assinatura" para interromper as próximas cobranças mantendo seu cadastro.</p>
+          <p>Para remover seu perfil profissional, use "Encerrar conta", disponível também para contas gratuitas e isentas. Exporte seus documentos e organize os atendimentos pendentes antes de confirmar.</p>
         </div>
       </details>
 
@@ -302,8 +332,10 @@
   import { requireTherapist } from "./js/auth-guard.js?v=3-36";
   import { clearDek } from "./js/crypto.js";
   import { runOnboarding } from "./js/onboarding.js?v=3-15";
+  import { setupAccountControls } from "./js/support-account.js?v=1";
 
-  await requireTherapist({ requireDek: false });
+  const ctx = await requireTherapist({ requireDek: false });
+  setupAccountControls(ctx);
 
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     clearDek();
