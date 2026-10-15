@@ -6,6 +6,18 @@ import vm from "node:vm";
 const source = readFileSync(new URL("../js/support-account.js", import.meta.url), "utf8")
   .replace(/^import .*;\r?\n/gm, "").replace("export function", "function");
 
+test("account translations preserve accents instead of replacement question marks", () => {
+  for (const lang of ["pt-BR", "en-US", "es-ES"]) {
+    const dict = JSON.parse(readFileSync(new URL(`../i18n/locales/${lang}/suporte.json`, import.meta.url), "utf8"));
+    for (const value of [...Object.values(dict.account), dict.faq.q9.a]) {
+      assert.doesNotMatch(value, /[\p{L}]\?[\p{L}]|\?\?|\uFFFD/u, `${lang}: ${value}`);
+    }
+    assert.ok(dict.account.processing.endsWith("…"));
+    if (lang === "pt-BR") assert.match(dict.account.noSubscription, /não.*Você/u);
+    if (lang === "es-ES") assert.match(dict.account.title, /suscripción/u);
+  }
+});
+
 function setup({ therapist = {}, ok = true } = {}) {
   const elements = new Map();
   const calls = [];
