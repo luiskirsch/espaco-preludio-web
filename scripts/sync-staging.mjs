@@ -12,7 +12,7 @@ const check = process.argv.includes("--check");
 // Arquivos que só existem na raiz: infraestrutura do domínio, ferramentas do
 // repositório e fontes de marketing que nenhuma página referencia.
 const ROOT_ONLY = [
-  /^staging\//, /^\.github\//, /^docs\//, /^scripts\//, /^test\//, /^assets\//,
+  /^staging\//, /^\.github\//, /^docs\//, /^scripts\//, /^test\//, /^assets\//, /^security\//,
   /^\.git/, /^CNAME$/, /^robots\.txt$/, /^sitemap\.xml$/, /^llms\.txt$/, /^404\.html$/,
   /^[0-9a-f]{32}\.txt$/, /^README\.md$/, /^package(-lock)?\.json$/,
   /^og-(app|escolas|portal)\.(png|jpg)$/, /^og-image\.jpg$/, /^og-escolas\.png$/,

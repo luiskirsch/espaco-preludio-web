@@ -1,14 +1,41 @@
-// IndexedDB via Dexie.js — instância compartilhada por api-cache.js e auth-guard.js.
-import Dexie from "https://cdn.jsdelivr.net/npm/dexie@4/dist/dexie.mjs";
+// Page-memory cache shared by api-cache.js and auth-guard.js.
+export function createMemoryTable(primaryKey) {
+  const rows = new Map();
+  return {
+    async get(key) { return rows.has(key) ? structuredClone(rows.get(key)) : undefined; },
+    async put(row) {
+      const key = row[primaryKey];
+      if (key == null) throw new TypeError("Missing cache key");
+      rows.set(key, structuredClone(row));
+      return key;
+    },
+    async delete(key) { rows.delete(key); },
+    async clear() { rows.clear(); },
+    async bulkDelete(keys) { for (const key of keys) rows.delete(key); },
+    toCollection() { return { async primaryKeys() { return [...rows.keys()]; } }; }
+  };
+}
 
-const db = new Dexie("ep_db");
-db.version(1).stores({
-  apiCache: "key, t",
-  profile:  "uid, t"
-});
+// No patient response or professional profile is persisted in IndexedDB.
+// Remove the old cache without touching Firebase's separate auth database.
+if (typeof indexedDB !== "undefined") {
+  try { indexedDB.deleteDatabase("ep_db"); } catch { /* unavailable storage */ }
+}
+const db = { apiCache: createMemoryTable("key"), profile: createMemoryTable("uid") };
+
+if (typeof sessionStorage !== "undefined") {
+  try {
+    for (let i = sessionStorage.length - 1; i >= 0; i--) {
+      const key = sessionStorage.key(i);
+      if (key && (key.startsWith("ep:api:") || /^ep:profile:v\d+$/.test(key))) {
+        sessionStorage.removeItem(key);
+      }
+    }
+  } catch { /* unavailable storage */ }
+}
 
 // Migração única: remove chaves antigas de localStorage (substituídas pelo IDB).
-if (!localStorage.getItem("ep:idb:migrated:v1")) {
+if (typeof localStorage !== "undefined") {
   try {
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const k = localStorage.key(i);
@@ -17,7 +44,6 @@ if (!localStorage.getItem("ep:idb:migrated:v1")) {
       }
     }
   } catch {}
-  try { localStorage.setItem("ep:idb:migrated:v1", "1"); } catch {}
 }
 
 export default db;

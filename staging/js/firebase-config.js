@@ -19,7 +19,6 @@
 
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 // ─── Detecções ─────────────────────────────────────────────────────────
 const _path = typeof location !== "undefined" ? location.pathname : "";
@@ -122,8 +121,7 @@ const institutionApp = _ensureApp("institution", firebaseConfig);
 const rtApp = _ensureApp("responsavel-tecnico", firebaseConfig);
 
 // Export padrao: aponta pro app correto baseado no perfil da pagina.
-// Codigo existente que faz `import { auth, db } from firebase-config` continua
-// funcionando sem mudanca — auth/db ja vem do app certo.
+// Clinical data is fetched only through the authorized backend.
 export const app  = IS_PATIENT_PAGE
   ? patientApp
   : IS_INSTITUTION_PAGE
@@ -132,17 +130,12 @@ export const app  = IS_PATIENT_PAGE
       ? rtApp
     : professionalApp;
 export const auth = getAuth(app);
-export const db   = getFirestore(app);
 
 // Também exporta os apps explícitos para casos especiais.
 export const authProfessional = getAuth(professionalApp);
 export const authPatient      = getAuth(patientApp);
-export const dbProfessional   = getFirestore(professionalApp);
-export const dbPatient        = getFirestore(patientApp);
 export const authInstitution  = getAuth(institutionApp);
-export const dbInstitution    = getFirestore(institutionApp);
 export const authRt           = getAuth(rtApp);
-export const dbRt             = getFirestore(rtApp);
 
 // Expõe na window pra monitoring.js (carregado antes deste módulo como
 // <script defer>) saber o domínio do backend e o ambiente. Também

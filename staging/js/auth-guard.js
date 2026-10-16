@@ -119,33 +119,19 @@ export function authReady() {
 // backend que muda a matriz pra um conselho).
 const PROFILE_CACHE_KEY    = "ep:profile:v2";
 const PROFILE_CACHE_TTL_MS = 30_000;
-const PROFILE_IDB_TTL_MS   = 30 * 60_000;
+
+// Discard profiles persisted by previous releases. Only page memory is used now.
+try { sessionStorage.removeItem(PROFILE_CACHE_KEY); } catch {}
 
 async function readProfileCache(uid) {
-  // 1. sessionStorage (quente, 30s).
-  try {
-    const raw = sessionStorage.getItem(PROFILE_CACHE_KEY);
-    if (raw) {
-      const entry = JSON.parse(raw);
-      if (entry.uid === uid && Date.now() - entry.t <= PROFILE_CACHE_TTL_MS) return entry.profile;
-    }
-  } catch {}
-  // 2. IndexedDB (morno, 30min — sobrevive ao fechar aba).
   try {
     const entry = await db.profile.get(uid);
-    if (!entry) return null;
-    if (Date.now() - entry.t > PROFILE_IDB_TTL_MS) return null;
-    try { sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify({ uid, t: Date.now(), profile: entry.profile })); } catch {}
-    return entry.profile;
+    return entry && Date.now() - entry.t <= PROFILE_CACHE_TTL_MS ? entry.profile : null;
   } catch { return null; }
 }
 
 function writeProfileCache(uid, profile) {
-  try {
-    sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify({ uid, t: Date.now(), profile }));
-  } catch {}
   db.profile.put({ uid, t: Date.now(), profile }).catch(() => {});
-  // Flag sync para sidebar.js: preflight TISS antes do primeiro auth async.
   try { localStorage.setItem("ep:tiss:enabled", profile?.therapist?.tissEnabled ? "1" : "0"); } catch {}
   try { localStorage.setItem("ep:programNetwork", profile?.therapist?.programNetwork ? "1" : "0"); } catch {}
 }
@@ -169,6 +155,7 @@ onAuthStateChanged(auth, (user) => {
   const uid = user?.uid || null;
   if (lastSeenUid && uid !== lastSeenUid) {
     invalidateProfileCache();
+    db.apiCache.clear().catch(() => {});
     clear2faSession();
   }
   lastSeenUid = uid;
@@ -176,7 +163,8 @@ onAuthStateChanged(auth, (user) => {
 
 async function fetchProfileFromBackend(idToken) {
   const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/me`, {
-    headers: { "Authorization": `Bearer ${idToken}` }
+    headers: { "Authorization": `Bearer ${idToken}` },
+    cache: "no-store", credentials: "omit"
   });
   if (res.status === 404) return { ok: false, code: "NAO_REGISTRADO" };
   const data = await res.json().catch(() => ({}));

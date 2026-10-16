@@ -7,7 +7,7 @@
 //
 // Bump SW_VERSION pra forçar refresh do cache em todas as instalações.
 
-const SW_VERSION = "ep-sw-v20-2026-10-11-logo-leve-mobile";
+const SW_VERSION = "ep-sw-v21-2026-10-16-private-cache";
 const PRECACHE   = `precache-${SW_VERSION}`;
 const RUNTIME    = `runtime-${SW_VERSION}`;
 
@@ -35,7 +35,12 @@ self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(PRECACHE);
     // Best-effort: falhas individuais (404, network) não derrubam o install.
-    await Promise.allSettled(PRECACHE_URLS.map(u => cache.add(u)));
+    await Promise.allSettled(PRECACHE_URLS.map(async u => {
+      const response = await fetch(u, { cache: "no-store" });
+      if (response.ok && !/no-store|private/i.test(response.headers.get("Cache-Control") || "")) {
+        await cache.put(u, response);
+      }
+    }));
     // skipWaiting INCONDICIONAL — usuário tava preso em versão antiga
     // mesmo com toast de update aparecendo. Prefere reload involuntário
     // ao "preso pra sempre". Quando o SW novo ativar, pwa.js detecta
@@ -74,6 +79,9 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
   const url = req.url;
+  const target = new URL(url);
+  if (target.origin !== self.location.origin || req.headers.has("Authorization")) return;
+  if ([...target.searchParams.keys()].some(key => /token|code|secret|password/i.test(key))) return;
 
   // API: passa direto, sem tocar no cache.
   if (isApiRequest(url)) return;
@@ -87,7 +95,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith((async () => {
       try {
         const fresh = await fetch(req);
-        if (fresh && fresh.ok) {
+        if (fresh && fresh.ok && !/no-store|private/i.test(fresh.headers.get("Cache-Control") || "")) {
           const cache = await caches.open(RUNTIME);
           cache.put(req, fresh.clone()).catch(() => {});
         }
@@ -110,7 +118,7 @@ self.addEventListener("fetch", (event) => {
       const cached = await caches.match(req);
       const networkPromise = fetch(req).then(res => {
         // Só cacheia se OK e mesmo origin (evita lixo de CDN cross-origin sem CORS).
-        if (res.ok && (req.url.startsWith(self.location.origin) || res.type === "basic" || res.type === "cors")) {
+        if (res.ok && !/no-store|private/i.test(res.headers.get("Cache-Control") || "")) {
           const clone = res.clone();
           caches.open(RUNTIME).then(c => c.put(req, clone)).catch(() => {});
         }

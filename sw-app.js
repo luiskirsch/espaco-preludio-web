@@ -2,7 +2,7 @@
 // Documentos usam network-first para nunca prender o app em uma versão antiga.
 // Apenas ativos estáticos do mesmo domínio usam cache com revalidação.
 
-const VERSION = "ep-app-v29-2026-10-11-logo-leve-mobile";
+const VERSION = "ep-app-v30-2026-10-16-private-cache";
 const STATIC_CACHE = `static-${VERSION}`;
 const PAGE_CACHE = `pages-${VERSION}`;
 const OFFLINE_PAGE = "/app/login.html";
@@ -24,7 +24,12 @@ const PRECACHE = [
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(STATIC_CACHE);
-    await Promise.allSettled(PRECACHE.map((url) => cache.add(url)));
+    await Promise.allSettled(PRECACHE.map(async url => {
+      const response = await fetch(url, { cache: "no-store" });
+      if (response.ok && !/no-store|private/i.test(response.headers.get("Cache-Control") || "")) {
+        await cache.put(url, response);
+      }
+    }));
     self.skipWaiting();
   })());
 });
@@ -50,12 +55,14 @@ function isStaticAsset(request) {
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET" || !isSameOrigin(request)) return;
+  if (request.headers.has("Authorization")) return;
+  if ([...new URL(request.url).searchParams.keys()].some(key => /token|code|secret|password/i.test(key))) return;
 
   if (request.mode === "navigate" || request.destination === "document") {
     event.respondWith((async () => {
       try {
         const fresh = await fetch(request, { cache: "no-store" });
-        if (fresh.ok) {
+        if (fresh.ok && !/no-store|private/i.test(fresh.headers.get("Cache-Control") || "")) {
           const cache = await caches.open(PAGE_CACHE);
           cache.put(request, fresh.clone()).catch(() => {});
         }
@@ -73,7 +80,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith((async () => {
       const cached = await caches.match(request);
       const refresh = fetch(request).then((response) => {
-        if (response.ok) {
+        if (response.ok && !/no-store|private/i.test(response.headers.get("Cache-Control") || "")) {
           caches.open(STATIC_CACHE).then((cache) => cache.put(request, response.clone())).catch(() => {});
         }
         return response;

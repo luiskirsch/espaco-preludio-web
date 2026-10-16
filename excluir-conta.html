@@ -82,11 +82,9 @@
 
 <script type="module">
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import { authProfessional, authPatient, dbProfessional, dbPatient, BACKEND_BASE_URL } from "./js/firebase-config.js";
+import { authProfessional, authPatient, BACKEND_BASE_URL } from "./js/firebase-config.js";
 
 let currentUser = null;
-let currentDb   = null;
 let resolved    = false;
 
 function show(id) {
@@ -101,12 +99,11 @@ function setStatus(msg, type) {
   el.className = "ep-status" + (type === "err" ? " ep-status--err" : type === "ok" ? " ep-status--ok" : "");
 }
 
-function resolve(user, db) {
+function resolve(user) {
   if (resolved) return;
   resolved = true;
   if (user) {
     currentUser = user;
-    currentDb   = db;
     document.getElementById("userEmail").textContent = user.email;
     show("stateForm");
   } else {
@@ -118,12 +115,12 @@ function resolve(user, db) {
 let profResolved = false, patResolved = false;
 onAuthStateChanged(authProfessional, user => {
   profResolved = true;
-  if (user && !resolved) resolve(user, dbProfessional);
+  if (user && !resolved) resolve(user);
   else if (profResolved && patResolved && !resolved) resolve(null, null);
 });
 onAuthStateChanged(authPatient, user => {
   patResolved = true;
-  if (user && !resolved) resolve(user, dbPatient);
+  if (user && !resolved) resolve(user);
   else if (profResolved && patResolved && !resolved) resolve(null, null);
 });
 
@@ -150,25 +147,19 @@ document.getElementById("deleteForm").addEventListener("submit", async e => {
     const res = await fetch(`${BACKEND_BASE_URL}/therapy/conta/solicitar-exclusao`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
-      body: JSON.stringify({ email: currentUser.email, uid: currentUser.uid })
+      credentials: "omit", cache: "no-store",
+      body: JSON.stringify({})
     });
 
-    // Mesmo que o backend não tenha a rota ainda, considera sucesso (fallback: Firestore direto)
-    if (!res.ok) {
-      await setDoc(doc(currentDb, "therapy_deletion_requests", currentUser.uid), {
-        email: currentUser.email,
-        uid: currentUser.uid,
-        requestedAt: serverTimestamp(),
-        status: "pending"
-      });
+    const result = await res.json().catch(() => null);
+    if (!res.ok || result?.ok !== true || result.status !== "received") {
+      throw new Error("REQUEST_NOT_RECORDED");
     }
 
     show("stateDone");
   } catch (err) {
-    // Fallback final: abre e-mail de suporte
-    const mailto = `mailto:suporte@espacopreludio.com.br?subject=${encodeURIComponent("Solicitação de exclusão de conta")}&body=${encodeURIComponent(`Olá,\n\nSolicito a exclusão da minha conta.\n\nE-mail: ${currentUser.email}\nUID: ${currentUser.uid}\n`)}`;
-    window.location.href = mailto;
-    show("stateDone");
+    setStatus("Não foi possível registrar a solicitação. Tente novamente ou contate suporte@espacopreludio.com.br.", "err");
+    submitBtn.disabled = false;
   }
 });
 </script>
