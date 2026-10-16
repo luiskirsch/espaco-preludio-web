@@ -7,6 +7,8 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
+import "./twofa-fetch.js";
+import { clear2faSession, isTwoFactorChallenge } from "./twofa-session.js";
 
 const form = document.getElementById("rtLoginForm");
 const emailEl = document.getElementById("rtEmail");
@@ -40,6 +42,8 @@ onAuthStateChanged(auth, async user => {
     await validateAccess(user);
     window.location.replace("./rt-painel.html");
   } catch (error) {
+    if (isTwoFactorChallenge(error)) return;
+    clear2faSession();
     await signOut(auth);
     setMessage(error.message === "EMAIL_DO_RT_NAO_VERIFICADO"
       ? "Confirme seu e-mail antes de acessar."

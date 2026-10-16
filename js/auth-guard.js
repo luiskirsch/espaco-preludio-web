@@ -12,88 +12,14 @@ import "./cmdk.js";
 import db from "./db.js";
 import { connectRealtime } from "./realtime.js?v=1";
 
-// ─── 2FA session ─────────────────────────────────────────────────────
-// Token TOTP-session salvo em sessionStorage após verify. Validade = 8h
-// (mesmo do access token). Limpo no logout.
-const TWOFA_KEY = "ep:twofa-session";
-const TWOFA_TTL_MS = 8 * 60 * 60 * 1000;
-
-export function hasValid2faSession() {
-  return !!get2faSessionToken();
-}
-
-export function get2faSessionToken() {
-  try {
-    const raw = sessionStorage.getItem(TWOFA_KEY);
-    if (!raw) return "";
-    const entry = JSON.parse(raw);
-    if (!entry?.token || !entry?.savedAt) return "";
-    if ((Date.now() - entry.savedAt) >= TWOFA_TTL_MS) {
-      sessionStorage.removeItem(TWOFA_KEY);
-      return "";
-    }
-    return String(entry.token);
-  } catch { return ""; }
-}
-export function save2faSession(token) {
-  try { sessionStorage.setItem(TWOFA_KEY, JSON.stringify({ token, savedAt: Date.now() })); } catch {}
-}
-export function clear2faSession() {
-  try { sessionStorage.removeItem(TWOFA_KEY); } catch {}
-}
-
-// Acrescenta a prova de 2FA a toda chamada clínica feita por páginas que
-// usam este guard. A validação real é do backend; sessionStorage é apenas o
-// transporte do token opaco e não uma decisão de autorização do cliente.
-// Centralizar aqui também evita que novas telas esqueçam o header.
-const nativeFetch = globalThis.fetch.bind(globalThis);
-let twofaRedirectStarted = false;
-
-function isTherapyApiRequest(input) {
-  try {
-    const raw = typeof input === "string" || input instanceof URL ? input : input?.url;
-    const url = new URL(raw, location.href);
-    const backend = new URL(BACKEND_BASE_URL);
-    return url.origin === backend.origin && url.pathname.startsWith("/therapy/");
-  } catch {
-    return false;
-  }
-}
-
-async function therapyAuthenticatedFetch(input, init = {}) {
-  if (!isTherapyApiRequest(input)) return nativeFetch(input, init);
-
-  const requestHeaders = typeof Request !== "undefined" && input instanceof Request
-    ? input.headers
-    : undefined;
-  const headers = new Headers(init.headers || requestHeaders || undefined);
-  const twofaToken = get2faSessionToken();
-  if (twofaToken && !headers.has("X-Therapy-2FA")) {
-    headers.set("X-Therapy-2FA", twofaToken);
-  }
-
-  const response = await nativeFetch(input, { ...init, headers });
-  if (response.status === 401 && !location.pathname.endsWith("/2fa-verify.html")) {
-    const data = await response.clone().json().catch(() => ({}));
-    if (data?.error === "TWOFA_REQUIRED" || data?.error === "TWOFA_SESSION_INVALID") {
-      clear2faSession();
-      if (!twofaRedirectStarted) {
-        twofaRedirectStarted = true;
-        const redirect = encodeURIComponent(location.pathname + location.search + location.hash);
-        location.replace("./2fa-verify.html?redirect=" + redirect);
-      }
-    }
-  }
-  return response;
-}
-
-globalThis.fetch = therapyAuthenticatedFetch;
+import "./twofa-fetch.js";
+import { get2faSessionToken, clear2faSession, hasValid2faSession, verificationRedirect } from "./twofa-session.js";
+export { get2faSessionToken, save2faSession, clear2faSession, hasValid2faSession } from "./twofa-session.js";
 
 function redirectTo2faVerification() {
   clear2faSession();
   if (location.pathname.endsWith("/2fa-verify.html")) return;
-  const redirect = encodeURIComponent(location.pathname + location.search + location.hash);
-  location.replace("./2fa-verify.html?redirect=" + redirect);
+  location.replace(verificationRedirect(location));
 }
 
 export function authReady() {

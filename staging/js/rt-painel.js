@@ -1,5 +1,7 @@
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
+import "./twofa-fetch.js";
+import { clear2faSession, isTwoFactorChallenge } from "./twofa-session.js";
 
 const state = {
   actor: null,
@@ -386,7 +388,7 @@ $("#newSupervision").addEventListener("click", () => { $("#supervisionForm").ele
 $("#newIncident").addEventListener("click", () => $("#incidentModal").showModal());
 $("#rtRefresh").addEventListener("click", () => loadAll(true).catch(() => showToast("Falha ao atualizar os dados.", true)));
 $("#rtMenuToggle").addEventListener("click", () => $(".rt-sidebar").classList.toggle("is-open"));
-$("#rtLogout").addEventListener("click", async () => { await signOut(auth); window.location.replace("./rt-login.html"); });
+$("#rtLogout").addEventListener("click", async () => { clear2faSession(); await signOut(auth); window.location.replace("./rt-login.html"); });
 
 const now = new Date();
 $("#todayCard").innerHTML = `<small>${now.toLocaleDateString("pt-BR", { weekday: "long" })}</small><strong>${now.getDate()}</strong><span>${now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</span>`;
@@ -396,7 +398,9 @@ onAuthStateChanged(auth, async user => {
   try {
     await loadAll(); $("#rtLoader").hidden = true; $("#rtApp").hidden = false;
   } catch (error) {
+    if (isTwoFactorChallenge(error)) return;
     if (["ACESSO_RT_NAO_LIBERADO", "EMAIL_DO_RT_NAO_VERIFICADO", "TOKEN_INVALIDO"].includes(error.message)) {
+      clear2faSession();
       await signOut(auth); window.location.replace("./rt-login.html"); return;
     }
     $("#rtLoader").innerHTML = `<p>Não foi possível carregar o painel.<br><button onclick="location.reload()">Tentar novamente</button></p>`;

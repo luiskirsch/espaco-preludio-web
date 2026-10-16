@@ -6,12 +6,13 @@ import { join, resolve } from "node:path";
 const ROOT = resolve(import.meta.dirname, "..");
 const read = (path) => readFileSync(join(ROOT, path), "utf8");
 
-test("therapy requests attach the server-validated 2FA session", () => {
-  const source = read("js/auth-guard.js");
-  assert.match(source, /headers\.set\("X-Therapy-2FA", twofaToken\)/);
-  assert.match(source, /TWOFA_REQUIRED/);
-  assert.match(source, /TWOFA_SESSION_INVALID/);
-  assert.match(source, /location\.replace\("\.\/2fa-verify\.html\?redirect="/);
+test("professional and RT entry points load the shared second-factor transport", () => {
+  // Behavioral transport coverage lives in twofa-session.test.mjs. This wiring
+  // check ensures every independently loaded portal actually installs it.
+  for (const file of ["js/auth-guard.js", "js/rt-login.js", "js/rt-painel.js"]) {
+    assert.match(read(file), /import "\.\/twofa-fetch\.js"/);
+  }
+  assert.match(read("js/twofa-fetch.js"), /globalThis\.fetch = createClinicalFetch/);
 });
 
 test("staging backend override cannot exfiltrate Firebase tokens", () => {
