@@ -77,7 +77,7 @@
 
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { auth, authRt, BACKEND_BASE_URL } from "./js/firebase-config.js";
   import { authReady, save2faSession, clear2faSession } from "./js/auth-guard.js?v=3-36";
   import { clearDek } from "./js/crypto.js";
 
@@ -89,8 +89,9 @@
     return fallback;
   }
 
+  const loginPage = auth === authRt ? "./rt-login.html" : "./login.html";
   const user = await authReady();
-  if (!user) { window.location.href = "./login.html"; throw new Error("NOT_AUTH"); }
+  if (!user) { window.location.href = loginPage; throw new Error("NOT_AUTH"); }
   // Sanitiza redirect: aceita so path relativo same-origin (./...). Bloqueia
   // //evil, /\\evil, https://evil, javascript:, data:, etc. — protege phishing
   // que abusava do redirect pra mandar user pro fake-login.
@@ -103,7 +104,7 @@
 
 
   const params = new URLSearchParams(location.search);
-  const redirect = sanitizeRedirect(params.get("redirect"), "./painel.html");
+  const redirect = sanitizeRedirect(params.get("redirect"), auth === authRt ? "./rt-painel.html" : "./painel.html");
 
   const codeEl = document.getElementById("codeInput");
   const btnEl  = document.getElementById("verifyBtn");
@@ -150,9 +151,9 @@
 
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     clear2faSession();
-    clearDek();
+    if (auth !== authRt) clearDek();
     await signOut(auth);
-    window.location.href = "./login.html";
+    window.location.href = loginPage;
   });
 </script>
 

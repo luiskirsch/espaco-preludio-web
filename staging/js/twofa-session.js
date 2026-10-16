@@ -23,11 +23,16 @@ export function hasValid2faSession() { return !!get2faSessionToken(); }
 export function isTwoFactorChallenge(error) {
   return ["TWOFA_REQUIRED", "TWOFA_SESSION_INVALID"].includes(typeof error === "string" ? error : error?.message);
 }
+export function isRtAuthContext(pathname, search = "") {
+  return /\/rt-(?:login|painel)\.html$/.test(pathname) ||
+    (pathname.endsWith("/2fa-verify.html") && new URLSearchParams(search).get("context") === "rt");
+}
 export function verificationRedirect(location) {
   // The verification page accepts ./relative paths; preserve the current page
   // inside the same production/staging directory without an external redirect.
   const target = "./" + location.pathname.split("/").at(-1) + location.search + location.hash;
-  return "./2fa-verify.html?redirect=" + encodeURIComponent(target);
+  return "./2fa-verify.html?redirect=" + encodeURIComponent(target) +
+    (isRtAuthContext(location.pathname, location.search) ? "&context=rt" : "");
 }
 
 export function createClinicalFetch({ fetch: nativeFetch, backend, location, storage }) {

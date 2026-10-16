@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createClinicalFetch, get2faSessionToken, verificationRedirect } from "../js/twofa-session.js";
+import { createClinicalFetch, get2faSessionToken, verificationRedirect, isRtAuthContext } from "../js/twofa-session.js";
 
 function fixture(response = Response.json({ ok: true })) {
   const calls = [], redirects = [];
@@ -44,7 +44,18 @@ test("server challenges clear stale proof and redirect once while preserving the
   const redirect = new URL(f.redirects[0], f.location.href);
   assert.equal(redirect.pathname, "/staging/2fa-verify.html");
   assert.equal(redirect.searchParams.get("redirect"), "./rt-painel.html?tab=team");
+  assert.equal(redirect.searchParams.get("context"), "rt");
+  assert.equal(isRtAuthContext(redirect.pathname, redirect.search), true);
   assert.equal(verificationRedirect({ pathname: "/painel.html", search: "", hash: "" }), "./2fa-verify.html?redirect=.%2Fpainel.html");
+});
+
+test("MFA verification keeps RT Firebase Auth isolated from the professional login", () => {
+  assert.equal(isRtAuthContext("/rt-login.html"), true);
+  assert.equal(isRtAuthContext("/staging/rt-painel.html"), true);
+  assert.equal(isRtAuthContext("/2fa-verify.html", "?context=rt"), true);
+  assert.equal(isRtAuthContext("/staging/2fa-verify.html", "?context=rt"), true);
+  assert.equal(isRtAuthContext("/2fa-verify.html", "?redirect=./rt-painel.html"), false);
+  assert.equal(isRtAuthContext("/painel.html", "?context=rt"), false);
 });
 
 test("ordinary auth errors and the verification page do not trigger a second-factor redirect loop", async () => {

@@ -19,6 +19,7 @@
 
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { isRtAuthContext } from "./twofa-session.js";
 
 // ─── Detecções ─────────────────────────────────────────────────────────
 const _path = typeof location !== "undefined" ? location.pathname : "";
@@ -28,7 +29,7 @@ const IS_PATIENT_PAGE =
   _path.includes("/aluno-") ||
   _path.endsWith("/entrar.html");
 const IS_INSTITUTION_PAGE = _path.includes("/instituicao-");
-const IS_RT_PAGE = _path.includes("/rt-");
+const IS_RT_PAGE = isRtAuthContext(_path, typeof location !== "undefined" ? location.search : "");
 
 // ─── Configs por ambiente ─────────────────────────────────────────────────
 const STAGING_FIREBASE = {
