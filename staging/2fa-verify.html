@@ -76,9 +76,9 @@
 </div>
 
 <script type="module">
-  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth, authRt, BACKEND_BASE_URL } from "./js/firebase-config.js";
-  import { authReady, save2faSession, clear2faSession } from "./js/auth-guard.js?v=3-36";
+  import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, authRt, BACKEND_BASE_URL } from "./js/firebase-config.js?v=20261016-mfa2";
+  import { save2faSession, clear2faSession } from "./js/twofa-session.js?v=20261016-mfa2";
   import { clearDek } from "./js/crypto.js";
 
   function tr(key, fallback) {
@@ -90,7 +90,9 @@
   }
 
   const loginPage = auth === authRt ? "./rt-login.html" : "./login.html";
-  const user = await authReady();
+  const user = await new Promise(resolve => {
+    const unsubscribe = onAuthStateChanged(auth, current => { unsubscribe(); resolve(current); });
+  });
   if (!user) { window.location.href = loginPage; throw new Error("NOT_AUTH"); }
   // Sanitiza redirect: aceita so path relativo same-origin (./...). Bloqueia
   // //evil, /\\evil, https://evil, javascript:, data:, etc. — protege phishing

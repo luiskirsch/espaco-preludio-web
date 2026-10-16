@@ -54,7 +54,9 @@ test("MFA verification keeps RT Firebase Auth isolated from the professional log
   assert.equal(isRtAuthContext("/staging/rt-painel.html"), true);
   assert.equal(isRtAuthContext("/2fa-verify.html", "?context=rt"), true);
   assert.equal(isRtAuthContext("/staging/2fa-verify.html", "?context=rt"), true);
-  assert.equal(isRtAuthContext("/2fa-verify.html", "?redirect=./rt-painel.html"), false);
+  assert.equal(isRtAuthContext("/2fa-verify.html", "?redirect=./rt-painel.html"), true);
+  assert.equal(isRtAuthContext("/2fa-verify.html", "?redirect=https://evil.invalid/rt-painel.html"), false);
+  assert.equal(isRtAuthContext("/2fa-verify.html", "?redirect=//evil.invalid/rt-painel.html"), false);
   assert.equal(isRtAuthContext("/painel.html", "?context=rt"), false);
 });
 

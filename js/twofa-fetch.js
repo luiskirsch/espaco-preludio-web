@@ -1,5 +1,5 @@
 import { BACKEND_BASE_URL } from "./firebase-config.js";
-import { createClinicalFetch } from "./twofa-session.js";
+import { createClinicalFetch } from "./twofa-session.js?v=20261016-mfa2";
 
 // Loaded once by the ES module registry; contains no profile loading or UI work.
 let storage;

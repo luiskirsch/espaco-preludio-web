@@ -12,9 +12,9 @@ import "./cmdk.js";
 import db from "./db.js";
 import { connectRealtime } from "./realtime.js?v=1";
 
-import "./twofa-fetch.js";
-import { get2faSessionToken, clear2faSession, hasValid2faSession, verificationRedirect } from "./twofa-session.js";
-export { get2faSessionToken, save2faSession, clear2faSession, hasValid2faSession } from "./twofa-session.js";
+import "./twofa-fetch.js?v=20261016-mfa2";
+import { get2faSessionToken, clear2faSession, hasValid2faSession, verificationRedirect } from "./twofa-session.js?v=20261016-mfa2";
+export { get2faSessionToken, save2faSession, clear2faSession, hasValid2faSession } from "./twofa-session.js?v=20261016-mfa2";
 
 function redirectTo2faVerification() {
   clear2faSession();

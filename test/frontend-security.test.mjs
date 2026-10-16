@@ -10,7 +10,7 @@ test("professional and RT entry points load the shared second-factor transport",
   // Behavioral transport coverage lives in twofa-session.test.mjs. This wiring
   // check ensures every independently loaded portal actually installs it.
   for (const file of ["js/auth-guard.js", "js/rt-login.js", "js/rt-painel.js"]) {
-    assert.match(read(file), /import "\.\/twofa-fetch\.js"/);
+    assert.match(read(file), /import "\.\/twofa-fetch\.js\?v=20261016-mfa2"/);
   }
   assert.match(read("js/twofa-fetch.js"), /globalThis\.fetch = createClinicalFetch/);
 });

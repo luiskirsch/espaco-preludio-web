@@ -24,8 +24,11 @@ export function isTwoFactorChallenge(error) {
   return ["TWOFA_REQUIRED", "TWOFA_SESSION_INVALID"].includes(typeof error === "string" ? error : error?.message);
 }
 export function isRtAuthContext(pathname, search = "") {
-  return /\/rt-(?:login|painel)\.html$/.test(pathname) ||
-    (pathname.endsWith("/2fa-verify.html") && new URLSearchParams(search).get("context") === "rt");
+  if (/\/rt-(?:login|painel)\.html$/.test(pathname)) return true;
+  if (!pathname.endsWith("/2fa-verify.html")) return false;
+  const params = new URLSearchParams(search);
+  // Also accept the narrow relative return path emitted by the previous release.
+  return params.get("context") === "rt" || /^\.\/rt-(?:login|painel)\.html(?:[?#]|$)/.test(params.get("redirect") || "");
 }
 export function verificationRedirect(location) {
   // The verification page accepts ./relative paths; preserve the current page

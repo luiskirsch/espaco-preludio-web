@@ -1,7 +1,7 @@
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
-import "./twofa-fetch.js";
-import { clear2faSession, isTwoFactorChallenge } from "./twofa-session.js";
+import "./twofa-fetch.js?v=20261016-mfa2";
+import { clear2faSession, isTwoFactorChallenge } from "./twofa-session.js?v=20261016-mfa2";
 
 const state = {
   actor: null,
