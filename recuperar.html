@@ -154,8 +154,7 @@
     resetBtn.disabled = true;
     setStatus(statusReset, tr("recuperar:msg.sending", "Enviando…"));
     try {
-      await requestPasswordReset({ backend: BACKEND_BASE_URL, email, retorno: "profissional",
-        fallback: () => sendPasswordResetEmail(auth, email, { url: new URL("./recuperar.html?passo=2", location.href).href }) });
+      await requestPasswordReset({ backend: BACKEND_BASE_URL, email, retorno: "profissional" });
       setStatus(statusReset, tr("recuperar:msg.resetOk", "Pronto. Se o e-mail está cadastrado, você receberá um link em instantes. Cheque também o spam."), "ok");
     } catch (err) {
       console.error("reset_email_error", err);

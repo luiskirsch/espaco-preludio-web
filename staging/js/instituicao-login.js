@@ -73,8 +73,7 @@ async function validateInstitutionAccess(user) {
 
 async function ensureVerifiedEmail(user) {
   if (user.emailVerified) return;
-  await requestEmailVerification({ backend: BACKEND_BASE_URL, user, retorno: "instituicao",
-      fallback: () => sendEmailVerification(user, { url: new URL("./instituicao-login.html", location.href).href }) }).catch(() => {});
+  await requestEmailVerification({ backend: BACKEND_BASE_URL, user, retorno: "instituicao" }).catch(() => {});
   const error = new Error("EMAIL_INSTITUCIONAL_NAO_VERIFICADO");
   error.code = "EMAIL_INSTITUCIONAL_NAO_VERIFICADO";
   throw error;
@@ -139,8 +138,7 @@ firstAccess.addEventListener("click", async () => {
   try {
     await setPersistence(auth, browserSessionPersistence);
     const credential = await createUserWithEmailAndPassword(auth, email, password);
-    await requestEmailVerification({ backend: BACKEND_BASE_URL, user: credential.user, retorno: "instituicao",
-      fallback: () => sendEmailVerification(credential.user, { url: new URL("./instituicao-login.html", location.href).href }) });
+    await requestEmailVerification({ backend: BACKEND_BASE_URL, user: credential.user, retorno: "instituicao" });
     await signOut(auth);
     setMessage("Conta criada. Enviamos uma confirmação para o seu e-mail; confirme o endereço e depois entre no painel.", "success");
   } catch (error) {
@@ -165,8 +163,7 @@ forgotPassword.addEventListener("click", async () => {
   forgotPassword.disabled = true;
   setMessage("Enviando instruções…");
   try {
-    await requestPasswordReset({ backend: BACKEND_BASE_URL, email, retorno: "instituicao",
-        fallback: () => sendPasswordResetEmail(auth, email, { url: new URL("./instituicao-login.html", location.href).href }) });
+    await requestPasswordReset({ backend: BACKEND_BASE_URL, email, retorno: "instituicao" });
     setMessage("Se esse e-mail estiver habilitado, você receberá as instruções para definir uma nova senha.", "success");
   } catch (error) {
     const code = String(error?.code || "");

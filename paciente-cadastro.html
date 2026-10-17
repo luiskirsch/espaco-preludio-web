@@ -275,8 +275,7 @@
       // acesso admin por e-mail depois que o Firebase confirma esse e-mail
       // (email_verified). Sem isso, cadastro fica normal mas o histórico por
       // e-mail só aparece depois que a pessoa confirmar pelo link recebido.
-      requestEmailVerification({ backend: BACKEND_BASE_URL, user: cred.user, retorno: "paciente",
-        fallback: () => sendEmailVerification(cred.user, { url: new URL("./paciente-login.html", location.href).href }) }).catch(() => {});
+      requestEmailVerification({ backend: BACKEND_BASE_URL, user: cred.user, retorno: "paciente" }).catch(() => {});
       const idToken = await cred.user.getIdToken();
 
       setStatus(statusData, tr("paciente-cadastro:status.generatingKey", "Gerando sua chave de cifragem…"));

@@ -79,7 +79,7 @@ $("resendBtn").addEventListener("click", async () => {
   const status = $("doneStatus");
   $("resendBtn").disabled = true;
   try {
-    await requestPasswordReset({ backend: BACKEND_BASE_URL, email, retorno: "", fallback: () => sendPasswordResetEmail(auth, email) });
+    await requestPasswordReset({ backend: BACKEND_BASE_URL, email, retorno: "" });
     setStatus(status, tr("conta-acao:recover.sent", "Enviamos um link para redefinir a senha. Confira também o spam."), "ok");
   } catch (error) {
     $("resendBtn").disabled = false;

@@ -48,50 +48,43 @@ test("página de ação não carrega monitoramento nem pré-renderização (o li
   assert.match(script, /history\.replaceState\(null, "", location\.pathname\)/);
 });
 
-test("e-mails de conta saem pelo backend; o Firebase só entra como reserva", async () => {
+test("e-mails de conta saem só pelo backend, com uma segunda tentativa", async () => {
   const realFetch = globalThis.fetch;
   const run = async (respond, call) => {
-    let fallbacks = 0, request;
-    globalThis.fetch = async (url, init) => { request = { url, init }; return respond(); };
-    try { await call(() => { fallbacks++; }); return { fallbacks, request }; }
+    const requests = [];
+    globalThis.fetch = async (url, init) => { requests.push({ url, init }); return respond(); };
+    try { await call(); return requests; }
     finally { globalThis.fetch = realFetch; }
   };
-  const reset = fallback => requestPasswordReset({ backend: "https://api.test", email: "a@b.com", retorno: "paciente", fallback });
+  const reset = () => requestPasswordReset({ backend: "https://api.test", email: "a@b.com", retorno: "paciente" });
   const ok = await run(() => new Response("{}", { status: 200 }), reset);
-  assert.equal(ok.fallbacks, 0);
-  assert.equal(ok.request.url, "https://api.test/conta/redefinir-senha");
-  assert.deepEqual(JSON.parse(ok.request.init.body), { email: "a@b.com", retorno: "paciente" });
+  assert.equal(ok.length, 1);
+  assert.equal(ok[0].url, "https://api.test/conta/redefinir-senha");
+  assert.deepEqual(JSON.parse(ok[0].init.body), { email: "a@b.com", retorno: "paciente" });
   for (const respond of [() => new Response("{}", { status: 404 }), () => new Response("{}", { status: 503 }), () => { throw new TypeError("offline"); }]) {
-    assert.equal((await run(respond, reset)).fallbacks, 1);
+    let attempts = 0;
+    await assert.rejects(run(() => { attempts++; return respond(); }, reset), { code: "auth/network-request-failed" });
+    assert.equal(attempts, 2, "tenta de novo uma vez antes de mostrar erro");
   }
   await assert.rejects(run(() => new Response("{}", { status: 429 }), reset), { code: "auth/too-many-requests" });
   await assert.rejects(run(() => new Response('{"error":"EMAIL_INVALIDO"}', { status: 400 }), reset), { code: "auth/invalid-email" });
   const user = { getIdToken: async () => "tok" };
   const verify = await run(() => new Response("{}", { status: 200 }),
-    fallback => requestEmailVerification({ backend: "https://api.test", user, retorno: "aluno", fallback }));
-  assert.equal(verify.request.init.headers.Authorization, "Bearer tok");
-  assert.equal(verify.fallbacks, 0);
+    () => requestEmailVerification({ backend: "https://api.test", user, retorno: "aluno" }));
+  assert.equal(verify[0].init.headers.Authorization, "Bearer tok");
 });
 
-test("todos os fluxos de redefinição e confirmação passam pelo backend", async () => {
+test("nenhum fluxo envia e-mail de conta pelo Firebase (domínio *.firebaseapp.com)", async () => {
   for (const file of ["recuperar.html", "paciente-recuperar.html", "app/recuperar.html", "admin-login.html",
     "aluno-login.html", "js/instituicao-login.js", "js/rt-login.js", "js/conta-acao.js"]) {
     const source = await readFile(new URL("../" + file, import.meta.url), "utf8");
     assert.match(source, /requestPasswordReset\(\{/, file);
-    assert.doesNotMatch(source, /await sendPasswordResetEmail\(/, file);
+    assert.doesNotMatch(source, /sendPasswordResetEmail\(auth/, file);
+    assert.doesNotMatch(source, /fallback:/, file);
   }
   for (const file of ["aluno-login.html", "js/instituicao-login.js", "js/patient-auth-guard.js", "paciente-cadastro.html"]) {
     const source = await readFile(new URL("../" + file, import.meta.url), "utf8");
     assert.match(source, /requestEmailVerification\(\{/, file);
-    assert.doesNotMatch(source, /await sendEmailVerification\(/, file);
-  }
-});
-
-test("todos os pedidos de redefinição informam o retorno ao site", async () => {
-  for (const file of ["recuperar.html", "paciente-recuperar.html", "app/recuperar.html", "admin-login.html",
-    "aluno-login.html", "js/instituicao-login.js", "js/rt-login.js"]) {
-    const source = await readFile(new URL("../" + file, import.meta.url), "utf8");
-    assert.doesNotMatch(source, /sendPasswordResetEmail\(auth, ?email\)/, file);
-    assert.match(source, /sendPasswordResetEmail\(auth, ?email, ?\{ ?url: ?new URL\(/, file);
+    assert.doesNotMatch(source, /sendEmailVerification\((user|cred|credential|auth)/, file);
   }
 });

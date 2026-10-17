@@ -87,8 +87,7 @@ function mountEmailVerificationBanner(user) {
     const original = btn.textContent;
     try {
       await requestEmailVerification({ backend: BACKEND_BASE_URL, user,
-      retorno: location.pathname.includes("/app/") ? "app-paciente" : "paciente",
-      fallback: () => sendEmailVerification(user) });
+      retorno: location.pathname.includes("/app/") ? "app-paciente" : "paciente" });
       btn.textContent = "E-mail enviado ✓";
       setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 30_000);
     } catch {
