@@ -296,11 +296,28 @@
     <div class="ep-observations" id="patientObs"></div>
   </section>
 
-  <!-- Evolução de escalas (PHQ-9 / GAD-7) — só aparece se houver dados -->
+  <!-- Escalas (PHQ-9 / GAD-7) — só aparece se houver alguma enviada -->
   <section class="ep-mt-32 ep-hide" id="escalasBlock" data-i18n-aria-label="prontuario:escalas.blockAria" aria-label="Evolução de escalas clínicas">
     <div class="ep-eyebrow ep-mb-12" data-i18n="prontuario:escalas.block">Evolução de escalas</div>
-    <div id="escalasGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px;"></div>
+    <div id="escalasGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: 16px;"></div>
+    <div class="ep-eyebrow ep-mt-24 ep-mb-12" data-i18n="prontuario:escalas.applications">Aplicações e respostas</div>
+    <div id="escalasList" class="ep-escalas-list"></div>
   </section>
+  <style>
+    .ep-escalas-list { display: grid; gap: 10px; }
+    .ep-escala-item { border: 1px solid var(--ep-line); border-radius: 10px; background: var(--ep-surface, #fff); }
+    .ep-escala-item > summary { list-style: none; cursor: pointer; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; justify-content: space-between; }
+    .ep-escala-item > summary::-webkit-details-marker { display: none; }
+    .ep-escala-item[open] > summary { border-bottom: 1px solid var(--ep-line); }
+    .ep-escala-item__title { font-weight: 600; color: var(--ep-ink); }
+    .ep-escala-item__score { font-weight: 700; color: var(--ep-ink); white-space: nowrap; }
+    .ep-escala-item__alert { color: #a02b1f; font-weight: 600; }
+    .ep-escala-item__answers { margin: 0; padding: 10px 14px 14px 34px; display: grid; gap: 8px; }
+    .ep-escala-item__answers li { line-height: 1.4; }
+    .ep-escala-item__answers li.is-flag { color: #a02b1f; }
+    .ep-escala-item__value { display: block; font-weight: 600; }
+    .ep-escala-item--pending > summary { cursor: default; }
+  </style>
 
   <!-- Jornada do paciente — timeline de eventos marcantes por ano, gerada a
        partir dos sinais clínicos extraídos por IA dos resumos de sessão.
@@ -1044,20 +1061,77 @@
     renderTimeline(sessions, notesBySession);
   }
 
-  // ─── Evolução de escalas (PHQ-9 / GAD-7) ───────────────────────────
-  // Fetch + render via Chart.js (já carregado via CDN nesta página? — se
-  // não, lazy import). Mostra 1 gráfico por escala com pelo menos 1 resposta.
+  // ─── Escalas (PHQ-9 / GAD-7) ───────────────────────────────────────
+  // Lista de aplicações com respostas item a item (registro do prontuário,
+  // também vai pro PDF) + gráfico de evolução via Chart.js (lazy import).
+  // O gráfico é complemento: se o CDN falhar, a lista continua visível.
+  let escalasCache = null;
+  async function fetchEscalas() {
+    if (escalasCache) return escalasCache;
+    const res = await fetch(`${BACKEND_BASE_URL}/therapy/escalas?patientId=${encodeURIComponent(patientId)}`, {
+      headers: { "Authorization": `Bearer ${idToken}` }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
+    escalasCache = data.escalas || [];
+    return escalasCache;
+  }
+
+  function renderEscalasList(escalas) {
+    const list = document.getElementById("escalasList");
+    const fmt = ms => ms ? new Date(ms).toLocaleDateString(currentLocale(), { day: "2-digit", month: "short", year: "numeric" }) : "—";
+    // Mais recente primeiro
+    const sorted = [...escalas].sort((a, b) => (b.respondedAt || b.createdAt || 0) - (a.respondedAt || a.createdAt || 0));
+    list.innerHTML = sorted.map(e => {
+      if (e.status !== "answered") {
+        return `
+          <div class="ep-escala-item ep-escala-item--pending">
+            <div style="padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between;">
+              <span class="ep-escala-item__title">${escapeHtml(e.scaleName || e.scaleType)}</span>
+              <span class="ep-text-sm ep-text-muted">${escapeHtml(tr("prontuario:escalas.pending", "Aguardando resposta · enviada em {{date}}", { date: fmt(e.createdAt) }))}</span>
+            </div>
+          </div>`;
+      }
+      const answers = (e.items || []).map(it => {
+        const isFlag = it.flag === "suicide" && it.value > 0;
+        const value = it.value == null
+          ? tr("prontuario:escalas.noAnswer", "Sem resposta")
+          : `${it.valueLabel} (${it.value})`;
+        return `
+          <li class="${isFlag ? "is-flag" : ""}">
+            ${escapeHtml(it.label)}
+            <span class="ep-escala-item__value">${escapeHtml(value)}${isFlag ? " · " + escapeHtml(tr("prontuario:escalas.itemAlert", "item de risco — avaliar")) : ""}</span>
+          </li>`;
+      }).join("");
+      return `
+        <details class="ep-escala-item">
+          <summary>
+            <span>
+              <span class="ep-escala-item__title">${escapeHtml(e.scaleName || e.scaleType)}</span>
+              <span class="ep-text-sm ep-text-muted"> · ${escapeHtml(tr("prontuario:escalas.answeredOn", "respondida em {{date}}", { date: fmt(e.respondedAt || e.createdAt) }))}</span>
+            </span>
+            <span>
+              <span class="ep-escala-item__score">${escapeHtml(tr("prontuario:escalas.scoreLine", "Score {{score}} · {{band}}", { score: e.score, band: e.band?.label || "—" }))}</span>
+              ${e.suicideFlag ? `<span class="ep-escala-item__alert">${escapeHtml(tr("prontuario:escalas.alertTag", " · ⚠ alerta"))}</span>` : ""}
+              <span class="ep-text-sm ep-text-muted"> · ${escapeHtml(tr("prontuario:escalas.viewAnswers", "ver respostas"))}</span>
+            </span>
+          </summary>
+          <ol class="ep-escala-item__answers">${answers}</ol>
+        </details>`;
+    }).join("");
+  }
+
   async function loadAndRenderEscalas(patient) {
     if (!patient || !patient.patientId) return;
     const block = document.getElementById("escalasBlock");
     const grid  = document.getElementById("escalasGrid");
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/escalas?patientId=${encodeURIComponent(patient.patientId)}`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) return;
-      const answered = (data.escalas || []).filter(e => e.status === "answered" && Number.isFinite(e.score));
+      const escalas = await fetchEscalas();
+      if (!escalas.length) return;
+      renderEscalasList(escalas);
+      block.classList.remove("ep-hide");
+
+      const answered = escalas.filter(e => e.status === "answered" && Number.isFinite(e.score));
       if (!answered.length) return;
 
       // Agrupa por scaleType
@@ -1152,7 +1226,6 @@
           }
         });
       }
-      block.classList.remove("ep-hide");
     } catch (e) {
       console.warn("render_escalas_failed", e);
     }
@@ -1726,7 +1799,8 @@
     patient: null,
     sessions: [],
     notesBySession: new Map(),
-    receitas: []  // {receitaId, status, signedAt, createdAt, formDecrypted: {meds, observacoes, ...}}
+    receitas: [],  // {receitaId, status, signedAt, createdAt, formDecrypted: {meds, observacoes, ...}}
+    escalas: []    // GET /therapy/escalas — {scaleName, status, score, band, suicideFlag, items, respondedAt}
   };
   // Hook em boot/renderReceitas via wrappers
   const _origBoot = boot;
@@ -1768,6 +1842,7 @@
     try {
       // Garante que receitas estão decifradas
       if (exportState.receitas.length === 0) await loadReceitasDecrypted();
+      try { exportState.escalas = await fetchEscalas(); } catch (e) { console.warn("export_escalas_error", e); }
       const bytes = await buildProntuarioPdf(exportState);
       const blob = new Blob([bytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
@@ -1979,6 +2054,37 @@
             y -= 2;
             txt(tr("prontuario:pdf.obsLabel", "Observações: ") + f.observacoes, { size: 10, color: rgb(0.30,0.30,0.30) });
           }
+        }
+        y -= 10;
+      }
+    }
+
+    // ── ESCALAS ───────────────────────────────────────────────────────
+    // Só as respondidas: pendente não é registro clínico. Helvetica padrão
+    // (WinAnsi) não tem "⚠", então o alerta vai por extenso.
+    y -= 8;
+    ensure(40);
+    txt(tr("prontuario:pdf.section4", "4. Escalas aplicadas"), { font: fontBold, size: 14 });
+    y -= 4; hr();
+
+    const escalasAsc = (state.escalas || [])
+      .filter(e => e.status === "answered")
+      .sort((a, b) => (a.respondedAt || a.createdAt || 0) - (b.respondedAt || b.createdAt || 0));
+    if (escalasAsc.length === 0) {
+      txt(tr("prontuario:pdf.noEscalas", "Nenhuma escala respondida por este paciente."), { color: rgb(0.45,0.45,0.45) });
+    } else {
+      for (const e of escalasAsc) {
+        ensure(60);
+        txt(tr("prontuario:pdf.escalaLabel", "{{scale}} — respondida em {{date}}", { scale: e.scaleName || e.scaleType, date: fmtDate(e.respondedAt || e.createdAt) }), { font: fontBold, size: 12 });
+        txt(tr("prontuario:pdf.escalaScore", "Score: {{score}} ({{band}})", { score: e.score, band: e.band?.label || "—" }), { size: 10, color: rgb(0.40,0.40,0.40) });
+        if (e.suicideFlag) {
+          txt(tr("prontuario:pdf.escalaAlert", "ALERTA: resposta positiva no item sobre pensamentos de se ferir. Requer avaliação clínica."), { font: fontBold, size: 10, color: rgb(0.63,0.17,0.12) });
+        }
+        y -= 4;
+        for (const it of (e.items || [])) {
+          const value = it.value == null ? tr("prontuario:escalas.noAnswer", "Sem resposta") : `${it.valueLabel} (${it.value})`;
+          txt(`${it.n}. ${it.label}`, { size: 10 });
+          txt(`     ${value}`, { size: 10, font: fontBold, color: rgb(0.30,0.30,0.30) });
         }
         y -= 10;
       }

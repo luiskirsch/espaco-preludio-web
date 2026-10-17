@@ -142,9 +142,11 @@
     throw e;
   }
 
+  // Escala já respondida é imutável (vai pro prontuário): o link só confirma.
+  if (payload.escala?.status === "answered") { show("successBox"); throw new Error("ALREADY_ANSWERED"); }
+
   const t = payload.therapist || {};
   const scale = payload.scale;
-  const existing = payload.escala?.responses || {};
 
   $("therapistName").textContent = `${t.displayName || tr("escala:form.therapistFallback", "Profissional")}`;
   $("scaleNameLabel").textContent = scale.name;
@@ -167,10 +169,9 @@
     wrap.className = "ep-field";
     wrap.dataset.qid = q.id;
     const options = scale.options.map(o => {
-      const checked = existing[q.id] === o.value ? "checked" : "";
       return `
         <label class="ep-flex" style="gap: 8px; align-items: center; cursor: pointer; padding: 8px 12px; border: 1px solid var(--ep-line); border-radius: 8px; flex: 1; min-width: 120px;">
-          <input type="radio" name="${q.id}" value="${o.value}" ${checked}>
+          <input type="radio" name="${q.id}" value="${o.value}">
           <span class="ep-text-sm">${escapeHtml(o.label)}</span>
         </label>`;
     }).join("");
@@ -210,6 +211,12 @@
         body: JSON.stringify({ token, responses })
       });
       const data = await res.json().catch(() => ({}));
+      if (res.status === 409) {
+        // Já respondida (outra aba / reenvio) — o registro existente vale.
+        show("successBox");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
       if (!res.ok || !data.ok) {
         $("formStatus").textContent = tr("escala:form.sendError", "Erro: {{message}}", { message: data?.error || res.status });
         $("formStatus").className = "ep-status is-err";
