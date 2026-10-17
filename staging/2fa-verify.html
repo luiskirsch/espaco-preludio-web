@@ -56,12 +56,11 @@
       Abra seu app de autenticador (Google Authenticator, Authy, 1Password) e digite o código de 6 dígitos.
     </p>
 
-    <input id="codeInput" class="ep-input twofa-code-input" type="text" inputmode="numeric"
-           autocomplete="one-time-code" maxlength="6" placeholder="••••••" autofocus>
+    
 
     <div class="ep-status" id="status"></div>
 
-    <button id="verifyBtn" type="button" class="ep-btn ep-btn--primary ep-btn--block ep-mt-16" disabled data-i18n="2fa-verify:btnVerify">Verificar</button>
+    <button id="retryBtn" type="button" class="ep-btn ep-btn--primary ep-btn--block ep-mt-16" data-i18n="2fa-verify:btnVerify">Verificar</button>
 
     <p class="ep-text-xs ep-text-muted ep-mt-16 ep-text-center" style="margin-bottom: 0;">
       <span data-i18n="2fa-verify:helpPrefix">Perdeu acesso ao app? </span><a href="mailto:contato@espacopreludio.com.br?subject=Recuperar%20acesso%202FA" style="color: var(--ep-accent);" data-i18n="2fa-verify:helpLink">Fale com o suporte</a>
@@ -75,89 +74,7 @@
   </div>
 </div>
 
-<script type="module">
-  import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth, authRt, BACKEND_BASE_URL } from "./js/firebase-config.js?v=20261016-mfa2";
-  import { save2faSession, clear2faSession } from "./js/twofa-session.js?v=20261016-mfa2";
-  import { clearDek } from "./js/crypto.js";
-
-  function tr(key, fallback) {
-    if (window.EP_I18N && window.EP_I18N.t) {
-      const v = window.EP_I18N.t(key);
-      if (v && v !== key) return v;
-    }
-    return fallback;
-  }
-
-  const loginPage = auth === authRt ? "./rt-login.html" : "./login.html";
-  const user = await new Promise(resolve => {
-    const unsubscribe = onAuthStateChanged(auth, current => { unsubscribe(); resolve(current); });
-  });
-  if (!user) { window.location.href = loginPage; throw new Error("NOT_AUTH"); }
-  // Sanitiza redirect: aceita so path relativo same-origin (./...). Bloqueia
-  // //evil, /\\evil, https://evil, javascript:, data:, etc. — protege phishing
-  // que abusava do redirect pra mandar user pro fake-login.
-  function sanitizeRedirect(raw, fallback) {
-    if (!raw || typeof raw !== "string") return fallback;
-    if (!/^\.\/[a-zA-Z0-9_\-/.?=&%]+$/.test(raw)) return fallback;
-    if (raw.includes(":") || raw.includes("//") || raw.includes("\\")) return fallback;
-    return raw;
-  }
-
-
-  const params = new URLSearchParams(location.search);
-  const redirect = sanitizeRedirect(params.get("redirect"), auth === authRt ? "./rt-painel.html" : "./painel.html");
-
-  const codeEl = document.getElementById("codeInput");
-  const btnEl  = document.getElementById("verifyBtn");
-  const stEl   = document.getElementById("status");
-
-  codeEl.addEventListener("input", () => {
-    codeEl.value = codeEl.value.replace(/\D/g, "").slice(0, 6);
-    btnEl.disabled = codeEl.value.length !== 6;
-    if (codeEl.value.length === 6) btnEl.focus();
-  });
-  codeEl.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && codeEl.value.length === 6) verify();
-  });
-
-  async function verify() {
-    const code = codeEl.value.trim();
-    if (!/^\d{6}$/.test(code)) return;
-    btnEl.disabled = true;
-    stEl.className = "ep-status";
-    stEl.textContent = tr("2fa-verify:status.verifying", "Verificando…");
-
-    try {
-      const idToken = await user.getIdToken();
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/2fa/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
-        body: JSON.stringify({ code })
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
-      save2faSession(data.sessionToken);
-      window.location.href = redirect;
-    } catch (e) {
-      stEl.textContent = e.message === "CODIGO_INCORRETO"
-        ? tr("2fa-verify:status.wrongCode", "Código incorreto. Tente o próximo (códigos mudam a cada 30s).")
-        : tr("2fa-verify:status.errorPrefix", "Erro: ") + (e?.message || tr("2fa-verify:status.unknownError", "desconhecido"));
-      stEl.classList.add("is-err");
-      btnEl.disabled = false;
-      codeEl.select();
-    }
-  }
-
-  btnEl.addEventListener("click", verify);
-
-  document.getElementById("logoutBtn").addEventListener("click", async () => {
-    clear2faSession();
-    if (auth !== authRt) clearDek();
-    await signOut(auth);
-    window.location.href = loginPage;
-  });
-</script>
+<script type="module" src="./js/mfa-verify-page.js?v=20261017-mfa3"></script>
 
 </body>
 </html>

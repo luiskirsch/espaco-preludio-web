@@ -89,9 +89,11 @@
     onAuthStateChanged, signInWithEmailAndPassword, signOut,
     sendPasswordResetEmail, browserSessionPersistence, setPersistence
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth } from "./js/firebase-config.js";
+  import { auth } from "./js/firebase-config.js?v=20261017-mfa3";
+  import { ensureMfa } from "./js/mfa-flow.js?v=20261017-mfa3";
+  import { safeMfaReturn, clear2faSession } from "./js/twofa-session.js?v=20261017-mfa3";
 
-  const dest      = new URLSearchParams(location.search).get("from") || "./admin-painel.html";
+  const dest      = safeMfaReturn(new URLSearchParams(location.search).get("from"), "./admin-painel.html");
   const emailEl   = document.getElementById("adminEmail");
   const passEl    = document.getElementById("adminPassword");
   const statusEl  = document.getElementById("loginStatus");
@@ -100,8 +102,10 @@
   const sairBtn   = document.getElementById("sairBtn");
 
   // Already authenticated? Go directly
-  onAuthStateChanged(auth, user => {
-    if (user) window.location.replace(dest);
+  onAuthStateChanged(auth, async user => {
+    if (!user) return;
+    try { await ensureMfa(user); window.location.replace(dest); }
+    catch (_) { statusEl.textContent = "Conclua a verificação em duas etapas para entrar."; loginBtn.disabled = false; }
   });
 
   loginForm.addEventListener("submit", async e => {
@@ -131,6 +135,7 @@
   });
 
   sairBtn.addEventListener("click", async () => {
+    clear2faSession();
     await signOut(auth);
     sairBtn.textContent = "Saído.";
   });

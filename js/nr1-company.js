@@ -1,4 +1,4 @@
-import { BACKEND_BASE_URL } from "./firebase-config.js";
+import { BACKEND_BASE_URL } from "./firebase-config.js?v=20261017-mfa3";
 
 const token = sessionStorage.getItem("ep:empresa:token");
 if (!token) location.replace("./empresa-login.html");

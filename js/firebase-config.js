@@ -19,7 +19,7 @@
 
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { isRtAuthContext } from "./twofa-session.js?v=20261016-mfa2";
+import { isRtAuthContext, installClinicalFetch } from "./twofa-session.js?v=20261017-mfa3";
 
 // ─── Detecções ─────────────────────────────────────────────────────────
 const _path = typeof location !== "undefined" ? location.pathname : "";
@@ -137,6 +137,10 @@ export const authProfessional = getAuth(professionalApp);
 export const authPatient      = getAuth(patientApp);
 export const authInstitution  = getAuth(institutionApp);
 export const authRt           = getAuth(rtApp);
+
+// Every independently loaded clinical/admin screen transports MFA proof and
+// handles enrollment challenges, including screens without auth-guard imports.
+installClinicalFetch({ backend: BACKEND_BASE_URL });
 
 // Expõe na window pra monitoring.js (carregado antes deste módulo como
 // <script defer>) saber o domínio do backend e o ambiente. Também

@@ -27,6 +27,8 @@ async function startServer() {
       auth.currentUser = user; queueMicrotask(() => authListener(user)); return { user };
     }
     async function signOut() { auth.currentUser = null; queueMicrotask(() => authListener(null)); }
+    window.__mfaChecks = [];
+    async function ensureMfa(user) { window.__mfaChecks.push(user.uid); return { verified: true }; }
   `;
   const server = createServer(async (request, response) => {
     try {
@@ -133,6 +135,7 @@ test("NR-1 mostra login, explica acesso negado e libera painel para administrado
     })()`);
     await poll(() => cdp.evaluate('!document.querySelector("#adminWorkspace").hidden && document.querySelector("#company").textContent.includes("Projeto Campi")'));
     assert.equal(await cdp.evaluate('document.querySelector("#accessPanel").hidden'), true);
+    assert.equal(await cdp.evaluate('window.__mfaChecks.includes("admin@preludio.test")'), true);
   } finally {
     cdp?.socket.close();
     if (browser.exitCode === null) { browser.kill(); await once(browser, "exit"); }

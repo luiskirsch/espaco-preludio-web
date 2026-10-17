@@ -43,7 +43,7 @@
 </div>
 <script type="module">
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?v=20261017-mfa3";
   const $ = id => document.getElementById(id);
   let user = null, campaigns = [], questions = [];
   async function api(path, options = {}) { const token = await user.getIdToken(); const response = await fetch(`${BACKEND_BASE_URL}${path}`, { ...options, headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(options.headers || {}) } }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || `Erro HTTP ${response.status}`); return data; }

@@ -733,65 +733,18 @@
     </form>
 
     <!-- Modal: Setup 2FA -->
-    <div class="ep-modal" id="twofaModal" role="dialog" aria-modal="true">
-      <div class="ep-modal__panel">
-        <h3 class="ep-modal__title" id="twofaModalTitle" data-i18n="perfil:twofa.setupTitle">Ativar verificação em 2 etapas</h3>
-        <p class="ep-modal__sub" data-i18n="perfil:twofa.setupSub">
-          Abra o app de autenticador no seu celular e escaneie o QR code. Depois digite o código de 6 dígitos que ele mostrar pra confirmar.
-        </p>
-
-        <div id="twofaSetupContent" style="padding: 0 28px;">
-          <div id="twofaQr" style="text-align: center; padding: 20px 0;">
-            <div id="twofaQrCode" style="display: inline-block; padding: 12px; background: #fff; border-radius: 8px; border: 1px solid var(--ep-line);"></div>
-            <p class="ep-text-xs ep-text-muted ep-mt-12" style="margin: 12px 0 0;">
-              <span data-i18n="perfil:twofa.cantScan">Não consegue escanear? Digite manualmente:</span><br>
-              <code id="twofaSecretText" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--ep-bg-2); padding: 4px 8px; border-radius: 4px; word-break: break-all;">—</code>
-            </p>
-          </div>
-
-          <div class="ep-field">
-            <label class="ep-label" for="twofaEnableCode" data-i18n="perfil:twofa.code">Código de 6 dígitos</label>
-            <input id="twofaEnableCode" class="ep-input" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="••••••" style="font-family: 'JetBrains Mono', monospace; font-size: 20px; letter-spacing: 4px; text-align: center;">
-          </div>
-
-          <div class="ep-status" id="twofaSetupStatus"></div>
-        </div>
-
-        <div class="ep-modal__actions">
-          <button type="button" class="ep-btn ep-btn--ghost" id="twofaSetupCancelBtn" data-i18n="perfil:twofa.cancel">Cancelar</button>
-          <button type="button" class="ep-btn ep-btn--primary" id="twofaSetupConfirmBtn" disabled data-i18n="perfil:twofa.activate">Ativar 2FA</button>
-        </div>
-      </div>
-    </div>
+    
 
     <!-- Modal: Desativar 2FA -->
-    <div class="ep-modal" id="twofaDisableModal" role="dialog" aria-modal="true">
-      <div class="ep-modal__panel">
-        <h3 class="ep-modal__title" data-i18n="perfil:twofa.disableTitle">Desativar 2FA</h3>
-        <p class="ep-modal__sub" data-i18n="perfil:twofa.disableSub">
-          Digite um código atual do seu app de autenticador pra confirmar que é você desativando.
-        </p>
-        <div style="padding: 0 28px;">
-          <div class="ep-field">
-            <label class="ep-label" for="twofaDisableCode" data-i18n="perfil:twofa.code">Código de 6 dígitos</label>
-            <input id="twofaDisableCode" class="ep-input" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="••••••" style="font-family: 'JetBrains Mono', monospace; font-size: 20px; letter-spacing: 4px; text-align: center;">
-          </div>
-          <div class="ep-status" id="twofaDisableStatus"></div>
-        </div>
-        <div class="ep-modal__actions">
-          <button type="button" class="ep-btn ep-btn--ghost" id="twofaDisableCancelBtn" data-i18n="perfil:twofa.back">Voltar</button>
-          <button type="button" class="ep-btn ep-btn--danger" id="twofaDisableConfirmBtn" disabled data-i18n="perfil:twofa.disable">Desativar</button>
-        </div>
-      </div>
-    </div>
+    
 
   </main>
 </div>
 
 <script type="module">
-  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?v=20261017-mfa3";
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=3-36";
+  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=20261017-mfa3";
 
   // ─── i18n helper ────────────────────────────────────────────
   function tr(key, fallback, opts) {
@@ -2102,165 +2055,22 @@ Direito de portabilidade — LGPD Art. 18, V.
   });
 
   // ─── 2FA ─────────────────────────────────────────────────────────────
-  // Carrega Chart.js via CDN só se precisar (não usado aqui, mas QR usa qrcode-generator)
-  await new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = "https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js";
-    s.onload = resolve;
-    s.onerror = () => reject(new Error("QR code lib falhou"));
-    document.head.appendChild(s);
-  }).catch(() => {});
-
-  const twoFactorBlock  = $("twoFactorBlock");
-  const twoFactorStatus = $("twoFactorStatus");
-  const twofaModal      = $("twofaModal");
-  const twofaDisableModal = $("twofaDisableModal");
-
-  function renderTwoFactorStatus() {
-    twoFactorBlock.innerHTML = "";
-    if (therapist.twoFactorEnabled) {
-      twoFactorBlock.innerHTML = `
-        <div class="ep-flex ep-flex--end-wrap" style="align-items: center; gap: 12px;">
-          <span class="ep-badge ep-badge--ok">✓ Ativada</span>
-          <span class="ep-text-sm ep-text-muted" style="flex: 1;">Você precisa digitar o código do app a cada novo login.</span>
-          <button type="button" class="ep-btn ep-btn--danger ep-btn--sm" id="disable2faBtn">Desativar</button>
-        </div>
-      `;
-      document.getElementById("disable2faBtn").addEventListener("click", openDisableModal);
-    } else {
-      twoFactorBlock.innerHTML = `
-        <div class="ep-flex ep-flex--end-wrap" style="align-items: center; gap: 12px;">
-          <span class="ep-badge ep-badge--muted">Desativada</span>
-          <span class="ep-text-sm ep-text-muted" style="flex: 1;">Recomendado pra contas com dados clínicos.</span>
-          <button type="button" class="ep-btn ep-btn--primary ep-btn--sm" id="enable2faBtn">Ativar</button>
-        </div>
-      `;
-      document.getElementById("enable2faBtn").addEventListener("click", openSetupModal);
-    }
-  }
-  renderTwoFactorStatus();
-
-  async function openSetupModal() {
-    $("twofaSetupStatus").textContent = "";
-    $("twofaSetupStatus").className   = "ep-status";
-    $("twofaEnableCode").value = "";
-    $("twofaSetupConfirmBtn").disabled = true;
-    $("twofaQrCode").innerHTML = "Carregando…";
-    $("twofaSecretText").textContent = "—";
-    twofaModal.classList.add("is-open");
-
-    try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/2fa/setup`, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${await freshToken()}` }
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
-      $("twofaSecretText").textContent = data.secret;
-
-      // Gera QR code do otpauth URL.
-      if (window.qrcode) {
-        const qr = window.qrcode(0, "M");
-        qr.addData(data.otpauthUrl);
-        qr.make();
-        $("twofaQrCode").innerHTML = qr.createImgTag(5, 4);
-      } else {
-        // Fallback: usa a API do Google Charts (não-bloqueante)
-        $("twofaQrCode").innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.otpauthUrl)}" alt="QR" style="width: 200px; height: 200px;">`;
-      }
-    } catch (e) {
-      $("twofaSetupStatus").textContent = "Erro ao iniciar: " + (e?.message || "desconhecido");
-      $("twofaSetupStatus").classList.add("is-err");
-    }
-  }
-
-  $("twofaSetupCancelBtn").addEventListener("click", () => twofaModal.classList.remove("is-open"));
-
-  $("twofaEnableCode").addEventListener("input", () => {
-    const v = $("twofaEnableCode").value.replace(/\D/g, "").slice(0, 6);
-    $("twofaEnableCode").value = v;
-    $("twofaSetupConfirmBtn").disabled = v.length !== 6;
+  // Mandatory MFA and recovery codes are managed by the shared dialog.
+  const mfaManagement = await import("./js/mfa-flow.js?v=20261017-mfa3");
+  const mfaBlock = document.getElementById("twoFactorBlock");
+  mfaBlock.replaceChildren();
+  const mfaState = document.createElement("p");
+  mfaState.textContent = "Ativada e obrigat\u00f3ria para acessar os dados cl\u00ednicos.";
+  const renewCodes = document.createElement("button");
+  renewCodes.type = "button"; renewCodes.className = "ep-btn ep-btn--ghost ep-btn--sm";
+  renewCodes.textContent = "Gerar novos c\u00f3digos de recupera\u00e7\u00e3o";
+  renewCodes.addEventListener("click", async () => {
+    renewCodes.disabled = true;
+    try { await mfaManagement.ensureMfa(auth.currentUser, { renewRecovery: true }); }
+    catch (_) { /* The shared dialog explains verification errors. */ }
+    finally { renewCodes.disabled = false; }
   });
-
-  $("twofaSetupConfirmBtn").addEventListener("click", async () => {
-    const code = $("twofaEnableCode").value.trim();
-    if (!/^\d{6}$/.test(code)) return;
-    const btn = $("twofaSetupConfirmBtn");
-    const st  = $("twofaSetupStatus");
-    btn.disabled = true;
-    st.className = "ep-status";
-    st.textContent = "Verificando…";
-    try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/2fa/enable`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
-        body: JSON.stringify({ code })
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
-      // Salva session 2FA token (evita redirect imediato após ativar).
-      const { save2faSession } = await import("./js/auth-guard.js?v=3-36");
-      save2faSession(data.sessionToken);
-      therapist.twoFactorEnabled = true;
-      twofaModal.classList.remove("is-open");
-      renderTwoFactorStatus();
-      invalidateProfileCache();
-    } catch (e) {
-      st.textContent = e.message === "CODIGO_INCORRETO"
-        ? "Código incorreto. Tente o próximo (códigos mudam a cada 30s)."
-        : "Erro: " + (e?.message || "desconhecido");
-      st.classList.add("is-err");
-      btn.disabled = false;
-    }
-  });
-
-  function openDisableModal() {
-    $("twofaDisableCode").value = "";
-    $("twofaDisableConfirmBtn").disabled = true;
-    $("twofaDisableStatus").textContent = "";
-    $("twofaDisableStatus").className = "ep-status";
-    twofaDisableModal.classList.add("is-open");
-  }
-  $("twofaDisableCancelBtn").addEventListener("click", () => twofaDisableModal.classList.remove("is-open"));
-
-  $("twofaDisableCode").addEventListener("input", () => {
-    const v = $("twofaDisableCode").value.replace(/\D/g, "").slice(0, 6);
-    $("twofaDisableCode").value = v;
-    $("twofaDisableConfirmBtn").disabled = v.length !== 6;
-  });
-
-  $("twofaDisableConfirmBtn").addEventListener("click", async () => {
-    const code = $("twofaDisableCode").value.trim();
-    if (!/^\d{6}$/.test(code)) return;
-    const btn = $("twofaDisableConfirmBtn");
-    const st  = $("twofaDisableStatus");
-    btn.disabled = true;
-    st.className = "ep-status";
-    st.textContent = "Verificando…";
-    try {
-      const res = await fetch(`${BACKEND_BASE_URL}/therapy/2fa/disable`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${await freshToken()}` },
-        body: JSON.stringify({ code })
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
-      therapist.twoFactorEnabled = false;
-      const { clear2faSession } = await import("./js/auth-guard.js?v=3-36");
-      clear2faSession();
-      twofaDisableModal.classList.remove("is-open");
-      renderTwoFactorStatus();
-      invalidateProfileCache();
-    } catch (e) {
-      st.textContent = e.message === "CODIGO_INCORRETO"
-        ? "Código incorreto."
-        : "Erro: " + (e?.message || "desconhecido");
-      st.classList.add("is-err");
-      btn.disabled = false;
-    }
-  });
-
-  // ─── Foto de perfil ──────────────────────────────────────────────────
+  mfaBlock.append(mfaState, renewCodes);
 
   function renderPhotoPreview(base64, mime, name) {
     const img = $("photoImg");

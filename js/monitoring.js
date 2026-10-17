@@ -28,11 +28,11 @@
   const RECOVERY_POLL_MS = 30_000;
   // URL do status page público. Default = Railway (já que nosso backend tá lá).
   // Quando criar Instatus em status.espacopreludio.com.br, sobrescreve isso
-  // setando window.EP_STATUS_URL no firebase-config.js ou inline.
+  // setando window.EP_STATUS_URL no firebase-config.js?v=20261017-mfa3 ou inline.
   const STATUS_URL = (typeof window !== 'undefined' && window.EP_STATUS_URL) || 'https://status.railway.com';
 
   // Backend matching: usa window.EP_BACKEND_BASE_URL (setado pelo
-  // firebase-config.js) pra detectar requests. Fallback: pattern railway.app
+  // firebase-config.js?v=20261017-mfa3) pra detectar requests. Fallback: pattern railway.app
   // se firebase-config ainda não carregou (race). Suporta override pra
   // localhost / cloudflared / etc — toggle via ?backend= ou localStorage.
   function isBackendUrl(url) {
@@ -144,7 +144,7 @@
 
   // ─── Sentry browser SDK (lazy, se DSN configurado) ───────────────────
   // Coloca window.EP_SENTRY_DSN = "https://..." num <script inline> antes
-  // deste arquivo, ou no firebase-config.js. DSN do Sentry é público =
+  // deste arquivo, ou no firebase-config.js?v=20261017-mfa3. DSN do Sentry é público =
   // safe pra committar em frontend code.
   if (window.EP_SENTRY_DSN) {
     const s = document.createElement('script');

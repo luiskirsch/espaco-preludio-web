@@ -1,9 +1,9 @@
 // Espaço Prelúdio — guard de autenticação para páginas que exigem PACIENTE
-// logado (paciente-painel.html). Espelha auth-guard.js do profissional, mas
+// logado (paciente-painel.html). Espelha auth-guard.js?v=20261017-mfa3 do profissional, mas
 // usa coleção `therapy_patient_accounts` e sessionStorage namespaced.
 
 import { onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261017-mfa3";
 import { recallPatientDek } from "./patient-session.js";
 
 export function authReady() {

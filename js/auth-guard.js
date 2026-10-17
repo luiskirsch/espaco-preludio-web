@@ -1,10 +1,10 @@
 // Espaço Prelúdio — guard de autenticação para páginas que exigem profissional logado.
 // Uso:
-//   import { requireTherapist } from "./js/auth-guard.js";
+//   import { requireTherapist } from "./js/auth-guard.js?v=20261017-mfa3";
 //   const { user, idToken, therapist } = await requireTherapist();
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261017-mfa3";
 import { recallDek } from "./crypto.js";
 import { matchPatients, loadBookingDirectory, createSessionFromProposal, regeneratePatientLink, sanitizeProposal, proposalTimestamp, isValidEmail } from "./aurora-booking.js?v=3";
 import { mountThemeToggle } from "./theme-toggle.js";
@@ -12,9 +12,9 @@ import "./cmdk.js";
 import db from "./db.js";
 import { connectRealtime } from "./realtime.js?v=1";
 
-import "./twofa-fetch.js?v=20261016-mfa2";
-import { get2faSessionToken, clear2faSession, hasValid2faSession, verificationRedirect } from "./twofa-session.js?v=20261016-mfa2";
-export { get2faSessionToken, save2faSession, clear2faSession, hasValid2faSession } from "./twofa-session.js?v=20261016-mfa2";
+import "./twofa-fetch.js?v=20261017-mfa3";
+import { get2faSessionToken, clear2faSession, hasValid2faSession, verificationRedirect } from "./twofa-session.js?v=20261017-mfa3";
+export { get2faSessionToken, save2faSession, clear2faSession, hasValid2faSession } from "./twofa-session.js?v=20261017-mfa3";
 
 function redirectTo2faVerification() {
   clear2faSession();
@@ -1003,7 +1003,7 @@ export async function requireTherapist({ requireDek = true } = {}) {
   const profile = await fetchTherapistProfile(idToken, user.uid);
 
   if (!profile.ok) {
-    if (profile.code === "TWOFA_REQUIRED" || profile.code === "TWOFA_SESSION_INVALID") {
+    if (["TWOFA_REQUIRED", "TWOFA_SESSION_INVALID", "TWOFA_ENROLLMENT_REQUIRED"].includes(profile.code)) {
       redirectTo2faVerification();
     } else if (profile.code === "NAO_REGISTRADO") {
       window.location.href = "./cadastro.html?step=profissional";

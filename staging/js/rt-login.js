@@ -6,9 +6,10 @@ import {
   signInWithEmailAndPassword,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
-import "./twofa-fetch.js?v=20261016-mfa2";
-import { clear2faSession, isTwoFactorChallenge } from "./twofa-session.js?v=20261016-mfa2";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261017-mfa3";
+import "./twofa-fetch.js?v=20261017-mfa3";
+import { clear2faSession, isTwoFactorChallenge } from "./twofa-session.js?v=20261017-mfa3";
+import { ensureMfa } from "./mfa-flow.js?v=20261017-mfa3";
 
 const form = document.getElementById("rtLoginForm");
 const emailEl = document.getElementById("rtEmail");
@@ -39,10 +40,15 @@ onAuthStateChanged(auth, async user => {
   checking = true;
   try {
     setMessage("Validando seu vínculo técnico…");
+    await ensureMfa(user);
     await validateAccess(user);
     window.location.replace("./rt-painel.html");
   } catch (error) {
     if (isTwoFactorChallenge(error)) return;
+    if (error.code === "MFA_CANCELLED") {
+      setMessage("Conclua a verificação em duas etapas para entrar.", true);
+      clear2faSession(); await signOut(auth); submit.disabled = false; checking = false; return;
+    }
     clear2faSession();
     await signOut(auth);
     setMessage(error.message === "EMAIL_DO_RT_NAO_VERIFICADO"

@@ -1,5 +1,6 @@
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261017-mfa3";
+import { ensureMfa } from "./mfa-flow.js?v=20261017-mfa3";
 
 const $ = id => document.getElementById(id);
 let campaigns = [];
@@ -63,6 +64,7 @@ async function refreshAccess() {
   if (!auth.currentUser) { showAccess(); return; }
   try {
     await auth.currentUser.getIdToken(true);
+    await ensureMfa(auth.currentUser);
     await loadCompanies();
   } catch (error) {
     showAccess(error);

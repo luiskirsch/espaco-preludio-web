@@ -1,6 +1,6 @@
 // Shared second-factor transport for clinical and technical portals.
 const KEY = "ep:twofa-session";
-const TTL = 8 * 60 * 60 * 1000;
+const TTL = 2 * 60 * 60 * 1000;
 
 export function get2faSessionToken(storage) {
   try {
@@ -21,7 +21,7 @@ export function clear2faSession(storage) {
 }
 export function hasValid2faSession() { return !!get2faSessionToken(); }
 export function isTwoFactorChallenge(error) {
-  return ["TWOFA_REQUIRED", "TWOFA_SESSION_INVALID"].includes(typeof error === "string" ? error : error?.message);
+  return ["TWOFA_REQUIRED", "TWOFA_SESSION_INVALID", "TWOFA_ENROLLMENT_REQUIRED"].includes(typeof error === "string" ? error : error?.message);
 }
 export function isRtAuthContext(pathname, search = "") {
   if (/\/rt-(?:login|painel)\.html$/.test(pathname)) return true;
@@ -36,6 +36,9 @@ export function verificationRedirect(location) {
   const target = "./" + location.pathname.split("/").at(-1) + location.search + location.hash;
   return "./2fa-verify.html?redirect=" + encodeURIComponent(target) +
     (isRtAuthContext(location.pathname, location.search) ? "&context=rt" : "");
+}
+export function safeMfaReturn(raw, fallback = "./painel.html") {
+  return typeof raw === "string" && /^\.\/[A-Za-z0-9_-]+\.html(?:[?#][A-Za-z0-9_.?=&%#-]*)?$/.test(raw) ? raw : fallback;
 }
 
 export function createClinicalFetch({ fetch: nativeFetch, backend, location, storage }) {
@@ -63,4 +66,16 @@ export function createClinicalFetch({ fetch: nativeFetch, backend, location, sto
     }
     return response;
   };
+}
+
+const FETCH_INSTALLATION = Symbol.for("ep.clinical.fetch.v3");
+export function installClinicalFetch({ backend, scope = globalThis }) {
+  if (!scope.location || typeof scope.fetch !== "function") return;
+  const previous = scope[FETCH_INSTALLATION];
+  if (previous?.backend === backend && scope.fetch === previous.fetch) return;
+  let storage; try { storage = scope.sessionStorage; } catch {}
+  const nativeFetch = previous?.nativeFetch || scope.fetch.bind(scope);
+  const wrapped = createClinicalFetch({ fetch: nativeFetch, backend, location: scope.location, storage });
+  scope.fetch = wrapped;
+  scope[FETCH_INSTALLATION] = { backend, nativeFetch, fetch: wrapped };
 }

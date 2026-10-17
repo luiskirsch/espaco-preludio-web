@@ -1,6 +1,6 @@
 // Espaço Prelúdio — botão flutuante de toggle de tema (sol/lua).
 // Módulo dedicado pra ser importado tanto pelo guard do profissional
-// (auth-guard.js) quanto pelo guard do paciente (patient-auth-guard.js)
+// (auth-guard.js?v=20261017-mfa3) quanto pelo guard do paciente (patient-auth-guard.js?v=20261017-mfa3)
 // sem o paciente ter que carregar auth-guard inteiro (cmdk.js, recallDek,
 // 2FA, etc).
 //
