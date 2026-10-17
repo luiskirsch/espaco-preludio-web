@@ -25,7 +25,7 @@
   const STORAGE_KEY = 'ep_lang';
   const I18NEXT_CDN = '/i18n/i18next.min.js';
   const BACKEND_CDN = '/i18n/i18nextHttpBackend.min.js';
-  const I18N_VERSION = 'af656a5ec';
+  const I18N_VERSION = 'a3f22fd79';
   let activeLocale = detectLocale();
 
   // Datas e horas que o código formata com 'pt-BR' (ou sem locale) passam a
