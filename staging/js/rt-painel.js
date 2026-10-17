@@ -1,3 +1,4 @@
+import "./csp-actions.js?v=20261017-csp1";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js";
 import "./twofa-fetch.js?v=20261016-mfa2";
@@ -403,6 +404,6 @@ onAuthStateChanged(auth, async user => {
       clear2faSession();
       await signOut(auth); window.location.replace("./rt-login.html"); return;
     }
-    $("#rtLoader").innerHTML = `<p>Não foi possível carregar o painel.<br><button onclick="location.reload()">Tentar novamente</button></p>`;
+    $("#rtLoader").innerHTML = `<p>Não foi possível carregar o painel.<br><button data-csp-action="reload">Tentar novamente</button></p>`;
   }
 });

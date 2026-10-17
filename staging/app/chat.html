@@ -173,12 +173,13 @@
     .chat-unlock__error { margin-top: 12px; color: #b84135; font-size: 12px; line-height: 1.45; }
     .chat-unlock__back { display: inline-block; margin-top: 18px; color: var(--a-ink2); font-size: 12px; text-decoration: none; }
   </style>
-  <script src="./portal-shell.js?v=6" defer></script>
+  <script src="./portal-shell.js?v=7" defer></script>
   <script src="./sw-register.js" defer></script>
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
   <script src="/i18n/init.js?v=2-8" defer></script>
   <link rel="stylesheet" href="../css/responsive.css?v=20261011b">
+<script type="module" src="../js/csp-actions.js?v=20261017-csp1"></script>
 </head>
 <body class="a-portal-authenticated">
 <div class="a-shell">
@@ -206,7 +207,7 @@
   <!-- Vista: conversa individual -->
   <div id="chatView" class="chat-shell" style="display:none;">
     <div class="chat-header">
-      <button class="chat-header__back" onclick="backToList()">
+      <button class="chat-header__back" data-csp-action="chat-back">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <div class="chat-header__avatar" id="chatAvatar">?</div>

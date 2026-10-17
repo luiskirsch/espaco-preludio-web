@@ -57,6 +57,7 @@
       .map(name => ({ href_matches: { pathname: `{/staging}?/app/${name}.html` } }));
     const rules = document.createElement("script");
     rules.type = "speculationrules";
+    rules.nonce = document.querySelector("script[nonce]")?.nonce || "";
     rules.dataset.epSpeculation = "";
     rules.textContent = JSON.stringify({
       // "immediate": as páginas do menu ficam prontas logo que o portal abre.

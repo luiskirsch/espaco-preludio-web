@@ -25,6 +25,8 @@
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=3" defer></script>
   <link rel="stylesheet" href="./css/responsive.css?v=20261011b">
+<script type="module" src="./js/csp-actions.js?v=20261017-csp1"></script>
+<style>[data-csp-hover="subtle"]:hover { background:var(--ep-bg-2) !important; }</style>
 </head>
 <body class="ep-has-sidebar">
 <script src="./js/sidebar.js?v=31"></script>
@@ -1523,7 +1525,7 @@
     el.innerHTML = list.map(p => {
       const sub = [p.especialidade, p.conselho, p.cidade && p.uf ? `${p.cidade}/${p.uf}` : (p.cidade || p.uf)].filter(Boolean).join(" · ");
       return `
-        <button type="button" data-contact-uid="${escapeHtml(p.uid)}" style="display:flex; align-items:center; gap:12px; width:100%; padding:10px 12px; border:0; background:transparent; cursor:pointer; border-radius:8px; text-align:left; transition: background 0.1s;" onmouseover="this.style.background='var(--ep-bg-2)'" onmouseout="this.style.background='transparent'">
+        <button type="button" data-contact-uid="${escapeHtml(p.uid)}" style="display:flex; align-items:center; gap:12px; width:100%; padding:10px 12px; border:0; background:transparent; cursor:pointer; border-radius:8px; text-align:left; transition: background 0.1s;" data-csp-hover="subtle">
           <span style="width:38px; height:38px; border-radius:50%; background:#2a3d5c; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; flex-shrink:0;">${escapeHtml(p.displayName.charAt(0).toUpperCase())}</span>
           <span style="display:flex; flex-direction:column; gap:2px; overflow:hidden;">
             <span style="font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(p.displayName)}</span>

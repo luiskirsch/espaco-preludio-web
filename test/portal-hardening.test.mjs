@@ -31,7 +31,7 @@ test("portal headers preserve video permissions, HTML, status, and existing cook
   const response = applyPortalHeaders(new Response("<html>test</html>", { status: 403, headers: {
     "Content-Type": "text/html; charset=utf-8", "Set-Cookie": "session=opaque; Secure; HttpOnly",
     "X-Powered-By": "server", "Cache-Control": "public, max-age=3600"
-  } }), new Request("https://espacopreludio.com.br/app/login.html"));
+  } }), new Request("https://espacopreludio.com.br/app/login.html"), { nonce: "synthetic-test-nonce-0123456789" });
   assert.equal(response.status, 403); assert.equal(await response.text(), "<html>test</html>");
   assert.match(response.headers.get("Permissions-Policy"), /camera=\(self\), microphone=\(self\)/);
   assert.match(response.headers.get("Cache-Control"), /no-store/);
@@ -39,7 +39,10 @@ test("portal headers preserve video permissions, HTML, status, and existing cook
   assert.match(response.headers.get("Set-Cookie"), /HttpOnly/);
   assert.equal(response.headers.get("X-Powered-By"), null);
   assert.match(response.headers.get("Content-Security-Policy"), /connect-src/);
-  assert.doesNotMatch(response.headers.get("Content-Security-Policy-Report-Only"), /script-src[^;]*'unsafe-inline'/);
+  assert.match(response.headers.get("Content-Security-Policy"), /'nonce-synthetic-test-nonce-0123456789'/);
+  assert.match(response.headers.get("Content-Security-Policy"), /script-src-attr 'none'/);
+  assert.doesNotMatch(response.headers.get("Content-Security-Policy"), /script-src[^;]*'unsafe-inline'/);
+  assert.equal(response.headers.get("Content-Security-Policy-Report-Only"), null);
 });
 
 test("production CSP does not authorize the staging API, and static cache headers survive", () => {

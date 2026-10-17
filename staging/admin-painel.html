@@ -402,6 +402,7 @@
     .ap-empty { text-align: center; padding: 60px 20px; color: var(--ep-ink-3); font-size: 14px; }
   </style>
   <link rel="stylesheet" href="./css/responsive.css?v=20261011b">
+<script type="module" src="./js/csp-actions.js?v=20261017-csp1"></script>
 </head>
 <body>
 <script src="./js/admin-sidebar.js?v=1"></script>
@@ -540,7 +541,7 @@
             </div>
 
             <div class="ap-metrics ep-mt-16">
-              <div class="ap-card ap-card--wide" data-clickable="true" onclick="location.href='./admin-sessoes.html'">
+              <div class="ap-card ap-card--wide" data-clickable="true" data-csp-action="admin-sessions">
                 <div class="ap-card__label">
                   <span data-i18n="admin-painel:metrics.sessoes">Sessões</span>
                   <span class="ep-text-muted" id="metricSesPeriodLabel" style="text-transform: lowercase; font-weight: 400;">(período)</span>
@@ -569,7 +570,7 @@
                 <svg class="ap-sparkline" viewBox="0 0 300 48" preserveAspectRatio="none" id="sparkMrr" aria-hidden="true"></svg>
               </div>
 
-              <div class="ap-card" data-clickable="true" onclick="location.href='./admin-verificacoes.html'">
+              <div class="ap-card" data-clickable="true" data-csp-action="admin-verifications">
                 <div class="ap-card__label" data-i18n="admin-painel:metrics.profissionais">Profissionais</div>
                 <div class="ap-card__value" id="metricProfTotal">—</div>
                 <div class="ap-card__sub">
@@ -1186,7 +1187,7 @@
       const verifLabel = verifStatus === "verified" ? "✓" : (verifStatus === "rejected" ? "✗" : "…");
       const ago = fmtAgo(n.createdAt);
       return `
-        <div class="ap-novos-row" onclick="location.href='./admin-verificacoes.html'" style="cursor:pointer;">
+        <div class="ap-novos-row" data-csp-action="admin-verifications" style="cursor:pointer;">
           <div>
             <div class="ap-novos-name">${escapeHtml(n.displayName)}</div>
             <div class="ap-novos-email">${escapeHtml(n.email || "—")}</div>

@@ -31,12 +31,13 @@
     .sessions-list { display: flex; flex-direction: column; gap: 10px; padding: 16px; }
     .countdown { font-size: 11px; color: var(--a-ink3); margin-top: 4px; }
   </style>
-  <script src="./portal-shell.js?v=6" defer></script>
+  <script src="./portal-shell.js?v=7" defer></script>
   <script src="./sw-register.js" defer></script>
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
   <script src="/i18n/init.js?v=2-8" defer></script>
   <link rel="stylesheet" href="../css/responsive.css?v=20261011b">
+<script type="module" src="../js/csp-actions.js?v=20261017-csp1"></script>
 </head>
 <body class="a-portal-authenticated">
 <div class="a-shell">
@@ -48,9 +49,9 @@
   <div class="a-page a-page-enter">
 
     <div class="tabs">
-      <button class="tab-btn is-active" id="tabProx" onclick="showTab('prox')" data-i18n="p-app-consultas:proximas_4b73b">Próximas</button>
-      <button class="tab-btn" id="tabHist" onclick="showTab('hist')" data-i18n="p-app-consultas:historico_bea29">Histórico</button>
-      <button class="tab-btn" id="tabPend" onclick="showTab('pend')" data-i18n="p-app-consultas:pendentes_020db">Pendentes</button>
+      <button class="tab-btn is-active" id="tabProx" data-csp-action="tab-upcoming" data-i18n="p-app-consultas:proximas_4b73b">Próximas</button>
+      <button class="tab-btn" id="tabHist" data-csp-action="tab-history" data-i18n="p-app-consultas:historico_bea29">Histórico</button>
+      <button class="tab-btn" id="tabPend" data-csp-action="tab-pending" data-i18n="p-app-consultas:pendentes_020db">Pendentes</button>
     </div>
 
     <div id="loadingSkel" class="sessions-list">
@@ -100,7 +101,7 @@
     <h3 style="font-family:var(--ff-serif);font-size:20px;margin:0 0 8px;" data-i18n="p-app-consultas:cancelar_consulta_23561">Cancelar consulta?</h3>
     <p style="font-size:13px;color:var(--a-ink2);line-height:1.5;margin:0 0 20px;" data-i18n="p-app-consultas:o_registro_da_consulta_sera_884af">O registro da consulta será mantido. Você pode reagendar a qualquer momento.</p>
     <div style="display:flex;gap:10px;">
-      <button class="a-btn a-btn--ghost" style="flex:1;" onclick="document.getElementById('cancelModal').style.display='none'" data-i18n="p-app-consultas:voltar_6da1d">Voltar</button>
+      <button class="a-btn a-btn--ghost" style="flex:1;" data-csp-action="close-cancel" data-i18n="p-app-consultas:voltar_6da1d">Voltar</button>
       <button class="a-btn a-btn--primary" style="flex:1;background:#b8453d;" id="confirmCancelBtn" data-i18n="p-app-consultas:cancelar_c111e">Cancelar</button>
     </div>
   </div>

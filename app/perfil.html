@@ -78,12 +78,13 @@
     .toggle-switch.is-on::after { transform: translateX(18px); }
     .version-text { text-align: center; font-size: 11px; color: var(--a-ink3); padding: 20px 16px 8px; }
   </style>
-  <script src="./portal-shell.js?v=6" defer></script>
+  <script src="./portal-shell.js?v=7" defer></script>
   <script src="./sw-register.js" defer></script>
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
   <script src="/i18n/init.js?v=2-8" defer></script>
   <link rel="stylesheet" href="../css/responsive.css?v=20261011b">
+<script type="module" src="../js/csp-actions.js?v=20261017-csp1"></script>
 </head>
 <body class="a-portal-authenticated">
 <div class="a-shell">
@@ -99,7 +100,7 @@
 
     <!-- Hero -->
     <div class="profile-hero">
-      <div class="profile-avatar-wrap" onclick="document.getElementById('photoInput').click()">
+      <div class="profile-avatar-wrap" data-csp-action="photo-upload">
         <div class="profile-avatar" id="profileAvatar">?</div>
         <div class="profile-avatar-cam">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -115,7 +116,7 @@
     <div class="menu-section">
       <div class="menu-section__title" data-i18n="p-app-perfil:minha_conta_5fa36">Minha conta</div>
       <div class="menu-card">
-        <div class="menu-item" onclick="openEditName()">
+        <div class="menu-item" data-csp-action="edit-name">
           <div class="menu-item__icon" style="background:rgba(45,106,62,.1);">👤</div>
           <div class="menu-item__text">
             <div class="menu-item__label" data-i18n="p-app-perfil:nome_13030">Nome</div>
@@ -123,7 +124,7 @@
           </div>
           <div class="menu-item__arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
         </div>
-        <div class="menu-item" onclick="openEditSenha()">
+        <div class="menu-item" data-csp-action="edit-password">
           <div class="menu-item__icon" style="background:rgba(60,90,180,.1);">🔐</div>
           <div class="menu-item__text">
             <div class="menu-item__label" data-i18n="p-app-perfil:senha_deba0">Senha</div>
@@ -181,7 +182,7 @@
     <div class="menu-section a-mt-16" id="installSection" style="display:none;">
       <div class="menu-section__title" data-i18n="p-app-perfil:app_fc4a6">App</div>
       <div class="menu-card">
-        <div class="menu-item" id="installBtn" onclick="installPWA()">
+        <div class="menu-item" id="installBtn" data-csp-action="install-pwa">
           <div class="menu-item__icon" style="background:rgba(45,106,62,.1);">📲</div>
           <div class="menu-item__text">
             <div class="menu-item__label" data-i18n="p-app-perfil:instalar_no_celular_8bcec">Instalar no celular</div>
@@ -206,7 +207,7 @@
           <div class="menu-item__text"><div class="menu-item__label" data-i18n="p-app-perfil:termos_de_uso_42237">Termos de uso</div></div>
           <div class="menu-item__arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
         </a>
-        <div class="menu-item menu-item--danger" onclick="doLogout()">
+        <div class="menu-item menu-item--danger" data-csp-action="logout">
           <div class="menu-item__icon" style="background:rgba(184,69,61,.1);">🚪</div>
           <div class="menu-item__text"><div class="menu-item__label" data-i18n="p-app-perfil:sair_da_conta_79c74">Sair da conta</div></div>
         </div>
@@ -245,8 +246,8 @@
     <h3 style="font-family:var(--ff-serif);font-size:20px;margin:0 0 16px;" data-i18n="p-app-perfil:editar_nome_ea5a6">Editar nome</h3>
     <div class="a-field"><input id="newName" class="a-input" type="text" placeholder="Seu nome completo" data-i18n-placeholder="p-app-perfil:seu_nome_completo_d9050"></div>
     <div style="display:flex;gap:10px;margin-top:16px;">
-      <button class="a-btn a-btn--ghost" style="flex:1;" onclick="document.getElementById('editNameModal').style.display='none'" data-i18n="p-app-perfil:cancelar_c111e">Cancelar</button>
-      <button class="a-btn a-btn--primary" style="flex:1;" onclick="saveName()" data-i18n="p-app-perfil:salvar_93bf2">Salvar</button>
+      <button class="a-btn a-btn--ghost" style="flex:1;" data-csp-action="close-edit-name" data-i18n="p-app-perfil:cancelar_c111e">Cancelar</button>
+      <button class="a-btn a-btn--primary" style="flex:1;" data-csp-action="save-name" data-i18n="p-app-perfil:salvar_93bf2">Salvar</button>
     </div>
   </div>
 </div>
@@ -259,8 +260,8 @@
     <div class="a-field"><label class="a-field__label" data-i18n="p-app-perfil:confirmar_81b4b">Confirmar</label><input id="newSenha2" class="a-input" type="password" placeholder="Repita a senha" data-i18n-placeholder="p-app-perfil:repita_a_senha_85a9f"></div>
     <div id="senhaErro" class="a-alert a-alert--err a-hide" style="margin-top:10px;"></div>
     <div style="display:flex;gap:10px;margin-top:16px;">
-      <button class="a-btn a-btn--ghost" style="flex:1;" onclick="document.getElementById('editSenhaModal').style.display='none'" data-i18n="p-app-perfil:cancelar_c111e">Cancelar</button>
-      <button class="a-btn a-btn--primary" style="flex:1;" onclick="saveSenha()" data-i18n="p-app-perfil:salvar_93bf2">Salvar</button>
+      <button class="a-btn a-btn--ghost" style="flex:1;" data-csp-action="close-edit-password" data-i18n="p-app-perfil:cancelar_c111e">Cancelar</button>
+      <button class="a-btn a-btn--primary" style="flex:1;" data-csp-action="save-password" data-i18n="p-app-perfil:salvar_93bf2">Salvar</button>
     </div>
   </div>
 </div>
@@ -391,7 +392,7 @@
             <div class="menu-item__label">Notificações push</div>
             <div class="menu-item__sub" id="notifSub">${isOn ? "✓ Ativas neste dispositivo" : "Toque para ativar"}</div>
           </div>
-          <button class="toggle-switch ${isOn ? "is-on" : ""}" id="notifToggle" onclick="toggleNotif()"></button>
+          <button class="toggle-switch ${isOn ? "is-on" : ""}" id="notifToggle" data-csp-action="toggle-notifications"></button>
         </div>
         ${emailRow}`;
       document.getElementById("menuEmail").textContent = user.email;
