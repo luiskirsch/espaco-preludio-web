@@ -65,8 +65,8 @@
 
   var isStaging = /(^|\.)staging\./i.test(location.hostname) || /\/staging\//i.test(location.pathname);
   var apiBase = isStaging
-    ? "https://osl-video-server-staging.up.railway.app"
-    : "https://osl-video-server-production.up.railway.app";
+    ? "https://api-staging.espacopreludio.com.br"
+    : "https://api.espacopreludio.com.br";
 
   function setStatus(message, kind) {
     status.textContent = message;

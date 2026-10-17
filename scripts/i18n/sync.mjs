@@ -19,7 +19,7 @@ import { createHash } from "node:crypto";
 import { processHtml, setRoot } from "./extract.mjs";
 
 const ROOT = join(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, "$1")), "..", "..");
-const API = process.env.I18N_API || "https://osl-video-server-production.up.railway.app";
+const API = process.env.I18N_API || "https://api.espacopreludio.com.br";
 const TOKEN = process.env.I18N_CI_TOKEN || "";
 const LANGS = ["en-US", "es-ES"];
 const loc = (l, f) => join(ROOT, "i18n", "locales", l, f);

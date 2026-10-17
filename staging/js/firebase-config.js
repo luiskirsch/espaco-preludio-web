@@ -68,7 +68,7 @@ function _detectBackendOverride() {
     try {
       const url = new URL(String(value || ""));
       const localHost = url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
-      const officialStaging = url.origin === "https://osl-video-server-staging.up.railway.app";
+      const officialStaging = ["https://api-staging.espacopreludio.com.br", "https://osl-video-server-staging.up.railway.app"].includes(url.origin);
       if (url.username || url.password || (url.protocol !== "https:" && !(localHost && url.protocol === "http:"))) return null;
       if (!localHost && !officialStaging) return null;
       return url.origin;
@@ -99,8 +99,8 @@ function _detectBackendOverride() {
 }
 const _override = _detectBackendOverride();
 export const BACKEND_BASE_URL = _override || (IS_STAGING
-  ? "https://osl-video-server-staging.up.railway.app"
-  : "https://osl-video-server-production.up.railway.app");
+  ? "https://api-staging.espacopreludio.com.br"
+  : "https://api.espacopreludio.com.br");
 
 // ─── 2 apps Firebase (default + patient) ─────────────────────────────────
 // getApps() retorna lista de TODOS apps inicializados — preciso checar
