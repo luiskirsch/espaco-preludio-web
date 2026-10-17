@@ -25,6 +25,8 @@
     .ses-table tr:hover td { background: rgba(0,0,0,.025); }
     .ses-table tr.is-selected td { background: rgba(74,114,176,.07); }
     .ses-status { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    [data-filter].is-active-filter,
+    [data-filter].is-active-filter:hover { background: #2d4a3e; border-color: #2d4a3e; color: #fff; }
     .ses-status--completed   { background: rgba(45,106,62,.12);  color: #2d6a3e; }
     .ses-status--scheduled   { background: rgba(74,114,176,.12); color: #2a5ea8; }
     .ses-status--in_progress { background: rgba(200,150,58,.15); color: #8a5b1a; }
@@ -109,7 +111,7 @@
 
       <div class="ep-flex ep-flex--end-wrap" style="gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
         <input id="searchBox" class="ep-input" type="search" placeholder="Buscar por profissional ou paciente…" style="flex: 1; min-width: 240px;" data-i18n-placeholder="p-admin-sessoes:buscar_por_profissional_ou_paciente_6144d">
-        <button class="ep-btn ep-btn--ghost ep-btn--sm is-active-filter" data-filter="all" data-i18n="p-admin-sessoes:todas_8a3c3">Todas</button>
+        <button class="ep-btn ep-btn--ghost ep-btn--sm is-active-filter" aria-pressed="true" data-filter="all" data-i18n="p-admin-sessoes:todas_8a3c3">Todas</button>
         <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="completed" data-i18n="p-admin-sessoes:realizadas_56589">Realizadas</button>
         <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="scheduled" data-i18n="p-admin-sessoes:agendadas_c6543">Agendadas</button>
         <button class="ep-btn ep-btn--ghost ep-btn--sm" data-filter="in_progress" data-i18n="p-admin-sessoes:ao_vivo_c81a1">Ao vivo</button>
@@ -364,8 +366,12 @@
   // Filtros
   document.querySelectorAll("[data-filter]").forEach(btn => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll("[data-filter]").forEach(b => b.classList.remove("is-active-filter"));
+      document.querySelectorAll("[data-filter]").forEach(b => {
+        b.classList.remove("is-active-filter");
+        b.setAttribute("aria-pressed", "false");
+      });
       btn.classList.add("is-active-filter");
+      btn.setAttribute("aria-pressed", "true");
       currentFilter = btn.dataset.filter;
       renderRows(allItems);
     });
