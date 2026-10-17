@@ -312,11 +312,9 @@
     // deixando o "?" estático travado mesmo quando o usuário tinha nome mas
     // não tinha foto. Preenchido dentro de buildNotifCard() agora.
 
-    // A foto NÃO vem de user.photoURL (Firebase Auth) — este projeto Firebase
-    // é compartilhado com O SextoLugar (jogo), e esse campo é global à conta:
-    // quem já jogou e definiu um avatar lá via a mesma conta via o avatar do
-    // jogo aqui, e uma foto enviada aqui vazaria pro jogo. A foto fica em
-    // therapy_patient_accounts (base64), isolada por produto.
+    // A foto NÃO vem de user.photoURL (Firebase Auth): esse campo é global à
+    // conta e pode ter sido definido por outro produto da mesma conta. A foto
+    // fica em therapy_patient_accounts (base64), isolada no Espaço Prelúdio.
     let photoUrl = null;
     try {
       const idToken = await user.getIdToken();

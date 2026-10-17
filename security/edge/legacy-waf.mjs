@@ -6,7 +6,7 @@ var SEC_BASE = {
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload"
 };
-var FRAME_ANCESTORS = "frame-ancestors 'self' https://preludiojogos.com https://www.preludiojogos.com https://preludiojogos.com.br https://www.preludiojogos.com.br https://espacopreludio.com https://www.espacopreludio.com https://espacopreludio.com.br https://www.espacopreludio.com.br";
+var FRAME_ANCESTORS = "frame-ancestors 'self'";
 var NOINDEX_JOGO = /* @__PURE__ */ new Set([
   "/sala.html",
   "/entrada.html",
