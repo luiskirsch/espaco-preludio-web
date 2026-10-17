@@ -113,6 +113,7 @@
   import {
     generateSalt, wrapDek, recoveryPhraseToDek, rememberDek, rememberUser
   } from "./js/crypto.js";
+  import { focusRecoveryStepFromEmail } from "./js/recovery-return.js?v=1";
 
   // Tradução com fallback PT-BR — caso o i18n ainda não tenha carregado.
   function tr(key, fallback) {
@@ -152,7 +153,7 @@
     resetBtn.disabled = true;
     setStatus(statusReset, tr("recuperar:msg.sending", "Enviando…"));
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordResetEmail(auth, email, { url: new URL("./recuperar.html?passo=2", location.href).href });
       setStatus(statusReset, tr("recuperar:msg.resetOk", "Pronto. Se o e-mail está cadastrado, você receberá um link em instantes. Cheque também o spam."), "ok");
     } catch (err) {
       console.error("reset_email_error", err);
@@ -168,6 +169,8 @@
   const recoveryEl     = document.getElementById("recoveryPhrase");
   const statusRecover  = document.getElementById("statusRecover");
   const recoverBtn     = document.getElementById("recoverBtn");
+  focusRecoveryStepFromEmail(() => setStatus(statusRecover, tr("recuperar:msg.fromEmail",
+    "Senha redefinida. Agora entre com a nova senha e a sua chave-semente para recuperar as anotações."), "ok"));
 
   formRecover.addEventListener("submit", async (e) => {
     e.preventDefault();

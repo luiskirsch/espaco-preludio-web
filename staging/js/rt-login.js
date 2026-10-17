@@ -89,7 +89,7 @@ document.getElementById("forgotPassword").addEventListener("click", async () => 
   const email = emailEl.value.trim().toLowerCase();
   if (!email) return setMessage("Digite seu e-mail para recuperar a senha.", true);
   try {
-    await sendPasswordResetEmail(auth, email);
+    await sendPasswordResetEmail(auth, email, { url: new URL("./rt-login.html", location.href).href });
     setMessage("Enviamos as instruções de recuperação para seu e-mail.");
   } catch (_) {
     setMessage("Não foi possível enviar a recuperação. Confira o e-mail.", true);

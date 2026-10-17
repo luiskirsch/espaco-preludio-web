@@ -103,6 +103,7 @@
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?v=20261017-mfa3";
   import { generateSalt, wrapDek, recoveryPhraseToDek } from "../js/crypto.js";
   import { rememberPatientDek, rememberPatientUser } from "../js/patient-session.js";
+  import { focusRecoveryStepFromEmail } from "../js/recovery-return.js?v=1";
 
   function setStatus(el, text, type = "") {
     el.textContent = text;
@@ -131,7 +132,7 @@
     resetBtn.disabled = true;
     setStatus(statusReset, "Enviando…");
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordResetEmail(auth, email, { url: new URL("./recuperar.html?passo=2", location.href).href });
       setStatus(statusReset, "Pronto. Se o e-mail está cadastrado, você receberá um link em instantes. Cheque também o spam.", "ok");
     } catch (err) {
       console.error("colaborador_reset_email_error", err);
@@ -146,6 +147,8 @@
   const recoveryEl      = document.getElementById("recoveryPhraseInput");
   const statusRecover   = document.getElementById("statusRecover");
   const recoverBtn      = document.getElementById("recoverBtn");
+  focusRecoveryStepFromEmail(() => setStatus(statusRecover,
+    "Senha redefinida. Agora entre com a nova senha e a sua chave-semente para recuperar o chat.", "ok"));
 
   formRecover.addEventListener("submit", async (e) => {
     e.preventDefault();

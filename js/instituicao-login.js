@@ -162,7 +162,7 @@ forgotPassword.addEventListener("click", async () => {
   forgotPassword.disabled = true;
   setMessage("Enviando instruções…");
   try {
-    await sendPasswordResetEmail(auth, email);
+    await sendPasswordResetEmail(auth, email, { url: new URL("./instituicao-login.html", location.href).href });
     setMessage("Se esse e-mail estiver habilitado, você receberá as instruções para definir uma nova senha.", "success");
   } catch (error) {
     const code = String(error?.code || "");

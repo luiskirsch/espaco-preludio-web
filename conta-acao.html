@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-i18n-ns="conta-acao">
+<head>
+<script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conteúdo só está disponível no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+  <link rel="dns-prefetch" href="https://www.gstatic.com">
+  <title data-i18n="conta-acao:title">Sua conta · Espaço Prelúdio</title>
+  <link rel="icon" type="image/png" href="/logo-144.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <script src="./i18n/init.js?v=2-8" defer></script>
+  <link rel="stylesheet" href="./css/responsive.css?v=20261011b">
+</head>
+<body>
+
+<main class="ep-auth">
+  <div class="ep-auth__panel" style="max-width: 520px;">
+    <a href="./index.html" class="ep-brand" aria-label="Espaço Prelúdio">
+      <span class="ep-brand__mark">EP</span>
+      <span class="ep-brand__name">
+        <span class="ep-brand__lead" data-i18n="common:brand.lead">Espaço</span>
+        <span data-i18n="common:brand.tail">Prelúdio</span>
+      </span>
+    </a>
+
+    <section id="stepLoading" data-step class="ep-mt-32" aria-live="polite">
+      <h2 class="ep-auth__title ep-mt-0" data-i18n="conta-acao:loading.title">Verificando o link…</h2>
+      <p class="ep-auth__sub" data-i18n="conta-acao:loading.sub">Só um instante.</p>
+    </section>
+
+    <section id="stepReset" data-step class="ep-mt-32" hidden>
+      <h2 class="ep-auth__title ep-mt-0" data-i18n="conta-acao:reset.title">Crie uma nova senha</h2>
+      <p class="ep-auth__sub"><span data-i18n="conta-acao:reset.forAccount">Para a conta</span> <strong id="resetEmail"></strong></p>
+      <form id="resetForm" class="ep-stack ep-mt-16" novalidate>
+        <input id="resetUsername" type="email" autocomplete="username" readonly hidden>
+        <div class="ep-field">
+          <label class="ep-label" for="newPassword" data-i18n="conta-acao:reset.labelNew">Nova senha (mínimo de 10 caracteres)</label>
+          <input id="newPassword" class="ep-input" type="password" autocomplete="new-password" minlength="10" maxlength="128" required>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="confirmPassword" data-i18n="conta-acao:reset.labelConfirm">Repita a nova senha</label>
+          <input id="confirmPassword" class="ep-input" type="password" autocomplete="new-password" minlength="10" maxlength="128" required>
+        </div>
+        <div class="ep-status" id="resetStatus" role="status"></div>
+        <button class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" type="submit" id="resetBtn" data-i18n="conta-acao:reset.btn">Salvar nova senha</button>
+      </form>
+    </section>
+
+    <section id="stepDone" data-step class="ep-mt-32" hidden aria-live="polite">
+      <h2 class="ep-auth__title ep-mt-0" id="doneTitle"></h2>
+      <p class="ep-auth__sub" id="doneMsg"></p>
+      <div class="ep-status" id="doneStatus" role="status"></div>
+      <div class="ep-stack ep-mt-16">
+        <a class="ep-btn ep-btn--primary ep-btn--lg ep-btn--block" id="continueBtn" href="./index.html" hidden data-i18n="conta-acao:done.continue">Continuar</a>
+        <button class="ep-btn ep-btn--ghost ep-btn--block" type="button" id="resendBtn" hidden data-i18n="conta-acao:recover.resetBtn">Trocar minha senha agora</button>
+        <div id="loginLinks" class="ep-stack">
+          <a class="ep-btn ep-btn--primary ep-btn--block" href="./login.html" data-i18n="conta-acao:done.loginPro">Entrar como profissional</a>
+          <a class="ep-btn ep-btn--ghost ep-btn--block" href="./paciente-login.html" data-i18n="conta-acao:done.loginPatient">Entrar como paciente</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="stepError" data-step class="ep-mt-32" hidden aria-live="polite">
+      <h2 class="ep-auth__title ep-mt-0" data-i18n="conta-acao:error.title">Não foi possível usar este link</h2>
+      <p class="ep-auth__sub" id="errorMsg"></p>
+      <div class="ep-stack ep-mt-16">
+        <a class="ep-btn ep-btn--primary ep-btn--block" href="./recuperar.html" data-i18n="conta-acao:error.newPro">Pedir novo link (profissional)</a>
+        <a class="ep-btn ep-btn--ghost ep-btn--block" href="./paciente-recuperar.html" data-i18n="conta-acao:error.newPatient">Pedir novo link (paciente)</a>
+      </div>
+    </section>
+
+    <div class="ep-auth__bottom ep-mt-24">
+      <a href="./index.html" data-i18n="conta-acao:home">Voltar ao início</a>
+    </div>
+  </div>
+</main>
+
+<script type="module" src="./js/conta-acao.js?v=1"></script>
+
+</body>
+</html>

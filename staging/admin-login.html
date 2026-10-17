@@ -148,7 +148,7 @@
       return;
     }
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordResetEmail(auth, email, { url: new URL("./admin-login.html", location.href).href });
       statusEl.textContent = "E-mail de redefinição enviado! Verifique sua caixa de entrada.";
       statusEl.className = "ep-status";
     } catch (err) {
