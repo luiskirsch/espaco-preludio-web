@@ -5,9 +5,12 @@ const HOSTS = new Set(["espacopreludio.com.br", "www.espacopreludio.com.br"]);
 
 export function portalPolicy(pathname, { nonce } = {}) {
   const staging = pathname.startsWith("/staging/");
-  const backend = staging
-    ? "https://osl-video-server-staging.up.railway.app"
-    : "https://osl-video-server-production.up.railway.app";
+  // Domínio próprio da API + o endereço antigo do Railway (ainda usado pelo
+  // app instalado até a próxima versão).
+  const backends = staging
+    ? ["https://api-staging.espacopreludio.com.br", "https://osl-video-server-staging.up.railway.app"]
+    : ["https://api.espacopreludio.com.br", "https://osl-video-server-production.up.railway.app"];
+  const backend = backends.flatMap(url => [url, url.replace("https:", "wss:")]).join(" ");
   const firebase = staging ? "sextolugar-staging" : "osextolugar-game";
   const scripts = ["'strict-dynamic'", "'self'", "'wasm-unsafe-eval'",
     "https://www.gstatic.com", "https://cdn.jsdelivr.net", "https://esm.sh",
@@ -25,7 +28,7 @@ export function portalPolicy(pathname, { nonce } = {}) {
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://storage.googleapis.com https://lh3.googleusercontent.com https://api.qrserver.com",
     "media-src 'self' blob: https://firebasestorage.googleapis.com https://storage.googleapis.com",
-    "connect-src 'self' " + backend + " " + backend.replace("https:", "wss:") +
+    "connect-src 'self' " + backend +
       " https://identitytoolkit.googleapis.com https://securetoken.googleapis.com" +
       " https://firestore.googleapis.com https://firebaseinstallations.googleapis.com" +
       " https://firebasestorage.googleapis.com https://storage.googleapis.com" +
