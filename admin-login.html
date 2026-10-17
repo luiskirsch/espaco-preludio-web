@@ -89,7 +89,8 @@
     onAuthStateChanged, signInWithEmailAndPassword, signOut,
     sendPasswordResetEmail, browserSessionPersistence, setPersistence
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth } from "./js/firebase-config.js?v=20261017-mfa3";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?v=20261017-mfa3";
+  import { requestPasswordReset } from "./js/account-email.js?v=1";
   import { ensureMfa } from "./js/mfa-flow.js?v=20261017-mfa3";
   import { safeMfaReturn, clear2faSession } from "./js/twofa-session.js?v=20261017-mfa3";
 
@@ -148,7 +149,8 @@
       return;
     }
     try {
-      await sendPasswordResetEmail(auth, email, { url: new URL("./admin-login.html", location.href).href });
+      await requestPasswordReset({ backend: BACKEND_BASE_URL, email, retorno: "admin",
+        fallback: () => sendPasswordResetEmail(auth, email, { url: new URL("./admin-login.html", location.href).href }) });
       statusEl.textContent = "E-mail de redefinição enviado! Verifique sua caixa de entrada.";
       statusEl.className = "ep-status";
     } catch (err) {

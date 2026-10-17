@@ -4,6 +4,7 @@
 
 import { onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261017-mfa3";
+import { requestEmailVerification } from "./account-email.js?v=1";
 import { recallPatientDek } from "./patient-session.js";
 
 export function authReady() {
@@ -85,7 +86,9 @@ function mountEmailVerificationBanner(user) {
     btn.disabled = true;
     const original = btn.textContent;
     try {
-      await sendEmailVerification(user);
+      await requestEmailVerification({ backend: BACKEND_BASE_URL, user,
+      retorno: location.pathname.includes("/app/") ? "app-paciente" : "paciente",
+      fallback: () => sendEmailVerification(user) });
       btn.textContent = "E-mail enviado ✓";
       setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 30_000);
     } catch {

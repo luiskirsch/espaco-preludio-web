@@ -101,6 +101,7 @@
 <script type="module">
   import { signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?v=20261017-mfa3";
+  import { requestPasswordReset } from "../js/account-email.js?v=1";
   import { generateSalt, wrapDek, recoveryPhraseToDek } from "../js/crypto.js";
   import { rememberPatientDek, rememberPatientUser } from "../js/patient-session.js";
   import { focusRecoveryStepFromEmail } from "../js/recovery-return.js?v=1";
@@ -132,7 +133,8 @@
     resetBtn.disabled = true;
     setStatus(statusReset, "Enviando…");
     try {
-      await sendPasswordResetEmail(auth, email, { url: new URL("./recuperar.html?passo=2", location.href).href });
+      await requestPasswordReset({ backend: BACKEND_BASE_URL, email, retorno: "app-paciente",
+        fallback: () => sendPasswordResetEmail(auth, email, { url: new URL("./recuperar.html?passo=2", location.href).href }) });
       setStatus(statusReset, "Pronto. Se o e-mail está cadastrado, você receberá um link em instantes. Cheque também o spam.", "ok");
     } catch (err) {
       console.error("colaborador_reset_email_error", err);

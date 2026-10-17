@@ -3,8 +3,9 @@
 import {
   verifyPasswordResetCode, confirmPasswordReset, applyActionCode, checkActionCode, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth } from "./firebase-config.js?v=20261017-mfa3";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261017-mfa3";
 import { parseActionParams, safeContinueUrl, actionErrorKey } from "./auth-action-core.js?v=1";
+import { requestPasswordReset } from "./account-email.js?v=1";
 
 function tr(key, fallback) {
   if (window.EP_I18N && window.EP_I18N.t) {
@@ -78,7 +79,7 @@ $("resendBtn").addEventListener("click", async () => {
   const status = $("doneStatus");
   $("resendBtn").disabled = true;
   try {
-    await sendPasswordResetEmail(auth, email);
+    await requestPasswordReset({ backend: BACKEND_BASE_URL, email, retorno: "", fallback: () => sendPasswordResetEmail(auth, email) });
     setStatus(status, tr("conta-acao:recover.sent", "Enviamos um link para redefinir a senha. Confira também o spam."), "ok");
   } catch (error) {
     $("resendBtn").disabled = false;
