@@ -58,7 +58,7 @@ const STEPS = [
   {
     eyebrow: "Passo 6 de 6",
     title: "Automatize e relaxe",
-    body: "WhatsApp confirma a consulta na hora e lembra 24h antes. Aniversariantes recebem mensagem automática. Relatórios mostram analytics e NPS.\n\nNo plano Profissional, são 30 dias grátis após cadastrar o meio de pagamento. Quando precisar, o Suporte reúne FAQ e contato direto.",
+    body: "WhatsApp confirma a consulta na hora e lembra 24h antes. Aniversariantes recebem mensagem automática. Relatórios mostram analytics e NPS.\n\nNo plano Profissional, são 14 dias grátis após cadastrar o meio de pagamento. Quando precisar, o Suporte reúne FAQ e contato direto.",
     meta: "Automação que trabalha com você",
     icon: "automation",
     cta: "Começar a usar"
