@@ -1245,3 +1245,8 @@ body.a-route-home .home-hero::before, body.a-route-home .home-hero::after { z-in
 body.a-portal-authenticated .a-nav { view-transition-name: ep-nav; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .16s; }
 @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+
+/* Itens de menu que são <button> (ex.: 2FA no perfil) herdam o visual do link. */
+button.menu-item { width:100%; border:0; background:transparent; text-align:left; font:inherit; color:inherit; cursor:pointer; }
+button.menu-item:disabled { cursor:default; }
+button.menu-item:disabled:hover { background:transparent; box-shadow:none; }

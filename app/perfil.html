@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app.css?v=20261005b">
+  <link rel="stylesheet" href="./app.css?v=20261018a">
   <style>
     .profile-hero {
       padding: 28px 16px 20px; text-align: center;
@@ -175,7 +175,7 @@
     <div class="menu-section a-mt-16 a-hide" id="mfaSection">
       <div class="menu-section__title" data-i18n="p-app-perfil:seguranca_27a02">Segurança</div>
       <div class="menu-card">
-        <button type="button" class="menu-item" id="mfaItem" style="width:100%;border:0;background:none;text-align:left;font:inherit;color:inherit;cursor:pointer;">
+        <button type="button" class="menu-item" id="mfaItem">
           <div class="menu-item__icon" style="background:rgba(45,106,62,.1);">🔐</div>
           <div class="menu-item__text">
             <div class="menu-item__label" data-i18n="p-app-perfil:verificacao_em_duas_etapas_e9246">Verificação em duas etapas</div>
@@ -297,9 +297,9 @@
       const item = document.getElementById("mfaItem");
       if (state.required !== false) {
         // Conta profissional: obrigatória, gerenciada no perfil profissional.
-        item.disabled = true; item.style.cursor = "default";
+        item.disabled = true;
         item.querySelector(".menu-item__arrow").remove();
-        document.getElementById("mfaSub").textContent = "Ativada · obrigatória para contas profissionais";
+        document.getElementById("mfaSub").textContent = "Ativada · sua conta também é profissional, então é obrigatória e protege todo o acesso";
         document.getElementById("mfaSection").classList.remove("a-hide");
         return;
       }
