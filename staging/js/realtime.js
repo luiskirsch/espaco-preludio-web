@@ -1,6 +1,6 @@
 // Espaço Prelúdio — realtime via Socket.io.
 // Invalida caches automaticamente quando o backend emite eventos de mutação.
-// Chamado por auth-guard.js?v=20261018-identity1 após requireTherapist() → singleton, seguro chamar N vezes.
+// Chamado por auth-guard.js?v=20261018-tools1 após requireTherapist() → singleton, seguro chamar N vezes.
 
 import { invalidatePrefix } from "./api-cache.js?v=4";
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261017-mfa3";

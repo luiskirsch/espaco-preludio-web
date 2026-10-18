@@ -1,4 +1,4 @@
-// Page-memory cache shared by api-cache.js and auth-guard.js?v=20261018-identity1.
+// Page-memory cache shared by api-cache.js and auth-guard.js?v=20261018-tools1.
 export function createMemoryTable(primaryKey) {
   const rows = new Map();
   return {

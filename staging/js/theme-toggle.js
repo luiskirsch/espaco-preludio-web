@@ -1,6 +1,6 @@
 // Espaço Prelúdio — botão flutuante de toggle de tema (sol/lua).
 // Módulo dedicado pra ser importado tanto pelo guard do profissional
-// (auth-guard.js?v=20261018-identity1) quanto pelo guard do paciente (patient-auth-guard.js?v=20261018-identity1)
+// (auth-guard.js?v=20261018-tools1) quanto pelo guard do paciente (patient-auth-guard.js?v=20261018-tools1)
 // sem o paciente ter que carregar auth-guard inteiro (cmdk.js, recallDek,
 // 2FA, etc).
 //
@@ -16,11 +16,12 @@ const MOON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke
 
 export function mountThemeToggle() {
   if (typeof document === "undefined") return;
-  if (document.getElementById("epThemeToggle")) return;
+  if (document.getElementById("epThemeToggle")?.dataset.initialized) return;
   const path = location.pathname.toLowerCase();
   if (path.endsWith("/2fa-verify.html")) return;
 
-  const btn = document.createElement("button");
+  const btn = document.getElementById("epThemeToggle") || document.createElement("button");
+  btn.dataset.initialized = "true";
   btn.id = "epThemeToggle";
   btn.type = "button";
   btn.className = "ep-theme-toggle";
@@ -32,5 +33,5 @@ export function mountThemeToggle() {
   }
   paint();
   btn.addEventListener("click", () => { toggleTheme(); paint(); });
-  document.body.appendChild(btn);
+  if (!btn.isConnected) document.body.appendChild(btn);
 }

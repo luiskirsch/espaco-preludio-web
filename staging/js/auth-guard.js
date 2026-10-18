@@ -1,13 +1,13 @@
 // Espaço Prelúdio — guard de autenticação para páginas que exigem profissional logado.
 // Uso:
-//   import { requireTherapist } from "./js/auth-guard.js?v=20261018-identity1";
+//   import { requireTherapist } from "./js/auth-guard.js?v=20261018-tools1";
 //   const { user, idToken, therapist } = await requireTherapist();
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261017-mfa3";
 import { recallDek } from "./crypto.js";
 import { matchPatients, loadBookingDirectory, createSessionFromProposal, regeneratePatientLink, sanitizeProposal, proposalTimestamp, isValidEmail } from "./aurora-booking.js?v=3";
-import { mountThemeToggle } from "./theme-toggle.js";
+import { mountThemeToggle } from "./theme-toggle.js?v=2";
 import "./cmdk.js";
 import db from "./db.js";
 import { connectRealtime } from "./realtime.js?v=1";
@@ -80,6 +80,7 @@ let lastSeenUid = null;
 onAuthStateChanged(auth, (user) => {
   const uid = user?.uid || null;
   window.EP_PROFESSIONAL_IDENTITY?.reconcile(uid);
+  window.EP_PROFESSIONAL_TOOLS?.reconcile(uid);
   if (lastSeenUid && uid !== lastSeenUid) {
     invalidateProfileCache();
     db.apiCache.clear().catch(() => {});
@@ -128,6 +129,7 @@ export async function fetchTherapistProfile(idToken, uid) {
         writeProfileCache(uid, fresh);
         if (!capsEqual(cached.conselho?.capabilities, fresh.conselho?.capabilities)) {
           applyCapabilityVisibility(fresh.conselho?.capabilities);
+          mountCapabilityFabs(fresh.conselho?.capabilities);
         }
         if (!!cached.therapist?.tissEnabled !== !!fresh.therapist?.tissEnabled) {
           applyTissVisibility(fresh.therapist);
@@ -269,7 +271,7 @@ function mountHelpBubble() {
   if (typeof document === "undefined") return;
   const path = location.pathname.toLowerCase();
   if (path.endsWith("/2fa-verify.html")) return;
-  if (document.getElementById("epAuroraBubble")) return;
+  if (document.getElementById("epAuroraBubble")?.dataset.initialized) return;
 
   injectAuroraFabStyle();
   const fabParent = document.querySelector(".ep-fab-stack") || document.body;
@@ -285,7 +287,8 @@ function mountHelpBubble() {
     fabParent.appendChild(help);
   }
 
-  const a = document.createElement("button");
+  const a = document.getElementById("epAuroraBubble") || document.createElement("button");
+  a.dataset.initialized = "true";
   a.id = "epAuroraBubble";
   a.type = "button";
   a.className = "ep-aurora-fab";
@@ -293,7 +296,7 @@ function mountHelpBubble() {
   a.setAttribute("aria-label", "Abrir Aurora — assistente IA");
   a.setAttribute("aria-expanded", "false");
   a.innerHTML = `<img src="/img/aurora-avatar.png" alt="" width="52" height="52" aria-hidden="true">`;
-  fabParent.appendChild(a);
+  if (a.parentNode !== fabParent) fabParent.appendChild(a);
 
   // Widget panel (oculto inicialmente)
   const panel = document.createElement("div");
@@ -746,6 +749,10 @@ export { mountThemeToggle };
 // FABs de ferramentas clínicas — montados só para quem tem a capability.
 function mountCapabilityFabs(capabilities) {
   if (typeof document === "undefined") return;
+  if (window.EP_PROFESSIONAL_TOOLS && document.body.classList.contains("ep-has-sidebar")) {
+    window.EP_PROFESSIONAL_TOOLS.save(auth.currentUser?.uid || "", capabilities);
+    return;
+  }
   const set = new Set(capabilities || []);
   const FABS = [
     {
@@ -794,12 +801,13 @@ function mountCapabilityFabs(capabilities) {
 // no canto superior direito. Polling 60s.
 function mountMessagesBubble(idTokenGetter) {
   if (typeof document === "undefined") return;
-  if (document.getElementById("epMessagesBubble")) return;
+  if (document.getElementById("epMessagesBubble")?.dataset.initialized) return;
   const path = location.pathname.toLowerCase();
   if (path.endsWith("/2fa-verify.html")) return;
   if (path.endsWith("/mensagens.html") || path.endsWith("/mensagens-pro.html")) return; // não mostra dentro do Chat
 
-  const a = document.createElement("a");
+  const a = document.getElementById("epMessagesBubble") || document.createElement("a");
+  a.dataset.initialized = "true";
   a.id = "epMessagesBubble";
   a.href = "./mensagens-pro.html";
   a.className = "ep-msg-bubble-fab";
@@ -811,7 +819,7 @@ function mountMessagesBubble(idTokenGetter) {
     </svg>
     <span class="ep-msg-bubble-fab__badge ep-hide" aria-hidden="true">0</span>
   `;
-  document.body.appendChild(a);
+  if (!a.isConnected) document.body.appendChild(a);
   const badge = a.querySelector(".ep-msg-bubble-fab__badge");
 
   async function refresh() {

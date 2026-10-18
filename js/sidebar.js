@@ -163,6 +163,7 @@
   document.body.classList.add('ep-has-sidebar');
   document.body.insertAdjacentHTML('afterbegin', html);
   window.EP_PROFESSIONAL_IDENTITY?.hydrate();
+  window.EP_PROFESSIONAL_TOOLS?.mount();
 
   var sideEl = document.querySelector('.ep-sidebar');
 
@@ -212,10 +213,10 @@
 
     // FAB stack — container flex que agrupa todos os botões flutuantes
     // (theme/msg/help/logout/notif) e centraliza verticalmente como BLOCO.
-    if (!document.querySelector('.ep-fab-stack')) {
-      const stack = document.createElement('div');
+    {
+      const stack = document.querySelector('.ep-fab-stack') || document.createElement('div');
       stack.className = 'ep-fab-stack';
-      document.body.appendChild(stack);
+      if (!stack.isConnected) document.body.appendChild(stack);
       const SELECTORS = '.ep-theme-toggle, .ep-msg-bubble-fab, .ep-aurora-fab, .ep-help-bubble, .ep-logout-fab, .ep-notif-fab, .ep-receita-fab, .ep-atestado-fab, .ep-calc-fab';
       function collect() {
         document.querySelectorAll(SELECTORS).forEach(el => {
@@ -226,6 +227,7 @@
       new MutationObserver(collect).observe(document.body, { childList: true });
 
       // Sino de notificações — injetado pelo sidebar pra aparecer em todas as páginas.
+      if (!document.querySelector('.ep-notif-fab')) {
       const notifFab = document.createElement('a');
       notifFab.href = './notificacoes.html';
       notifFab.className = 'ep-notif-fab';
@@ -237,6 +239,7 @@
         '</svg>' +
         '<span class="ep-notif-fab__badge" id="sidebarNotifBadge" style="display:none;">0</span>';
       document.body.appendChild(notifFab);
+      }
     }
   }
 
