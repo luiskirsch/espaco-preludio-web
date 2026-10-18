@@ -436,7 +436,7 @@
     try {
       const json = await decryptNote({ ciphertext: p.ciphertext, iv: p.iv }, dek);
       const data = JSON.parse(json);
-      return { patientId: p.patientId, ...data, createdAt: p.createdAt, updatedAt: p.updatedAt };
+      return { patientId: p.patientId, ...data, revision: p.revision || 0, createdAt: p.createdAt, updatedAt: p.updatedAt };
     } catch {
       return { patientId: p.patientId, name: tr("pacientes:js.corrupted", "[corrompido]"), createdAt: p.createdAt, updatedAt: p.updatedAt };
     }
@@ -1225,7 +1225,12 @@
     renderTagsChips();
   });
 
+  let editingOriginal = {};
+  let editingRevision = 0;
   function openModal({ mode, patient }) {
+    const { patientId: _id, createdAt, updatedAt, revision, ...original } = patient || {};
+    editingOriginal = mode === "edit" ? original : {};
+    editingRevision = revision || 0;
     editingId = mode === "edit" ? patient.patientId : null;
     modalTitle.textContent = mode === "edit" ? tr("pacientes:modal.titleEdit", "Editar paciente") : tr("pacientes:modal.titleNew", "Novo paciente");
     nameEl.value    = patient?.name      || "";
@@ -1378,6 +1383,7 @@
 
     if (tagsInputEl.value.trim()) addTagFromInput();
     const payload = {
+      ...editingOriginal,
       name,
       contact: contactEl.value.trim(),
       birthdate: birthEl.value || "",
@@ -1399,7 +1405,7 @@
           "Content-Type": "application/json",
           "Authorization": `Bearer ${idToken}`
         },
-        body: JSON.stringify({ ciphertext, iv })
+        body: JSON.stringify({ ciphertext, iv, ...(editingId ? { expectedRevision: editingRevision } : {}) })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {

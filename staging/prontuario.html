@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-i18n-ns="prontuario,p-prontuario">
+<html lang="pt-BR" data-i18n-ns="prontuario,p-prontuario,chart">
 <head>
 <script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conte\u00fado s\u00f3 est\u00e1 dispon\u00edvel no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
   <meta charset="UTF-8">
@@ -23,6 +23,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=3" defer></script>
+  <link rel="stylesheet" href="./css/chart-workspace.css?v=1">
   <style>
     .rec-drop {
       display: flex;
@@ -265,7 +266,7 @@
     </div>
     <div class="ep-prontuario__actions">
       <a href="./pacientes.html" class="ep-btn ep-btn--ghost ep-btn--sm" id="editPatientBtn" data-i18n-title="prontuario:actions.editTitle" title="Gerenciar paciente" data-i18n="prontuario:actions.edit">Editar</a>
-      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="exportPdfBtn" data-i18n-title="prontuario:actions.exportPdfTitle" title="Exportar PDF do prontuário (CFP Res. 1/2019)" data-i18n="prontuario:actions.exportPdf">Exportar PDF</button>
+      <button type="button" class="ep-btn ep-btn--ghost ep-btn--sm" id="exportPdfBtn" data-i18n-title="prontuario:actions.exportPdfTitle" title="Exportar cópia do prontuário em PDF" data-i18n="prontuario:actions.exportPdf">Exportar PDF</button>
       <a id="newReceitaLink" href="#" class="ep-btn ep-btn--ghost ep-btn--sm" data-i18n-title="prontuario:actions.newReceitaTitle" title="Emitir nova receita" data-i18n="prontuario:actions.newReceita">+ Receita</a>
       <a id="newSessionLink" href="#" class="ep-btn ep-btn--primary" data-i18n="prontuario:actions.newSession">+ Nova consulta</a>
     </div>
@@ -459,6 +460,8 @@
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?v=20261017-mfa3";
   import { requireTherapist } from "./js/auth-guard.js?v=20261017-mfa3";
+  import { layoutPdfText } from "./js/chart-pdf-text.js?v=1";
+  import { createChartWorkspace } from "./js/chart-workspace.js?v=1";
   import { decryptNote, clearDek } from "./js/crypto.js";
   import { decryptAiSummaryPayload, migrateLegacyAiSummary } from "./js/ai-summary-crypto.js?v=2";
   import { hasStoredAiAudio, retryAiSummaryUpload, clearStoredAiAudio } from "./js/session-ai-capture.js?v=6";
@@ -492,6 +495,12 @@
   const sess = await requireTherapist({ requireDek: true });
   const { idToken, therapist, dek } = sess;
   document.getElementById("topUserName").textContent = therapist.displayName || "";
+  document.getElementById("exportPdfBtn").disabled = true;
+  const chartWorkspace = createChartWorkspace({
+    patientId, user: sess.user, therapist, dek, backendBaseUrl: BACKEND_BASE_URL, tr, locale: currentLocale, capabilities: sess.conselho?.capabilities || [],
+    onPatientSaved: patient => { renderHeader(patient); exportState.patient = patient; }
+  });
+
 
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     clearDek();
@@ -599,15 +608,17 @@
 
   // ─── Loaders ────────────────────────────────────────────────
   async function loadPatient() {
-    const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes`, {
-      headers: { "Authorization": `Bearer ${idToken}` }
+    const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patientId)}`, {
+      headers: { "Authorization": `Bearer ${(await sess.user.getIdToken())}` }, cache: "no-store"
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
-    const p = (data.patients || []).find(x => x.patientId === patientId);
-    if (!p) return null;
-    const json = await decryptNote({ ciphertext: p.ciphertext, iv: p.iv }, dek);
-    return { ...JSON.parse(json), patientId, createdAt: p.createdAt, updatedAt: p.updatedAt };
+    if (res.status === 404) return null;
+    if (!res.ok || !data.ok) throw new Error(data.error || "PACIENTE_INDISPONIVEL");
+    const p = data.patient;
+    if (!p || p.deleted) return null;
+    const payload = JSON.parse(await decryptNote(p, dek));
+    const millis = value => typeof value === "number" ? value : (value?._seconds ?? value?.seconds) ? (value._seconds ?? value.seconds) * 1000 : null;
+    return { ...payload, patientId, revision: p.revision || 0, createdAt: millis(p.createdAt), updatedAt: millis(p.updatedAt) };
   }
 
   async function loadSessions() {
@@ -625,7 +636,7 @@
       headers: { "Authorization": `Bearer ${idToken}` }
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) return [];
+    if (!res.ok || !data.ok) throw new Error(data.error || "NOTAS_INDISPONIVEIS");
     return Promise.all((data.notes || []).map(async n => ({ ...n, text: await decryptNote(n, dek) })));
   }
 
@@ -650,6 +661,8 @@
 
   // ─── Renders ────────────────────────────────────────────────
   function renderHeader(patient) {
+    document.getElementById("exportPdfBtn").disabled = false;
+    chartWorkspace.setPatient(patient);
     const avatarEl = document.getElementById("patientAvatar");
     avatarEl.textContent = initialsFromName(patient.name);
     loadPatientPhoto(avatarEl);
@@ -661,6 +674,9 @@
     const age = calcAge(patient.birthdate);
     if (age !== null) {
       pills.insertAdjacentHTML("beforeend", `<span class="ep-pill">${escapeHtml(tr("prontuario:pills.ageYears", "{{age}} anos", { age }))}</span>`);
+    }
+    if (["private", "insurance"].includes(patient.paymentType)) {
+      pills.insertAdjacentHTML("beforeend", `<span class="ep-pill">${escapeHtml(tr("chart:" + patient.paymentType, patient.paymentType === "private" ? "Particular" : "Convênio"))}</span>`);
     }
     if (patient.contact) {
       pills.insertAdjacentHTML("beforeend",
@@ -684,6 +700,7 @@
   }
 
   function renderHeaderError(name) {
+    document.getElementById("exportPdfBtn").disabled = true;
     document.getElementById("patientAvatar").textContent = tr("prontuario:stats.dash", "—");
     document.getElementById("patientName").textContent = name || tr("prontuario:error.patientNotFound", "Paciente não encontrado");
     document.getElementById("patientPills").innerHTML = "";
@@ -695,7 +712,7 @@
 
   function renderStats(sessions) {
     const completed = sessions.filter(s => s.status === "completed");
-    const last = sessions[0]; // já vem ordenado desc
+    const last = [...completed].sort((a, b) => (b.startedAt || b.scheduledAt || b.createdAt || 0) - (a.startedAt || a.scheduledAt || a.createdAt || 0))[0];
 
     document.getElementById("statSessions").textContent = sessions.length;
     document.getElementById("statSessionsHint").textContent =
@@ -704,8 +721,8 @@
         : tr("prontuario:stats.completedMixed", "{{completed}} encerradas · {{open}} em aberto", { completed: completed.length, open: sessions.length - completed.length });
 
     if (last) {
-      document.getElementById("statLast").textContent = relativeTime(last.createdAt);
-      document.getElementById("statLastHint").textContent = new Date(last.createdAt).toLocaleDateString(currentLocale(), {
+      document.getElementById("statLast").textContent = relativeTime(last.startedAt || last.scheduledAt || last.createdAt);
+      document.getElementById("statLastHint").textContent = new Date(last.startedAt || last.scheduledAt || last.createdAt).toLocaleDateString(currentLocale(), {
         day: "2-digit", month: "short", year: "numeric"
       });
     } else {
@@ -736,9 +753,9 @@
 
     // Agrupa por mês (já ordenado desc por createdAt)
     const groups = new Map();
-    for (const s of sessions) {
-      const k = monthKey(s.startedAt || s.createdAt || Date.now());
-      if (!groups.has(k)) groups.set(k, { label: fmtMonthYear(s.startedAt || s.createdAt || Date.now()), items: [] });
+    for (const s of [...sessions].sort((a, b) => (b.startedAt || b.scheduledAt || b.createdAt || 0) - (a.startedAt || a.scheduledAt || a.createdAt || 0))) {
+      const k = monthKey(s.startedAt || s.scheduledAt || s.createdAt || Date.now());
+      if (!groups.has(k)) groups.set(k, { label: fmtMonthYear(s.startedAt || s.scheduledAt || s.createdAt || Date.now()), items: [] });
       groups.get(k).items.push(s);
     }
 
@@ -780,7 +797,7 @@
         ? `<span class="ep-badge ep-badge--ok">${escapeHtml(tr("prontuario:sessionCard.inProgress", "Em sessão"))}</span>`
         : `<span class="ep-badge">${escapeHtml(tr("prontuario:sessionCard.scheduled", "Agendada"))}</span>`;
 
-    const startMs = s.startedAt || s.createdAt;
+    const startMs = s.startedAt || s.scheduledAt || s.createdAt;
     const duration = (s.completedAt && s.startedAt && s.completedAt > s.startedAt)
       ? fmtDuration(s.completedAt - s.startedAt)
       : null;
@@ -1012,7 +1029,7 @@
     try {
       patient = await loadPatient();
     } catch (err) {
-      console.error("load_patient_error", err);
+      console.error("load_patient_error", { code: err?.name || "Error" });
       renderHeaderError();
       showError(String(err?.message || err || "ERRO"));
       return;
@@ -1032,12 +1049,14 @@
     try {
       sessions = await loadSessions();
     } catch (err) {
-      console.error("load_sessions_error", err);
+      console.error("load_sessions_error", { code: err?.name || "Error" });
       showError(String(err?.message || err || "ERRO"));
       return;
     }
 
     renderStats(sessions);
+    chartWorkspace.setSessions(sessions);
+    chartWorkspace.load();
 
     // Carrega + renderiza evolução de escalas (não bloqueia se falhar)
     loadAndRenderEscalas(patient).catch(e => console.warn("escalas_load_failed", e));
@@ -1048,17 +1067,22 @@
     if (sessions.length === 0) {
       document.getElementById("sessionsLoading").classList.add("ep-hide");
       document.getElementById("sessionsEmpty").classList.remove("ep-hide");
-      return;
+      return { patient, sessions, notesBySession: new Map() };
     }
 
     // Carrega notas em paralelo (limite de concorrência implícito do browser)
-    const notesEntries = await Promise.all(
-      sessions.map(async s => [s.sessionId, await loadNotesFor(s.sessionId)])
-    );
+    let notesEntries;
+    try {
+      notesEntries = await Promise.all(sessions.map(async s => [s.sessionId, await loadNotesFor(s.sessionId)]));
+    } catch (error) {
+      showError(tr("chart:loadError", "Não foi possível carregar estes dados. Tente novamente."));
+      throw error;
+    }
     const notesBySession = new Map(notesEntries);
 
     document.getElementById("sessionsLoading").classList.add("ep-hide");
     renderTimeline(sessions, notesBySession);
+    return { patient, sessions, notesBySession };
   }
 
   // ─── Escalas (PHQ-9 / GAD-7) ───────────────────────────────────────
@@ -1066,8 +1090,8 @@
   // também vai pro PDF) + gráfico de evolução via Chart.js (lazy import).
   // O gráfico é complemento: se o CDN falhar, a lista continua visível.
   let escalasCache = null;
-  async function fetchEscalas() {
-    if (escalasCache) return escalasCache;
+  async function fetchEscalas({ force = false } = {}) {
+    if (escalasCache && !force) return escalasCache;
     const res = await fetch(`${BACKEND_BASE_URL}/therapy/escalas?patientId=${encodeURIComponent(patientId)}`, {
       headers: { "Authorization": `Bearer ${idToken}` }
     });
@@ -1671,7 +1695,7 @@
     }
   }
 
-  document.getElementById("retryBtn").addEventListener("click", boot);
+  document.getElementById("retryBtn").addEventListener("click", bootWithExport);
 
   // ─── Gravações (.ep-rec) ─────────────────────────────────────
   function b64ToArrayBuffer(b64) {
@@ -1805,21 +1829,13 @@
   // Hook em boot/renderReceitas via wrappers
   const _origBoot = boot;
   async function bootWithExport() {
-    await _origBoot();
-    // Ao final do boot, expõe dados decifrados pro export.
-    // Loadpatient é repetido aqui pois o original não retornou nada (renderHeader consome).
     try {
-      exportState.patient = await loadPatient();
-    } catch {}
-    try {
-      const sessions = await loadSessions();
-      exportState.sessions = sessions;
-      const entries = await Promise.all(sessions.map(async s => [s.sessionId, await loadNotesFor(s.sessionId)]));
-      exportState.notesBySession = new Map(entries);
-    } catch {}
+      const data = await _origBoot();
+      if (data) Object.assign(exportState, data);
+    } catch (error) { console.warn("chart_history_load_failed", { code: error?.name || "Error" }); }
   }
   // Recarrega receitas com decifrado completo pro PDF
-  async function loadReceitasDecrypted() {
+  async function loadReceitasDecrypted({ strict = false } = {}) {
     try {
       const receitas = await loadReceitas();
       const out = [];
@@ -1828,11 +1844,11 @@
         try {
           const txt = await decryptNote({ ciphertext: r.formCiphertext, iv: r.formIv }, dek);
           formDecrypted = JSON.parse(txt);
-        } catch {}
+        } catch (error) { if (strict) throw error; }
         out.push({ ...r, formDecrypted });
       }
       exportState.receitas = out;
-    } catch (e) { console.warn("export_receitas_error", e); }
+    } catch (e) { if (strict) throw e; console.warn("export_receitas_error", e); }
   }
 
   document.getElementById("exportPdfBtn").addEventListener("click", async () => {
@@ -1841,8 +1857,13 @@
     btn.textContent = tr("prontuario:actions.exportGenerating", "Gerando…");
     try {
       // Garante que receitas estão decifradas
-      if (exportState.receitas.length === 0) await loadReceitasDecrypted();
-      try { exportState.escalas = await fetchEscalas(); } catch (e) { console.warn("export_escalas_error", e); }
+      await loadReceitasDecrypted({ strict: true });
+      exportState.escalas = await fetchEscalas({ force: true });
+      const exportSessions = await loadSessions();
+      const exportNotes = await Promise.all(exportSessions.map(async session => [session.sessionId, await loadNotesFor(session.sessionId)]));
+      exportState.sessions = exportSessions; exportState.notesBySession = new Map(exportNotes);
+      exportState.chartData = await chartWorkspace.exportData();
+      exportState.patient = exportState.chartData.patient || exportState.patient;
       const bytes = await buildProntuarioPdf(exportState);
       const blob = new Blob([bytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
@@ -1883,23 +1904,18 @@
     }
     function drawPageFooter() {
       const total = pdfDoc.getPageCount();
-      page.drawText(tr("prontuario:pdf.docHeader", "Documento gerado pelo Espaço Prelúdio — guarda mínima de 5 anos conforme Resolução CFP nº 1/2009, ressalvadas outras exigências."), {
+      page.drawText(tr("prontuario:pdf.docHeader", "Documento confidencial gerado pelo Espaço Prelúdio."), {
         x: MARGIN, y: 30, font: fontReg, size: 7.5, color: rgb(0.55,0.55,0.55)
       });
       page.drawText(tr("prontuario:pdf.pageNo", "Página {{n}}", { n: total }), {
         x: RIGHT - 50, y: 30, font: fontReg, size: 7.5, color: rgb(0.55,0.55,0.55)
       });
     }
+    const escapedPdfCodepoints = new Set();
     function wrap(text, font, size, max) {
-      const words = String(text || "").split(/\s+/);
-      const lines = []; let cur = "";
-      for (const w of words) {
-        const test = cur ? cur + " " + w : w;
-        if (font.widthOfTextAtSize(test, size) > max && cur) { lines.push(cur); cur = w; }
-        else cur = test;
-      }
-      if (cur) lines.push(cur);
-      return lines.length ? lines : [""];
+      const result = layoutPdfText(text, value => font.widthOfTextAtSize(value, size), max);
+      result.escapedCodepoints.forEach(code => escapedPdfCodepoints.add(code));
+      return result.lines;
     }
     function txt(text, opts = {}) {
       const { x = MARGIN, font = fontReg, size = 11, color = rgb(0.1,0.1,0.1), max = RIGHT - MARGIN } = opts;
@@ -1928,6 +1944,7 @@
     const idParts = [];
     if (therapist.crm) idParts.push("CRM " + therapist.crm);
     if (therapist.crp) idParts.push("CRP " + therapist.crp);
+    if (!therapist.crm && !therapist.crp && sess.conselho?.sigla && therapist.numeroConselho) idParts.push(sess.conselho.sigla + " " + therapist.numeroConselho);
     if (therapist.rqe) idParts.push("RQE " + therapist.rqe.replace(/^RQE\s*/i, ""));
     if (therapist.especialidade) idParts.push(therapist.especialidade);
     if (idParts.length) txt(idParts.join("  ·  "), { size: 10, color: rgb(0.4,0.4,0.4) });
@@ -1950,7 +1967,7 @@
 
     y -= 30;
     txt(tr("prontuario:pdf.confidential", "Documento confidencial — uso clínico restrito."), { size: 9, color: rgb(0.55,0.55,0.55), font: fontBold });
-    txt(tr("prontuario:pdf.retentionNote", "Mantenha em local seguro pelo prazo aplicável (mínimo de 5 anos para registros psicológicos, conforme Resolução CFP nº 1/2009, ressalvadas outras exigências)."), {
+    txt(tr("prontuario:pdf.retentionNote", "Esta cópia contém dados pessoais de saúde. Armazene-a em local seguro e compartilhe apenas com destinatários autorizados."), {
       size: 9, color: rgb(0.50,0.50,0.50)
     });
 
@@ -1964,6 +1981,13 @@
     if (state.patient?.contact)   txt(tr("prontuario:pdf.metaContact", "Contato: ") + state.patient.contact);
     if (state.patient?.birthdate) txt(tr("prontuario:pdf.fieldBirth", "Data de nascimento: ") + state.patient.birthdate);
     txt(tr("prontuario:pdf.fieldCreatedAt", "Cadastrado em: ") + fmtDate(state.patient?.createdAt));
+    const details = state.patient?.demographics || {};
+    for (const key of ["email", "phone", "cpf", "occupation", "address", "city", "state", "postalCode"]) {
+      if (details[key]) txt(tr("chart:" + key, key) + ": " + details[key]);
+    }
+    if (state.patient?.guardian?.name) txt(tr("chart:guardian", "Responsável pelo paciente") + ": " + [state.patient.guardian.name, state.patient.guardian.relationship, state.patient.guardian.contact].filter(Boolean).join(" · "));
+    if (state.patient?.emergencyContact?.name) txt(tr("chart:emergency", "Contato de emergência") + ": " + [state.patient.emergencyContact.name, state.patient.emergencyContact.phone].filter(Boolean).join(" · "));
+
     if (state.patient?.observations) {
       y -= 8;
       txt(tr("prontuario:pdf.obsInitial", "Observações iniciais"), { font: fontBold, size: 12 });
@@ -2091,6 +2115,47 @@
     }
 
     // ── ASSINATURA DO PROFISSIONAL ────────────────────────────────────
+    if (state.chartData) {
+      newPage();
+      txt(tr("chart:clinical", "História clínica"), { font: fontBold, size: 16 });
+      y -= 12;
+      const contextLabels = { summary: "Síntese do acompanhamento", allergies: "Alergias e reações", medications: "Medicamentos em uso", problems: "Condições e questões em acompanhamento", history: "Antecedentes pessoais", family: "História familiar", lifestyle: "Rotina e contexto de vida", alerts: "Alertas para o atendimento", goals: "Objetivos do cuidado", actions: "Próximos passos", reviewDate: "Revisar o plano em" };
+      for (const [key, label] of Object.entries(contextLabels)) {
+        let value = state.chartData.clinical[key];
+        if (key === "allergies" && state.chartData.clinical.allergyStatus === "none") value = tr("chart:noneReported", "Nenhuma relatada");
+        if (key === "medications" && state.chartData.clinical.medicationStatus === "none") value = tr("chart:noneInUse", "Nenhum informado em uso");
+        if (!value) continue;
+        ensure(50); txt(tr("chart:" + key, label), { font: fontBold, size: 10 }); txt(value); y -= 10;
+      }
+      for (const entry of state.chartData.entries) {
+        ensure(100); y -= 15; hr();
+        txt(entry.title || tr("chart:record", "Registro clínico"), { font: fontBold, size: 13 });
+        txt(fmtDate(entry.occurredAt || entry.createdAt) + " · " + fmtTime(entry.occurredAt || entry.createdAt), { size: 9 });
+        if (entry.parentEntryId) txt(tr("chart:complementOf", "Complemento do registro") + ": " + entry.parentEntryId, { size: 8 });
+        for (const section of entry.sections || []) {
+          if (!section.text) continue;
+          ensure(50); txt(section.label || section.key, { font: fontBold, size: 10 }); txt(section.text); y -= 8;
+        }
+        txt(tr("chart:publishedAt", "Registrado em") + " " + fmtDate(entry.createdAt) + " · " + (entry.authorName || therapist.displayName || ""), { size: 8 });
+      }
+      if (state.chartData.documents.length) {
+        newPage();
+        txt(tr("chart:documentsTitle", "Documentos do paciente"), { font: fontBold, size: 16 });
+        y -= 12;
+        const labels = { dias: "Dias", cid10: "CID-10", periodo: "Período", justificativa: "Justificativa", indicacao: "Indicação", exames: "Exames solicitados", urgente: "Urgente", especialidade: "Especialidade", profissionalDestino: "Profissional de destino", motivo: "Motivo", resumoClinico: "Resumo clínico", finalidade: "Finalidade", diagnostico: "Diagnóstico", resumoCaso: "Resumo do caso", conduta: "Conduta", consideracoes: "Considerações" };
+        for (const document of state.chartData.documents) {
+          ensure(100); hr();
+          txt(document.tipo + " · " + tr("chart:" + (document.status === "signed" ? "signed" : "documentDraft"), document.status === "signed" ? "Assinado" : "Rascunho"), { font: fontBold, size: 12 });
+          txt(document.documentoId + " · " + fmtDate(document.createdAt), { size: 9 });
+          for (const [key, value] of Object.entries(document.form)) {
+            if (["patientId", "patientName", "patientCpf", "tipo", "sessionId"].includes(key) || value === null || value === "") continue;
+            const label = tr("chart:doc_" + key, labels[key] || key);
+            const text = typeof value === "object" ? JSON.stringify(value) : typeof value === "boolean" ? tr("chart:" + (value ? "yes" : "no"), value ? "Sim" : "Não") : String(value);
+            ensure(50); txt(label + ":", { font: fontBold, size: 10 }); txt(text); y -= 6;
+          }
+        }
+      }
+    }
     y -= 30;
     ensure(80);
     page.drawLine({ start: { x: MARGIN, y }, end: { x: MARGIN + 280, y }, thickness: 0.5, color: rgb(0.3,0.3,0.3) });
@@ -2099,6 +2164,10 @@
     txt(therapist.displayName || "", { font: fontBold, size: 11 });
     if (idParts.length) txt(idParts.join("  ·  "), { size: 9, color: rgb(0.35,0.35,0.35) });
 
+    if (escapedPdfCodepoints.size) {
+      y -= 12;
+      txt(tr("chart:pdfCodepoints", "Caracteres não disponíveis na fonte deste PDF aparecem como [U+código Unicode], preservando sua identificação."), { size: 8 });
+    }
     return pdfDoc.save();
   }
 
