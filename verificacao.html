@@ -127,7 +127,6 @@
 <script type="module">
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?v=20261018-mfa4";
   import { requireTherapist } from "./js/auth-guard.js?v=20261018-tools1";
-  import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
   function tr(key, fallback) {
     if (window.EP_I18N && window.EP_I18N.t) {
@@ -157,7 +156,9 @@
   let pendingFile = null; // { base64, mime, name, sizeKb }
 
   async function freshToken() {
-    try { idToken = await getAuth().currentUser?.getIdToken() ?? idToken; } catch (_) {}
+    // Mesma instância de login da página (o getAuth() de outra versão do SDK
+    // não via a sessão e o token vencia depois de 1 h).
+    try { idToken = await auth.currentUser?.getIdToken() ?? idToken; } catch (_) {}
     return idToken;
   }
 

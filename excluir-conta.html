@@ -82,7 +82,9 @@
 
 <script type="module">
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { authProfessional, authPatient, BACKEND_BASE_URL } from "./js/firebase-config.js?v=20261018-mfa4";
+import { getProfessionalAuth, getPatientAuth, BACKEND_BASE_URL } from "./js/firebase-config.js?v=20261018-mfa4";
+const authProfessional = getProfessionalAuth();
+const authPatient = getPatientAuth();
 
 let currentUser = null;
 let resolved    = false;

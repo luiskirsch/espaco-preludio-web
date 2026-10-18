@@ -1,10 +1,11 @@
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, authRt } from "./firebase-config.js?v=20261018-mfa4";
+import { auth, AUTH_CONTEXT } from "./firebase-config.js?v=20261018-mfa4";
 import { ensureMfa } from "./mfa-flow.js?v=20261018-mfa5";
 import { clear2faSession, safeMfaReturn } from "./twofa-session.js?v=20261018-mfa4";
 import { clearDek } from "./crypto.js";
 
-const loginPage = auth === authRt ? "./rt-login.html" : "./login.html";
+const isRt = AUTH_CONTEXT === "rt";
+const loginPage = isRt ? "./rt-login.html" : "./login.html";
 const user = await new Promise(resolve => {
   const unsubscribe = onAuthStateChanged(auth, current => { unsubscribe(); resolve(current); });
 });
@@ -12,7 +13,7 @@ const user = await new Promise(resolve => {
 if (!user) { location.replace(loginPage); await new Promise(() => {}); }
 const status = document.getElementById("status");
 const retry = document.getElementById("retryBtn");
-const destination = safeMfaReturn(new URLSearchParams(location.search).get("redirect"), auth === authRt ? "./rt-painel.html" : "./painel.html");
+const destination = safeMfaReturn(new URLSearchParams(location.search).get("redirect"), isRt ? "./rt-painel.html" : "./painel.html");
 let entering = false;
 async function enter() {
   if (entering) return;
@@ -34,6 +35,6 @@ async function enter() {
 }
 retry.addEventListener("click", enter);
 document.getElementById("logoutBtn").addEventListener("click", async () => {
-  clear2faSession(); if (auth !== authRt) clearDek(); await signOut(auth); location.replace(loginPage);
+  clear2faSession(); if (!isRt) clearDek(); await signOut(auth); location.replace(loginPage);
 });
 enter();

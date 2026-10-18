@@ -18,7 +18,8 @@
 // namespaced separadamente => 2 sessoes independentes no mesmo browser.
 
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence }
+  from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { isRtAuthContext, installClinicalFetch } from "./twofa-session.js?v=20261018-mfa4";
 
 // ─── Detecções ─────────────────────────────────────────────────────────
@@ -123,20 +124,28 @@ const rtApp = _ensureApp("responsavel-tecnico", firebaseConfig);
 
 // Export padrao: aponta pro app correto baseado no perfil da pagina.
 // Clinical data is fetched only through the authorized backend.
-export const app  = IS_PATIENT_PAGE
-  ? patientApp
-  : IS_INSTITUTION_PAGE
-    ? institutionApp
-    : IS_RT_PAGE
-      ? rtApp
-    : professionalApp;
-export const auth = getAuth(app);
+export const AUTH_CONTEXT = IS_PATIENT_PAGE ? "patient"
+  : IS_INSTITUTION_PAGE ? "institution"
+  : IS_RT_PAGE ? "rt"
+  : "professional";
+export const app = { patient: patientApp, institution: institutionApp, rt: rtApp, professional: professionalApp }[AUTH_CONTEXT];
 
-// Também exporta os apps explícitos para casos especiais.
-export const authProfessional = getAuth(professionalApp);
-export const authPatient      = getAuth(patientApp);
-export const authInstitution  = getAuth(institutionApp);
-export const authRt           = getAuth(rtApp);
+// Mesma persistência do getAuth(), sem o popupRedirectResolver: o site não usa
+// login por pop-up/redirecionamento, e o resolver padrão baixava o gapi e um
+// iframe do firebaseapp.com por instância (~130 KB e 8 requisições por página).
+const AUTH_PERSISTENCE = [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence];
+function authOf(firebaseApp) {
+  try { return initializeAuth(firebaseApp, { persistence: AUTH_PERSISTENCE }); }
+  catch { return getAuth(firebaseApp); } // já inicializada nesta página
+}
+export const auth = authOf(app);
+
+// Instâncias de outros perfis só quando uma tela precisa delas (ex.: excluir
+// conta). Criar todas em toda página abria a persistência de cada uma à toa.
+export const getProfessionalAuth  = () => authOf(professionalApp);
+export const getPatientAuth       = () => authOf(patientApp);
+export const getInstitutionAuth   = () => authOf(institutionApp);
+export const getRtAuth            = () => authOf(rtApp);
 
 // Every independently loaded clinical/admin screen transports MFA proof and
 // handles enrollment challenges, including screens without auth-guard imports.
