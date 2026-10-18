@@ -623,7 +623,7 @@
 
   async function loadSessions() {
     const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patientId)}/sessoes`, {
-      headers: { "Authorization": `Bearer ${idToken}` }
+      headers: { "Authorization": `Bearer ${await sess.user.getIdToken()}` }
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
@@ -633,7 +633,7 @@
 
   async function loadNotesFor(sessionId) {
     const res = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(sessionId)}/notas`, {
-      headers: { "Authorization": `Bearer ${idToken}` }
+      headers: { "Authorization": `Bearer ${await sess.user.getIdToken()}` }
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) throw new Error(data.error || "NOTAS_INDISPONIVEIS");
@@ -645,7 +645,7 @@
   async function loadPatientPhoto(avatarEl) {
     try {
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patientId)}/foto`, {
-        headers: { "Authorization": `Bearer ${idToken}` }
+        headers: { "Authorization": `Bearer ${await sess.user.getIdToken()}` }
       });
       const data = await res.json().catch(() => ({}));
       const foto = data?.foto;
@@ -858,7 +858,7 @@
       try {
         const res = await fetch(
           `${BACKEND_BASE_URL}/therapy/session/${encodeURIComponent(s.sessionId)}/ai-summary`,
-          { headers: { "Authorization": `Bearer ${idToken}` } }
+          { headers: { "Authorization": `Bearer ${await sess.user.getIdToken()}` } }
         );
         if (!res.ok) return;
         let data = await res.json().catch(() => ({}));
@@ -1093,7 +1093,7 @@
   async function fetchEscalas({ force = false } = {}) {
     if (escalasCache && !force) return escalasCache;
     const res = await fetch(`${BACKEND_BASE_URL}/therapy/escalas?patientId=${encodeURIComponent(patientId)}`, {
-      headers: { "Authorization": `Bearer ${idToken}` }
+      headers: { "Authorization": `Bearer ${await sess.user.getIdToken()}` }
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
@@ -1265,7 +1265,7 @@
     const entries = await Promise.all(recent.map(async session => {
       try {
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/session/${encodeURIComponent(session.sessionId)}/ai-summary`, {
-          headers: { "Authorization": `Bearer ${idToken}` }
+          headers: { "Authorization": `Bearer ${await sess.user.getIdToken()}` }
         });
         if (!res.ok) return null;
         const data = await res.json().catch(() => ({}));
@@ -1568,7 +1568,7 @@
       try {
         const res = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patientId)}/gemeo-clinico`, {
           method: "POST",
-          headers: { "Authorization": `Bearer ${idToken}`, "Content-Type": "application/json" },
+          headers: { "Authorization": `Bearer ${await sess.user.getIdToken()}`, "Content-Type": "application/json" },
           body: JSON.stringify({ question, entries: buildClinicalTwinEntries(decryptedEntries) })
         });
         const data = await res.json().catch(() => ({}));
@@ -1625,7 +1625,7 @@
   // ─── Receitas digitais — listagem por paciente ─────────────────────
   async function loadReceitas() {
     const url = `${BACKEND_BASE_URL}/therapy/receitas?patientId=${encodeURIComponent(patientId)}`;
-    const res = await fetch(url, { headers: { "Authorization": `Bearer ${idToken}` } });
+    const res = await fetch(url, { headers: { "Authorization": `Bearer ${await sess.user.getIdToken()}` } });
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data?.error || ("HTTP_" + res.status));
     return data.receitas || [];

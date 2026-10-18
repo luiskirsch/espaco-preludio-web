@@ -39,6 +39,7 @@ const setup = String.raw`
   window.fetch=async(url,options={})=>{
     const route=new URL(url,location.origin).pathname;
     if(!route.startsWith('/therapy/'))return originalFetch(url,options);
+    if(options.headers?.Authorization!=='Bearer fixture-token')return {ok:false,status:401,json:async()=>({ok:false,error:'EXPIRED_TOKEN'})};
     const method=options.method||'GET';
     const result=(body,status=200)=>({ok:status<400,status,json:async()=>body});
     if(method!=='GET'){
@@ -63,7 +64,7 @@ const setup = String.raw`
   window.confirm=()=>true;
   const fixtureUser={uid:'owner',getIdToken:async()=>'fixture-token'};
   const auth={},BACKEND_BASE_URL=location.origin,signOut=async()=>{};
-  const requireTherapist=async()=>({user:fixtureUser,idToken:'fixture-token',therapist:{displayName:'Profissional de demonstração'},conselho:{capabilities:['receita','documentos-clinicos']},dek:fixtureDek});
+  const requireTherapist=async()=>({user:fixtureUser,idToken:'expired-token',therapist:{displayName:'Profissional de demonstração'},conselho:{capabilities:['receita','documentos-clinicos']},dek:fixtureDek});
   const decryptAiSummaryPayload=async()=>({}),migrateLegacyAiSummary=async()=>{},hasStoredAiAudio=async()=>false,retryAiSummaryUpload=async()=>({ok:true}),clearStoredAiAudio=async()=>{};
 `;
 
