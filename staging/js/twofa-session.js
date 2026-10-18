@@ -33,12 +33,16 @@ export function isRtAuthContext(pathname, search = "") {
 export function verificationRedirect(location) {
   // The verification page accepts ./relative paths; preserve the current page
   // inside the same production/staging directory without an external redirect.
-  const target = "./" + location.pathname.split("/").at(-1) + location.search + location.hash;
-  return "./2fa-verify.html?redirect=" + encodeURIComponent(target) +
+  // Pages under /app/ (patient/collaborator portal) live one level down: the
+  // verification page is in the parent directory and the return path keeps app/.
+  const parts = location.pathname.split("/");
+  const inApp = parts.at(-2) === "app";
+  const target = "./" + (inApp ? "app/" : "") + parts.at(-1) + location.search + location.hash;
+  return (inApp ? "../" : "./") + "2fa-verify.html?redirect=" + encodeURIComponent(target) +
     (isRtAuthContext(location.pathname, location.search) ? "&context=rt" : "");
 }
 export function safeMfaReturn(raw, fallback = "./painel.html") {
-  return typeof raw === "string" && /^\.\/[A-Za-z0-9_-]+\.html(?:[?#][A-Za-z0-9_.?=&%#-]*)?$/.test(raw) ? raw : fallback;
+  return typeof raw === "string" && /^\.\/(?:app\/)?[A-Za-z0-9_-]+\.html(?:[?#][A-Za-z0-9_.?=&%#-]*)?$/.test(raw) ? raw : fallback;
 }
 
 export function createClinicalFetch({ fetch: nativeFetch, backend, location, storage }) {

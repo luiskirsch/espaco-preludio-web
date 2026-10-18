@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createClinicalFetch, get2faSessionToken, verificationRedirect, isRtAuthContext } from "../js/twofa-session.js";
+import { createClinicalFetch, get2faSessionToken, verificationRedirect, isRtAuthContext, safeMfaReturn } from "../js/twofa-session.js";
 
 function fixture(response = Response.json({ ok: true })) {
   const calls = [], redirects = [];
@@ -47,6 +47,9 @@ test("server challenges clear stale proof and redirect once while preserving the
   assert.equal(redirect.searchParams.get("context"), "rt");
   assert.equal(isRtAuthContext(redirect.pathname, redirect.search), true);
   assert.equal(verificationRedirect({ pathname: "/painel.html", search: "", hash: "" }), "./2fa-verify.html?redirect=.%2Fpainel.html");
+  assert.equal(verificationRedirect({ pathname: "/staging/app/home.html", search: "", hash: "" }), "../2fa-verify.html?redirect=.%2Fapp%2Fhome.html");
+  assert.equal(safeMfaReturn("./app/home.html"), "./app/home.html");
+  assert.equal(safeMfaReturn("./app/../evil.html"), "./painel.html");
 });
 
 test("MFA verification keeps RT Firebase Auth isolated from the professional login", () => {
