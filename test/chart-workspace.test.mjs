@@ -24,10 +24,11 @@ const setup = String.raw`
   import { createChartWorkspace } from '/js/chart-workspace.js';
   import { generateDEK, encryptNote, decryptNote, clearDek } from '/js/crypto.js';
   const fixtureDek = generateDEK();
-  const fixturePatient = {name:'Helena Duarte · demonstração',birthdate:'1991-04-18',contact:'helena@example.com',paymentType:'private',tags:['Exemplo'],customField:'preserve-me'};
+  const fixturePatient = {name:'Helena Duarte Albuquerque de Oliveira · demonstração',birthdate:'1991-04-18',contact:'helena@example.com',paymentType:'private',tags:['Exemplo'],customField:'preserve-me'};
   const fixtureContext = {summary:'Cuidado centrado na pessoa, com acompanhamento dos objetivos construídos em conjunto.',allergyStatus:'unknown',medicationStatus:'unknown',problems:'Contexto fictício para demonstrar a organização do prontuário.',goals:'Fortalecer recursos e acompanhar a evolução.',actions:'Revisar os objetivos no próximo encontro\nRegistrar a resposta às intervenções',reviewDate:'2030-11-18'};
   let fixtureEnvelope = await encryptNote(JSON.stringify(fixturePatient),fixtureDek);
   let fixtureChart = await encryptNote(JSON.stringify(fixtureContext),fixtureDek);
+  window.fixtureEmptyChart=async()=>{fixtureChart=await encryptNote('{}',fixtureDek);fixtureEntries.splice(0);};
   const fixtureEntries = [];
   for(const [i,title] of ['Continuidade do cuidado','Avaliação inicial e objetivos'].entries()){
     fixtureEntries.push({entryId:'record_'+i,kind:'progress',createdAt:Date.now()-(i+1)*86400000,...await encryptNote(JSON.stringify({title,occurredAt:Date.now()-(i+1)*86400000,authorName:'Profissional de demonstração',sections:[{key:'complaint',label:'Demanda e contexto',text:'Informações fictícias para apresentação do prontuário.'},{key:'plan',label:'Plano e conduta',text:'Acompanhar os objetivos definidos em conjunto.'}]}),fixtureDek)});
@@ -124,6 +125,20 @@ test('complete chart supports encrypted context, SOAP, supplements, protected dr
     });
     await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1100, deviceScaleFactor: 1, mobile: false });
     await evaluate('new Promise(r=>setTimeout(r,100))');
+    assert.equal(await evaluate('document.querySelector(".chart-nav").getAttribute("aria-orientation")'), 'horizontal');
+    assert.equal(await evaluate('document.querySelectorAll("#chartIdentity h2,.chart-identity__avatar").length'), 0);
+    for (const width of [1920, 1440, 1024]) {
+      await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false });
+      assert.equal(await evaluate(`(()=>{const tabs=[...document.querySelectorAll('[data-chart-tab]')].map(e=>e.getBoundingClientRect());const header=document.querySelector('.ep-prontuario__header').getBoundingClientRect();return tabs.every(t=>t.left>=200&&t.right<${width}-90&&t.bottom<450)&&header.right<${width}-90&&document.documentElement.scrollWidth<=${width}})()`), true, `All tabs and actions fit the clinical area at ${width}px`);
+    }
+    await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 760, deviceScaleFactor: 1, mobile: false });
+    await evaluate('window.scrollTo(0,500)');
+    assert.equal(await evaluate('(()=>{const r=document.querySelector(".chart-toolbar").getBoundingClientRect();return r.top>=0&&r.top<2&&r.bottom<100})()'), true, 'Navigation stays visible while scrolling');
+    await evaluate('document.getElementById("chart-tab-clinical").click()');
+    assert.equal(await evaluate('document.getElementById("chart-panel-clinical").getBoundingClientRect().top>=document.querySelector(".chart-toolbar").getBoundingClientRect().bottom'), true, 'Changing tabs reveals the beginning of the selected panel');
+    await evaluate('document.getElementById("chart-tab-overview").click();window.scrollTo(0,0)');
+    await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1100, deviceScaleFactor: 1, mobile: false });
+    await evaluate('document.fonts.ready.then(()=>new Promise(r=>setTimeout(r,250)))');
     if (process.env.CHART_SCREENSHOTS_DIR) {
       await mkdir(process.env.CHART_SCREENSHOTS_DIR, { recursive: true });
       const image = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
@@ -181,12 +196,27 @@ test('complete chart supports encrypted context, SOAP, supplements, protected dr
     await evaluate('document.getElementById("chart-tab-overview").click();window.scrollTo(0,0)');
     await evaluate('new Promise(r=>setTimeout(r,100))');
     assert.equal(await evaluate('document.documentElement.scrollWidth<=390'), true);
+    assert.equal(await evaluate('(()=>{const tabs=[...document.querySelectorAll("[data-chart-tab]")].map(e=>e.getBoundingClientRect());return tabs.every(t=>t.left>=0&&t.right<=390&&t.height>=44)&&Math.max(...tabs.map(t=>t.bottom))-Math.min(...tabs.map(t=>t.top))<=100})()'), true, 'All mobile tabs fit in two accessible rows');
     if (process.env.CHART_SCREENSHOTS_DIR) {
       const image = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
       await writeFile(join(process.env.CHART_SCREENSHOTS_DIR, 'chart-mobile.png'), Buffer.from(image.data, 'base64'));
     }
     await evaluate('document.documentElement.setAttribute("data-theme","dark")');
     assert.equal(await evaluate('getComputedStyle(document.querySelector(".chart-card")).backgroundColor'), 'rgb(27, 44, 49)');
+    await evaluate('window.scrollTo(0,600)');
+    assert.equal(await evaluate('(()=>{const r=document.querySelector(".chart-toolbar").getBoundingClientRect();return r.top>=64&&r.top<66&&r.bottom<180})()'), true, 'Mobile navigation stays below the app header');
+    await evaluate('document.getElementById("chart-tab-registration").click()');
+    assert.equal(await evaluate('document.getElementById("chart-panel-registration").getBoundingClientRect().top>=document.querySelector(".chart-toolbar").getBoundingClientRect().bottom'), true);
+    await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+    await evaluate('document.documentElement.setAttribute("data-theme","light");document.getElementById("chart-tab-overview").click();window.scrollTo(0,0);window.fixtureEmptyChart().then(()=>{document.getElementById("chartReloadProfile").click();document.getElementById("chartReloadEntries").click()})');
+    await poll(() => evaluate('document.getElementById("chartAddPlan")&&document.getElementById("chart-count-entries").textContent===""'));
+    assert.equal(await evaluate('document.getElementById("chartCarePlan").getBoundingClientRect().height<150'), true, 'An empty care plan has no large blank area');
+    assert.equal(await evaluate('getComputedStyle(document.body).minHeight'), '900px');
+    if (process.env.CHART_SCREENSHOTS_DIR) {
+      await evaluate('new Promise(r=>setTimeout(r,250))');
+      const image = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+      await writeFile(join(process.env.CHART_SCREENSHOTS_DIR, 'chart-empty.png'), Buffer.from(image.data, 'base64'));
+    }
   } finally {
     socket?.close(); browser.kill(); await new Promise(r => server.close(r));
     assert.ok(resolve(profile).startsWith(resolve(tmpdir()) + sep + 'ep-chart-'));

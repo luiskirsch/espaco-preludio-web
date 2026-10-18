@@ -50,17 +50,14 @@ export function createChartWorkspace({ patientId, user, therapist, dek, backendB
   main.classList.add("chart-main"); document.body.classList.add("chart-page");
   const shell = document.createElement("div"); shell.className = "chart-shell";
   shell.innerHTML = `
-    <aside class="chart-sidebar" aria-label="${escape(t("patientSummary"))}">
-      <div class="chart-sidebar__heading"><span class="chart-dot"></span><span>${escape(t("continuity"))}</span></div>
-      <div id="chartIdentity" class="chart-identity"><div class="chart-placeholder"></div></div>
-      <nav class="chart-nav" aria-label="${escape(t("workspace"))}" role="tablist" aria-orientation="vertical">
+    <div class="chart-toolbar">
+      <nav class="chart-nav" aria-label="${escape(t("workspace"))}" role="tablist" aria-orientation="horizontal">
         ${["overview", "entries", "clinical", "monitoring", "documents", "registration"].map((key, i) => `<button type="button" id="chart-tab-${key}" role="tab" aria-selected="${i === 0}" aria-controls="chart-panel-${key}" tabindex="${i ? -1 : 0}" data-chart-tab="${key}"><span class="chart-nav__icon" aria-hidden="true">${["◫", "≡", "+", "↗", "▤", "◎"][i]}</span>${escape(t(key))}<span class="chart-nav__mark" id="chart-count-${key}"></span></button>`).join("")}
       </nav>
-      <div class="chart-side-note"><span aria-hidden="true">◈</span><p>${escape(t("locked"))}</p></div>
-    </aside>
+    </div>
     <div class="chart-content">
       <section id="chart-panel-overview" class="chart-panel" role="tabpanel" aria-labelledby="chart-tab-overview" tabindex="0">
-        <div class="chart-section-head"><div><div class="chart-eyebrow">${escape(t("overview"))}</div><h2>${escape(t("overviewTitle"))}</h2><p>${escape(t("overviewSub"))}</p></div><button type="button" class="chart-button chart-button--primary" data-new-entry>＋ ${escape(t("newEntry"))}</button></div>
+        <div class="chart-section-head"><div><h2>${escape(t("overviewTitle"))}</h2><p>${escape(t("overviewSub"))}</p></div><div class="chart-security-note"><span aria-hidden="true">◈</span><span>${escape(t("locked"))}</span></div></div>
         <div class="chart-metrics" id="chartMetrics"></div>
         <div class="chart-overview-grid">
           <article class="chart-card chart-context"><header><h3>${escape(t("clinicalContext"))}</h3><button type="button" class="chart-text-button" data-go="clinical">${escape(t("editClinical"))} ↗</button></header><div id="chartContext"></div></article>
@@ -101,6 +98,8 @@ export function createChartWorkspace({ patientId, user, therapist, dek, backendB
   const historySection = $("sessions").closest("section");
   const prescriptionSection = $("receitasList").closest("section");
   main.appendChild(shell);
+  const identity = document.createElement("dl"); identity.id = "chartIdentity"; identity.className = "chart-patient-details";
+  document.querySelector(".ep-prontuario__title").appendChild(identity);
   if (!capabilities.includes("documentos-clinicos")) shell.querySelector('[data-capability="documentos-clinicos"]').hidden = true;
   $("chartPatientName").required = true;
   $("chartLegacySessions").appendChild(historySection);
@@ -125,12 +124,16 @@ export function createChartWorkspace({ patientId, user, therapist, dek, backendB
   $("editPatientBtn").addEventListener("click", e => { e.preventDefault(); activate("registration"); });
 
   function activate(key, focus = false) {
+    const toolbar = shell.querySelector(".chart-toolbar");
+    const toolbarTop = Number.parseFloat(getComputedStyle(toolbar).top) || 0;
+    const shouldScroll = shell.getBoundingClientRect().top < toolbarTop;
     shell.querySelectorAll("[data-chart-tab]").forEach(button => {
       const active = button.dataset.chartTab === key;
       button.setAttribute("aria-selected", String(active)); button.tabIndex = active ? 0 : -1;
       if (active && focus) button.focus();
     });
     shell.querySelectorAll(".chart-panel").forEach(panel => { panel.hidden = panel.id !== "chart-panel-" + key; });
+    if (shouldScroll) shell.scrollIntoView({ block: "start" });
     if (key === "monitoring") window.dispatchEvent(new Event("resize"));
     if (key === "documents") loadDocuments();
   }
@@ -147,8 +150,7 @@ export function createChartWorkspace({ patientId, user, therapist, dek, backendB
 
   function renderIdentity() {
     if (!patient) return;
-    const phone = patient.demographics?.phone || patient.contact || "";
-    $("chartIdentity").innerHTML = `<div class="chart-identity__avatar">${escape((patient.socialName || patient.name || "?").trim().split(/\s+/).slice(0, 2).map(p => p[0]).join("").toUpperCase())}</div><h2>${escape(patient.socialName || patient.name)}</h2><span class="chart-identity__id">${escape(patientId.slice(-10).toUpperCase())}</span><dl><div><dt>${escape(t("birthdate"))}</dt><dd>${escape(patient.birthdate ? new Date(patient.birthdate + "T12:00:00").toLocaleDateString(locale()) : t("notRecorded"))}</dd></div><div><dt>${escape(t("contact"))}</dt><dd>${escape(phone || t("notRecorded"))}</dd></div><div><dt>${escape(t("paymentType"))}</dt><dd>${["private", "insurance"].includes(patient.paymentType) ? `<span class="chart-tag">${escape(t(patient.paymentType))}</span>` : escape(t("notRecorded"))}</dd></div></dl>`;
+    $("chartIdentity").innerHTML = `<div><dt>${escape(t("birthdate"))}</dt><dd>${escape(patient.birthdate ? new Date(patient.birthdate + "T12:00:00").toLocaleDateString(locale()) : t("notRecorded"))}</dd></div>`;
     const p = patient, d = p.demographics || {}, guardian = p.guardian || {}, emergency = p.emergencyContact || {};
     if (!patientDirty) {
       const fields = { chartPatientName: p.name, chartSocialName: p.socialName, chartBirthdate: p.birthdate, chartContact: p.contact, chartEmail: d.email, chartPhone: d.phone, chartCpf: d.cpf, chartOccupation: d.occupation, chartAddress: d.address, chartCity: d.city, chartState: d.state, chartPostalCode: d.postalCode, chartGuardianName: guardian.name, chartGuardianRelation: guardian.relationship, chartGuardianContact: guardian.contact, chartEmergencyName: emergency.name, chartEmergencyPhone: emergency.phone, chartPatientObservations: p.observations };
