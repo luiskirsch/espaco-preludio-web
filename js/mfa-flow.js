@@ -49,7 +49,7 @@ async function startFlow(user, { renewRecovery = false } = {}) {
   if (state.sessionValid && !renewRecovery) return { verified: true };
   if (!document.getElementById("mfaFlowStyles")) {
     const css = node("link"); css.id = "mfaFlowStyles"; css.rel = "stylesheet";
-    css.href = new URL("../css/mfa-flow.css?v=20261017-mfa3", import.meta.url).href;
+    css.href = new URL("../css/mfa-flow.css?v=20261018-mfa4", import.meta.url).href;
     document.head.append(css);
   }
   const text = messages[language()];

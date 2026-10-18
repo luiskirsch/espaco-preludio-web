@@ -258,7 +258,8 @@
 </div>
 
 <script type="module">
-  import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile }
+  import { ensureMfa } from "../js/mfa-flow.js?v=20261018-mfa4";
+  import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile, signOut }
     from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?v=20261018-mfa4";
   import { generateSalt, generateDEK, wrapDek, unwrapDek, dekToRecoveryPhrase } from "../js/crypto.js";
@@ -278,9 +279,15 @@
 
   // Já logado com DEK disponível → vai direto. Sem DEK, deixa logar de novo
   // (cobre o caso de reauth por expiração de sessionStorage).
-  onAuthStateChanged(auth, u => {
+  // Contas com 2FA (ex.: profissional usando o portal) confirmam o código
+  // antes de entrar; colaborador sem 2FA passa direto. Durante o submit, o
+  // próprio formulário conduz o fluxo — o listener não redireciona sozinho.
+  let signingIn = false;
+  onAuthStateChanged(auth, async u => {
     if (u && isReauth && u.email) document.getElementById("loginEmail").value = u.email;
-    if (u && !isReauth) window.location.href = redirectTo;
+    if (!u || isReauth || signingIn) return;
+    try { await ensureMfa(u); window.location.href = redirectTo; }
+    catch { await signOut(auth).catch(() => {}); }
   });
 
   async function registerAccount({ idToken, displayName, e2eeSalt, wrappedDEK, wrappedDEKIv }) {
@@ -407,8 +414,11 @@
     btn.disabled = true; btn.textContent = "Entrando…";
     const email = document.getElementById("loginEmail").value.trim();
     const senha = document.getElementById("loginSenha").value;
+    signingIn = true;
     try {
       const cred = await signInWithEmailAndPassword(auth, email, senha);
+      try { await ensureMfa(cred.user); }
+      catch (mfaErr) { await signOut(auth).catch(() => {}); throw mfaErr; }
       const idToken = await cred.user.getIdToken();
 
       // Verifica se a conta já tem chave de chat configurada.
@@ -440,7 +450,10 @@
       await beginRecoverySetup({ user: cred.user, password: senha, displayName: account?.displayName || cred.user.displayName, redirectTo });
       btn.disabled = false; btn.textContent = "Entrar";
     } catch (err) {
-      erro.textContent = ERROS[err.code] || "Erro ao entrar. Tente novamente.";
+      signingIn = false;
+      erro.textContent = err.code === "MFA_CANCELLED"
+        ? "Verificação em duas etapas cancelada. Entre novamente."
+        : ERROS[err.code] || "Erro ao entrar. Tente novamente.";
       erro.classList.remove("a-hide");
       btn.disabled = false; btn.textContent = "Entrar";
     }
