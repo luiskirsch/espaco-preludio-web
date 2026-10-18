@@ -8,7 +8,8 @@ const loginPage = auth === authRt ? "./rt-login.html" : "./login.html";
 const user = await new Promise(resolve => {
   const unsubscribe = onAuthStateChanged(auth, current => { unsubscribe(); resolve(current); });
 });
-if (!user) { location.replace(loginPage); throw new Error("NOT_AUTH"); }
+// Sem login: vai para a tela de entrada e para aqui sem erro no console.
+if (!user) { location.replace(loginPage); await new Promise(() => {}); }
 const status = document.getElementById("status");
 const retry = document.getElementById("retryBtn");
 const destination = safeMfaReturn(new URLSearchParams(location.search).get("redirect"), auth === authRt ? "./rt-painel.html" : "./painel.html");
