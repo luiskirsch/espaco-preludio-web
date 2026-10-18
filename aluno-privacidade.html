@@ -22,7 +22,7 @@
   </section>
 </main>
 <script type="module">
-  import { BACKEND_BASE_URL } from './js/firebase-config.js?v=20261017-mfa3';
+  import { BACKEND_BASE_URL } from './js/firebase-config.js?v=20261018-mfa4';
   const token = new URLSearchParams(location.search).get('token') || '';
   const show = id => ['loading','invalid','content'].forEach(x => document.getElementById(x).classList.toggle('hidden',x!==id));
   async function request(path='', options={}) { const r=await fetch(`${BACKEND_BASE_URL}/public/aluno-privacidade/${encodeURIComponent(token)}${path}`,options); const d=await r.json().catch(()=>({})); if(!r.ok||!d.ok) throw new Error(d.error||'Não foi possível concluir.'); return d; }

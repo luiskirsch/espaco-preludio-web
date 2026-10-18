@@ -3,7 +3,7 @@
 // Chamado por auth-guard.js?v=20261018-tools1 após requireTherapist() → singleton, seguro chamar N vezes.
 
 import { invalidatePrefix } from "./api-cache.js?v=4";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261017-mfa3";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261018-mfa4";
 
 let _socket = null;
 let _uid    = null;
