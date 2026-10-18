@@ -226,6 +226,7 @@
 
   function humanize(err) {
     const code = err?.code || "";
+    if (code === "MFA_CANCELLED") return tr("login:errors.mfaCancelled", "Verificação em duas etapas cancelada. Clique em Entrar para tentar novamente.");
     if (code === "auth/invalid-credential") return tr("login:errors.invalidCredential", "E-mail ou senha incorretos.");
     if (code === "auth/wrong-password")     return tr("login:errors.wrongPassword", "Senha incorreta.");
     if (code === "auth/user-not-found")     return tr("login:errors.userNotFound", "Conta não encontrada.");
