@@ -86,6 +86,33 @@
       display: flex; align-items: center; gap: 14px;
     }
     .streak-num { font-family: var(--ff-serif); font-size: 40px; font-weight: 500; color: var(--a-accent); line-height: 1; }
+    .cal-card { background: var(--a-surface); border-radius: var(--a-radius); box-shadow: var(--a-shadow); padding: 16px; }
+    .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+    .cal-head__title { font-size: 15px; font-weight: 700; color: var(--a-ink); }
+    .cal-head__title::first-letter { text-transform: uppercase; }
+    .cal-nav { width: 40px; height: 40px; display: grid; place-items: center; border: 0; border-radius: 12px; background: #f3eee3; color: #1d6b67; cursor: pointer; }
+    .cal-nav:hover:not(:disabled) { background: #e9e1d0; }
+    .cal-nav:disabled { opacity: .35; cursor: default; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-wd { text-align: center; font-size: 11px; font-weight: 700; color: var(--a-ink3); padding: 2px 0 6px; }
+    .cal-day { aspect-ratio: 1; min-height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; border: 1.5px solid transparent; border-radius: 12px; background: #f8f5ee; color: var(--a-ink); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; position: relative; }
+    .cal-day__emoji { font-size: 18px; line-height: 1; }
+    .cal-day.has-mood { background: color-mix(in srgb, var(--mood) 14%, #fff); }
+    .cal-day.has-note::after { content: ""; position: absolute; top: 5px; right: 6px; width: 5px; height: 5px; border-radius: 50%; background: #1d6b67; }
+    .cal-day.is-today { border-color: rgba(29,107,103,.45); }
+    .cal-day.is-selected { border-color: #1d6b67; box-shadow: 0 0 0 3px rgba(29,107,103,.14); }
+    .cal-day:disabled { background: transparent; color: var(--a-ink3); opacity: .45; cursor: default; }
+    .cal-day:hover:not(:disabled) { border-color: rgba(29,107,103,.35); }
+    .cal-detail { margin-top: 14px; padding: 14px; border-radius: 14px; background: #f6f1e6; }
+    .cal-detail__head { display: flex; align-items: center; gap: 12px; }
+    .cal-detail__emoji { font-size: 32px; line-height: 1; }
+    .cal-detail__date { font-size: 12px; color: var(--a-ink3); }
+    .cal-detail__mood { font-size: 16px; font-weight: 700; color: var(--a-ink); }
+    .cal-detail__note { margin: 10px 0 0; color: var(--a-ink2); font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .cal-detail__empty { margin: 0; color: var(--a-ink3); font-size: 13.5px; }
+    .cal-detail__empty--gap { margin-top: 10px; }
+    .cal-legend { margin-top: 10px; font-size: 11.5px; color: var(--a-ink3); display: flex; align-items: center; gap: 6px; }
+    .cal-legend i { width: 5px; height: 5px; border-radius: 50%; background: #1d6b67; display: inline-block; }
   </style>
   <script src="./portal-shell.js?v=7" defer></script>
   <script src="./sw-register.js?v=20261018" defer></script>
@@ -133,6 +160,20 @@
           <canvas id="moodChart"></canvas>
         </div>
         <div class="month-stats" id="monthStats"></div>
+      </div>
+    </div>
+
+    <!-- Calendário: tocar num dia mostra o humor e a anotação -->
+    <div class="a-section" style="padding-top:0;">
+      <div class="cal-card">
+        <div class="cal-head">
+          <button type="button" class="cal-nav" id="calPrev" aria-label="Mês anterior"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+          <div class="cal-head__title" id="calTitle" aria-live="polite"></div>
+          <button type="button" class="cal-nav" id="calNext" aria-label="Próximo mês"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-legend"><i></i><span>dia com anotação</span></div>
+        <div class="cal-detail" id="calDetail" aria-live="polite"></div>
       </div>
     </div>
 
@@ -286,8 +327,67 @@
     buildChart();
     buildMonth();
     buildStreak();
+    buildCalendar();
     loadHistory();
   }
+
+  // Calendário mensal: navega do primeiro mês com registro até o atual;
+  // o dia selecionado mostra o humor e a anotação. Abre no dia de hoje.
+  let calMonth = null, calSelected = null;
+  function buildCalendar() {
+    const today = todayStr(), current = today.slice(0, 7);
+    const first = Object.keys(humorData).sort()[0]?.slice(0, 7) || current;
+    if (!calMonth) calMonth = current;
+    if (!calSelected) calSelected = today;
+    const [y, m] = calMonth.split("-").map(Number);
+    document.getElementById("calTitle").textContent = `${MONTH_NAMES[m - 1]} de ${y}`;
+    document.getElementById("calPrev").disabled = calMonth <= first;
+    document.getElementById("calNext").disabled = calMonth >= current;
+    const lead = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
+    const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    let cells = DAYS.map(d => `<div class="cal-wd" aria-hidden="true">${d.slice(0, 1)}</div>`).join("");
+    cells += "<span></span>".repeat(lead);
+    for (let day = 1; day <= last; day++) {
+      const key = `${calMonth}-${String(day).padStart(2, "0")}`;
+      const mood = MOODS[humorData[key]];
+      const note = !!humorNotes[key];
+      const cls = ["cal-day", mood && "has-mood", note && "has-note", key === today && "is-today", key === calSelected && "is-selected"].filter(Boolean).join(" ");
+      const label = `${day} de ${MONTH_NAMES[m - 1]}${mood ? ": " + mood.label : ""}${note ? ", com anotação" : ""}`;
+      cells += `<button type="button" class="${cls}" data-day="${key}"${key > today ? " disabled" : ""}${mood ? ` data-mood="${mood.color}"` : ""} aria-label="${label}" aria-pressed="${key === calSelected}">`
+        + `${mood ? `<span class="cal-day__emoji" aria-hidden="true">${mood.emoji}</span>` : ""}<span>${day}</span></button>`;
+    }
+    const grid = document.getElementById("calGrid");
+    grid.innerHTML = cells;
+    grid.querySelectorAll(".cal-day").forEach(b => {
+      if (b.dataset.mood) b.style.setProperty("--mood", b.dataset.mood);
+      b.addEventListener("click", () => { calSelected = b.dataset.day; buildCalendar(); });
+    });
+    renderCalDetail();
+  }
+  function renderCalDetail() {
+    const box = document.getElementById("calDetail");
+    const d = dateFromKey(calSelected);
+    const dateText = `${DAYS_FULL[d.getUTCDay()]}, ${d.getUTCDate()} de ${MONTH_NAMES[d.getUTCMonth()]} de ${d.getUTCFullYear()}`;
+    const mood = MOODS[humorData[calSelected]];
+    if (!mood) {
+      box.innerHTML = `<div class="cal-detail__date">${dateText}</div><p class="cal-detail__empty">Sem registro de humor neste dia.</p>`;
+      return;
+    }
+    const note = humorNotes[calSelected];
+    box.innerHTML = `<div class="cal-detail__head"><span class="cal-detail__emoji" aria-hidden="true">${mood.emoji}</span>`
+      + `<div><div class="cal-detail__date">${dateText}</div><div class="cal-detail__mood">${mood.label}</div></div></div>`
+      + (note ? `<p class="cal-detail__note">${escapeNote(note)}</p>` : `<p class="cal-detail__empty cal-detail__empty--gap">Você não escreveu nada neste dia.</p>`);
+  }
+  function stepMonth(delta) {
+    const [y, m] = calMonth.split("-").map(Number);
+    calMonth = new Date(Date.UTC(y, m - 1 + delta, 1)).toISOString().slice(0, 7);
+    // Seleciona hoje no mês atual; nos outros, o último dia com registro.
+    const keys = Object.keys(humorData).filter(k => k.startsWith(calMonth)).sort();
+    calSelected = calMonth === todayStr().slice(0, 7) ? todayStr() : keys.at(-1) || `${calMonth}-01`;
+    buildCalendar();
+  }
+  document.getElementById("calPrev").addEventListener("click", () => stepMonth(-1));
+  document.getElementById("calNext").addEventListener("click", () => stepMonth(1));
 
   // Resumo do mês corrente: % de dias registrados em cada humor.
   let monthChoice = null;
