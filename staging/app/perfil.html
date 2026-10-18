@@ -294,7 +294,15 @@
   async function renderMfa(user) {
     try {
       const state = await mfaStatus(user);
-      if (state.required !== false) return;
+      const item = document.getElementById("mfaItem");
+      if (state.required !== false) {
+        // Conta profissional: obrigatória, gerenciada no perfil profissional.
+        item.disabled = true; item.style.cursor = "default";
+        item.querySelector(".menu-item__arrow").remove();
+        document.getElementById("mfaSub").textContent = "Ativada · obrigatória para contas profissionais";
+        document.getElementById("mfaSection").classList.remove("a-hide");
+        return;
+      }
       mfaEnabled = !!state.enabled;
       document.getElementById("mfaSub").textContent = mfaEnabled
         ? "Ativada · toque para desativar"
