@@ -71,16 +71,24 @@ test('professional selects 30-minute first visits and 20-minute returns, overrid
         res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
         res.end(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/css/espaco-preludio.css"></head><body><script type="module">
           import { createNewSessionModal } from '/js/new-session-modal.js';
+          import { generateDEK, encryptNote } from '/js/crypto.js';
+          const dek=generateDEK();
+          const patients=await Promise.all(['insured','empty'].map(async patientId=>({patientId,...await encryptNote(JSON.stringify({name:'Fixture '+patientId,paymentType:'insurance'}),dek)})));
           window.requests = [];
           window.fetch = async (url, options = {}) => {
+            const path=new URL(url,location.origin).pathname;
             if (options.method === 'POST') {
               window.requests.push(JSON.parse(options.body));
+              if(path.endsWith('/tiss/marcar')&&window.failGuide)return {ok:false,status:503,json:async()=>({ok:false})};
               return { ok:true, status:200, json:async()=>({ok:true,session:{sessionId:'test',joinCode:'TESTCODE'}}) };
             }
-            return {ok:true,json:async()=>({ok:true,patients:[]})};
+            if(path==='/therapy/profissional/tiss/convenios')return {ok:true,json:async()=>({ok:true,convenios:[{code:'fixture',nome:'Seguro de teste'}]})};
+            if(path==='/therapy/pacientes/insured'&&window.delayInsuranceReads)await new Promise(r=>setTimeout(r,200));
+            return {ok:true,json:async()=>({ok:true,patients,patient:{convenios:path.endsWith('/insured')?[{convenioCode:'fixture',numeroCarteirinha:'12345'}]:[]}})};
           };
-          window.modal = createNewSessionModal({getToken:async()=>'test-token', uid:'test', dek:null,
-            therapist:{agendaConfig:{slotMinutes:50}}, BACKEND_BASE_URL:location.origin,
+          window.fixtureTherapist={tissEnabled:true,agendaConfig:{slotMinutes:50}};
+          window.modal = createNewSessionModal({getToken:async()=>'test-token', uid:'test', dek,
+            therapist:window.fixtureTherapist, BACKEND_BASE_URL:location.origin,
             tr:(_key,fallback)=>fallback,currentLocaleSafe:()=> 'pt-BR', getAllSessions:()=>[],buildPatientLink:()=> 'test-link'});
           window.modal.open();
         </script></body></html>`);
@@ -140,6 +148,34 @@ test('professional selects 30-minute first visits and 20-minute returns, overrid
       document.getElementById('sessionDuration').value='5';document.getElementById('createNewSession').click()`);
     assert.equal(await evaluate('window.requests.length'), 1);
     assert.equal(await evaluate('document.getElementById("newSessionStatus").textContent.includes("15 e 240")'), true);
+    await evaluate('window.modal.reloadPatients()');
+    await evaluate('window.modal.open({patientId:"insured",scheduledAt:"2030-10-21T08:00"})');
+    await poll(() => evaluate('!document.getElementById("tissNewConvSelect").disabled'));
+    assert.equal(await evaluate('document.getElementById("sessionPaymentType").value'), 'insurance');
+    assert.equal(await evaluate('document.getElementById("tissNewSessionBlock").classList.contains("ep-hide")'), false);
+    assert.equal(await evaluate('document.querySelector("#tissNewSessionBlock details").open'), true);
+    assert.equal(await evaluate('document.getElementById("tissNewSessionBlock").previousElementSibling.id'), 'sessionInsuranceStatus');
+    await evaluate('document.getElementById("tissNewConvSelect").value="fixture";document.getElementById("createNewSession").click()');
+    assert.equal(await evaluate('window.requests.length'), 1, 'An incomplete insurance guide does not create an appointment');
+    assert.equal(await evaluate('document.getElementById("newSessionStatus").textContent.includes("TUSS")'), true);
+    await evaluate('document.getElementById("tissNewTussCode").value="50000489";document.getElementById("tissNewTussLabel").value="Procedimento de teste";document.getElementById("tissNewValor").value="120.50";document.getElementById("createNewSession").click()');
+    await poll(() => evaluate('window.requests.length===3'));
+    assert.equal(await evaluate('window.requests[1].paymentType'), 'insurance');
+    assert.equal(await evaluate('window.requests[1].patientId'), 'insured');
+    assert.deepEqual(await evaluate('window.requests[2]'), {convenioCode:'fixture',tussCode:'50000489',tussLabel:'Procedimento de teste',valorProcedimento:120.5});
+    await evaluate('window.failGuide=true;window.modal.open({patientId:"insured",scheduledAt:"2030-10-21T08:00"})');
+    await poll(() => evaluate('!document.getElementById("tissNewConvSelect").disabled'));
+    await evaluate('document.getElementById("tissNewConvSelect").value="fixture";document.getElementById("tissNewTussCode").value="50000489";document.getElementById("createNewSession").click()');
+    await poll(() => evaluate('document.getElementById("linkSubtitle").textContent.includes("não foi possível gerar")'));
+    assert.equal(await evaluate('window.requests.length'), 5, 'A failed guide reports the issue without recreating the appointment');
+    await evaluate('window.delayInsuranceReads=true;window.modal.open({patientId:"insured"});const patient=document.getElementById("patientSelect");patient.value="id:empty";patient.dispatchEvent(new Event("change"))');
+    await poll(() => evaluate('document.getElementById("sessionInsuranceStatus").textContent.includes("não tem carteirinha")'));
+    await evaluate('new Promise(r=>setTimeout(r,250))');
+    assert.equal(await evaluate('document.getElementById("tissNewConvSelect").options.length'), 1, 'An earlier patient response cannot restore the wrong insurance');
+    await evaluate('document.getElementById("sessionPaymentType").value="private";document.getElementById("sessionPaymentType").dispatchEvent(new Event("change"))');
+    assert.equal(await evaluate('document.getElementById("tissNewSessionBlock").classList.contains("ep-hide")'), true);
+    await evaluate('window.fixtureTherapist.tissEnabled=false;document.getElementById("sessionPaymentType").value="insurance";document.getElementById("sessionPaymentType").dispatchEvent(new Event("change"))');
+    assert.equal(await evaluate('document.getElementById("sessionInsuranceStatus").textContent.includes("Ative TISS")'), true);
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
     assert.equal(await evaluate('document.documentElement.scrollWidth <= 390'), true);
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/patient-fixture.html` });

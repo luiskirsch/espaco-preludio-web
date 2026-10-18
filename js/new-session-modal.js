@@ -192,14 +192,16 @@ export function createNewSessionModal({
   const patientSelect   = document.getElementById("patientSelect");
   const freeNameField   = document.getElementById("freeNameField");
 
-  // TISS é opt-in por profissional — esconde bloco se não habilitado.
-  if (!therapist?.tissEnabled) {
-    document.querySelectorAll("[data-tiss-only]").forEach(el => el.classList.add("ep-hide"));
-  }
-
   const typeInput = document.getElementById("appointmentType");
   const durationInput = document.getElementById("sessionDuration");
   const paymentInput = document.getElementById("sessionPaymentType");
+  const insuranceBlock = document.getElementById("tissNewSessionBlock");
+  const insuranceDetails = insuranceBlock.querySelector("details");
+  const insuranceStatus = document.createElement("p");
+  insuranceStatus.className = "ep-text-xs ep-text-muted";
+  insuranceStatus.id = "sessionInsuranceStatus";
+  insuranceStatus.setAttribute("role", "status");
+  paymentInput.closest(".ep-field").after(insuranceStatus, insuranceBlock);
   function applyTypeDuration() {
     const defaults = { initial: 30, return: 20, follow_up: 20 };
     durationInput.value = typeInput.value === "standard"
@@ -366,38 +368,71 @@ export function createNewSessionModal({
     } catch { _tissAceitos = []; }
     return _tissAceitos;
   }
+  let insuranceGeneration = 0, insuranceLoading = false;
   async function refreshTissNewSessionConvenios() {
+    const generation = ++insuranceGeneration;
+    insuranceLoading = false;
     const sel = document.getElementById("tissNewConvSelect");
-    const block = document.getElementById("tissNewSessionBlock");
-    if (!sel || !block) return;
-    sel.innerHTML = `<option value="">${tr("painel:modalNew.tissConvenioPlaceholderShort", "— Selecione (paciente precisa ter carteirinha) —")}</option>`;
+    const insurance = paymentInput.value === "insurance" && !therapist?.institutional;
+    insuranceBlock.classList.toggle("ep-hide", !insurance || !therapist?.tissEnabled);
+    insuranceStatus.hidden = !insurance;
+    insuranceStatus.replaceChildren();
+    insuranceDetails.open = insurance;
+    sel.replaceChildren(new Option(tr("painel:modalNew.tissSelect", "— Selecione o convênio —"), ""));
+    sel.disabled = true;
+    for (const id of ["tissNewTussCode", "tissNewTussLabel", "tissNewValor"]) document.getElementById(id).value = "";
+    if (!insurance) return;
+    const help = (key, fallback, href) => {
+      insuranceStatus.textContent = tr(key, fallback);
+      if (href) {
+        const link = document.createElement("a"); link.href = href;
+        link.textContent = " " + tr("painel:modalNew.tissConfigure", "Abrir cadastro →");
+        insuranceStatus.appendChild(link);
+      }
+    };
+    if (!therapist?.tissEnabled) {
+      help("painel:modalNew.tissEnable", "Ative TISS no seu perfil para selecionar o convênio e gerar a guia.", "./perfil.html");
+      return;
+    }
     const v = patientSelect.value;
     if (!v.startsWith("id:")) {
-      block.classList.add("ep-hide");
+      help("painel:modalNew.tissRegistered", "Selecione um paciente cadastrado para carregar seus convênios e carteirinhas.", "./pacientes.html");
       return;
     }
     const patientId = v.slice(3);
+    insuranceLoading = true;
+    insuranceStatus.textContent = tr("painel:modalNew.tissLoading", "Carregando convênios do paciente…");
     try {
       const token = await getToken();
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/pacientes/${encodeURIComponent(patientId)}`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) throw new Error("INSURANCE_LOAD_FAILED");
+      if (generation !== insuranceGeneration) return;
       const carts = (d?.patient?.convenios) || [];
       if (carts.length === 0) {
-        block.classList.add("ep-hide");
+        help("painel:modalNew.tissNoCards", "Este paciente não tem carteirinha cadastrada. Cadastre o convênio em Pacientes → Editar → Convênios.", "./pacientes.html");
         return;
       }
       const aceitos = await _loadTissAceitos();
+      if (generation !== insuranceGeneration) return;
       const nomeOf = (code) => aceitos.find(c => c.code === code)?.nome || code;
-      sel.innerHTML = `<option value="">${tr("painel:modalNew.tissParticular", "— Particular (sem convênio) —")}</option>` +
-        carts.map(c => `<option value="${c.convenioCode}">${nomeOf(c.convenioCode)} (${c.numeroCarteirinha})</option>`).join("");
-      block.classList.remove("ep-hide");
+      sel.append(...carts.map(c => new Option(`${nomeOf(c.convenioCode)} (${c.numeroCarteirinha})`, c.convenioCode)));
+      sel.disabled = false;
+      insuranceStatus.textContent = "";
     } catch {
-      block.classList.add("ep-hide");
+      if (generation !== insuranceGeneration) return;
+      insuranceStatus.textContent = tr("painel:modalNew.tissLoadError", "Não foi possível carregar os convênios.");
+      const retry = document.createElement("button"); retry.type = "button"; retry.className = "ep-btn ep-btn--ghost ep-btn--sm";
+      retry.textContent = tr("painel:modalNew.tissRetry", "Tentar novamente");
+      retry.addEventListener("click", refreshTissNewSessionConvenios); insuranceStatus.appendChild(retry);
+    } finally {
+      if (generation === insuranceGeneration) insuranceLoading = false;
     }
   }
   patientSelect.addEventListener("change", refreshTissNewSessionConvenios);
+  paymentInput.addEventListener("change", refreshTissNewSessionConvenios);
 
   // O campo nativo de data só recebe valor quando dia, mês e os quatro
   // dígitos do ano estão completos. Nesse instante, segue direto para a hora.
@@ -465,6 +500,23 @@ export function createNewSessionModal({
       statusEl.textContent = tr("painel:modalNew.errMissingEmail", "Informe o e-mail do paciente — necessário pra confirmação, lembrete e vincular conta (chat).");
       statusEl.className = "ep-status is-err";
       document.getElementById("patientEmail").focus();
+      return;
+    }
+    const tissConvCode = paymentInput.value === "insurance" && therapist?.tissEnabled && !therapist?.institutional
+      ? document.getElementById("tissNewConvSelect").value : "";
+    if (insuranceLoading) {
+      statusEl.textContent = tr("painel:modalNew.tissLoading", "Carregando convênios do paciente…");
+      return;
+    }
+    if (paymentInput.value === "insurance" && therapist?.tissEnabled && !document.getElementById("tissNewConvSelect").disabled && !tissConvCode) {
+      statusEl.textContent = tr("painel:modalNew.tissPick", "Selecione o convênio do paciente.");
+      document.getElementById("tissNewConvSelect").focus();
+      return;
+    }
+    if (tissConvCode && !document.getElementById("tissNewTussCode").value.trim()) {
+      statusEl.textContent = tr("painel:modalNew.tissRequiredTuss", "Informe o código TUSS para gerar a guia do convênio selecionado.");
+      statusEl.className = "ep-status is-err";
+      document.getElementById("tissNewTussCode").focus();
       return;
     }
     statusEl.textContent = tr("painel:modalNew.creating", "Criando…");
@@ -544,8 +596,8 @@ export function createNewSessionModal({
         return;
       }
 
-      // TISS opcional: best-effort, se falhar usuário marca depois em /tiss.html.
-      const tissConvCode = document.getElementById("tissNewConvSelect")?.value;
+      // The consultation already exists; report guide failures without creating it twice.
+      let guideWarning = "";
       if (tissConvCode && data.session?.sessionId) {
         const tussCode  = document.getElementById("tissNewTussCode").value.trim();
         const tussLabel = document.getElementById("tissNewTussLabel").value.trim();
@@ -553,7 +605,7 @@ export function createNewSessionModal({
         if (tussCode) {
           try {
             const tToken = await getToken();
-            await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(data.session.sessionId)}/tiss/marcar`, {
+            const marked = await fetch(`${BACKEND_BASE_URL}/therapy/sessao/${encodeURIComponent(data.session.sessionId)}/tiss/marcar`, {
               method: "POST",
               headers: { "Content-Type": "application/json", "Authorization": `Bearer ${tToken}` },
               body: JSON.stringify({
@@ -563,7 +615,11 @@ export function createNewSessionModal({
                 valorProcedimento: valor
               })
             });
-          } catch (e) { /* best-effort */ }
+            const result = await marked.json().catch(() => ({}));
+            if (!marked.ok || !result.ok) throw new Error("GUIDE_FAILED");
+          } catch {
+            guideWarning = tr("painel:modalNew.tissGuideFailed", "Consulta criada, mas não foi possível gerar a guia do convênio. Complete o registro em TISS → Guias.");
+          }
         }
       }
 
@@ -587,6 +643,7 @@ export function createNewSessionModal({
         linkSubEl.textContent = data.recurrence
           ? tr("painel:modalLink.seriesSub", "Série de {{n}} consultas criada. Este é o link da 1ª — pegue os links das demais na agenda, no dia.", { n: data.recurrence.count })
           : "";
+        if (guideWarning) linkSubEl.textContent += (linkSubEl.textContent ? " " : "") + guideWarning;
       }
       linkModal.classList.add("is-open");
 
