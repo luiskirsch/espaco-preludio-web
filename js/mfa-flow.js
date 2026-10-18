@@ -2,9 +2,9 @@ import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261018-mfa4";
 import { get2faSessionToken, save2faSession, clear2faSession } from "./twofa-session.js?v=20261018-mfa4";
 
 const messages = {
-  pt: { setup:"Proteja seu acesso", setupInfo:"A verificação em duas etapas é obrigatória. Cadastre esta chave no seu aplicativo autenticador e confirme o código de seis dígitos.", verify:"Confirme seu acesso", verifyInfo:"Digite o código atual do seu aplicativo autenticador.", code:"Código de seis dígitos", confirm:"Confirmar", cancel:"Cancelar", loading:"Verificando…", recovery:"Usar código de recuperação", recoveryTitle:"Recuperar o autenticador", recoveryInfo:"Use um dos códigos guardados na ativação. Depois será necessário cadastrar um novo autenticador.", recoveryLabel:"Código de recuperação", back:"Voltar", savedTitle:"Guarde seus códigos de recuperação", savedInfo:"Eles aparecem somente agora. Guarde-os em local seguro, fora deste navegador. Cada recuperação exige cadastrar um novo autenticador.", download:"Baixar códigos", saved:"Guardei os códigos de recuperação.", proceed:"Continuar", unavailable:"Não foi possível concluir. Tente novamente.", wrong:"Código incorreto. Confira o aplicativo e tente novamente.", reused:"Este código já foi usado. Aguarde o próximo código do aplicativo.", expired:"O cadastro expirou. Feche esta janela e inicie novamente.", limited:"Muitas tentativas. Aguarde dez minutos e tente novamente.", invalidRecovery:"Código de recuperação inválido ou já utilizado.", changed:"A sessão mudou. Entre novamente.", renewed:"Gerar novos códigos de recuperação" },
-  en: { setup:"Protect your account", setupInfo:"Two-step verification is required. Add this key to your authenticator app and confirm its six-digit code.", verify:"Verify your access", verifyInfo:"Enter the current code from your authenticator app.", code:"Six-digit code", confirm:"Confirm", cancel:"Cancel", loading:"Verifying…", recovery:"Use a recovery code", recoveryTitle:"Recover your authenticator", recoveryInfo:"Use a code saved during enrollment. You will then need to enroll a new authenticator.", recoveryLabel:"Recovery code", back:"Back", savedTitle:"Save your recovery codes", savedInfo:"They are shown only now. Keep them somewhere safe outside this browser. Recovery requires enrolling a new authenticator.", download:"Download codes", saved:"I have saved the recovery codes.", proceed:"Continue", unavailable:"Could not complete this request. Please try again.", wrong:"Incorrect code. Check your authenticator and try again.", reused:"This code has already been used. Wait for the next authenticator code.", expired:"Enrollment expired. Close this window and start again.", limited:"Too many attempts. Wait ten minutes and try again.", invalidRecovery:"Invalid or already used recovery code.", changed:"Your session changed. Please sign in again.", renewed:"Generate new recovery codes" },
-  es: { setup:"Protege tu acceso", setupInfo:"La verificación en dos pasos es obligatoria. Añade esta clave a tu aplicación de autenticación y confirma su código de seis dígitos.", verify:"Confirma tu acceso", verifyInfo:"Introduce el código actual de tu aplicación de autenticación.", code:"Código de seis dígitos", confirm:"Confirmar", cancel:"Cancelar", loading:"Verificando…", recovery:"Usar código de recuperación", recoveryTitle:"Recuperar el autenticador", recoveryInfo:"Usa un código guardado al activar la protección. Después deberás registrar un autenticador nuevo.", recoveryLabel:"Código de recuperación", back:"Volver", savedTitle:"Guarda tus códigos de recuperación", savedInfo:"Solo se muestran ahora. Guárdalos en un lugar seguro, fuera de este navegador. La recuperación requiere registrar un autenticador nuevo.", download:"Descargar códigos", saved:"He guardado los códigos de recuperación.", proceed:"Continuar", unavailable:"No se pudo completar. Inténtalo de nuevo.", wrong:"Código incorrecto. Revisa la aplicación e inténtalo de nuevo.", reused:"Este código ya fue usado. Espera el siguiente código de la aplicación.", expired:"El registro ha caducado. Cierra esta ventana y vuelve a empezar.", limited:"Demasiados intentos. Espera diez minutos e inténtalo de nuevo.", invalidRecovery:"Código de recuperación inválido o ya utilizado.", changed:"La sesión cambió. Inicia sesión de nuevo.", renewed:"Generar nuevos códigos de recuperación" }
+  pt: { disableTitle:"Desativar verificação em duas etapas", disableInfo:"Digite o código atual do seu aplicativo autenticador para desativar.", enrollOptInfo:"Cadastre esta chave no seu aplicativo autenticador e confirme o código de seis dígitos.", setup:"Proteja seu acesso", setupInfo:"A verificação em duas etapas é obrigatória. Cadastre esta chave no seu aplicativo autenticador e confirme o código de seis dígitos.", verify:"Confirme seu acesso", verifyInfo:"Digite o código atual do seu aplicativo autenticador.", code:"Código de seis dígitos", confirm:"Confirmar", cancel:"Cancelar", loading:"Verificando…", recovery:"Usar código de recuperação", recoveryTitle:"Recuperar o autenticador", recoveryInfo:"Use um dos códigos guardados na ativação. Depois será necessário cadastrar um novo autenticador.", recoveryLabel:"Código de recuperação", back:"Voltar", savedTitle:"Guarde seus códigos de recuperação", savedInfo:"Eles aparecem somente agora. Guarde-os em local seguro, fora deste navegador. Cada recuperação exige cadastrar um novo autenticador.", download:"Baixar códigos", saved:"Guardei os códigos de recuperação.", proceed:"Continuar", unavailable:"Não foi possível concluir. Tente novamente.", wrong:"Código incorreto. Confira o aplicativo e tente novamente.", reused:"Este código já foi usado. Aguarde o próximo código do aplicativo.", expired:"O cadastro expirou. Feche esta janela e inicie novamente.", limited:"Muitas tentativas. Aguarde dez minutos e tente novamente.", invalidRecovery:"Código de recuperação inválido ou já utilizado.", changed:"A sessão mudou. Entre novamente.", renewed:"Gerar novos códigos de recuperação" },
+  en: { disableTitle:"Turn off two-step verification", disableInfo:"Enter the current code from your authenticator app to turn it off.", enrollOptInfo:"Add this key to your authenticator app and confirm its six-digit code.", setup:"Protect your account", setupInfo:"Two-step verification is required. Add this key to your authenticator app and confirm its six-digit code.", verify:"Verify your access", verifyInfo:"Enter the current code from your authenticator app.", code:"Six-digit code", confirm:"Confirm", cancel:"Cancel", loading:"Verifying…", recovery:"Use a recovery code", recoveryTitle:"Recover your authenticator", recoveryInfo:"Use a code saved during enrollment. You will then need to enroll a new authenticator.", recoveryLabel:"Recovery code", back:"Back", savedTitle:"Save your recovery codes", savedInfo:"They are shown only now. Keep them somewhere safe outside this browser. Recovery requires enrolling a new authenticator.", download:"Download codes", saved:"I have saved the recovery codes.", proceed:"Continue", unavailable:"Could not complete this request. Please try again.", wrong:"Incorrect code. Check your authenticator and try again.", reused:"This code has already been used. Wait for the next authenticator code.", expired:"Enrollment expired. Close this window and start again.", limited:"Too many attempts. Wait ten minutes and try again.", invalidRecovery:"Invalid or already used recovery code.", changed:"Your session changed. Please sign in again.", renewed:"Generate new recovery codes" },
+  es: { disableTitle:"Desactivar la verificación en dos pasos", disableInfo:"Introduce el código actual de tu aplicación de autenticación para desactivarla.", enrollOptInfo:"Añade esta clave a tu aplicación de autenticación y confirma su código de seis dígitos.", setup:"Protege tu acceso", setupInfo:"La verificación en dos pasos es obligatoria. Añade esta clave a tu aplicación de autenticación y confirma su código de seis dígitos.", verify:"Confirma tu acceso", verifyInfo:"Introduce el código actual de tu aplicación de autenticación.", code:"Código de seis dígitos", confirm:"Confirmar", cancel:"Cancelar", loading:"Verificando…", recovery:"Usar código de recuperación", recoveryTitle:"Recuperar el autenticador", recoveryInfo:"Usa un código guardado al activar la protección. Después deberás registrar un autenticador nuevo.", recoveryLabel:"Código de recuperación", back:"Volver", savedTitle:"Guarda tus códigos de recuperación", savedInfo:"Solo se muestran ahora. Guárdalos en un lugar seguro, fuera de este navegador. La recuperación requiere registrar un autenticador nuevo.", download:"Descargar códigos", saved:"He guardado los códigos de recuperación.", proceed:"Continuar", unavailable:"No se pudo completar. Inténtalo de nuevo.", wrong:"Código incorrecto. Revisa la aplicación e inténtalo de nuevo.", reused:"Este código ya fue usado. Espera el siguiente código de la aplicación.", expired:"El registro ha caducado. Cierra esta ventana y vuelve a empezar.", limited:"Demasiados intentos. Espera diez minutos e inténtalo de nuevo.", invalidRecovery:"Código de recuperación inválido o ya utilizado.", changed:"La sesión cambió. Inicia sesión de nuevo.", renewed:"Generar nuevos códigos de recuperación" }
 };
 function language() {
   let lang = document.documentElement.lang;
@@ -39,14 +39,21 @@ export function ensureMfa(user, options = {}) {
   pendingFlow = startFlow(user, options).finally(() => { pendingFlow = undefined; });
   return pendingFlow;
 }
-async function startFlow(user, { renewRecovery = false } = {}) {
+export async function mfaStatus(user) { return request(user, "status"); }
+
+async function startFlow(user, { renewRecovery = false, enroll = false, disable = false } = {}) {
   let state;
   try { state = await request(user, "status"); }
   catch (error) {
     if (error.code === "PROFISSIONAL_NAO_REGISTRADO") return { registered: false };
     throw error;
   }
-  if (state.sessionValid && !renewRecovery) return { verified: true };
+  const optional = state.required === false;
+  // Opt-in accounts that have not enrolled sign in without a dialog.
+  if (optional && !state.enabled && !enroll) return { verified: true, optional: true };
+  if (enroll && state.enabled) return { verified: true };
+  if (disable && !state.enabled) return { disabled: true };
+  if (state.sessionValid && !renewRecovery && !disable) return { verified: true };
   if (!document.getElementById("mfaFlowStyles")) {
     const css = node("link"); css.id = "mfaFlowStyles"; css.rel = "stylesheet";
     css.href = new URL("../css/mfa-flow.css?v=20261018-mfa4", import.meta.url).href;
@@ -101,7 +108,8 @@ async function startFlow(user, { renewRecovery = false } = {}) {
     }
     async function renderCode(setup) {
       let details;
-      const status = frame(setup ? text.setup : renewRecovery ? text.renewed : text.verify, setup ? text.setupInfo : text.verifyInfo);
+      const status = frame(setup ? text.setup : disable ? text.disableTitle : renewRecovery ? text.renewed : text.verify,
+        setup ? (optional ? text.enrollOptInfo : text.setupInfo) : disable ? text.disableInfo : text.verifyInfo);
       if (setup) {
         try {
           details = await request(user, "setup", {});
@@ -124,16 +132,17 @@ async function startFlow(user, { renewRecovery = false } = {}) {
         if (!/^\d{6}$/.test(input.value)) return;
         confirm.disabled = true; status.textContent = text.loading;
         try {
-          const action = setup ? "enable" : renewRecovery ? "recovery-codes" : "verify";
+          const action = setup ? "enable" : disable ? "disable" : renewRecovery ? "recovery-codes" : "verify";
           const data = await request(user, action, { code: input.value });
-          if (setup || renewRecovery) showRecoveryCodes(data);
+          if (disable) { clear2faSession(); finish({ disabled: true }); }
+          else if (setup || renewRecovery) showRecoveryCodes(data);
           else { save2faSession(data.sessionToken); finish({ verified: true }); }
         } catch (error) { showError(status, error); confirm.disabled = false; input.select(); }
       }
       const actions = node("div", undefined, "mfa-actions");
       actions.append(button(text.cancel, () => finish(null, Object.assign(new Error("MFA_CANCELLED"), { code:"MFA_CANCELLED" }))), confirm);
       dialog.append(label, input, status, actions);
-      if (!setup) { const recover = button(text.recovery, renderRecovery); recover.className = "mfa-link"; dialog.append(recover); }
+      if (!setup && !disable) { const recover = button(text.recovery, renderRecovery); recover.className = "mfa-link"; dialog.append(recover); }
       input.focus();
     }
     function renderRecovery() {
@@ -144,7 +153,8 @@ async function startFlow(user, { renewRecovery = false } = {}) {
         confirm.disabled = true; status.textContent = text.loading;
         try {
           await request(user, "recover", { recoveryCode: input.value }); clear2faSession(); renewRecovery = false;
-          await renderCode(true);
+          // Opt-in accounts end up without the factor; they may enroll again from the profile.
+          if (optional) finish({ verified: true, recovered: true }); else await renderCode(true);
         } catch (error) { showError(status, error); confirm.disabled = false; }
       }, true);
       const actions = node("div", undefined, "mfa-actions"); actions.append(button(text.back, () => renderCode(false)), confirm);

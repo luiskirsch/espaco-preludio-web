@@ -171,6 +171,21 @@
       </div>
     </div>
 
+    <!-- Segurança: verificação em duas etapas opcional -->
+    <div class="menu-section a-mt-16 a-hide" id="mfaSection">
+      <div class="menu-section__title">Segurança</div>
+      <div class="menu-card">
+        <button type="button" class="menu-item" id="mfaItem" style="width:100%;border:0;background:none;text-align:left;font:inherit;color:inherit;cursor:pointer;">
+          <div class="menu-item__icon" style="background:rgba(45,106,62,.1);">🔐</div>
+          <div class="menu-item__text">
+            <div class="menu-item__label">Verificação em duas etapas</div>
+            <div class="menu-item__sub" id="mfaSub">—</div>
+          </div>
+          <div class="menu-item__arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </button>
+      </div>
+    </div>
+
     <!-- Notificações -->
     <div class="menu-section a-mt-16">
       <div class="menu-section__title" data-i18n="p-app-perfil:notificacoes_e9c96">Notificações</div>
@@ -271,6 +286,29 @@
   import { onAuthStateChanged, signOut, updateProfile, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?v=20261018-mfa4";
   import { clearPatientDek } from "../js/patient-session.js";
+  import { ensureMfa, mfaStatus } from "../js/mfa-flow.js?v=20261018-mfa5";
+
+  // 2FA opcional (paciente, colaborador, aluno). Contas em que é obrigatório
+  // (profissional) gerenciam pelo perfil profissional — aqui fica oculto.
+  let mfaEnabled = false;
+  async function renderMfa(user) {
+    try {
+      const state = await mfaStatus(user);
+      if (state.required !== false) return;
+      mfaEnabled = !!state.enabled;
+      document.getElementById("mfaSub").textContent = mfaEnabled
+        ? "Ativada · toque para desativar"
+        : "Desativada · toque para ativar (recomendado)";
+      document.getElementById("mfaSection").classList.remove("a-hide");
+    } catch { /* indisponível — a seção permanece oculta */ }
+  }
+  document.getElementById("mfaItem").addEventListener("click", async () => {
+    const item = document.getElementById("mfaItem");
+    item.disabled = true;
+    try { await ensureMfa(auth.currentUser, mfaEnabled ? { disable: true } : { enroll: true }); }
+    catch { /* o próprio modal explica erros; cancelar não muda nada */ }
+    finally { item.disabled = false; await renderMfa(auth.currentUser); }
+  });
 
   let currentUser = null;
   let deferredInstall = null;
@@ -301,6 +339,7 @@
   onAuthStateChanged(auth, async user => {
     if (!user) { window.location.href = "./login.html"; return; }
     currentUser = user;
+    renderMfa(user);
     const name = user.displayName || user.email.split("@")[0];
     const initials = name.match(/\b\p{L}/gu)?.slice(0,2).join("").toUpperCase() || "?";
     document.getElementById("profileName").textContent = name;

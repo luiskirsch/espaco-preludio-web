@@ -98,6 +98,7 @@
 <script type="module">
   import {onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import {auth,BACKEND_BASE_URL} from "./js/firebase-config.js?v=20261018-mfa4";
+  import {mountOptionalMfaButton} from "./js/mfa-optional-button.js?v=20261018-mfa5";
   const $=id=>document.getElementById(id),esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
   const NAV=[['home','⌂','Início'],['care','♡','Consultas'],['journey','◌','Jornada'],['academy','▤','Academia'],['impact','✦','Impacto'],['safety','+','Ajuda']];
   const DAILY_INSPIRATIONS=[
@@ -202,7 +203,7 @@
   $('studentSwitch').onchange=async()=>{activeStudent=students.find(item=>item.id===$('studentSwitch').value)||students[0];localStorage.setItem('ep_student_active',activeStudent.id);await loadProgress();renderAll();showView('home')};
   $('logoutButton').onclick=async()=>{const button=$('logoutButton');button.disabled=true;button.textContent='Saindo…';try{await signOut(auth);location.replace('./aluno-login.html')}catch(error){button.disabled=false;button.textContent='Sair';toast('Não foi possível sair. Tente novamente.')}};
   const localPreview=['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).has('preview');
-  if(localPreview){activeStudent={id:'preview',name:'Marina Oliveira',caseCode:'EP-PREVIEW-2026',programName:'Programa Municipal de Cuidado Integral',schoolName:'Escola Caminhos do Sol',status:'care_active',therapistName:'Dra. Ana Martins',demo:true,nextSessionAt:Date.now()+86400000,sessions:[{id:'preview-session',scheduledAt:Date.now()+86400000,status:'scheduled',therapistName:'Dra. Ana Martins',demo:true,joinAvailable:true,joinCode:'DEMO2026'}]};students=[activeStudent];progress={totalPoints:365,level:2,nextLevelAt:500,streakDays:4,completedCourses:2,totalActions:11,completedActivityIds:['course_emotional_literacy','course_digital_balance'],practicedToday:['breathe_60']};syncStudentSwitch();renderAll();$('loading').style.display='none';showView('home')}else{onAuthStateChanged(auth,account=>{if(!account){location.replace('./aluno-login.html');return}load(account).catch(()=>location.replace('./aluno-login.html'))})}
+  if(localPreview){activeStudent={id:'preview',name:'Marina Oliveira',caseCode:'EP-PREVIEW-2026',programName:'Programa Municipal de Cuidado Integral',schoolName:'Escola Caminhos do Sol',status:'care_active',therapistName:'Dra. Ana Martins',demo:true,nextSessionAt:Date.now()+86400000,sessions:[{id:'preview-session',scheduledAt:Date.now()+86400000,status:'scheduled',therapistName:'Dra. Ana Martins',demo:true,joinAvailable:true,joinCode:'DEMO2026'}]};students=[activeStudent];progress={totalPoints:365,level:2,nextLevelAt:500,streakDays:4,completedCourses:2,totalActions:11,completedActivityIds:['course_emotional_literacy','course_digital_balance'],practicedToday:['breathe_60']};syncStudentSwitch();renderAll();$('loading').style.display='none';showView('home')}else{onAuthStateChanged(auth,account=>{if(!account){location.replace('./aluno-login.html');return}if(!$('logoutButton').previousElementSibling?.classList.contains('logout'))mountOptionalMfaButton($('logoutButton'),account,{className:'logout'});load(account).catch(()=>location.replace('./aluno-login.html'))})}
 </script>
 </body>
 </html>

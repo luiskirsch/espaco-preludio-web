@@ -214,8 +214,9 @@
 
 <script type="module">
   import {
-    signInWithEmailAndPassword
+    signInWithEmailAndPassword, signOut
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { ensureMfa } from "./js/mfa-flow.js?v=20261018-mfa5";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?v=20261018-mfa4";
   import { unwrapDek } from "./js/crypto.js";
   import { rememberPatientDek, rememberPatientUser } from "./js/patient-session.js";
@@ -280,6 +281,7 @@
 
   function humanize(err) {
     const code = err?.code || "";
+    if (code === "MFA_CANCELLED") return "Verificação em duas etapas cancelada. Entre novamente.";
     if (code === "auth/invalid-credential") return tr("paciente-login:errors.invalidCredential", "E-mail ou senha incorretos.");
     if (code === "auth/wrong-password")     return tr("paciente-login:errors.wrongPassword", "Senha incorreta.");
     if (code === "auth/user-not-found")     return tr("paciente-login:errors.userNotFound", "Conta não encontrada.");
@@ -305,6 +307,9 @@
     try {
       setStatus(tr("paciente-login:errors.authenticating", "Autenticando…"));
       const cred = await signInWithEmailAndPassword(auth, email, password);
+      // 2FA opcional: só abre o modal se a conta tiver ativado no perfil.
+      try { await ensureMfa(cred.user); }
+      catch (mfaErr) { await signOut(auth).catch(() => {}); throw mfaErr; }
       const idToken = await cred.user.getIdToken();
 
       setStatus(tr("paciente-login:errors.loadingProfile", "Carregando perfil…"));

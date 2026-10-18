@@ -137,6 +137,7 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?v=20261018-mfa4";
+  import { mountOptionalMfaButton } from "./js/mfa-optional-button.js?v=20261018-mfa5";
   import { requirePatient } from "./js/patient-auth-guard.js?v=20261018-tools1";
   import { encryptNote, decryptNote, openSealed, generateEcdhKeypair, wrapKey, unwrapKey } from "./js/crypto.js?v=2";
   import { clearPatientDek } from "./js/patient-session.js";
@@ -745,6 +746,7 @@
       // firebase-config.js?v=20261018-mfa4 importado no topo (usado em signOut(auth) no
       // logoutBtn handler). Padrão usado em painel.html / outras páginas.
       const session = await requirePatient();
+      if (auth.currentUser) mountOptionalMfaButton(document.getElementById("logoutBtn"), auth.currentUser, { className: "ep-btn ep-btn--ghost ep-btn--sm" });
       idToken = session.idToken;
       account = session.account;
       dek     = session.dek;
