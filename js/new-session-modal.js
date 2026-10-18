@@ -63,6 +63,29 @@ const MODAL_HTML = `
         </div>
         <span class="ep-text-xs ep-text-muted" data-i18n="painel:modalNew.scheduledAtHint">Obrigatório — a consulta precisa aparecer na agenda. Você pode entrar antes do horário marcado.</span>
       </div>
+      <div class="ep-row">
+        <div class="ep-field">
+          <label class="ep-label" for="appointmentType" data-i18n="painel:modalNew.appointmentType">Tipo de consulta</label>
+          <select id="appointmentType" class="ep-select">
+            <option value="standard" data-i18n="painel:modalNew.typeStandard">Consulta padrão</option>
+            <option value="initial" data-i18n="painel:modalNew.typeInitial">Primeira consulta</option>
+            <option value="return" data-i18n="painel:modalNew.typeReturn">Retorno</option>
+            <option value="follow_up" data-i18n="painel:modalNew.typeFollowUp">Acompanhamento</option>
+          </select>
+        </div>
+        <div class="ep-field">
+          <label class="ep-label" for="sessionDuration" data-i18n="painel:modalNew.duration">Duração (minutos)</label>
+          <input id="sessionDuration" class="ep-input" type="number" min="15" max="240" step="1" required>
+        </div>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="sessionPaymentType" data-i18n="painel:modalNew.paymentType">Modalidade de pagamento</label>
+        <select id="sessionPaymentType" class="ep-select">
+          <option value="unspecified" data-i18n="painel:modalNew.paymentUnspecified">Não informado</option>
+          <option value="private" data-i18n="painel:modalNew.paymentPrivate">Particular</option>
+          <option value="insurance" data-i18n="painel:modalNew.paymentInsurance">Convênio</option>
+        </select>
+      </div>
       <div class="ep-field" id="chargeField">
         <label class="ep-label" for="chargeAmount">Valor a cobrar do paciente (R$)</label>
         <input id="chargeAmount" class="ep-input" type="number" min="10" max="100000" step="0.01" placeholder="Opcional — ex.: 180,00">
@@ -174,6 +197,17 @@ export function createNewSessionModal({
     document.querySelectorAll("[data-tiss-only]").forEach(el => el.classList.add("ep-hide"));
   }
 
+  const typeInput = document.getElementById("appointmentType");
+  const durationInput = document.getElementById("sessionDuration");
+  const paymentInput = document.getElementById("sessionPaymentType");
+  function applyTypeDuration() {
+    const defaults = { initial: 30, return: 20, follow_up: 20 };
+    durationInput.value = typeInput.value === "standard"
+      ? (therapist?.agendaConfig?.slotMinutes || 60)
+      : (therapist?.agendaConfig?.appointmentDurations?.[typeInput.value] || defaults[typeInput.value]);
+  }
+  typeInput.addEventListener("change", applyTypeDuration);
+  paymentInput.disabled = !!therapist?.institutional;
   let patientsCache = [];
   let avulsoCache   = [];
 
@@ -189,7 +223,7 @@ export function createNewSessionModal({
           try {
             const json = await decryptNote({ ciphertext: p.ciphertext, iv: p.iv }, dek);
             const obj = JSON.parse(json);
-            return { patientId: p.patientId, name: obj.name || "—" };
+            return { patientId: p.patientId, name: obj.name || "—", paymentType: obj.paymentType || "unspecified" };
           } catch {
             return { patientId: p.patientId, name: "[corrompido]" };
           }
@@ -255,6 +289,7 @@ export function createNewSessionModal({
 
   patientSelect.addEventListener("change", () => {
     const v = patientSelect.value;
+    paymentInput.value = "unspecified";
     if (v === "__new__") {
       patientSelect.value = "";
       window.location.href = "./pacientes.html";
@@ -264,6 +299,7 @@ export function createNewSessionModal({
       const patientId = v.slice(3);
       const p = patientsCache.find(x => x.patientId === patientId);
       document.getElementById("patientName").value = p?.name || "";
+      paymentInput.value = ["private", "insurance"].includes(p?.paymentType) ? p.paymentType : "unspecified";
       freeNameField.classList.add("ep-hide");
     } else if (v.startsWith("name:")) {
       const name = v.slice(5);
@@ -276,6 +312,11 @@ export function createNewSessionModal({
   });
 
   function openModal(prefill = {}) {
+    document.getElementById("createNewSession").disabled = false;
+    typeInput.value = "standard";
+    applyTypeDuration();
+    const selectedPatient = patientsCache.find(p => p.patientId === prefill.patientId);
+    paymentInput.value = ["private", "insurance"].includes(selectedPatient?.paymentType) ? selectedPatient.paymentType : "unspecified";
     // Cobrança do paciente: não se aplica ao plano institucional (R$ 60 pela plataforma).
     const chargeField = document.getElementById("chargeField");
     if (chargeField) {
@@ -442,7 +483,17 @@ export function createNewSessionModal({
         return;
       }
     }
+    const durationMinutes = Number(durationInput.value);
+    if (!Number.isInteger(durationMinutes) || durationMinutes < 15 || durationMinutes > 240) {
+      statusEl.textContent = tr("painel:modalNew.invalidDuration", "Informe uma duração entre 15 e 240 minutos.");
+      statusEl.className = "ep-status is-err";
+      createBtn.disabled = false;
+      return;
+    }
     const body = {
+      appointmentType: typeInput.value,
+      durationMinutes,
+      paymentType: paymentInput.value,
       patientName,
       patientId: patientId || undefined,
       patientEmail: patientEmailRaw || undefined,

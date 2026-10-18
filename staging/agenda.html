@@ -24,6 +24,10 @@
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=3" defer></script>
   <style>
+    .ep-agenda-session.is-compact { display:flex; align-items:center; gap:5px; padding:2px 5px; }
+    .ep-agenda-session.is-compact .ep-agenda-session__time { font-size:10px; flex-shrink:0; }
+    .ep-agenda-session.is-compact .ep-agenda-session__name { font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
     .ep-agenda-blackout--red {
       background: rgba(184,69,61,.15) !important;
       border-left-color: #b8453d !important;
@@ -382,6 +386,7 @@
     <div class="ep-field" style="padding: 0 28px;">
       <label class="ep-label" for="cfgSlotMinutes" data-i18n="agenda:config.slotMinutes">Duração padrão da consulta</label>
       <select id="cfgSlotMinutes" class="ep-select">
+        <option value="20" data-i18n="agenda:config.min20">20 minutos</option>
         <option value="30" data-i18n="agenda:config.min30">30 minutos</option>
         <option value="45" data-i18n="agenda:config.min45">45 minutos</option>
         <option value="50" data-i18n="agenda:config.min50">50 minutos</option>
@@ -390,6 +395,14 @@
         <option value="120" data-i18n="agenda:config.min120">120 minutos</option>
       </select>
       <p class="ep-text-xs ep-text-muted ep-mt-0" data-i18n="agenda:config.slotHint">Aplicado ao criar consultas sem horário de fim explícito.</p>
+    </div>
+    <div class="ep-field" style="padding:0 28px;">
+      <label class="ep-label" for="cfgInitialMinutes" data-i18n="agenda:config.initial">Primeira consulta (minutos)</label>
+      <input id="cfgInitialMinutes" class="ep-input" type="number" min="15" max="240" step="1" value="30">
+      <label class="ep-label" for="cfgReturnMinutes" data-i18n="agenda:config.return">Retorno (minutos)</label>
+      <input id="cfgReturnMinutes" class="ep-input" type="number" min="15" max="240" step="1" value="20">
+      <label class="ep-label" for="cfgFollowUpMinutes" data-i18n="agenda:config.followUp">Acompanhamento (minutos)</label>
+      <input id="cfgFollowUpMinutes" class="ep-input" type="number" min="15" max="240" step="1" value="20">
     </div>
     <div class="ep-status" id="agendaConfigStatus" style="padding: 0 28px;"></div>
     <div class="ep-modal__actions">
@@ -405,7 +418,7 @@
   import { requireTherapist, refreshIdToken, invalidateProfileCache } from "./js/auth-guard.js?v=20261017-mfa3";
   import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=4";
   import { clearDek } from "./js/crypto.js";
-  import { createNewSessionModal } from "./js/new-session-modal.js?v=5";
+  import { createNewSessionModal } from "./js/new-session-modal.js?v=6";
 
   // tr(): helper i18n com fallback PT.
   function tr(key, fallback, opts) {
@@ -744,7 +757,8 @@
             const block = document.createElement("button");
             block.type = "button";
             block.className = "ep-agenda-blackout ep-agenda-blackout--red";
-            block.style.top = `${topPx}px`;
+            block.classList.toggle("is-compact", sessionDurationMinutes(s) <= 30);
+      block.style.top = `${topPx}px`;
             block.style.height = `${heightPx}px`;
             const blockedLbl = tr("agenda:js.blocked", "Bloqueado");
             block.title = b.reason ? tr("agenda:js.blockedWithReason", "Bloqueado: {{reason}}", { reason: b.reason }) : blockedLbl;
@@ -838,7 +852,7 @@
       const startMinutesFromTop = (sessionStartHour - START_HOUR) * 60;
       const topPx = Math.max(0, (startMinutesFromTop / 60) * HOUR_PX);
       // Clamp ao tamanho do slot inteiro — bloco sempre preenche o horário.
-      const heightPx = Math.max(HOUR_PX, (sessionDurationMinutes(s) / 60) * HOUR_PX);
+      const heightPx = Math.max(24, (sessionDurationMinutes(s) / 60) * HOUR_PX);
 
       const block = document.createElement("button");
       block.type = "button";
@@ -846,10 +860,13 @@
       block.style.top = `${topPx}px`;
       block.style.height = `${heightPx}px`;
       block.dataset.patientName = s.patientName || "";
-      block.title = `${s.patientName || "—"} · ${statusLabel(s)}`;
+      const paymentLabel = s.paymentType === "private" ? tr("agenda:session.private", "Particular") : s.paymentType === "insurance" ? tr("agenda:session.insurance", "Convênio") : "";
+      const confirmationLabel = s.status === "scheduled" ? (s.confirmedAt ? tr("agenda:session.confirmed", "Confirmada pelo paciente") : tr("agenda:session.pending", "Aguardando confirmação")) : "";
+      block.title = [s.patientName || "—", statusLabel(s), appointmentTypeLabel(s), `${sessionDurationMinutes(s)} min`, paymentLabel, confirmationLabel].filter(Boolean).join(" · ");
+      block.setAttribute("aria-label", block.title);
       block.innerHTML = `
         <div class="ep-agenda-session__time">${pad2(sd.getHours())}:${pad2(sd.getMinutes())}</div>
-        <div class="ep-agenda-session__name">${escapeHtml(s.patientName || "—")}</div>
+        <div class="ep-agenda-session__name">${escapeHtml(s.patientName || "—")}${paymentLabel ? ` · ${escapeHtml(paymentLabel)}` : ""}${s.confirmedAt ? " ✓" : ""}</div>
       `;
       block.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -897,6 +914,12 @@
     ).length;
   }
 
+  function appointmentTypeLabel(s) {
+    const key = { initial: "typeInitial", return: "typeReturn", follow_up: "typeFollowUp" }[s.appointmentType];
+    const fallback = { initial: "Primeira consulta", return: "Retorno", follow_up: "Acompanhamento" }[s.appointmentType];
+    return key ? tr("painel:modalNew." + key, fallback) : "";
+  }
+
   function openSessionPopover(s) {
     popoverSession = s;
     document.getElementById("popPatientName").textContent = s.patientName || "—";
@@ -907,7 +930,10 @@
     const overdue = isSessionOverdue(s);
     statusEl.textContent = overdue
       ? tr("agenda:pop.overdue", "Horário encerrado · atualização pendente")
-      : statusLabel(s);
+      : [statusLabel(s), appointmentTypeLabel(s), `${sessionDurationMinutes(s)} min`,
+        s.paymentType === "private" ? tr("agenda:session.private", "Particular") : s.paymentType === "insurance" ? tr("agenda:session.insurance", "Convênio") : "",
+        s.status === "scheduled" ? (s.confirmedAt ? tr("agenda:session.confirmed", "Confirmada pelo paciente") : tr("agenda:session.pending", "Aguardando confirmação")) : ""
+      ].filter(Boolean).join(" · ");
     statusEl.className = "ep-pop-status";
     if (s.status === "completed")   statusEl.classList.add("is-ok");
     if (s.status === "in_progress" && !overdue) statusEl.classList.add("is-ok");
@@ -1433,6 +1459,10 @@
     cfgStartEl.value = String(START_HOUR);
     cfgEndEl.value   = String(END_HOUR);
     cfgSlotEl.value  = String(SESSION_DEFAULT_MIN);
+    const durations = therapist?.agendaConfig?.appointmentDurations || {};
+    document.getElementById("cfgInitialMinutes").value = durations.initial || 30;
+    document.getElementById("cfgReturnMinutes").value = durations.return || 20;
+    document.getElementById("cfgFollowUpMinutes").value = durations.follow_up || 20;
     cfgStatusEl.textContent = "";
     cfgStatusEl.className = "ep-status";
     cfgModal.classList.add("is-open");
@@ -1449,6 +1479,15 @@
       cfgStatusEl.classList.add("is-err");
       return;
     }
+    const appointmentDurations = {
+      initial: Number(document.getElementById("cfgInitialMinutes").value),
+      return: Number(document.getElementById("cfgReturnMinutes").value),
+      follow_up: Number(document.getElementById("cfgFollowUpMinutes").value)
+    };
+    if (Object.values(appointmentDurations).some(n => !Number.isInteger(n) || n < 15 || n > 240)) {
+      cfgStatusEl.textContent = tr("agenda:config.invalidDuration", "Use durações inteiras entre 15 e 240 minutos.");
+      cfgStatusEl.classList.add("is-err"); return;
+    }
     cfgSaveBtn.disabled = true;
     cfgStatusEl.className = "ep-status";
     cfgStatusEl.textContent = tr("agenda:js.saving", "Salvando…");
@@ -1456,12 +1495,13 @@
       const res = await fetch(`${BACKEND_BASE_URL}/therapy/profissional/perfil`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
-        body: JSON.stringify({ agendaConfig: { startHour: sh, endHour: eh, slotMinutes: sm } })
+        body: JSON.stringify({ agendaConfig: { startHour: sh, endHour: eh, slotMinutes: sm, appointmentDurations } })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP_${res.status}`);
       // Aplica em memória + re-render
       START_HOUR = sh; END_HOUR = eh; SESSION_DEFAULT_MIN = sm;
+      therapist.agendaConfig = { ...therapist.agendaConfig, startHour: sh, endHour: eh, slotMinutes: sm, appointmentDurations };
       invalidateProfileCache();
       cfgStatusEl.textContent = tr("agenda:js.savedUpdating", "Salvo. Atualizando agenda…");
       cfgStatusEl.classList.add("is-ok");

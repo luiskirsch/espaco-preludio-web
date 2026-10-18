@@ -111,6 +111,14 @@
         <a id="benefitLogin" class="ep-btn ep-btn--ghost ep-mt-12 ep-hide" href="./paciente-login.html">Entrar na conta de paciente</a>
       </section>
 
+      <div class="ep-field ep-mt-24">
+        <label class="ep-label" for="bookingAppointmentType" data-i18n="agendar:appointment.label">Tipo de consulta</label>
+        <select id="bookingAppointmentType" class="ep-select"><option value="standard" data-i18n="agendar:appointment.standard">Consulta padrão</option>
+          <option value="initial" data-i18n="agendar:appointment.initial">Primeira consulta</option>
+          <option value="return" data-i18n="agendar:appointment.return">Retorno</option>
+          <option value="follow_up" data-i18n="agendar:appointment.followUp">Acompanhamento</option></select>
+        <p id="bookingDurationHint" class="ep-text-sm ep-text-muted" aria-live="polite"></p>
+      </div>
       <!-- Passo 1: escolher dia -->
       <section class="ep-mt-32">
         <h2 class="ep-h3 ep-mt-0" data-i18n="agendar:steps.day">1. Escolha o dia</h2>
@@ -531,7 +539,21 @@
     }
   } catch (_) { /* nenhum pagamento pendente nesta aba */ }
 
+  const bookingTypeInput = $("bookingAppointmentType");
+  function updateBookingDuration() {
+    const type = bookingTypeInput.value;
+    const minutes = type === "standard" ? (agendaCfg?.slotMinutes || 50) : (agendaCfg?.appointmentDurations?.[type] || (type === "initial" ? 30 : 20));
+    $("bookingDurationHint").textContent = tr("agendar:appointment.duration", "Duração: {{minutes}} minutos", { minutes });
+  }
+  updateBookingDuration();
+  bookingTypeInput.addEventListener("change", () => {
+    updateBookingDuration(); selectedSlot = null;
+    $("formSection").classList.add("ep-hide");
+    if (selectedDay) selectDay(selectedDay);
+  });
+  let slotRequestSequence = 0;
   async function selectDay(dayMs, btnEl) {
+    const requestSequence = ++slotRequestSequence;
     selectedDay = dayMs;
     selectedSlot = null;
     document.querySelectorAll("#dayPicker .ep-day-chip").forEach(b => b.classList.remove("is-selected"));
@@ -545,8 +567,9 @@
     const from = dayMs;
     const to   = dayMs + 24 * 3600 * 1000 - 1;
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(slug)}/slots?from=${from}&to=${to}`);
+      const res = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(slug)}/slots?from=${from}&to=${to}&appointmentType=${encodeURIComponent(bookingTypeInput.value)}`);
       const data = await res.json().catch(() => ({}));
+      if (requestSequence !== slotRequestSequence) return;
       $("slotsLoading").classList.add("ep-hide");
       if (!res.ok || !data.ok) {
         $("slotsEmpty").textContent = tr("agendar:slots.errorLoad", "Erro carregando horários. Tente outro dia.");
@@ -781,6 +804,7 @@
         body: JSON.stringify({
           patientName, patientEmail, patientPhone, notes,
           requestedSlot: selectedSlot.start,
+          appointmentType: bookingTypeInput.value,
           tcleSigned: true,
           ...(isCorporateExtra ? { acceptExtraPriceCents: quotedExtraCents } : {})
         })

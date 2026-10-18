@@ -93,6 +93,12 @@
     <div id="patientFilters" class="ep-mt-16 ep-hide" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 16px;background:var(--ep-bg-2);border-radius:10px;">
       <span class="ep-text-xs ep-text-muted" style="font-weight:600;letter-spacing:0.06em;text-transform:uppercase;" data-i18n="pacientes:filters.label">Filtrar:</span>
       <input id="patientSearchInput" class="ep-input" type="text" placeholder="🔍 Nome ou contato…" style="flex:1;min-width:200px;max-width:320px;height:36px;font-size:13px;" data-i18n-placeholder="pacientes:filters.searchPlaceholder">
+      <select id="paymentTypeFilter" class="ep-select" aria-label="Modalidade de pagamento" style="width:auto;max-width:220px;">
+        <option value="" data-i18n="pacientes:payment.all">Todas as modalidades</option>
+        <option value="private" data-i18n="pacientes:payment.private">Particular</option>
+        <option value="insurance" data-i18n="pacientes:payment.insurance">Convênio</option>
+        <option value="unspecified" data-i18n="pacientes:payment.unspecified">Não informado</option>
+      </select>
       <div id="tagFilterChips" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;"></div>
       <button id="clearFiltersBtn" type="button" class="ep-btn ep-btn--ghost ep-btn--sm ep-hide" style="margin-left:auto;" data-i18n="pacientes:filters.clear">Limpar filtros</button>
     </div>
@@ -130,6 +136,14 @@
           <label class="ep-label" for="patientBirth" data-i18n="pacientes:modal.labelBirth">Nascimento</label>
           <input id="patientBirth" class="ep-input" type="date">
         </div>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label" for="patientPaymentType" data-i18n="pacientes:payment.label">Modalidade de pagamento</label>
+        <select id="patientPaymentType" class="ep-select">
+          <option value="unspecified" data-i18n="pacientes:payment.unspecified">Não informado</option>
+          <option value="private" data-i18n="pacientes:payment.private">Particular</option>
+          <option value="insurance" data-i18n="pacientes:payment.insurance">Convênio</option>
+        </select>
       </div>
       <div class="ep-field">
         <label class="ep-label" for="patientObs" data-i18n="pacientes:modal.labelObs">Observações iniciais</label>
@@ -458,6 +472,8 @@
   function applyFilters() {
     const term = searchTerm.toLowerCase();
     let filtered = allDecrypted;
+    const paymentFilter = document.getElementById("paymentTypeFilter").value;
+    if (paymentFilter) filtered = filtered.filter(p => (p.paymentType || "unspecified") === paymentFilter);
     if (activeTagFilter) filtered = filtered.filter(p => (p.tags || []).includes(activeTagFilter));
     if (term) filtered = filtered.filter(p =>
       (p.name || "").toLowerCase().includes(term) ||
@@ -478,7 +494,7 @@
       filtered.forEach(p => patientList.appendChild(renderPatient(p)));
       patientList.classList.remove("ep-hide");
     }
-    const hasFilter = !!(activeTagFilter || searchTerm);
+    const hasFilter = !!(activeTagFilter || searchTerm || paymentFilter);
     clearFiltersBtn.classList.toggle("ep-hide", !hasFilter);
   }
 
@@ -505,12 +521,14 @@
     renderTagFilterChips();
     applyFilters();
   });
+  document.getElementById("paymentTypeFilter").addEventListener("change", applyFilters);
   searchInput.addEventListener("input", () => {
     searchTerm = searchInput.value.trim();
     applyFilters();
   });
   clearFiltersBtn.addEventListener("click", () => {
     activeTagFilter = null;
+    document.getElementById("paymentTypeFilter").value = "";
     searchTerm = "";
     searchInput.value = "";
     renderTagFilterChips();
@@ -582,6 +600,7 @@
         <div class="ep-session__name">${escapeHtml(p.name || "—")}</div>
         <div class="ep-session__meta">
           ${anamBadge}
+          ${["private", "insurance"].includes(p.paymentType) ? `<span class="ep-badge${p.paymentType === "private" ? " ep-badge--ok" : ""}">${escapeHtml(tr("pacientes:payment." + p.paymentType, p.paymentType === "private" ? "Particular" : "Convênio"))}</span>` : ""}
           ${p.contact ? `<span>${escapeHtml(p.contact)}</span>` : ""}
           ${p.birthdate ? `<span>· ${escapeHtml(tr("pacientes:js.bornOn", "nasc. {{date}}", { date: fmtDate(new Date(p.birthdate).getTime()) }))}</span>` : ""}
           <span>· ${escapeHtml(tr("pacientes:js.updatedOn", "atualizado {{date}}", { date: fmtDate(p.updatedAt) }))}</span>
@@ -1213,6 +1232,7 @@
     contactEl.value = patient?.contact   || "";
     birthEl.value   = patient?.birthdate || "";
     obsEl.value     = patient?.observations || "";
+    document.getElementById("patientPaymentType").value = ["private", "insurance"].includes(patient?.paymentType) ? patient.paymentType : "unspecified";
     editingTags     = Array.isArray(patient?.tags) ? patient.tags.slice(0, 10) : [];
     tagsInputEl.value = "";
     renderTagsChips();
@@ -1362,6 +1382,7 @@
       contact: contactEl.value.trim(),
       birthdate: birthEl.value || "",
       observations: obsEl.value.trim(),
+      paymentType: document.getElementById("patientPaymentType").value,
       tags: editingTags.slice(0, 10)
     };
 

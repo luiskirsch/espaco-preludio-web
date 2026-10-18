@@ -85,6 +85,14 @@
 
     <div class="profile-notice a-hide" id="profileNotice"></div>
 
+    <div class="step-header">
+      <label for="bookingAppointmentType" data-i18n="p-app-agendar:appointment.label">Tipo de consulta</label>
+      <select id="bookingAppointmentType" class="ep-select"><option value="standard" data-i18n="p-app-agendar:appointment.standard">Consulta padrão</option>
+          <option value="initial" data-i18n="p-app-agendar:appointment.initial">Primeira consulta</option>
+          <option value="return" data-i18n="p-app-agendar:appointment.return">Retorno</option>
+          <option value="follow_up" data-i18n="p-app-agendar:appointment.followUp">Acompanhamento</option></select>
+      <p id="bookingDurationHint" class="step-header__sub" aria-live="polite"></p>
+    </div>
     <!-- Steps indicator -->
     <div style="padding:14px 16px 6px;display:flex;justify-content:space-between;align-items:center;" id="stepsRow">
       <div class="a-steps" id="stepsIndicator">
@@ -288,6 +296,8 @@
       if (!r.ok || !d.ok || !d.profissional) throw new Error(d.error || "PROFISSIONAL_NAO_ENCONTRADO");
       const prof = d.profissional;
       therapist = prof;
+      therapist.agendaConfig = d.agendaConfig || {};
+      updateBookingDuration();
       bookingSlug = d.publicSchedulingSlug || legacySlug;
       document.getElementById("profNome").textContent = prof.displayName || "Profissional";
       document.getElementById("profEsp").textContent  = prof.especialidade || "";
@@ -350,7 +360,21 @@
   }
 
   // Consulta a agenda e mostra somente dias que realmente possuem horário livre.
+  const bookingTypeInput = document.getElementById("bookingAppointmentType");
+  function updateBookingDuration() {
+    const type = bookingTypeInput.value;
+    const cfg = therapist?.agendaConfig || {};
+    const minutes = type === "standard" ? (cfg.slotMinutes || 50) : (cfg.appointmentDurations?.[type] || (type === "initial" ? 30 : 20));
+    document.getElementById("bookingDurationHint").textContent = `${minutes} min`;
+  }
+  bookingTypeInput.addEventListener("change", () => {
+    selectedSlot = null; selectedDate = null;
+    goStep(1);
+    updateBookingDuration(); buildCalendar();
+  });
+  let calendarRequestSequence = 0;
   async function buildCalendar() {
+    const requestSequence = ++calendarRequestSequence;
     const container = document.getElementById("calDays");
     const empty = document.getElementById("calendarEmpty");
     const today  = new Date(); today.setHours(0,0,0,0);
@@ -361,8 +385,9 @@
     document.getElementById("btnNext").disabled = true;
 
     try {
-      const r = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(bookingSlug)}/slots?from=${fromDate.getTime()}&to=${toDate.getTime()}`);
+      const r = await fetch(`${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(bookingSlug)}/slots?from=${fromDate.getTime()}&to=${toDate.getTime()}&appointmentType=${encodeURIComponent(bookingTypeInput.value)}`);
       const data = await r.json().catch(() => ({}));
+      if (requestSequence !== calendarRequestSequence) return;
       if (!r.ok || !data.ok) throw new Error(data.error || "AGENDA_INDISPONIVEL");
 
       availableSlotsByDay = new Map();
@@ -503,6 +528,7 @@
           patientPhone:  document.getElementById("patPhone").value.trim(),
           notes:         document.getElementById("patNotes").value.trim() || undefined,
           requestedSlot: selectedSlot.start,
+          appointmentType: bookingTypeInput.value,
           tcleSigned:    true
         })
       });

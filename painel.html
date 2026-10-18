@@ -646,7 +646,7 @@
   import { cachedGet, invalidate as invalidateApi, invalidatePrefix } from "./js/api-cache.js?v=5";
   import { clearDek, recallUser, decryptNote } from "./js/crypto.js";
   import { downloadAttendanceCertificate } from "./js/attendance-pdf.js?v=4";
-  import { createNewSessionModal } from "./js/new-session-modal.js?v=5";
+  import { createNewSessionModal } from "./js/new-session-modal.js?v=6";
   import { runOnboarding } from "./js/onboarding.js?v=3-15";
 
   // ─── i18n helper ────────────────────────────────────────────
@@ -1528,6 +1528,8 @@
     div.dataset.sessionId = s.sessionId;
     div.dataset.timingState = overdue ? "overdue" : "current";
     if (publicSchool) div.dataset.careOrigin = "public-school";
+    const appointmentKey = { initial: "typeInitial", return: "typeReturn", follow_up: "typeFollowUp" }[s.appointmentType];
+    const appointmentFallback = { initial: "Primeira consulta", return: "Retorno", follow_up: "Acompanhamento" }[s.appointmentType];
     const confirmedTag = (s.confirmedAt && s.status === "scheduled")
       ? `<span class="ep-badge ep-badge--ok" title="${tr("painel:list.confirmedTitle","Paciente clicou no link de confirmação do e-mail de lembrete")}">${tr("painel:list.confirmedTag","✓ Confirmada pelo paciente")}</span>`
       : "";
@@ -1557,6 +1559,9 @@
           ${statusBadge(s)}
           ${demoTag}
           ${confirmedTag}
+          ${["private", "insurance"].includes(s.paymentType) ? `<span class="ep-badge${s.paymentType === "private" ? " ep-badge--ok" : ""}">${escapeHtml(tr("painel:modalNew." + (s.paymentType === "private" ? "paymentPrivate" : "paymentInsurance"), s.paymentType === "private" ? "Particular" : "Convênio"))}</span>` : ""}
+          <span>${sessionDurationMinutes(s)} min</span>
+          ${appointmentKey ? `<span>${escapeHtml(tr("painel:modalNew." + appointmentKey, appointmentFallback))}</span>` : ""}
           <span>${tr("painel:list.createdAt","Criada {{date}}",{date:fmtDate(s.createdAt)})}</span>
           ${s.scheduledAt ? `<span>${tr("painel:list.scheduledAt","· Agendada {{date}}",{date:fmtDate(s.scheduledAt)})}</span>` : ""}
           ${s.completedAt ? `<span>${tr("painel:list.completedAt","· Encerrada {{date}}",{date:fmtDate(s.completedAt)})}</span>` : ""}
