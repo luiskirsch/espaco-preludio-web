@@ -22,6 +22,10 @@ async function enter() {
     if (!result.verified) throw new Error("PROFILE_REQUIRED");
     location.replace(destination);
   } catch (error) {
+    // O modal é a interface principal; o cartão só aparece como plano B
+    // (tentar de novo ou sair) depois de cancelar ou falhar.
+    document.getElementById("twofaFallback").classList.remove("ep-hide");
+    document.getElementById("twofaLogout").classList.remove("ep-hide");
     status.textContent = error.code === "MFA_CANCELLED"
       ? "Conclua a verificação em duas etapas para continuar."
       : "Não foi possível concluir a verificação. Tente novamente ou entre novamente na sua conta.";
