@@ -1,9 +1,9 @@
 // Sidebar premium do produto profissional — single source of truth.
 // Cada página logged-in só precisa de:
 //   1. <body class="ep-has-sidebar"> (pra CSS aplicar layout sem FOUC)
-//   2. <script src="./js/sidebar.js?v=28" defer></script>
+//   2. <script src="./js/sidebar.js?v=32"></script> no início do body.
 // O script injeta o <aside> no início do body, marca link ativo pelo
-// pathname, e sincroniza avatar/nome/TISS do topbar (Firebase logic vive
+// pathname, e sincroniza avatar/nome do topbar (Firebase logic vive
 // em auth-guard.js?v=20261017-mfa3 → topUserName / topUserAvatar).
 (function () {
   if (document.querySelector('.ep-sidebar')) return;
@@ -83,20 +83,12 @@
     return '<a href="./' + href + '" ' + (extra || '') + '>' + svg(icon) + '<span data-i18n="' + i18n + '">' + label + '</span></a>';
   }
 
-  // Preflight do TISS: lê cache do profile (auth-guard grava sessionStorage
-  // e localStorage). sessionStorage primeiro (30s, mais rápido); fallback
-  // para localStorage (5min, sobrevive ao fechar aba) — elimina o flicker
-  // de "TISS some/aparece" tanto em navegações intra-sessão quanto ao reabrir.
+  // Preferência visual mínima gravada pelo auth-guard. O perfil completo não
+  // é persistido. A confirmação do servidor atualiza o menu diretamente;
+  // o placeholder oculto da topbar nunca deve substituir esta preferência.
   var tissCachedEnabled = false;
   try {
-    var profileRaw = sessionStorage.getItem('ep:profile:v2');
-    if (profileRaw) {
-      var profileEntry = JSON.parse(profileRaw);
-      tissCachedEnabled = !!(profileEntry && profileEntry.profile && profileEntry.profile.therapist && profileEntry.profile.therapist.tissEnabled);
-    } else {
-      // Fallback: flag simples gravado por auth-guard.writeProfileCache (sync, sobrevive ao fechar aba).
-      tissCachedEnabled = localStorage.getItem('ep:tiss:enabled') === '1';
-    }
+    tissCachedEnabled = localStorage.getItem('ep:tiss:enabled') === '1';
   } catch (e) { /* sem cache, mantém hidden */ }
   var tissExtra = 'id="sidebarTissLink" class="ep-sidebar__tiss' + (tissCachedEnabled ? '' : ' is-hidden') + '"';
 
@@ -199,10 +191,10 @@
   document.addEventListener('ep:i18n-ready', applyToSidebar);
 
   // ─── PARTE DEFERIDA — espera o resto do body (topbar) ser parsed ────
-  // Topbar elements (topUserName, topUserAvatar, [data-tiss-only], logoutBtn)
+  // Topbar elements (topUserName, topUserAvatar, logoutBtn)
   // vem DEPOIS no HTML. Esperamos DOMContentLoaded pra configurar mirror.
   function setupDeferred() {
-    // Sync avatar/nome/TISS do topbar — auth-guard.js?v=20261017-mfa3 seta foto base64,
+    // Sync avatar/nome do topbar — auth-guard.js?v=20261017-mfa3 seta foto base64,
     // selo verificado (innerHTML) e iniciais (textContent). Replicamos tudo
     // via MutationObserver pra reatividade quando Firebase emite mudança.
     const topName = document.getElementById('topUserName');
@@ -236,17 +228,9 @@
     syncName();
     syncAvatar();
 
-    // TISS link visibility — getComputedStyle considera inline + CSS !important.
-    const topTiss = document.querySelector('header.ep-topbar [data-tiss-only]');
-    const sideTiss = document.getElementById('sidebarTissLink');
-    if (topTiss && sideTiss) {
-      const syncTiss = function () {
-        const hidden = window.getComputedStyle(topTiss).display === 'none';
-        sideTiss.classList.toggle('is-hidden', hidden);
-      };
-      new MutationObserver(syncTiss).observe(topTiss, { attributes: true, attributeFilter: ['style', 'class'] });
-      syncTiss();
-    }
+    // TISS é atualizado diretamente por applyTissVisibility no auth-guard.
+    // Espelhar o display inicial da topbar causava visible → hidden → visible
+    // em toda navegação, antes da resposta autenticada do servidor.
 
     // Logout encaminha pro handler original (Firebase signOut em auth-guard)
     const sideLogout = document.getElementById('sidebarLogout');
