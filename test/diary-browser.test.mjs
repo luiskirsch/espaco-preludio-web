@@ -112,16 +112,55 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
       await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
     };
     const checkLayout = async (name, width) => {
-      if (name === 'escrita') await poll(() => evaluate("(()=>{const text=document.getElementById('journalText');return text.scrollHeight<=text.clientHeight+2})()"), `altura da escrita em ${width}px`, 3000).catch(async error => {
+      const writing = ['escrita', 'página vazia', 'texto longo'].includes(name);
+      if (writing) await poll(() => evaluate("(()=>{const text=document.getElementById('journalText');return text.scrollHeight<=text.clientHeight+2})()"), `altura da escrita em ${width}px`, 3000).catch(async error => {
         error.message += ' ' + JSON.stringify(await evaluate("(()=>{const text=document.getElementById('journalText'),style=getComputedStyle(text);return {editor:{height:text.clientHeight,scrollHeight:text.scrollHeight,inlineHeight:text.style.height,flex:style.flex,minHeight:style.minHeight},paper:document.getElementById('paper').getBoundingClientRect().toJSON(),content:document.getElementById('editorView').getBoundingClientRect().toJSON()}})()"));
         throw error;
       });
-      const layout = await evaluate(`(()=>{const root=document.documentElement,dialog=document.getElementById('diaryDialog'),box=dialog.open?dialog.getBoundingClientRect():null,text=document.getElementById('journalText');return {view:${JSON.stringify(name)},viewport:innerWidth,content:root.scrollWidth,editor:${JSON.stringify(name)}==='escrita'?{height:text.clientHeight,content:text.scrollHeight}:null,dialog:box?{left:Math.round(box.left),right:Math.round(box.right),width:Math.round(box.width)}:null}})()`);
+      const layout = await evaluate(`(()=>{const root=document.documentElement,dialog=document.getElementById('diaryDialog'),box=dialog.open?dialog.getBoundingClientRect():null,text=document.getElementById('journalText');return {view:${JSON.stringify(name)},viewport:innerWidth,content:root.scrollWidth,editor:${writing}?{height:text.clientHeight,content:text.scrollHeight,width:text.clientWidth,contentWidth:text.scrollWidth}:null,dialog:box?{left:Math.round(box.left),right:Math.round(box.right),width:Math.round(box.width)}:null}})()`);
       layouts.push(layout);
       assert.equal(layout.viewport, width);
       assert.ok(layout.content <= width, `${name}: overflow horizontal em ${width}px (${layout.content}px)`);
       if (layout.editor) assert.ok(layout.editor.content <= layout.editor.height + 2, `${name}: texto cortado após redimensionar para ${width}px (${layout.editor.content}px em ${layout.editor.height}px)`);
+      if (layout.editor) assert.ok(layout.editor.contentWidth <= layout.editor.width + 2, `${name}: linhas da escrita ultrapassam a largura em ${width}px`);
       if (layout.dialog) assert.ok(layout.dialog.left >= 0 && layout.dialog.right <= width, `${name}: diálogo cabe em ${width}px`);
+    };
+    const checkPaperText = async width => {
+      const typography = await evaluate(`(()=>{
+        const paper=document.getElementById('paper').getBoundingClientRect(),footer=document.querySelector('.entry-footer'),footerBox=footer?.getBoundingClientRect(),editor=document.getElementById('journalText'),editorStyle=getComputedStyle(editor),placeholderStyle=getComputedStyle(editor,'::placeholder');
+        const controls=[...document.querySelectorAll('.page-topline,.paper-action,#feelingButton,#wordCount,#saveState,.tag,#entryExtra,#deleteCurrent')].filter(element=>element.getClientRects().length).map(element=>{const style=getComputedStyle(element),box=element.getBoundingClientRect();return {selector:element.id||element.className,fontSize:parseFloat(style.fontSize),fontFamily:style.fontFamily,color:style.color,left:box.left,right:box.right,top:box.top,bottom:box.bottom}});
+        return {view:'tipografia',viewport:innerWidth,editor:{fontSize:parseFloat(editorStyle.fontSize),lineHeight:parseFloat(editorStyle.lineHeight),fontFamily:editorStyle.fontFamily,color:editorStyle.color},placeholder:{fontSize:parseFloat(placeholderStyle.fontSize),fontFamily:placeholderStyle.fontFamily,color:placeholderStyle.color},paper:{left:paper.left,right:paper.right,top:paper.top,bottom:paper.bottom},footer:footerBox?{left:footerBox.left,right:footerBox.right,top:footerBox.top,bottom:footerBox.bottom}:null,controls};
+      })()`);
+      layouts.push(typography);
+      assert.ok(typography.editor.fontSize >= 17, `Escrita legível em ${width}px`);
+      assert.ok(typography.editor.lineHeight >= typography.editor.fontSize * 1.35, `Entrelinha da escrita em ${width}px`);
+      assert.ok(typography.footer, 'Controles inferiores agrupados dentro do pergaminho');
+      for (const control of typography.controls) {
+        assert.ok(control.fontSize >= 11, `${control.selector}: fonte auxiliar de pelo menos 11px em ${width}px (${control.fontSize}px)`);
+        assert.ok(control.left >= typography.paper.left && control.right <= typography.paper.right, `${control.selector}: controle cabe no pergaminho em ${width}px`);
+        assert.ok(control.top >= typography.paper.top && control.bottom <= typography.paper.bottom, `${control.selector}: controle não é cortado pelo pergaminho em ${width}px`);
+        if (['feelingButton', 'wordCount', 'saveState', 'entryExtra', 'deleteCurrent'].includes(control.selector)) {
+          assert.ok(control.top >= typography.footer.top - 1 && control.bottom <= typography.footer.bottom + 1, `${control.selector}: cabe no grupo de controles em ${width}px`);
+        }
+      }
+    };
+    const capture = async filename => {
+      if (!capturePreview) return;
+      await evaluate('window.scrollTo(0,0)');
+      const screenshot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+      await writeFile(join(root, 'docs/diary-preview', filename), Buffer.from(screenshot.data, 'base64'));
+    };
+    const checkLeaves = async () => {
+      const decoration = await evaluate(`(()=>{const layer=document.querySelector('.diary-leaves'),text=document.getElementById('journalText'),box=text.getBoundingClientRect(),x=box.left+box.width/2,y=Math.min(box.bottom-1,box.top+20);return {exists:!!layer,hidden:layer?.getAttribute('aria-hidden'),inert:layer?.hasAttribute('inert'),intercepts:layer?[layer,...layer.querySelectorAll('*')].some(element=>getComputedStyle(element).pointerEvents!=='none'):true,editorHit:y>=0&&y<innerHeight?document.elementFromPoint(x,y)===text:null,writingMotion:['paper','editorView','journalText'].map(id=>({id,animations:document.getElementById(id).getAnimations().length,transform:getComputedStyle(document.getElementById(id)).transform}))}})()`);
+      assert.equal(decoration.exists, true, 'Folhas decorativas montadas');
+      assert.equal(decoration.hidden, 'true', 'Decoração não entra na leitura assistiva');
+      assert.equal(decoration.inert, true, 'Decoração fica fora da árvore de interação');
+      assert.equal(decoration.intercepts, false, 'Folhas não interceptam interação com a escrita');
+      if (decoration.editorHit !== null) assert.equal(decoration.editorHit, true, 'Área de escrita recebe interação diretamente');
+      for (const element of decoration.writingMotion) {
+        assert.equal(element.animations, 0, `${element.id}: a escrita permanece sem animação`);
+        assert.equal(element.transform, 'none', `${element.id}: a escrita permanece estável`);
+      }
     };
     await viewport(1440);
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/app/diario.html?preview=1` });
@@ -129,20 +168,36 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     assert.equal(await evaluate("document.getElementById('previewBanner').hidden"), false);
     assert.equal(await evaluate("document.getElementById('portalBack').getAttribute('href')"), './home.html');
     await evaluate('Promise.race([document.fonts.ready,new Promise(resolve=>setTimeout(resolve,3000))])');
+    await checkLeaves();
+    await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+    assert.equal(await evaluate("[...document.querySelectorAll('.diary-leaf__art')].every(element=>getComputedStyle(element).animationName==='none' && getComputedStyle(element).transform==='none')"), true, 'Preferência por menos movimento mantém as folhas paradas');
+    await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
     if (capturePreview) await mkdir(join(root, 'docs/diary-preview'), { recursive: true });
     for (const width of [1440, 768, 390, 320]) {
-      await viewport(width); await checkLayout('escrita', width);
-      if (capturePreview && (width === 1440 || width === 390)) {
-        await evaluate('window.scrollTo(0,0)');
-        const screenshot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
-        await writeFile(join(root, 'docs/diary-preview', width === 1440 ? 'desktop.png' : 'mobile.png'), Buffer.from(screenshot.data, 'base64'));
-      }
+      await viewport(width); await checkLayout('escrita', width); await checkPaperText(width);
+      if (width === 1440 || width === 390) await capture(width === 1440 ? 'desktop.png' : 'mobile.png');
       await openDialog('#tagsButton'); await checkLayout('marcadores', width); await closeDialog();
     }
     await viewport(1440);
 
     await click('#newPageButton');
     await poll(() => evaluate("document.getElementById('journalText').value===''"), 'nova página vazia');
+    const placeholder = await evaluate("document.getElementById('journalText').placeholder");
+    assert.ok(placeholder.trim().length > 10 && placeholder.length < 130, 'Página vazia oferece um convite curto para escrever');
+    assert.doesNotMatch(placeholder, /caminhei pelo parque|memórias antigas|nostalgia me abraçou/i, 'Convite não se confunde com uma memória já escrita');
+    assert.equal(await evaluate("document.getElementById('wordCount').textContent"), '0 palavras');
+    for (const width of [1440, 768, 390, 320]) {
+      await viewport(width); await checkLayout('página vazia', width); await checkPaperText(width);
+      if (width === 1440 || width === 390) await capture(width === 1440 ? 'blank-desktop.png' : 'blank-mobile.png');
+    }
+    const longWriting = Array.from({ length: 12 }, (_, index) => `${index + 1}. Hoje encontrei tempo para respirar e observar os detalhes ao meu redor. Escrevo com calma sobre o que senti, os pequenos encontros e aquilo que quero guardar. Cada lembrança encontra seu espaço nesta página, sem pressa para terminar.`).join('\n\n');
+    await fill('#journalText', longWriting); await saved();
+    for (const width of [320, 390, 768, 1440]) {
+      await viewport(width); await checkLayout('texto longo', width); await checkPaperText(width);
+      assert.equal(await evaluate("document.getElementById('journalText').value"), longWriting, `Texto longo preservado ao redimensionar para ${width}px`);
+    }
+    await click('#newPageButton');
+    await poll(() => evaluate("document.getElementById('journalText').value===''"), 'página após escrita longa');
     const memory = '<img src=x onerror="document.title=\'XSS_EXECUTED\'"> Café sem pressa';
     await fill('#journalText', memory);
     assert.equal(await evaluate("document.getElementById('saveState').dataset.state"), '');
@@ -232,16 +287,33 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     await tab('capsules'); await click('[data-delete]'); await click('#confirmDelete');
     await poll(() => evaluate("!document.getElementById('diaryDialog').open && document.querySelectorAll('.entry-card').length===0"), 'exclusão da cápsula');
 
+    await viewport(1440);
+    await evaluate('window.scrollTo(0,0)');
+    assert.equal(await evaluate("document.getElementById('playButton').getAttribute('aria-pressed')"), 'false', 'Trilha só começa após uma ação');
+    const audioClick = async selector => {
+      const result = await send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(selector)}).click()`, userGesture: true, returnByValue: true });
+      if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
+    };
+    await audioClick('#playButton');
+    await poll(() => evaluate("document.body.classList.contains('is-playing') && document.getElementById('playerDescription').textContent.includes('Chuva na cabana')"), 'chuva real no Web Audio');
+    await evaluate("document.getElementById('volumeSlider').value='35';document.getElementById('volumeSlider').dispatchEvent(new Event('input',{bubbles:true}))");
+    await audioClick('#playButton');
+    await poll(() => evaluate("document.getElementById('playButton').getAttribute('aria-pressed')==='false'"), 'pausa da chuva');
+    await openDialog('#soundButton');
+    await audioClick('[data-preset="piano"]');
+    await poll(() => evaluate("document.body.classList.contains('is-playing') && document.getElementById('playerDescription').textContent.includes('Piano para desacelerar')"), 'piano separado da chuva');
+    await audioClick('#playButton');
+
     await viewport(390);
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/aluno-diario.html?preview=1` });
     await poll(() => evaluate("document.body.dataset.portal==='student' && !document.getElementById('journalText')?.disabled && document.getElementById('journalText').value.length>0"), 'prévia do aluno');
     assert.equal(await evaluate("document.getElementById('portalBack').getAttribute('href')"), './aluno-painel.html');
     assert.equal(await evaluate("document.querySelector('.diary-brand').getAttribute('href')"), './aluno-diario.html');
-    await checkLayout('escrita', 390);
+    await checkLayout('escrita', 390); await checkLeaves();
 
     assert.deepEqual(cdp.exceptions, [], 'Nenhum erro de execução no navegador');
     assert.deepEqual(cdp.privateRequests.filter(privateRequest), [], 'A prévia não tenta acessar Firebase ou backend');
-    if (capturePreview) await writeFile(join(root, 'docs/diary-preview/report.json'), JSON.stringify({ route: '/app/diario.html?preview=1', scenarios: ['autosave', 'tags', 'aroma', 'font', 'three-feelings-limit', 'search-escaped-html', 'dream', 'sealed-capsule', 'release-without-saving', 'delete'], layouts, runtimeErrors: cdp.exceptions, privateRequests: cdp.privateRequests }, null, 2) + '\n');
+    if (capturePreview) await writeFile(join(root, 'docs/diary-preview/report.json'), JSON.stringify({ route: '/app/diario.html?preview=1', scenarios: ['blank-writing-prompt', 'paper-text-readability', 'long-writing-no-clipping', 'decorative-leaves-no-interception', 'reduced-motion', 'autosave', 'tags', 'aroma', 'font', 'three-feelings-limit', 'search-escaped-html', 'dream', 'sealed-capsule', 'release-without-saving', 'delete'], layouts, runtimeErrors: cdp.exceptions, privateRequests: cdp.privateRequests }, null, 2) + '\n');
   } finally {
     cdp?.socket.close(); browser.kill(); server.closeAllConnections();
     await new Promise(resolveClose => server.close(resolveClose));

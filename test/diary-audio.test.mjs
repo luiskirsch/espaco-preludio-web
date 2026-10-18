@@ -11,7 +11,7 @@ afterEach(() => {
 });
 
 function parameter(value = 0) {
-  return { value, setValueAtTime(v) { this.value = v; }, linearRampToValueAtTime(v) { this.value = v; }, exponentialRampToValueAtTime(v) { this.value = v; }, setTargetAtTime(v) { this.value = v; }, cancelScheduledValues() {} };
+  return { value, events: [], setValueAtTime(v, time) { this.events.push(['set', v, time]); this.value = v; }, linearRampToValueAtTime(v, time) { this.events.push(['ramp', v, time]); this.value = v; }, exponentialRampToValueAtTime(v) { this.value = v; }, setTargetAtTime(v, time, constant) { this.events.push(['target', v, time, constant]); this.value = v; }, cancelScheduledValues() {} };
 }
 
 class FakeNode {
@@ -49,7 +49,10 @@ class FakeAudioContext {
   createOscillator() { return this.node('oscillator'); }
   createBiquadFilter() { return this.node('filter'); }
   createBufferSource() { return this.node('buffer'); }
-  createBuffer(channels, length) { return { getChannelData: () => new Float32Array(length) }; }
+  createBuffer(numberOfChannels, length) {
+    const channels = Array.from({ length: numberOfChannels }, () => new Float32Array(length));
+    return { numberOfChannels, length, getChannelData: channel => channels[channel] };
+  }
   createPeriodicWave() { return {}; }
   async resume() { this.state = 'running'; }
   async close() { this.state = 'closed'; this.closed = true; }
@@ -74,16 +77,23 @@ test('soundscapes stay idle until explicitly played; switching and destruction r
   assert.equal(await audio.play('rain'), true);
   const rain = FakeAudioContext.instances.at(-1);
   assert.equal(rain.nodes[0].gain.value, 0.2);
-  assert.equal(rain.nodes.find(node => node.kind === 'filter').type, 'highpass');
+  const rainSource = rain.nodes.find(node => node.kind === 'buffer');
+  assert.equal(rainSource.buffer.numberOfChannels, 2);
+  assert.equal(rainSource.loop, true);
+  assert.equal(rain.nodes.some(node => node.kind === 'oscillator'), false);
+  assert.deepEqual(rain.nodes[0].gain.events.at(-1), ['ramp', 0.2, 1.2]);
   assert.equal(await audio.play('rain'), true);
   assert.equal(FakeAudioContext.instances.length, before + 1);
   await audio.play('forest');
   const forest = FakeAudioContext.instances.at(-1);
+  assert.deepEqual(rain.nodes[0].gain.events.at(-1), ['target', 0, 0, 0.035]);
+  await new Promise(resolve => setTimeout(resolve, 200));
   assert.equal(rain.closed, true);
   assert.equal(forest.nodes.find(node => node.kind === 'filter').type, 'lowpass');
   assert.ok(forest.nodes.filter(node => node.kind === 'oscillator').length >= 3);
   await audio.play('piano');
   const piano = FakeAudioContext.instances.at(-1);
+  await new Promise(resolve => setTimeout(resolve, 200));
   assert.equal(forest.closed, true);
   assert.equal(piano.nodes.some(node => node.kind === 'buffer'), false);
   await audio.setVolume(2);

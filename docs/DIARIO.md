@@ -46,8 +46,12 @@ do conteúdo cifrado, além dos metadados de busca.
 
 ## Recursos sensoriais
 
-A trilha de chuva/piano/floresta é sintetizada por Web Audio e só começa após
-uma ação. O ditado usa o reconhecimento de voz disponível no navegador;
+A trilha é sintetizada por Web Audio e só começa após uma ação. O ambiente
+“Chuva na cabana” usa uma textura estéreo contínua, gotas irregulares sobre
+madeira e reflexos abafados, com entrada e saída graduais. Piano e floresta
+ficam em ambientes separados. Uma amostra de 29 segundos está em
+`docs/diary-preview/cabin-rain.wav`; ela não é baixada para reproduzir a trilha.
+O ditado usa o reconhecimento de voz disponível no navegador;
 o modal informa sobre o processamento de áudio pelo serviço do navegador.
 O diário mantém apenas a transcrição. Aromas são associações simbólicas.
 O clima reutiliza a API de ambiente do portal; quando indisponível, pode ser
@@ -57,6 +61,10 @@ Os insights representam os sentimentos escolhidos pelo titular, sem análise
 automática do texto ou avaliação clínica. Desabafos são descartados na própria
 interface, sem envio ou gravação. As ilustrações de pergaminho e parque foram
 geradas para esta implementação e otimizadas em WebP em `app/assets/diary/`.
+Folhas SVG nas margens oscilam levemente em ritmos diferentes. O papel e a
+escrita ficam estáveis, e a preferência do sistema por movimento reduzido
+desativa essas animações. As pistas de escrita são curtas e os controles
+ficam sobre uma superfície clara, afastados das folhas pintadas.
 
 ## Verificação
 

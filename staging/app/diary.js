@@ -1,4 +1,5 @@
-import { createSoundscape, createDictation } from './diary-audio.js?v=20261018';
+import { createSoundscape, createDictation } from './diary-audio.js?v=20261018b';
+import { mountDiaryLeaves } from './diary-leaves.js?v=20261018b';
 import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?v=20261018';
 
 const $ = id => document.getElementById(id);
@@ -48,11 +49,13 @@ function renderMeta() {
   $('wordCount').textContent = `${countWords(current.text)} ${countWords(current.text) === 1 ? 'palavra' : 'palavras'}`;
   $('entryTags').innerHTML = (current.tags || []).map(tag => `<span class="tag">#${esc(tag)}</span>`).join('');
   $('paper').dataset.font = current.font || 'hand';
-  $('feelingButton').textContent = current.feelings?.length ? current.feelings.map(id => `${FEELINGS[id]?.icon || ''} ${FEELINGS[id]?.label || ''}`).join(' · ') : '♡ Como esta memória faz você se sentir?';
+  $('feelingButton').textContent = current.feelings?.length ? current.feelings.map(id => `${FEELINGS[id]?.icon || ''} ${FEELINGS[id]?.label || ''}`).join(' · ') : '♡ Como você se sente?';
   $('aromaLabel').textContent = current.aroma ? `Memória de ${AROMAS[current.aroma]?.[0].toLowerCase()}` : 'Associe suas memórias a um perfume especial';
   $('weatherLabel').textContent = current.weather ? `${WEATHER[current.weather]?.[1]} ${WEATHER[current.weather]?.[0]} · guardado nesta página` : 'Guarde um pedacinho do tempo de hoje';
-  $('entryExtra').textContent = [current.weather ? WEATHER[current.weather]?.[0] : '', current.aroma ? AROMAS[current.aroma]?.[0] : ''].filter(Boolean).join(' · ') || 'Um lugar para acolher o que você sente.';
+  $('entryExtra').textContent = [current.weather ? WEATHER[current.weather]?.[0] : '', current.aroma ? AROMAS[current.aroma]?.[0] : ''].filter(Boolean).join(' · ');
+  $('entryExtra').hidden = !$('entryExtra').textContent;
   $('deleteCurrent').hidden = !current.version;
+  $('entryExtra').parentElement.hidden = $('entryExtra').hidden && !current.version;
   renderInsights();
   requestAnimationFrame(resizeEditor);
 }
@@ -121,7 +124,7 @@ function showEditor(entry) {
   $('editorView').hidden = false; $('collectionView').hidden = true;
   activateTab(current.kind === 'dream' ? 'dreams' : current.kind === 'capsule' ? 'capsules' : 'diary');
   $('entryDate').textContent = dateLabel(current.date);
-  $('entryKind').textContent = current.kind === 'dream' ? 'DO LADO DE LÁ DOS OLHOS FECHADOS' : current.kind === 'capsule' ? 'UMA CARTA QUE ATRAVESSOU O TEMPO' : 'UMA PÁGINA DO SEU DIA';
+  $('entryKind').textContent = current.kind === 'dream' ? 'UM SONHO PARA GUARDAR' : current.kind === 'capsule' ? 'UMA CARTA DO SEU PASSADO' : 'UMA PÁGINA SÓ SUA';
   text.value = current.text; text.disabled = !ready || current.kind === 'capsule';
   $('newPageButton').textContent = current.kind === 'dream' ? '+ Novo sonho' : '+ Nova página';
   ['feelingButton', 'tagsButton'].forEach(id => { $(id).disabled = current.kind === 'capsule'; });
@@ -252,13 +255,14 @@ const soundscape = createSoundscape({ onState({ playing, preset: selected }) {
   preset = selected;
   document.body.classList.toggle('is-playing', playing);
   $('playButton').textContent = playing ? 'Ⅱ' : '▶'; $('playButton').setAttribute('aria-pressed', String(playing)); $('playButton').setAttribute('aria-label', playing ? 'Pausar trilha sonora' : 'Reproduzir trilha sonora');
-  const name = { rain: 'Chuva suave & piano', forest: 'Um passeio pela floresta', piano: 'Piano para desacelerar' }[selected];
+  const name = { rain: 'Chuva na cabana', forest: 'Um passeio pela floresta', piano: 'Piano para desacelerar' }[selected];
+  $('playerDescription').removeAttribute('data-i18n-html'); $('soundLabel').removeAttribute('data-i18n-html');
   $('playerDescription').textContent = `${name} · ${playing ? 'tocando' : 'pausado'}`; $('soundLabel').textContent = name;
 } });
 soundscape.setVolume(.25);
 async function toggleSound() { try { if (soundscape.playing) await soundscape.stop(); else await soundscape.play(preset); } catch (error) { toast(error.message); } }
 function openSound() {
-  openDialog('Uma trilha para o seu momento', '<p>Escolha uma paisagem sonora. Ajuste o volume no painel ao lado.</p><div class="entry-list">' + [['rain', '🌧', 'Chuva suave & piano'], ['forest', '🌿', 'Um passeio pela floresta'], ['piano', '♫', 'Piano para desacelerar']].map(([id, icon, label]) => `<button class="choice-button" data-preset="${id}" aria-pressed="${preset === id}"><span>${icon}</span>${label}</button>`).join('') + '</div><div class="dialog-actions"><button class="quiet-button" id="stopSound">Pausar trilha</button></div>');
+  openDialog('Uma trilha para o seu momento', '<p>Escolha uma paisagem sonora. Ajuste o volume no painel ao lado.</p><div class="entry-list">' + [['rain', '🌧', 'Chuva na cabana'], ['forest', '🌿', 'Um passeio pela floresta'], ['piano', '♫', 'Piano para desacelerar']].map(([id, icon, label]) => `<button class="choice-button" data-preset="${id}" aria-pressed="${preset === id}"><span>${icon}</span>${label}</button>`).join('') + '</div><div class="dialog-actions"><button class="quiet-button" id="stopSound">Pausar trilha</button></div>');
   dialog.querySelectorAll('[data-preset]').forEach(button => button.addEventListener('click', async () => { try { await soundscape.play(button.dataset.preset); closeDialog(); } catch (error) { toast(error.message); } }));
   $('stopSound').addEventListener('click', () => { soundscape.stop(); closeDialog(); });
 }
@@ -342,6 +346,7 @@ window.addEventListener('pagehide', () => { soundscape.stop(); dictation.stop();
 window.addEventListener('online', () => { if (ready && dirty) flush(); });
 $('headerDate').dateTime = today(); $('headerDate').textContent = dateLabel(today(), { weekday: 'long' });
 $('entryDate').textContent = dateLabel(today());
+mountDiaryLeaves($('paper'));
 document.querySelector('.fireflies').innerHTML = Array.from({ length: 38 }, (_, i) => `<i style="--x:${(i * 27.3 + 3) % 100}%;--y:${(i * 17.6 + 2) % 100}%;--s:${i % 4 === 0 ? 4 : 2}px;--o:${.3 + (i % 5) / 10};--t:${3 + i % 4}s;--d:-${i * .3}s"></i>`).join('');
 document.querySelector('.spectrum').innerHTML = Array.from({ length: 38 }, (_, i) => `<i style="--h:${15 + Math.abs(Math.sin(i * 1.8) * Math.cos(i * .42)) * 85}%;--hue:${15 + i * 7};--d:-${i * .13}s"></i>`).join('');
 document.fonts?.ready.then(() => requestAnimationFrame(resizeEditor));

@@ -14,3 +14,181 @@
 @media(max-width:640px){.diary-shell{padding:0 13px 15px}.portal-bar{min-height:37px;font-size:9px}.portal-bar>span:nth-child(2){display:none}.private-badge{font-size:9px}.private-badge svg{width:11px;height:11px}.back-link{min-height:37px}.diary-header{display:flex;flex-direction:column;gap:14px;padding:19px 0 18px}.diary-brand{font-size:16px}.diary-brand>svg{height:49px;width:88px;margin-bottom:3px}.diary-brand br{display:none}.diary-tabs{width:calc(100% + 14px);justify-content:flex-start;gap:0;overflow-x:auto;scrollbar-width:none;padding:0 3px}.diary-tabs button{font-size:14px;flex:1;min-width:68px;white-space:normal;padding:10px 5px 16px;line-height:1.14}.diary-tabs button:after{left:10%;right:10%;bottom:4px}.diary-layout{display:flex;flex-direction:column;gap:23px}.journal-stage{order:0;width:100%}.diary-tools{order:1;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 2px}.rail-caption{grid-column:1/-1;margin-bottom:0;letter-spacing:.17em;font-size:8px}.tool-card{height:100%;padding:13px 9px;border-radius:11px}.tool-card--voice{grid-column:1/-1;display:grid;grid-template-columns:auto 1fr;column-gap:12px;padding:17px}.tool-card--voice .voice-wave{grid-row:1/3;align-self:center;margin:0;max-width:100px;overflow:hidden;letter-spacing:1px;font-size:15px}.tool-card--voice .tool-card__heading{justify-content:flex-start;font-size:21px}.tool-card--voice .tool-card__heading svg{height:22px}.tool-card--voice small{grid-column:2;text-align:left;font-size:10px;margin:4px 0 0 32px}.tool-card__heading{font-size:18px}.tool-card small{font-size:10px;margin-top:5px}.tool-card--font .tool-card__heading,.tool-card--sound .tool-card__heading{font-size:16px}.tools-footnote{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;margin:3px 0}.tools-footnote br{display:none}.tools-footnote svg{margin:0;width:17px;height:17px}.diary-panels{order:2;width:100%;grid-template-columns:1fr 1fr;gap:12px;margin:0}.side-panel{padding:14px}.side-panel h2{font-size:18px}.side-panel p{font-size:10px}.release-button{min-height:110px}.memory-image{max-height:115px}.paper{min-height:610px;box-shadow:0 0 0 2px #87664099,0 0 0 3px #291c17,2px 5px 20px #120b1099}.paper-content{padding:32px 31px 31px}.paper h1{font-size:31px;margin:14px 0 17px}.journal-text{font-size:27px;min-height:330px;line-height:1.45}.page-topline{font-size:7px;letter-spacing:.09em}.paper-action{font-size:9px}.entry-details{margin:13px 0 10px;gap:8px}.feeling-button{font-size:13px;max-width:80%}.entry-details>span{font-size:7px}.save-strip{gap:6px;padding:8px;font-size:11px}.tag{font-size:9px;padding:3px 5px}.paper-bottom{font-size:10px}.text-button{font-size:10px}.journal-caption{font-size:12px;margin-top:12px}.diary-footer{padding-top:22px;font-size:12px}.collection-view{min-height:610px;padding-bottom:55px}.collection-view h1{font-size:31px}.collection-intro{font-size:16px}.empty-state{padding:45px 0}.diary-dialog{padding:22px;width:calc(100% - 26px)}.diary-dialog h2{font-size:28px}.diary-toast{bottom:17px;width:max-content;font-size:11px}.diary-header+.diary-layout .journal-stage:before{left:8%}.collection-toolbar .gold-button{font-size:10px}.choice-grid{gap:8px}.choice-button{font-size:16px;padding:12px 10px}.choice-button span{font-size:19px}}
 @media(max-width:359px){.diary-shell{padding-left:10px;padding-right:10px}.paper-content{padding-left:25px;padding-right:25px}.diary-tabs button{font-size:12px;min-width:59px}.journal-text{font-size:25px}.side-panel{padding:11px}.side-panel h2{font-size:16px}.tool-card__heading{font-size:16px}.tool-card--font .tool-card__heading,.tool-card--sound .tool-card__heading{font-size:14px}.private-badge{font-size:8px}.diary-brand{font-size:15px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
+
+/* Keep the writing and its controls within the quiet part of the artwork. */
+.paper-content {
+  padding: 64px clamp(60px, 12%, 116px) 72px;
+}
+.page-topline {
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  min-height: 36px;
+  color: #674b30;
+  font: 500 11px/1.5 var(--sans);
+  letter-spacing: .09em;
+}
+.page-topline > span {
+  padding: 5px 8px;
+  border-radius: 5px;
+  background: #fff6e3c9;
+}
+.paper-action {
+  padding: 9px 12px;
+  border: 1px solid #9d794e55;
+  border-radius: 7px;
+  background: #fff7e6e6;
+  color: #65482d;
+  font: 500 12px/1.4 var(--sans);
+  letter-spacing: 0;
+  transition: background .2s, border-color .2s;
+}
+.paper-action:hover {
+  color: #472e1c;
+  border-color: #927044;
+  background: #fff9ec;
+}
+.paper h1 {
+  margin: 22px 0 25px;
+  color: #453224;
+  font: 600 clamp(30px, 2.6vw, 37px)/1.2 var(--serif);
+  letter-spacing: -.015em;
+}
+.journal-text {
+  min-height: 300px;
+  padding: 2px 0 5px;
+  color: #3d2c23;
+  font: 500 clamp(26px, 2.1vw, 30px)/1.55 var(--hand);
+  overflow-wrap: anywhere;
+}
+.journal-text::placeholder {
+  color: #886b4b;
+  opacity: 1;
+  font-family: var(--serif);
+  font-size: clamp(23px, 1.9vw, 27px);
+  font-weight: 400;
+  font-style: italic;
+}
+.paper[data-font=classic] .journal-text {
+  font-size: 24px;
+  line-height: 1.65;
+}
+.paper[data-font=simple] .journal-text {
+  font-size: 17px;
+  line-height: 1.85;
+}
+.entry-footer {
+  min-width: 0;
+  margin-top: 24px;
+  padding: 12px 14px;
+  border: 1px solid #ab875950;
+  border-radius: 10px;
+  background: #fbf3e0f2;
+  box-shadow: 0 3px 16px #6646260a;
+}
+.entry-details {
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  margin: 0 0 9px;
+  color: #735b40;
+}
+.feeling-button {
+  max-width: 100%;
+  padding: 7px 0;
+  color: #674c34;
+  font: 500 12px/1.5 var(--sans);
+  overflow-wrap: anywhere;
+}
+.entry-details > span {
+  margin-left: auto;
+  color: #786247;
+  font: 400 11px/1.5 var(--sans);
+}
+.save-strip {
+  gap: 9px;
+  padding: 10px 0 0;
+  border: 0;
+  border-top: 1px solid #ac90653b;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: #67563e;
+  font: 400 11px/1.5 var(--sans);
+}
+.save-state {
+  flex-shrink: 1;
+  overflow-wrap: anywhere;
+}
+.entry-tags { min-width: 0; }
+.tag {
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: #e7d7b96b;
+  color: #6d5134;
+  font: 400 11px/1.4 var(--sans);
+  overflow-wrap: anywhere;
+}
+.tags-button {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  min-height: 30px;
+  border: 1px solid #af8c5738;
+  border-radius: 6px;
+  color: #735635;
+  font: 16px var(--sans);
+}
+.tags-button:hover { background: #eadbbd77; }
+.paper-bottom {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 9px;
+  color: #735b40;
+  font: 400 11px/1.5 var(--sans);
+}
+.text-button {
+  margin-left: auto;
+  padding: 4px 0;
+  color: #865a40;
+  font: 400 11px/1.5 var(--sans);
+}
+.collection-kicker {
+  color: #775735;
+  font: 500 11px/1.5 var(--sans);
+  letter-spacing: .08em;
+}
+.collection-view h1 { font-size: 34px; }
+.collection-search { min-height: 43px; font-size: 13px; }
+.entry-card time, .entry-delete, .capsule-lock small,
+.collection-stats span { font-size: 11px; line-height: 1.5; }
+.entry-card p, .collection-intro { color: #795c3c; }
+.paper .gold-button, .paper .quiet-button { font-size: 12px; }
+
+@media (max-width: 1200px) and (min-width: 641px) {
+  .paper-content { padding: 58px 54px 64px; }
+  .page-topline { font-size: 11px; letter-spacing: .06em; }
+  .paper-action { padding: 8px 9px; font-size: 11px; }
+  .paper h1 { font-size: 32px; }
+  .journal-text { font-size: 28px; }
+}
+@media (max-width: 640px) {
+  .paper-content { padding: 54px 42px 62px; }
+  .page-topline { font-size: 11px; letter-spacing: .04em; }
+  .page-topline > span { padding: 4px 6px; }
+  .paper-action { padding: 8px 9px; font-size: 11px; }
+  .paper h1 { margin: 18px 0 24px; font-size: 31px; }
+  .journal-text { min-height: 280px; font-size: 26px; line-height: 1.55; }
+  .journal-text::placeholder { font-size: 23px; }
+  .entry-footer { margin: 20px -7px 0; padding: 11px; }
+  .feeling-button { font-size: 12px; }
+  .save-strip { gap: 7px; }
+  .collection-view h1 { font-size: 30px; }
+}
+@media (max-width: 359px) {
+  .paper-content { padding-left: 34px; padding-right: 34px; }
+  .page-topline { column-gap: 6px; font-size: 11px; letter-spacing: 0; }
+  .page-topline > span { padding-left: 4px; padding-right: 4px; }
+  .paper-action { padding-left: 7px; padding-right: 7px; }
+  .paper h1 { font-size: 29px; }
+  .journal-text { font-size: 25px; }
+}

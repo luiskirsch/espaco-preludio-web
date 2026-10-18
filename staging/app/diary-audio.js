@@ -1,7 +1,7 @@
 /** Browser-only diary helpers. Nothing starts at module load. */
 
 const SOUNDSCAPES = {
-  rain: { notes: [220, 261.63, 329.63, 440, 523.25], interval: 2500, decay: 5.5, level: 0.105 },
+  rain: {},
   forest: { notes: [196, 246.94, 293.66, 392, 493.88], interval: 3400, decay: 6, level: 0.075 },
   piano: { notes: [261.63, 329.63, 392, 523.25, 440, 392, 329.63, 293.66], interval: 1100, decay: 4, level: 0.15 },
 };
@@ -13,6 +13,128 @@ function notify(callback, value) {
 
 function disconnect(node) {
   try { node.disconnect(); } catch { /* Already disconnected. */ }
+}
+
+/** A muted roof heard from inside a cabin, with no repeating melody or sharp hiss.
+ * Returns PCM so the same texture can also be rendered and checked offline.
+ */
+export function synthesizeCabinRain(sampleRate, { duration = 29, seed = Math.floor(Math.random() * 0xffffffff) } = {}) {
+  const length = Math.round(sampleRate * duration);
+  const overlap = Math.round(sampleRate * 0.8);
+  const size = length + overlap;
+  const channels = [new Float32Array(size), new Float32Array(size)];
+  let state = seed >>> 0 || 1;
+  const random = () => {
+    state ^= state << 13;
+    state ^= state >>> 17;
+    state ^= state << 5;
+    return (state >>> 0) / 4294967296;
+  };
+  const coefficient = frequency => 1 - Math.exp(-2 * Math.PI * frequency / sampleRate);
+  const brightCutoff = coefficient(2350);
+  const middleCutoff = coefficient(520);
+  const rumbleCutoff = coefficient(110);
+  const sharedCutoff = coefficient(1250);
+  let shared = 0;
+  const low = [0, 0];
+  const middle = [0, 0];
+  const rumble = [0, 0];
+
+  // A diffuse bed remains underneath the individual roof drops. Slow, shallow
+  // changes in density avoid the static quality of a single filtered noise.
+  for (let i = 0; i < size; i += 1) {
+    shared += sharedCutoff * (random() * 2 - 1 - shared);
+    const time = i / sampleRate;
+    const breeze = 0.91 + 0.055 * Math.sin(time * 0.31) + 0.035 * Math.sin(time * 0.83 + 1.4);
+    for (let channel = 0; channel < 2; channel += 1) {
+      const white = random() * 2 - 1;
+      low[channel] += brightCutoff * (white - low[channel]);
+      middle[channel] += middleCutoff * (white - middle[channel]);
+      rumble[channel] += rumbleCutoff * (white - rumble[channel]);
+      channels[channel][i] = breeze * (
+        0.26 * (low[channel] - middle[channel])
+        + 0.20 * (middle[channel] - rumble[channel])
+        + 0.10 * shared
+      );
+    }
+  }
+
+  // Stochastic, rounded impacts: many fine drops and occasional fuller wooden
+  // roof taps. Each has its own colour, decay and position, never a fixed beat.
+  let arrival = 0;
+  while (arrival < duration + 0.8) {
+    arrival += -Math.log(Math.max(0.000001, random())) / (73 + 9 * Math.sin(arrival * 0.37));
+    const start = Math.floor(arrival * sampleRate);
+    const fullDrop = random() < 0.075;
+    const decay = fullDrop ? 0.035 + random() * 0.028 : 0.009 + random() * 0.019;
+    const attack = 0.0015 + random() * 0.0025;
+    const tapLength = Math.ceil(decay * 5 * sampleRate);
+    const cutoff = coefficient(fullDrop ? 650 + random() * 600 : 1150 + random() * 1600);
+    const bodyFrequency = 210 + random() * 490;
+    const level = (fullDrop ? 0.18 : 0.065) * (0.35 + random() * 0.65);
+    const pan = random() * 1.6 - 0.8;
+    const left = Math.cos((pan + 1) * Math.PI / 4);
+    const right = Math.sin((pan + 1) * Math.PI / 4);
+    let filtered = 0;
+    let bass = 0;
+    for (let j = 0; j < tapLength && start + j < size; j += 1) {
+      const time = j / sampleRate;
+      filtered += cutoff * (random() * 2 - 1 - filtered);
+      bass += rumbleCutoff * (filtered - bass);
+      const envelope = (1 - Math.exp(-time / attack)) * Math.exp(-time / decay);
+      const body = fullDrop ? 0.28 * Math.sin(2 * Math.PI * bodyFrequency * time) * Math.exp(-time / 0.019) : 0;
+      const tap = level * (envelope * (filtered - bass) + body);
+      channels[0][start + j] += tap * left;
+      channels[1][start + j] += tap * right;
+    }
+  }
+
+  const output = [new Float32Array(length), new Float32Array(length)];
+  const reflectionA = Math.round(sampleRate * 0.017);
+  const reflectionB = Math.round(sampleRate * 0.041);
+  const roomCutoff = coefficient(1800);
+  const ceilingCutoff = coefficient(3400);
+  const dcCutoff = coefficient(35);
+  let energy = 0;
+  let peak = 0;
+  for (let channel = 0; channel < 2; channel += 1) {
+    const samples = channels[channel];
+    const opposite = channels[1 - channel];
+    let room = 0;
+    let sheltered = 0;
+    let softened = 0;
+    let dc = 0;
+    for (let i = 0; i < size; i += 1) {
+      // Short, dark reflections suggest a sheltered interior, without an echo.
+      const reflected = (i >= reflectionA ? samples[i - reflectionA] * 0.12 : 0)
+        + (i >= reflectionB ? opposite[i - reflectionB] * 0.075 : 0);
+      room += roomCutoff * (reflected - room);
+      sheltered += ceilingCutoff * (samples[i] + room - sheltered);
+      softened += ceilingCutoff * (sheltered - softened);
+      const value = softened;
+      dc += dcCutoff * (value - dc);
+      samples[i] = value - dc;
+    }
+    for (let i = 0; i < length; i += 1) {
+      // Use the warmed-up head. A smooth overlap at the tail joins back to it
+      // with matching slope; both channels share the same crossfade envelope.
+      let value = samples[overlap + i];
+      if (i >= length - overlap) {
+        const progress = (i - (length - overlap)) / overlap;
+        const mix = 0.5 - 0.5 * Math.cos(Math.PI * progress);
+        value = value * (1 - mix) + samples[i - (length - overlap)] * mix;
+      }
+      output[channel][i] = value;
+      energy += value * value;
+      peak = Math.max(peak, Math.abs(value));
+    }
+  }
+  const rms = Math.sqrt(energy / (length * 2));
+  const gain = Math.min(0.14 / Math.max(rms, 0.0001), 0.68 / Math.max(peak, 0.0001));
+  for (const samples of output) {
+    for (let i = 0; i < length; i += 1) samples[i] *= gain;
+  }
+  return output;
 }
 
 /** Entirely synthesized. Call play from a user action; no network or storage. */
@@ -66,6 +188,17 @@ export function createSoundscape({ onState } = {}) {
   function addAtmosphere(current, selectedPreset) {
     if (selectedPreset === 'piano') return;
     const context = current.context;
+    if (selectedPreset === 'rain') {
+      const channels = synthesizeCabinRain(context.sampleRate);
+      const buffer = context.createBuffer(2, channels[0].length, context.sampleRate);
+      for (let channel = 0; channel < 2; channel += 1) buffer.getChannelData(channel).set(channels[channel]);
+      const rain = track(current, context.createBufferSource(), true);
+      rain.buffer = buffer;
+      rain.loop = true;
+      rain.connect(current.master);
+      rain.start();
+      return;
+    }
     const buffer = context.createBuffer(1, context.sampleRate * 3, context.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < data.length; i += 1) data[i] = Math.random() * 2 - 1;
@@ -80,10 +213,10 @@ export function createSoundscape({ onState } = {}) {
     const level = track(current, context.createGain());
     noise.buffer = buffer;
     noise.loop = true;
-    filter.type = selectedPreset === 'rain' ? 'highpass' : 'lowpass';
-    filter.frequency.value = selectedPreset === 'rain' ? 1200 : 480;
+    filter.type = 'lowpass';
+    filter.frequency.value = 480;
     filter.Q.value = 0.5;
-    level.gain.value = selectedPreset === 'rain' ? 0.105 : 0.065;
+    level.gain.value = 0.065;
     noise.connect(filter);
     filter.connect(level);
     level.connect(current.master);
@@ -91,6 +224,7 @@ export function createSoundscape({ onState } = {}) {
   }
 
   function schedule(current, selectedPreset) {
+    if (selectedPreset === 'rain') return;
     const config = SOUNDSCAPES[selectedPreset];
     let step = 0;
     const tick = () => {
@@ -125,6 +259,15 @@ export function createSoundscape({ onState } = {}) {
     current.alive = false;
     clearTimeout(current.timer);
     current.context.onstatechange = null;
+    if (current.context.state === 'running') {
+      const now = current.context.currentTime;
+      const parameter = current.master.gain;
+      if (parameter.cancelAndHoldAtTime) parameter.cancelAndHoldAtTime(now);
+      else parameter.cancelScheduledValues(now);
+      parameter.setTargetAtTime(0, now, 0.035);
+      // Let the fade reach silence before stopping sources or closing context.
+      await new Promise(resolve => setTimeout(resolve, 180));
+    }
     for (const source of current.sources) {
       source.onended = null;
       try { source.stop(); } catch { /* It may have already ended. */ }
@@ -159,7 +302,7 @@ export function createSoundscape({ onState } = {}) {
       current = { context, alive: true, timer: null, nodes: new Set(), sources: new Set() };
       session = current;
       current.master = track(current, context.createGain());
-      current.master.gain.value = volume;
+      current.master.gain.value = 0;
       const compressor = track(current, context.createDynamicsCompressor());
       compressor.threshold.value = -16;
       compressor.knee.value = 20;
@@ -179,6 +322,8 @@ export function createSoundscape({ onState } = {}) {
       }
       if (context.state !== 'running') throw new Error('AudioContext is suspended');
       addAtmosphere(current, selectedPreset);
+      current.master.gain.setValueAtTime(0, context.currentTime);
+      current.master.gain.linearRampToValueAtTime(volume, context.currentTime + 1.2);
       playing = true;
       context.onstatechange = () => {
         if (session !== current || !current.alive) return;
@@ -215,7 +360,8 @@ export function createSoundscape({ onState } = {}) {
     if (session?.alive && session.context.state !== 'closed') {
       const parameter = session.master.gain;
       const now = session.context.currentTime;
-      parameter.cancelScheduledValues(now);
+      if (parameter.cancelAndHoldAtTime) parameter.cancelAndHoldAtTime(now);
+      else parameter.cancelScheduledValues(now);
       parameter.setTargetAtTime(volume, now, 0.035);
     }
     return true;

@@ -10,9 +10,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app/diary.css?v=20261018">
+  <link rel="stylesheet" href="./app/diary.css?v=20261018b">
+  <link rel="stylesheet" href="./app/diary-leaves.css?v=20261018b">
   <script src="/i18n/init.js?v=2-8" defer></script>
-  <script type="module" src="./app/diary.js?v=20261018"></script>
+  <script type="module" src="./app/diary.js?v=20261018b"></script>
 </head>
 <body data-portal="student">
   <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -50,22 +51,22 @@
         <button class="tool-card tool-card--weather" id="weatherButton"><span class="tool-card__heading"><span class="weather-illustration" aria-hidden="true">🌤️</span><span data-i18n="p-diary:tool_weather">Capturar Clima</span></span><small id="weatherLabel">Guarde um pedacinho<br>do tempo de hoje</small></button>
         <button class="tool-card tool-card--aroma" id="aromaButton"><span class="tool-card__heading"><svg><use href="#i-aroma"/></svg><span data-i18n="p-diary:tool_aroma">Adicionar Aroma</span></span><small id="aromaLabel">Associe suas memórias<br>a um perfume especial</small></button>
         <button class="tool-card tool-card--font" id="fontButton"><span class="tool-card__heading"><svg><use href="#i-feather"/></svg><span data-i18n="p-diary:tool_handwriting">Estilo de Caligrafia</span></span><small data-i18n="p-diary:handwriting_hint">A sua história, do seu jeito</small></button>
-        <button class="tool-card tool-card--sound" id="soundButton"><span class="tool-card__heading"><svg><use href="#i-music"/></svg><span data-i18n="p-diary:tool_soundtrack">Trilha Sonora de Fundo</span></span><small id="soundLabel">Chuva suave & piano<br>Um abraço em forma de som</small></button>
+        <button class="tool-card tool-card--sound" id="soundButton"><span class="tool-card__heading"><svg><use href="#i-music"/></svg><span data-i18n="p-diary:tool_soundtrack">Trilha Sonora de Fundo</span></span><small id="soundLabel" data-i18n-html="p-diary:cabin_rain_hint">Chuva na cabana<br>Gotas suaves sobre o telhado</small></button>
         <p class="tools-footnote" data-i18n-html="p-diary:tools_footnote"><svg><use href="#i-leaf"/></svg> Aqui, cada sentimento<br>tem seu próprio tempo.</p>
       </aside>
       <section class="journal-stage" aria-label="Seu espaço de escrita" data-i18n-aria-label="p-diary:writing_space">
         <div class="paper" id="paper">
           <div class="paper-content" id="editorView">
-            <div class="page-topline"><span id="entryKind">UMA PÁGINA DO SEU DIA</span><button class="paper-action" id="newPageButton" title="Começar outra página" data-i18n-title="p-diary:new_page_title" data-i18n="p-diary:new_page">+ Nova página</button></div>
+            <div class="page-topline"><span id="entryKind">UMA PÁGINA SÓ SUA</span><button class="paper-action" id="newPageButton" title="Começar outra página" data-i18n-title="p-diary:new_page_title" data-i18n="p-diary:new_page">+ Nova página</button></div>
             <h1 id="entryDate"></h1>
             <label class="sr-only" for="journalText" data-i18n="p-diary:write_your_thoughts">Escreva seus pensamentos</label>
-            <textarea data-i18n-placeholder="p-diary:writing_placeholder" id="journalText" class="journal-text" maxlength="20000" spellcheck="true" disabled placeholder="Hoje o dia teve um tom diferente… caminhei pelo parque e o vento parecia trazer memórias antigas…
-E de repente, uma sensação de nostalgia me abraçou, como se o próprio cenário estivesse contando uma história.
-
-O que você gostaria de guardar de hoje?"></textarea>
-            <div class="entry-details"><button id="feelingButton" class="feeling-button">♡ Como esta memória faz você se sentir?</button><span id="wordCount">0 palavras</span></div>
-            <div class="save-strip"><span class="save-state" id="saveState" role="status" aria-live="polite">Preparando seu diário…</span><div class="entry-tags" id="entryTags"></div><button id="tagsButton" class="tags-button" aria-label="Editar marcadores" data-i18n-aria-label="p-diary:edit_tags">#</button></div>
-            <div class="paper-bottom"><span id="entryExtra">Um lugar para acolher o que você sente.</span><button id="deleteCurrent" class="text-button" hidden data-i18n="p-diary:delete_page">Excluir página</button></div>
+            <textarea data-i18n-placeholder="p-diary:writing_placeholder" id="journalText" class="journal-text" maxlength="20000" spellcheck="true" disabled placeholder="O que você gostaria de guardar de hoje?
+Escreva no seu tempo."></textarea>
+            <div class="entry-footer">
+              <div class="entry-details"><button id="feelingButton" class="feeling-button">♡ Como você se sente?</button><span id="wordCount">0 palavras</span></div>
+              <div class="save-strip"><span class="save-state" id="saveState" role="status" aria-live="polite">Preparando seu diário…</span><div class="entry-tags" id="entryTags"></div><button id="tagsButton" class="tags-button" aria-label="Editar marcadores" data-i18n-aria-label="p-diary:edit_tags">#</button></div>
+              <div class="paper-bottom"><span id="entryExtra" hidden></span><button id="deleteCurrent" class="text-button" hidden data-i18n="p-diary:delete_page">Excluir página</button></div>
+            </div>
           </div>
           <div class="paper-content collection-view" id="collectionView" hidden></div>
         </div>
