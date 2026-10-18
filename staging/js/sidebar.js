@@ -1,10 +1,10 @@
 // Sidebar premium do produto profissional — single source of truth.
 // Cada página logged-in só precisa de:
 //   1. <body class="ep-has-sidebar"> (pra CSS aplicar layout sem FOUC)
-//   2. <script src="./js/sidebar.js?v=32"></script> no início do body.
+//   2. <script src="./js/sidebar.js?v=33"></script> no início do body.
 // O script injeta o <aside> no início do body, marca link ativo pelo
-// pathname, e sincroniza avatar/nome do topbar (Firebase logic vive
-// em auth-guard.js?v=20261018-nav1 → topUserName / topUserAvatar).
+// pathname. Nome/foto vêm do professional-identity.js antes do primeiro paint
+// e são atualizados pelo auth-guard após validar a conta.
 (function () {
   if (document.querySelector('.ep-sidebar')) return;
 
@@ -162,6 +162,7 @@
   // apareca com o PRIMEIRO PAINT da pagina (sem flicker entre navegacoes).
   document.body.classList.add('ep-has-sidebar');
   document.body.insertAdjacentHTML('afterbegin', html);
+  window.EP_PROFESSIONAL_IDENTITY?.hydrate();
 
   var sideEl = document.querySelector('.ep-sidebar');
 
@@ -191,42 +192,12 @@
   document.addEventListener('ep:i18n-ready', applyToSidebar);
 
   // ─── PARTE DEFERIDA — espera o resto do body (topbar) ser parsed ────
-  // Topbar elements (topUserName, topUserAvatar, logoutBtn)
-  // vem DEPOIS no HTML. Esperamos DOMContentLoaded pra configurar mirror.
+  // O botão de sair da topbar vem depois no HTML. Esperamos o DOM completo
+  // para conectá-lo à sidebar e reunir os controles flutuantes.
   function setupDeferred() {
-    // Sync avatar/nome do topbar — auth-guard.js?v=20261018-nav1 seta foto base64,
-    // selo verificado (innerHTML) e iniciais (textContent). Replicamos tudo
-    // via MutationObserver pra reatividade quando Firebase emite mudança.
-    const topName = document.getElementById('topUserName');
-    const sideName = document.getElementById('sidebarUserName');
-    const topAvatar = document.getElementById('topUserAvatar');
-    const sideAvatar = document.getElementById('sidebarUserAvatar');
-
-    function syncName() {
-      if (!topName || !sideName) return;
-      const parts = (topName.textContent || '').trim().split(/\s+/).filter(Boolean);
-      const first = parts[0] || 'Perfil';
-      const last = parts.length > 1 ? parts[parts.length - 1] : '';
-      sideName.innerHTML = last
-        ? '<span>' + first + '</span><span>' + last + '</span>'
-        : '<span>' + first + '</span>';
-    }
-    function syncAvatar() {
-      if (!topAvatar || !sideAvatar) return;
-      sideAvatar.style.backgroundImage = topAvatar.style.backgroundImage;
-      sideAvatar.style.backgroundSize = topAvatar.style.backgroundSize || 'cover';
-      sideAvatar.style.backgroundPosition = topAvatar.style.backgroundPosition || 'center';
-      sideAvatar.innerHTML = topAvatar.innerHTML;
-      if (topAvatar.classList.contains('ep-avatar-wrap')) sideAvatar.classList.add('ep-avatar-wrap');
-    }
-
-    if (topName) new MutationObserver(syncName).observe(topName, { childList: true, characterData: true, subtree: true });
-    if (topAvatar) new MutationObserver(syncAvatar).observe(topAvatar, {
-      childList: true, characterData: true, subtree: true,
-      attributes: true, attributeFilter: ['style', 'class']
-    });
-    syncName();
-    syncAvatar();
+    // Identity is hydrated before first paint and refreshed directly by
+    // applyTopUserSlot. Do not mirror an empty topbar placeholder into it.
+    window.EP_PROFESSIONAL_IDENTITY?.hydrate();
 
     // TISS é atualizado diretamente por applyTissVisibility no auth-guard.
     // Espelhar o display inicial da topbar causava visible → hidden → visible

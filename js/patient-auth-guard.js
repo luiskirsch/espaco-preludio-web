@@ -1,5 +1,5 @@
 // Espaço Prelúdio — guard de autenticação para páginas que exigem PACIENTE
-// logado (paciente-painel.html). Espelha auth-guard.js?v=20261018-nav1 do profissional, mas
+// logado (paciente-painel.html). Espelha auth-guard.js?v=20261018-identity1 do profissional, mas
 // usa coleção `therapy_patient_accounts` e sessionStorage namespaced.
 
 import { onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";

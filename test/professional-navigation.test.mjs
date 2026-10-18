@@ -25,10 +25,11 @@ test('every professional menu page loads the shared navigation preparation and c
   for (const filename of await readdir(root)) {
     if (!filename.endsWith('.html')) continue;
     const html = await readFile(join(root, filename), 'utf8');
-    if (!html.includes('./js/sidebar.js?v=32')) continue;
+    if (!html.includes('./js/sidebar.js?v=33')) continue;
     count++;
+    assert.match(html, /<script src="\.\/js\/professional-identity\.js\?v=1"><\/script>/, filename);
     assert.match(html, /<script defer src="\.\/js\/professional-navigation\.js\?v=1"><\/script>/, filename);
-    assert.match(html, /rel="modulepreload" href="\.\/js\/auth-guard\.js\?v=20261018-nav1"/, filename);
+    assert.match(html, /rel="modulepreload" href="\.\/js\/auth-guard\.js\?v=20261018-identity1"/, filename);
     assert.doesNotMatch(html, /<script type="speculationrules">/, `${filename} must use the shared route selection`);
   }
   assert.ok(count >= 25);

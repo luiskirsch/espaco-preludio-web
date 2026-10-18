@@ -1,6 +1,6 @@
 // Espaço Prelúdio — guard de autenticação para páginas que exigem profissional logado.
 // Uso:
-//   import { requireTherapist } from "./js/auth-guard.js?v=20261018-nav1";
+//   import { requireTherapist } from "./js/auth-guard.js?v=20261018-identity1";
 //   const { user, idToken, therapist } = await requireTherapist();
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
@@ -79,6 +79,7 @@ export function invalidateProfileCache() {
 let lastSeenUid = null;
 onAuthStateChanged(auth, (user) => {
   const uid = user?.uid || null;
+  window.EP_PROFESSIONAL_IDENTITY?.reconcile(uid);
   if (lastSeenUid && uid !== lastSeenUid) {
     invalidateProfileCache();
     db.apiCache.clear().catch(() => {});
@@ -621,6 +622,10 @@ function mountHelpBubble() {
 // therapist.photoMime (armazenamento inline no Firestore). Fallback pra
 // iniciais quando não tem foto.
 export function applyTopUserSlot(therapist) {
+  if (window.EP_PROFESSIONAL_IDENTITY && auth.currentUser?.uid) {
+    window.EP_PROFESSIONAL_IDENTITY.save(auth.currentUser.uid, therapist);
+    return;
+  }
   const name = (therapist?.displayName || "").trim();
   const elName   = document.getElementById("topUserName");
   const elAvatar = document.getElementById("topUserAvatar");

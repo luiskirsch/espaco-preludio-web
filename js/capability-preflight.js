@@ -5,10 +5,10 @@
 //   2. aplica classe .ep-unregulated no <html> (layout grid do topbar),
 //   3. preenche #topUserName / #topUserAvatar com nome + foto do cache
 //      via MutationObserver — microtask antes do primeiro paint, evita
-//      "salto" do pill de perfil quando o auth-guard.js?v=20261018-nav1 termina o fetch.
+//      "salto" do pill de perfil quando o auth-guard.js?v=20261018-identity1 termina o fetch.
 //
 // Sem cache (primeira visita pós-login OU sessionStorage limpo): no-op,
-// menu/perfil renderizam com placeholder e auth-guard.js?v=20261018-nav1 preenche após
+// menu/perfil renderizam com placeholder e auth-guard.js?v=20261018-identity1 preenche após
 // o fetch (~100-500ms). Afeta apenas a PRIMEIRA navegação após login.
 //
 // Carregado por <script src="./js/capability-preflight.js"></script> no
@@ -29,7 +29,7 @@
     if (Array.isArray(caps)) {
       var has = function (c) { return caps.indexOf(c) !== -1; };
 
-      // Mesma matriz de RULES do applyCapabilityVisibility (auth-guard.js?v=20261018-nav1).
+      // Mesma matriz de RULES do applyCapabilityVisibility (auth-guard.js?v=20261018-identity1).
       // Se mudar lá, sincronizar aqui.
       var hideSelectors = [];
       if (!has("receita"))              hideSelectors.push('a[href*="receita.html"]', 'button[data-href*="receita.html"]', '[data-capability="receita"]');
@@ -63,7 +63,7 @@
       document.head.appendChild(tissStyle);
     }
 
-    // Slot do perfil — replica logica de applyTopUserSlot (auth-guard.js?v=20261018-nav1).
+    // Slot do perfil — replica logica de applyTopUserSlot (auth-guard.js?v=20261018-identity1).
     // Sem MutationObserver os elementos #topUserName/#topUserAvatar so
     // ganham conteudo depois do auth-guard rodar, causando "Perfil" → nome
     // real (pill encolhe/expande). MO roda em microtask, antes do paint.
