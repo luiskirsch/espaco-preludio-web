@@ -10,12 +10,13 @@
   <link rel="preconnect" href="https://firestore.googleapis.com">
   <link rel="dns-prefetch" href="https://www.gstatic.com">
   <link rel="dns-prefetch" href="https://api.espacopreludio.com.br">
-  <script type="speculationrules">{"prerender":[{"where":{"selector_matches":"a[href$='.html']:not([href^='http'])"},"eagerness":"moderate"}]}</script>
   <title data-i18n="prontuario:title">Prontuário · Espaço Prelúdio</title>
   <link rel="icon" type="image/png" href="/logo-144.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <script defer src="./js/professional-navigation.js?v=1"></script>
+  <link rel="modulepreload" href="./js/auth-guard.js?v=20261018-nav1">
   <script defer src="./js/capability-preflight.js?v=5"></script>
   <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
   <script src="./i18n/init.js?v=2-8" defer></script>
@@ -23,7 +24,8 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
   <script src="./js/pwa.js?v=3" defer></script>
-  <link rel="stylesheet" href="./css/chart-workspace.css?v=3">
+  <link rel="stylesheet" href="./css/chart-workspace.css?v=4">
+  <link rel="modulepreload" href="./js/chart-workspace.js?v=3">
   <style>
     .rec-drop {
       display: flex;
@@ -208,7 +210,7 @@
   </style>
   <link rel="stylesheet" href="./css/responsive.css?v=20261011b">
 </head>
-<body class="ep-has-sidebar">
+<body class="ep-has-sidebar chart-page">
 <script src="./js/sidebar.js?v=32"></script>
 
 <header class="ep-topbar">
@@ -246,7 +248,7 @@
   </div>
 </header>
 
-<main class="ep-container ep-mt-32 ep-mb-16 ep-page-main">
+<main class="ep-container ep-mt-32 ep-mb-16 ep-page-main chart-main">
 
   <a href="./pacientes.html" class="ep-text-sm ep-text-muted" data-i18n="prontuario:backToPatients">← Voltar para pacientes</a>
 
@@ -271,6 +273,23 @@
       <a id="newSessionLink" href="#" class="ep-btn ep-btn--primary" data-i18n="prontuario:actions.newSession">+ Nova consulta</a>
     </div>
   </section>
+
+  <div class="chart-boot" role="status" aria-live="polite" aria-busy="true">
+    <p class="chart-sr-only" data-i18n="chart:loading">Carregando…</p>
+    <div class="chart-toolbar" aria-hidden="true"><div class="chart-nav">
+      <span class="chart-boot-tab" data-i18n="chart:overview">Visão geral</span>
+      <span class="chart-boot-tab" data-i18n="chart:entries">Evoluções</span>
+      <span class="chart-boot-tab" data-i18n="chart:clinical">História clínica</span>
+      <span class="chart-boot-tab" data-i18n="chart:monitoring">Acompanhamento</span>
+      <span class="chart-boot-tab" data-i18n="chart:documents">Documentos</span>
+      <span class="chart-boot-tab" data-i18n="chart:registration">Cadastro</span>
+    </div></div>
+    <div aria-hidden="true">
+      <div class="chart-section-head"><div><h2 data-i18n="chart:overviewTitle">Visão geral do cuidado</h2><p data-i18n="chart:loading">Carregando…</p></div></div>
+      <div class="chart-metrics"><div class="chart-metric"><div class="ep-skel ep-skel--line"></div></div><div class="chart-metric"><div class="ep-skel ep-skel--line"></div></div><div class="chart-metric"><div class="ep-skel ep-skel--line"></div></div></div>
+      <div class="chart-overview-grid"><div class="chart-card"><div class="ep-skel ep-skel--title"></div><div class="ep-skel ep-skel--card"></div></div><div class="chart-card"><div class="ep-skel ep-skel--title"></div><div class="ep-skel ep-skel--card"></div></div></div>
+    </div>
+  </div>
 
   <!-- Strip de stats agregados -->
   <section class="ep-stats-strip ep-mt-16" id="statsStrip" data-i18n-aria-label="prontuario:stats.summaryAria" aria-label="Resumo do paciente">
@@ -459,9 +478,9 @@
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?v=20261017-mfa3";
-  import { requireTherapist } from "./js/auth-guard.js?v=20261017-mfa3";
+  import { requireTherapist } from "./js/auth-guard.js?v=20261018-nav1";
   import { layoutPdfText } from "./js/chart-pdf-text.js?v=1";
-  import { createChartWorkspace } from "./js/chart-workspace.js?v=2";
+  import { createChartWorkspace } from "./js/chart-workspace.js?v=3";
   import { decryptNote, clearDek } from "./js/crypto.js";
   import { decryptAiSummaryPayload, migrateLegacyAiSummary } from "./js/ai-summary-crypto.js?v=2";
   import { hasStoredAiAudio, retryAiSummaryUpload, clearStoredAiAudio } from "./js/session-ai-capture.js?v=6";
@@ -1024,6 +1043,10 @@
   async function boot() {
     document.getElementById("errorState").classList.add("ep-hide");
     document.getElementById("sessionsLoading").classList.remove("ep-hide");
+    // These reads are independent; handle rejection immediately while identity loads.
+    const sessionsRequest = loadSessions().then(
+      sessions => ({ sessions }), error => ({ error })
+    );
 
     let patient;
     try {
@@ -1044,10 +1067,13 @@
     }
 
     renderHeader(patient);
+    chartWorkspace.load();
 
     let sessions;
     try {
-      sessions = await loadSessions();
+      const result = await sessionsRequest;
+      if (result.error) throw result.error;
+      sessions = result.sessions;
     } catch (err) {
       console.error("load_sessions_error", { code: err?.name || "Error" });
       showError(String(err?.message || err || "ERRO"));
@@ -1056,7 +1082,6 @@
 
     renderStats(sessions);
     chartWorkspace.setSessions(sessions);
-    chartWorkspace.load();
 
     // Carrega + renderiza evolução de escalas (não bloqueia se falhar)
     loadAndRenderEscalas(patient).catch(e => console.warn("escalas_load_failed", e));

@@ -1,6 +1,6 @@
 // Espaço Prelúdio — guard de autenticação para páginas que exigem profissional logado.
 // Uso:
-//   import { requireTherapist } from "./js/auth-guard.js?v=20261017-mfa3";
+//   import { requireTherapist } from "./js/auth-guard.js?v=20261018-nav1";
 //   const { user, idToken, therapist } = await requireTherapist();
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
@@ -675,114 +675,11 @@ export function verifiedBadgeHtml(size) {
   return `<span class="ep-verified-badge${sz}" title="Profissional verificado · inscrição no conselho confirmada" aria-label="Profissional verificado"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
 }
 
-// Prefetch HTML das páginas do nav após render — próxima navegação chega
-// pré-carregada do disk cache. Custo: ~30-100KB por página em background,
-// pago uma vez por sessão. Ganho: clique vira navegação instantânea.
-function prefetchNavLinks() {
-  // Espera o load completar pra não competir com recursos críticos.
-  const run = () => {
-    const seen = new Set();
-    document.querySelectorAll('a[href$=".html"]').forEach(a => {
-      const href = a.getAttribute("href");
-      if (!href || href.startsWith("http") || seen.has(href)) return;
-      seen.add(href);
-      const link = document.createElement("link");
-      link.rel = "prefetch";
-      link.href = href;
-      link.as = "document";
-      document.head.appendChild(link);
-    });
-  };
-  if (document.readyState === "complete") setTimeout(run, 50);
-  else window.addEventListener("load", () => setTimeout(run, 50), { once: true });
-}
-
-// Hover-prefetch de DADOS — vai além do prefetch de HTML. Quando o usuário
-// passa o mouse sobre um link da sidebar/nav e fica >120ms (debounce evita
-// disparar pra todos os links no swipe), faz fetch das APIs principais da
-// página destino e grava no MESMO sessionStorage cache (api-cache.js).
-// Quando a página alvo abre e chama cachedGet(), pega o cache fresco —
-// pula o "Carregando…" inteiramente, render direto com dados.
-//
-// Mapping é estático (rota → endpoints+keys). Falha silenciosa.
-const NAV_DATA_PREFETCH = {
-  "painel.html": [
-    { url: "/therapy/sessoes",        key: "sessoes" },
-  ],
-  "agenda.html": [
-    { url: "/therapy/sessoes?includeHidden=true", key: "sessoes:all" },
-    { url: "/therapy/agenda/blackouts",  key: "blackouts" },
-    { url: "/therapy/agenda/notes",      key: "agendaNotes" },
-  ],
-  "pacientes.html": [
-    { url: "/therapy/pacientes",      key: "pacientes" },
-  ],
-  "clinica.html": [
-    { url: "/therapy/clinicas/state", key: "clinicas:state", ttl: 30_000 },
-  ],
-  "marketing.html": [
-    { url: "/therapy/marketing/audiences", key: "marketing:audiences", ttl: 5 * 60_000 },
-  ],
-};
-const NS_API_CACHE = "ep:api:v1:";
-function setupHoverDataPrefetch(uid) {
-  if (!uid) return;
-  const seenSessionPrefetches = new Set();
-  let hoverTimer = null;
-
-  function prefetchRoute(href) {
-    // basename da href: "./pacientes.html" → "pacientes.html"
-    const name = (href || "").replace(/^\.?\//, "").split("?")[0].toLowerCase();
-    const targets = NAV_DATA_PREFETCH[name];
-    if (!targets) return;
-    if (seenSessionPrefetches.has(name)) return; // já feito nesta sessão de hover
-
-    targets.forEach(async ({ url, key, ttl }) => {
-      const cacheTtl = ttl || 30_000;
-      const cacheKey = NS_API_CACHE + key + ":" + uid;
-      // Pula se já tem cache fresco (api-cache.js gerencia TTL).
-      try {
-        const raw = sessionStorage.getItem(cacheKey);
-        if (raw) {
-          const entry = JSON.parse(raw);
-          if (Date.now() - entry.t < (entry.ttl || cacheTtl)) return; // ainda válido
-        }
-      } catch {}
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
-        const token = await user.getIdToken();
-        const res = await fetch(BACKEND_BASE_URL + url, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!data?.ok) return;
-        sessionStorage.setItem(cacheKey, JSON.stringify({
-          t: Date.now(), ttl: cacheTtl, data
-        }));
-      } catch { /* silencioso */ }
-    });
-    seenSessionPrefetches.add(name);
-  }
-
-  function onHoverStart(e) {
-    const a = e.target.closest('a[href$=".html"]');
-    if (!a) return;
-    const href = a.getAttribute("href");
-    if (!href || href.startsWith("http")) return;
-    clearTimeout(hoverTimer);
-    hoverTimer = setTimeout(() => prefetchRoute(href), 120);
-  }
-  function onHoverEnd() { clearTimeout(hoverTimer); }
-
-  document.addEventListener("mouseover", onHoverStart, { passive: true });
-  document.addEventListener("mouseout",  onHoverEnd,   { passive: true });
-  // Touch — dispara imediato no touchstart (usuário já decidiu).
-  document.addEventListener("touchstart", (e) => {
-    const a = e.target.closest('a[href$=".html"]');
-    if (a) prefetchRoute(a.getAttribute("href"));
-  }, { passive: true });
+// Speculative pages prepare the shell and Firebase modules, but read current
+// authorization and clinical data only when the user activates the page.
+function whenProfessionalActive() {
+  if (!document.prerendering) return Promise.resolve();
+  return new Promise(resolve => document.addEventListener("prerenderingchange", resolve, { once: true }));
 }
 
 // Move o #logoutBtn pra fora do nav e transforma em FAB (botão flutuante
@@ -959,7 +856,7 @@ function mountNotifBadge(idTokenGetter) {
   setInterval(refresh, 60_000);
 }
 
-(function hydrateChromeFromCache() {
+function hydrateChromeFromCache() {
   if (typeof document === "undefined") return;
   mountLogoutFab();
   mountThemeToggle();
@@ -990,9 +887,11 @@ function mountNotifBadge(idTokenGetter) {
       });
     }).catch(() => {});
   }
-})();
+}
+whenProfessionalActive().then(hydrateChromeFromCache);
 
 export async function requireTherapist({ requireDek = true } = {}) {
+  await whenProfessionalActive();
   const user = await authReady();
   if (!user) {
     window.location.href = "./login.html";
@@ -1033,14 +932,6 @@ export async function requireTherapist({ requireDek = true } = {}) {
   applyTissVisibility(profile.therapist);
   applyProgramNetworkVisibility(profile.therapist);
 
-  // Prefetch da nav pra navegação subsequente parecer instantânea.
-  prefetchNavLinks();
-  // Hover-prefetch de dados — quando o user passa o mouse num link da
-  // sidebar por >120ms, dispara as APIs da página destino em background.
-  // Resultado: ao clicar, a página alvo já vê o cache fresco e pula o
-  // "Carregando…" inteiramente.
-  setupHoverDataPrefetch(user.uid);
-
   // Preenche o slot de perfil no topbar (avatar + nome → link pra perfil.html).
   applyTopUserSlot(profile.therapist);
 
@@ -1065,9 +956,11 @@ export async function requireTherapist({ requireDek = true } = {}) {
       window.location.href = "./login.html?reauth=1&redirect=" + encodeURIComponent(location.pathname + location.search);
       throw new Error("DEK_AUSENTE");
     }
+    window.EP_PROFESSIONAL_NAV?.start();
     return { user, idToken, therapist: profile.therapist, conselho: profile.conselho, planAccess: profile.planAccess, dek };
   }
 
+  window.EP_PROFESSIONAL_NAV?.start();
   return { user, idToken, therapist: profile.therapist, conselho: profile.conselho, planAccess: profile.planAccess };
 }
 

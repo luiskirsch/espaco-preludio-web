@@ -98,6 +98,8 @@ export function createChartWorkspace({ patientId, user, therapist, dek, backendB
   const historySection = $("sessions").closest("section");
   const prescriptionSection = $("receitasList").closest("section");
   main.appendChild(shell);
+  main.querySelector('.chart-boot')?.remove();
+  main.dataset.chartReady = '';
   const identity = document.createElement("dl"); identity.id = "chartIdentity"; identity.className = "chart-patient-details";
   document.querySelector(".ep-prontuario__title").appendChild(identity);
   if (!capabilities.includes("documentos-clinicos")) shell.querySelector('[data-capability="documentos-clinicos"]').hidden = true;

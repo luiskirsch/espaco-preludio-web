@@ -34,6 +34,7 @@ const setup = String.raw`
     fixtureEntries.push({entryId:'record_'+i,kind:'progress',createdAt:Date.now()-(i+1)*86400000,...await encryptNote(JSON.stringify({title,occurredAt:Date.now()-(i+1)*86400000,authorName:'Profissional de demonstração',sections:[{key:'complaint',label:'Demanda e contexto',text:'Informações fictícias para apresentação do prontuário.'},{key:'plan',label:'Plano e conduta',text:'Acompanhar os objetivos definidos em conjunto.'}]}),fixtureDek)});
   }
   window.fixtureWrites=[];
+  window.fixtureReadActive=0;window.fixtureMaxParallelReads=0;
   window.fixtureAlerts=[];window.alert=message=>window.fixtureAlerts.push(message);
   window.fixtureDecrypt=async envelope=>JSON.parse(await decryptNote(envelope,fixtureDek));
   const originalFetch=window.fetch.bind(window);
@@ -42,6 +43,10 @@ const setup = String.raw`
     if(!route.startsWith('/therapy/'))return originalFetch(url,options);
     if(options.headers?.Authorization!=='Bearer fixture-token')return {ok:false,status:401,json:async()=>({ok:false,error:'EXPIRED_TOKEN'})};
     const method=options.method||'GET';
+    if(method==='GET'&&['/therapy/pacientes/pat_demo','/therapy/pacientes/pat_demo/sessoes'].includes(route)){
+      window.fixtureReadActive++;window.fixtureMaxParallelReads=Math.max(window.fixtureMaxParallelReads,window.fixtureReadActive);
+      await new Promise(r=>setTimeout(r,40));window.fixtureReadActive--;
+    }
     const result=(body,status=200)=>({ok:status<400,status,json:async()=>body});
     if(method!=='GET'){
       const body=JSON.parse(options.body);window.fixtureWrites.push({route,method,body});
@@ -65,7 +70,10 @@ const setup = String.raw`
   window.confirm=()=>true;
   const fixtureUser={uid:'owner',getIdToken:async()=>'fixture-token'};
   const auth={},BACKEND_BASE_URL=location.origin,signOut=async()=>{};
-  const requireTherapist=async()=>({user:fixtureUser,idToken:'expired-token',therapist:{displayName:'Profissional de demonstração'},conselho:{capabilities:['receita','documentos-clinicos']},dek:fixtureDek});
+  const requireTherapist=async()=>{
+    window.fixtureWaitingForAuth=true;await new Promise(r=>window.fixtureReleaseAuth=r);
+    return {user:fixtureUser,idToken:'expired-token',therapist:{displayName:'Profissional de demonstração'},conselho:{capabilities:['receita','documentos-clinicos']},dek:fixtureDek};
+  };
   const decryptAiSummaryPayload=async()=>({}),migrateLegacyAiSummary=async()=>{},hasStoredAiAudio=async()=>false,retryAiSummaryUpload=async()=>({ok:true}),clearStoredAiAudio=async()=>{};
 `;
 
@@ -119,6 +127,13 @@ test('complete chart supports encrypted context, SOAP, supplements, protected dr
       if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
       return result.result.value;
     };
+    await poll(() => evaluate('window.fixtureWaitingForAuth'));
+    assert.equal(await evaluate('document.body.classList.contains("chart-page")'), true, 'The modern page styles are present before authentication completes');
+    assert.equal(await evaluate('document.querySelectorAll(".chart-boot-tab").length'), 6);
+    assert.equal(await evaluate('getComputedStyle(document.getElementById("statsStrip")).display'), 'none');
+    assert.equal(await evaluate('getComputedStyle(document.getElementById("sessions").closest("section")).display'), 'none', 'Legacy content cannot flash while authentication is pending');
+    assert.equal(await evaluate('getComputedStyle(document.querySelector(".ep-prontuario__actions")).visibility'), 'hidden');
+    await evaluate('window.fixtureReleaseAuth()');
     await poll(() => evaluate('document.getElementById("chartRecent")?.textContent.includes("Continuidade do cuidado")')).catch(async error => {
       error.message += ' ' + JSON.stringify(await evaluate('({errors:window.fixtureErrors,patient:document.getElementById("patientName").textContent,status:document.getElementById("errorStateDetail").textContent})'));
       throw error;
@@ -145,6 +160,8 @@ test('complete chart supports encrypted context, SOAP, supplements, protected dr
       await writeFile(join(process.env.CHART_SCREENSHOTS_DIR, 'chart-desktop.png'), Buffer.from(image.data, 'base64'));
     }
     assert.equal(await evaluate('document.querySelectorAll("[role=tab]").length'), 6);
+    assert.equal(await evaluate('document.querySelector(".chart-boot")'), null);
+    assert.equal(await evaluate('window.fixtureMaxParallelReads>=2'), true, 'Patient identity and appointments load concurrently');
     assert.equal(await evaluate('document.getElementById("chartContext").textContent.includes("Não informado")'), true);
     await evaluate('document.getElementById("chart-tab-clinical").click();document.getElementById("chartSummary").value="Private clinical summary";document.getElementById("chartSummary").dispatchEvent(new Event("input",{bubbles:true}));document.getElementById("chartClinicalForm").requestSubmit()');
     await poll(() => evaluate('document.getElementById("chartClinicalStatus").textContent.includes("salvas")'));

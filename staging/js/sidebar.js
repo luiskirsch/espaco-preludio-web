@@ -4,7 +4,7 @@
 //   2. <script src="./js/sidebar.js?v=32"></script> no início do body.
 // O script injeta o <aside> no início do body, marca link ativo pelo
 // pathname, e sincroniza avatar/nome do topbar (Firebase logic vive
-// em auth-guard.js?v=20261017-mfa3 → topUserName / topUserAvatar).
+// em auth-guard.js?v=20261018-nav1 → topUserName / topUserAvatar).
 (function () {
   if (document.querySelector('.ep-sidebar')) return;
 
@@ -194,7 +194,7 @@
   // Topbar elements (topUserName, topUserAvatar, logoutBtn)
   // vem DEPOIS no HTML. Esperamos DOMContentLoaded pra configurar mirror.
   function setupDeferred() {
-    // Sync avatar/nome do topbar — auth-guard.js?v=20261017-mfa3 seta foto base64,
+    // Sync avatar/nome do topbar — auth-guard.js?v=20261018-nav1 seta foto base64,
     // selo verificado (innerHTML) e iniciais (textContent). Replicamos tudo
     // via MutationObserver pra reatividade quando Firebase emite mudança.
     const topName = document.getElementById('topUserName');
