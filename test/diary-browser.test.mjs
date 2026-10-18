@@ -151,11 +151,8 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
       await writeFile(join(root, 'docs/diary-preview', filename), Buffer.from(screenshot.data, 'base64'));
     };
     const checkLeaves = async () => {
-      const decoration = await evaluate(`(()=>{const layer=document.querySelector('.diary-leaves'),text=document.getElementById('journalText'),box=text.getBoundingClientRect(),x=box.left+box.width/2,y=Math.min(box.bottom-1,box.top+20);return {exists:!!layer,hidden:layer?.getAttribute('aria-hidden'),inert:layer?.hasAttribute('inert'),intercepts:layer?[layer,...layer.querySelectorAll('*')].some(element=>getComputedStyle(element).pointerEvents!=='none'):true,editorHit:y>=0&&y<innerHeight?document.elementFromPoint(x,y)===text:null,writingMotion:['paper','editorView','journalText'].map(id=>({id,animations:document.getElementById(id).getAnimations().length,transform:getComputedStyle(document.getElementById(id)).transform}))}})()`);
-      assert.equal(decoration.exists, true, 'Folhas decorativas montadas');
-      assert.equal(decoration.hidden, 'true', 'Decoração não entra na leitura assistiva');
-      assert.equal(decoration.inert, true, 'Decoração fica fora da árvore de interação');
-      assert.equal(decoration.intercepts, false, 'Folhas não interceptam interação com a escrita');
+      const decoration = await evaluate(`(()=>{const layer=document.querySelector('.diary-leaves'),text=document.getElementById('journalText'),box=text.getBoundingClientRect(),x=box.left+box.width/2,y=Math.min(box.bottom-1,box.top+20);return {exists:!!layer,editorHit:y>=0&&y<innerHeight?document.elementFromPoint(x,y)===text:null,writingMotion:['paper','editorView','journalText'].map(id=>({id,animations:document.getElementById(id).getAnimations().length,transform:getComputedStyle(document.getElementById(id)).transform}))}})()`);
+      assert.equal(decoration.exists, false, 'Folhas permanecem na ilustração estática do pergaminho');
       if (decoration.editorHit !== null) assert.equal(decoration.editorHit, true, 'Área de escrita recebe interação diretamente');
       for (const element of decoration.writingMotion) {
         assert.equal(element.animations, 0, `${element.id}: a escrita permanece sem animação`);
@@ -170,11 +167,13 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     await evaluate('Promise.race([document.fonts.ready,new Promise(resolve=>setTimeout(resolve,3000))])');
     await checkLeaves();
     await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
-    assert.equal(await evaluate("[...document.querySelectorAll('.diary-leaf__art')].every(element=>getComputedStyle(element).animationName==='none' && getComputedStyle(element).transform==='none')"), true, 'Preferência por menos movimento mantém as folhas paradas');
+    assert.equal(await evaluate("!document.querySelector('.diary-leaves') && document.getElementById('paper').getAnimations().length===0"), true, 'Folhas e pergaminho continuam estáticos com movimento reduzido');
     await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
     if (capturePreview) await mkdir(join(root, 'docs/diary-preview'), { recursive: true });
     for (const width of [1440, 768, 390, 320]) {
       await viewport(width); await checkLayout('escrita', width); await checkPaperText(width);
+      const tools = await evaluate("[...document.querySelectorAll('.tool-card,.tool-card__heading,.tool-card small,.voice-wave')].map(element=>({name:element.id||element.className,width:element.clientWidth,contentWidth:element.scrollWidth,height:element.clientHeight,contentHeight:element.scrollHeight}))");
+      for (const tool of tools) { assert.ok(tool.contentWidth <= tool.width + 2, `${tool.name}: sem cortes laterais em ${width}px`); assert.ok(tool.contentHeight <= tool.height + 2, `${tool.name}: texto cabe no cartão em ${width}px`); }
       if (width === 1440 || width === 390) await capture(width === 1440 ? 'desktop.png' : 'mobile.png');
       await openDialog('#tagsButton'); await checkLayout('marcadores', width); await closeDialog();
     }
@@ -290,12 +289,14 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     await viewport(1440);
     await evaluate('window.scrollTo(0,0)');
     assert.equal(await evaluate("document.getElementById('playButton').getAttribute('aria-pressed')"), 'false', 'Trilha só começa após uma ação');
+    assert.equal(await evaluate("performance.getEntriesByType('resource').some(entry=>entry.name.includes('cabin-rain-recorded'))"), false, 'Gravação não é baixada antes de pedir reprodução');
     const audioClick = async selector => {
       const result = await send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(selector)}).click()`, userGesture: true, returnByValue: true });
       if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
     };
     await audioClick('#playButton');
-    await poll(() => evaluate("document.body.classList.contains('is-playing') && document.getElementById('playerDescription').textContent.includes('Chuva na cabana')"), 'chuva real no Web Audio');
+    await poll(() => evaluate("document.body.classList.contains('is-playing') && document.getElementById('playerDescription').textContent.includes('Chuva na cabana & piano')"), 'chuva gravada e piano no Web Audio');
+    assert.equal(await evaluate("performance.getEntriesByType('resource').some(entry=>entry.name.includes('cabin-rain-recorded-v1.mp3'))"), true, 'Reprodução usa o arquivo de chuva gravada');
     await evaluate("document.getElementById('volumeSlider').value='35';document.getElementById('volumeSlider').dispatchEvent(new Event('input',{bubbles:true}))");
     await audioClick('#playButton');
     await poll(() => evaluate("document.getElementById('playButton').getAttribute('aria-pressed')==='false'"), 'pausa da chuva');

@@ -1,5 +1,4 @@
-import { createSoundscape, createDictation } from './diary-audio.js?v=20261018b';
-import { mountDiaryLeaves } from './diary-leaves.js?v=20261018b';
+import { createSoundscape, createDictation } from './diary-audio.js?v=20261018c';
 import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?v=20261018';
 
 const $ = id => document.getElementById(id);
@@ -50,8 +49,8 @@ function renderMeta() {
   $('entryTags').innerHTML = (current.tags || []).map(tag => `<span class="tag">#${esc(tag)}</span>`).join('');
   $('paper').dataset.font = current.font || 'hand';
   $('feelingButton').textContent = current.feelings?.length ? current.feelings.map(id => `${FEELINGS[id]?.icon || ''} ${FEELINGS[id]?.label || ''}`).join(' · ') : '♡ Como você se sente?';
-  $('aromaLabel').textContent = current.aroma ? `Memória de ${AROMAS[current.aroma]?.[0].toLowerCase()}` : 'Associe suas memórias a um perfume especial';
-  $('weatherLabel').textContent = current.weather ? `${WEATHER[current.weather]?.[1]} ${WEATHER[current.weather]?.[0]} · guardado nesta página` : 'Guarde um pedacinho do tempo de hoje';
+  $('aromaLabel').textContent = current.aroma ? `Memória de ${AROMAS[current.aroma]?.[0].toLowerCase()}` : 'Um perfume para esta lembrança.';
+  $('weatherLabel').textContent = current.weather ? `${WEATHER[current.weather]?.[0]} · guardado nesta página` : 'O clima de hoje na sua página.';
   $('entryExtra').textContent = [current.weather ? WEATHER[current.weather]?.[0] : '', current.aroma ? AROMAS[current.aroma]?.[0] : ''].filter(Boolean).join(' · ');
   $('entryExtra').hidden = !$('entryExtra').textContent;
   $('deleteCurrent').hidden = !current.version;
@@ -255,14 +254,14 @@ const soundscape = createSoundscape({ onState({ playing, preset: selected }) {
   preset = selected;
   document.body.classList.toggle('is-playing', playing);
   $('playButton').textContent = playing ? 'Ⅱ' : '▶'; $('playButton').setAttribute('aria-pressed', String(playing)); $('playButton').setAttribute('aria-label', playing ? 'Pausar trilha sonora' : 'Reproduzir trilha sonora');
-  const name = { rain: 'Chuva na cabana', forest: 'Um passeio pela floresta', piano: 'Piano para desacelerar' }[selected];
+  const name = { rain: 'Chuva na cabana & piano', forest: 'Um passeio pela floresta', piano: 'Piano para desacelerar' }[selected];
   $('playerDescription').removeAttribute('data-i18n-html'); $('soundLabel').removeAttribute('data-i18n-html');
   $('playerDescription').textContent = `${name} · ${playing ? 'tocando' : 'pausado'}`; $('soundLabel').textContent = name;
 } });
 soundscape.setVolume(.25);
 async function toggleSound() { try { if (soundscape.playing) await soundscape.stop(); else await soundscape.play(preset); } catch (error) { toast(error.message); } }
 function openSound() {
-  openDialog('Uma trilha para o seu momento', '<p>Escolha uma paisagem sonora. Ajuste o volume no painel ao lado.</p><div class="entry-list">' + [['rain', '🌧', 'Chuva na cabana'], ['forest', '🌿', 'Um passeio pela floresta'], ['piano', '♫', 'Piano para desacelerar']].map(([id, icon, label]) => `<button class="choice-button" data-preset="${id}" aria-pressed="${preset === id}"><span>${icon}</span>${label}</button>`).join('') + '</div><div class="dialog-actions"><button class="quiet-button" id="stopSound">Pausar trilha</button></div>');
+  openDialog('Uma trilha para o seu momento', '<p>Escolha uma paisagem sonora. Ajuste o volume no painel ao lado.</p><div class="entry-list">' + [['rain', '🌧', 'Chuva na cabana & piano'], ['forest', '🌿', 'Um passeio pela floresta'], ['piano', '♫', 'Piano para desacelerar']].map(([id, icon, label]) => `<button class="choice-button" data-preset="${id}" aria-pressed="${preset === id}"><span>${icon}</span>${label}</button>`).join('') + '</div><div class="dialog-actions"><button class="quiet-button" id="stopSound">Pausar trilha</button></div>');
   dialog.querySelectorAll('[data-preset]').forEach(button => button.addEventListener('click', async () => { try { await soundscape.play(button.dataset.preset); closeDialog(); } catch (error) { toast(error.message); } }));
   $('stopSound').addEventListener('click', () => { soundscape.stop(); closeDialog(); });
 }
@@ -272,7 +271,7 @@ const dictation = createDictation({ onText(transcript) {
   text.value = (text.value + spacer + transcript).slice(0, 20000); current.text = text.value; markDirty(); resizeEditor();
 }, onState(listening) {
   $('voiceButton').classList.toggle('is-listening', listening);
-  $('voiceLabel').textContent = listening ? 'Ouvindo… fale no seu tempo' : 'Deixe sua voz virar palavras';
+  $('voiceLabel').textContent = listening ? 'Ouvindo… fale no seu tempo' : 'Fale e registre seus pensamentos.';
   $('voiceStatus')?.classList.toggle('is-listening', listening);
   if ($('voiceStatusText')) $('voiceStatusText').textContent = listening ? 'Ouvindo a sua história…' : 'O microfone está pausado';
   if ($('voiceToggle')) $('voiceToggle').textContent = listening ? 'Pausar microfone' : 'Começar a falar';
@@ -346,7 +345,6 @@ window.addEventListener('pagehide', () => { soundscape.stop(); dictation.stop();
 window.addEventListener('online', () => { if (ready && dirty) flush(); });
 $('headerDate').dateTime = today(); $('headerDate').textContent = dateLabel(today(), { weekday: 'long' });
 $('entryDate').textContent = dateLabel(today());
-mountDiaryLeaves($('paper'));
 document.querySelector('.fireflies').innerHTML = Array.from({ length: 38 }, (_, i) => `<i style="--x:${(i * 27.3 + 3) % 100}%;--y:${(i * 17.6 + 2) % 100}%;--s:${i % 4 === 0 ? 4 : 2}px;--o:${.3 + (i % 5) / 10};--t:${3 + i % 4}s;--d:-${i * .3}s"></i>`).join('');
 document.querySelector('.spectrum').innerHTML = Array.from({ length: 38 }, (_, i) => `<i style="--h:${15 + Math.abs(Math.sin(i * 1.8) * Math.cos(i * .42)) * 85}%;--hue:${15 + i * 7};--d:-${i * .13}s"></i>`).join('');
 document.fonts?.ready.then(() => requestAnimationFrame(resizeEditor));

@@ -192,3 +192,93 @@
   .paper h1 { font-size: 29px; }
   .journal-text { font-size: 25px; }
 }
+
+/* A consistent rhythm for the tools, including the narrow desktop rail. */
+.diary-tools { gap: 14px; }
+.diary-tools .tool-card {
+  display: grid;
+  align-content: center;
+  min-height: 112px;
+  padding: 18px 16px;
+  text-align: left;
+  overflow: hidden;
+  box-shadow: inset 0 0 18px #eac98706, 0 5px 16px #100c121c;
+}
+.diary-tools .tool-card:hover { box-shadow: 0 0 16px #d9b4711c; }
+.diary-tools .tool-card__heading {
+  display: grid;
+  grid-template-columns: 27px minmax(0, 1fr);
+  align-items: center;
+  justify-content: start;
+  gap: 11px;
+  font: 500 19px/1.2 var(--serif);
+  text-align: left;
+}
+.diary-tools .tool-card__heading > span { min-width: 0; }
+.diary-tools .tool-card__heading svg {
+  width: 27px;
+  height: 30px;
+  filter: none;
+}
+.diary-tools .weather-illustration { color: #e6c889; fill: #d0b47820; }
+.diary-tools .tool-card small {
+  margin: 9px 0 0 38px;
+  color: #dfd0c1;
+  font: 400 11.5px/1.6 var(--sans);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.diary-tools .tool-card--voice { min-height: 146px; }
+.diary-tools .voice-wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  max-width: 100%;
+  height: 23px;
+  margin: 0 0 13px;
+  padding: 0 2px;
+  overflow: hidden;
+  text-shadow: none;
+  opacity: .8;
+}
+.voice-wave i {
+  display: block;
+  flex: 1 1 0;
+  max-width: 4px;
+  height: 4px;
+  border-radius: 2px;
+  background: #efcfac;
+}
+.voice-wave i:nth-child(3n) { height: 11px; }
+.voice-wave i:nth-child(4n) { height: 16px; }
+.voice-wave i:nth-child(5n) { height: 8px; }
+.voice-wave i:nth-child(7n) { height: 21px; }
+.tool-card--voice:before,.tool-card--aroma:before,.tool-card--font:before {
+  top: 4px;
+  right: 7px;
+  font-size: 15px;
+  opacity: .7;
+  text-shadow: 0 0 10px #ffe28780;
+}
+@media (max-width: 1200px) and (min-width: 641px) {
+  .diary-tools .tool-card { padding: 15px 12px; min-height: 110px; }
+  .diary-tools .tool-card--voice { min-height: 143px; }
+  .diary-tools .tool-card__heading { grid-template-columns: 24px minmax(0,1fr); gap: 9px; font-size: 17px; }
+  .diary-tools .tool-card__heading svg { width: 24px; height: 27px; }
+  .diary-tools .tool-card small { margin-left: 33px; font-size: 11px; }
+}
+@media (max-width: 640px) {
+  .diary-tools .tool-card { padding: 15px 12px; min-height: 132px; }
+  .diary-tools .tool-card__heading { grid-template-columns: 24px minmax(0,1fr); gap: 8px; font-size: 18px; }
+  .diary-tools .tool-card__heading svg { width: 24px; height: 28px; }
+  .diary-tools .tool-card small { margin: 10px 0 0; font-size: 11px; }
+  .diary-tools .tool-card--voice { display: grid; grid-template-columns: 1fr; min-height: 141px; padding: 16px 18px; }
+  .diary-tools .tool-card--voice .voice-wave { grid-column: 1; grid-row: auto; max-width: 100%; margin: 0 0 11px; }
+  .diary-tools .tool-card--voice .tool-card__heading { grid-column: 1; font-size: 22px; }
+  .diary-tools .tool-card--voice small { grid-column: 1; margin: 6px 0 0 32px; }
+}
+@media (max-width: 359px) {
+  .diary-tools .tool-card__heading { font-size: 16px; }
+}

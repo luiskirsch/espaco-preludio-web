@@ -1,6 +1,10 @@
 ﻿import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { createDictation, createSoundscape } from '../app/diary-audio.js';
+import { createDictation, createSoundscape as createRuntimeSoundscape } from '../app/diary-audio.js';
+
+function createSoundscape(options = {}) {
+  return createRuntimeSoundscape({ rainLoader: async context => context.createBuffer(2, context.sampleRate * 3, context.sampleRate), ...options });
+}
 
 const originalGlobals = new Map(['AudioContext', 'webkitAudioContext', 'SpeechRecognition', 'webkitSpeechRecognition'].map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
 afterEach(() => {
@@ -80,7 +84,7 @@ test('soundscapes stay idle until explicitly played; switching and destruction r
   const rainSource = rain.nodes.find(node => node.kind === 'buffer');
   assert.equal(rainSource.buffer.numberOfChannels, 2);
   assert.equal(rainSource.loop, true);
-  assert.equal(rain.nodes.some(node => node.kind === 'oscillator'), false);
+  assert.ok(rain.nodes.some(node => node.kind === 'oscillator'), 'Recorded rain keeps the quiet piano accompaniment');
   assert.deepEqual(rain.nodes[0].gain.events.at(-1), ['ramp', 0.2, 1.2]);
   assert.equal(await audio.play('rain'), true);
   assert.equal(FakeAudioContext.instances.length, before + 1);
@@ -135,6 +139,36 @@ test('device suspension closes the context and updates playback state', async ()
   context.onstatechange();
   assert.equal(audio.playing, false);
   assert.equal(context.closed, true);
+});
+
+test('a failed rain download stops cleanly without falling back to generated hiss', async () => {
+  globalThis.AudioContext = FakeAudioContext;
+  const audio = createSoundscape({ rainLoader: async () => { throw new Error('Recording unavailable'); } });
+  await assert.rejects(audio.play('rain'), /Não foi possível iniciar/);
+  assert.equal(audio.playing, false);
+  const context = FakeAudioContext.instances.at(-1);
+  assert.equal(context.closed, true);
+  assert.equal(context.nodes.some(node => node.kind === 'buffer' || node.kind === 'oscillator'), false);
+});
+
+test('stopping during a rain download cancels it and ignores its late result', async () => {
+  globalThis.AudioContext = FakeAudioContext;
+  let finishDownload, downloadSignal;
+  const audio = createSoundscape({ rainLoader: (context, signal) => {
+    downloadSignal = signal;
+    return new Promise(resolve => { finishDownload = () => resolve(context.createBuffer(2, 2000, 8000)); });
+  } });
+  const pending = audio.play('rain');
+  for (let i = 0; !finishDownload && i < 5; i++) await Promise.resolve();
+  assert.equal(typeof finishDownload, 'function');
+  await audio.stop();
+  assert.equal(downloadSignal.aborted, true);
+  finishDownload();
+  assert.equal(await pending, false);
+  assert.equal(audio.playing, false);
+  const context = FakeAudioContext.instances.at(-1);
+  assert.equal(context.closed, true);
+  assert.equal(context.nodes.some(node => node.kind === 'buffer' || node.kind === 'oscillator'), false);
 });
 
 test('unsupported speech recognition reports a useful message without throwing', () => {
