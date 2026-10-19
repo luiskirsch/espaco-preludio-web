@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { applyPortalHeaders, isImmutableAsset } from "../security/edge/worker.mjs";
 
@@ -19,6 +20,28 @@ function pages(dir = "") {
 
 test("otimizações de carregamento estão aplicadas e em dia (scripts/perf/build.mjs --check)", () => {
   execFileSync(process.execPath, [join(ROOT, "scripts/perf/build.mjs"), "--check", "--quiet"], { cwd: ROOT, stdio: "pipe" });
+});
+
+test("a versão pelo conteúdo é a mesma com CRLF no disco (checkout antigo do Windows) e LF (CI)", () => {
+  const build = eol => {
+    const dir = mkdtempSync(join(tmpdir(), "perf-eol-"));
+    try {
+      const write = (rel, text) => writeFileSync(join(dir, rel), text.replace(/\n/g, eol));
+      mkdirSync(join(dir, "fonts"));
+      writeFileSync(join(dir, "fonts/fonts.json"), "{}");
+      write("index.html", '<!doctype html>\n<html><head><meta charset="utf-8">\n<script type="module" src="./a.js"></script>\n</head><body></body></html>\n');
+      write("a.js", 'import { b } from "./b.js";\nconsole.log(b);\n');
+      write("b.js", "export const b = 1;\n");
+      execFileSync(process.execPath, [join(ROOT, "scripts/perf/build.mjs"), "--quiet"], { cwd: dir, env: { ...process.env, PERF_ROOT: dir }, stdio: "pipe" });
+      const ref = (rel, name) => readFileSync(join(dir, rel), "utf8").split(`${name}?h=`)[1]?.slice(0, 10);
+      return { a: ref("index.html", "a.js"), b: ref("a.js", "b.js") };
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  };
+  const lf = build("\n");
+  assert.match(`${lf.a} ${lf.b}`, /^[0-9a-f]{10} [0-9a-f]{10}$/, "o build versiona a.js e b.js no site de exemplo");
+  assert.deepEqual(build("\r\n"), lf);
 });
 
 test("páginas do site usam fontes do próprio domínio e só pré-conectam ao que usam", () => {

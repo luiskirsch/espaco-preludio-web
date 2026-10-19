@@ -22,7 +22,8 @@ import { parse as parseHtml } from "parse5";
 import * as acorn from "acorn";
 import * as walk from "acorn-walk";
 
-const ROOT = resolve(import.meta.dirname, "..", "..");
+// PERF_ROOT: só para os testes rodarem o build num site de exemplo.
+const ROOT = process.env.PERF_ROOT ? resolve(process.env.PERF_ROOT) : resolve(import.meta.dirname, "..", "..");
 const CHECK = process.argv.includes("--check");
 const QUIET = process.argv.includes("--quiet");
 
@@ -46,6 +47,12 @@ function exists(rel) { return overlay.has(rel) || (existsSync(abs(rel)) && statS
 function readText(rel) { return overlay.has(rel) ? overlay.get(rel) : readFileSync(abs(rel), "utf8"); }
 function readBytes(rel) { return overlay.has(rel) ? Buffer.from(overlay.get(rel)) : readFileSync(abs(rel)); }
 const sha = data => createHash("sha256").update(data).digest("hex").slice(0, HASH_LEN);
+// A versão segue o conteúdo que o git guarda e o site serve (.gitattributes: text=auto eol=lf).
+// Num checkout antigo do Windows o arquivo pode estar com CRLF no disco; sem normalizar,
+// Windows e CI calculariam hashes diferentes e trocariam ?h= a cada build.
+const EOL_TEXT = new Set([".js", ".mjs", ".css", ".svg", ".html", ".json"]);
+const lf = text => text.replace(/\r\n/g, "\n");
+const contentSha = (rel, data) => EOL_TEXT.has(extname(rel).toLowerCase()) ? sha(lf(Buffer.isBuffer(data) ? data.toString("utf8") : data)) : sha(data);
 
 function listPages() {
   const out = [];
@@ -400,13 +407,13 @@ function buildHashes(rootFiles) {
   for (const comp of sccs) {
     if (comp.length === 1 && !edges.get(comp[0]).includes(comp[0])) {
       const rel = comp[0];
-      if (isText(rel)) { const text = rewrite(rel, readText(rel), t => hashes.get(t)); output.set(rel, text); hashes.set(rel, sha(text)); }
-      else hashes.set(rel, sha(readBytes(rel)));
+      if (isText(rel)) { const text = rewrite(rel, readText(rel), t => hashes.get(t)); output.set(rel, text); hashes.set(rel, contentSha(rel, text)); }
+      else hashes.set(rel, contentSha(rel, readBytes(rel)));
       continue;
     }
     const members = new Set(comp);
     const provisional = comp.sort().map(rel => rel + "\0" + rewrite(rel, readText(rel), t => members.has(t) ? "0".repeat(HASH_LEN) : hashes.get(t))).join("\0");
-    const group = sha(provisional);
+    const group = sha(lf(provisional));
     for (const rel of comp) hashes.set(rel, group);
     for (const rel of comp) output.set(rel, rewrite(rel, readText(rel), t => hashes.get(t)));
   }
