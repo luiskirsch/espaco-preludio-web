@@ -23,6 +23,28 @@ const uiErrors = {
   TOKEN_NAO_INFORMADO: 'Entre no portal para acessar seu diário.',
 };
 function errorText(error) { return uiErrors[error?.message] || 'Não foi possível salvar. Sua escrita continua nesta página. Verifique a conexão e tente novamente.'; }
+function showAvatarFallback(user) {
+  const name = user?.displayName || user?.email?.split('@')[0] || '';
+  $('avatar').replaceChildren(document.createTextNode(name.trim().charAt(0).toUpperCase() || '✦'));
+  $('avatar').setAttribute('aria-label', name ? `Perfil de ${name}` : 'Perfil');
+}
+async function loadPortalAvatar(user) {
+  const generation = bootGeneration;
+  showAvatarFallback(user);
+  try {
+    const data = await api('/therapy/paciente/me');
+    if (generation !== bootGeneration || account?.uid !== user.uid) return;
+    const profile = data.account || {};
+    const mime = String(profile.photoMime || '');
+    const base64 = String(profile.photoBase64 || '');
+    if (!/^image\/(?:png|jpeg|webp)$/.test(mime) || base64.length > 1_500_000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(base64)) return;
+    const image = new Image();
+    image.alt = '';
+    image.src = `data:${mime};base64,${base64}`;
+    $('avatar').replaceChildren(image);
+    $('avatar').setAttribute('aria-label', `Foto de perfil de ${user.displayName || 'usuário'}`);
+  } catch { /* A inicial continua disponível quando a foto não puder ser carregada. */ }
+}
 function toast(message) { clearTimeout(toastTimer); $('diaryToast').textContent = message; $('diaryToast').hidden = false; toastTimer = setTimeout(() => { $('diaryToast').hidden = true; }, 6500); }
 function setStatus(message, state = '') {
   $('saveState').textContent = message; $('saveState').dataset.state = state;
@@ -389,7 +411,7 @@ if (preview) {
         $('collectionView').innerHTML = ''; $('collectionView').hidden = true; $('editorView').hidden = false;
       }
       if (!user) { account = null; location.replace(student ? './aluno-login.html' : './login.html'); return; }
-      account = user; $('avatar').textContent = user.displayName?.trim()?.charAt(0)?.toUpperCase() || '✦'; loadDiary();
+      account = user; loadDiary(); loadPortalAvatar(user);
     });
   } catch { setStatus('Não foi possível conectar · recarregue a página', 'error'); toast('Não foi possível abrir o diário. Verifique sua conexão e recarregue a página.'); }
 }
