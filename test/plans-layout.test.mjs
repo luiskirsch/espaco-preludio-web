@@ -6,7 +6,7 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('plans page separates free institutional access from the optional Pro subscription', async () => {
   const html = await read('planos.html');
-  assert.match(html, /css\/planos\.css\?v=\w+/);
+  assert.match(html, /css\/planos\.css\?h=[0-9a-f]{10}/);
   assert.match(html, /id="profCard" class="ep-plan-card ep-plan-wide"/);
   assert.match(html, /Sem mensalidade/);
   assert.match(html, /id="subscribeProfBtn"/);

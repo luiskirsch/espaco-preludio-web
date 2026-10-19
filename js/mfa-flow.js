@@ -1,5 +1,5 @@
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261018-mfa4";
-import { get2faSessionToken, save2faSession, clear2faSession } from "./twofa-session.js?v=20261018-mfa4";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=a1e6b0a1a1";
+import { get2faSessionToken, save2faSession, clear2faSession } from "./twofa-session.js?h=fbd5e4b98b";
 
 const messages = {
   pt: { disableTitle:"Desativar verificação em duas etapas", disableInfo:"Digite o código atual do seu aplicativo autenticador para desativar.", enrollOptInfo:"Cadastre esta chave no seu aplicativo autenticador e confirme o código de seis dígitos.", setup:"Proteja seu acesso", setupInfo:"A verificação em duas etapas é obrigatória. Cadastre esta chave no seu aplicativo autenticador e confirme o código de seis dígitos.", verify:"Confirme seu acesso", verifyInfo:"Digite o código atual do seu aplicativo autenticador.", code:"Código de seis dígitos", confirm:"Confirmar", cancel:"Cancelar", loading:"Verificando…", recovery:"Usar código de recuperação", recoveryTitle:"Recuperar o autenticador", recoveryInfo:"Use um dos códigos guardados na ativação. Depois será necessário cadastrar um novo autenticador.", recoveryLabel:"Código de recuperação", back:"Voltar", savedTitle:"Guarde seus códigos de recuperação", savedInfo:"Eles aparecem somente agora. Guarde-os em local seguro, fora deste navegador. Cada recuperação exige cadastrar um novo autenticador.", download:"Baixar códigos", saved:"Guardei os códigos de recuperação.", proceed:"Continuar", unavailable:"Não foi possível concluir. Tente novamente.", wrong:"Código incorreto. Confira o aplicativo e tente novamente.", reused:"Este código já foi usado. Aguarde o próximo código do aplicativo.", expired:"O cadastro expirou. Feche esta janela e inicie novamente.", limited:"Muitas tentativas. Aguarde dez minutos e tente novamente.", invalidRecovery:"Código de recuperação inválido ou já utilizado.", changed:"A sessão mudou. Entre novamente.", renewed:"Gerar novos códigos de recuperação" },
@@ -56,7 +56,7 @@ async function startFlow(user, { renewRecovery = false, enroll = false, disable 
   if (state.sessionValid && !renewRecovery && !disable) return { verified: true };
   if (!document.getElementById("mfaFlowStyles")) {
     const css = node("link"); css.id = "mfaFlowStyles"; css.rel = "stylesheet";
-    css.href = new URL("../css/mfa-flow.css?v=20261018-mfa4", import.meta.url).href;
+    css.href = new URL("../css/mfa-flow.css?h=0a8af4950f", import.meta.url).href;
     document.head.append(css);
   }
   const text = messages[language()];
@@ -116,7 +116,7 @@ async function startFlow(user, { renewRecovery = false, enroll = false, disable 
           const secret = node("code", details.secret, "mfa-secret"); secret.id = "mfaSecret";
           dialog.append(secret);
           try {
-            const { default: qrcode } = await import("./vendor/qrcode-generator-1.4.4.mjs");
+            const { default: qrcode } = await import("./vendor/qrcode-generator-1.4.4.mjs?h=c345e19176");
             const qr = qrcode(0, "M"); qr.addData(details.otpauthUrl); qr.make();
             const image = node("img", undefined, "mfa-qr"); image.alt = "QR"; image.src = qr.createDataURL(4, 4); dialog.append(image);
           } catch { /* The manually entered key remains fully functional. */ }

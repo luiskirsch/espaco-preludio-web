@@ -9,6 +9,10 @@ import { dirname, resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
 const check = process.argv.includes("--check");
 
+// Antes de espelhar, aplica as otimizações de carregamento (fontes locais, bloco
+// ep:perf e ?h= pelo conteúdo) para o staging receber a versão final.
+if (!check) execFileSync(process.execPath, [resolve(root, "scripts/perf/build.mjs"), "--quiet"], { cwd: root, stdio: "inherit" });
+
 // Arquivos que só existem na raiz: infraestrutura do domínio, ferramentas do
 // repositório e fontes de marketing que nenhuma página referencia.
 const ROOT_ONLY = [

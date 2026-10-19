@@ -1,5 +1,5 @@
-import { createSoundscape, createDictation } from './diary-audio.js?v=20261018c';
-import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?v=20261018';
+import { createSoundscape, createDictation } from './diary-audio.js?h=fb22bb467e';
+import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=8d6a35037b';
 
 const $ = id => document.getElementById(id);
 const student = document.body.dataset.portal === 'student';
@@ -380,7 +380,7 @@ if (preview) {
   demoEntries.set(example.id, example); loadDiary();
 } else {
   try {
-    const [{ onAuthStateChanged }, config] = await Promise.all([import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js'), import('../js/firebase-config.js?v=20261018-mfa4')]);
+    const [{ onAuthStateChanged }, config] = await Promise.all([import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js'), import('../js/firebase-config.js?h=a1e6b0a1a1')]);
     backend = config.BACKEND_BASE_URL;
     onAuthStateChanged(config.auth, user => {
       if (!user || account && account.uid !== user.uid) {

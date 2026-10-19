@@ -41,9 +41,21 @@ export function portalPolicy(pathname, { nonce } = {}) {
   ].join("; ");
 }
 
+// URLs versionadas pelo conteúdo (scripts/perf/build.mjs grava ?h=<hash>) e
+// arquivos de idioma versionados pelo hash das traduções (I18N_VERSION):
+// o conteúdo de uma dessas URLs nunca muda, então o navegador guarda por 1 ano.
+export function isImmutableAsset(url) {
+  if (/^[0-9a-f]{10}$/.test(url.searchParams.get("h") || "")) return true;
+  return /\/i18n\/locales\/[^/]+\/[^/]+\.json$/.test(url.pathname) && /^a[0-9a-f]{8}$/.test(url.searchParams.get("v") || "");
+}
+
 export function applyPortalHeaders(response, request, { nonce } = {}) {
   const url = new URL(request.url);
   const headers = new Headers(response.headers);
+  const contentType = (headers.get("Content-Type") || "").toLowerCase();
+  if (response.status === 200 && !contentType.includes("text/html") && isImmutableAsset(url)) {
+    headers.set("Cache-Control", "public, max-age=31536000, immutable");
+  }
   if (!headers.has("Strict-Transport-Security")) {
     headers.set("Strict-Transport-Security", "max-age=31536000");
   }

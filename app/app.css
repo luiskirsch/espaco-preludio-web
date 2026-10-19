@@ -373,13 +373,9 @@ html, body {
 .a-text-center { text-align: center; }
 
 /* ── Page transitions ── */
-.a-page-enter {
-  animation: pageIn 250ms cubic-bezier(.25,.46,.45,.94) forwards;
-}
-@keyframes pageIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+/* A troca entre páginas é animada pelo @view-transition (fim do arquivo).
+   A antiga animação de entrada (.a-page-enter) segurava a primeira pintura
+   até o fim do carregamento: no 4G o conteúdo aparecia ~1,3 s depois. */
 
 /* Portal do colaborador --------------------------------------------------- */
 .a-nav__brand,

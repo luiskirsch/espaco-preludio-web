@@ -1,4 +1,4 @@
-import { decryptNote, encryptNote, generateThreadKey, unwrapKey, wrapKey } from "./crypto.js";
+import { decryptNote, encryptNote, generateThreadKey, unwrapKey, wrapKey } from "./crypto.js?h=e302c46b08";
 
 function bytesToBase64(bytes) {
   let binary = "";

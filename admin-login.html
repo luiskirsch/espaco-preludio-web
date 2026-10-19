@@ -5,12 +5,21 @@
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- ep:perf · gerado por scripts/perf/build.mjs, não editar à mão -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://api.espacopreludio.com.br" crossorigin>
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js">
+  <link rel="modulepreload" href="./js/firebase-config.js?h=a1e6b0a1a1">
+  <link rel="modulepreload" href="./js/twofa-session.js?h=fbd5e4b98b">
+  <link rel="modulepreload" href="./js/account-email.js?h=adc983ca80">
+  <link rel="modulepreload" href="./js/mfa-flow.js?h=824d566594">
+  <!-- /ep:perf -->
   <title data-i18n="p-admin-login:login_admin_espaco_preludio_fee94">Login Admin · Espaço Prelúdio</title>
   <link rel="icon" type="image/png" href="/logo-144.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <link rel="stylesheet" href="./fonts/fraunces500-600_inter400-700.css?h=c4afe3d9fc">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?h=4061945ec2">
   <style>
     body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--ep-bg); }
     .admin-card { width: 100%; max-width: 400px; }
@@ -28,7 +37,7 @@
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
   <script src="/i18n/init.js?v=2-8" defer></script>
-  <link rel="stylesheet" href="./css/responsive.css?v=20261011b">
+  <link rel="stylesheet" href="./css/responsive.css?h=4e30c94957">
 </head>
 <body>
 
@@ -37,7 +46,7 @@
   <!-- Brand -->
   <div class="admin-brand">
     <div class="admin-brand__logo">
-      <img src="./logo-144.png" alt="EP">
+      <img src="./logo-144.png?h=13e64ad030" alt="EP">
     </div>
     <div class="admin-brand__text">
       <div class="admin-brand__name">Espaço Prelúdio</div>
@@ -89,10 +98,10 @@
     onAuthStateChanged, signInWithEmailAndPassword, signOut,
     sendPasswordResetEmail, browserSessionPersistence, setPersistence
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?v=20261018-mfa4";
-  import { requestPasswordReset } from "./js/account-email.js?v=1";
-  import { ensureMfa } from "./js/mfa-flow.js?v=20261018-mfa5";
-  import { safeMfaReturn, clear2faSession } from "./js/twofa-session.js?v=20261018-mfa4";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?h=a1e6b0a1a1";
+  import { requestPasswordReset } from "./js/account-email.js?h=adc983ca80";
+  import { ensureMfa } from "./js/mfa-flow.js?h=824d566594";
+  import { safeMfaReturn, clear2faSession } from "./js/twofa-session.js?h=fbd5e4b98b";
 
   const dest      = safeMfaReturn(new URLSearchParams(location.search).get("from"), "./admin-painel.html");
   const emailEl   = document.getElementById("adminEmail");

@@ -6,11 +6,11 @@ import {
   signInWithEmailAndPassword,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261018-mfa4";
-import { requestPasswordReset } from "./account-email.js?v=1";
-import "./twofa-fetch.js?v=20261017-mfa3";
-import { clear2faSession, isTwoFactorChallenge } from "./twofa-session.js?v=20261018-mfa4";
-import { ensureMfa } from "./mfa-flow.js?v=20261018-mfa5";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=a1e6b0a1a1";
+import { requestPasswordReset } from "./account-email.js?h=adc983ca80";
+import "./twofa-fetch.js?h=38cf68b49a";
+import { clear2faSession, isTwoFactorChallenge } from "./twofa-session.js?h=fbd5e4b98b";
+import { ensureMfa } from "./mfa-flow.js?h=824d566594";
 
 const form = document.getElementById("rtLoginForm");
 const emailEl = document.getElementById("rtEmail");

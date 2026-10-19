@@ -7,7 +7,7 @@ const fmtDate = ms => new Date(ms).toLocaleDateString("pt-BR", { day: "2-digit",
 const fmtTime = ms => new Date(ms).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
 
 const VERIFY_BASE = "https://espacopreludio.com.br/verificar-comprovante.html";
-const LOGO_URL = new URL("../logo_oficial_fundo_transparente.png?v=2", import.meta.url).href;
+const LOGO_URL = new URL("../logo_oficial_fundo_transparente.png?h=dfe07fa7a9", import.meta.url).href;
 const LOWER_WORDS = new Set(["de", "da", "das", "do", "dos", "e"]);
 
 // Nome todo em caixa alta (como alguns cadastros vêm) → "Luis Henrique de Souza".

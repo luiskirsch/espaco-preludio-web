@@ -20,7 +20,7 @@
 // Após mount, getElementById("newSessionModal") / "linkModal" funcionam normalmente
 // (o módulo injeta esses elementos no body).
 
-import { decryptNote } from "./crypto.js";
+import { decryptNote } from "./crypto.js?h=e302c46b08";
 
 const MODAL_HTML = `
 <div class="ep-modal" id="newSessionModal" role="dialog" aria-modal="true">

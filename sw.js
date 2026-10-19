@@ -7,29 +7,19 @@
 //
 // Bump SW_VERSION pra forçar refresh do cache em todas as instalações.
 
-const SW_VERSION = "ep-sw-v22-2026-10-17-strict-csp";
+const SW_VERSION = "ep-sw-v23-2026-10-18-perf";
 const PRECACHE   = `precache-${SW_VERSION}`;
 const RUNTIME    = `runtime-${SW_VERSION}`;
 
+// Páginas HTML não entram: chegam com Cache-Control no-store e nunca eram
+// guardadas, mas eram baixadas a cada atualização do SW. JS/CSS/imagens com
+// ?h= (hash do conteúdo) vão para o cache permanente na primeira visita.
 const PRECACHE_URLS = [
-  "/css/responsive.css?v=20261011b",
-  "/painel.html",
-  "/agenda.html",
-  "/pacientes.html",
-  "/perfil.html",
-  "/financeiro.html",
-  "/relatorios.html",
-  "/tiss.html",
-  "/consultorio.html",
-  "/mensagens.html",
-  "/clinica.html",
-  "/receita.html",
-  "/documento.html",
-  "/calculadora.html",
-  "/manifest.webmanifest",
-  "/logo_oficial_fundo_transparente.png?v=2",
-  "/logo-144.png"
+  "/manifest.webmanifest"
 ];
+// Cache que sobrevive às versões do SW: o conteúdo de uma URL ?h= nunca muda.
+const IMMUTABLE = "immutable-v1";
+const IMMUTABLE_MAX = 400;
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
@@ -55,11 +45,35 @@ self.addEventListener("activate", (event) => {
     // CSS/JS velhos que estavam servindo a versão presa do user.
     const keys = await caches.keys();
     await Promise.all(keys
-      .filter(k => k !== PRECACHE && k !== RUNTIME)
+      .filter(k => k !== PRECACHE && k !== RUNTIME && k !== IMMUTABLE)
       .map(k => caches.delete(k)));
+    await pruneImmutable();
     await self.clients.claim();
   })());
 });
+
+// URLs versionadas pelo conteúdo (scripts/perf/build.mjs) e arquivos de idioma
+// versionados pelo hash das traduções: imutáveis.
+function isImmutable(target) {
+  return /^[0-9a-f]{10}$/.test(target.searchParams.get("h") || "")
+    || (/\/i18n\/locales\/[^/]+\/[^/]+\.json$/.test(target.pathname) && /^a[0-9a-f]{8}$/.test(target.searchParams.get("v") || ""));
+}
+async function cacheFirstImmutable(req) {
+  const cache = await caches.open(IMMUTABLE);
+  const hit = await cache.match(req);
+  if (hit) return hit;
+  const res = await fetch(req);
+  if (res.ok && res.type === "basic") cache.put(req, res.clone()).catch(() => {});
+  return res;
+}
+// Versões antigas de cada arquivo ficam para trás: mantém só as mais recentes.
+async function pruneImmutable() {
+  try {
+    const cache = await caches.open(IMMUTABLE);
+    const keys = await cache.keys();
+    await Promise.all(keys.slice(0, Math.max(0, keys.length - IMMUTABLE_MAX)).map(k => cache.delete(k)));
+  } catch { /* best-effort */ }
+}
 
 function isApiRequest(url) {
   // Backend Railway + auth endpoints — não cacheamos por design.
@@ -109,6 +123,11 @@ self.addEventListener("fetch", (event) => {
         return new Response("Offline", { status: 503 });
       }
     })());
+    return;
+  }
+
+  if (isImmutable(target)) {
+    event.respondWith(cacheFirstImmutable(req).catch(() => new Response("", { status: 504 })));
     return;
   }
 

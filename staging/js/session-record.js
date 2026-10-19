@@ -15,7 +15,7 @@
 // Formato .ep-rec v2: JSON { format, version, sessionId, mimeType,
 //   startedAt, durationMs, chunkCount, chunks: [{idx, ts, ciphertext, iv}] }
 
-import { encryptNote } from "./crypto.js";
+import { encryptNote } from "./crypto.js?h=e302c46b08";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 

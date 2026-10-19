@@ -1,5 +1,5 @@
 /** Browser-only diary helpers. Nothing starts at module load. */
-import { loadCabinRain } from './diary-rain.js?v=20261018c';
+import { loadCabinRain } from './diary-rain.js?h=28fc06031d';
 
 const SOUNDSCAPES = {
   rain: { notes: [261.63, 329.63, 392, 523.25, 440, 392, 329.63, 293.66], interval: 2600, decay: 5.8, level: .038 },

@@ -1,5 +1,5 @@
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261018-mfa4";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=a1e6b0a1a1";
 
 const $ = id => document.getElementById(id);
 let campaigns = [];

@@ -18,9 +18,9 @@
 // reentrada na sala, queda de rede ou reinício do servidor só atrasam o envio.
 // Sobras de sessões abandonadas expiram em 3 dias.
 
-import { recallDek } from "./crypto.js";
+import { recallDek } from "./crypto.js?h=e302c46b08";
 // Versionado: uma cópia antiga em cache ignoraria a chave por sessão.
-import { createAiSummaryEnvelope } from "./ai-summary-crypto.js?v=2";
+import { createAiSummaryEnvelope } from "./ai-summary-crypto.js?h=bd3b11e0ea";
 
 // Numa recarga, o que ainda não virou trecho se perde (a gravação no
 // IndexedDB durante o unload não termina a tempo): 2 s é o teto dessa perda.

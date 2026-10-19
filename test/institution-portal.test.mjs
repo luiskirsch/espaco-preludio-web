@@ -45,7 +45,7 @@ function startServer() {
         const html = (await readFile(resolve(root, 'instituicao-painel.html'), 'utf8'))
           .replace('id="dashboardLoading" role="status"', 'id="dashboardLoading" role="status" hidden')
           .replace('id="dashboardApp" hidden', 'id="dashboardApp"')
-          .replace(/\s*<script type="module" src="\.\/js\/instituicao-painel\.js\?v=1"><\/script>/, '');
+          .replace(/\s*<script type="module" src="\.\/js\/instituicao-painel\.js\?h=[0-9a-f]{10}"><\/script>/, '');
         response.writeHead(200, { 'content-type': mime['.html'] });
         response.end(html);
         return;
@@ -297,8 +297,8 @@ test('todas as telas autenticadas do colaborador usam a estrutura responsiva com
   for (const page of authenticatedPages) {
     const html = await readFile(resolve(root, `app/${page}.html`), 'utf8');
     assert.match(html, /<body class="a-portal-authenticated">/, page);
-    const shellVersion = html.match(/portal-shell\.js\?v=(\w+)/);
-    const cssVersion = html.match(/app\.css\?v=(\w+)/);
+    const shellVersion = html.match(/portal-shell\.js\?h=(\w+)/);
+    const cssVersion = html.match(/app\.css\?h=(\w+)/);
     assert.ok(shellVersion, `${page}: portal-shell.js sem versão`);
     assert.ok(cssVersion, `${page}: app.css sem versão`);
     shellVersions.add(shellVersion[1]);
@@ -383,8 +383,8 @@ test('páginas institucional e profissional usam a mesma régua de cabeçalho', 
   const institutional = await readFile(resolve(root, 'index.html'), 'utf8');
   const professional = await readFile(resolve(root, 'profissional.html'), 'utf8');
   const sharedStyles = await readFile(resolve(root, 'css/public-header.css'), 'utf8');
-  assert.match(institutional, /css\/public-header\.css\?v=3/);
-  assert.match(professional, /css\/public-header\.css\?v=3/);
+  assert.match(institutional, /css\/public-header\.css\?h=[0-9a-f]{10}/);
+  assert.match(professional, /css\/public-header\.css\?h=[0-9a-f]{10}/);
   assert.match(sharedStyles, /--public-header-logo-size: 50px/);
   assert.match(sharedStyles, /\.site-header \.brand img,\s*\.ep-topbar \.ep-brand__mark/);
 });

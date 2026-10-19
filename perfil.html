@@ -5,31 +5,43 @@
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- ep:perf · gerado por scripts/perf/build.mjs, não editar à mão -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://api.espacopreludio.com.br" crossorigin>
+  <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js">
+  <link rel="modulepreload" href="./js/firebase-config.js?h=a1e6b0a1a1">
+  <link rel="modulepreload" href="./js/twofa-session.js?h=fbd5e4b98b">
+  <link rel="modulepreload" href="./js/auth-guard.js?h=a73d7c32b6">
+  <link rel="modulepreload" href="./js/crypto.js?h=e302c46b08">
+  <link rel="modulepreload" href="./js/aurora-booking.js?h=78573dbb79">
+  <link rel="modulepreload" href="./js/theme-toggle.js?h=e78b1bb8ef">
+  <link rel="modulepreload" href="./js/theme.js?h=a235876129">
+  <link rel="modulepreload" href="./js/cmdk.js?h=16f6e12be2">
+  <link rel="modulepreload" href="./js/db.js?h=8b3a551836">
+  <link rel="modulepreload" href="./js/realtime.js?h=8b9c94f22c">
+  <link rel="modulepreload" href="./js/api-cache.js?h=38870d9805">
+  <link rel="modulepreload" href="./js/twofa-fetch.js?h=38cf68b49a">
+  <!-- /ep:perf -->
   <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
-<link rel="preconnect" href="https://identitytoolkit.googleapis.com">
-  <link rel="preconnect" href="https://firestore.googleapis.com">
-  <link rel="dns-prefetch" href="https://www.gstatic.com">
-  <link rel="dns-prefetch" href="https://api.espacopreludio.com.br">
   <title data-i18n="perfil:title">Perfil profissional · Espaço Prelúdio</title>
   <link rel="icon" type="image/png" href="/logo-144.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <script src="./js/professional-identity.js?v=1"></script>
-  <script src="./js/professional-tools.js?v=1"></script>
-  <script defer src="./js/professional-navigation.js?v=1"></script>
-  <link rel="modulepreload" href="./js/auth-guard.js?v=20261018-tools1">
-  <script defer src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <link rel="stylesheet" href="./fonts/fraunces500-600_inter400-700_jetbrainsmono500-600.css?h=2a7bf0e67f">
+  <script src="./js/professional-identity.js?h=39f7706d92"></script>
+  <script src="./js/professional-tools.js?h=f2aa986ef5"></script>
+  <script defer src="./js/professional-navigation.js?h=b0eb25cd85"></script>
+  <script defer src="./js/capability-preflight.js?h=52f37eafdf"></script>
+  <link rel="stylesheet" href="./css/espaco-preludio.css?h=4061945ec2">
   <script src="./i18n/init.js?v=2-8" defer></script>
-  <script src="./js/monitoring.js?v=3" defer></script>
+  <script src="./js/monitoring.js?h=75d5d05e25" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
-  <script src="./js/pwa.js?v=3" defer></script>
-  <link rel="stylesheet" href="./css/responsive.css?v=20261011b">
+  <script src="./js/pwa.js?h=4c561d24f2" defer></script>
+  <link rel="stylesheet" href="./css/responsive.css?h=4e30c94957">
 </head>
 <body class="ep-has-sidebar">
-<script src="./js/sidebar.js?v=34"></script>
+<script src="./js/sidebar.js?h=047f01fd7b"></script>
 
 <div class="ep-shell">
   <header class="ep-topbar">
@@ -745,9 +757,9 @@
 </div>
 
 <script type="module">
-  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?v=20261018-mfa4";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?h=a1e6b0a1a1";
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?v=20261018-tools1";
+  import { requireTherapist, invalidateProfileCache, applyTopUserSlot } from "./js/auth-guard.js?h=a73d7c32b6";
 
   // ─── i18n helper ────────────────────────────────────────────
   function tr(key, fallback, opts) {
@@ -905,7 +917,7 @@
 
   // ─── Tópicos da sessão ─────────────────────────────────────────────────
   let customTopics = [];
-  const { TOPIC_LIBRARY, ABORDAGEM_LABEL, topicKey } = await import("./js/topics.js?v=2");
+  const { TOPIC_LIBRARY, ABORDAGEM_LABEL, topicKey } = await import("./js/topics.js?h=6394177ea4");
   let disabledSessionTopics = new Set();
 
   function renderTopicLibrary() {
@@ -1428,7 +1440,7 @@
     try {
       // Importa libs (lazy). JSZip via esm.sh.
       const { default: JSZip } = await import("https://esm.sh/jszip@3.10.1");
-      const { decryptNote, recallDek } = await import("./js/crypto.js");
+      const { decryptNote, recallDek } = await import("./js/crypto.js?h=e302c46b08");
       const dekLocal = recallDek();
       if (!dekLocal) throw new Error("Sessão sem chave de cifragem. Abra a página Pacientes (ou faça login novamente) e tente de novo.");
 
@@ -1617,7 +1629,7 @@
       // 11) Mensagens (chat E2EE) — threads + mensagens decifradas
       hdr("Baixando mensagens…");
       try {
-        const { unwrapKey, unwrapThreadKeyFromPeer, decryptNote } = await import("./js/crypto.js");
+        const { unwrapKey, unwrapThreadKeyFromPeer, decryptNote } = await import("./js/crypto.js?h=e302c46b08");
 
         // Garante que tenho ECDH keypair (se não tiver, não tem chat)
         let myEcdhPriv = null;
@@ -1886,9 +1898,9 @@ Direito de portabilidade — LGPD Art. 18, V.
       // API token: só envia se user digitou algo novo (input vazio = mantém o atual).
       const apiToken = $("nfseApiToken").value;
       if (apiToken) {
-        const dekLocal = (await import("./js/crypto.js")).recallDek();
+        const dekLocal = (await import("./js/crypto.js?h=e302c46b08")).recallDek();
         if (!dekLocal) throw new Error("Sessão sem chave de cifragem. Faça login novamente.");
-        const { encryptNote } = await import("./js/crypto.js");
+        const { encryptNote } = await import("./js/crypto.js?h=e302c46b08");
         const tokenEnc = await encryptNote(apiToken, dekLocal);
         body.nfseConfig.apiTokenEncrypted = tokenEnc; // { ciphertext, iv }
       }
@@ -2059,7 +2071,7 @@ Direito de portabilidade — LGPD Art. 18, V.
 
   // ─── 2FA ─────────────────────────────────────────────────────────────
   // Mandatory MFA and recovery codes are managed by the shared dialog.
-  const mfaManagement = await import("./js/mfa-flow.js?v=20261018-mfa5");
+  const mfaManagement = await import("./js/mfa-flow.js?h=824d566594");
   const mfaBlock = document.getElementById("twoFactorBlock");
   mfaBlock.replaceChildren();
   const mfaState = document.createElement("p");

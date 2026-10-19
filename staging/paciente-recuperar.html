@@ -5,21 +5,28 @@
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- ep:perf · gerado por scripts/perf/build.mjs, não editar à mão -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://api.espacopreludio.com.br" crossorigin>
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js">
+  <link rel="modulepreload" href="./js/firebase-config.js?h=a1e6b0a1a1">
+  <link rel="modulepreload" href="./js/twofa-session.js?h=fbd5e4b98b">
+  <link rel="modulepreload" href="./js/account-email.js?h=adc983ca80">
+  <link rel="modulepreload" href="./js/crypto.js?h=e302c46b08">
+  <link rel="modulepreload" href="./js/patient-session.js?h=b2d1db5669">
+  <link rel="modulepreload" href="./js/recovery-return.js?h=4f62e88e1e">
+  <!-- /ep:perf -->
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
-<link rel="preconnect" href="https://identitytoolkit.googleapis.com">
-  <link rel="preconnect" href="https://firestore.googleapis.com">
-  <link rel="dns-prefetch" href="https://www.gstatic.com">
-  <link rel="dns-prefetch" href="https://api.espacopreludio.com.br">
   <script type="speculationrules">{"prerender":[{"where":{"selector_matches":"a[href$='.html']:not([href^='http'])"},"eagerness":"moderate"}]}</script>
   <title data-i18n="paciente-recuperar:title">Recuperar acesso · Espaço Prelúdio</title>
   <link rel="icon" type="image/png" href="/logo-144.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-277">
+  <link rel="stylesheet" href="./fonts/fraunces500-600_inter400-700_jetbrainsmono500-600.css?h=2a7bf0e67f">
+  <link rel="stylesheet" href="./css/espaco-preludio.css?h=4061945ec2">
   <script src="./i18n/init.js?v=2-8" defer></script>
-  <script src="./js/monitoring.js?v=3" defer></script>
-  <link rel="stylesheet" href="./css/responsive.css?v=20261011b">
+  <script src="./js/monitoring.js?h=75d5d05e25" defer></script>
+  <link rel="stylesheet" href="./css/responsive.css?h=4e30c94957">
 </head>
 <body>
 
@@ -108,11 +115,11 @@
     signInWithEmailAndPassword,
     sendPasswordResetEmail
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?v=20261018-mfa4";
-  import { requestPasswordReset } from "./js/account-email.js?v=1";
-  import { generateSalt, wrapDek, recoveryPhraseToDek } from "./js/crypto.js";
-  import { rememberPatientDek, rememberPatientUser } from "./js/patient-session.js";
-  import { focusRecoveryStepFromEmail } from "./js/recovery-return.js?v=1";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?h=a1e6b0a1a1";
+  import { requestPasswordReset } from "./js/account-email.js?h=adc983ca80";
+  import { generateSalt, wrapDek, recoveryPhraseToDek } from "./js/crypto.js?h=e302c46b08";
+  import { rememberPatientDek, rememberPatientUser } from "./js/patient-session.js?h=b2d1db5669";
+  import { focusRecoveryStepFromEmail } from "./js/recovery-return.js?h=4f62e88e1e";
 
   // Tradução com fallback PT-BR — caso o i18n ainda não tenha carregado.
   function tr(key, fallback) {

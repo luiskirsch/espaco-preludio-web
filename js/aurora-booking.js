@@ -5,7 +5,7 @@
 // e o e-mail dele só é possível aqui. A consulta é criada pela mesma rota do
 // modal "Nova consulta", e só depois do clique em Confirmar no cartão.
 
-import { decryptNote, recallDek } from "./crypto.js";
+import { decryptNote, recallDek } from "./crypto.js?h=e302c46b08";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

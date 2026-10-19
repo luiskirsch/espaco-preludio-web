@@ -5,16 +5,26 @@
 <script>(function(){if(window.top!==window.self){try{window.top.location.replace(location.href);}catch(_){document.documentElement.innerHTML="";}return;}var h=(location.hostname||"").toLowerCase(),p=location.protocol||"";var A=["espacopreludio.com","www.espacopreludio.com","espacopreludio.com.br","www.espacopreludio.com.br","localhost","127.0.0.1"];if(p==="file:"||h&&A.indexOf(h)===-1){document.documentElement.innerHTML="<style>*{margin:0;padding:0}html,body{background:#0d1117;height:100%;display:flex;align-items:center;justify-content:center}p{color:#ccc;font:15px/1.7 sans-serif;text-align:center;max-width:320px}a{color:#5b8af5;text-decoration:none}</style><p>Este conte\u00fado s\u00f3 est\u00e1 dispon\u00edvel no site oficial.<br><a href=\"https://espacopreludio.com.br\">espacopreludio.com.br<\/a><\/p>";setTimeout(function(){location.replace("https://espacopreludio.com.br");},2500);}else{document.documentElement.classList.add("guard-ok");}})();</script><style>html:not(.guard-ok) body{visibility:hidden!important;background:#0d1117!important}</style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- ep:perf · gerado por scripts/perf/build.mjs, não editar à mão -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://api.espacopreludio.com.br" crossorigin>
+  <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js">
+  <link rel="modulepreload" href="../js/firebase-config.js?h=a1e6b0a1a1">
+  <link rel="modulepreload" href="../js/twofa-session.js?h=fbd5e4b98b">
+  <link rel="modulepreload" href="../js/crypto.js?h=e302c46b08">
+  <link rel="modulepreload" href="../js/patient-session.js?h=b2d1db5669">
+  <link rel="modulepreload" href="../js/chat-files.js?h=97f5a45be2">
+  <!-- /ep:perf -->
   <meta name="robots" content="noindex, nofollow">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title data-i18n="p-app-chat:mensagens_espaco_preludio_af126">Mensagens · Espaço Prelúdio</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="/logo-144.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app.css?v=20261018a">
+  <link rel="stylesheet" href="../fonts/fraunces500-600_inter400-700_jetbrainsmono500-600.css?h=2a7bf0e67f">
+  <link rel="stylesheet" href="./app.css?h=738a3abe80">
   <style>
     .chat-shell { display: flex; flex-direction: column; height: 100dvh; position: relative; }
     .chat-header {
@@ -174,13 +184,13 @@
     .chat-unlock__error { margin-top: 12px; color: #b84135; font-size: 12px; line-height: 1.45; }
     .chat-unlock__back { display: inline-block; margin-top: 18px; color: var(--a-ink2); font-size: 12px; text-decoration: none; }
   </style>
-  <script src="./portal-shell.js?v=7" defer></script>
-  <script src="./sw-register.js?v=20261018" defer></script>
+  <script src="./portal-shell.js?h=7b3dbc3335" defer></script>
+  <script src="./sw-register.js?h=bebf506e30" defer></script>
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
   <script src="/i18n/init.js?v=2-8" defer></script>
-  <link rel="stylesheet" href="../css/responsive.css?v=20261011b">
-<script type="module" src="../js/csp-actions.js?v=20261017-csp1"></script>
+  <link rel="stylesheet" href="../css/responsive.css?h=4e30c94957">
+<script type="module" src="../js/csp-actions.js?h=6c7094ea11"></script>
 </head>
 <body class="a-portal-authenticated">
 <div class="a-shell">
@@ -268,13 +278,13 @@
 
 <script type="module">
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?v=20261018-mfa4";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?h=a1e6b0a1a1";
   import {
     generateEcdhKeypair, wrapKey, unwrapKey,
     unwrapThreadKeyFromPeer, encryptNote, decryptNote, unwrapDek
-  } from "../js/crypto.js";
-  import { recallPatientDek, recallPatientUser, rememberPatientDek, rememberPatientUser } from "../js/patient-session.js";
-  import { parseFileCard, fileLabel, renderFileCard, hydrateAttachments, uploadAttachment, attachEmojiPicker, FILE_CSS, EMOJI_CSS } from "../js/chat-files.js?v=1";
+  } from "../js/crypto.js?h=e302c46b08";
+  import { recallPatientDek, recallPatientUser, rememberPatientDek, rememberPatientUser } from "../js/patient-session.js?h=b2d1db5669";
+  import { parseFileCard, fileLabel, renderFileCard, hydrateAttachments, uploadAttachment, attachEmojiPicker, FILE_CSS, EMOJI_CSS } from "../js/chat-files.js?h=97f5a45be2";
   document.head.insertAdjacentHTML("beforeend", `<style>${FILE_CSS}${EMOJI_CSS}</style>`);
 
   let currentUser = null;

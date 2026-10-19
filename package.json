@@ -5,7 +5,9 @@
   "scripts": {
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
     "check:mirrors": "node scripts/sync-staging.mjs --check",
-    "check": "npm test && npm run i18n:audit && npm run check:mirrors",
+    "check": "npm test && npm run i18n:audit && npm run check:perf && npm run check:mirrors",
+    "perf:build": "node scripts/perf/build.mjs",
+    "check:perf": "node scripts/perf/build.mjs --check",
     "i18n:sync": "node scripts/i18n/sync.mjs",
     "i18n:audit": "node scripts/i18n/audit.mjs",
     "sync:staging": "node scripts/sync-staging.mjs",

@@ -6,6 +6,18 @@
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- ep:perf · gerado por scripts/perf/build.mjs, não editar à mão -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://api.espacopreludio.com.br" crossorigin>
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js">
+  <link rel="modulepreload" href="../js/mfa-flow.js?h=824d566594">
+  <link rel="modulepreload" href="../js/firebase-config.js?h=a1e6b0a1a1">
+  <link rel="modulepreload" href="../js/twofa-session.js?h=fbd5e4b98b">
+  <link rel="modulepreload" href="../js/crypto.js?h=e302c46b08">
+  <link rel="modulepreload" href="../js/patient-session.js?h=b2d1db5669">
+  <!-- /ep:perf -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -29,11 +41,9 @@
   <meta name="twitter:image" content="https://espacopreludio.com.br/og-portal.jpg?v=2">
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="/logo-144.png">
-  <link rel="apple-touch-icon" href="/logo_oficial_fundo_transparente.png?v=2">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./app.css?v=20261018a">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="../fonts/fraunces500-600_inter400-700_jetbrainsmono500-600.css?h=2a7bf0e67f">
+  <link rel="stylesheet" href="./app.css?h=738a3abe80">
   <style>
     :root {
       --staff-deep: #123a45;
@@ -126,18 +136,18 @@
     .recovery-confirm { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; font-size: 12.5px; color: #455d61; }
     .recovery-confirm input { margin-top: 2px; }
   </style>
-  <script src="./sw-register.js?v=20261018" defer></script>
+  <script src="./sw-register.js?h=bebf506e30" defer></script>
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
   <script src="/i18n/init.js?v=2-8" defer></script>
-  <link rel="stylesheet" href="../css/responsive.css?v=20261011b">
+  <link rel="stylesheet" href="../css/responsive.css?h=4e30c94957">
 </head>
 <body>
 <div class="a-shell">
   <main class="staff-auth a-page-enter">
     <section class="staff-intro">
       <a class="login-brand" href="../index.html" aria-label="Voltar ao site do Espaço Prelúdio" data-i18n-aria-label="p-app-login:voltar_ao_site_do_espaco_e256d">
-        <img src="/logo-144.png" alt="">
+        <img src="/logo-144.png?h=13e64ad030" alt="">
         <span class="login-brand__text" data-i18n-html="p-app-login:projeto_lemniscata_espaco_preludio_aaec9">
           <span class="login-brand__lead">Projeto Lemniscata</span>
           <span class="login-brand__name">Espaço Prelúdio</span>
@@ -258,12 +268,12 @@
 </div>
 
 <script type="module">
-  import { ensureMfa } from "../js/mfa-flow.js?v=20261018-mfa5";
+  import { ensureMfa } from "../js/mfa-flow.js?h=824d566594";
   import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile, signOut }
     from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?v=20261018-mfa4";
-  import { generateSalt, generateDEK, wrapDek, unwrapDek, dekToRecoveryPhrase } from "../js/crypto.js";
-  import { rememberPatientDek, rememberPatientUser } from "../js/patient-session.js";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?h=a1e6b0a1a1";
+  import { generateSalt, generateDEK, wrapDek, unwrapDek, dekToRecoveryPhrase } from "../js/crypto.js?h=e302c46b08";
+  import { rememberPatientDek, rememberPatientUser } from "../js/patient-session.js?h=b2d1db5669";
 
   const params = new URLSearchParams(location.search);
   const requestedRedirect = params.get("redirect") || "./home.html";

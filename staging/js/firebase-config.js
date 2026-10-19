@@ -20,7 +20,7 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence }
   from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { isRtAuthContext, installClinicalFetch } from "./twofa-session.js?v=20261018-mfa4";
+import { isRtAuthContext, installClinicalFetch } from "./twofa-session.js?h=fbd5e4b98b";
 
 // ─── Detecções ─────────────────────────────────────────────────────────
 const _path = typeof location !== "undefined" ? location.pathname : "";

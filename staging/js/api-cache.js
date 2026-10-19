@@ -1,6 +1,6 @@
 // Validate authorization on every read. Clinical responses are never restored
 // from browser storage or rendered before the server accepts the session.
-import db from "./db.js";
+import db from "./db.js?h=8b3a551836";
 
 const NS = "ep:api:v1:";
 const makeKey = (scope, uid) => NS + scope + ":" + uid;

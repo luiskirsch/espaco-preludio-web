@@ -2,24 +2,18 @@
 // Documentos usam network-first para nunca prender o app em uma versão antiga.
 // Apenas ativos estáticos do mesmo domínio usam cache com revalidação.
 
-const VERSION = "ep-app-v35-2026-10-18-recorded-rain";
+const VERSION = "ep-app-v36-2026-10-18-perf";
 const STATIC_CACHE = `static-${VERSION}`;
 const PAGE_CACHE = `pages-${VERSION}`;
 const OFFLINE_PAGE = "/app/login.html";
+// HTML e arquivos versionados não entram: o HTML chega com no-store (nunca era
+// guardado) e JS/CSS/imagens com ?h= vão para o cache permanente na 1ª visita.
 const PRECACHE = [
-  "/css/responsive.css?v=20261011b",
-  OFFLINE_PAGE,
-  "/app/app.css?v=20261005b",
-  "/app/weather-hero.css?v=20261002f",
-  "/app/assets/home-sky-clouds.webp",
-  "/app/portal-shell.js?v=7",
-  "/app/jornada.html",
-  "/app/nr1.html",
-  "/app/emergencia.html",
   "/app/manifest.json",
-  "/logo_oficial_fundo_transparente.png?v=2",
-  "/logo-144.png",
 ];
+// Cache que sobrevive às versões do SW: o conteúdo de uma URL ?h= nunca muda.
+const IMMUTABLE_CACHE = "immutable-v1";
+const IMMUTABLE_MAX = 400;
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
@@ -36,15 +30,28 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
-    const current = new Set([STATIC_CACHE, PAGE_CACHE]);
+    const current = new Set([STATIC_CACHE, PAGE_CACHE, IMMUTABLE_CACHE]);
     const keys = await caches.keys();
     await Promise.all(keys.filter((key) => !current.has(key)).map((key) => caches.delete(key)));
+    try {
+      const immutable = await caches.open(IMMUTABLE_CACHE);
+      const entries = await immutable.keys();
+      await Promise.all(entries.slice(0, Math.max(0, entries.length - IMMUTABLE_MAX)).map((key) => immutable.delete(key)));
+    } catch { /* best-effort */ }
     await self.clients.claim();
   })());
 });
 
 function isSameOrigin(request) {
   return new URL(request.url).origin === self.location.origin;
+}
+
+// URLs versionadas pelo conteúdo (scripts/perf/build.mjs) e arquivos de idioma
+// versionados pelo hash das traduções: imutáveis, servidos sem revalidar.
+function isImmutable(request) {
+  const target = new URL(request.url);
+  return /^[0-9a-f]{10}$/.test(target.searchParams.get("h") || "")
+    || (/\/i18n\/locales\/[^/]+\/[^/]+\.json$/.test(target.pathname) && /^a[0-9a-f]{8}$/.test(target.searchParams.get("v") || ""));
 }
 
 function isStaticAsset(request) {
@@ -71,6 +78,22 @@ self.addEventListener("fetch", (event) => {
         return (await caches.match(request))
           || (await caches.match(OFFLINE_PAGE))
           || new Response("Offline", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+      }
+    })());
+    return;
+  }
+
+  if (isImmutable(request)) {
+    event.respondWith((async () => {
+      const cache = await caches.open(IMMUTABLE_CACHE);
+      const hit = await cache.match(request);
+      if (hit) return hit;
+      try {
+        const response = await fetch(request);
+        if (response.ok && response.type === "basic") cache.put(request, response.clone()).catch(() => {});
+        return response;
+      } catch {
+        return new Response("", { status: 504 });
       }
     })());
     return;
@@ -108,8 +131,8 @@ self.addEventListener("push", (event) => {
 
   event.waitUntil(self.registration.showNotification(data.title || "Espaço Prelúdio", {
     body: data.body || "Você tem uma nova mensagem.",
-    icon: "/logo_oficial_fundo_transparente.png?v=2",
-    badge: "/logo_oficial_fundo_transparente.png?v=2",
+    icon: "/logo_oficial_fundo_transparente.png?h=dfe07fa7a9",
+    badge: "/logo_oficial_fundo_transparente.png?h=dfe07fa7a9",
     data: { url: notificationTarget(data.url) },
   }));
 });

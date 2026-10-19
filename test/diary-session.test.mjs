@@ -84,11 +84,15 @@ async function fixture() {
       let body = await readFile(file);
       if (pathname === '/app/diary.js') {
         const original = body.toString('utf8');
-        const rewritten = original.replace('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js', '/__diary-fixture/auth.js').replace('../js/firebase-config.js?v=20261018-mfa4', '/__diary-fixture/config.js');
-        assert.notEqual(rewritten, original, 'Fixture replaces production Firebase imports in served bytes only');
+        const config = /\.\.\/js\/firebase-config\.js\?[hv]=[\w.-]+/;
+        assert.match(original, config, 'diary.js imports the versioned Firebase config');
+        const rewritten = original.replace('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js', '/__diary-fixture/auth.js').replace(config, '/__diary-fixture/config.js');
+        assert.ok(!rewritten.includes('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js'), 'Fixture replaces production Firebase imports in served bytes only');
         assert.ok(!rewritten.includes('import(\'https://www.gstatic.com/'));
         body = rewritten;
       }
+      // Os modulepreload (scripts/perf/build.mjs) buscariam o Firebase real; o fixture não os usa.
+      if (extname(file) === '.html') body = body.toString('utf8').replace(/[ \t]*<link rel="modulepreload"[^>]*>\r?\n?/g, '');
       response.writeHead(200, { 'content-type': mime[extname(file)] || 'application/octet-stream', 'cache-control': 'no-store' }).end(body);
     } catch (error) {
       response.writeHead(404).end(String(error.message));

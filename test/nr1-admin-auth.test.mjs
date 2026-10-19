@@ -43,7 +43,9 @@ async function startServer() {
       }
       if (path === "/admin-nr1.html") {
         const html = (await readFile(resolve(root, "admin-nr1.html"), "utf8"))
-          .replace('src="./js/nr1-admin.js"', 'src="./mock-nr1-admin.js"');
+          .replace(/src="\.\/js\/nr1-admin\.js(?:\?h=[0-9a-f]{10})?"/, 'src="./mock-nr1-admin.js"')
+          // Sem os módulos reais pré-carregados: a tela usa só o módulo simulado.
+          .replace(/<!-- ep:perf[\s\S]*?<!-- \/ep:perf -->/, "");
         response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
         response.end(html); return;
       }

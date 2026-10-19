@@ -2,8 +2,8 @@
 // Invalida caches automaticamente quando o backend emite eventos de mutação.
 // Chamado por auth-guard.js?v=20261018-tools1 após requireTherapist() → singleton, seguro chamar N vezes.
 
-import { invalidatePrefix } from "./api-cache.js?v=4";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261018-mfa4";
+import { invalidatePrefix } from "./api-cache.js?h=38870d9805";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=a1e6b0a1a1";
 
 let _socket = null;
 let _uid    = null;

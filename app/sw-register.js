@@ -8,9 +8,12 @@ window.addEventListener("pageswap", event => {
   if (!next || !new URL(next).pathname.includes("/app/")) event.viewTransition.skipTransition();
 });
 
-// Registra o service worker em todas as páginas do app
+// Registra o service worker do app só para /app/. Com o escopo padrão ("/") ele
+// disputava a raiz com o /sw.js das áreas profissional e de paciente: a cada troca
+// de área um substituía o outro, reinstalava e recarregava a página.
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw-app.js")
+  const base = location.pathname.startsWith("/staging/") ? "/staging" : "";
+  navigator.serviceWorker.register(`${base}/sw-app.js`, { scope: `${base}/app/` })
     .then(reg => {
       console.log("[EP App] SW registrado:", reg.scope);
     })

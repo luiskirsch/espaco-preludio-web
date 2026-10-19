@@ -1,8 +1,8 @@
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, AUTH_CONTEXT } from "./firebase-config.js?v=20261018-mfa4";
-import { ensureMfa } from "./mfa-flow.js?v=20261018-mfa5";
-import { clear2faSession, safeMfaReturn } from "./twofa-session.js?v=20261018-mfa4";
-import { clearDek } from "./crypto.js";
+import { auth, AUTH_CONTEXT } from "./firebase-config.js?h=a1e6b0a1a1";
+import { ensureMfa } from "./mfa-flow.js?h=824d566594";
+import { clear2faSession, safeMfaReturn } from "./twofa-session.js?h=fbd5e4b98b";
+import { clearDek } from "./crypto.js?h=e302c46b08";
 
 const isRt = AUTH_CONTEXT === "rt";
 const loginPage = isRt ? "./rt-login.html" : "./login.html";

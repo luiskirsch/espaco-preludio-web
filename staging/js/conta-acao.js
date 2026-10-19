@@ -3,9 +3,9 @@
 import {
   verifyPasswordResetCode, confirmPasswordReset, applyActionCode, checkActionCode, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261018-mfa4";
-import { parseActionParams, safeContinueUrl, actionErrorKey } from "./auth-action-core.js?v=1";
-import { requestPasswordReset } from "./account-email.js?v=1";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=a1e6b0a1a1";
+import { parseActionParams, safeContinueUrl, actionErrorKey } from "./auth-action-core.js?h=628d155b56";
+import { requestPasswordReset } from "./account-email.js?h=adc983ca80";
 
 function tr(key, fallback) {
   if (window.EP_I18N && window.EP_I18N.t) {

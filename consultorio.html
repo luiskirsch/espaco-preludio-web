@@ -5,25 +5,42 @@
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- ep:perf · gerado por scripts/perf/build.mjs, não editar à mão -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://api.espacopreludio.com.br" crossorigin>
+  <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js">
+  <link rel="modulepreload" href="./js/firebase-config.js?h=a1e6b0a1a1">
+  <link rel="modulepreload" href="./js/twofa-session.js?h=fbd5e4b98b">
+  <link rel="modulepreload" href="./js/auth-guard.js?h=a73d7c32b6">
+  <link rel="modulepreload" href="./js/crypto.js?h=e302c46b08">
+  <link rel="modulepreload" href="./js/aurora-booking.js?h=78573dbb79">
+  <link rel="modulepreload" href="./js/theme-toggle.js?h=e78b1bb8ef">
+  <link rel="modulepreload" href="./js/theme.js?h=a235876129">
+  <link rel="modulepreload" href="./js/cmdk.js?h=16f6e12be2">
+  <link rel="modulepreload" href="./js/db.js?h=8b3a551836">
+  <link rel="modulepreload" href="./js/realtime.js?h=8b9c94f22c">
+  <link rel="modulepreload" href="./js/api-cache.js?h=38870d9805">
+  <link rel="modulepreload" href="./js/twofa-fetch.js?h=38cf68b49a">
+  <link rel="modulepreload" href="./js/topics.js?h=6394177ea4">
+  <link rel="modulepreload" href="./js/atmosphere.js?h=335bb5586b">
+  <link rel="modulepreload" href="./js/room-ambient.js?h=34a186184d">
+  <link rel="modulepreload" href="./js/cid10.js?h=4bb768ef86">
+  <!-- /ep:perf -->
   <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
-<link rel="preconnect" href="https://identitytoolkit.googleapis.com">
-  <link rel="preconnect" href="https://firestore.googleapis.com">
-  <link rel="dns-prefetch" href="https://www.gstatic.com">
-  <link rel="dns-prefetch" href="https://api.espacopreludio.com.br">
   <script type="speculationrules">{"prerender":[{"where":{"selector_matches":"a[href$='.html']:not([href^='http'])"},"eagerness":"moderate"}]}</script>
   <title data-i18n="consultorio:title">Consultório · Espaço Prelúdio</title>
   <link rel="icon" type="image/png" href="/logo-144.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <script defer src="./js/capability-preflight.js?v=5"></script>
-  <link rel="stylesheet" href="./css/espaco-preludio.css?v=3-293">
-  <link rel="stylesheet" href="./css/consultation-video.css?v=2">
+  <link rel="stylesheet" href="./fonts/fraunces500-600_inter400-700_jetbrainsmono500-600.css?h=2a7bf0e67f">
+  <script defer src="./js/capability-preflight.js?h=52f37eafdf"></script>
+  <link rel="stylesheet" href="./css/espaco-preludio.css?h=4061945ec2">
+  <link rel="stylesheet" href="./css/consultation-video.css?h=37ad7597d9">
   <script src="./i18n/init.js?v=2-8" defer></script>
-  <script src="./js/monitoring.js?v=3" defer></script>
+  <script src="./js/monitoring.js?h=75d5d05e25" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#1a130a">
-  <script src="./js/pwa.js?v=3" defer></script>
+  <script src="./js/pwa.js?h=4c561d24f2" defer></script>
   <style>
     /* REC fica no fluxo do grupo da direita (o CSS global o posicionava absoluto). */
     body.ep-consult #recIndicator.ep-rec-indicator--right { position: static; transform: none; right: auto; top: auto; margin-right: 4px; }
@@ -43,7 +60,7 @@
     }
     @media (prefers-reduced-motion: reduce) { #ctrlRecord.ep-ctrl.is-recording { animation: none; } }
   </style>
-  <link rel="stylesheet" href="./css/responsive.css?v=20261011b">
+  <link rel="stylesheet" href="./css/responsive.css?h=4e30c94957">
 </head>
 <body class="ep-consult">
 
@@ -242,13 +259,13 @@
 
 <script type="module">
   import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?v=20261018-mfa4";
-  import { requireTherapist } from "./js/auth-guard.js?v=20261018-tools1";
-  import { encryptNote, decryptNote, clearDek } from "./js/crypto.js";
-  import { getDeckTopics, ABORDAGEM_LABEL, shuffle } from "./js/topics.js?v=2";
-  import { applyMode, readMode } from "./js/atmosphere.js";
-  import { initRoomAmbient } from "./js/room-ambient.js?v=3";
-  import { searchCID10 } from "./js/cid10.js?v=1";
+  import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?h=a1e6b0a1a1";
+  import { requireTherapist } from "./js/auth-guard.js?h=a73d7c32b6";
+  import { encryptNote, decryptNote, clearDek } from "./js/crypto.js?h=e302c46b08";
+  import { getDeckTopics, ABORDAGEM_LABEL, shuffle } from "./js/topics.js?h=6394177ea4";
+  import { applyMode, readMode } from "./js/atmosphere.js?h=335bb5586b";
+  import { initRoomAmbient } from "./js/room-ambient.js?h=34a186184d";
+  import { searchCID10 } from "./js/cid10.js?h=4bb768ef86";
 
   // tr(): i18n helper com fallback PT-BR.
   function tr(key, fallback, opts) {
@@ -297,7 +314,7 @@
   applyMode(readMode());
 
   // LiveKit via esm.sh — pin de versão para reprodutibilidade.
-  const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack, setupCodecNegotiation } = await import('./js/consultation-media.js?v=3');
+  const { LIVEKIT_VERSION, consultationRoomOptions, detachConsultationTrack, setupCodecNegotiation } = await import('./js/consultation-media.js?h=c55a0ba0a0');
   const livekitMod = await import(`https://esm.sh/livekit-client@${LIVEKIT_VERSION}`);
   const { Room, RoomEvent, Track, ExternalE2EEKeyProvider } = livekitMod;
 
@@ -740,7 +757,7 @@
     // só áudio mixado pro Whisper. Web Audio API consome ~1-2% CPU.
     if (tokenData.aiSummaryReady) {
       try {
-        const { SessionAiCapture } = await import("./js/session-ai-capture.js?v=6");
+        const { SessionAiCapture } = await import("./js/session-ai-capture.js?h=2ce0350014");
         const aiCaptureBadge = document.getElementById("aiCaptureBadge");
         aiCapture = new SessionAiCapture({
           room,
@@ -863,7 +880,7 @@
   endSessionBtn.addEventListener("click", endSessionFlow);
 
   // ─── Gravação local cifrada ──────────────────────────────────
-  const { SessionRecorder, downloadRecording } = await import("./js/session-record.js?v=4");
+  const { SessionRecorder, downloadRecording } = await import("./js/session-record.js?h=7022836584");
   const ctrlRecord       = document.getElementById("ctrlRecord");
   const recConsentModal  = document.getElementById("recConsentModal");
   const recConsentCheck  = document.getElementById("recConsentCheck");

@@ -9,7 +9,7 @@
 // aparelho não der conta (quadro demorando demais), o efeito é desligado com
 // aviso — vídeo fluido vale mais que fundo bonito.
 
-import { applyMode, readMode, stopBrownNoise } from "./atmosphere.js";
+import { applyMode, readMode, stopBrownNoise } from "./atmosphere.js?h=335bb5586b";
 
 const PREFS_KEY = "ep_room_ambient_v1";
 const TRACK_PROCESSORS_VERSION = "0.8.1";

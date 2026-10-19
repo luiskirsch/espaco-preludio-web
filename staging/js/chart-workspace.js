@@ -1,4 +1,4 @@
-import { encryptNote, decryptNote } from "./crypto.js";
+import { encryptNote, decryptNote } from "./crypto.js?h=e302c46b08";
 
 export const CHART_COPY = {
   overview: "Visão geral", entries: "Evoluções", clinical: "História clínica", monitoring: "Acompanhamento", documents: "Documentos", registration: "Cadastro",

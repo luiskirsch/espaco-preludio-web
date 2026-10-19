@@ -30,7 +30,7 @@ test("páginas do portal requisitam a versão nova do CSS interativo", async () 
       .filter(file => file.endsWith(".html"));
     for (const file of files) {
       const html = await readFile(new URL(`../${directory}/${file}`, import.meta.url), "utf8");
-      const version = html.match(/\.\/app\.css\?v=(\w+)/);
+      const version = html.match(/\.\/app\.css\?h=(\w+)/);
       if (version) versions.set(`${directory}/${file}`, version[1]);
     }
   }

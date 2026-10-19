@@ -1,6 +1,6 @@
 import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?v=20261018-mfa4";
-import { clearDek } from "./crypto.js";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=a1e6b0a1a1";
+import { clearDek } from "./crypto.js?h=e302c46b08";
 
 const t = (key, fallback) => window.i18next?.t(`suporte:account.${key}`, { defaultValue: fallback }) || fallback;
 

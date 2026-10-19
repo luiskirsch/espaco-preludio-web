@@ -25,12 +25,12 @@ test('every professional menu page loads the shared navigation preparation and c
   for (const filename of await readdir(root)) {
     if (!filename.endsWith('.html')) continue;
     const html = await readFile(join(root, filename), 'utf8');
-    if (!html.includes('./js/sidebar.js?v=34')) continue;
+    if (!/\.\/js\/sidebar\.js\?h=[0-9a-f]{10}/.test(html)) continue;
     count++;
-    assert.match(html, /<script src="\.\/js\/professional-identity\.js\?v=1"><\/script>/, filename);
-    assert.match(html, /<script src="\.\/js\/professional-tools\.js\?v=1"><\/script>/, filename);
-    assert.match(html, /<script defer src="\.\/js\/professional-navigation\.js\?v=1"><\/script>/, filename);
-    assert.match(html, /rel="modulepreload" href="\.\/js\/auth-guard\.js\?v=20261018-tools1"/, filename);
+    assert.match(html, /<script src="\.\/js\/professional-identity\.js\?h=[0-9a-f]{10}"><\/script>/, filename);
+    assert.match(html, /<script src="\.\/js\/professional-tools\.js\?h=[0-9a-f]{10}"><\/script>/, filename);
+    assert.match(html, /<script defer src="\.\/js\/professional-navigation\.js\?h=[0-9a-f]{10}"><\/script>/, filename);
+    assert.match(html, /rel="modulepreload" href="\.\/js\/auth-guard\.js\?h=[0-9a-f]{10}"/, filename);
     assert.doesNotMatch(html, /<script type="speculationrules">/, `${filename} must use the shared route selection`);
   }
   assert.ok(count >= 25);
