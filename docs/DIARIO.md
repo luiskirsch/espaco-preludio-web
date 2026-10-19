@@ -61,7 +61,9 @@ Além das sugestões, o titular pode descrever seu próprio aroma em até 100
 caracteres. O campo opcional `aromaText` é cifrado com a página; uma sugestão
 selecionada limpa esse campo. Registros antigos continuam usando `aroma`.
 O clima reutiliza a API de ambiente do portal; quando indisponível, pode ser
-escolhido manualmente. Coordenadas não são gravadas no diário.
+escolhido manualmente. Coordenadas não são gravadas no diário. Clima,
+sentimentos, marcadores, aroma e estilo de escrita acionam salvamento imediato,
+mesmo antes de existir texto, e são restaurados ao recarregar a página.
 
 Os insights representam os sentimentos escolhidos pelo titular, sem análise
 automática do texto ou avaliação clínica. Desabafos são descartados na própria

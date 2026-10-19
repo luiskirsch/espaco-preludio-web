@@ -1,5 +1,5 @@
 import { createSoundscape, createDictation } from './diary-audio.js?h=fb22bb467e';
-import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=3ee11a1354';
+import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, hasEntryContent, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=15c6c8575e';
 
 const $ = id => document.getElementById(id);
 const student = document.body.dataset.portal === 'student';
@@ -84,18 +84,19 @@ function renderMeta() {
 }
 function renderInsights() {
   const list = entries.filter(entry => entry.date === today() && entry.id !== current.id);
-  if (current.date === today() && current.text.trim()) list.push(current);
+  if (current.date === today() && hasEntryContent(current)) list.push(current);
   const stats = feelingStats(list);
   let offset = 0;
   $('feelingRing').style.background = stats.length ? `conic-gradient(${stats.map(item => { const start = offset; offset += item.percent; return `${item.color} ${start}% ${offset}%`; }).join(',')})` : '#998b7b';
   $('feelingRing').querySelector('span').textContent = stats.length ? '✧' : '♡';
   $('insightLegend').innerHTML = stats.length ? stats.slice(0, 3).map(item => `<p><strong>${esc(item.label)}</strong><small>${Math.round(item.percent)}% das escolhas de hoje</small></p>`).join('') : '<p class="insight-prompt"><strong>Como você se sente hoje?</strong><small>Registre até três sentimentos na sua página.</small></p>';
 }
-function markDirty() {
+function markDirty({ immediate = false } = {}) {
   if (!ready || current.locked || current.kind === 'capsule') return;
   dirty = true; editTick++; renderMeta(); clearTimeout(saveTimer);
-  setStatus(current.text.trim() ? 'Alterações pendentes…' : 'Sua página espera por você');
-  if (current.text.trim()) saveTimer = setTimeout(() => flush(), 950);
+  if (!hasEntryContent(current) && !saving) { dirty = false; setStatus('Sua página espera por você'); return; }
+  setStatus('Alterações pendentes…');
+  saveTimer = setTimeout(() => flush(), immediate ? 0 : 950);
 }
 async function flush() {
   clearTimeout(saveTimer);
@@ -104,7 +105,7 @@ async function flush() {
   while (saving) { const ok = await saving; if (!ok || generation !== bootGeneration) return false; }
   if (!ready || deletingId === current.id) return false;
   if (!dirty) return true;
-  if (!current.text.trim()) { setStatus('Escreva algo antes de salvar'); return false; }
+  if (!hasEntryContent(current)) { dirty = false; setStatus('Sua página espera por você'); return true; }
   const snapshot = structuredClone(current), tick = editTick;
   setStatus('Guardando suas palavras…');
   const operation = (async () => {
@@ -128,7 +129,6 @@ async function flush() {
 }
 async function settle() {
   const generation = bootGeneration;
-  if (dirty && !current.text.trim() && !current.version) { dirty = false; clearTimeout(saveTimer); return true; }
   while (dirty || saving) {
     if (generation !== bootGeneration || !ready || !await flush()) return false;
   }
@@ -189,10 +189,11 @@ function cardMarkup(entry) {
   const firstLine = content.split('\n')[0];
   const excerpt = firstLine.slice(0, 82);
   const boundary = excerpt.lastIndexOf(' ');
-  const title = firstLine.length > 82 && boundary > 0 ? excerpt.slice(0, boundary) : excerpt;
-  const remainder = content.slice(title.length).trim().replace(/\s+/g, ' ');
+  const writtenTitle = firstLine.length > 82 && boundary > 0 ? excerpt.slice(0, boundary) : excerpt;
+  const title = writtenTitle || (entry.weather ? `${WEATHER[entry.weather]?.[0] || 'O clima'} guardado neste dia` : entry.aromaText ? `Memória de ${entry.aromaText}` : entry.aroma ? `Memória de ${(AROMAS[entry.aroma]?.[0] || entry.aroma).toLowerCase()}` : entry.feelings?.length ? entry.feelings.map(id => FEELINGS[id]?.label).filter(Boolean).join(' · ') : 'Uma página guardada com carinho');
+  const remainder = writtenTitle ? content.slice(writtenTitle.length).trim().replace(/\s+/g, ' ') : '';
   const label = entry.kind === 'dream' ? 'Sonho' : entry.kind === 'capsule' ? 'Cápsula aberta' : 'Memória';
-  return `<article class="entry-card"><button class="entry-open" data-open="${esc(entry.id)}"><time>${esc(dateLabel(entry.date))} · ${label}</time><h2>${esc(title)}${entry.text.split('\n')[0].length > 82 ? '…' : ''}</h2>${remainder ? `<p>${esc(remainder.slice(0, 130))}${remainder.length > 130 ? '…' : ''}</p>` : ''}<div class="entry-tags">${(entry.tags || []).map(tag => `<span class="tag">#${esc(tag)}</span>`).join('')}${(entry.feelings || []).map(id => `<span class="tag">${esc(FEELINGS[id]?.label || '')}</span>`).join('')}</div></button><button class="entry-delete" data-delete="${esc(entry.id)}">Excluir ${entry.kind === 'dream' ? 'sonho' : 'página'}</button></article>`;
+  return `<article class="entry-card"><button class="entry-open" data-open="${esc(entry.id)}"><time>${esc(dateLabel(entry.date))} · ${label}</time><h2>${esc(title)}${firstLine.length > 82 ? '…' : ''}</h2>${remainder ? `<p>${esc(remainder.slice(0, 130))}${remainder.length > 130 ? '…' : ''}</p>` : ''}<div class="entry-tags">${(entry.tags || []).map(tag => `<span class="tag">#${esc(tag)}</span>`).join('')}${(entry.feelings || []).map(id => `<span class="tag">${esc(FEELINGS[id]?.label || '')}</span>`).join('')}</div></button><button class="entry-delete" data-delete="${esc(entry.id)}">Excluir ${entry.kind === 'dream' ? 'sonho' : 'página'}</button></article>`;
 }
 function renderCollection(name) {
   const box = $('collectionView');
@@ -257,31 +258,31 @@ function openFeelings() {
     if (selected.has(id)) selected.delete(id); else if (selected.size < 3) selected.add(id); else { toast('Escolha até três sentimentos para esta página.'); return; }
     button.setAttribute('aria-pressed', String(selected.has(id)));
   }));
-  $('applyFeelings').addEventListener('click', () => { current.feelings = [...selected]; markDirty(); closeDialog(); });
+  $('applyFeelings').addEventListener('click', () => { current.feelings = [...selected]; markDirty({ immediate: true }); closeDialog(); });
 }
 function openAroma() {
   if (!canEdit()) return;
   openDialog('O perfume de uma memória', `<p class="aroma-intro">Um cheiro pode guardar um lugar, uma pessoa ou um instante. Qual acompanha esta lembrança?</p><div class="aroma-section-label">ESCOLHA UM AROMA</div><div class="choice-grid aroma-choices">${Object.entries(AROMAS).map(([id, [label, icon]]) => `<button type="button" class="choice-button aroma-choice" data-aroma="${id}" aria-pressed="${!current.aromaText && current.aroma === id}"><span aria-hidden="true">${icon}</span><strong>${label}</strong></button>`).join('')}</div><form id="customAromaForm" class="aroma-custom"><label for="customAroma">Ou descreva o seu aroma</label><p>Algumas memórias têm um perfume só delas.</p><input type="text" id="customAroma" name="aroma" maxlength="100" required autocomplete="off" placeholder="Ex.: bolo saindo do forno, perfume da minha mãe…" value="${esc(current.aromaText || '')}" aria-describedby="customAromaHint"><div class="aroma-custom__footer"><small id="customAromaHint">Até 100 caracteres.</small><button type="submit" class="gold-button">Guardar aroma <span aria-hidden="true">↗</span></button></div></form><p class="aroma-footnote"><svg aria-hidden="true"><use href="#i-leaf"/></svg> Um detalhe para sentir essa história outra vez.</p>`);
   dialog.classList.add('diary-dialog--aroma');
-  dialog.querySelectorAll('[data-aroma]').forEach(button => button.addEventListener('click', () => { current.aroma = button.dataset.aroma; current.aromaText = ''; markDirty(); closeDialog(); }));
+  dialog.querySelectorAll('[data-aroma]').forEach(button => button.addEventListener('click', () => { current.aroma = button.dataset.aroma; current.aromaText = ''; markDirty({ immediate: true }); closeDialog(); }));
   $('customAromaForm').addEventListener('submit', event => {
     event.preventDefault();
     const value = $('customAroma').value.trim();
     if (!value) { $('customAroma').setCustomValidity('Escreva o aroma que deseja guardar.'); $('customAroma').reportValidity(); return; }
-    current.aroma = ''; current.aromaText = value; markDirty(); closeDialog();
+    current.aroma = ''; current.aromaText = value; markDirty({ immediate: true }); closeDialog();
   });
   $('customAroma').addEventListener('input', () => $('customAroma').setCustomValidity(''));
 }
 function openFont() {
   if (!canEdit()) return;
   openDialog('A sua letra, o seu ritmo', `<p>Escolha a caligrafia que mais combina com você.</p><div class="entry-list">${[['hand', 'Escrita à mão'], ['classic', 'Clássica & delicada'], ['simple', 'Simples & leve']].map(([id, label]) => `<button class="choice-button font-choice" data-font="${id}" aria-pressed="${current.font === id}">${label}</button>`).join('')}</div>`);
-  dialog.querySelectorAll('[data-font]').forEach(button => button.addEventListener('click', () => { current.font = button.dataset.font; markDirty(); closeDialog(); }));
+  dialog.querySelectorAll('[data-font]').forEach(button => button.addEventListener('click', () => { current.font = button.dataset.font; markDirty({ immediate: true }); closeDialog(); }));
 }
 function openTags() {
   if (!canEdit()) return;
   openDialog('Pequenas pistas da sua história', '<form id="tagsForm"><p>Separe por vírgulas. Você pode guardar até seis marcadores de até 30 caracteres.</p><label class="dialog-field">Marcadores<input id="tagsInput" maxlength="185" placeholder="parque, nostalgia, reflexão"></label><div class="dialog-actions"><button class="gold-button" type="submit">Guardar marcadores</button></div></form>');
   $('tagsInput').value = current.tags.join(', ');
-  $('tagsForm').addEventListener('submit', event => { event.preventDefault(); const tags = [...new Set($('tagsInput').value.split(',').map(tag => tag.trim().replace(/^#/, '')).filter(Boolean))]; if (tags.length > 6 || tags.some(tag => tag.length > 30)) { toast('Use até seis marcadores de até 30 caracteres.'); return; } current.tags = tags; markDirty(); closeDialog(); });
+  $('tagsForm').addEventListener('submit', event => { event.preventDefault(); const tags = [...new Set($('tagsInput').value.split(',').map(tag => tag.trim().replace(/^#/, '')).filter(Boolean))]; if (tags.length > 6 || tags.some(tag => tag.length > 30)) { toast('Use até seis marcadores de até 30 caracteres.'); return; } current.tags = tags; markDirty({ immediate: true }); closeDialog(); });
 }
 async function captureWeather() {
   if (!canEdit()) return;
@@ -292,14 +293,14 @@ async function captureWeather() {
     const data = preview ? { weather: null } : coordinates ? await api('/therapy/paciente/ambiente', { method: 'POST', body: JSON.stringify(coordinates) }) : await api('/therapy/paciente/ambiente');
     if (generation !== bootGeneration || entryId !== current.id) return;
     const weather = data.weather === 'partly' ? 'cloudy' : data.weather;
-    if (WEATHER[weather]) { current.weather = weather; markDirty(); toast('Um pedacinho do clima ficou guardado nesta página.'); if (weather === 'rain' || weather === 'storm') preset = 'rain'; }
+    if (WEATHER[weather]) { current.weather = weather; markDirty({ immediate: true }); toast('Um pedacinho do clima ficou guardado nesta página.'); if (weather === 'rain' || weather === 'storm') preset = 'rain'; }
     else if (weatherDialogSerial === dialogSerial) openWeatherChoice();
   } catch { if (generation === bootGeneration && entryId === current.id && weatherDialogSerial === dialogSerial) openWeatherChoice(); }
   finally { button.disabled = false; if (generation === bootGeneration) renderMeta(); }
 }
 function openWeatherChoice() {
   openDialog('Como está o tempo por aí?', `<p>Não conseguimos capturar o clima agora. Você pode escolher o que vê pela janela.</p><div class="choice-grid">${Object.entries(WEATHER).map(([id, [label, icon]]) => `<button class="choice-button" data-weather="${id}"><span>${icon}</span>${label}</button>`).join('')}</div>`);
-  dialog.querySelectorAll('[data-weather]').forEach(button => button.addEventListener('click', () => { current.weather = button.dataset.weather; markDirty(); closeDialog(); }));
+  dialog.querySelectorAll('[data-weather]').forEach(button => button.addEventListener('click', () => { current.weather = button.dataset.weather; markDirty({ immediate: true }); closeDialog(); }));
 }
 const soundscape = createSoundscape({ onState({ playing, preset: selected }) {
   preset = selected;
@@ -335,7 +336,7 @@ function openVoice() {
 }
 function openMemory(kind) {
   openDialog(kind === 'park' ? 'Parque ao entardecer' : 'Folhas ao vento', `<img class="memory-preview" src="${new URL(kind === 'park' ? 'autumn-memory.webp' : 'autumn-paper.webp', assetBase).href}" alt="${kind === 'park' ? 'Caminho entre árvores de outono sob a luz dourada do pôr do sol' : 'Folhas douradas e avermelhadas em uma página de pergaminho'}"><p>${kind === 'park' ? 'Que lugar faz você se sentir em casa? Talvez seja um caminho, uma pessoa ou um instante.' : 'Algumas coisas a gente guarda. Outras, deixa o vento levar. O que este momento desperta em você?'}</p><div class="dialog-actions"><button class="gold-button" id="memoryWrite">Escrever a partir daqui</button></div>`);
-  $('memoryWrite').addEventListener('click', async () => { closeDialog(); if (!assertReady() || !await settle()) return; if ($('editorView').hidden || current.kind === 'capsule') showEditor(draft()); const tag = kind === 'park' ? 'parque' : 'outono'; if (!current.tags.includes(tag) && current.tags.length < 6) { current.tags.push(tag); markDirty(); } text.focus(); });
+  $('memoryWrite').addEventListener('click', async () => { closeDialog(); if (!assertReady() || !await settle()) return; if ($('editorView').hidden || current.kind === 'capsule') showEditor(draft()); const tag = kind === 'park' ? 'parque' : 'outono'; if (!current.tags.includes(tag) && current.tags.length < 6) { current.tags.push(tag); markDirty({ immediate: true }); } text.focus(); });
 }
 function openRelease() {
   openDialog('Nem tudo precisa ficar guardado', '<form id="releaseForm"><p>Escreva o que pesa. Quando estiver pronto, deixe suas palavras encontrar outro lugar no céu.</p><label class="sr-only" for="releaseText">O que você gostaria de soltar?</label><textarea class="release-field" id="releaseText" maxlength="5000" placeholder="Hoje eu quero deixar ir…" required></textarea><p class="dialog-note">Estas palavras não são salvas nem enviadas.</p><div class="dialog-actions"><button class="gold-button" type="submit">✧ Deixar ir</button></div></form>');

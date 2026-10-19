@@ -41,6 +41,10 @@ async function fixture() {
     try {
       const url = new URL(request.url, 'http://localhost');
       const pathname = decodeURIComponent(url.pathname);
+      if (pathname === '/therapy/paciente/ambiente') {
+        response.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' }).end(JSON.stringify({ ok: true, weather: 'rain', source: 'test' }));
+        return;
+      }
       if (pathname.startsWith(endpoint)) {
         const uid = String(request.headers.authorization || '').replace(/^Bearer /, '');
         const store = accounts.get(uid);
@@ -215,6 +219,43 @@ test('production diary: account switch clears private UI before B loads and igno
   await poll(() => evaluate("!!document.querySelector('[data-open=\"b-page\"]')"), 'B timeline');
   assert.deepEqual(await evaluate("[...document.querySelectorAll('[data-open]')].map(node=>node.dataset.open)"), ['b-page']);
   assert.equal(await evaluate(`document.body.innerHTML.includes(${JSON.stringify(a)}) || document.body.innerHTML.includes(${JSON.stringify(lateA)})`), false, 'Neither old-account page is exposed after the late response');
+}));
+
+test('production diary: weather and every page personalization survive a reload without text', options, () => withBrowser(async ({ accounts, navigate, click, fill, evaluate }) => {
+  await navigate();
+  assert.equal(await evaluate("document.getElementById('journalText').value"), '');
+  await click('#weatherButton');
+  await poll(() => evaluate("document.getElementById('weatherLabel').textContent.includes('Chuva suave')"), 'captured weather');
+  await click('#feelingButton');
+  await click('[data-feeling="nostalgia"]');
+  await click('#applyFeelings');
+  await click('#aromaButton');
+  await click('[data-aroma="lavanda"]');
+  await click('#fontButton');
+  await click('[data-font="classic"]');
+  await click('#tagsButton');
+  await fill('#tagsInput', 'chuva, aconchego');
+  await click('#tagsForm button[type="submit"]');
+  await poll(() => evaluate("document.getElementById('saveState').dataset.state==='saved'"), 'metadata-only page saved');
+  assert.equal(accounts.get('A').size, 1);
+  const stored = [...accounts.get('A').values()][0];
+  assert.equal(stored.text, '');
+  assert.equal(stored.weather, 'rain');
+  assert.equal(stored.aroma, 'lavanda');
+  assert.equal(stored.font, 'classic');
+  assert.deepEqual(stored.feelings, ['nostalgia']);
+  assert.deepEqual(stored.tags, ['chuva', 'aconchego']);
+
+  await navigate();
+  assert.equal(await evaluate("document.getElementById('journalText').value"), '');
+  assert.match(await evaluate("document.getElementById('weatherLabel').textContent"), /Chuva suave/);
+  assert.match(await evaluate("document.getElementById('aromaLabel').textContent"), /lavanda/i);
+  assert.match(await evaluate("document.getElementById('feelingButton').textContent"), /Nostalgia/);
+  assert.equal(await evaluate("document.getElementById('paper').dataset.font"), 'classic');
+  assert.deepEqual(await evaluate("[...document.querySelectorAll('#entryTags .tag')].map(tag=>tag.textContent)"), ['#chuva', '#aconchego']);
+  await click('[data-tab="timeline"]');
+  await poll(() => evaluate("!!document.querySelector('.entry-open h2')"), 'metadata-only timeline card');
+  assert.match(await evaluate("document.querySelector('.entry-open h2').textContent"), /Chuva suave guardado neste dia/);
 }));
 
 test('production diary: letters typed during PUTs survive autosave and a pending page switch', options, () => withBrowser(async ({ accounts, hold, navigate, click, fill, evaluate }) => {

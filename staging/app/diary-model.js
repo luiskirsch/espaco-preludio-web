@@ -16,6 +16,9 @@ export function dateLabel(date, options = {}) {
 export function draft(kind = 'diary') {
   return { id: `page-${crypto.randomUUID()}`, kind, date: today(), text: '', version: 0, unlockDate: null, feelings: [], tags: [], aroma: '', aromaText: '', font: 'hand', weather: '' };
 }
+export function hasEntryContent(entry) {
+  return Boolean(entry?.version || String(entry?.text || '').trim() || entry?.feelings?.length || entry?.tags?.length || entry?.aroma || String(entry?.aromaText || '').trim() || entry?.weather || entry?.font && entry.font !== 'hand');
+}
 export function countWords(text) { return String(text || '').trim().split(/\s+/u).filter(Boolean).length; }
 export function feelingStats(entries) {
   const counts = new Map();
