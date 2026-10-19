@@ -360,3 +360,84 @@
   .diary-brand { gap: 7px; }
   .diary-brand > svg { margin-bottom: 0; }
 }
+
+/* Painéis laterais: leitura confortável em telas grandes e pequenas. */
+.diary-panels .side-panel {
+  min-width: 0;
+  padding: 18px;
+}
+.diary-panels .side-panel h2 {
+  margin-bottom: 14px;
+  font-size: 22px;
+  line-height: 1.18;
+  overflow-wrap: anywhere;
+}
+.diary-panels .side-panel p {
+  font-size: 13px;
+  line-height: 1.55;
+}
+.memory-tiles {
+  min-width: 0;
+  gap: 12px;
+  /* Legendas de alturas diferentes: sem isso o botão mais baixo centraliza a imagem. */
+  align-items: start;
+}
+.memory-tiles button {
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.diary-panels .side-panel .panel-whisper {
+  margin-top: 15px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #d4bda9;
+}
+.release-button {
+  padding: 19px 10px;
+}
+.release-button strong {
+  font-size: 19px;
+  line-height: 1.25;
+}
+.release-button > span:last-child {
+  font-size: 14px;
+  line-height: 1.4;
+}
+#insightLegend p {
+  font-size: 16px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+#insightLegend small {
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.insight-link {
+  font-size: 14px;
+}
+@media (max-width: 1200px) and (min-width: 981px) {
+  .diary-panels .side-panel { padding: 15px; }
+  .diary-panels .side-panel h2 { font-size: 19px; }
+  .diary-panels .side-panel p { font-size: 12px; }
+  .memory-tiles button { font-size: 13px; }
+  .diary-panels .side-panel .panel-whisper { font-size: 12px; }
+}
+@media (max-width: 640px) {
+  .diary-panels .side-panel { padding: 18px; }
+  .diary-panels .side-panel h2 { font-size: 22px; }
+  .diary-panels .side-panel p { font-size: 13px; }
+  .memory-tiles button { font-size: 15px; }
+  .diary-panels .side-panel .panel-whisper { font-size: 14px; }
+  .release-button strong { font-size: 20px; }
+  .release-button > span:last-child { font-size: 15px; }
+  #insightLegend p { font-size: 17px; }
+  #insightLegend small { font-size: 14px; }
+}
+/* Abaixo de 390 px as duas colunas ficam estreitas demais para essas fontes
+   ("entardecer" e "Serenidade" quebravam no meio da palavra): uma coluna só. */
+@media (max-width: 389px) {
+  .diary-panels { grid-template-columns: minmax(0, 1fr); }
+}
