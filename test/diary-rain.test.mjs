@@ -58,3 +58,13 @@ test('the rain shipped with the portal is an MP3 field recording with its source
   const credits = readFileSync(new URL('../app/assets/diary/AUDIO-CREDITS.md', import.meta.url), 'utf8');
   assert.match(credits, /Ylmir/); assert.match(credits, /CC0/);
 });
+
+test('page turns use the credited local paper recording', () => {
+  const bytes = readFileSync(new URL('../app/assets/diary/page-turn.ogg', import.meta.url));
+  assert.ok(bytes.length > 9000 && bytes.length < 12000);
+  assert.equal(bytes.subarray(0, 4).toString(), 'OggS');
+  const credits = readFileSync(new URL('../app/assets/diary/AUDIO-CREDITS.md', import.meta.url), 'utf8');
+  assert.match(credits, /FlippingPages\.ogg/);
+  assert.match(credits, /\byd\b/);
+  assert.match(credits, /CC0/);
+});

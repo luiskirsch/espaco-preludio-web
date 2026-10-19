@@ -12,3 +12,14 @@ a field recording by **Ylmir**, published on OpenGameArt on 2016-03-28.
 
 No artificial noise is added to the rain. The bundled recording is served
 from the portal's own origin; playback does not contact OpenGameArt.
+
+# Virada de página
+
+`page-turn.ogg` is **FlippingPages.ogg**, a paper page-turn recording by **yd**,
+published on OpenGameArt on 2012-01-31.
+
+- Source: https://opengameart.org/content/old-pagesflip-with-sound
+- Original download: https://opengameart.org/sites/default/files/FlippingPages_0.ogg
+- License: CC0 1.0 Universal — https://creativecommons.org/publicdomain/zero/1.0/
+- Changes: none. The 0.58-second OGG is played locally at a restrained volume;
+  the portal does not contact OpenGameArt during playback.

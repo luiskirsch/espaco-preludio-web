@@ -14,7 +14,7 @@ const chrome = [
   'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
   '/usr/bin/google-chrome', '/usr/bin/chromium'
 ].find(path => path && existsSync(path));
-const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml' };
+const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml', '.ogg': 'audio/ogg' };
 const privateRequest = url => /firebase|firestore|identitytoolkit|securetoken|\/therapy\//i.test(url);
 const capturePreview = process.env.DIARY_CAPTURE_PREVIEW === '1';
 
@@ -250,11 +250,30 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
       await viewport(width); await checkLayout('página vazia', width); await checkPaperText(width);
       if (width === 1440 || width === 390) await capture(width === 1440 ? 'blank-desktop.png' : 'blank-mobile.png');
     }
+    const blankPaperHeight = await evaluate("Math.round(document.getElementById('paper').getBoundingClientRect().height)");
+    await evaluate("window.__diaryPageTurns=0;window.__diaryPaperSounds=0;window.__diaryOriginalMediaPlay=HTMLMediaElement.prototype.play;HTMLMediaElement.prototype.play=function(){window.__diaryPaperSounds++;return Promise.resolve()};document.getElementById('paper').addEventListener('diarypageturn',()=>window.__diaryPageTurns++)");
     const longWriting = Array.from({ length: 12 }, (_, index) => `${index + 1}. Hoje encontrei tempo para respirar e observar os detalhes ao meu redor. Escrevo com calma sobre o que senti, os pequenos encontros e aquilo que quero guardar. Cada lembrança encontra seu espaço nesta página, sem pressa para terminar.`).join('\n\n');
-    await fill('#journalText', longWriting); await saved();
+    await fill('#journalText', longWriting);
+    const pagination = await poll(() => evaluate("(()=>{const label=document.getElementById('writingPageIndicator').textContent,match=label.match(/(\\d+)\\D+(\\d+)/);if(!match||Number(match[2])<2)return null;return {current:Number(match[1]),total:Number(match[2]),paperHeight:Math.round(document.getElementById('paper').getBoundingClientRect().height),turns:window.__diaryPageTurns,sounds:window.__diaryPaperSounds,animation:document.getElementById('pageTurnEffect').getAnimations().length,value:document.getElementById('journalText').value}})()"), 'paginação automática da escrita');
+    assert.equal(pagination.current, pagination.total, 'Ao chegar ao fim, a última página aparece sozinha');
+    assert.equal(pagination.paperHeight, blankPaperHeight, 'O pergaminho não cresce com o texto');
+    assert.equal(pagination.value, longWriting, 'A paginação mantém todo o texto no mesmo registro');
+    assert.ok(pagination.turns >= 1, 'A troca automática dispara o efeito de virar a página');
+    assert.ok(pagination.sounds >= 1, 'A troca automática toca a gravação de papel');
+    assert.ok(pagination.animation >= 1, 'A folha anima durante a troca automática');
+    const soundsBeforeNavigation = pagination.sounds;
+    await click('#previousWritingPage');
+    assert.match(await evaluate("document.getElementById('writingPageIndicator').textContent"), new RegExp(`Página ${pagination.total - 1} de ${pagination.total}`));
+    assert.equal(await evaluate("document.getElementById('journalText').value"), longWriting, 'Voltar uma folha não altera a escrita');
+    assert.ok(await evaluate("window.__diaryPaperSounds") > soundsBeforeNavigation, 'A navegação manual também tem som de papel');
+    await capture('writing-page-turn-mobile.png');
+    await click('#nextWritingPage');
+    await evaluate("HTMLMediaElement.prototype.play=window.__diaryOriginalMediaPlay;delete window.__diaryOriginalMediaPlay");
+    await saved();
     for (const width of [320, 390, 768, 1440]) {
       await viewport(width); await checkLayout('texto longo', width); await checkPaperText(width);
       assert.equal(await evaluate("document.getElementById('journalText').value"), longWriting, `Texto longo preservado ao redimensionar para ${width}px`);
+      if (width === 390 || width === 1440) await capture(width === 1440 ? 'writing-pages-desktop.png' : 'writing-pages-mobile.png');
     }
     await click('#newPageButton');
     await poll(() => evaluate("document.getElementById('journalText').value===''"), 'página após escrita longa');
@@ -436,7 +455,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
 
     assert.deepEqual(cdp.exceptions, [], 'Nenhum erro de execução no navegador');
     assert.deepEqual(cdp.privateRequests.filter(privateRequest), [], 'A prévia não tenta acessar Firebase ou backend');
-    if (capturePreview) await writeFile(join(root, 'docs/diary-preview/report.json'), JSON.stringify({ route: '/app/diario.html?preview=1', scenarios: ['blank-writing-prompt', 'paper-text-readability', 'long-writing-no-clipping', 'decorative-leaves-no-interception', 'reduced-motion', 'autosave', 'tags', 'aroma', 'font', 'insights-empty', 'insights-summary', 'three-feelings-limit', 'search-escaped-html', 'dream', 'sealed-capsule', 'release-without-saving', 'delete'], layouts, runtimeErrors: cdp.exceptions, privateRequests: cdp.privateRequests }, null, 2) + '\n');
+    if (capturePreview) await writeFile(join(root, 'docs/diary-preview/report.json'), JSON.stringify({ route: '/app/diario.html?preview=1', scenarios: ['blank-writing-prompt', 'fixed-height-automatic-pagination', 'paper-turn-animation-and-sound', 'paper-text-readability', 'long-writing-no-clipping', 'decorative-leaves-no-interception', 'reduced-motion', 'autosave', 'tags', 'aroma', 'font', 'insights-empty', 'insights-summary', 'three-feelings-limit', 'search-escaped-html', 'dream', 'sealed-capsule', 'release-without-saving', 'delete'], layouts, runtimeErrors: cdp.exceptions, privateRequests: cdp.privateRequests }, null, 2) + '\n');
   } finally {
     cdp?.socket.close(); browser.kill(); server.closeAllConnections();
     await new Promise(resolveClose => server.close(resolveClose));

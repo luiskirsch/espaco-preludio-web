@@ -11,8 +11,8 @@ memória ilustrativa e registros em memória; não acessa Firebase, não envia
 texto ao servidor e não mantém as alterações ao recarregar. O modo de prévia
 não é habilitado em outros domínios.
 
-As duas páginas usam `app/diary.js`, `diary-model.js`, `diary-audio.js` e
-`diary.css`. A versão do aluno mantém o mesmo HTML, com os caminhos de CSS/JS,
+As duas páginas usam `app/diary.js`, `diary-model.js`, `diary-audio.js`,
+`diary-pages.js` e `diary.css`. A versão do aluno mantém o mesmo HTML, com os caminhos de CSS/JS,
 identidade de portal e links de retorno ajustados. Os arquivos de implantação
 também são espelhados em `staging/`.
 
@@ -72,6 +72,15 @@ geradas para esta implementação e otimizadas em WebP em `app/assets/diary/`.
 As folhas fazem parte da ilustração estática do pergaminho. O papel e a
 escrita ficam estáveis. As pistas de escrita são curtas e os controles
 ficam sobre uma superfície clara, afastados das folhas pintadas.
+
+A escrita usa folhas de altura fixa. Quando o cursor alcança o fim da área
+útil, a interface abre automaticamente a página seguinte com uma virada de
+papel e um som curto gravado. O registro continua sendo um único texto cifrado,
+por isso autosave, busca e reabertura preservam todas as páginas. Os botões sob
+a escrita permitem voltar e avançar sem alterar o conteúdo. O efeito visual é
+desativado quando o dispositivo pede movimento reduzido; o som respeita o
+controle de volume da trilha e também pode ficar mudo. A gravação de papel de
+yd é CC0 e está documentada em `app/assets/diary/AUDIO-CREDITS.md`.
 
 ## Verificação
 

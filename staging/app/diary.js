@@ -1,5 +1,6 @@
 import { createSoundscape, createDictation } from './diary-audio.js?h=fb22bb467e';
 import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, hasEntryContent, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=15c6c8575e';
+import { createPagedEditor } from './diary-pages.js?h=1a6450364c';
 
 const $ = id => document.getElementById(id);
 const student = document.body.dataset.portal === 'student';
@@ -13,6 +14,17 @@ let dictationEntryId = null, dictationGeneration = 0;
 let preset = 'rain';
 const dialog = $('diaryDialog');
 const text = $('journalText');
+const pagedEditor = createPagedEditor({
+  textarea: text,
+  viewport: $('writingPages'),
+  measure: $('journalMeasure'),
+  paper: $('paper'),
+  indicator: $('writingPageIndicator'),
+  previous: $('previousWritingPage'),
+  next: $('nextWritingPage'),
+  soundUrl: new URL('./assets/diary/page-turn.ogg', import.meta.url).href,
+  getVolume: () => Number($('volumeSlider').value) / 200,
+});
 const uiErrors = {
   REGISTRO_ALTERADO: 'Esta página foi alterada em outra aba. Sua escrita continua aqui. Copie o texto e recarregue para conciliar as versões.',
   CAPSULA_SELADA: 'Esta cápsula já está selada. Você pode escrever uma nova carta.',
@@ -66,7 +78,7 @@ async function api(path, options = {}) {
   return data;
 }
 function upsert(item) { entries = [item, ...entries.filter(entry => entry.id !== item.id)].sort((a, b) => b.createdAt - a.createdAt); }
-function resizeEditor() { text.style.height = 'auto'; text.style.height = `${Math.max(330, text.scrollHeight)}px`; }
+function resizeEditor(options) { return pagedEditor.layout(options); }
 function renderMeta() {
   $('wordCount').textContent = `${countWords(current.text)} ${countWords(current.text) === 1 ? 'palavra' : 'palavras'}`;
   $('entryTags').innerHTML = (current.tags || []).map(tag => `<span class="tag">#${esc(tag)}</span>`).join('');
@@ -153,7 +165,7 @@ function revealPage(heading) {
 function showEditor(entry) {
   dictation.stop(); dictationEntryId = null;
   current = structuredClone(entry); dirty = false; conflict = false; editTick++; clearTimeout(saveTimer);
-  $('editorView').hidden = false; $('collectionView').hidden = true;
+  $('editorView').hidden = false; $('collectionView').hidden = true; $('paper').classList.add('paper--writing');
   activateTab(current.kind === 'dream' ? 'dreams' : current.kind === 'capsule' ? 'capsules' : 'diary');
   $('entryDate').textContent = dateLabel(current.date);
   $('entryKind').textContent = current.kind === 'dream' ? 'UM SONHO PARA GUARDAR' : current.kind === 'capsule' ? 'UMA CARTA DO SEU PASSADO' : 'UMA PÁGINA SÓ SUA';
@@ -161,7 +173,7 @@ function showEditor(entry) {
   $('newPageButton').textContent = current.kind === 'dream' ? '+ Novo sonho' : '+ Nova página';
   ['feelingButton', 'tagsButton'].forEach(id => { $(id).disabled = current.kind === 'capsule'; });
   setStatus(current.version ? current.kind === 'capsule' ? 'Cápsula aberta · somente leitura' : 'Salvo automaticamente' : 'Seu espaço está pronto', current.version ? 'saved' : '');
-  renderMeta(); requestAnimationFrame(resizeEditor);
+  renderMeta(); requestAnimationFrame(() => pagedEditor.reset());
 }
 async function newPage(kind = 'diary') {
   const generation = bootGeneration;
@@ -178,7 +190,7 @@ async function switchTab(name) {
     const latest = entries.find(item => item.kind === 'diary' && item.date === today());
     showEditor(latest || draft()); revealPage($('entryDate')); return;
   }
-  activateTab(name); $('editorView').hidden = true; $('collectionView').hidden = false;
+  activateTab(name); $('editorView').hidden = true; $('collectionView').hidden = false; $('paper').classList.remove('paper--writing');
   renderCollection(name);
   revealPage($('collectionView').querySelector('h1'));
 }
@@ -320,7 +332,7 @@ function openSound() {
 const dictation = createDictation({ onText(transcript) {
   if (!ready || current.kind === 'capsule' || dictationEntryId !== current.id || dictationGeneration !== bootGeneration) return;
   const spacer = text.value && !/\s$/.test(text.value) ? ' ' : '';
-  text.value = (text.value + spacer + transcript).slice(0, 20000); current.text = text.value; markDirty(); resizeEditor();
+  text.value = (text.value + spacer + transcript).slice(0, 20000); text.setSelectionRange(text.value.length, text.value.length); current.text = text.value; markDirty(); resizeEditor({ followCaret: true, animate: true, withSound: true });
 }, onState(listening) {
   $('voiceButton').classList.toggle('is-listening', listening);
   $('voiceLabel').textContent = listening ? 'Ouvindo… fale no seu tempo' : 'Fale e registre seus pensamentos.';
@@ -378,7 +390,7 @@ function recoverWriting() {
   $('keepWriting').addEventListener('click', closeDialog);
   $('saveAsNew').addEventListener('click', async () => { current.id = `page-${crypto.randomUUID()}`; current.version = 0; delete current.createdAt; delete current.updatedAt; conflict = false; dirty = true; editTick++; closeDialog(); await flush(); });
 }
-text.addEventListener('input', () => { current.text = text.value; markDirty(); resizeEditor(); });
+text.addEventListener('input', () => { current.text = text.value; markDirty(); resizeEditor({ followCaret: true, animate: true, withSound: true }); });
 document.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => switchTab(button.dataset.tab)));
 document.querySelectorAll('[data-go]').forEach(button => button.addEventListener('click', () => switchTab(button.dataset.go)));
 document.querySelectorAll('[data-memory]').forEach(button => button.addEventListener('click', () => openMemory(button.dataset.memory)));
@@ -437,7 +449,7 @@ if (preview) {
     onAuthStateChanged(config.auth, user => {
       if (!user || account && account.uid !== user.uid) {
         bootGeneration++; ready = false; dirty = false; conflict = false; saving = null; deletingId = null; clearTimeout(saveTimer); closeDialog(); dictation.stop(); soundscape.stop();
-        text.value = ''; text.disabled = true; entries = []; current = draft(); renderMeta();
+        text.value = ''; text.disabled = true; entries = []; current = draft(); renderMeta(); pagedEditor.reset();
         $('collectionView').innerHTML = ''; $('collectionView').hidden = true; $('editorView').hidden = false;
       }
       if (!user) { account = null; location.replace(student ? './aluno-login.html' : './login.html'); return; }

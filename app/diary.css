@@ -935,3 +935,130 @@
   .aroma-custom__footer .gold-button { width: 100%; justify-content: center; }
   .diary-dialog--aroma .aroma-footnote { margin-top: 9px; font-size: 12px; }
 }
+
+/* Folhas de escrita: altura estável, paginação contínua e virada de página. */
+.paper.paper--writing {
+  height: max(690px, calc(100svh - 225px));
+  min-height: 0;
+  contain: layout paint;
+}
+.paper--writing #editorView { height: 100%; overflow: hidden; }
+.writing-pages {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 180px;
+  overflow: hidden;
+  isolation: isolate;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 7px, #000 calc(100% - 7px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 7px, #000 calc(100% - 7px), transparent 100%);
+}
+.writing-pages .journal-text {
+  position: absolute;
+  inset: 0 auto auto 0;
+  display: block;
+  min-height: 0;
+  width: 100%;
+  max-width: 100%;
+  will-change: transform;
+  transition: transform .16s cubic-bezier(.22,.7,.3,1);
+}
+.journal-measure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  min-height: 1px;
+  visibility: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+.journal-caret-marker { display: inline-block; width: 0; }
+.page-navigation {
+  display: grid;
+  grid-template-columns: 36px minmax(112px, auto) 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 42px;
+  margin: 7px 0 1px;
+  color: #826641;
+}
+.page-navigation button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid #a9895b66;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #fff8e1a6, #ddc49352);
+  box-shadow: inset 0 1px #fff8e9a8, 0 3px 9px #76532b14;
+  color: #76562f;
+  font: 18px/1 var(--serif);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, opacity .18s ease;
+}
+.page-navigation button:hover:not(:disabled) { transform: translateY(-1px); border-color: #9a713d; box-shadow: inset 0 1px #fff8e9, 0 4px 12px #76532b2b; }
+.page-navigation button:active:not(:disabled) { transform: translateY(1px); }
+.page-navigation button:disabled { cursor: default; opacity: .28; }
+.page-navigation > span {
+  text-align: center;
+  color: #80633e;
+  font: 600 11px/1.2 var(--serif);
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+.paper--writing .entry-details { margin-top: 4px; }
+.page-turn-effect {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  opacity: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, #60452a00 0%, #6d4c2b29 44%, #fff7d8d4 52%, #a8773a66 58%, #4b321800 100%),
+    #f8eace url('./assets/diary/autumn-paper.webp?h=550a30df54') center/100% 100% no-repeat;
+  box-shadow: -24px 0 35px #3e271b42, inset 18px 0 28px #fffbe76b, inset -18px 0 30px #68401f38;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+.paper.is-turning-forward .page-turn-effect { animation: pageTurnForward .76s cubic-bezier(.42,.02,.2,1) both; }
+.paper.is-turning-backward .page-turn-effect { animation: pageTurnBackward .76s cubic-bezier(.42,.02,.2,1) both; }
+@keyframes pageTurnForward {
+  0% { opacity: 0; transform: perspective(1500px) rotateY(-88deg) scaleX(.48); transform-origin: 100% 50%; }
+  15% { opacity: .92; }
+  52% { opacity: 1; transform: perspective(1500px) rotateY(-36deg) scaleX(.94); filter: brightness(.93); }
+  82% { opacity: .7; }
+  100% { opacity: 0; transform: perspective(1500px) rotateY(0) scaleX(1); transform-origin: 0 50%; filter: brightness(1); }
+}
+@keyframes pageTurnBackward {
+  0% { opacity: 0; transform: perspective(1500px) rotateY(88deg) scaleX(.48); transform-origin: 0 50%; }
+  15% { opacity: .92; }
+  52% { opacity: 1; transform: perspective(1500px) rotateY(36deg) scaleX(.94); filter: brightness(.93); }
+  82% { opacity: .7; }
+  100% { opacity: 0; transform: perspective(1500px) rotateY(0) scaleX(1); transform-origin: 100% 50%; filter: brightness(1); }
+}
+[data-diary-theme="night"] .page-navigation { color: #d6bc8b; }
+[data-diary-theme="night"] .page-navigation button { border-color: #d3b57859; background: linear-gradient(145deg, #4d453b8f, #2828338f); color: #efd49c; box-shadow: inset 0 1px #fff7dd24, 0 4px 12px #0808122e; }
+[data-diary-theme="night"] .page-navigation > span { color: #d9c094; }
+[data-diary-theme="night"] .page-turn-effect { filter: brightness(.66) sepia(.13); }
+@media (max-width: 1200px) { .paper.paper--writing { height: max(670px, calc(100svh - 205px)); } }
+@media (max-width: 980px) { .paper.paper--writing { height: max(650px, calc(100svh - 205px)); } }
+@media (max-width: 640px) {
+  .paper.paper--writing { height: 650px; }
+  .writing-pages { min-height: 145px; }
+  .page-navigation { grid-template-columns: 34px minmax(102px, auto) 34px; min-height: 38px; margin-top: 3px; }
+  .page-navigation button { width: 32px; height: 28px; }
+  .page-navigation > span { font-size: 10px; }
+  .paper--writing .entry-details { margin-top: 0; }
+}
+@media (max-width: 359px) {
+  .paper.paper--writing { height: 710px; }
+  .page-navigation { min-height: 34px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .writing-pages .journal-text { transition: none; }
+  .paper.is-turning-forward .page-turn-effect,
+  .paper.is-turning-backward .page-turn-effect { animation: none; }
+}

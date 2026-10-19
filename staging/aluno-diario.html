@@ -7,6 +7,7 @@
   <link rel="modulepreload" href="./app/diary-audio.js?h=fb22bb467e">
   <link rel="modulepreload" href="./app/diary-rain.js?h=28fc06031d">
   <link rel="modulepreload" href="./app/diary-model.js?h=15c6c8575e">
+  <link rel="modulepreload" href="./app/diary-pages.js?h=1a6450364c">
   <!-- /ep:perf -->
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#2b2225">
@@ -14,9 +15,9 @@
   <title data-i18n="p-diary:page_title">Diário dos Pensamentos Vividos · Espaço Prelúdio</title>
   <link rel="icon" href="/logo-144.png" type="image/png">
   <link rel="stylesheet" href="./fonts/caveat400-600_cormorantgaramond400-600_inter400-600.css?h=4f8befaaca">
-  <link rel="stylesheet" href="./app/diary.css?h=33efbcee3d">
+  <link rel="stylesheet" href="./app/diary.css?h=0fd432c9b6">
   <script src="/i18n/init.js?v=2-8" defer></script>
-  <script type="module" src="./app/diary.js?h=100641e093"></script>
+  <script type="module" src="./app/diary.js?h=3ef47dbce0"></script>
 </head>
 <body data-portal="student">
   <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -60,12 +61,21 @@
       </aside>
       <section class="journal-stage" aria-label="Seu espaço de escrita" data-i18n-aria-label="p-diary:writing_space">
         <div class="paper" id="paper">
+          <div class="page-turn-effect" id="pageTurnEffect" aria-hidden="true"></div>
           <div class="paper-content" id="editorView">
             <div class="page-topline"><span id="entryKind">UMA PÁGINA SÓ SUA</span><button class="paper-action" id="newPageButton" title="Começar outra página" data-i18n-title="p-diary:new_page_title" data-i18n="p-diary:new_page">+ Nova página</button></div>
             <h1 id="entryDate"></h1>
             <label class="sr-only" for="journalText" data-i18n="p-diary:write_your_thoughts">Escreva seus pensamentos</label>
-            <textarea data-i18n-placeholder="p-diary:writing_placeholder" id="journalText" class="journal-text" maxlength="20000" spellcheck="true" disabled placeholder="O que você gostaria de guardar de hoje?
+            <div class="writing-pages" id="writingPages">
+              <textarea data-i18n-placeholder="p-diary:writing_placeholder" id="journalText" class="journal-text" maxlength="20000" spellcheck="true" disabled placeholder="O que você gostaria de guardar de hoje?
 Escreva no seu tempo."></textarea>
+              <div class="journal-measure" id="journalMeasure" aria-hidden="true"></div>
+            </div>
+            <nav class="page-navigation" id="pageNavigation" aria-label="Páginas da escrita">
+              <button type="button" id="previousWritingPage" aria-label="Você está na primeira página" disabled><span aria-hidden="true">←</span></button>
+              <span id="writingPageIndicator" aria-live="polite">Página 1 de 1</span>
+              <button type="button" id="nextWritingPage" aria-label="Você está na última página" disabled><span aria-hidden="true">→</span></button>
+            </nav>
             <div class="entry-footer">
               <div class="entry-details"><button id="feelingButton" class="feeling-button">♡ Como você se sente?</button><span id="wordCount">0 palavras</span></div>
               <div class="save-strip"><span class="save-state" id="saveState" role="status" aria-live="polite">Preparando seu diário…</span><div class="entry-tags" id="entryTags"></div><button id="tagsButton" class="tags-button" aria-label="Editar marcadores" data-i18n-aria-label="p-diary:edit_tags">#</button></div>
