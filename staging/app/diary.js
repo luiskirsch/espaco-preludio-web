@@ -235,9 +235,9 @@ async function loadMore() {
 function openDialog(title, markup, cleanup = null) {
   if (dialog.open) closeDialog();
   dialogOrigin = document.activeElement; dialogCleanup = cleanup; dialogGeneration = bootGeneration; dialogSerial++;
-  $('dialogTitle').textContent = title; $('dialogBody').innerHTML = markup; dialog.showModal();
+  $('dialogTitle').textContent = title; $('dialogBody').innerHTML = markup; document.documentElement.classList.add('diary-modal-open'); dialog.showModal();
 }
-function closeDialog() { dialogSerial++; dialogCleanup?.(); dialogCleanup = null; if (dialog.open) dialog.close(); dialog.classList.remove('diary-dialog--aroma'); $('dialogBody').replaceChildren(); $('dialogTitle').textContent = ''; dialogOrigin?.focus?.(); }
+function closeDialog() { dialogSerial++; dialogCleanup?.(); dialogCleanup = null; if (dialog.open) dialog.close(); document.documentElement.classList.remove('diary-modal-open'); dialog.classList.remove('diary-dialog--aroma'); $('dialogBody').replaceChildren(); $('dialogTitle').textContent = ''; dialogOrigin?.focus?.(); }
 function requestCloseDialog() {
   if ($('capsuleText')?.value.trim() && !window.confirm('Descartar esta carta ainda não selada?')) return;
   closeDialog();

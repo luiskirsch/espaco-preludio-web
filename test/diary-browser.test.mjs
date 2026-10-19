@@ -102,13 +102,13 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     };
     const saved = () => poll(() => evaluate("document.getElementById('saveState').dataset.state==='saved'"), 'salvamento automático');
     const openDialog = async selector => { await click(selector); await poll(() => evaluate("document.getElementById('diaryDialog').open"), `diálogo ${selector}`); };
-    const closeDialog = async () => { await click('#closeDialog'); assert.equal(await evaluate("document.getElementById('diaryDialog').open"), false); };
+    const closeDialog = async () => { await click('#closeDialog'); assert.equal(await evaluate("document.getElementById('diaryDialog').open"), false); assert.equal(await evaluate("document.documentElement.classList.contains('diary-modal-open')"), false, 'Fechar o modal libera a página'); };
     const tab = async name => {
       await click(`[data-tab="${name}"]`);
       await poll(() => evaluate(`document.querySelector('[data-tab="${name}"]').classList.contains('is-active')`), `ambiente ${name}`);
     };
-    const viewport = async width => {
-      await send('Emulation.setDeviceMetricsOverride', { width, height: width >= 1000 ? 1000 : 900, deviceScaleFactor: 1, mobile: width < 700 });
+    const viewport = async (width, height = width >= 1000 ? 1000 : 900) => {
+      await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 700 });
       await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
     };
     const checkLayout = async (name, width) => {
@@ -313,9 +313,14 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     await closeDialog();
 
     await openDialog('#aromaButton');
-    for (const width of [320, 390, 768, 1440]) {
-      await viewport(width); await checkLayout('aroma personalizado', width);
+    for (const [width, height] of [[320, 900], [390, 844], [602, 727], [768, 720], [1440, 800]]) {
+      await viewport(width, height); await checkLayout('aroma personalizado', width);
       assert.equal(await evaluate("document.getElementById('customAroma').maxLength"), 100);
+      const aromaDialog = await evaluate("(()=>{const dialog=document.getElementById('diaryDialog'),box=dialog.getBoundingClientRect();return {clientHeight:dialog.clientHeight,scrollHeight:dialog.scrollHeight,top:box.top,bottom:box.bottom,viewportHeight:innerHeight,overflowY:getComputedStyle(dialog).overflowY}})()");
+      assert.ok(aromaDialog.scrollHeight <= aromaDialog.clientHeight + 1, `Modal de aroma não tem rolagem em ${width}x${height}`);
+      assert.ok(aromaDialog.top >= 0 && aromaDialog.bottom <= aromaDialog.viewportHeight, `Modal de aroma cabe na altura de ${width}x${height}`);
+      assert.equal(aromaDialog.overflowY, 'hidden', `Modal de aroma não exibe barra em ${width}x${height}`);
+      assert.equal(await evaluate("document.documentElement.classList.contains('diary-modal-open') && getComputedStyle(document.documentElement).overflow==='hidden' && getComputedStyle(document.body).overflow==='hidden'"), true, `Página ao fundo não rola em ${width}x${height}`);
       if (width === 1440 || width === 390) await capture(width === 1440 ? 'aroma-desktop.png' : 'aroma-mobile.png');
     }
     const customAroma = 'Bolo de fubá da minha avó <3';
