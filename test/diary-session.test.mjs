@@ -65,7 +65,7 @@ async function fixture() {
           const item = { ...body, version: body.version + 1, createdAt: previous?.createdAt || Date.now(), updatedAt: Date.now(), locked: body.kind === 'capsule' && body.unlockDate > today() };
           store.set(item.id, structuredClone(item));
           const visible = structuredClone(item);
-          if (visible.locked) for (const key of ['text', 'tags', 'feelings', 'aroma', 'font', 'weather']) delete visible[key];
+          if (visible.locked) for (const key of ['text', 'tags', 'feelings', 'aroma', 'aromaText', 'font', 'weather']) delete visible[key];
           payload = { ok: true, item: visible };
         } else throw new Error(`Unexpected method ${request.method}`);
         response.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' }).end(JSON.stringify(payload));

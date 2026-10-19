@@ -57,6 +57,9 @@ estão em `app/assets/diary/AUDIO-CREDITS.md`. O exemplo WAV de 29 segundos em
 O ditado usa o reconhecimento de voz disponível no navegador;
 o modal informa sobre o processamento de áudio pelo serviço do navegador.
 O diário mantém apenas a transcrição. Aromas são associações simbólicas.
+Além das sugestões, o titular pode descrever seu próprio aroma em até 100
+caracteres. O campo opcional `aromaText` é cifrado com a página; uma sugestão
+selecionada limpa esse campo. Registros antigos continuam usando `aroma`.
 O clima reutiliza a API de ambiente do portal; quando indisponível, pode ser
 escolhido manualmente. Coordenadas não são gravadas no diário.
 

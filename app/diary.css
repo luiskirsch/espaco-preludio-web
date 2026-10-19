@@ -888,3 +888,47 @@
 [data-diary-theme="night"] .diary-brand > svg,
 [data-diary-theme="night"] .avatar { filter: none; box-shadow: none; }
 [data-diary-theme="night"] .fireflies { opacity: .28; }
+
+/* Aroma: suggestions and a personal olfactory memory in one quiet surface. */
+.diary-dialog--aroma {
+  width: min(560px, calc(100% - 32px));
+  padding: 30px;
+  border-radius: 22px;
+  border-color: #c8a77070;
+  background: radial-gradient(ellipse at 0 0, #6550474d, transparent 65%), linear-gradient(145deg, #3e3034, #30282c);
+  box-shadow: 0 28px 100px #09070b99, inset 0 1px #ffe5bc0d;
+}
+.diary-dialog--aroma h2 { margin: 14px 0 12px; font-size: 35px; line-height: 1.1; text-wrap: balance; }
+.diary-dialog--aroma .aroma-intro { margin: 0 0 24px; color: #decdbc; font-size: 14px; line-height: 1.65; }
+.aroma-section-label { color: #c4a578; font: 600 10px/1.5 var(--sans); letter-spacing: .14em; }
+.aroma-choices { gap: 10px; margin: 10px 0 23px; }
+.aroma-choice { min-width: 0; min-height: 72px; padding: 12px; gap: 11px; border-radius: 12px; border-color: #c6ab7d33; background: #f2d4a305; }
+.aroma-choice:hover { background: #e6c99a10; border-color: #dfbf8677; }
+.aroma-choice[aria-pressed="true"] { background: #d2b18422; border-color: #e6c88e; box-shadow: inset 0 0 0 1px #e6c88e12; }
+.aroma-choice > span { display: grid; place-items: center; flex: 0 0 34px; width: 34px; height: 34px; border-radius: 50%; background: #e6c99a0c; font-size: 22px; }
+.aroma-choice strong { min-width: 0; font: 500 20px/1.2 var(--serif); color: #f0dfc8; }
+.aroma-custom { padding: 20px; border: 1px solid #c4a57838; border-radius: 15px; background: linear-gradient(135deg,#e5c28b0c,#b28fbb08); }
+.aroma-custom > label { display: block; color: #f2e1c8; font: 500 24px/1.2 var(--serif); }
+.diary-dialog--aroma .aroma-custom > p { margin: 6px 0 15px; font-size: 12px; color: #c7b5a5; }
+.diary-dialog--aroma #customAroma { min-height: 48px; padding: 13px 14px; font-size: 14px; border-color: #b99c704d; background: #17151c52; border-radius: 9px; color: #f4e6d4; }
+.diary-dialog--aroma #customAroma::placeholder { color: #b7a597; opacity: 1; }
+.aroma-custom__footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+.aroma-custom__footer > small { color: #c8b7a4; font-size: 11px; }
+.aroma-custom__footer .gold-button { min-height: 43px; gap: 14px; font-size: 12px; border-radius: 9px; }
+.diary-dialog--aroma .aroma-footnote { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 20px 0 0; color: #c6ae8f; font: italic 15px/1.4 var(--serif); text-align: center; }
+.aroma-footnote svg { width: 16px; height: 16px; color: #d5b57e; }
+#entryExtra { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+[data-diary-theme="night"] .aroma-custom { background: #20232b80; border-color: #b59b7038; }
+[data-diary-theme="night"] .diary-dialog--aroma #customAroma { background: #1d2029; }
+@media (max-width: 480px) {
+  .diary-dialog--aroma { padding: 22px; width: calc(100% - 24px); }
+  .diary-dialog--aroma h2 { font-size: 30px; }
+  .diary-dialog--aroma .aroma-intro { font-size: 13px; margin-bottom: 20px; }
+  .aroma-choices { gap: 8px; }
+  .aroma-choice { padding: 10px 8px; gap: 7px; min-height: 70px; }
+  .aroma-choice > span { flex-basis: 27px; width: 27px; height: 30px; font-size: 19px; }
+  .aroma-choice strong { font-size: 18px; }
+  .aroma-custom { padding: 16px; }
+  .aroma-custom > label { font-size: 23px; }
+  .aroma-custom__footer .gold-button { width: 100%; justify-content: center; }
+}

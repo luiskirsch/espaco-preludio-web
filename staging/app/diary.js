@@ -1,5 +1,5 @@
 import { createSoundscape, createDictation } from './diary-audio.js?h=fb22bb467e';
-import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=8d6a35037b';
+import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=3ee11a1354';
 
 const $ = id => document.getElementById(id);
 const student = document.body.dataset.portal === 'student';
@@ -18,6 +18,7 @@ const uiErrors = {
   CAPSULA_SELADA: 'Esta cápsula já está selada. Você pode escrever uma nova carta.',
   DIARIO_INDISPONIVEL: 'Não foi possível acessar o diário agora. Tente novamente em instantes.',
   TEXTO_INVALIDO: 'Escreva entre 1 e 20.000 caracteres.',
+  AROMA_INVALIDO: 'Descreva o aroma em até 100 caracteres, em uma única linha.',
   ABERTURA_INVALIDA: 'Escolha uma data de abertura a partir de amanhã.',
   TOKEN_INVALIDO: 'Sua sessão expirou. Entre novamente no portal.',
   TOKEN_NAO_INFORMADO: 'Entre no portal para acessar seu diário.',
@@ -71,9 +72,10 @@ function renderMeta() {
   $('entryTags').innerHTML = (current.tags || []).map(tag => `<span class="tag">#${esc(tag)}</span>`).join('');
   $('paper').dataset.font = current.font || 'hand';
   $('feelingButton').textContent = current.feelings?.length ? current.feelings.map(id => `${FEELINGS[id]?.icon || ''} ${FEELINGS[id]?.label || ''}`).join(' · ') : '♡ Como você se sente?';
-  $('aromaLabel').textContent = current.aroma ? `Memória de ${AROMAS[current.aroma]?.[0].toLowerCase()}` : 'Um perfume para esta lembrança.';
+  const aromaLabel = current.aromaText || AROMAS[current.aroma]?.[0] || '';
+  $('aromaLabel').textContent = current.aromaText ? `Memória de ${current.aromaText}` : current.aroma ? `Memória de ${aromaLabel.toLowerCase()}` : 'Um perfume para esta lembrança.';
   $('weatherLabel').textContent = current.weather ? `${WEATHER[current.weather]?.[0]} · guardado nesta página` : 'O clima de hoje na sua página.';
-  $('entryExtra').textContent = [current.weather ? WEATHER[current.weather]?.[0] : '', current.aroma ? AROMAS[current.aroma]?.[0] : ''].filter(Boolean).join(' · ');
+  $('entryExtra').textContent = [current.weather ? WEATHER[current.weather]?.[0] : '', current.aroma || current.aromaText ? aromaLabel : ''].filter(Boolean).join(' · ');
   $('entryExtra').hidden = !$('entryExtra').textContent;
   $('deleteCurrent').hidden = !current.version;
   $('entryExtra').parentElement.hidden = $('entryExtra').hidden && !current.version;
@@ -235,7 +237,7 @@ function openDialog(title, markup, cleanup = null) {
   dialogOrigin = document.activeElement; dialogCleanup = cleanup; dialogGeneration = bootGeneration; dialogSerial++;
   $('dialogTitle').textContent = title; $('dialogBody').innerHTML = markup; dialog.showModal();
 }
-function closeDialog() { dialogSerial++; dialogCleanup?.(); dialogCleanup = null; if (dialog.open) dialog.close(); $('dialogBody').replaceChildren(); $('dialogTitle').textContent = ''; dialogOrigin?.focus?.(); }
+function closeDialog() { dialogSerial++; dialogCleanup?.(); dialogCleanup = null; if (dialog.open) dialog.close(); dialog.classList.remove('diary-dialog--aroma'); $('dialogBody').replaceChildren(); $('dialogTitle').textContent = ''; dialogOrigin?.focus?.(); }
 function requestCloseDialog() {
   if ($('capsuleText')?.value.trim() && !window.confirm('Descartar esta carta ainda não selada?')) return;
   closeDialog();
@@ -259,8 +261,16 @@ function openFeelings() {
 }
 function openAroma() {
   if (!canEdit()) return;
-  openDialog('O perfume de uma memória', `<p>Às vezes, um aroma leva a gente de volta. Qual combina com esta página?</p><div class="choice-grid">${Object.entries(AROMAS).map(([id, [label, icon]]) => `<button class="choice-button" data-aroma="${id}" aria-pressed="${current.aroma === id}"><span>${icon}</span>${label}</button>`).join('')}</div><p class="dialog-note">Uma lembrança olfativa para associar à sua escrita.</p>`);
-  dialog.querySelectorAll('[data-aroma]').forEach(button => button.addEventListener('click', () => { current.aroma = button.dataset.aroma; markDirty(); closeDialog(); }));
+  openDialog('O perfume de uma memória', `<p class="aroma-intro">Um cheiro pode guardar um lugar, uma pessoa ou um instante. Qual acompanha esta lembrança?</p><div class="aroma-section-label">ESCOLHA UM AROMA</div><div class="choice-grid aroma-choices">${Object.entries(AROMAS).map(([id, [label, icon]]) => `<button type="button" class="choice-button aroma-choice" data-aroma="${id}" aria-pressed="${!current.aromaText && current.aroma === id}"><span aria-hidden="true">${icon}</span><strong>${label}</strong></button>`).join('')}</div><form id="customAromaForm" class="aroma-custom"><label for="customAroma">Ou descreva o seu aroma</label><p>Algumas memórias têm um perfume só delas.</p><input type="text" id="customAroma" name="aroma" maxlength="100" required autocomplete="off" placeholder="Ex.: bolo saindo do forno, perfume da minha mãe…" value="${esc(current.aromaText || '')}" aria-describedby="customAromaHint"><div class="aroma-custom__footer"><small id="customAromaHint">Até 100 caracteres.</small><button type="submit" class="gold-button">Guardar aroma <span aria-hidden="true">↗</span></button></div></form><p class="aroma-footnote"><svg aria-hidden="true"><use href="#i-leaf"/></svg> Um detalhe para sentir essa história outra vez.</p>`);
+  dialog.classList.add('diary-dialog--aroma');
+  dialog.querySelectorAll('[data-aroma]').forEach(button => button.addEventListener('click', () => { current.aroma = button.dataset.aroma; current.aromaText = ''; markDirty(); closeDialog(); }));
+  $('customAromaForm').addEventListener('submit', event => {
+    event.preventDefault();
+    const value = $('customAroma').value.trim();
+    if (!value) { $('customAroma').setCustomValidity('Escreva o aroma que deseja guardar.'); $('customAroma').reportValidity(); return; }
+    current.aroma = ''; current.aromaText = value; markDirty(); closeDialog();
+  });
+  $('customAroma').addEventListener('input', () => $('customAroma').setCustomValidity(''));
 }
 function openFont() {
   if (!canEdit()) return;
@@ -409,7 +419,7 @@ async function demoApi(path, options = {}) {
     const item = JSON.parse(options.body); const previous = demoEntries.get(item.id);
     if ((previous?.version || 0) !== item.version) throw new Error('REGISTRO_ALTERADO');
     const saved = { ...item, version: item.version + 1, createdAt: previous?.createdAt || Date.now(), updatedAt: Date.now(), locked: item.kind === 'capsule' && item.unlockDate > today() };
-    if (saved.locked) { delete saved.text; delete saved.tags; delete saved.feelings; delete saved.aroma; delete saved.font; delete saved.weather; }
+    if (saved.locked) { delete saved.text; delete saved.tags; delete saved.feelings; delete saved.aroma; delete saved.aromaText; delete saved.font; delete saved.weather; }
     demoEntries.set(item.id, saved); return { ok: true, item: saved };
   }
   if (options.method === 'DELETE') { demoEntries.delete(path.split('/').pop().split('?')[0]); return { ok: true }; }

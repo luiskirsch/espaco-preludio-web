@@ -14,7 +14,7 @@ export function dateLabel(date, options = {}) {
   return new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long', year: 'numeric', ...options }).format(new Date(`${date}T12:00:00Z`));
 }
 export function draft(kind = 'diary') {
-  return { id: `page-${crypto.randomUUID()}`, kind, date: today(), text: '', version: 0, unlockDate: null, feelings: [], tags: [], aroma: '', font: 'hand', weather: '' };
+  return { id: `page-${crypto.randomUUID()}`, kind, date: today(), text: '', version: 0, unlockDate: null, feelings: [], tags: [], aroma: '', aromaText: '', font: 'hand', weather: '' };
 }
 export function countWords(text) { return String(text || '').trim().split(/\s+/u).filter(Boolean).length; }
 export function feelingStats(entries) {

@@ -312,6 +312,42 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     assert.deepEqual(await evaluate("[...document.querySelectorAll('[data-feeling][aria-pressed=true]')].map(element=>element.dataset.feeling)"), choices.slice(0, 3).map(choice => choice.id));
     await closeDialog();
 
+    await openDialog('#aromaButton');
+    for (const width of [320, 390, 768, 1440]) {
+      await viewport(width); await checkLayout('aroma personalizado', width);
+      assert.equal(await evaluate("document.getElementById('customAroma').maxLength"), 100);
+      if (width === 1440 || width === 390) await capture(width === 1440 ? 'aroma-desktop.png' : 'aroma-mobile.png');
+    }
+    const customAroma = 'Bolo de fubá da minha avó <3';
+    await fill('#customAroma', customAroma);
+    await click('#customAromaForm button[type="submit"]'); await saved();
+    assert.equal(await evaluate("document.getElementById('aromaLabel').textContent"), `Memória de ${customAroma}`);
+    await openDialog('#aromaButton');
+    assert.equal(await evaluate("document.getElementById('customAroma').value"), customAroma);
+    assert.equal(await evaluate("document.querySelectorAll('[data-aroma][aria-pressed=true]').length"), 0);
+    await fill('#customAroma', 'Uma alteração que será cancelada'); await closeDialog();
+    assert.equal(await evaluate("document.getElementById('aromaLabel').textContent"), `Memória de ${customAroma}`, 'Fechar o modal preserva o aroma anterior');
+    await openDialog('#aromaButton'); await click('[data-aroma="lavanda"]'); await saved();
+    await openDialog('#aromaButton');
+    assert.equal(await evaluate("document.getElementById('customAroma').value"), '', 'Escolher uma sugestão limpa o aroma personalizado');
+    const literalAroma = '<img src=x onerror="document.title=123">';
+    await fill('#customAroma', literalAroma);
+    await click('#customAromaForm button[type="submit"]'); await saved();
+    await openDialog('#aromaButton');
+    assert.equal(await evaluate("document.getElementById('customAroma').value"), literalAroma, 'Caracteres especiais são preservados como texto');
+    assert.equal(await evaluate("document.querySelector('#diaryDialog img')"), null, 'Aroma personalizado não injeta HTML no modal');
+    await fill('#customAroma', 'x'.repeat(100));
+    await click('#customAromaForm button[type="submit"]'); await saved();
+    await viewport(320); await checkLayout('aroma longo', 320); await checkPaperText(320);
+    await openDialog('#aromaButton'); await fill('#customAroma', customAroma);
+    await click('#customAromaForm button[type="submit"]'); await saved();
+    await tab('timeline'); await fill('#memorySearch', 'cafe'); await click('.entry-open');
+    await openDialog('#aromaButton');
+    assert.equal(await evaluate("document.getElementById('customAroma').value"), customAroma, 'Aroma personalizado volta ao reabrir a memória salva');
+    await closeDialog();
+    await click('#diaryThemeToggle'); await openDialog('#aromaButton');
+    await viewport(1440); await capture('aroma-night.png'); await closeDialog(); await click('#diaryThemeToggle');
+
     await tab('dreams'); await click('#collectionNew');
     await poll(() => evaluate("!document.getElementById('editorView').hidden && document.getElementById('journalText').value===''"), 'escrita de sonho');
     const dream = 'Sonhei que as folhas viravam pequenas estrelas.';
