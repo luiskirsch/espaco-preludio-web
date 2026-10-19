@@ -116,7 +116,7 @@ async function startFlow(user, { renewRecovery = false, enroll = false, disable 
           const secret = node("code", details.secret, "mfa-secret"); secret.id = "mfaSecret";
           dialog.append(secret);
           try {
-            const { default: qrcode } = await import("./vendor/qrcode-generator-1.4.4.mjs?h=c345e19176");
+            const { default: qrcode } = await import("./vendor/qrcode-generator-1.4.4.mjs?h=e49a3b9366");
             const qr = qrcode(0, "M"); qr.addData(details.otpauthUrl); qr.make();
             const image = node("img", undefined, "mfa-qr"); image.alt = "QR"; image.src = qr.createDataURL(4, 4); dialog.append(image);
           } catch { /* The manually entered key remains fully functional. */ }
