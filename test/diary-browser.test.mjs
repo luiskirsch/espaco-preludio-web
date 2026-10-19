@@ -179,6 +179,25 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     }
     await viewport(1440);
 
+    await openDialog('#feelingButton');
+    const initialFeelings = await evaluate("[...document.querySelectorAll('[data-feeling][aria-pressed=true]')].map(element=>element.dataset.feeling)");
+    for (const feeling of initialFeelings) await click(`[data-feeling="${feeling}"]`);
+    await click('#applyFeelings'); await saved();
+    await tab('feelings');
+    assert.equal(await evaluate("document.querySelector('.feelings-empty')!==null"), true, 'Insights vazio oferece um próximo passo claro');
+    assert.match(await evaluate("document.querySelector('.feelings-empty').textContent"), /Comece pela página de hoje/i);
+    for (const width of [320, 390, 768, 1440]) {
+      await viewport(width); await checkLayout('insights vazio', width);
+      const emptyLayout = await evaluate(`(()=>{const card=document.querySelector('.feelings-empty').getBoundingClientRect(),note=document.querySelector('.feelings-care-note').getBoundingClientRect(),button=document.getElementById('backToWriting').getBoundingClientRect();return {card:{left:card.left,right:card.right,bottom:card.bottom},note:{top:note.top},button:{left:button.left,right:button.right,bottom:button.bottom}}})()`);
+      assert.ok(emptyLayout.button.left >= emptyLayout.card.left && emptyLayout.button.right <= emptyLayout.card.right, `Ação do estado inicial cabe no cartão em ${width}px`);
+      assert.ok(emptyLayout.button.bottom < emptyLayout.note.top, `Estado inicial não encosta no aviso em ${width}px`);
+      if (width === 1440 || width === 390) await capture(width === 1440 ? 'insights-empty-desktop.png' : 'insights-empty-mobile.png');
+    }
+    await click('#backToWriting');
+    await poll(() => evaluate("document.getElementById('diaryDialog').open"), 'escolha de sentimentos a partir do estado inicial');
+    await closeDialog();
+    await viewport(1440);
+
     await click('#newPageButton');
     await poll(() => evaluate("document.getElementById('journalText').value===''"), 'nova página vazia');
     const placeholder = await evaluate("document.getElementById('journalText').placeholder");
@@ -217,7 +236,21 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     assert.equal(await evaluate("document.querySelectorAll('[data-feeling][aria-pressed=true]').length"), 3, 'Uma quarta escolha não ultrapassa o limite de três sentimentos');
     assert.equal(await evaluate(`document.querySelector('[data-feeling="${choices[3].id}"]').getAttribute('aria-pressed')`), 'false');
     await click('#applyFeelings'); await saved();
+    await evaluate("document.getElementById('diaryToast').hidden=true");
 
+    await tab('feelings');
+    assert.equal(await evaluate("document.querySelector('.feelings-chart')!==null"), true, 'Insights mostra a distribuição dos sentimentos registrados');
+    assert.equal(await evaluate("document.querySelectorAll('.feeling-stat-card').length"), 2, 'Insights apresenta os dois indicadores principais');
+    assert.match(await evaluate("document.querySelector('.feelings-care-note').textContent"), /não faz avaliação psicológica/i);
+    for (const width of [320, 390, 768, 1440]) {
+      await viewport(width); await checkLayout('insights', width);
+      const insightLayout = await evaluate(`(()=>{const paper=document.getElementById('paper').getBoundingClientRect(),view=document.querySelector('.feelings-view').getBoundingClientRect(),note=document.querySelector('.feelings-care-note').getBoundingClientRect(),button=document.getElementById('backToWriting').getBoundingClientRect();return {paper:{left:paper.left,right:paper.right,bottom:paper.bottom},view:{left:view.left,right:view.right,bottom:view.bottom},note:{bottom:note.bottom},button:{bottom:button.bottom}}})()`);
+      assert.ok(insightLayout.view.left >= insightLayout.paper.left && insightLayout.view.right <= insightLayout.paper.right, `Insights cabe no pergaminho em ${width}px`);
+      assert.ok(insightLayout.note.bottom < insightLayout.button.bottom, `Aviso fica separado da ação em ${width}px`);
+      assert.ok(insightLayout.button.bottom <= insightLayout.paper.bottom, `Ação de Insights não invade as folhas em ${width}px`);
+      if (width === 1440 || width === 390) await capture(width === 1440 ? 'insights-desktop.png' : 'insights-mobile.png');
+    }
+    await viewport(1440);
     await tab('timeline');
     await fill('#memorySearch', 'cafe');
     assert.equal(await evaluate("document.querySelectorAll('.entry-card').length"), 1, 'Busca ignora acentos');
@@ -314,7 +347,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
 
     assert.deepEqual(cdp.exceptions, [], 'Nenhum erro de execução no navegador');
     assert.deepEqual(cdp.privateRequests.filter(privateRequest), [], 'A prévia não tenta acessar Firebase ou backend');
-    if (capturePreview) await writeFile(join(root, 'docs/diary-preview/report.json'), JSON.stringify({ route: '/app/diario.html?preview=1', scenarios: ['blank-writing-prompt', 'paper-text-readability', 'long-writing-no-clipping', 'decorative-leaves-no-interception', 'reduced-motion', 'autosave', 'tags', 'aroma', 'font', 'three-feelings-limit', 'search-escaped-html', 'dream', 'sealed-capsule', 'release-without-saving', 'delete'], layouts, runtimeErrors: cdp.exceptions, privateRequests: cdp.privateRequests }, null, 2) + '\n');
+    if (capturePreview) await writeFile(join(root, 'docs/diary-preview/report.json'), JSON.stringify({ route: '/app/diario.html?preview=1', scenarios: ['blank-writing-prompt', 'paper-text-readability', 'long-writing-no-clipping', 'decorative-leaves-no-interception', 'reduced-motion', 'autosave', 'tags', 'aroma', 'font', 'insights-empty', 'insights-summary', 'three-feelings-limit', 'search-escaped-html', 'dream', 'sealed-capsule', 'release-without-saving', 'delete'], layouts, runtimeErrors: cdp.exceptions, privateRequests: cdp.privateRequests }, null, 2) + '\n');
   } finally {
     cdp?.socket.close(); browser.kill(); server.closeAllConnections();
     await new Promise(resolveClose => server.close(resolveClose));

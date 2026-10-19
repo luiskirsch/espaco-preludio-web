@@ -441,3 +441,232 @@
 @media (max-width: 389px) {
   .diary-panels { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Insights: resumo claro, estado inicial acolhedor e leitura sem conflito com a arte. */
+.feelings-view {
+  display: grid;
+  gap: 22px;
+  width: min(100%, 920px);
+  margin: 0 auto;
+  padding-bottom: 12px;
+}
+.feelings-header {
+  max-width: 680px;
+}
+.feelings-header h1 {
+  margin: 12px 0 9px;
+  font-size: clamp(36px, 4vw, 48px);
+  line-height: 1.04;
+  color: #4f3425;
+}
+.feelings-header .collection-intro {
+  max-width: 620px;
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.5;
+}
+.feelings-dashboard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.feeling-stat-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 14px;
+  min-width: 0;
+  padding: 17px 19px;
+  border: 1px solid #a87d4847;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff9e5b8, #ead4a838);
+  box-shadow: 0 8px 22px #6e45110b;
+}
+.feeling-stat-card > span {
+  grid-column: 2;
+  color: #8b673f;
+  font: 600 10px/1.4 var(--sans);
+  letter-spacing: .09em;
+}
+.feeling-stat-card strong {
+  grid-row: 1 / 3;
+  color: #6d492d;
+  font: 500 40px/1 var(--serif);
+}
+.feeling-stat-card small {
+  grid-column: 2;
+  color: #795f43;
+  font: 500 13px/1.4 var(--sans);
+}
+.feelings-empty,
+.feelings-chart {
+  border: 1px solid #aa7f493d;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fff9e8c9, #ead3a733);
+  box-shadow: 0 12px 30px #70430d0c;
+}
+.feelings-empty {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  align-items: center;
+  gap: 22px;
+  padding: 28px 30px;
+}
+.feelings-empty__icon {
+  display: grid;
+  place-items: center;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: #b8874930;
+  color: #9b713b;
+}
+.feelings-empty__icon svg {
+  width: 38px;
+  height: 38px;
+}
+.feelings-empty__copy > span,
+.feelings-section-heading > span {
+  color: #9b7448;
+  font: 600 10px/1.4 var(--sans);
+  letter-spacing: .1em;
+}
+.feelings-empty h2,
+.feelings-section-heading h2 {
+  margin: 5px 0 7px;
+  color: #68482e;
+  font: 500 28px/1.12 var(--serif);
+}
+.feelings-empty p,
+.feelings-section-heading p {
+  max-width: 650px;
+  margin: 0;
+  color: #7b6248;
+  font: 16px/1.55 var(--serif);
+}
+.feelings-empty .gold-button {
+  margin-top: 17px;
+}
+.feelings-chart {
+  padding: 25px 28px 23px;
+}
+.feelings-chart .sentiment-bars {
+  gap: 17px;
+  margin: 24px 0 18px;
+}
+.sentiment-row__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #68482f;
+  font: 500 17px/1.3 var(--serif);
+}
+.sentiment-row__heading > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sentiment-row__heading > span > i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color) 22%, transparent);
+}
+.sentiment-row__heading strong {
+  color: #745335;
+  font: 600 14px var(--sans);
+}
+.feelings-chart .sentiment-track {
+  height: 8px;
+  margin-top: 8px;
+  background: #9b74451c;
+}
+.feelings-chart .sentiment-row > small {
+  display: block;
+  margin-top: 5px;
+  color: #927657;
+  font: 11px/1.4 var(--sans);
+  text-align: right;
+}
+.sentiment-explanation {
+  margin: 0;
+  color: #856b50;
+  font: italic 14px/1.5 var(--serif);
+}
+.feelings-care-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px 17px;
+  border: 1px solid #9e77402b;
+  border-radius: 12px;
+  background: #f6e8c65c;
+  color: #795c3d;
+}
+.feelings-care-note svg {
+  width: 21px;
+  height: 21px;
+  margin-top: 2px;
+  color: #9a7040;
+}
+.feelings-care-note p {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  text-align: left;
+}
+.feelings-care-note strong {
+  font: 600 13px/1.45 var(--sans);
+}
+.feelings-care-note span {
+  color: #846a50;
+  font: 13px/1.5 var(--sans);
+}
+.feelings-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+.feelings-view .gold-button {
+  min-height: 44px;
+  padding-inline: 19px;
+  font-size: 13px;
+}
+#insightLegend {
+  min-width: 0;
+}
+#insightLegend p + p {
+  margin-top: 8px;
+}
+#insightLegend strong {
+  display: block;
+  color: #f1dfca;
+  font-weight: 500;
+}
+#insightLegend small {
+  color: #cdb49b;
+}
+#insightLegend .insight-prompt small {
+  margin-top: 5px;
+}
+@media (max-width: 640px) {
+  .feelings-view { gap: 16px; }
+  .feelings-header h1 { font-size: 33px; }
+  .feelings-header .collection-intro { font-size: 17px; }
+  .feelings-dashboard { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+  .feeling-stat-card { padding: 14px 16px; }
+  .feeling-stat-card strong { font-size: 34px; }
+  .feelings-empty { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 22px; }
+  .feelings-empty__icon { width: 58px; height: 58px; }
+  .feelings-empty__icon svg { width: 30px; height: 30px; }
+  .feelings-empty h2,
+  .feelings-section-heading h2 { font-size: 25px; }
+  .feelings-empty p,
+  .feelings-section-heading p { font-size: 15px; }
+  .feelings-empty .gold-button,
+  .feelings-actions .gold-button { width: 100%; }
+  .feelings-chart { padding: 21px 20px; }
+  .feelings-care-note { padding: 14px; }
+}
