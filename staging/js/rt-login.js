@@ -10,7 +10,7 @@ import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=a1e6b0a1a1";
 import { requestPasswordReset } from "./account-email.js?h=adc983ca80";
 import "./twofa-fetch.js?h=38cf68b49a";
 import { clear2faSession, isTwoFactorChallenge } from "./twofa-session.js?h=fbd5e4b98b";
-import { ensureMfa } from "./mfa-flow.js?h=c09d85cbdd";
+import { ensureMfa } from "./mfa-flow.js?h=824d566594";
 
 const form = document.getElementById("rtLoginForm");
 const emailEl = document.getElementById("rtEmail");

@@ -1,6 +1,6 @@
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { auth, AUTH_CONTEXT } from "./firebase-config.js?h=a1e6b0a1a1";
-import { ensureMfa } from "./mfa-flow.js?h=c09d85cbdd";
+import { ensureMfa } from "./mfa-flow.js?h=824d566594";
 import { clear2faSession, safeMfaReturn } from "./twofa-session.js?h=fbd5e4b98b";
 import { clearDek } from "./crypto.js?h=e302c46b08";
 
