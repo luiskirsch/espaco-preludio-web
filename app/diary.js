@@ -12,6 +12,15 @@ let dirty = false, editTick = 0, saveTimer, saving = null, toastTimer, dialogOri
 let dialogGeneration = 0, dialogSerial = 0, deletingId = null, conflict = false;
 let dictationEntryId = null, dictationGeneration = 0;
 let preset = 'rain';
+let promptIndex = 0, coverTimer = 0, bookOpened = false, sealedEntryId = null;
+const JOURNAL_PROMPTS = [
+  'O que você gostaria de guardar de hoje?',
+  'Qual pequeno momento de hoje merece ser lembrado?',
+  'O que fez você sorrir hoje?',
+  'O que você agradece neste dia?',
+  'O que está pesando, e o que pode ficar para amanhã?',
+  'Como estava o céu hoje?',
+];
 const dialog = $('diaryDialog');
 const text = $('journalText');
 const pagedEditor = createPagedEditor({
@@ -79,11 +88,51 @@ async function api(path, options = {}) {
 }
 function upsert(item) { entries = [item, ...entries.filter(entry => entry.id !== item.id)].sort((a, b) => b.createdAt - a.createdAt); }
 function resizeEditor(options) { return pagedEditor.layout(options); }
+function moonName(value) {
+  const days = (new Date(value).getTime() - Date.UTC(2000, 0, 6, 18, 14)) / 86400000;
+  const phase = ((days % 29.53058867) + 29.53058867) % 29.53058867;
+  if (phase < 1.85 || phase >= 27.68) return 'Lua nova';
+  if (phase < 7.38) return 'Lua crescente';
+  if (phase < 9.23) return 'Quarto crescente';
+  if (phase < 14.77) return 'Lua crescente';
+  if (phase < 16.61) return 'Lua cheia';
+  if (phase < 22.15) return 'Lua minguante';
+  if (phase < 24) return 'Quarto minguante';
+  return 'Lua minguante';
+}
+function renderBookDate(entry) {
+  const date = new Date(`${entry.date || today()}T12:00:00-03:00`);
+  const created = entry.createdAt ? new Date(entry.createdAt) : new Date();
+  $('entryDay').textContent = String(date.getDate());
+  $('sealDayNumber').textContent = String(date.getDate());
+  $('entryMonthYear').textContent = `de ${new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(date)}`;
+  const weekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(date);
+  const time = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false }).format(created).replace(':', 'h');
+  $('entryMeta').textContent = `${weekday} · ${time} · ${moonName(created)}`;
+  $('entryDate').setAttribute('aria-label', dateLabel(entry.date || today(), { weekday: 'long' }));
+}
+function renderPrompt() { $('journalPrompt').textContent = JOURNAL_PROMPTS[promptIndex % JOURNAL_PROMPTS.length]; }
+function openBook() {
+  clearTimeout(coverTimer); coverTimer = 0; bookOpened = true;
+  $('bookFrame').classList.add('is-cover-open'); $('bookCover').setAttribute('aria-expanded', 'true');
+  $('closeDiaryButton').textContent = 'Fechar diário';
+}
+function closeBook() {
+  clearTimeout(coverTimer); coverTimer = 0; bookOpened = false;
+  $('bookFrame').classList.remove('is-cover-open'); $('bookCover').setAttribute('aria-expanded', 'false');
+  $('closeDiaryButton').textContent = 'Abrir diário';
+}
 function renderMeta() {
   $('wordCount').textContent = `${countWords(current.text)} ${countWords(current.text) === 1 ? 'palavra' : 'palavras'}`;
   $('entryTags').innerHTML = (current.tags || []).map(tag => `<span class="tag">#${esc(tag)}</span>`).join('');
   $('paper').dataset.font = current.font || 'hand';
-  $('feelingButton').textContent = current.feelings?.length ? current.feelings.map(id => `${FEELINGS[id]?.icon || ''} ${FEELINGS[id]?.label || ''}`).join(' · ') : '♡ Como você se sente?';
+  const feelingSummary = (current.feelings || []).map(id => FEELINGS[id]?.label).filter(Boolean).join(', ');
+  $('feelingButton').textContent = feelingSummary ? `${feelingSummary} · ${current.feelings.length}/3` : 'Outros sentimentos';
+  document.querySelectorAll('[data-quick-feeling]').forEach(button => button.setAttribute('aria-pressed', String((current.feelings || []).includes(button.dataset.quickFeeling))));
+  const sealed = sealedEntryId === current.id && Boolean(current.version);
+  $('paper').classList.toggle('is-day-sealed', sealed);
+  $('sealDayButton').setAttribute('aria-pressed', String(sealed));
+  $('sealDayButton').setAttribute('aria-label', sealed ? 'Reabrir este dia para escrever' : 'Guardar este dia');
   const aromaLabel = current.aromaText || AROMAS[current.aroma]?.[0] || '';
   $('aromaLabel').textContent = current.aromaText ? `Memória de ${current.aromaText}` : current.aroma ? `Memória de ${aromaLabel.toLowerCase()}` : 'Um perfume para esta lembrança.';
   $('weatherLabel').textContent = current.weather ? `${WEATHER[current.weather]?.[0]} · guardado nesta página` : 'O clima de hoje na sua página.';
@@ -105,7 +154,7 @@ function renderInsights() {
 }
 function markDirty({ immediate = false } = {}) {
   if (!ready || current.locked || current.kind === 'capsule') return;
-  dirty = true; editTick++; renderMeta(); clearTimeout(saveTimer);
+  sealedEntryId = null; dirty = true; editTick++; renderMeta(); clearTimeout(saveTimer);
   if (!hasEntryContent(current) && !saving) { dirty = false; setStatus('Sua página espera por você'); return; }
   setStatus('Alterações pendentes…');
   saveTimer = setTimeout(() => flush(), immediate ? 0 : 950);
@@ -165,15 +214,19 @@ function revealPage(heading) {
 function showEditor(entry) {
   dictation.stop(); dictationEntryId = null;
   current = structuredClone(entry); dirty = false; conflict = false; editTick++; clearTimeout(saveTimer);
-  $('editorView').hidden = false; $('collectionView').hidden = true; $('paper').classList.add('paper--writing');
+  $('editorView').hidden = false; $('collectionView').hidden = true; $('paper').classList.add('paper--writing'); $('bookFrame').classList.remove('is-collection'); document.body.classList.add('is-book-writing');
   activateTab(current.kind === 'dream' ? 'dreams' : current.kind === 'capsule' ? 'capsules' : 'diary');
-  $('entryDate').textContent = dateLabel(current.date);
+  renderBookDate(current);
+  promptIndex = [...current.id].reduce((total, char) => total + char.charCodeAt(0), 0) % JOURNAL_PROMPTS.length; renderPrompt();
+  sealedEntryId = current.version ? current.id : null;
   $('entryKind').textContent = current.kind === 'dream' ? 'UM SONHO PARA GUARDAR' : current.kind === 'capsule' ? 'UMA CARTA DO SEU PASSADO' : 'UMA PÁGINA SÓ SUA';
   text.value = current.text; text.disabled = !ready || current.kind === 'capsule';
   $('newPageButton').textContent = current.kind === 'dream' ? '+ Novo sonho' : '+ Nova página';
   ['feelingButton', 'tagsButton'].forEach(id => { $(id).disabled = current.kind === 'capsule'; });
   setStatus(current.version ? current.kind === 'capsule' ? 'Cápsula aberta · somente leitura' : 'Salvo automaticamente' : 'Seu espaço está pronto', current.version ? 'saved' : '');
   renderMeta(); requestAnimationFrame(() => pagedEditor.reset());
+  if (bookOpened) $('bookFrame').classList.add('is-cover-open');
+  else if (!coverTimer) coverTimer = setTimeout(openBook, 4200);
 }
 async function newPage(kind = 'diary') {
   const generation = bootGeneration;
@@ -190,7 +243,7 @@ async function switchTab(name) {
     const latest = entries.find(item => item.kind === 'diary' && item.date === today());
     showEditor(latest || draft()); revealPage($('entryDate')); return;
   }
-  activateTab(name); $('editorView').hidden = true; $('collectionView').hidden = false; $('paper').classList.remove('paper--writing');
+  activateTab(name); $('editorView').hidden = true; $('collectionView').hidden = false; $('paper').classList.remove('paper--writing'); $('bookFrame').classList.add('is-collection'); document.body.classList.remove('is-book-writing');
   renderCollection(name);
   revealPage($('collectionView').querySelector('h1'));
 }
@@ -390,11 +443,34 @@ function recoverWriting() {
   $('keepWriting').addEventListener('click', closeDialog);
   $('saveAsNew').addEventListener('click', async () => { current.id = `page-${crypto.randomUUID()}`; current.version = 0; delete current.createdAt; delete current.updatedAt; conflict = false; dirty = true; editTick++; closeDialog(); await flush(); });
 }
+function toggleQuickFeeling(event) {
+  if (!canEdit()) return;
+  const id = event.currentTarget.dataset.quickFeeling;
+  const selected = new Set(current.feelings || []);
+  if (selected.has(id)) selected.delete(id);
+  else if (selected.size < 3) selected.add(id);
+  else { toast('Escolha até três sentimentos para esta página.'); return; }
+  current.feelings = [...selected]; markDirty({ immediate: true });
+}
+async function toggleDaySeal() {
+  if (!canEdit()) return;
+  if (sealedEntryId === current.id) { sealedEntryId = null; renderMeta(); text.focus(); return; }
+  if (!hasEntryContent(current)) { toast('Escreva uma lembrança antes de guardar este dia.'); text.focus(); return; }
+  if (!await flush()) return;
+  sealedEntryId = current.id; renderMeta();
+  const seal = $('sealDayButton'); seal.classList.remove('is-stamping'); void seal.offsetWidth; seal.classList.add('is-stamping');
+  setTimeout(() => seal.classList.remove('is-stamping'), 950);
+  toast('Este dia foi guardado no seu diário.');
+}
 text.addEventListener('input', () => { current.text = text.value; markDirty(); resizeEditor({ followCaret: true, animate: true, withSound: true }); });
 document.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => switchTab(button.dataset.tab)));
 document.querySelectorAll('[data-go]').forEach(button => button.addEventListener('click', () => switchTab(button.dataset.go)));
 document.querySelectorAll('[data-memory]').forEach(button => button.addEventListener('click', () => openMemory(button.dataset.memory)));
 $('newPageButton').addEventListener('click', () => newPage(current.kind === 'dream' ? 'dream' : 'diary'));
+$('bookCover').addEventListener('click', openBook); $('closeDiaryButton').addEventListener('click', () => (bookOpened ? closeBook() : openBook()));
+$('nextPromptButton').addEventListener('click', () => { promptIndex = (promptIndex + 1) % JOURNAL_PROMPTS.length; renderPrompt(); });
+$('sealDayButton').addEventListener('click', toggleDaySeal);
+document.querySelectorAll('[data-quick-feeling]').forEach(button => button.addEventListener('click', toggleQuickFeeling));
 $('feelingButton').addEventListener('click', openFeelings); $('tagsButton').addEventListener('click', openTags);
 $('aromaButton').addEventListener('click', openAroma); $('fontButton').addEventListener('click', openFont);
 $('weatherButton').addEventListener('click', captureWeather); $('voiceButton').addEventListener('click', openVoice);
@@ -405,10 +481,10 @@ $('saveState').addEventListener('click', () => { if ($('saveState').dataset.stat
 $('saveState').addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); $('saveState').click(); } });
 document.querySelectorAll('a.back-link, a.diary-brand').forEach(link => link.addEventListener('click', async event => { if (!dirty) return; event.preventDefault(); if (await settle()) location.assign(link.href); }));
 window.addEventListener('beforeunload', event => { if (dirty || $('capsuleText')?.value.trim()) { event.preventDefault(); event.returnValue = ''; } });
-window.addEventListener('pagehide', () => { soundscape.stop(); dictation.stop(); dictationEntryId = null; });
+window.addEventListener('pagehide', () => { clearTimeout(coverTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
 window.addEventListener('online', () => { if (ready && dirty) flush(); });
 $('headerDate').dateTime = today(); $('headerDate').textContent = dateLabel(today(), { weekday: 'long' });
-$('entryDate').textContent = dateLabel(today());
+renderBookDate(current); renderPrompt();
 document.querySelector('.fireflies').innerHTML = Array.from({ length: 38 }, (_, i) => `<i style="--x:${(i * 27.3 + 3) % 100}%;--y:${(i * 17.6 + 2) % 100}%;--s:${i % 4 === 0 ? 4 : 2}px;--o:${.3 + (i % 5) / 10};--t:${3 + i % 4}s;--d:-${i * .3}s"></i>`).join('');
 document.querySelector('.spectrum').innerHTML = Array.from({ length: 38 }, (_, i) => `<i style="--h:${15 + Math.abs(Math.sin(i * 1.8) * Math.cos(i * .42)) * 85}%;--hue:${15 + i * 7};--d:-${i * .13}s"></i>`).join('');
 document.fonts?.ready.then(() => requestAnimationFrame(resizeEditor));
@@ -449,7 +525,7 @@ if (preview) {
     onAuthStateChanged(config.auth, user => {
       if (!user || account && account.uid !== user.uid) {
         bootGeneration++; ready = false; dirty = false; conflict = false; saving = null; deletingId = null; clearTimeout(saveTimer); closeDialog(); dictation.stop(); soundscape.stop();
-        text.value = ''; text.disabled = true; entries = []; current = draft(); renderMeta(); pagedEditor.reset();
+        text.value = ''; text.disabled = true; entries = []; current = draft(); sealedEntryId = null; renderBookDate(current); renderMeta(); pagedEditor.reset();
         $('collectionView').innerHTML = ''; $('collectionView').hidden = true; $('editorView').hidden = false;
       }
       if (!user) { account = null; location.replace(student ? './aluno-login.html' : './login.html'); return; }

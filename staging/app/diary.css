@@ -1062,3 +1062,216 @@
   .paper.is-turning-forward .page-turn-effect,
   .paper.is-turning-backward .page-turn-effect { animation: none; }
 }
+
+/* Experiência de livro baseada no protótipo Meu diário.html. */
+.book-toolbar { display: none; }
+.book-frame { position: relative; min-width: 0; }
+.book-cover,.book-ribbon { display: none; }
+.is-book-writing { background: radial-gradient(ellipse 74% 60% at 50% 42%, #493127 0%, #2a1d18 58%, #160f0d 100%); }
+.is-book-writing .diary-shell { max-width: none; padding-inline: clamp(18px,3vw,44px); }
+.is-book-writing .diary-header { grid-template-columns:minmax(0,1fr) auto; max-width:1180px; margin:0 auto; gap:22px; padding:9px 0 12px; }
+.is-book-writing .diary-brand { display:none; }
+.is-book-writing .diary-tabs { max-width:850px; justify-self:center; width:100%; }
+.is-book-writing .diary-tabs button { padding-block:9px 13px; font-size:15px; }
+.is-book-writing .diary-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); max-width:1280px; margin:0 auto; gap:34px 28px; }
+.is-book-writing .journal-stage { grid-column:1/-1; grid-row:1; width:100%; }
+.is-book-writing .diary-tools { grid-column:1; grid-row:2; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-content:start; gap:14px; padding:0; }
+.is-book-writing .diary-tools .rail-caption,.is-book-writing .diary-tools .tools-footnote { grid-column:1/-1; }
+.is-book-writing .diary-tools .tool-card--voice { grid-column:1/-1; }
+.is-book-writing .diary-panels { grid-column:2; grid-row:2; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-content:start; gap:14px; padding:0; }
+.is-book-writing .journal-caption { margin-top:24px; }
+.is-book-writing .diary-footer { padding-bottom:18px; }
+.is-book-writing .journal-stage:before,.is-book-writing .journal-stage:after { display:none; }
+.is-book-writing .book-toolbar {
+  width:min(1180px,calc((100svh - 175px) * 1.142),calc(100vw - 88px));
+  min-width:720px;
+  min-height:46px;
+  margin:0 auto 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  color:#ead8b9;
+}
+.is-book-writing .page-navigation { display:flex; align-items:center; justify-content:flex-start; gap:7px; min-height:38px; margin:0; color:#cdb495; }
+.is-book-writing .page-navigation button { width:34px; height:34px; border-color:#e2be8c4d; background:#e2be8c0a; color:#ead6b6; box-shadow:none; font:28px/1 var(--serif); }
+.is-book-writing .page-navigation button:hover:not(:disabled) { border-color:#e2be8c99; background:#e2be8c24; box-shadow:none; }
+.is-book-writing .page-navigation > span { order:3; margin-left:8px; color:#cdb495; font:600 11px/1 var(--sans); letter-spacing:.2em; }
+.book-actions { display:flex; align-items:center; gap:8px; }
+.book-close,.book-new { height:38px; padding:0 17px; border:1px solid transparent; border-radius:999px; background:none; color:#cdb495; font:500 13px/1 var(--sans); letter-spacing:.06em; transition:.2s ease; }
+.book-close:hover { color:#f0dfc3; border-color:#e2be8c4d; }
+.book-new { padding-inline:20px; border-color:#e2be8c61; background:#e2be8c0f; color:#f0dfc3; }
+.book-new:hover { border-color:#e2be8c9e; background:#e2be8c29; }
+.is-book-writing .book-frame {
+  container-type:inline-size;
+  width:min(1180px,calc((100svh - 175px) * 1.142),calc(100vw - 88px));
+  min-width:720px;
+  aspect-ratio:1663/1457;
+  margin:0 auto 3.6%;
+  perspective:3200px;
+  isolation:isolate;
+}
+.is-book-writing .book-frame:before {
+  content:'';
+  position:absolute;
+  inset:-1.7% -1.8% -2.3% -2.6%;
+  z-index:-2;
+  border-radius:12px 15px 15px 12px;
+  background-color:#4e2a1e;
+  background-image:url('./assets/diary/leather-cover.png?h=abe68145ac'),radial-gradient(130% 100% at 40% 20%,#ffd2a019,transparent 60%);
+  background-size:280px 280px,auto;
+  box-shadow:0 25px 48px #0009,0 7px 14px #0007,inset 0 0 0 1px #0007;
+}
+.is-book-writing .book-frame:after {
+  content:'';
+  position:absolute;
+  inset:-1.05% -.9% -1.5% -1.75%;
+  z-index:-1;
+  border:1px dashed #dcb47d61;
+  border-radius:9px;
+  pointer-events:none;
+}
+.is-book-writing .book-ribbon {
+  display:block;
+  position:absolute;
+  z-index:-1;
+  left:70%;
+  top:98.6%;
+  width:2.1%;
+  height:10.6%;
+  clip-path:polygon(0 0,100% 0,100% 100%,50% 87%,0 100%);
+  background:linear-gradient(90deg,#4c0f0f,#a5322b 46%,#561211);
+  filter:drop-shadow(0 3px 3px #0008);
+}
+.is-book-writing .paper.paper--writing {
+  width:100%;
+  height:100%;
+  min-height:0;
+  aspect-ratio:auto;
+  border:1px solid #c5a06e;
+  border-radius:5px;
+  overflow:hidden;
+  contain:layout paint;
+  box-shadow:2px 2px 0 #e8d6b6,4px 4px 0 #d6c09c,6px 6px 0 #e5d1ae,8px 8px 0 #ccb48d,12px 17px 24px #0006;
+}
+.is-book-writing .paper.paper--writing:before { box-shadow:inset 44px 0 42px #50301824,inset 0 0 30px #985a2417; }
+.is-book-writing .paper--writing #editorView { height:100%; overflow:hidden; padding:7.6% 12.5% 4.8%; }
+.is-book-writing .page-topline { justify-content:center; gap:14px; min-height:18px; color:#8a5a3a; font:600 max(11px,1.02cqw)/1 var(--sans); letter-spacing:.26em; }
+.is-book-writing .page-topline i { width:4.5cqw; height:1px; background:#96643773; }
+.is-book-writing .entry-date { display:flex; align-items:center; gap:1.8cqw; min-height:11.8cqw; margin:1.8cqw 0 .4cqw; }
+.is-book-writing .entry-date > strong { padding:.4cqw .15cqw .2cqw 0; color:#93602a; background-image:linear-gradient(165deg,#a8732f,#d9a650 30%,#8d5a20 55%,#c48d3e 78%,#7e4c18); background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent; font:600 10.8cqw/.82 var(--serif); letter-spacing:-.02em; }
+.is-book-writing .entry-date > span { display:flex; flex-direction:column; gap:.75cqw; padding-top:.6cqw; }
+.is-book-writing .entry-date em { color:#3a2418; font:italic 500 3.4cqw/1 var(--serif); white-space:nowrap; }
+.is-book-writing .entry-date small { color:#73533e; font:600 max(9.5px,1cqw)/1.2 var(--sans); letter-spacing:.17em; text-transform:uppercase; white-space:nowrap; }
+.journal-prompt { display:flex; align-items:baseline; flex-wrap:wrap; column-gap:1.4cqw; row-gap:3px; min-height:3.5cqw; margin:0 0 1.4cqw; }
+.journal-prompt > i { flex:none; align-self:center; width:2.8cqw; height:1px; background:#b07a45; }
+.journal-prompt p { margin:0; color:#87451f; font:italic 500 2.55cqw/1.2 var(--serif); text-wrap:pretty; }
+.journal-prompt button { padding:0; background:none; color:#85502c; font:600 max(9.5px,.85cqw)/1 var(--sans); letter-spacing:.16em; text-transform:uppercase; }
+.journal-prompt button:hover { color:#5f2e13; }
+.is-book-writing .writing-pages { flex:1 1 auto; min-height:14cqw; max-height:26cqw; overflow:hidden; isolation:isolate; -webkit-mask-image:none; mask-image:none; }
+.is-book-writing .writing-pages .journal-text { font-family:'Cormorant Garamond',Georgia,serif; font-size:max(17px,1.95cqw); font-weight:500; line-height:max(28px,3.2cqw); color:#2e1c12; background-image:repeating-linear-gradient(180deg,transparent 0,transparent calc(max(28px,3.2cqw) - 1px),#8c5c342b calc(max(28px,3.2cqw) - 1px),#8c5c342b max(28px,3.2cqw)); background-position:0 calc(max(28px,3.2cqw) * -.16); background-attachment:local; }
+.is-book-writing .writing-pages .journal-text::placeholder { color:#a58a72; opacity:1; font-style:italic; }
+.day-seal { position:relative; flex:0 0 auto; align-self:center; display:flex; flex-direction:column; align-items:center; justify-content:center; width:6.4cqw; height:6.4cqw; min-width:50px; min-height:50px; margin:.55cqw 0 .65cqw; border:1px dashed #965c32b3; border-radius:50%; background:#fcf4e6b3; color:#87451f; font:italic 500 max(10px,1.25cqw)/1.05 var(--serif); transition:transform .3s,filter .3s,background .3s; }
+.day-seal:hover { transform:scale(1.05); background:#fff6e8f2; }
+.day-seal strong { display:none; }
+.paper.is-day-sealed .day-seal { border:0; background:radial-gradient(circle at 34% 28%,#cf5143,#a72d24 34%,#85201a 66%,#611310); box-shadow:inset 0 .3cqw .4cqw #ffaf9959,inset 0 -.45cqw .6cqw #2d060380,0 .35cqw .45cqw #460f0873; color:#741711; transform:rotate(-8deg); text-shadow:0 -1px #2804028c,0 1px #ffaa9691; }
+.paper.is-day-sealed .day-seal span { display:none; }
+.paper.is-day-sealed .day-seal strong { display:block; font:italic 600 2.4cqw/1 var(--serif); }
+.day-seal.is-stamping { animation:sealStamp .9s cubic-bezier(.2,1.25,.35,1); }
+@keyframes sealStamp { 0%{transform:scale(1.75) rotate(-26deg);opacity:0} 55%{transform:scale(.92) rotate(-8deg);opacity:1} 100%{transform:scale(1) rotate(-8deg)} }
+.quick-feelings { flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:.7cqw; color:#4a2e1f; }
+.quick-feelings > p { margin:0; font:italic 500 1.7cqw/1.1 var(--serif); }
+.quick-feelings > div { display:flex; align-items:center; justify-content:center; gap:2.2cqw; }
+.quick-feelings button { position:relative; padding:.42cqw .15cqw; background:none; color:#6b4a35; font:600 max(9.5px,.92cqw)/1 var(--sans); letter-spacing:.18em; text-transform:uppercase; }
+.quick-feelings button:after,.quick-feelings button:before { content:''; position:absolute; inset:-.25cqw -.8cqw; border:1.3px solid #923416cc; border-radius:48% 52% 46% 54%/56% 44% 56% 44%; opacity:0; transform:rotate(-3deg) scale(.65); transition:.3s cubic-bezier(.3,1.5,.5,1); pointer-events:none; }
+.quick-feelings button:before { inset:-.12cqw -.95cqw -.35cqw -.6cqw; border-width:1px; border-radius:52% 48% 55% 45%/46% 56% 44% 54%; transform:rotate(2.5deg) scale(.65); }
+.quick-feelings button[aria-pressed=true] { color:#7a2e14; }
+.quick-feelings button[aria-pressed=true]:after,.quick-feelings button[aria-pressed=true]:before { opacity:1; transform:rotate(-3deg) scale(1); }
+.quick-feelings button[aria-pressed=true]:before { transform:rotate(2.5deg) scale(1); }
+.is-book-writing .entry-footer { flex:0 0 auto; display:grid; grid-template-columns:1fr auto; gap:.45cqw 1.2cqw; margin-top:.55cqw; padding:0; border:0; background:none; box-shadow:none; color:#74543c; }
+.is-book-writing .entry-details { display:contents; }
+.is-book-writing .entry-details .feeling-button { grid-column:1; grid-row:1; justify-self:start; padding:2px 0; color:#8a4a28; font:italic 500 max(11px,1.05cqw)/1 var(--serif); }
+.is-book-writing .entry-details #wordCount { grid-column:2; grid-row:1; align-self:center; color:#7a5a44; font:500 max(11px,.9cqw)/1 var(--sans); }
+.is-book-writing .save-strip { grid-column:1/-1; display:flex; align-items:center; gap:.7cqw; min-height:24px; padding:0; border:0; background:none; box-shadow:none; color:#7a5a44; font:500 max(11px,.86cqw)/1 var(--sans); }
+.is-book-writing .save-strip .tags-button { order:0; margin:0; padding:0; color:#a06a3e; font:600 1.55cqw/1 var(--serif); }
+.is-book-writing .save-strip .entry-tags { order:1; }
+.is-book-writing .save-strip .save-state { order:2; margin-left:auto; }
+.is-book-writing .save-strip .save-state:before { width:7px; height:7px; content:''; border:1px solid #b09078; border-radius:50%; }
+.is-book-writing .save-strip .save-state[data-state=saved]:before { content:''; background:#8f2a1f; border-color:#8f2a1f; }
+.is-book-writing .tag { padding:0; background:none; color:#87451f; font:italic 500 max(11px,1.1cqw)/1 var(--serif); }
+.is-book-writing .paper-bottom { grid-column:1/-1; min-height:16px; margin:0; color:#87664c; }
+.is-book-writing .book-cover { display:flex; position:absolute; inset:-1.7% -1.8% -2.3% -2.6%; z-index:12; flex-direction:column; align-items:center; justify-content:center; gap:2cqw; padding-left:2.6cqw; border:0; border-radius:12px 15px 15px 12px; background-color:#5a3022; background-image:url('./assets/diary/leather-cover.png?h=abe68145ac'),radial-gradient(120% 90% at 38% 26%,#ffd7aa29,transparent 58%),linear-gradient(180deg,transparent 55%,#00000047); background-size:280px 280px,auto,auto; box-shadow:0 24px 52px #0009,inset 0 0 0 1px #0007,inset 2px 2px 4px #ffdcaa19; color:#e6c47e; transform-origin:left center; transform:rotateY(0); opacity:1; backface-visibility:hidden; transition:transform 1.5s cubic-bezier(.6,.02,.28,1),opacity .5s ease 1s,visibility 0s; }
+.is-book-writing .book-cover:before { content:''; position:absolute; inset:5.4% 5.2% 5.4% 8%; border:1px solid #e4be76bf; box-shadow:inset 0 0 0 8px transparent,0 0 0 1px #5d301f; }
+.is-book-writing .book-cover:after { content:''; position:absolute; inset:1% 1% 1% 3.4%; border:1px dashed #deb8806b; border-radius:9px; }
+.book-cover > span { z-index:1; color:#e8c983; font:600 1.4cqw/1 var(--sans); letter-spacing:.42em; }
+.book-cover > strong { z-index:1; max-width:76%; color:#e6c47e; background-image:linear-gradient(100deg,#c9a058,#f5dc9a 24%,#d4aa60 44%,#fce9b4 62%,#c0944c 82%,#ebca84); background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent; font:italic 600 min(6.2cqw,68px)/1.1 var(--serif); text-shadow:0 2px 1px #3a160899; white-space:nowrap; }
+.book-cover > i { z-index:1; width:1.1cqw; height:1.1cqw; transform:rotate(45deg); background:linear-gradient(135deg,#f5dc9a,#c0944c); box-shadow:1px 1px 1px #351408; }
+.book-cover > small { position:absolute; z-index:1; bottom:7.5%; left:2.6cqw; right:0; color:#e6cfa8b8; font:italic 1.55cqw/1 var(--serif); }
+.book-frame.is-cover-open .book-cover { visibility:hidden; pointer-events:none; transform:rotateY(-112deg); opacity:0; transition:transform 1.5s cubic-bezier(.6,.02,.28,1),opacity .5s ease 1s,visibility 0s 1.5s; }
+.book-frame.is-collection .book-cover,.book-frame.is-collection .book-ribbon { display:none; }
+[data-diary-theme=night] .is-book-writing .entry-date em,[data-diary-theme=night] .is-book-writing .entry-date small,[data-diary-theme=night] .journal-prompt p,[data-diary-theme=night] .quick-feelings,[data-diary-theme=night] .quick-feelings button { color:#e4d6c1; }
+[data-diary-theme=night] .is-book-writing .journal-prompt button,[data-diary-theme=night] .is-book-writing .feeling-button { color:#e4bd87; }
+[data-diary-theme=night] .is-book-writing .writing-pages .journal-text { color:#eee2cc; caret-color:#e5c891; background-image:repeating-linear-gradient(180deg,transparent 0,transparent calc(max(28px,3.2cqw) - 1px),#c5a77e26 calc(max(28px,3.2cqw) - 1px),#c5a77e26 max(28px,3.2cqw)); }
+[data-diary-theme=night] .is-book-writing .writing-pages .journal-text::placeholder { color:#c4b9a6; }
+@media(max-width:980px) {
+  .is-book-writing .diary-header { grid-template-columns:1fr; }
+  .is-book-writing .diary-tabs { max-width:none; }
+  .is-book-writing .book-toolbar,.is-book-writing .book-frame { width:calc(100vw - 58px); min-width:0; }
+  .is-book-writing .diary-layout { grid-template-columns:1fr; }
+  .is-book-writing .diary-tools,.is-book-writing .diary-panels { grid-column:1; }
+  .is-book-writing .diary-tools { grid-row:2; }
+  .is-book-writing .diary-panels { grid-row:3; grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:640px) {
+  .is-book-writing .diary-shell { padding-inline:13px; }
+  .is-book-writing .diary-header { padding-top:12px; }
+  .is-book-writing .diary-tabs { width:calc(100% + 8px); }
+  .is-book-writing .book-toolbar { width:100%; min-height:82px; margin-bottom:12px; flex-wrap:wrap; gap:6px; }
+  .is-book-writing .page-navigation { order:2; width:100%; justify-content:center; }
+  .book-actions { order:1; width:100%; justify-content:space-between; }
+  .book-close,.book-new { height:34px; padding-inline:13px; font-size:12px; }
+  .is-book-writing .book-frame { width:100%; height:760px; aspect-ratio:auto; margin-bottom:34px; }
+  .is-book-writing .paper--writing #editorView { padding:45px 37px 32px; }
+  .is-book-writing .page-topline { gap:10px; font-size:11px; }
+  .is-book-writing .page-topline i { width:34px; }
+  .is-book-writing .entry-date { min-height:82px; margin:15px 0 5px; gap:12px; }
+  .is-book-writing .entry-date > strong { font-size:68px; }
+  .is-book-writing .entry-date em { font-size:25px; }
+  .is-book-writing .entry-date small { font-size:9px; letter-spacing:.1em; white-space:normal; }
+  .journal-prompt { column-gap:8px; margin-bottom:12px; }
+  .journal-prompt > i { width:20px; }
+  .journal-prompt p { flex:1; font-size:19px; }
+  .journal-prompt button { margin-left:28px; font-size:9px; }
+  .is-book-writing .writing-pages { min-height:215px; max-height:none; }
+  .is-book-writing .writing-pages .journal-text { font-size:20px; line-height:31px; background-image:repeating-linear-gradient(180deg,transparent 0,transparent 30px,#8c5c342b 30px,#8c5c342b 31px); }
+  .day-seal { width:54px; height:54px; margin:8px 0; font-size:11px; }
+  .paper.is-day-sealed .day-seal strong { font-size:22px; }
+  .quick-feelings { gap:7px; }
+  .quick-feelings > p { font-size:16px; }
+  .quick-feelings > div { flex-wrap:wrap; gap:5px 19px; }
+  .quick-feelings button { padding:5px 1px; font-size:9px; letter-spacing:.12em; }
+  .is-book-writing .entry-footer { margin-top:7px; gap:5px 10px; }
+  .is-book-writing .save-strip { gap:7px; }
+  .is-book-writing .save-strip .tags-button { font-size:18px; }
+  .is-book-writing .save-strip .save-state { max-width:135px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .is-book-writing .book-cover { gap:18px; padding-left:10px; }
+  .book-cover > span { font-size:10px; }
+  .book-cover > strong { max-width:82%; font-size:34px; white-space:normal; }
+  .book-cover > i { width:10px; height:10px; }
+  .book-cover > small { left:10px; font-size:14px; }
+  .is-book-writing .diary-tools { grid-template-columns:1fr 1fr; }
+  .is-book-writing .diary-panels { grid-template-columns:1fr 1fr; }
+}
+@media(max-width:359px) {
+  .is-book-writing .book-frame { height:790px; }
+  .is-book-writing .paper--writing #editorView { padding-inline:30px; }
+  .is-book-writing .entry-date > strong { font-size:62px; }
+  .is-book-writing .entry-date em { font-size:22px; }
+  .quick-feelings > div { gap:5px 14px; }
+  .is-book-writing .diary-tools,.is-book-writing .diary-panels { grid-template-columns:minmax(0,1fr); }
+  .is-book-writing .diary-tools .tool-card--voice { grid-column:auto; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .book-cover,.book-frame.is-cover-open .book-cover { transition:none!important; }
+  .day-seal.is-stamping { animation:none; }
+}

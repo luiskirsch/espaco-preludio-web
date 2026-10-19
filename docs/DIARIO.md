@@ -16,6 +16,15 @@ As duas páginas usam `app/diary.js`, `diary-model.js`, `diary-audio.js`,
 identidade de portal e links de retorno ajustados. Os arquivos de implantação
 também são espelhados em `staging/`.
 
+A experiência de escrita abre como um livro físico: a capa de couro pode ser
+aberta e fechada, o pergaminho mantém proporção fixa e a data, a fase lunar,
+as perguntas rotativas, o selo de página salva e os sentimentos rápidos ficam
+integrados à folha. A textura de couro veio do protótipo HTML fornecido para o
+projeto e foi incorporada como arquivo local em `app/assets/diary/`, sem
+dependência externa. Em telas estreitas, o livro e os painéis se reorganizam
+sem rolagem horizontal; a composição mantém os mesmos recursos nos portais do
+colaborador e do aluno.
+
 ## Registros e privacidade
 
 O backend correspondente está em `osl-video-server/routes/diary.js` e

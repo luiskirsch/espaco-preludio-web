@@ -119,7 +119,8 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
       });
       const layout = await evaluate(`(()=>{const root=document.documentElement,dialog=document.getElementById('diaryDialog'),box=dialog.open?dialog.getBoundingClientRect():null,text=document.getElementById('journalText');return {view:${JSON.stringify(name)},viewport:innerWidth,content:root.scrollWidth,editor:${writing}?{height:text.clientHeight,content:text.scrollHeight,width:text.clientWidth,contentWidth:text.scrollWidth}:null,dialog:box?{left:Math.round(box.left),right:Math.round(box.right),width:Math.round(box.width)}:null}})()`);
       layouts.push(layout);
-      assert.equal(layout.viewport, width);
+      if (layout.viewport !== width || layout.content > width) layout.overflowing = await evaluate("[...document.querySelectorAll('body *')].map(element=>{const box=element.getBoundingClientRect();return {name:element.id||element.className||element.tagName,left:Math.round(box.left),right:Math.round(box.right),width:Math.round(box.width),scrollWidth:element.scrollWidth}}).filter(item=>item.left<0||item.right>innerWidth||item.scrollWidth>Math.ceil(item.width)+2).slice(0,30)");
+      assert.equal(layout.viewport, width, `${name}: viewport alterado por conteúdo em ${width}px ${JSON.stringify(layout.overflowing || [])}`);
       assert.ok(layout.content <= width, `${name}: overflow horizontal em ${width}px (${layout.content}px)`);
       if (layout.editor) assert.ok(layout.editor.content <= layout.editor.height + 2, `${name}: texto cortado após redimensionar para ${width}px (${layout.editor.content}px em ${layout.editor.height}px)`);
       if (layout.editor) assert.ok(layout.editor.contentWidth <= layout.editor.width + 2, `${name}: linhas da escrita ultrapassam a largura em ${width}px`);
@@ -161,17 +162,26 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
         assert.equal(element.transform, 'none', `${element.id}: a escrita permanece estável`);
       }
     };
+    if (capturePreview) await mkdir(join(root, 'docs/diary-preview'), { recursive: true });
     await viewport(1440);
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/app/diario.html?preview=1` });
     await poll(() => evaluate("!document.getElementById('journalText')?.disabled && document.getElementById('journalText').value.length>0"), 'prévia real pronta');
     assert.equal(await evaluate("document.getElementById('previewBanner').hidden"), false);
     assert.equal(await evaluate("document.getElementById('portalBack').getAttribute('href')"), './home.html');
     await evaluate('Promise.race([document.fonts.ready,new Promise(resolve=>setTimeout(resolve,3000))])');
+    assert.equal(await evaluate("document.getElementById('bookCover').getAttribute('aria-expanded')"), 'false', 'O diário começa com a capa fechada');
+    await capture('book-cover-desktop.png');
+    await click('#bookCover');
+    assert.equal(await evaluate("document.getElementById('bookFrame').classList.contains('is-cover-open')"), true, 'A capa abre o diário');
+    await click('#closeDiaryButton');
+    assert.equal(await evaluate("document.getElementById('bookFrame').classList.contains('is-cover-open')"), false, 'A ação de fechar devolve a capa');
+    assert.equal(await evaluate("document.getElementById('closeDiaryButton').textContent"), 'Abrir diário');
+    await click('#closeDiaryButton');
+    assert.equal(await evaluate("document.getElementById('bookFrame').classList.contains('is-cover-open')"), true, 'A ação da barra também reabre o diário');
     await checkLeaves();
     await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
     assert.equal(await evaluate("!document.querySelector('.diary-leaves') && document.getElementById('paper').getAnimations().length===0"), true, 'Folhas e pergaminho continuam estáticos com movimento reduzido');
     await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
-    if (capturePreview) await mkdir(join(root, 'docs/diary-preview'), { recursive: true });
     for (const width of [1440, 768, 390, 320]) {
       await viewport(width); await checkLayout('escrita', width); await checkPaperText(width);
       const tools = await evaluate("[...document.querySelectorAll('.tool-card,.tool-card__heading,.tool-card small,.voice-wave')].map(element=>({name:element.id||element.className,width:element.clientWidth,contentWidth:element.scrollWidth,height:element.clientHeight,contentHeight:element.scrollHeight}))");
@@ -213,8 +223,9 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
       await capture(`premium-${section}-day.png`, true);
     }
     await tab('diary');
-    const composition = await evaluate("(()=>{const paper=document.getElementById('paper').getBoundingClientRect(),rail=document.querySelector('.diary-panels').getBoundingClientRect();return {gap:rail.bottom-paper.bottom}})()");
-    assert.ok(composition.gap < 180, `Coluna de apoio equilibrada com o pergaminho (${composition.gap}px)`);
+    const composition = await evaluate("(()=>{const paper=document.getElementById('paper').getBoundingClientRect(),tools=document.querySelector('.diary-tools').getBoundingClientRect(),rail=document.querySelector('.diary-panels').getBoundingClientRect();return {paperBottom:paper.bottom,toolsTop:tools.top,railTop:rail.top}})()");
+    assert.ok(composition.toolsTop >= composition.paperBottom && composition.railTop >= composition.paperBottom, 'Recursos complementares começam abaixo do livro');
+    assert.ok(Math.abs(composition.toolsTop-composition.railTop) < 2, 'Ferramentas e painéis começam na mesma linha');
     await capture('premium-diary-day.png', true);
     await evaluate('window.scrollTo(0,document.documentElement.scrollHeight)');
     await tab('timeline');
@@ -297,6 +308,9 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     assert.equal(await evaluate("document.querySelectorAll('[data-feeling][aria-pressed=true]').length"), 3, 'Uma quarta escolha não ultrapassa o limite de três sentimentos');
     assert.equal(await evaluate(`document.querySelector('[data-feeling="${choices[3].id}"]').getAttribute('aria-pressed')`), 'false');
     await click('#applyFeelings'); await saved();
+    assert.equal(await evaluate("document.querySelectorAll('[data-quick-feeling][aria-pressed=true]').length"), 3, 'Os sentimentos rápidos refletem a seleção salva');
+    await click('[data-quick-feeling="cansaco"]');
+    assert.equal(await evaluate("document.querySelector('[data-quick-feeling=cansaco]').getAttribute('aria-pressed')"), 'false', 'A seleção rápida também respeita o limite de três sentimentos');
     await evaluate("document.getElementById('diaryToast').hidden=true");
 
     await tab('feelings');
@@ -448,6 +462,8 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     assert.equal(await evaluate("document.querySelector('.diary-brand').getAttribute('href')"), './aluno-diario.html');
     assert.equal(await evaluate("document.documentElement.dataset.diaryTheme"), 'night', 'Preferência é restaurada na navegação para o portal do aluno');
     assert.equal(await evaluate("document.getElementById('diaryThemeToggle').getAttribute('aria-pressed')"), 'true');
+    await capture('book-cover-mobile.png');
+    await click('#bookCover');
     await checkLayout('escrita', 390); await checkLeaves();
     await capture('premium-mobile-night.png', true);
     await click('#diaryThemeToggle');
@@ -455,7 +471,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
 
     assert.deepEqual(cdp.exceptions, [], 'Nenhum erro de execução no navegador');
     assert.deepEqual(cdp.privateRequests.filter(privateRequest), [], 'A prévia não tenta acessar Firebase ou backend');
-    if (capturePreview) await writeFile(join(root, 'docs/diary-preview/report.json'), JSON.stringify({ route: '/app/diario.html?preview=1', scenarios: ['blank-writing-prompt', 'fixed-height-automatic-pagination', 'paper-turn-animation-and-sound', 'paper-text-readability', 'long-writing-no-clipping', 'decorative-leaves-no-interception', 'reduced-motion', 'autosave', 'tags', 'aroma', 'font', 'insights-empty', 'insights-summary', 'three-feelings-limit', 'search-escaped-html', 'dream', 'sealed-capsule', 'release-without-saving', 'delete'], layouts, runtimeErrors: cdp.exceptions, privateRequests: cdp.privateRequests }, null, 2) + '\n');
+    if (capturePreview) await writeFile(join(root, 'docs/diary-preview/report.json'), JSON.stringify({ route: '/app/diario.html?preview=1', scenarios: ['leather-cover-open-and-close', 'blank-writing-prompt', 'fixed-height-automatic-pagination', 'paper-turn-animation-and-sound', 'paper-text-readability', 'long-writing-no-clipping', 'decorative-leaves-no-interception', 'reduced-motion', 'autosave', 'tags', 'aroma', 'font', 'insights-empty', 'insights-summary', 'three-feelings-limit', 'search-escaped-html', 'dream', 'sealed-capsule', 'release-without-saving', 'delete'], layouts, runtimeErrors: cdp.exceptions, privateRequests: cdp.privateRequests }, null, 2) + '\n');
   } finally {
     cdp?.socket.close(); browser.kill(); server.closeAllConnections();
     await new Promise(resolveClose => server.close(resolveClose));
