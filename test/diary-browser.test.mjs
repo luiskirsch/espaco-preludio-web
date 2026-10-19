@@ -144,10 +144,12 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
         }
       }
     };
-    const capture = async filename => {
+    const capture = async (filename, fullPage = false) => {
       if (!capturePreview) return;
       await evaluate('window.scrollTo(0,0)');
-      const screenshot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+      await evaluate('new Promise(resolve=>setTimeout(resolve,250))');
+      const dimensions = fullPage ? (await send('Page.getLayoutMetrics')).cssContentSize : null;
+      const screenshot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: fullPage, ...(dimensions ? { clip: { x: 0, y: 0, width: dimensions.width, height: dimensions.height, scale: 1 } } : {}) });
       await writeFile(join(root, 'docs/diary-preview', filename), Buffer.from(screenshot.data, 'base64'));
     };
     const checkLeaves = async () => {
@@ -178,6 +180,46 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
       await openDialog('#tagsButton'); await checkLayout('marcadores', width); await closeDialog();
     }
     await viewport(1440);
+
+    const textBeforeTheme = await evaluate("document.getElementById('journalText').value");
+    await click('#diaryThemeToggle');
+    assert.equal(await evaluate("document.documentElement.dataset.diaryTheme"), 'night');
+    assert.equal(await evaluate("document.getElementById('diaryThemeToggle').getAttribute('aria-pressed')"), 'true');
+    assert.equal(await evaluate("document.querySelector('[data-theme-label]').textContent"), 'Modo noturno', 'Nome do controle permanece estável quando ativado');
+    assert.equal(await evaluate("localStorage.getItem('ep.diary.appearance')"), 'night');
+    assert.equal(await evaluate("document.getElementById('journalText').value"), textBeforeTheme, 'Troca de aparência preserva a escrita');
+    assert.equal(await evaluate("getComputedStyle(document.getElementById('journalText')).color"), 'rgb(238, 226, 204)', 'Escrita ganha tinta clara no modo noturno');
+    for (const section of ['diary', 'timeline', 'dreams', 'capsules', 'feelings']) {
+      await tab(section);
+      for (const width of [320, 390, 768, 1024, 1440]) {
+        await viewport(width); await checkLayout(`noturno: ${section}`, width);
+        const overflow = await evaluate("[...document.querySelectorAll('.side-panel,.theme-toggle,.entry-card,.feelings-view')].filter(element=>element.getClientRects().length && element.scrollWidth>element.clientWidth+2).map(element=>element.className)");
+        assert.deepEqual(overflow, [], `${section}: cartões sem transbordamento em ${width}px`);
+      }
+      if (section !== 'diary') await capture(`premium-${section}-night.png`, true);
+    }
+    await tab('diary');
+    await capture('premium-diary-night.png', true);
+    await openDialog('#fontButton');
+    await capture('premium-dialog-night.png');
+    await closeDialog();
+    await click('#diaryThemeToggle');
+    assert.equal(await evaluate("document.documentElement.dataset.diaryTheme"), 'day');
+    for (const section of ['timeline', 'dreams', 'capsules', 'feelings']) {
+      await tab(section);
+      for (const width of [320, 390, 768, 1024, 1440]) {
+        await viewport(width); await checkLayout(`claro: ${section}`, width);
+      }
+      await capture(`premium-${section}-day.png`, true);
+    }
+    await tab('diary');
+    const composition = await evaluate("(()=>{const paper=document.getElementById('paper').getBoundingClientRect(),rail=document.querySelector('.diary-panels').getBoundingClientRect();return {gap:rail.bottom-paper.bottom}})()");
+    assert.ok(composition.gap < 180, `Coluna de apoio equilibrada com o pergaminho (${composition.gap}px)`);
+    await capture('premium-diary-day.png', true);
+    await evaluate('window.scrollTo(0,document.documentElement.scrollHeight)');
+    await tab('timeline');
+    await poll(() => evaluate("document.activeElement===document.querySelector('#collectionView h1') && document.querySelector('.journal-stage').getBoundingClientRect().top>=0"), 'nova seção visível e com foco após navegar do fim da página');
+    await tab('diary');
 
     await openDialog('#feelingButton');
     const initialFeelings = await evaluate("[...document.querySelectorAll('[data-feeling][aria-pressed=true]')].map(element=>element.dataset.feeling)");
@@ -338,12 +380,18 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     await poll(() => evaluate("document.body.classList.contains('is-playing') && document.getElementById('playerDescription').textContent.includes('Piano para desacelerar')"), 'piano separado da chuva');
     await audioClick('#playButton');
 
+    await click('#diaryThemeToggle');
     await viewport(390);
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/aluno-diario.html?preview=1` });
     await poll(() => evaluate("document.body.dataset.portal==='student' && !document.getElementById('journalText')?.disabled && document.getElementById('journalText').value.length>0"), 'prévia do aluno');
     assert.equal(await evaluate("document.getElementById('portalBack').getAttribute('href')"), './aluno-painel.html');
     assert.equal(await evaluate("document.querySelector('.diary-brand').getAttribute('href')"), './aluno-diario.html');
+    assert.equal(await evaluate("document.documentElement.dataset.diaryTheme"), 'night', 'Preferência é restaurada na navegação para o portal do aluno');
+    assert.equal(await evaluate("document.getElementById('diaryThemeToggle').getAttribute('aria-pressed')"), 'true');
     await checkLayout('escrita', 390); await checkLeaves();
+    await capture('premium-mobile-night.png', true);
+    await click('#diaryThemeToggle');
+    await capture('premium-mobile-day.png', true);
 
     assert.deepEqual(cdp.exceptions, [], 'Nenhum erro de execução no navegador');
     assert.deepEqual(cdp.privateRequests.filter(privateRequest), [], 'A prévia não tenta acessar Firebase ou backend');

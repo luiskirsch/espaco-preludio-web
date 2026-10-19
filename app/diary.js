@@ -139,6 +139,15 @@ function activateTab(name) {
     if (button.dataset.tab === name) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current');
   });
 }
+function revealPage(heading) {
+  requestAnimationFrame(() => {
+    if (dialog.open) return;
+    heading?.setAttribute('tabindex', '-1');
+    heading?.focus({ preventScroll: true });
+    const stage = document.querySelector('.journal-stage');
+    if (stage.getBoundingClientRect().top < 0) stage.scrollIntoView({ block: 'start', behavior: 'instant' });
+  });
+}
 function showEditor(entry) {
   dictation.stop(); dictationEntryId = null;
   current = structuredClone(entry); dirty = false; conflict = false; editTick++; clearTimeout(saveTimer);
@@ -165,17 +174,23 @@ async function switchTab(name) {
   dictation.stop();
   if (name === 'diary') {
     const latest = entries.find(item => item.kind === 'diary' && item.date === today());
-    showEditor(latest || draft()); return;
+    showEditor(latest || draft()); revealPage($('entryDate')); return;
   }
   activateTab(name); $('editorView').hidden = true; $('collectionView').hidden = false;
   renderCollection(name);
+  revealPage($('collectionView').querySelector('h1'));
 }
 function emptyState(icon, title, description) { return `<div class="empty-state"><svg><use href="#i-${icon}"/></svg><strong>${title}</strong><p>${description}</p></div>`; }
 function cardMarkup(entry) {
   if (entry.locked) return `<article class="entry-card"><div class="capsule-lock"><svg><use href="#i-lock"/></svg><div><strong>Uma carta para o futuro</strong><small>Abre em ${esc(dateLabel(entry.unlockDate))}</small></div></div><button class="entry-delete" data-delete="${esc(entry.id)}">Excluir cápsula</button></article>`;
-  const title = entry.text.split('\n')[0].slice(0, 82);
+  const content = entry.text.trim();
+  const firstLine = content.split('\n')[0];
+  const excerpt = firstLine.slice(0, 82);
+  const boundary = excerpt.lastIndexOf(' ');
+  const title = firstLine.length > 82 && boundary > 0 ? excerpt.slice(0, boundary) : excerpt;
+  const remainder = content.slice(title.length).trim().replace(/\s+/g, ' ');
   const label = entry.kind === 'dream' ? 'Sonho' : entry.kind === 'capsule' ? 'Cápsula aberta' : 'Memória';
-  return `<article class="entry-card"><button class="entry-open" data-open="${esc(entry.id)}"><time>${esc(dateLabel(entry.date))} · ${label}</time><h2>${esc(title)}</h2><p>${esc(entry.text.replace(/\s+/g, ' ').slice(0, 130))}${entry.text.length > 130 ? '…' : ''}</p><div class="entry-tags">${(entry.tags || []).map(tag => `<span class="tag">#${esc(tag)}</span>`).join('')}${(entry.feelings || []).map(id => `<span class="tag">${esc(FEELINGS[id]?.label || '')}</span>`).join('')}</div></button><button class="entry-delete" data-delete="${esc(entry.id)}">Excluir ${entry.kind === 'dream' ? 'sonho' : 'página'}</button></article>`;
+  return `<article class="entry-card"><button class="entry-open" data-open="${esc(entry.id)}"><time>${esc(dateLabel(entry.date))} · ${label}</time><h2>${esc(title)}${entry.text.split('\n')[0].length > 82 ? '…' : ''}</h2>${remainder ? `<p>${esc(remainder.slice(0, 130))}${remainder.length > 130 ? '…' : ''}</p>` : ''}<div class="entry-tags">${(entry.tags || []).map(tag => `<span class="tag">#${esc(tag)}</span>`).join('')}${(entry.feelings || []).map(id => `<span class="tag">${esc(FEELINGS[id]?.label || '')}</span>`).join('')}</div></button><button class="entry-delete" data-delete="${esc(entry.id)}">Excluir ${entry.kind === 'dream' ? 'sonho' : 'página'}</button></article>`;
 }
 function renderCollection(name) {
   const box = $('collectionView');
@@ -203,7 +218,7 @@ function renderCollection(name) {
     $('collectionNew').addEventListener('click', () => name === 'capsules' ? openCapsule() : newPage(name === 'dreams' ? 'dream' : 'diary'));
     $('entryList').addEventListener('click', event => {
       const open = event.target.closest('[data-open]'), remove = event.target.closest('[data-delete]');
-      if (open) { const item = entries.find(entry => entry.id === open.dataset.open); if (item) { showEditor(item); text.focus(); } }
+      if (open) { const item = entries.find(entry => entry.id === open.dataset.open); if (item) { showEditor(item); revealPage($('entryDate')); } }
       if (remove) confirmDelete(entries.find(entry => entry.id === remove.dataset.delete));
     });
   }
