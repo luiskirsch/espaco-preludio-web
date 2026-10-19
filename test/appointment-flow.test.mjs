@@ -10,7 +10,7 @@ import { parse } from 'acorn';
 
 const root = resolve(import.meta.dirname, '..');
 const chrome = [process.env.CHROME_PATH, 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe', '/usr/bin/chromium'].find(p => p && existsSync(p));
+  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe', '/usr/bin/google-chrome', '/usr/bin/chromium'].find(p => p && existsSync(p));
 
 test('appointment, patient and public-booking scripts have valid syntax', async () => {
   for (const name of ['agenda.html', 'painel.html', 'pacientes.html', 'agendar.html', 'app/agendar.html']) {
