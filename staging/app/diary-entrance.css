@@ -11,6 +11,7 @@
   font-family:Inter,Arial,sans-serif;
   -webkit-tap-highlight-color:transparent;
 }
+.diary-entrance,.diary-entrance *,.diary-entrance::before,.diary-entrance::after { box-sizing:border-box; }
 .diary-entrance::before {
   content:''; position:absolute; z-index:-2; inset:0;
   background:radial-gradient(ellipse at 50% 42%,#8c593536,transparent 57%),linear-gradient(145deg,#10363840,transparent 45%,#6b38231f);
@@ -62,8 +63,10 @@ html.diary-entrance-revealing .diary-shell { animation:diary-entry-world 2.15s c
 @keyframes diary-entry-light { from { opacity:.15; transform:scale(.8); } to { opacity:1; transform:scale(1.15); } }
 @keyframes diary-entry-dust { 0%,100% { opacity:0; transform:translate3d(0,18px,0); } 45% { opacity:.65; } 80% { opacity:.15; transform:translate3d(var(--drift),-30px,0); } }
 @keyframes diary-entry-arrive { 0%,18% { opacity:1; } to { opacity:0; visibility:hidden; } }
-@keyframes diary-entry-away { from { opacity:1; transform:scale(1); } to { opacity:0; transform:scale(1.08) translateY(-15px); } }
-@keyframes diary-entry-world { from { opacity:0; transform:translateY(14px) scale(.985); } 30% { opacity:.25; } to { opacity:1; transform:none; } }
+@keyframes diary-entry-away { from { opacity:1; transform:scale(1); } 45% { opacity:.2; } 65% { opacity:0; } to { opacity:0; transform:scale(1.045) translateY(-8px); } }
+/* Dissolve into the final layout: scaling the entire interface makes it look
+   as if the page is resizing or reloading at the end of the passage. */
+@keyframes diary-entry-world { from { opacity:0; } 30% { opacity:.25; } to { opacity:1; } }
 @media(max-width:600px) {
   .diary-entrance { padding:24px 24px 70px; }
   .diary-entrance__book { width:88px; height:113px; margin-bottom:28px; }

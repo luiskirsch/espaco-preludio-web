@@ -284,8 +284,11 @@ test('production diary: portal entry carries the cinematic reveal through both r
   })()`;
   await send('Page.addScriptToEvaluateOnNewDocument', { source: `const entranceObserver=new MutationObserver(()=>{
     if(!document.querySelector('.diary-entrance--arrival'))return;
-    window.__diaryArrivalView=${passageView};entranceObserver.disconnect();
-  });entranceObserver.observe(document,{childList:true,subtree:true});` });
+    window.__diaryArrivalView ||= ${passageView};
+    if(document.documentElement.classList.contains('diary-entrance-revealing')){
+      window.__diaryRevealView=${passageView};entranceObserver.disconnect();
+    }
+  });entranceObserver.observe(document,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});` });
   const sources = [
     ['/app/home.html', '.home-diary-card', '/app/diario.html', 1440],
     ['/app/home.html', '.a-nav__item[href="./diario.html"]', '/app/diario.html', 1440],
@@ -328,7 +331,8 @@ test('production diary: portal entry carries the cinematic reveal through both r
     assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), 'Luis Henrique');
     assert.equal(await evaluate("document.getElementById('bookCover').getAttribute('aria-expanded')"), 'false', 'The passage lands on the closed personal cover');
     assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'), true);
-    assert.equal(await evaluate("document.getElementById('bookFrame').offsetWidth"), arrivalView.bookWidth, 'Restoring scrolling does not resize the revealed diary');
+    const revealView = await evaluate('window.__diaryRevealView');
+    assert.equal(await evaluate("document.getElementById('bookFrame').offsetWidth"), revealView.bookWidth, 'Restoring scrolling does not resize the revealed diary');
     const history = await send('Page.getNavigationHistory');
     await send('Page.navigateToHistoryEntry', { entryId: history.entries[history.currentIndex - 1].id });
     await poll(() => evaluate(`location.pathname===${JSON.stringify(source.split('?')[0])} && !!document.querySelector(${JSON.stringify(selector)}) && !document.querySelector('.diary-entrance') && !document.documentElement.classList.contains('diary-entrance-leaving')`), 'back restores portal');
@@ -349,6 +353,73 @@ test('production diary: portal entry carries the cinematic reveal through both r
   await send('Page.reload', { ignoreCache: true });
   await poll(() => evaluate("!!document.getElementById('journalText') && !document.getElementById('journalText').disabled"), 'reloaded diary ready');
   assert.equal(await evaluate("!!document.querySelector('.diary-entrance') || document.documentElement.classList.contains('diary-entrance-pending')"), false, 'Reload never replays the passage');
+}));
+
+test('production diary: a slow document, saved cover and fonts never expose an unfinished diary during the passage', { ...options, timeout: 60000 }, () => withBrowser(async ({ server, accounts, covers, holdAsset, hold, send, click, evaluate }) => {
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  accounts.get('A').set('slow-entry', entry('slow-entry', 'Minha lembrança preservada.'));
+  covers.set('A', 'Meu universo particular');
+  await send('Network.setCacheDisabled', { cacheDisabled: true });
+  await send('Page.addScriptToEvaluateOnNewDocument', { source: "document.addEventListener('DOMContentLoaded',()=>{window.__diaryDcl=true},{once:true})" });
+  for (const [source, selector, target, width] of [
+    ['/app/home.html', '.home-diary-card', '/app/diario.html', 1440],
+    ['/aluno-painel.html?preview=1', '.nav-button--diary', '/aluno-diario.html', 390],
+  ]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: width < 700 });
+    await send('Page.navigate', { url: origin + source });
+    await poll(() => evaluate(`!!document.querySelector(${JSON.stringify(selector)}) && !!document.getElementById('diaryEntranceStyles')?.sheet`), 'portal ready');
+    await evaluate("localStorage.removeItem('ep.diary.cover-title.A')");
+    const module = holdAsset('/app/diary.js');
+    const font = holdAsset('/fonts/cormorantgaramond-latin.woff2');
+    const cover = hold('GET', 'A', record => record.path.endsWith('/ajustes/capa'));
+    await evaluate(`window.addEventListener('pagehide',()=>{
+      const scene=document.querySelector('.diary-entrance');
+      sessionStorage.setItem('__lastPassageFrame',JSON.stringify({present:!!scene,opacity:scene&&getComputedStyle(scene).opacity}));
+    },{once:true})`);
+    await click(selector);
+    await poll(() => module.request && evaluate(`location.pathname===${JSON.stringify(target)} && !!document.querySelector('.diary-entrance--arrival')`), 'continuation mounted before the delayed module');
+    assert.deepEqual(await evaluate("JSON.parse(sessionStorage.getItem('__lastPassageFrame'))"), { present: true, opacity: '1' }, 'The outgoing document retains the cinematic scene in its last frame');
+    assert.equal(await evaluate('!!window.__diaryDcl'), false, 'The arrival exists before DOMContentLoaded');
+    // The former six-second failsafe exposed a half-loaded interface here.
+    await new Promise(resolveWait => setTimeout(resolveWait, 6200));
+    const hidden = "!!document.querySelector('.diary-entrance--arrival') && !document.documentElement.classList.contains('diary-entrance-revealing') && getComputedStyle(document.querySelector('.diary-shell')).opacity==='0'";
+    assert.equal(await evaluate(hidden), true, 'A slow module never interrupts the scene or reveals placeholders');
+    module.release();
+    await poll(() => cover.request && evaluate("!document.getElementById('journalText').disabled"), 'writing ready while the saved title is still delayed');
+    assert.equal(await evaluate(hidden), true, 'Ready writing alone is insufficient: the saved personal cover must arrive too');
+    cover.release();
+    await poll(() => evaluate("document.documentElement.dataset.diaryReady==='true' && document.getElementById('coverTitle').textContent==='Meu universo particular'"), 'saved cover restored without a local cache');
+    await poll(() => font.request, 'diary font delayed');
+    assert.equal(await evaluate(hidden), true, 'The reveal also waits for the real typography');
+    font.release();
+    await poll(() => evaluate("document.documentElement.classList.contains('diary-entrance-revealing')"), 'one final dissolve');
+    const geometry = await evaluate("(()=>{const shell=document.querySelector('.diary-shell'),box=document.getElementById('bookFrame').getBoundingClientRect();return {transform:getComputedStyle(shell).transform,x:box.x,y:box.y,width:box.width,height:box.height}})()");
+    assert.equal(geometry.transform, 'none', 'The revealed interface has its final geometry throughout the dissolve');
+    await poll(() => evaluate("!document.querySelector('.diary-entrance')"), 'complete passage');
+    assert.deepEqual(await evaluate("(()=>{const shell=document.querySelector('.diary-shell'),box=document.getElementById('bookFrame').getBoundingClientRect();return {transform:getComputedStyle(shell).transform,x:box.x,y:box.y,width:box.width,height:box.height}})()"), geometry, 'Finishing the transition never resizes or moves the book');
+    assert.equal(await evaluate("document.getElementById('bookCover').getAttribute('aria-expanded')"), 'false');
+  }
+}));
+
+test('production diary: the very first arrival frame retains the selected language before translation bootstrap', options, () => withBrowser(async ({ server, send, click, evaluate }) => {
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  await send('Page.addScriptToEvaluateOnNewDocument', { source: `const languageObserver=new MutationObserver(()=>{
+    const title=document.querySelector('.diary-entrance--arrival h1');if(!title)return;
+    window.__firstEntranceCopy=[...title.children].map(node=>node.textContent).join('|');languageObserver.disconnect();
+  });languageObserver.observe(document,{childList:true,subtree:true});` });
+  for (const [locale, copy] of [['en-US', 'Diary of|Lived Thoughts'], ['es-ES', 'Diario de|Pensamientos Vividos']]) {
+    await send('Page.navigate', { url: origin + '/app/home.html' });
+    await poll(() => evaluate("!!document.querySelector('.home-diary-card')"), 'language setup');
+    await evaluate(`localStorage.setItem('ep_lang',${JSON.stringify(locale)})`);
+    await send('Page.navigate', { url: origin + '/app/home.html' });
+    await poll(() => evaluate(`window.EP_I18N?.locale?.()===${JSON.stringify(locale)} && !!document.getElementById('diaryEntranceStyles')?.sheet`), 'translated portal ready');
+    await click('.home-diary-card');
+    assert.equal(await evaluate("[...document.querySelector('.diary-entrance h1').children].map(node=>node.textContent).join('|')"), copy);
+    await poll(() => evaluate("location.pathname==='/app/diario.html' && !!window.__firstEntranceCopy"), 'first destination frame');
+    assert.equal(await evaluate('window.__firstEntranceCopy'), copy, 'Navigation never briefly switches the cinematic title back to Portuguese');
+    await click('.diary-entrance__skip');
+    await poll(() => evaluate("document.documentElement.dataset.diaryReady==='true'"), 'destination ready after skip');
+  }
 }));
 
 test('production diary: an early portal click waits for cold entrance styles in both portals', options, () => withBrowser(async ({ server, accounts, holdAsset, send, click, evaluate }) => {

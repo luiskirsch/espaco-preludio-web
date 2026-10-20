@@ -105,6 +105,8 @@ async function loadPortalAvatar(user) {
     const image = new Image();
     image.alt = '';
     image.src = `data:${mime};base64,${base64}`;
+    await image.decode();
+    if (generation !== bootGeneration || account?.uid !== user.uid) return;
     $('avatar').replaceChildren(image);
     $('avatar').setAttribute('aria-label', `Foto de perfil de ${user.displayName || 'usuário'}`);
   } catch { /* A inicial continua disponível quando a foto não puder ser carregada. */ }
@@ -726,6 +728,18 @@ async function loadDiary() {
     syncInvitationAvailability();
   } catch (error) { if (generation !== bootGeneration) return; ready = false; text.disabled = true; setStatus('Diário indisponível · tentar novamente', 'error'); toast(errorText(error)); }
 }
+async function prepareDiary(user) {
+  delete document.documentElement.dataset.diaryReady;
+  // loadDiary starts the generation. The cover and profile must belong to
+  // that same generation, including on a first visit without a local cache.
+  const pending = [loadDiary(), loadCoverTitle()];
+  if (user) pending.push(loadPortalAvatar(user));
+  const generation = bootGeneration;
+  await Promise.allSettled(pending);
+  if (generation !== bootGeneration) return;
+  document.documentElement.dataset.diaryReady = 'true';
+  document.dispatchEvent(new Event('ep:diary-ready'));
+}
 const demoEntries = new Map();
 let demoCoverTitle = '';
 async function demoApi(path, options = {}) {
@@ -750,7 +764,7 @@ async function demoApi(path, options = {}) {
 if (preview) {
   $('previewBanner').hidden = false;
   const example = { ...draft(), text: 'Hoje o dia teve um tom diferente… caminhei pelo parque e o vento parecia trazer memórias antigas…\nE de repente, uma sensação de nostalgia me abraçou, como se o próprio cenário estivesse contando uma história.\nSinto que o outono sempre traz essa vontade de olhar para dentro.', feelings: ['nostalgia', 'serenidade'], tags: ['parque', 'nostalgia', 'reflexão'], version: 1, createdAt: Date.now(), updatedAt: Date.now() };
-  demoEntries.set(example.id, example); loadCoverTitle(); loadDiary();
+  demoEntries.set(example.id, example); prepareDiary();
 } else {
   try {
     const [{ onAuthStateChanged }, config] = await Promise.all([import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js'), import('../js/firebase-config.js?h=69b74fc63a')]);
@@ -764,7 +778,7 @@ if (preview) {
       if (!user) { account = null; coverTitle = ''; renderCoverTitle(); location.replace(student ? './aluno-login.html' : './login.html'); return; }
       account = user; finishCoverNaming({ save: false });
       coverTitle = (() => { try { return localStorage.getItem(coverTitleKey()) || ''; } catch { return ''; } })();
-      renderCoverTitle(); loadCoverTitle(); loadDiary(); loadPortalAvatar(user);
+      renderCoverTitle(); prepareDiary(user);
     });
   } catch { setStatus('Não foi possível conectar · recarregue a página', 'error'); toast('Não foi possível abrir o diário. Verifique sua conexão e recarregue a página.'); }
 }
