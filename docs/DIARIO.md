@@ -19,8 +19,13 @@ também são espelhados em `staging/`.
 A entrada pelos atalhos do portal usa `diary-entrance.js` e
 `diary-entrance.css`: uma passagem curta em luz âmbar, com revelação da capa no
 destino. A intenção fica apenas no `sessionStorage`, dura até 15 segundos e é
-consumida ao chegar; recarregar o diário não repete a animação. Links abertos em
-outra aba e a preferência por movimento reduzido mantêm a navegação direta.
+consumida ao chegar; recarregar o diário não repete a animação. A mesma composição
+e os mesmos efeitos aparecem nos dois portais. Um clique durante o carregamento
+inicial aguarda os estilos; se a saída ainda não pôde tocar, o destino apresenta
+a passagem completa na chegada, inclusive sem cache, acesso ao armazenamento
+ou referenciador. Um primeiro acesso por link direto também recebe a apresentação;
+recarregar ou retornar pelo histórico não a repete.
+Cliques modificados continuam abrindo outra aba normalmente.
 “Pular animação” antecipa a entrada. O retorno pelo histórico libera o portal.
 
 Sem um título personalizado, a capa usa o nome de exibição da conta, assim

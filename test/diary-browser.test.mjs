@@ -184,7 +184,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     if (capturePreview) await mkdir(join(root, 'docs/diary-preview'), { recursive: true });
     await viewport(1440);
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/app/diario.html?preview=1` });
-    await poll(() => evaluate("!document.getElementById('journalText')?.disabled && document.getElementById('journalText').value.length>0"), 'prévia real pronta');
+    await poll(() => evaluate("!document.getElementById('journalText')?.disabled && document.getElementById('journalText').value.length>0 && !document.querySelector('.diary-entrance') && !document.documentElement.classList.contains('diary-entrance-pending')"), 'prévia real pronta');
     assert.equal(await evaluate("document.getElementById('previewBanner').hidden"), false);
     assert.equal(await evaluate("document.getElementById('portalBack').getAttribute('href')"), './home.html');
     await evaluate('Promise.race([document.fonts.ready,new Promise(resolve=>setTimeout(resolve,3000))])');
@@ -547,7 +547,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     await click('#diaryThemeToggle');
     await viewport(390);
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/aluno-diario.html?preview=1` });
-    await poll(() => evaluate("document.body.dataset.portal==='student' && !document.getElementById('journalText')?.disabled && document.getElementById('journalText').value.length>0"), 'prévia do aluno');
+    await poll(() => evaluate("document.body.dataset.portal==='student' && !document.getElementById('journalText')?.disabled && document.getElementById('journalText').value.length>0 && !document.querySelector('.diary-entrance') && !document.documentElement.classList.contains('diary-entrance-pending')"), 'prévia do aluno');
     assert.equal(await evaluate("document.getElementById('portalBack').getAttribute('href')"), './aluno-painel.html');
     assert.equal(await evaluate("document.querySelector('.diary-brand').getAttribute('href')"), './aluno-diario.html');
     assert.equal(await evaluate("document.documentElement.dataset.diaryTheme"), 'night', 'Preferência é restaurada na navegação para o portal do aluno');

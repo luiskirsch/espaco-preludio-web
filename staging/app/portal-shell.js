@@ -1,8 +1,16 @@
 // Portal responsivo do colaborador: preserva a navegação móvel e cria uma
 // experiência institucional completa em telas maiores.
 (function enhanceCollaboratorPortal() {
+  // The diary can be clicked while its entrance script is still downloading.
+  window.addEventListener('pageswap', event => {
+    const next = event.activation?.entry?.url;
+    if (!event.viewTransition || !next || !/\/app\/diario\.html$/.test(new URL(next).pathname)) return;
+    event.viewTransition.ready.catch(() => {});
+    event.viewTransition.finished.catch(() => {});
+    event.viewTransition.skipTransition();
+  });
   const diaryEntrance = document.createElement('script');
-  diaryEntrance.src = new URL('./diary-entrance.js?h=aa880337b5', document.currentScript.src).href;
+  diaryEntrance.src = new URL('./diary-entrance.js?h=7b38e899e9', document.currentScript.src).href;
   document.head.append(diaryEntrance);
   const currentFile = (location.pathname.split("/").pop() || "home.html").toLowerCase();
   const route = currentFile.replace(/\.html$/, "") || "home";

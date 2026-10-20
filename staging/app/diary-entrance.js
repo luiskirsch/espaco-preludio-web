@@ -5,9 +5,8 @@
   root.dataset.diaryEntranceBound = 'true';
   const key = 'ep.diary.entrance';
   const scriptUrl = document.currentScript.src;
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const diaryPath = /\/(?:app\/diario|aluno-diario)\.html$/;
-  let overlay, departureTimer, cleanupTimer, destination, previousFocus, navigating = false;
+  let overlay, departureTimer, cleanupTimer, styleWaitTimer, cancelStyleWait, destination, previousFocus, navigating = false, departurePlayed = false;
   const inertElements = new Map();
   const words = {
     'pt': ['Espaço Prelúdio', 'Diário dos', 'Pensamentos Vividos', 'Um tempo só seu.', 'Pular animação'],
@@ -20,14 +19,15 @@
     stylesheet = document.createElement('link');
     stylesheet.id = 'diaryEntranceStyles';
     stylesheet.rel = 'stylesheet';
-    stylesheet.href = new URL('./diary-entrance.css?h=5630c065dd', scriptUrl).href;
+    stylesheet.href = new URL('./diary-entrance.css?h=34f5f0036e', scriptUrl).href;
     document.head.append(stylesheet);
   }
 
   function clearIntent() { try { sessionStorage.removeItem(key); } catch { /* Storage is optional. */ } }
   function cleanup() {
-    clearTimeout(departureTimer); clearTimeout(cleanupTimer);
-    overlay?.remove(); overlay = null; destination = null; navigating = false;
+    clearTimeout(departureTimer); clearTimeout(cleanupTimer); clearTimeout(styleWaitTimer);
+    cancelStyleWait?.(); cancelStyleWait = null;
+    overlay?.remove(); overlay = null; destination = null; navigating = false; departurePlayed = false;
     root.classList.remove('diary-entrance-pending', 'diary-entrance-revealing', 'diary-entrance-leaving');
     for (const [element, inert] of inertElements) element.inert = inert;
     inertElements.clear();
@@ -38,18 +38,19 @@
     if (!destination || navigating) return;
     navigating = true;
     clearTimeout(departureTimer);
-    try { sessionStorage.setItem(key, JSON.stringify({ path: destination.pathname, at: Date.now(), animate: !skip })); } catch { /* Navigation still works. */ }
+    try { sessionStorage.setItem(key, JSON.stringify({ path: destination.pathname, at: Date.now(), animate: !skip, departurePlayed })); } catch { /* Navigation still works. */ }
     try { location.assign(destination.href); } catch { clearIntent(); cleanup(); }
     // A cancelled navigation must never leave the portal covered or inert.
     cleanupTimer = setTimeout(() => { clearIntent(); cleanup(); }, 5000);
   }
-  function mount(phase, point) {
+  function mount(phase, point, standalone = false) {
     const locale = (window.EP_I18N?.locale?.() || root.lang || 'pt').slice(0, 2);
     const copy = words[locale] || words.pt;
     overlay = document.createElement('div');
     overlay.className = `diary-entrance diary-entrance--${phase}`;
-    overlay.setAttribute('role', phase === 'departure' ? 'dialog' : 'status');
-    if (phase === 'departure') overlay.setAttribute('aria-modal', 'true');
+    const interactive = phase === 'departure' || standalone;
+    overlay.setAttribute('role', interactive ? 'dialog' : 'status');
+    if (interactive) overlay.setAttribute('aria-modal', 'true');
     overlay.setAttribute('aria-labelledby', 'diaryEntranceTitle');
     if (point) { overlay.style.setProperty('--entry-x', `${point.x}px`); overlay.style.setProperty('--entry-y', `${point.y}px`); }
     overlay.innerHTML = `<div class="diary-entrance__halo" aria-hidden="true"></div>
@@ -65,10 +66,13 @@
     overlay.querySelector('h1 span').textContent = copy[1];
     overlay.querySelector('h1 strong').textContent = copy[2];
     overlay.querySelector('.diary-entrance__whisper').textContent = copy[3];
-    if (phase === 'departure') {
+    if (interactive) {
       const skip = document.createElement('button');
       skip.type = 'button'; skip.className = 'diary-entrance__skip'; skip.textContent = copy[4];
-      skip.addEventListener('click', () => navigate({ skip: true })); overlay.append(skip);
+      const skipPassage = () => phase === 'departure' ? navigate({ skip: true }) : cleanup();
+      skip.addEventListener('click', skipPassage);
+      skip.addEventListener('keydown', event => { if (event.key === 'Escape') { event.preventDefault(); skipPassage(); } });
+      overlay.append(skip);
       previousFocus = document.activeElement;
       for (const element of document.body.children) { inertElements.set(element, element.inert); element.inert = true; }
       document.body.append(overlay); skip.focus({ preventScroll: true });
@@ -76,20 +80,57 @@
     return overlay;
   }
 
+  function depart(point) {
+    if (!destination || navigating) return;
+    departurePlayed = true;
+    mount('departure', point); root.classList.add('diary-entrance-leaving');
+    departureTimer = setTimeout(navigate, 1250);
+  }
+  function waitForStyles(point) {
+    if (stylesheet.sheet) { depart(point); return; }
+    let settled = false;
+    const clear = () => {
+      clearTimeout(styleWaitTimer);
+      stylesheet.removeEventListener('load', loaded);
+      stylesheet.removeEventListener('error', failed);
+    };
+    const finish = styled => {
+      if (settled) return;
+      settled = true; clear(); cancelStyleWait = null;
+      if (!destination || navigating) return;
+      if (styled) depart(point);
+      else navigate(); // The destination can run the complete passage itself.
+    };
+    const loaded = () => finish(true), failed = () => finish(false);
+    cancelStyleWait = () => { settled = true; clear(); };
+    stylesheet.addEventListener('load', loaded);
+    stylesheet.addEventListener('error', failed);
+    styleWaitTimer = setTimeout(failed, 1500);
+  }
+
   if (diaryPath.test(location.pathname)) {
     let intent;
-    try { intent = JSON.parse(sessionStorage.getItem(key)); } catch { /* Direct access uses the ordinary book. */ }
+    try { intent = JSON.parse(sessionStorage.getItem(key)); } catch { /* The arrival also works without storage. */ }
     clearIntent();
-    if (intent?.path === location.pathname && intent.animate !== false && Date.now() - intent.at >= 0 && Date.now() - intent.at < 15000 && !reduced.matches) {
+    const freshIntent = intent?.path === location.pathname && Date.now() - intent.at >= 0 && Date.now() - intent.at < 15000;
+    const freshNavigation = performance.getEntriesByType('navigation')[0]?.type === 'navigate';
+    const wantsPassage = freshIntent && intent.animate !== false;
+    // The site deliberately sends no referrer. A fresh entry must work even
+    // when the portal script was late, storage is blocked, or a link was shared.
+    const standalone = (wantsPassage && intent.departurePlayed === false) || (!freshIntent && freshNavigation);
+    if (wantsPassage || standalone) {
       root.classList.add('diary-entrance-pending');
       // This script runs in the head, so the old page cannot flash at arrival.
       cleanupTimer = setTimeout(cleanup, 4000);
       document.addEventListener('DOMContentLoaded', () => {
-        mount('arrival');
-        requestAnimationFrame(() => requestAnimationFrame(() => {
+        const scene = mount('arrival', null, standalone);
+        if (standalone) scene.classList.add('diary-entrance--standalone');
+        const reveal = () => requestAnimationFrame(() => requestAnimationFrame(() => {
           root.classList.add('diary-entrance-revealing');
           clearTimeout(cleanupTimer); cleanupTimer = setTimeout(cleanup, 1250);
         }));
+        if (standalone) departureTimer = setTimeout(reveal, 1250);
+        else reveal();
       }, { once: true });
     }
   } else {
@@ -98,16 +139,13 @@
       const anchor = event.target.closest?.('a[href]');
       if (!anchor || anchor.hasAttribute('download') || anchor.target && anchor.target !== '_self') return;
       const url = new URL(anchor.href, location.href);
-      if (url.origin !== location.origin || !diaryPath.test(url.pathname) || reduced.matches) return;
-      // A missing stylesheet falls back to the original, immediately usable link.
-      if (!stylesheet.sheet) return;
+      if (url.origin !== location.origin || !diaryPath.test(url.pathname)) return;
       event.preventDefault();
       if (destination) return;
       destination = url;
       const box = anchor.getBoundingClientRect();
       const point = event.detail ? { x: event.clientX, y: event.clientY } : { x: box.left + box.width / 2, y: box.top + box.height / 2 };
-      mount('departure', point); root.classList.add('diary-entrance-leaving');
-      departureTimer = setTimeout(navigate, 1250);
+      waitForStyles(point);
     });
     document.addEventListener('keydown', event => {
       if (!destination) return;
@@ -115,7 +153,6 @@
       if (event.key === 'Tab') { event.preventDefault(); overlay?.querySelector('button').focus(); }
     });
   }
-  reduced.addEventListener('change', () => { if (reduced.matches) { if (destination) navigate({ skip: true }); else cleanup(); } });
   // The portal's native cross-document fade must not compete with this passage.
   window.addEventListener('pageswap', event => {
     if (!event.viewTransition) return;
