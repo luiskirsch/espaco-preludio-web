@@ -19,7 +19,7 @@
     stylesheet = document.createElement('link');
     stylesheet.id = 'diaryEntranceStyles';
     stylesheet.rel = 'stylesheet';
-    stylesheet.href = new URL('./diary-entrance.css?h=34f5f0036e', scriptUrl).href;
+    stylesheet.href = new URL('./diary-entrance.css?h=45ec2ddf9f', scriptUrl).href;
     document.head.append(stylesheet);
   }
 

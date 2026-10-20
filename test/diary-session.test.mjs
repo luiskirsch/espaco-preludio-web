@@ -210,9 +210,11 @@ async function withBrowser(run) {
   }
 }
 
-test('production diary: the book is visible before scripts run in both portals and retains its initial geometry after loading', options, () => withBrowser(async ({ server, navigate, evaluate, send }) => {
+test('production diary: the textured book is visible before scripts run in both portals and retains its initial geometry after loading', options, () => withBrowser(async ({ server, navigate, evaluate, send, holdAsset }) => {
   await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1100, deviceScaleFactor: 1, mobile: false });
   await send('Emulation.setScriptExecutionDisabled', { value: true });
+  const externalTexture = holdAsset('/app/assets/diary/leather-cover.png');
+  const originalTexture = (await readFile(join(root, 'app/assets/diary/leather-cover.png'))).toString('base64');
   let initial;
   for (const path of ['/aluno-diario.html', '/app/diario.html']) {
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}${path}` });
@@ -224,6 +226,21 @@ test('production diary: the book is visible before scripts run in both portals a
     assert.equal(initial.closed, true);
     assert.equal(initial.disabled, true);
     assert.ok(initial.width > 500 && initial.height > 500, 'The fixed book layout is present on the first paint');
+    const texture = await evaluate(`(async()=>{
+      const cover=getComputedStyle(document.getElementById('bookCover')).backgroundImage;
+      const binding=getComputedStyle(document.getElementById('bookFrame'),'::before').backgroundImage;
+      const url=cover.match(/url\\("(data:image\\/webp;base64,[^"]+)"\\)/)?.[1];
+      if(!url) return {inline:false};
+      const pixels=async source=>{
+        const bitmap=await createImageBitmap(await (await fetch(source)).blob(),{premultiplyAlpha:'none',colorSpaceConversion:'none'});
+        const canvas=new OffscreenCanvas(bitmap.width,bitmap.height),ctx=canvas.getContext('2d');
+        ctx.drawImage(bitmap,0,0);return ctx.getImageData(0,0,canvas.width,canvas.height).data;
+      };
+      const [actual,original]=await Promise.all([pixels(url),pixels('data:image/png;base64,${originalTexture}')]);
+      return {inline:true,binding:binding.includes(url),identical:actual.length===original.length&&actual.every((value,index)=>value===original[index])};
+    })()`);
+    assert.deepEqual(texture, { inline: true, binding: true, identical: true }, `${path}: cover and binding have the original texture before JavaScript, even with external images unavailable`);
+    assert.equal(externalTexture.request, null, 'The first cover paint needs no separate texture download');
   }
   await send('Emulation.setScriptExecutionDisabled', { value: false });
   await navigate();
@@ -279,8 +296,8 @@ test('production diary: portal entry carries the cinematic reveal through both r
     assert.equal(await evaluate('location.pathname'), source.split('?')[0], 'The portal remains visible behind the beginning of the transition');
     assert.equal(await evaluate("document.activeElement.classList.contains('diary-entrance__skip')"), true, 'Skip is immediately available from the keyboard');
     assert.equal(await evaluate("document.querySelector('.diary-entrance').getAttribute('aria-modal')"), 'true');
-    const presentation = await evaluate("(()=>{const root=document.querySelector('.diary-entrance'),scene=root.querySelector('.diary-entrance__scene'),animation=scene.getAnimations().find(item=>item.animationName==='diary-entry-scene');return {particles:root.querySelectorAll('.diary-entrance__dust i').length,duration:animation?.effect.getTiming().duration,cover:!!root.querySelector('.diary-entrance__cover svg')}})()");
-    assert.deepEqual(presentation, { particles: 26, duration: 1250, cover: true }, 'Every account and device receives the same presentation');
+    const presentation = await evaluate("(()=>{const root=document.querySelector('.diary-entrance'),scene=root.querySelector('.diary-entrance__scene'),animation=scene.getAnimations().find(item=>item.animationName==='diary-entry-scene');return {particles:root.querySelectorAll('.diary-entrance__dust i').length,duration:animation?.effect.getTiming().duration,cover:!!root.querySelector('.diary-entrance__cover svg'),textured:getComputedStyle(root.querySelector('.diary-entrance__cover')).backgroundImage.startsWith('url(\"data:image/webp;base64,')}})()");
+    assert.deepEqual(presentation, { particles: 26, duration: 1250, cover: true, textured: true }, 'Every account and device receives the same presentation');
     if (process.env.DIARY_CAPTURE_PREVIEW === '1' && selector.includes('card')) {
       await evaluate("for(const animation of document.querySelector('.diary-entrance').getAnimations({subtree:true})){animation.pause();animation.currentTime=800}");
       const shot = await send('Page.captureScreenshot', { format: 'png' });
@@ -350,8 +367,8 @@ test('production diary: the destination recovers the complete passage when a col
     delayed.release();
     await poll(() => evaluate("!!document.querySelector('.diary-entrance--standalone')"), 'complete passage recovered at destination');
     assert.equal(await evaluate('document.referrer'), '', 'The passage works with the production no-referrer policy');
-    const scene = await evaluate("(()=>{const root=document.querySelector('.diary-entrance'),animation=root.querySelector('.diary-entrance__scene').getAnimations().find(item=>item.animationName==='diary-entry-scene');return {particles:root.querySelectorAll('.diary-entrance__dust i').length,duration:animation?.effect.getTiming().duration,cover:!!root.querySelector('.diary-entrance__cover svg')}})()");
-    assert.deepEqual(scene, { particles: 26, duration: 1250, cover: true });
+    const scene = await evaluate("(()=>{const root=document.querySelector('.diary-entrance'),animation=root.querySelector('.diary-entrance__scene').getAnimations().find(item=>item.animationName==='diary-entry-scene');return {particles:root.querySelectorAll('.diary-entrance__dust i').length,duration:animation?.effect.getTiming().duration,cover:!!root.querySelector('.diary-entrance__cover svg'),textured:getComputedStyle(root.querySelector('.diary-entrance__cover')).backgroundImage.startsWith('url(\"data:image/webp;base64,')}})()");
+    assert.deepEqual(scene, { particles: 26, duration: 1250, cover: true, textured: true });
     await click('.diary-entrance__skip');
     assert.equal(await evaluate("!!document.querySelector('.diary-entrance') || document.documentElement.classList.contains('diary-entrance-pending')"), false);
     await poll(() => evaluate("!document.getElementById('journalText').disabled"), 'recovered diary usable');
