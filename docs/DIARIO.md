@@ -97,6 +97,17 @@ desativado quando o dispositivo pede movimento reduzido; o som respeita o
 controle de volume da trilha e também pode ficar mudo. A gravação de papel de
 yd é CC0 e está documentada em `app/assets/diary/AUDIO-CREDITS.md`.
 
+O botão “Nova página” aguarda o salvamento da escrita atual e vira a folha
+com o mesmo som de papel. A folha escrita permanece visível na virada enquanto
+o novo registro aparece por baixo. A página anterior continua acessível na
+linha do tempo. Cliques repetidos ficam bloqueados durante a troca; falhas de
+salvamento mantêm a escrita atual aberta. A cópia visual da folha é removida ao
+terminar a animação, navegar para outra seção ou trocar de conta.
+O som só acompanha a criação de uma página ou uma virada real por escrita e
+navegação. Ajustes de layout, salvamento, cliques para posicionar o cursor e
+teclas sem navegação permanecem silenciosos. A gravação não fica em repetição
+e é interrompida ao ocultar ou sair da página.
+
 ## Verificação
 
 `npm test`, `npm run i18n:audit` e `npm run check:mirrors` verificam o frontend.

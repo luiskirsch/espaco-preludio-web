@@ -289,6 +289,70 @@ test('production diary: letters typed during PUTs survive autosave and a pending
   assert.equal(await evaluate("document.getElementById('journalText').value"), latest, 'Reopening recovers the exact final text');
 }));
 
+test('production diary: new page turns the saved sheet with sound and retains both entries', options, () => withBrowser(async ({ accounts, navigate, click, fill, evaluate, send }) => {
+  const original = 'Uma lembrança que precisa continuar guardada.';
+  accounts.get('A').set('original-page', entry('original-page', original));
+  await navigate();
+  await click('#bookCover');
+  await evaluate("window.__newEntryTurns=0;window.__newEntrySounds=0;HTMLMediaElement.prototype.play=function(){window.__newEntrySounds++;return Promise.resolve()};document.getElementById('paper').addEventListener('diarypageturn',event=>{if(event.detail.entry)window.__newEntryTurns++})");
+  await click('#newPageButton');
+  await poll(() => evaluate("document.getElementById('paper').classList.contains('is-turning-entry')"), 'new-entry page turn');
+  assert.equal(await evaluate("document.querySelector('#pageTurnEffect textarea').value"), original, 'The outgoing sheet still shows the saved writing during the turn');
+  assert.equal(await evaluate("document.querySelectorAll('#pageTurnEffect [id]').length"), 0, 'The decorative snapshot does not duplicate control IDs');
+  assert.equal(await evaluate("document.getElementById('journalText').value"), '', 'The new blank sheet is revealed underneath');
+  assert.ok(await evaluate("document.getElementById('pageTurnEffect').getAnimations().length") > 0, 'New page runs a paper animation');
+  assert.equal(await evaluate("document.getElementById('newPageButton').disabled"), true, 'Repeated clicks cannot create overlapping page changes');
+  await click('#newPageButton');
+  assert.equal(await evaluate('window.__newEntryTurns'), 1);
+  assert.equal(await evaluate('window.__newEntrySounds'), 1, 'New page plays the paper recording once');
+  await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'completed page turn');
+  assert.equal(await evaluate("document.getElementById('pageTurnEffect').childElementCount"), 0, 'The outgoing snapshot is released after the animation');
+  const next = 'Uma nova história em outra página.';
+  await fill('#journalText', next);
+  await poll(() => [...accounts.get('A').values()].some(item => item.text === next), 'new entry saved independently');
+  assert.equal(accounts.get('A').get('original-page').text, original);
+  assert.equal(accounts.get('A').size, 2);
+  await click('[data-tab="timeline"]');
+  await click('[data-open="original-page"]');
+  assert.equal(await evaluate("document.getElementById('journalText').value"), original, 'The previous page remains available in the timeline');
+
+  await evaluate("window.__newEntryTurns=0");
+  await click('#newPageButton');
+  await poll(() => evaluate("document.getElementById('paper').classList.contains('is-turning-entry')"), 'second page turn');
+  await evaluate("window.__diaryAuth('B')");
+  assert.equal(await evaluate("document.getElementById('pageTurnEffect').childElementCount"), 0, 'Switching accounts clears the outgoing private snapshot synchronously');
+  assert.equal(await evaluate("document.getElementById('paper').classList.contains('is-turning-entry')"), false);
+  await poll(() => evaluate("!document.getElementById('journalText').disabled"), 'second account ready');
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+  const turnsBefore = await evaluate('window.__newEntryTurns');
+  await click('#newPageButton');
+  await poll(() => evaluate(`window.__newEntryTurns===${turnsBefore + 1}`), 'new page with reduced motion');
+  assert.equal(await evaluate("document.getElementById('pageTurnEffect').getAnimations().length"), 0, 'Reduced motion skips the page animation');
+  assert.equal(await evaluate("document.getElementById('pageTurnEffect').childElementCount"), 0);
+  await evaluate("window.__paperPauses=0;HTMLMediaElement.prototype.pause=function(){window.__paperPauses++};HTMLMediaElement.prototype.play=function(){return new Promise(resolve=>{window.__finishPaperLoading=resolve})}");
+  await click('#newPageButton');
+  await poll(() => evaluate('typeof window.__finishPaperLoading === "function"'), 'pending paper audio download');
+  const pausesAtRequest = await evaluate('window.__paperPauses');
+  await poll(() => evaluate(`window.__paperPauses>${pausesAtRequest}`), 'late paper audio cancelled');
+  await evaluate('window.__finishPaperLoading()');
+}));
+
+test('production diary: new page keeps writing visible when saving fails', options, () => withBrowser(async ({ accounts, hold, navigate, click, fill, evaluate }) => {
+  accounts.get('A').set('conflict-page', entry('conflict-page', 'Original'));
+  await navigate();
+  const pending = hold('PUT', 'A');
+  const writing = 'Estas palavras ainda precisam ser salvas.';
+  await fill('#journalText', writing);
+  await click('#newPageButton');
+  await poll(() => pending.request, 'save before the page change');
+  accounts.get('A').get('conflict-page').version++;
+  pending.release();
+  await poll(() => evaluate("document.getElementById('saveState').dataset.state==='error'"), 'save conflict');
+  assert.equal(await evaluate("document.getElementById('journalText').value"), writing, 'Failed saving leaves all writing in place');
+  assert.equal(await evaluate("document.getElementById('paper').classList.contains('is-turning-entry')"), false, 'A failed save does not turn to an empty page');
+  await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'new-page action restored');
+}));
+
 test('production diary: a slow capsule response preserves a different modal opened meanwhile', options, () => withBrowser(async ({ accounts, hold, navigate, click, fill, evaluate }) => {
   await navigate();
   await click('[data-tab="capsules"]');

@@ -1,6 +1,6 @@
 import { createSoundscape, createDictation } from './diary-audio.js?h=fb22bb467e';
 import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, hasEntryContent, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=baf32a79b0';
-import { createPagedEditor } from './diary-pages.js?h=1a6450364c';
+import { createPagedEditor } from './diary-pages.js?h=3dc3a3a1a5';
 
 const $ = id => document.getElementById(id);
 const student = document.body.dataset.portal === 'student';
@@ -14,6 +14,7 @@ let dictationEntryId = null, dictationGeneration = 0;
 let preset = 'rain';
 let promptIndex = 0, coverTimer = 0, coverMotionTimer = 0, bookOpened = false;
 let namingCover = false, writingAnchor = null;
+let pageCreation = null;
 const COVER_TITLE_DEFAULT = 'Uma página só sua';
 const COVER_TITLE_KEY = 'p-app-diario:uma_pagina_so_sua_0c698';
 const JOURNAL_PROMPTS = [
@@ -282,6 +283,7 @@ function revealPage(heading) {
   });
 }
 function showEditor(entry) {
+  pagedEditor.cancelTurn();
   dictation.stop(); dictationEntryId = null;
   current = structuredClone(entry); dirty = false; conflict = false; editTick++; clearTimeout(saveTimer);
   $('editorView').hidden = false; $('collectionView').hidden = true; $('paper').classList.add('paper--writing'); $('bookFrame').classList.remove('is-collection'); document.body.classList.add('is-book-writing');
@@ -298,15 +300,29 @@ function showEditor(entry) {
   else if (!coverTimer) coverTimer = setTimeout(openBook, 4200);
 }
 async function newPage(kind = 'diary') {
+  if (pageCreation || !assertReady()) return;
+  const operation = {};
+  pageCreation = operation;
+  $('newPageButton').disabled = true;
   const generation = bootGeneration;
-  if (!assertReady() || !await settle()) return;
-  if (generation !== bootGeneration) return;
-  showEditor(draft(kind)); text.focus();
+  try {
+    dictation.stop(); dictationEntryId = null;
+    if (!await settle() || generation !== bootGeneration) return;
+    text.blur(); setWritingFocus(false);
+    const nextEntry = draft(kind);
+    const source = $('editorView').hidden ? null : $('editorView');
+    openBook();
+    const completed = await pagedEditor.turnEntry(() => showEditor(nextEntry), source);
+    if (completed && generation === bootGeneration && current.id === nextEntry.id && !$('editorView').hidden) text.focus({ preventScroll: true });
+  } finally {
+    if (pageCreation === operation) { pageCreation = null; $('newPageButton').disabled = false; }
+  }
 }
 async function switchTab(name) {
   const generation = bootGeneration;
   if (!assertReady() || !await settle()) return;
   if (generation !== bootGeneration) return;
+  pagedEditor.cancelTurn();
   dictation.stop();
   if (name === 'diary') {
     const latest = entries.find(item => item.kind === 'diary' && item.date === today());
@@ -569,7 +585,7 @@ $('saveState').addEventListener('click', () => { if ($('saveState').dataset.stat
 $('saveState').addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); $('saveState').click(); } });
 document.querySelectorAll('a.back-link, a.diary-brand').forEach(link => link.addEventListener('click', async event => { if (!dirty) return; event.preventDefault(); if (await settle()) location.assign(link.href); }));
 window.addEventListener('beforeunload', event => { if (dirty || $('capsuleText')?.value.trim()) { event.preventDefault(); event.returnValue = ''; } });
-window.addEventListener('pagehide', () => { clearTimeout(coverTimer); clearTimeout(coverMotionTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
+window.addEventListener('pagehide', () => { pagedEditor.cancelTurn(); clearTimeout(coverTimer); clearTimeout(coverMotionTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
 window.addEventListener('online', () => { if (ready && dirty) flush(); });
 $('headerDate').dateTime = today(); $('headerDate').textContent = dateLabel(today(), { weekday: 'long' });
 renderBookDate(current); renderPrompt(); renderCoverTitle();
@@ -612,7 +628,7 @@ if (preview) {
     backend = config.BACKEND_BASE_URL;
     onAuthStateChanged(config.auth, user => {
       if (!user || account && account.uid !== user.uid) {
-        bootGeneration++; ready = false; dirty = false; conflict = false; saving = null; deletingId = null; clearTimeout(saveTimer); closeDialog(); dictation.stop(); soundscape.stop();
+        bootGeneration++; pagedEditor.cancelTurn(); pageCreation = null; $('newPageButton').disabled = false; ready = false; dirty = false; conflict = false; saving = null; deletingId = null; clearTimeout(saveTimer); closeDialog(); dictation.stop(); soundscape.stop();
         text.value = ''; text.disabled = true; entries = []; current = draft(); renderBookDate(current); renderMeta(); pagedEditor.reset();
         $('collectionView').innerHTML = ''; $('collectionView').hidden = true; $('editorView').hidden = false;
       }

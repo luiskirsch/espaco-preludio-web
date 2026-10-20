@@ -265,6 +265,8 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
 
     await click('#newPageButton');
     await poll(() => evaluate("document.getElementById('journalText').value===''"), 'nova página vazia');
+    await capture('new-page-turn-desktop.png');
+    await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'virada para a nova página concluída');
     const placeholder = await evaluate("document.getElementById('journalText').placeholder");
     assert.ok(placeholder.trim().length > 10 && placeholder.length < 130, 'Página vazia oferece um convite curto para escrever');
     assert.doesNotMatch(placeholder, /caminhei pelo parque|memórias antigas|nostalgia me abraçou/i, 'Convite não se confunde com uma memória já escrita');
@@ -289,6 +291,12 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     assert.match(await evaluate("document.getElementById('writingPageIndicator').textContent"), new RegExp(`Página ${pagination.total - 1} de ${pagination.total}`));
     assert.equal(await evaluate("document.getElementById('journalText').value"), longWriting, 'Voltar uma folha não altera a escrita');
     assert.ok(await evaluate("window.__diaryPaperSounds") > soundsBeforeNavigation, 'A navegação manual também tem som de papel');
+    const quietPage = await evaluate("document.getElementById('writingPageIndicator').textContent.match(/\\d+/)[0]");
+    const soundsAfterNavigation = await evaluate('window.__diaryPaperSounds');
+    await evaluate("document.getElementById('journalText').dispatchEvent(new KeyboardEvent('keyup',{key:'Shift',bubbles:true}));window.dispatchEvent(new Event('resize'));document.getElementById('journalText').blur();window.dispatchEvent(new Event('online'))");
+    await evaluate('new Promise(resolve=>setTimeout(resolve,1500))');
+    assert.equal(await evaluate('window.__diaryPaperSounds'), soundsAfterNavigation, 'Autosave, redimensionamento e teclas sem navegação não emitem som de papel');
+    assert.equal(await evaluate("document.getElementById('writingPageIndicator').textContent.match(/\\d+/)[0]"), quietPage, 'Uma tecla modificadora não muda a folha que está sendo lida');
     await capture('writing-page-turn-mobile.png');
     await click('#nextWritingPage');
     await evaluate("HTMLMediaElement.prototype.play=window.__diaryOriginalMediaPlay;delete window.__diaryOriginalMediaPlay");
@@ -300,6 +308,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     }
     await click('#newPageButton');
     await poll(() => evaluate("document.getElementById('journalText').value===''"), 'página após escrita longa');
+    await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'virada após escrita longa concluída');
     const memory = '<img src=x onerror="document.title=\'XSS_EXECUTED\'"> Café sem pressa';
     await fill('#journalText', memory);
     assert.equal(await evaluate("document.getElementById('saveState').dataset.state"), '');
