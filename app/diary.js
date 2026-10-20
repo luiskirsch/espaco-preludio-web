@@ -551,7 +551,7 @@ function openWeatherChoice() {
 const soundscape = createSoundscape({ onState({ playing, preset: selected }) {
   preset = selected;
   document.body.classList.toggle('is-playing', playing);
-  $('playButton').textContent = playing ? 'Ⅱ' : '▶'; $('playButton').setAttribute('aria-pressed', String(playing)); $('playButton').setAttribute('aria-label', playing ? 'Pausar trilha sonora' : 'Reproduzir trilha sonora');
+  $('playButton').setAttribute('aria-pressed', String(playing)); $('playButton').setAttribute('aria-label', playing ? 'Pausar trilha sonora' : 'Reproduzir trilha sonora');
   const name = { rain: 'Chuva na cabana & piano', forest: 'Um passeio pela floresta', piano: 'Piano para desacelerar' }[selected];
   $('playerDescription').removeAttribute('data-i18n-html'); $('soundLabel').removeAttribute('data-i18n-html');
   $('playerDescription').textContent = `${name} · ${playing ? 'tocando' : 'pausado'}`; $('soundLabel').textContent = name;
