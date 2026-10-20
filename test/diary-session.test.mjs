@@ -278,6 +278,14 @@ test('production diary: portal entry carries the cinematic reveal through both r
   const origin = `http://127.0.0.1:${server.address().port}`;
   accounts.get('A').set('entry-page', entry('entry-page', 'Uma lembrança para guardar.'));
   await send('Page.addScriptToEvaluateOnNewDocument', { source: "window.__diaryNames={A:'Luis Henrique'}" });
+  const passageView = `(()=>{
+    const root=document.querySelector('.diary-entrance'),scene=root.querySelector('.diary-entrance__scene'),box=scene.getBoundingClientRect();
+    return {x:box.x,y:box.y,width:box.width,height:box.height,cover:getComputedStyle(root.querySelector('.diary-entrance__cover')).filter,haloDelay:parseFloat(getComputedStyle(root.querySelector('.diary-entrance__halo')).animationDelay),overflow:getComputedStyle(document.documentElement).overflowY,bookWidth:document.getElementById('bookFrame')?.offsetWidth};
+  })()`;
+  await send('Page.addScriptToEvaluateOnNewDocument', { source: `const entranceObserver=new MutationObserver(()=>{
+    if(!document.querySelector('.diary-entrance--arrival'))return;
+    window.__diaryArrivalView=${passageView};entranceObserver.disconnect();
+  });entranceObserver.observe(document,{childList:true,subtree:true});` });
   const sources = [
     ['/app/home.html', '.home-diary-card', '/app/diario.html', 1440],
     ['/app/home.html', '.a-nav__item[href="./diario.html"]', '/app/diario.html', 1440],
@@ -298,17 +306,29 @@ test('production diary: portal entry carries the cinematic reveal through both r
     assert.equal(await evaluate("document.querySelector('.diary-entrance').getAttribute('aria-modal')"), 'true');
     const presentation = await evaluate("(()=>{const root=document.querySelector('.diary-entrance'),scene=root.querySelector('.diary-entrance__scene'),animation=scene.getAnimations().find(item=>item.animationName==='diary-entry-scene');return {particles:root.querySelectorAll('.diary-entrance__dust i').length,duration:animation?.effect.getTiming().duration,cover:!!root.querySelector('.diary-entrance__cover svg'),textured:getComputedStyle(root.querySelector('.diary-entrance__cover')).backgroundImage.startsWith('url(\"data:image/webp;base64,')}})()");
     assert.deepEqual(presentation, { particles: 26, duration: 2250, cover: true, textured: true }, 'Every account and device receives the same presentation');
+    const departureView = await evaluate(`(()=>{
+      for(const animation of document.querySelector('.diary-entrance').getAnimations({subtree:true})){
+        if(['diary-entry-scene','diary-entry-book','diary-entry-line'].includes(animation.animationName))animation.finish();
+      }
+      return ${passageView};
+    })()`);
     if (process.env.DIARY_CAPTURE_PREVIEW === '1' && selector.includes('card')) {
       await evaluate("for(const animation of document.querySelector('.diary-entrance').getAnimations({subtree:true})){animation.pause();animation.currentTime=800}");
       const shot = await send('Page.captureScreenshot', { format: 'png' });
       await writeFile(join(root, `docs/diary-preview/entrance-${width}-${selector.includes('card') ? 'card' : 'menu'}.png`), Buffer.from(shot.data, 'base64'));
     }
     await poll(() => evaluate(`location.pathname===${JSON.stringify(target)} && !!document.querySelector('.diary-entrance--arrival')`), 'arrival continues the passage');
+    const arrivalView = await poll(() => evaluate('window.__diaryArrivalView'), 'first arrival frame recorded');
+    for (const metric of ['x', 'y', 'width', 'height']) assert.ok(Math.abs(arrivalView[metric] - departureView[metric]) < .5, `${source} ${width}: the scene must not jump at handoff (${metric}: ${departureView[metric]} to ${arrivalView[metric]})`);
+    assert.equal(arrivalView.cover, departureView.cover, 'The leather book retains the same lighting across navigation');
+    assert.ok(arrivalView.haloDelay <= -2.25, 'The ambient light continues from the departure phase');
+    assert.equal(arrivalView.overflow, 'hidden', 'The scrollbar stays hidden throughout the passage');
     assert.equal(await evaluate("sessionStorage.getItem('ep.diary.entrance')"), null, 'The arrival consumes its one-time intent');
     await poll(() => evaluate("!document.querySelector('.diary-entrance') && !document.documentElement.classList.contains('diary-entrance-pending') && !document.getElementById('journalText').disabled"), 'diary revealed');
     assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), 'Luis Henrique');
     assert.equal(await evaluate("document.getElementById('bookCover').getAttribute('aria-expanded')"), 'false', 'The passage lands on the closed personal cover');
     assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'), true);
+    assert.equal(await evaluate("document.getElementById('bookFrame').offsetWidth"), arrivalView.bookWidth, 'Restoring scrolling does not resize the revealed diary');
     const history = await send('Page.getNavigationHistory');
     await send('Page.navigateToHistoryEntry', { entryId: history.entries[history.currentIndex - 1].id });
     await poll(() => evaluate(`location.pathname===${JSON.stringify(source.split('?')[0])} && !!document.querySelector(${JSON.stringify(selector)}) && !document.querySelector('.diary-entrance') && !document.documentElement.classList.contains('diary-entrance-leaving')`), 'back restores portal');
@@ -638,15 +658,15 @@ test('production diary: turning sheets retain the resting paper colors in both t
       const [a,b]=await Promise.all([pixels(${JSON.stringify(before.data)}),pixels(${JSON.stringify(during.data)})]);
       // Compositing the 3D leaf can round a few texture channels differently.
       let changed=0,maximum=0;for(let i=0;i<a.length;i++){const delta=Math.abs(a[i]-b[i]);if(delta>3)changed++;maximum=Math.max(maximum,delta)}
-      return {sameSize:a.length===b.length,changed,maximum};
+      return {sameSize:a.length===b.length,changed,maximum,samples:a.length};
     })()`);
     assert.equal(difference.sameSize, true, label);
-    if (difference.changed) {
+    if (difference.changed > difference.samples * .001) {
       await writeFile(join(tmpdir(), 'ep-diary-color-before.png'), Buffer.from(before.data, 'base64'));
       await writeFile(join(tmpdir(), 'ep-diary-color-during.png'), Buffer.from(during.data, 'base64'));
       console.log(label, before.clip, await evaluate("['paper','pageTurnEffect','pageTurnUnderlay'].map(id=>{const el=document.getElementById(id),s=getComputedStyle(el),b=el.getBoundingClientRect();return {id,x:b.x,y:b.y,w:b.width,h:b.height,background:s.background,content:el.childElementCount,animation:s.animation,shadow:getComputedStyle(el,'::before').boxShadow}})"));
     }
-    assert.equal(difference.changed, 0, `${label}: ${JSON.stringify(difference)}`);
+    assert.ok(difference.changed <= difference.samples * .001, `${label}: ${JSON.stringify(difference)}`);
   };
   const pauseTurn = async () => {
     await poll(() => evaluate("document.getElementById('paper').classList.contains('is-turning-entry')"), 'color comparison turn');

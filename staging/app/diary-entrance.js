@@ -19,7 +19,7 @@
     stylesheet = document.createElement('link');
     stylesheet.id = 'diaryEntranceStyles';
     stylesheet.rel = 'stylesheet';
-    stylesheet.href = new URL('./diary-entrance.css?h=88d3b5e08f', scriptUrl).href;
+    stylesheet.href = new URL('./diary-entrance.css?h=593be6be63', scriptUrl).href;
     document.head.append(stylesheet);
   }
 
@@ -125,6 +125,7 @@
       document.addEventListener('DOMContentLoaded', () => {
         const scene = mount('arrival', null, standalone);
         if (standalone) scene.classList.add('diary-entrance--standalone');
+        else scene.style.setProperty('--entry-elapsed', `${2250 + Math.max(0, Date.now() - intent.at)}ms`);
         const reveal = () => requestAnimationFrame(() => requestAnimationFrame(() => {
           root.classList.add('diary-entrance-revealing');
           clearTimeout(cleanupTimer); cleanupTimer = setTimeout(cleanup, 2250);

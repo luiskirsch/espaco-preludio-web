@@ -5,7 +5,7 @@
    This optional, skippable passage keeps its timing across portal-wide resets. */
 .diary-entrance {
   --entry-gold:#e5c888;
-  position:fixed; inset:0; z-index:2147483647; isolation:isolate;
+  position:fixed; inset:0; width:100vw; z-index:2147483647; isolation:isolate;
   display:grid; place-items:center; overflow:hidden;
   padding:24px; color:#f5e8d1; background:#191311;
   font-family:Inter,Arial,sans-serif;
@@ -42,11 +42,16 @@
 .diary-entrance--departure .diary-entrance__scene,.diary-entrance--standalone .diary-entrance__scene { animation:diary-entry-scene 2.25s cubic-bezier(.16,.7,.2,1) both!important; }
 .diary-entrance--departure .diary-entrance__cover,.diary-entrance--standalone .diary-entrance__cover { animation:diary-entry-book 2.25s cubic-bezier(.2,.65,.3,1) both!important; }
 .diary-entrance--departure .diary-entrance__line,.diary-entrance--standalone .diary-entrance__line { animation:diary-entry-line 2.2s ease both!important; }
-html.diary-entrance-leaving { overflow:hidden; }
-html.diary-entrance-pending { background:#191311; }
+/* Reserve the page's gutter without drawing a scrollbar through the passage.
+   The scene uses the full viewport on both sides of document navigation. */
+html[data-diary-theme],html:has(.diary-shell) { scrollbar-gutter:stable; }
+html.diary-entrance-leaving,html.diary-entrance-pending { overflow:hidden; scrollbar-gutter:stable; background:#191311; }
 html.diary-entrance-pending body { background:#191311; }
 html.diary-entrance-pending:not(.diary-entrance-revealing) .diary-shell { opacity:0; }
 .diary-entrance--arrival { opacity:1; }
+.diary-entrance--arrival:not(.diary-entrance--standalone) .diary-entrance__cover { transform:rotateY(0); filter:brightness(1.15); }
+.diary-entrance--arrival:not(.diary-entrance--standalone) .diary-entrance__halo { animation-delay:calc(-1 * var(--entry-elapsed,2250ms))!important; }
+.diary-entrance--arrival:not(.diary-entrance--standalone) .diary-entrance__dust i { animation-delay:calc(var(--delay) - var(--entry-elapsed,2250ms))!important; }
 html.diary-entrance-revealing .diary-entrance--arrival { animation:diary-entry-arrive 2.15s ease-in-out both!important; }
 html.diary-entrance-revealing .diary-entrance--arrival .diary-entrance__scene { animation:diary-entry-away 1.85s cubic-bezier(.4,0,.6,1) both!important; }
 html.diary-entrance-revealing .diary-shell { animation:diary-entry-world 2.15s cubic-bezier(.2,.65,.25,1) both!important; }
