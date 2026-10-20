@@ -737,6 +737,7 @@ async function prepareDiary(user) {
   const generation = bootGeneration;
   await Promise.allSettled(pending);
   if (generation !== bootGeneration) return;
+  // Reveal the first view only once its personal cover and profile are settled.
   document.documentElement.dataset.diaryReady = 'true';
   document.dispatchEvent(new Event('ep:diary-ready'));
 }

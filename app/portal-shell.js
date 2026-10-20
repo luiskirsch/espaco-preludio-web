@@ -10,7 +10,7 @@
     event.viewTransition.skipTransition();
   });
   const diaryEntrance = document.createElement('script');
-  diaryEntrance.src = new URL('./diary-entrance.js?h=d1df4de043', document.currentScript.src).href;
+  diaryEntrance.src = new URL('./diary-entrance.js?h=da1a0042f7', document.currentScript.src).href;
   document.head.append(diaryEntrance);
   const currentFile = (location.pathname.split("/").pop() || "home.html").toLowerCase();
   const route = currentFile.replace(/\.html$/, "") || "home";
