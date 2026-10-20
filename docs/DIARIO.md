@@ -103,8 +103,15 @@ o novo registro aparece por baixo. A página anterior continua acessível na
 linha do tempo. Cliques repetidos ficam bloqueados durante a troca; falhas de
 salvamento mantêm a escrita atual aberta. A cópia visual da folha é removida ao
 terminar a animação, navegar para outra seção ou trocar de conta.
-A folha animada fica fora do recorte do papel e gira até o lado de fora da
-lombada, com frente e verso próprios. O diário tem 365 folhas: o contador
+A folha animada fica fora do recorte do papel e usa o mesmo movimento da
+capa: abertura de 1,5 s até −112°, retorno de 1,3 s, com as mesmas curvas
+de aceleração e desaparecimento. Não se estende como uma segunda página
+plana sobre as ferramentas. Ao voltar, a folha móvel contém a página de
+destino e a página atual permanece por baixo até o retorno terminar.
+A data interna só é atualizada depois desse retorno. As cópias visuais são
+inertes, não duplicam IDs e são descartadas inclusive ao cancelar a virada
+ou trocar de conta. Folhas de um texto longo usam o mesmo efeito da capa.
+O diário tem 365 folhas: o contador
 mostra “Página 1 de 365”, “Página 2 de 365” e assim por diante. A numeração
 inclui todos os registros, inclusive os retornados pelas próximas páginas
 da API, e as folhas adicionais de textos longos. O índice completo é

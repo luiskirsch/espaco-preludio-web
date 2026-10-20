@@ -12,8 +12,9 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
   let soundRequest = 0, soundStartTimer = 0;
   let invitationPlaying = false;
   const effect = document.getElementById('pageTurnEffect');
+  const underlay = document.getElementById('pageTurnUnderlay');
   const sheetCounts = new Map();
-  const turnDuration = 1100;
+  const turnDuration = direction => direction === 'backward' ? 1300 : 1500;
   let lastInteraction = -Infinity;
   const noteInteraction = event => {
     if (event.isTrusted && event.target.closest?.('#journalText,#newPageButton,#previousWritingPage,#nextWritingPage')) lastInteraction = performance.now();
@@ -24,6 +25,8 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
     paper.classList.remove('is-turning-forward', 'is-turning-backward', 'is-turning-entry');
     effect?.classList.remove('is-turning-forward', 'is-turning-backward', 'is-turning-entry');
     effect?.replaceChildren();
+    underlay?.replaceChildren();
+    underlay?.classList.remove('is-visible');
     const finish = finishEntryTurn;
     finishEntryTurn = null;
     finish?.(false);
@@ -95,41 +98,57 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
     } catch { /* A virada visual continua quando o navegador bloqueia áudio. */ }
   }
 
-  function animateTurn(direction, withSound) {
+  function snapshotPage(source, prepare) {
+    if (!source) return null;
+    const snapshot = source.cloneNode(true);
+    const originals = [source, ...source.querySelectorAll('*')];
+    const copies = [snapshot, ...snapshot.querySelectorAll('*')];
+    originals.forEach((original, index) => {
+      const copy = copies[index], style = getComputedStyle(original);
+      copy.style.cssText = Array.from(style, property => `${property}:${style.getPropertyValue(property)}`).join(';');
+      copy.style.animation = 'none'; copy.style.transition = 'none';
+      if (original instanceof HTMLTextAreaElement) copy.value = original.value;
+    });
+    prepare?.(snapshot);
+    for (const copy of copies) {
+      for (const attribute of [...copy.attributes]) {
+        if (['id', 'name', 'autofocus', 'aria-live'].includes(attribute.name) || attribute.name.startsWith('data-i18n')) copy.removeAttribute(attribute.name);
+      }
+    }
+    snapshot.classList.add('page-turn-snapshot');
+    Object.assign(snapshot.style, { position: 'absolute', inset: '0', width: '100%', height: '100%', margin: '0' });
+    snapshot.inert = true;
+    snapshot.setAttribute('aria-hidden', 'true');
+    return snapshot;
+  }
+
+  function mountTurn(direction, outgoing, source, prepareSnapshot) {
+    // Returning sheets carry the incoming page. The outgoing page stays flat
+    // underneath until the returning sheet has completely covered it.
+    if (direction === 'backward') {
+      if (outgoing && underlay) { underlay.append(outgoing); underlay.classList.add('is-visible'); }
+      const incoming = snapshotPage(source, prepareSnapshot);
+      if (incoming) effect?.append(incoming);
+    } else if (outgoing) effect?.append(outgoing);
+    void effect?.offsetWidth;
+    paper.classList.add(direction === 'backward' ? 'is-turning-backward' : 'is-turning-forward');
+    effect?.classList.add(direction === 'backward' ? 'is-turning-backward' : 'is-turning-forward');
+  }
+
+  function animateTurn(direction, withSound, outgoing) {
     cancelTurn();
     if (withSound) playPaper(direction);
     const book = bookPosition();
     paper.dispatchEvent(new CustomEvent('diarypageturn', { detail: { direction, page: book.offset + page + 1, total: DIARY_PAGE_COUNT } }));
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    clearTimeout(turnTimer);
-    paper.classList.remove('is-turning-forward', 'is-turning-backward');
-    void paper.offsetWidth;
-    paper.classList.add(direction === 'backward' ? 'is-turning-backward' : 'is-turning-forward');
-    effect?.classList.add(direction === 'backward' ? 'is-turning-backward' : 'is-turning-forward');
-    turnTimer = setTimeout(cancelTurn, turnDuration);
+    mountTurn(direction, outgoing, paper.querySelector('#editorView'));
+    turnTimer = setTimeout(cancelTurn, turnDuration(direction));
   }
 
-  function turnEntry(update, source, { direction = 'forward', lastSheet = false } = {}) {
+  function turnEntry(update, source, { direction = 'forward', lastSheet = false, prepareSnapshot } = {}) {
     cancelTurn();
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let snapshot = null;
-    if (effect && source && !reduced) {
-      snapshot = source.cloneNode(true);
-      const originals = [source, ...source.querySelectorAll('*')];
-      const copies = [snapshot, ...snapshot.querySelectorAll('*')];
-      originals.forEach((original, index) => {
-        const copy = copies[index], style = getComputedStyle(original);
-        copy.style.cssText = Array.from(style, property => `${property}:${style.getPropertyValue(property)}`).join(';');
-        copy.style.animation = 'none'; copy.style.transition = 'none';
-        copy.style.backfaceVisibility = 'hidden';
-        for (const attribute of ['id', 'name', 'autofocus', 'aria-live']) copy.removeAttribute(attribute);
-        if (original instanceof HTMLTextAreaElement) copy.value = original.value;
-      });
-      snapshot.classList.add('page-turn-snapshot');
-      Object.assign(snapshot.style, { position: 'absolute', inset: '0', width: '100%', height: '100%', margin: '0', transform: 'translateZ(0.5px)', backfaceVisibility: 'hidden' });
-      snapshot.inert = true;
-      snapshot.setAttribute('aria-hidden', 'true');
-    }
+    const outgoing = effect && !reduced ? snapshotPage(source) : null;
     update();
     layout({ reset: true });
     if (lastSheet) show(total - 1);
@@ -137,17 +156,16 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
     const book = bookPosition();
     paper.dispatchEvent(new CustomEvent('diarypageturn', { detail: { direction, entry: true, page: book.offset + page + 1, total: DIARY_PAGE_COUNT } }));
     if (!effect || reduced) return Promise.resolve(true);
-    if (snapshot) effect.append(snapshot);
-    void paper.offsetWidth;
+    mountTurn(direction, outgoing, source, prepareSnapshot);
     paper.classList.add('is-turning-entry');
-    effect.classList.add('is-turning-entry', direction === 'backward' ? 'is-turning-backward' : 'is-turning-forward');
+    effect.classList.add('is-turning-entry');
     return new Promise(resolve => {
       finishEntryTurn = resolve;
       turnTimer = setTimeout(() => {
         finishEntryTurn = null;
         cancelTurn();
         resolve(true);
-      }, turnDuration);
+      }, turnDuration(direction));
     });
   }
 
@@ -155,10 +173,11 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
     const nextPage = Math.max(0, Math.min(total - 1, Number(target) || 0));
     const changed = nextPage !== page;
     const direction = nextPage < page ? 'backward' : 'forward';
+    const outgoing = changed && animate && !matchMedia('(prefers-reduced-motion: reduce)').matches ? snapshotPage(paper.querySelector('#editorView')) : null;
     page = nextPage;
     textarea.style.transform = page ? `translate3d(0, -${page * pageHeight}px, 0)` : '';
     updateControls();
-    if (changed && animate) animateTurn(direction, withSound);
+    if (changed && animate) animateTurn(direction, withSound, outgoing);
     return changed;
   }
 
@@ -196,6 +215,8 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
     let target = reset ? 0 : Math.min(page, total - 1);
     if (followCaret) target = pageAtCaret();
     const createdPage = total > previousTotal && target > page;
+    // Preserve the outgoing viewport when capturing an internal sheet turn.
+    textarea.style.transform = page ? `translate3d(0, -${page * pageHeight}px, 0)` : '';
     show(target, { animate: animate && (createdPage || target !== page), withSound });
     updateControls();
     return { page, total, pageHeight };

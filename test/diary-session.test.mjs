@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { readFile, mkdtemp, rm } from 'node:fs/promises';
+import { readFile, writeFile, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { extname, join, resolve, sep } from 'node:path';
 
@@ -310,9 +310,12 @@ test('production diary: new page turns the saved sheet with sound and retains bo
   assert.equal(await evaluate("document.getElementById('writingPageIndicator').textContent"), 'Página 2 de 365', 'New entry advances the fixed-size book counter');
   assert.equal(await evaluate("document.getElementById('writingPageIndicator').hasAttribute('data-i18n')"), false, 'Delayed static translations cannot reset the live page number');
   assert.equal(await evaluate("document.getElementById('paper').contains(document.getElementById('pageTurnEffect'))"), false, 'The turning sheet is outside the clipped paper');
-  const outside = await evaluate("(()=>{const effect=document.getElementById('pageTurnEffect'),animation=effect.getAnimations()[0];animation.pause();animation.currentTime=650;const sheet=effect.getBoundingClientRect(),paper=document.getElementById('paper').getBoundingClientRect();return {left:sheet.left,spine:paper.left,width:paper.width,overflow:getComputedStyle(effect.parentElement).overflow}})()");
-  assert.ok(outside.left < outside.spine - outside.width * .2, 'After crossing the spine, the sheet extends visibly outside the cover');
-  assert.equal(outside.overflow, 'visible');
+  const motion = await evaluate("(()=>{const effect=document.getElementById('pageTurnEffect'),animation=effect.getAnimations().find(item=>item.animationName==='pageLeafOpen'),cover=getComputedStyle(document.getElementById('bookCover'));for(const item of effect.getAnimations()){item.pause();item.currentTime=650}return {duration:animation.effect.getTiming().duration,easing:animation.effect.getKeyframes()[0].easing,coverDuration:parseFloat(cover.transitionDuration)*1000,coverEasing:cover.transitionTimingFunction.split('),')[0]+')',end:animation.effect.getKeyframes().at(-1).transform,backface:getComputedStyle(effect).backfaceVisibility,overflow:getComputedStyle(effect.parentElement).overflow}})()");
+  assert.equal(motion.duration, motion.coverDuration, 'The page opens at the same speed as the cover');
+  assert.equal(motion.easing, motion.coverEasing, 'The page and cover share the same easing');
+  assert.equal(motion.end, 'rotateY(-112deg)', 'The page stops at the cover opening angle');
+  assert.equal(motion.backface, 'hidden', 'The page disappears behind the spine like the cover');
+  assert.equal(motion.overflow, 'visible');
   assert.ok(await evaluate("document.getElementById('pageTurnEffect').getAnimations().length") > 0, 'New page runs a paper animation');
   assert.equal(await evaluate("document.getElementById('newPageButton').disabled"), true, 'Repeated clicks cannot create overlapping page changes');
   await click('#newPageButton');
@@ -356,6 +359,53 @@ test('production diary: new page turns the saved sheet with sound and retains bo
   const pausesAtRequest = await evaluate('window.__paperPauses');
   await poll(() => evaluate(`window.__paperPauses>${pausesAtRequest}`), 'late paper audio cancelled');
   await evaluate('window.__finishPaperLoading()');
+}));
+
+test('production diary: returning pages carry their own date and reveal it only when the turn completes', options, () => withBrowser(async ({ accounts, navigate, click, evaluate, send }) => {
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1100, deviceScaleFactor: 1, mobile: false });
+  const previousDate = new Date(new Date(`${today()}T12:00:00Z`).getTime() - 86400000).toISOString().slice(0, 10);
+  const previousDay = String(Number(previousDate.slice(-2))), currentDay = String(Number(today().slice(-2)));
+  accounts.get('A').set('earlier', entry('earlier', 'A lembrança da página anterior.', { date: previousDate, createdAt: 1 }));
+  accounts.get('A').set('later', entry('later', 'A lembrança que estava aberta.', { createdAt: 2 }));
+  await navigate(); await click('#bookCover');
+  assert.equal(await evaluate("document.getElementById('entryDay').textContent"), currentDay);
+  await click('#previousWritingPage');
+  await poll(() => evaluate("document.getElementById('pageTurnUnderlay').classList.contains('is-visible')"), 'outgoing page held under the returning leaf');
+  await evaluate("for(const animation of document.getElementById('pageTurnEffect').getAnimations()){animation.pause();animation.currentTime=600}");
+  assert.equal(await evaluate("document.getElementById('entryDay').textContent"), currentDay, 'The live date does not jump before the returning page lands');
+  assert.equal(await evaluate("document.querySelector('#pageTurnUnderlay .entry-date strong').textContent"), currentDay);
+  assert.equal(await evaluate("document.querySelector('#pageTurnUnderlay textarea').value"), 'A lembrança que estava aberta.');
+  assert.equal(await evaluate("document.querySelector('#pageTurnEffect .entry-date strong').textContent"), previousDay, 'The returning leaf shows the incoming date');
+  assert.equal(await evaluate("document.querySelector('#pageTurnEffect textarea').value"), 'A lembrança da página anterior.');
+  assert.equal(await evaluate("document.querySelectorAll('#pageTurnEffect [id],#pageTurnUnderlay [id]').length"), 0);
+  if (process.env.DIARY_CAPTURE_PREVIEW === '1') {
+    const shot = await send('Page.captureScreenshot', { format: 'png' });
+    await writeFile(join(root, 'docs/diary-preview/return-page-turn-desktop.png'), Buffer.from(shot.data, 'base64'));
+  }
+  const closing = await evaluate("(()=>{const effect=document.getElementById('pageTurnEffect'),animation=effect.getAnimations().find(item=>item.animationName==='pageLeafClose'),frame=getComputedStyle(effect.parentElement),style=document.createElement('div').style;style.transitionTimingFunction=frame.getPropertyValue('--book-close-easing');return {duration:animation.effect.getTiming().duration,easing:animation.effect.getKeyframes()[0].easing,coverDuration:parseFloat(frame.getPropertyValue('--book-close-duration')),coverEasing:style.transitionTimingFunction}})()");
+  assert.equal(closing.duration, closing.coverDuration);
+  assert.equal(closing.easing.replaceAll(' ', ''), closing.coverEasing.replaceAll(' ', ''));
+  await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'returning page landed');
+  assert.equal(await evaluate("document.getElementById('entryDay').textContent"), previousDay);
+  assert.equal(await evaluate("document.getElementById('pageTurnUnderlay').childElementCount"), 0);
+  assert.equal(await evaluate("document.getElementById('pageTurnEffect').childElementCount"), 0);
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+  await click('#nextWritingPage');
+  await poll(() => evaluate(`document.getElementById('entryDay').textContent===${JSON.stringify(currentDay)}`), 'next date with reduced motion');
+  await click('#previousWritingPage');
+  await poll(() => evaluate(`document.getElementById('entryDay').textContent===${JSON.stringify(previousDay)}`), 'previous date with reduced motion');
+  assert.equal(await evaluate("document.getElementById('pageTurnEffect').getAnimations().length"), 0);
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
+  await click('#nextWritingPage');
+  await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'next sheet ready before account switch');
+  await click('#previousWritingPage');
+  await poll(() => evaluate("document.getElementById('pageTurnUnderlay').childElementCount>0"), 'private outgoing sheet mounted');
+  accounts.get('B').set('b-page', entry('b-page', 'A página de outra conta.'));
+  await evaluate("window.__diaryAuth('B')");
+  assert.equal(await evaluate("document.getElementById('pageTurnUnderlay').childElementCount"), 0, 'Account changes clear the stationary outgoing snapshot immediately');
+  assert.equal(await evaluate("document.getElementById('pageTurnEffect').childElementCount"), 0);
+  await poll(() => evaluate("document.getElementById('journalText').value==='A página de outra conta.'"), 'second account ready');
+  assert.equal(await evaluate("document.getElementById('entryDay').textContent"), currentDay, 'A cancelled return cannot overwrite the next account date');
 }));
 
 test('production diary: book counts blank drafts, navigates records and restores saved numbering', options, () => withBrowser(async ({ accounts, navigate, click, fill, evaluate }) => {

@@ -1,6 +1,6 @@
 import { createSoundscape, createDictation } from './diary-audio.js?h=fb22bb467e';
 import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, hasEntryContent, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=baf32a79b0';
-import { createPagedEditor } from './diary-pages.js?h=8dff5bba3e';
+import { createPagedEditor } from './diary-pages.js?h=9b908d41c2';
 import { createIdleInvitation } from './diary-invitation.js?h=26ddf46ff3';
 
 const $ = id => document.getElementById(id);
@@ -144,16 +144,17 @@ function moonName(value) {
   if (phase < 24) return 'Quarto minguante';
   return 'Lua minguante';
 }
-function renderBookDate(entry) {
+function renderBookDate(entry, root = document) {
+  const field = id => root.querySelector(`#${id}`);
   const date = new Date(`${entry.date || today()}T12:00:00-03:00`);
   const created = entry.createdAt ? new Date(entry.createdAt) : new Date();
-  $('entryDay').textContent = String(date.getDate());
-  $('sealDayNumber').textContent = String(date.getDate());
-  $('entryMonthYear').textContent = `de ${new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(date)}`;
+  field('entryDay').textContent = String(date.getDate());
+  field('sealDayNumber').textContent = String(date.getDate());
+  field('entryMonthYear').textContent = `de ${new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(date)}`;
   const weekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(date);
   const time = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false }).format(created).replace(':', 'h');
-  $('entryMeta').textContent = `${weekday} · ${time} · ${moonName(created)}`;
-  $('entryDate').setAttribute('aria-label', dateLabel(entry.date || today(), { weekday: 'long' }));
+  field('entryMeta').textContent = `${weekday} · ${time} · ${moonName(created)}`;
+  field('entryDate').setAttribute('aria-label', dateLabel(entry.date || today(), { weekday: 'long' }));
 }
 function renderPrompt() { $('journalPrompt').textContent = JOURNAL_PROMPTS[promptIndex % JOURNAL_PROMPTS.length]; }
 function openBook() {
@@ -165,6 +166,7 @@ function openBook() {
   $('closeDiaryButton').textContent = 'Fechar diário';
 }
 function closeBook() {
+  pagedEditor.cancelTurn();
   clearTimeout(coverTimer); coverTimer = 0; clearTimeout(coverMotionTimer); coverMotionTimer = 0; bookOpened = false;
   text.blur(); setWritingFocus(false); if (dirty) flush();
   const frame = $('bookFrame');
@@ -322,7 +324,7 @@ function revealPage(heading) {
     if (stage.getBoundingClientRect().top < 0) stage.scrollIntoView({ block: 'start', behavior: 'instant' });
   });
 }
-function showEditor(entry, { lastSheet = false } = {}) {
+function showEditor(entry, { lastSheet = false, keepDate = false } = {}) {
   pagedEditor.cancelTurn();
   if (bookDrafts.has(current.id)) bookDrafts.set(current.id, structuredClone(current));
   dictation.stop(); dictationEntryId = null;
@@ -334,7 +336,7 @@ function showEditor(entry, { lastSheet = false } = {}) {
   }
   $('editorView').hidden = false; $('collectionView').hidden = true; $('paper').classList.add('paper--writing'); $('bookFrame').classList.remove('is-collection'); document.body.classList.add('is-book-writing');
   activateTab(current.kind === 'dream' ? 'dreams' : current.kind === 'capsule' ? 'capsules' : 'diary');
-  renderBookDate(current);
+  if (!keepDate) renderBookDate(current);
   promptIndex = [...current.id].reduce((total, char) => total + char.charCodeAt(0), 0) % JOURNAL_PROMPTS.length; renderPrompt();
   $('entryKind').textContent = current.kind === 'dream' ? 'UM SONHO PARA GUARDAR' : current.kind === 'capsule' ? 'UMA CARTA DO SEU PASSADO' : 'UMA PÁGINA SÓ SUA';
   text.value = current.text; text.disabled = !ready || current.kind === 'capsule';
@@ -357,7 +359,10 @@ async function navigateBookEntry(id, direction) {
     if (!entry || entry.kind !== current.kind || entry.locked) return;
     text.blur(); setWritingFocus(false); openBook();
     const lastSheet = direction === 'backward';
-    await pagedEditor.turnEntry(() => showEditor(entry, { lastSheet }), $('editorView'), { direction, lastSheet });
+    await pagedEditor.turnEntry(() => showEditor(entry, { lastSheet, keepDate: lastSheet }), $('editorView'), {
+      direction, lastSheet, prepareSnapshot: copy => renderBookDate(entry, copy),
+    });
+    if (generation === bootGeneration && current.id === entry.id) renderBookDate(current);
   } finally {
     if (pageCreation === operation) { pageCreation = null; syncNewPageButton(); }
   }
