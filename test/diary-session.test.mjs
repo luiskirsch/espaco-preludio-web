@@ -166,6 +166,13 @@ async function withBrowser(run) {
     }
     async function click(selector) {
       assert.equal(await evaluate(`!!document.querySelector(${JSON.stringify(selector)})`), true, selector);
+      if (['#newPageButton', '#previousWritingPage', '#nextWritingPage'].includes(selector)) {
+        if (await evaluate(`document.querySelector(${JSON.stringify(selector)}).disabled`)) return;
+        const point = await evaluate(`(()=>{const node=document.querySelector(${JSON.stringify(selector)});node.scrollIntoView({block:'center'});const box=node.getBoundingClientRect();return {x:box.left+box.width/2,y:box.top+box.height/2}})()`);
+        await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...point, button: 'left', clickCount: 1 });
+        await send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...point, button: 'left', clickCount: 1 });
+        return;
+      }
       await evaluate(`document.querySelector(${JSON.stringify(selector)}).click()`);
     }
     async function fill(selector, value) {
@@ -300,6 +307,12 @@ test('production diary: new page turns the saved sheet with sound and retains bo
   assert.equal(await evaluate("document.querySelector('#pageTurnEffect textarea').value"), original, 'The outgoing sheet still shows the saved writing during the turn');
   assert.equal(await evaluate("document.querySelectorAll('#pageTurnEffect [id]').length"), 0, 'The decorative snapshot does not duplicate control IDs');
   assert.equal(await evaluate("document.getElementById('journalText').value"), '', 'The new blank sheet is revealed underneath');
+  assert.equal(await evaluate("document.getElementById('writingPageIndicator').textContent"), 'Página 2 de 365', 'New entry advances the fixed-size book counter');
+  assert.equal(await evaluate("document.getElementById('writingPageIndicator').hasAttribute('data-i18n')"), false, 'Delayed static translations cannot reset the live page number');
+  assert.equal(await evaluate("document.getElementById('paper').contains(document.getElementById('pageTurnEffect'))"), false, 'The turning sheet is outside the clipped paper');
+  const outside = await evaluate("(()=>{const effect=document.getElementById('pageTurnEffect'),animation=effect.getAnimations()[0];animation.pause();animation.currentTime=650;const sheet=effect.getBoundingClientRect(),paper=document.getElementById('paper').getBoundingClientRect();return {left:sheet.left,spine:paper.left,width:paper.width,overflow:getComputedStyle(effect.parentElement).overflow}})()");
+  assert.ok(outside.left < outside.spine - outside.width * .2, 'After crossing the spine, the sheet extends visibly outside the cover');
+  assert.equal(outside.overflow, 'visible');
   assert.ok(await evaluate("document.getElementById('pageTurnEffect').getAnimations().length") > 0, 'New page runs a paper animation');
   assert.equal(await evaluate("document.getElementById('newPageButton').disabled"), true, 'Repeated clicks cannot create overlapping page changes');
   await click('#newPageButton');
@@ -312,6 +325,14 @@ test('production diary: new page turns the saved sheet with sound and retains bo
   await poll(() => [...accounts.get('A').values()].some(item => item.text === next), 'new entry saved independently');
   assert.equal(accounts.get('A').get('original-page').text, original);
   assert.equal(accounts.get('A').size, 2);
+  await click('#previousWritingPage');
+  await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'previous saved entry');
+  assert.equal(await evaluate("document.getElementById('journalText').value"), original);
+  assert.equal(await evaluate("document.getElementById('writingPageIndicator').textContent"), 'Página 1 de 365');
+  await click('#nextWritingPage');
+  await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'next saved entry');
+  assert.equal(await evaluate("document.getElementById('journalText').value"), next);
+  assert.equal(await evaluate("document.getElementById('writingPageIndicator').textContent"), 'Página 2 de 365');
   await click('[data-tab="timeline"]');
   await click('[data-open="original-page"]');
   assert.equal(await evaluate("document.getElementById('journalText').value"), original, 'The previous page remains available in the timeline');
@@ -335,6 +356,106 @@ test('production diary: new page turns the saved sheet with sound and retains bo
   const pausesAtRequest = await evaluate('window.__paperPauses');
   await poll(() => evaluate(`window.__paperPauses>${pausesAtRequest}`), 'late paper audio cancelled');
   await evaluate('window.__finishPaperLoading()');
+}));
+
+test('production diary: book counts blank drafts, navigates records and restores saved numbering', options, () => withBrowser(async ({ accounts, navigate, click, fill, evaluate }) => {
+  accounts.get('A').set('first-page', entry('first-page', 'Primeira página'));
+  await navigate(); await click('#bookCover');
+  assert.equal(await evaluate("document.getElementById('writingPageIndicator').textContent"), 'Página 1 de 365');
+  const finished = () => poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'book turn completed');
+  await click('#nextWritingPage'); await finished();
+  assert.equal(await evaluate("document.getElementById('writingPageIndicator').textContent"), 'Página 2 de 365', 'The next arrow opens an available blank sheet');
+  await click('#newPageButton'); await finished();
+  assert.equal(await evaluate("document.getElementById('writingPageIndicator').textContent"), 'Página 3 de 365');
+  await click('#previousWritingPage'); await finished();
+  assert.equal(await evaluate("document.getElementById('writingPageIndicator').textContent"), 'Página 2 de 365');
+  await fill('#journalText', 'Segunda página');
+  await poll(() => accounts.get('A').size === 2, 'second page saved');
+  await click('#nextWritingPage'); await finished();
+  await fill('#journalText', 'Terceira página');
+  await poll(() => accounts.get('A').size === 3, 'third page saved');
+  await navigate(); await click('#bookCover');
+  assert.match(await evaluate("document.getElementById('writingPageIndicator').textContent"), /de 365$/);
+  await click('#nextWritingPage'); await finished();
+  assert.equal(await evaluate("document.getElementById('journalText').value"), 'Segunda página');
+  await click('#nextWritingPage'); await finished();
+  assert.equal(await evaluate("document.getElementById('writingPageIndicator').textContent"), 'Página 3 de 365');
+  assert.equal(await evaluate("document.getElementById('journalText').value"), 'Terceira página');
+}));
+
+test('production diary: the 365th page stays editable and cannot create page 366', options, () => withBrowser(async ({ accounts, pages, cursors, navigate, click, fill, evaluate }) => {
+  const start = Date.now() - 365000;
+  for (let number = 1; number <= 365; number++) {
+    const id = `sheet-${number}`;
+    accounts.get('A').set(id, entry(id, `Lembrança ${number}`, { createdAt: start + number * 1000 }));
+  }
+  // Keep the older sheets behind the API cursor, as in a real large diary.
+  const older = [...accounts.get('A').values()].slice(0, 265);
+  for (const item of older) accounts.get('A').delete(item.id);
+  cursors.set('A', 'older-sheets'); pages.set('A:older-sheets', older);
+  await navigate(); await click('#bookCover');
+  assert.equal(await evaluate("document.getElementById('writingPageIndicator').textContent"), 'Página 266 de 365', 'Older API pages are included before the diary becomes editable');
+  await click('#previousWritingPage');
+  await poll(() => evaluate("document.getElementById('journalText').value==='Lembrança 265'"), 'older page outside the expanded timeline');
+  await poll(() => evaluate("!document.getElementById('paper').classList.contains('is-turning-entry')"), 'older page turn finished');
+  await click('[data-tab="timeline"]'); await click('[data-open="sheet-365"]');
+  await poll(() => evaluate("document.getElementById('writingPageIndicator').textContent==='Página 365 de 365'"), 'last diary page');
+  assert.equal(await evaluate("document.getElementById('nextWritingPage').disabled"), true);
+  assert.equal(await evaluate("document.getElementById('newPageButton').disabled"), true);
+  await click('#newPageButton'); await click('#nextWritingPage');
+  assert.equal(accounts.get('A').size + older.length, 365);
+  assert.equal(await evaluate("document.getElementById('journalText').value"), 'Lembrança 365');
+  await fill('#journalText', 'Última lembrança, com carinho.');
+  await poll(() => accounts.get('A').get('sheet-365').text === 'Última lembrança, com carinho.', 'last page edited and saved');
+  await fill('#journalText', 'Um texto que não cabe na última folha.\n'.repeat(250));
+  assert.equal(await evaluate("document.getElementById('journalText').value"), 'Última lembrança, com carinho.', 'Overflow cannot overwrite the saved last page');
+  assert.equal(older[0].text, 'Lembrança 1');
+  await click('#previousWritingPage');
+  await poll(() => evaluate("document.getElementById('writingPageIndicator').textContent==='Página 364 de 365'"), 'previous sheet of full book');
+  await poll(() => evaluate("!document.getElementById('paper').classList.contains('is-turning-entry')"), 'previous sheet turn finished');
+  await click('#nextWritingPage');
+  await poll(() => evaluate("document.getElementById('writingPageIndicator').textContent==='Página 365 de 365'"), 'return to last sheet');
+}));
+
+test('production diary: invitation waits for its idle timer, works in the background and remembers being disabled', options, () => withBrowser(async ({ accounts, navigate, click, evaluate, send }) => {
+  await send('Page.addScriptToEvaluateOnNewDocument', { source: `
+    const schedule = window.setTimeout.bind(window), cancel = window.clearTimeout.bind(window);
+    const invitations = new Map(); let sequence = 0;
+    window.setTimeout = (callback, delay, ...args) => {
+      if (delay === 600000) { const id = --sequence; invitations.set(id, callback); return id; }
+      return schedule(callback, delay, ...args);
+    };
+    window.clearTimeout = id => { if (id < 0) invitations.delete(id); else cancel(id); };
+    window.__fireDiaryInvitations = () => { for (const [id, callback] of [...invitations]) { invitations.delete(id); callback(); } };
+    window.__invitationPlays = [];
+    HTMLMediaElement.prototype.play = function() { window.__invitationPlays.push({src:this.src,volume:this.volume}); return Promise.resolve(); };
+  ` });
+  accounts.get('A').set('first-page', entry('first-page', 'Minha escrita permanece aqui.'));
+  await navigate();
+  assert.equal(await evaluate("document.getElementById('diaryInvitationToggle').getAttribute('aria-pressed')"), 'true');
+  assert.equal(await evaluate('window.__invitationPlays.length'), 0, 'Opening the diary does not call immediately');
+  await evaluate('window.__fireDiaryInvitations()');
+  assert.equal(await evaluate('window.__invitationPlays.length'), 1, 'A full idle interval can call while the diary remains open');
+  await evaluate("Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));window.__fireDiaryInvitations()");
+  assert.equal(await evaluate('window.__invitationPlays.length'), 2);
+  assert.ok(await evaluate('window.__invitationPlays[0].volume') <= .1, 'The call is softer than a normal page turn');
+  assert.equal(await evaluate("document.getElementById('journalText').value"), 'Minha escrita permanece aqui.');
+  assert.equal(await evaluate("document.getElementById('pageTurnEffect').getAnimations().length"), 0, 'The invitation does not turn a page');
+  await evaluate('window.__fireDiaryInvitations()');
+  assert.equal(await evaluate('window.__invitationPlays.length'), 3, 'A later full interval can call again');
+  await evaluate("Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'))");
+  assert.equal(await evaluate('window.__invitationPlays.length'), 3, 'Returning to the diary starts a fresh interval without calling immediately');
+  await evaluate("window.dispatchEvent(new Event('pagehide'));window.__fireDiaryInvitations()");
+  assert.equal(await evaluate('window.__invitationPlays.length'), 3, 'Leaving the diary document cancels the timer');
+  await evaluate("window.dispatchEvent(new Event('pageshow'))");
+  await click('#diaryInvitationToggle');
+  assert.equal(await evaluate("localStorage.getItem('ep.diary.invitation')"), 'off');
+  await navigate();
+  assert.equal(await evaluate("document.getElementById('diaryInvitationToggle').getAttribute('aria-pressed')"), 'false');
+  assert.equal(await evaluate("document.querySelector('[data-invitation-state]').textContent"), 'Desligado');
+  assert.equal(await evaluate("document.querySelector('[data-invitation-state]').hasAttribute('data-i18n')"), false, 'Static translation cannot overwrite the saved disabled state');
+  await evaluate("Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));window.__fireDiaryInvitations()");
+  assert.equal(await evaluate('window.__invitationPlays.length'), 0, 'The disabled preference survives reloading and changing tabs');
 }));
 
 test('production diary: new page keeps writing visible when saving fails', options, () => withBrowser(async ({ accounts, hold, navigate, click, fill, evaluate }) => {

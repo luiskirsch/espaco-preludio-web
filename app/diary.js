@@ -1,6 +1,7 @@
 import { createSoundscape, createDictation } from './diary-audio.js?h=fb22bb467e';
 import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, hasEntryContent, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=baf32a79b0';
-import { createPagedEditor } from './diary-pages.js?h=3dc3a3a1a5';
+import { createPagedEditor } from './diary-pages.js?h=8dff5bba3e';
+import { createIdleInvitation } from './diary-invitation.js?h=26ddf46ff3';
 
 const $ = id => document.getElementById(id);
 const student = document.body.dataset.portal === 'student';
@@ -15,6 +16,9 @@ let preset = 'rain';
 let promptIndex = 0, coverTimer = 0, coverMotionTimer = 0, bookOpened = false;
 let namingCover = false, writingAnchor = null;
 let pageCreation = null;
+const bookDrafts = new Map();
+const bookOrder = new Map();
+let bookEntries = [];
 const COVER_TITLE_DEFAULT = 'Uma página só sua';
 const COVER_TITLE_KEY = 'p-app-diario:uma_pagina_so_sua_0c698';
 const JOURNAL_PROMPTS = [
@@ -37,7 +41,40 @@ const pagedEditor = createPagedEditor({
   next: $('nextWritingPage'),
   soundUrl: new URL('./assets/diary/page-turn.ogg', import.meta.url).href,
   getVolume: () => Number($('volumeSlider').value) / 200,
+  getBook: () => {
+    if (!ready) return null;
+    const pages = new Map([...bookEntries, ...entries, ...bookDrafts.values(), current].filter(entry => entry.kind === current.kind && !entry.locked).map(entry => [entry.id, entry]));
+    return { currentId: current.id, entries: [...pages.values()].sort((a, b) => (bookOrder.get(a.id) ?? a.createdAt ?? 0) - (bookOrder.get(b.id) ?? b.createdAt ?? 0) || a.id.localeCompare(b.id)) };
+  },
+  onEntryNavigate: navigateBookEntry,
+  onEmptyPage: () => newPage(current.kind === 'dream' ? 'dream' : 'diary'),
 });
+const invitationPreferenceKey = 'ep.diary.invitation';
+let invitationEnabled = true;
+try { invitationEnabled = localStorage.getItem(invitationPreferenceKey) !== 'off'; } catch { /* Use the default in this tab. */ }
+const invitation = createIdleInvitation({ enabled: invitationEnabled, play: () => { if (ready && !pageCreation && !dictation.listening) pagedEditor.invite(); } });
+function syncInvitationAvailability() {
+  if (ready) invitation.resume();
+  else invitation.pause();
+}
+function renderInvitationToggle() {
+  $('diaryInvitationToggle').setAttribute('aria-pressed', String(invitation.enabled));
+  const state = $('diaryInvitationToggle').querySelector('[data-invitation-state]');
+  state.removeAttribute('data-i18n');
+  state.textContent = invitation.enabled ? 'Ligado' : 'Desligado';
+}
+renderInvitationToggle();
+$('diaryInvitationToggle').addEventListener('click', () => {
+  invitation.setEnabled(!invitation.enabled);
+  if (!invitation.enabled) pagedEditor.stopSound();
+  try { localStorage.setItem(invitationPreferenceKey, invitation.enabled ? 'on' : 'off'); } catch { /* The preference still works in this tab. */ }
+  renderInvitationToggle(); syncInvitationAvailability();
+});
+for (const type of ['pointerdown', 'pointermove', 'keydown', 'input', 'scroll']) document.addEventListener(type, event => { if (event.isTrusted) invitation.activity(); }, { capture: true, passive: true });
+document.addEventListener('visibilitychange', () => { invitation.activity(); syncInvitationAvailability(); });
+window.addEventListener('focus', syncInvitationAvailability);
+window.addEventListener('pageshow', syncInvitationAvailability);
+window.addEventListener('storage', event => { if (event.key === invitationPreferenceKey || event.key === null) { invitation.setEnabled(event.newValue !== 'off'); if (!invitation.enabled) pagedEditor.stopSound(); renderInvitationToggle(); } });
 const uiErrors = {
   REGISTRO_ALTERADO: 'Esta página foi alterada em outra aba. Sua escrita continua aqui. Copie o texto e recarregue para conciliar as versões.',
   CAPSULA_SELADA: 'Esta cápsula já está selada. Você pode escrever uma nova carta.',
@@ -90,8 +127,11 @@ async function api(path, options = {}) {
   if (!response.ok || data.ok === false) throw new Error(data.error || `HTTP_${response.status}`);
   return data;
 }
-function upsert(item) { entries = [item, ...entries.filter(entry => entry.id !== item.id)].sort((a, b) => b.createdAt - a.createdAt); }
-function resizeEditor(options) { return pagedEditor.layout(options); }
+function upsert(item) { bookDrafts.delete(item.id); entries = [item, ...entries.filter(entry => entry.id !== item.id)].sort((a, b) => b.createdAt - a.createdAt); }
+function syncNewPageButton() {
+  $('newPageButton').disabled = Boolean(pageCreation) || pagedEditor.full;
+}
+function resizeEditor(options) { const result = pagedEditor.layout(options); syncNewPageButton(); return result; }
 function moonName(value) {
   const days = (new Date(value).getTime() - Date.UTC(2000, 0, 6, 18, 14)) / 86400000;
   const phase = ((days % 29.53058867) + 29.53058867) % 29.53058867;
@@ -282,10 +322,16 @@ function revealPage(heading) {
     if (stage.getBoundingClientRect().top < 0) stage.scrollIntoView({ block: 'start', behavior: 'instant' });
   });
 }
-function showEditor(entry) {
+function showEditor(entry, { lastSheet = false } = {}) {
   pagedEditor.cancelTurn();
+  if (bookDrafts.has(current.id)) bookDrafts.set(current.id, structuredClone(current));
   dictation.stop(); dictationEntryId = null;
   current = structuredClone(entry); dirty = false; conflict = false; editTick++; clearTimeout(saveTimer);
+  if (!current.version && current.kind !== 'capsule') {
+    current.createdAt ||= Date.now();
+    if (!bookOrder.has(current.id)) bookOrder.set(current.id, Math.max(current.createdAt, ...bookOrder.values(), 0) + 1);
+    bookDrafts.set(current.id, structuredClone(current));
+  }
   $('editorView').hidden = false; $('collectionView').hidden = true; $('paper').classList.add('paper--writing'); $('bookFrame').classList.remove('is-collection'); document.body.classList.add('is-book-writing');
   activateTab(current.kind === 'dream' ? 'dreams' : current.kind === 'capsule' ? 'capsules' : 'diary');
   renderBookDate(current);
@@ -295,12 +341,30 @@ function showEditor(entry) {
   $('newPageButton').textContent = current.kind === 'dream' ? '+ Novo sonho' : '+ Nova página';
   ['feelingButton', 'tagsButton'].forEach(id => { $(id).disabled = current.kind === 'capsule'; });
   setStatus(current.version ? current.kind === 'capsule' ? 'Cápsula aberta · somente leitura' : 'Salvo automaticamente' : 'Seu espaço está pronto', current.version ? 'saved' : '');
-  renderMeta(); requestAnimationFrame(() => pagedEditor.reset());
+  renderMeta(); requestAnimationFrame(() => { pagedEditor.reset(); if (lastSheet) pagedEditor.show(pagedEditor.total - 1); syncNewPageButton(); });
   if (bookOpened) $('bookFrame').classList.add('is-cover-open');
   else if (!coverTimer) coverTimer = setTimeout(openBook, 4200);
 }
+async function navigateBookEntry(id, direction) {
+  if (pageCreation || !assertReady()) return;
+  const operation = {};
+  pageCreation = operation; $('newPageButton').disabled = true;
+  const generation = bootGeneration;
+  try {
+    dictation.stop(); dictationEntryId = null;
+    if (!await settle() || generation !== bootGeneration) return;
+    const entry = entries.find(item => item.id === id) || bookEntries.find(item => item.id === id) || bookDrafts.get(id);
+    if (!entry || entry.kind !== current.kind || entry.locked) return;
+    text.blur(); setWritingFocus(false); openBook();
+    const lastSheet = direction === 'backward';
+    await pagedEditor.turnEntry(() => showEditor(entry, { lastSheet }), $('editorView'), { direction, lastSheet });
+  } finally {
+    if (pageCreation === operation) { pageCreation = null; syncNewPageButton(); }
+  }
+}
 async function newPage(kind = 'diary') {
   if (pageCreation || !assertReady()) return;
+  if (kind === current.kind && pagedEditor.full) { toast('As 365 páginas deste diário estão preenchidas. Você pode revisitar e editar suas lembranças.'); return; }
   const operation = {};
   pageCreation = operation;
   $('newPageButton').disabled = true;
@@ -315,7 +379,7 @@ async function newPage(kind = 'diary') {
     const completed = await pagedEditor.turnEntry(() => showEditor(nextEntry), source);
     if (completed && generation === bootGeneration && current.id === nextEntry.id && !$('editorView').hidden) text.focus({ preventScroll: true });
   } finally {
-    if (pageCreation === operation) { pageCreation = null; $('newPageButton').disabled = false; }
+    if (pageCreation === operation) { pageCreation = null; syncNewPageButton(); }
   }
 }
 async function switchTab(name) {
@@ -325,7 +389,7 @@ async function switchTab(name) {
   pagedEditor.cancelTurn();
   dictation.stop();
   if (name === 'diary') {
-    const latest = entries.find(item => item.kind === 'diary' && item.date === today());
+    const latest = entries.find(item => item.kind === 'diary' && item.date === today()) || entries.find(item => item.kind === 'diary') || bookEntries.find(item => item.kind === 'diary');
     showEditor(latest || draft()); revealPage($('entryDate')); return;
   }
   activateTab(name); $('editorView').hidden = true; $('collectionView').hidden = false; $('paper').classList.remove('paper--writing'); $('bookFrame').classList.add('is-collection'); document.body.classList.remove('is-book-writing');
@@ -469,8 +533,11 @@ function openSound() {
 }
 const dictation = createDictation({ onText(transcript) {
   if (!ready || current.kind === 'capsule' || dictationEntryId !== current.id || dictationGeneration !== bootGeneration) return;
+  invitation.activity();
   const spacer = text.value && !/\s$/.test(text.value) ? ' ' : '';
-  text.value = (text.value + spacer + transcript).slice(0, 20000); text.setSelectionRange(text.value.length, text.value.length); current.text = text.value; markDirty(); resizeEditor({ followCaret: true, animate: true, withSound: true });
+  const value = (text.value + spacer + transcript).slice(0, 20000);
+  if (!pagedEditor.fits(value)) { toast('Você chegou à última das 365 páginas. Suas lembranças continuam guardadas.'); return; }
+  text.value = value; text.setSelectionRange(text.value.length, text.value.length); current.text = text.value; markDirty(); resizeEditor({ followCaret: true, animate: true, withSound: true });
 }, onState(listening) {
   $('voiceButton').classList.toggle('is-listening', listening);
   $('voiceLabel').textContent = listening ? 'Ouvindo… fale no seu tempo' : 'Fale e registre seus pensamentos.';
@@ -518,7 +585,7 @@ function confirmDelete(entry) {
   $('confirmDelete').addEventListener('click', async () => {
     if (generation !== bootGeneration) return;
     const button = $('confirmDelete'); button.disabled = true; deletingId = entry.id; clearTimeout(saveTimer);
-    try { if (saving) await saving; if (generation !== bootGeneration) return; const latest = entries.find(item => item.id === entry.id) || entry; await api(`${endpoint}/${encodeURIComponent(entry.id)}?version=${latest.version}`, { method: 'DELETE' }); entries = entries.filter(item => item.id !== entry.id); if (current.id === entry.id) { dirty = false; clearTimeout(saveTimer); current = draft(); if ($('collectionView').hidden) showEditor(current); } if (deleteDialogSerial === dialogSerial) closeDialog(); if (!$('collectionView').hidden) renderCollection(tab); renderInsights(); toast('Página excluída.'); }
+    try { if (saving) await saving; if (generation !== bootGeneration) return; const latest = entries.find(item => item.id === entry.id) || entry; await api(`${endpoint}/${encodeURIComponent(entry.id)}?version=${latest.version}`, { method: 'DELETE' }); entries = entries.filter(item => item.id !== entry.id); bookEntries = bookEntries.filter(item => item.id !== entry.id); bookDrafts.delete(entry.id); bookOrder.delete(entry.id); if (current.id === entry.id) { dirty = false; clearTimeout(saveTimer); current = draft(); if ($('collectionView').hidden) showEditor(current); } if (deleteDialogSerial === dialogSerial) closeDialog(); if (!$('collectionView').hidden) renderCollection(tab); renderInsights(); toast('Página excluída.'); }
     catch (error) { if (generation !== bootGeneration) return; toast(errorText(error)); button.disabled = false; }
     finally { deletingId = null; }
   });
@@ -548,7 +615,14 @@ async function toggleDaySeal() {
   setTimeout(() => seal.classList.remove('is-stamping'), 950);
   toast('Este dia foi guardado no seu diário.');
 }
-text.addEventListener('input', () => { current.text = text.value; setWritingFocus(true); markDirty(); resizeEditor({ followCaret: true, animate: true, withSound: true }); });
+text.addEventListener('input', () => {
+  if (!pagedEditor.fits(text.value)) {
+    text.value = current.text;
+    toast('Você chegou à última das 365 páginas. Revise uma lembrança para abrir espaço.');
+    resizeEditor({ followCaret: true }); return;
+  }
+  current.text = text.value; setWritingFocus(true); markDirty(); resizeEditor({ followCaret: true, animate: true, withSound: true });
+});
 text.addEventListener('blur', () => setWritingFocus(false));
 document.addEventListener('pointermove', event => {
   if (!document.body.classList.contains('is-writing-focus')) return;
@@ -585,7 +659,7 @@ $('saveState').addEventListener('click', () => { if ($('saveState').dataset.stat
 $('saveState').addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); $('saveState').click(); } });
 document.querySelectorAll('a.back-link, a.diary-brand').forEach(link => link.addEventListener('click', async event => { if (!dirty) return; event.preventDefault(); if (await settle()) location.assign(link.href); }));
 window.addEventListener('beforeunload', event => { if (dirty || $('capsuleText')?.value.trim()) { event.preventDefault(); event.returnValue = ''; } });
-window.addEventListener('pagehide', () => { pagedEditor.cancelTurn(); clearTimeout(coverTimer); clearTimeout(coverMotionTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
+window.addEventListener('pagehide', () => { invitation.pause(); pagedEditor.cancelTurn(); clearTimeout(coverTimer); clearTimeout(coverMotionTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
 window.addEventListener('online', () => { if (ready && dirty) flush(); });
 $('headerDate').dateTime = today(); $('headerDate').textContent = dateLabel(today(), { weekday: 'long' });
 renderBookDate(current); renderPrompt(); renderCoverTitle();
@@ -601,9 +675,22 @@ async function loadDiary() {
   setStatus('Abrindo seu diário…'); const generation = ++bootGeneration;
   try {
     const data = await api(endpoint); if (generation !== bootGeneration) return;
+    // The API lists 100 records at a time. Number the entire book, including
+    // older records that have not yet been expanded in the timeline.
+    const older = [], cursors = new Set();
+    let cursor = data.nextCursor;
+    while (cursor) {
+      if (cursors.has(cursor)) throw new Error('DIARIO_INDISPONIVEL');
+      cursors.add(cursor);
+      const page = await api(`${endpoint}?cursor=${encodeURIComponent(cursor)}`);
+      if (generation !== bootGeneration) return;
+      older.push(...page.items); cursor = page.nextCursor;
+    }
+    bookEntries = older;
     entries = data.items; nextCursor = data.nextCursor; ready = true;
-    const latest = entries.find(item => item.kind === 'diary' && item.date === today());
+    const latest = entries.find(item => item.kind === 'diary' && item.date === today()) || entries.find(item => item.kind === 'diary') || bookEntries.find(item => item.kind === 'diary');
     showEditor(latest || draft());
+    syncInvitationAvailability();
   } catch (error) { if (generation !== bootGeneration) return; ready = false; text.disabled = true; setStatus('Diário indisponível · tentar novamente', 'error'); toast(errorText(error)); }
 }
 const demoEntries = new Map();
@@ -628,7 +715,7 @@ if (preview) {
     backend = config.BACKEND_BASE_URL;
     onAuthStateChanged(config.auth, user => {
       if (!user || account && account.uid !== user.uid) {
-        bootGeneration++; pagedEditor.cancelTurn(); pageCreation = null; $('newPageButton').disabled = false; ready = false; dirty = false; conflict = false; saving = null; deletingId = null; clearTimeout(saveTimer); closeDialog(); dictation.stop(); soundscape.stop();
+        bootGeneration++; invitation.pause(); bookDrafts.clear(); bookOrder.clear(); bookEntries = []; pagedEditor.clearBook(); pageCreation = null; $('newPageButton').disabled = false; ready = false; dirty = false; conflict = false; saving = null; deletingId = null; clearTimeout(saveTimer); closeDialog(); dictation.stop(); soundscape.stop();
         text.value = ''; text.disabled = true; entries = []; current = draft(); renderBookDate(current); renderMeta(); pagedEditor.reset();
         $('collectionView').innerHTML = ''; $('collectionView').hidden = true; $('editorView').hidden = false;
       }

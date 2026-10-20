@@ -103,10 +103,34 @@ o novo registro aparece por baixo. A página anterior continua acessível na
 linha do tempo. Cliques repetidos ficam bloqueados durante a troca; falhas de
 salvamento mantêm a escrita atual aberta. A cópia visual da folha é removida ao
 terminar a animação, navegar para outra seção ou trocar de conta.
-O som só acompanha a criação de uma página ou uma virada real por escrita e
-navegação. Ajustes de layout, salvamento, cliques para posicionar o cursor e
-teclas sem navegação permanecem silenciosos. A gravação não fica em repetição
-e é interrompida ao ocultar ou sair da página.
+A folha animada fica fora do recorte do papel e gira até o lado de fora da
+lombada, com frente e verso próprios. O diário tem 365 folhas: o contador
+mostra “Página 1 de 365”, “Página 2 de 365” e assim por diante. A numeração
+inclui todos os registros, inclusive os retornados pelas próximas páginas
+da API, e as folhas adicionais de textos longos. O índice completo é
+carregado antes de liberar a escrita; a linha do tempo continua gradual.
+As setas passam de um registro para o próximo, aguardando o salvamento,
+e avançam para uma folha vazia quando ainda há espaço no livro. Ao ocupar
+as 365 folhas, a criação fica indisponível; leitura e edição continuam
+acessíveis. Escrita e ditado não podem acrescentar uma folha além desse
+limite. Nenhum texto existente é truncado. Folhas vazias criadas nesta visita
+são mantidas em memória até receberem conteúdo; registros salvos recuperam
+a numeração ao recarregar. O contador dinâmico não é substituído pela
+tradução estática durante o carregamento.
+
+Viradas de página só emitem som após uma interação real recente. Ajustes de
+layout, salvamento e teclas sem navegação permanecem silenciosos. Áudio que
+não começa em até 500 ms é cancelado para evitar reprodução atrasada.
+
+O recurso “Convite para escrever” é independente da virada: ligado por padrão,
+reproduz um som de papel mais baixo após dez minutos sem interação e repete o
+intervalo enquanto a pessoa continuar ausente. Escrita, ditado, seleção de
+humor, movimentos do cursor e outros controles reiniciam a contagem. Funciona
+também com a aba do diário em segundo plano. O botão no painel sonoro permite
+desligar; a preferência fica em `ep.diary.invitation`. O temporizador existe
+somente no documento do diário e é cancelado ao sair dele. Outras páginas do
+portal não importam esse recurso. Abas suspensas e bloqueios de áudio do
+navegador podem atrasar ou impedir o convite em segundo plano.
 
 ## Verificação
 

@@ -94,6 +94,13 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     const { send, evaluate } = cdp;
     const click = async selector => {
       assert.equal(await evaluate(`!!document.querySelector(${JSON.stringify(selector)})`), true, `Controle existe: ${selector}`);
+      if (['#newPageButton', '#previousWritingPage', '#nextWritingPage'].includes(selector)) {
+        if (await evaluate(`document.querySelector(${JSON.stringify(selector)}).disabled`)) return;
+        const point = await evaluate(`(()=>{const node=document.querySelector(${JSON.stringify(selector)});node.scrollIntoView({block:'center'});const box=node.getBoundingClientRect();return {x:box.left+box.width/2,y:box.top+box.height/2}})()`);
+        await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...point, button: 'left', clickCount: 1 });
+        await send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...point, button: 'left', clickCount: 1 });
+        return;
+      }
       await evaluate(`document.querySelector(${JSON.stringify(selector)}).click()`);
     };
     const fill = async (selector, value) => {
@@ -265,6 +272,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
 
     await click('#newPageButton');
     await poll(() => evaluate("document.getElementById('journalText').value===''"), 'nova página vazia');
+    if (capturePreview) await evaluate("const animation=document.getElementById('pageTurnEffect').getAnimations()[0];animation.pause();animation.currentTime=650");
     await capture('new-page-turn-desktop.png');
     await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'virada para a nova página concluída');
     const placeholder = await evaluate("document.getElementById('journalText').placeholder");
@@ -279,8 +287,9 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     await evaluate("window.__diaryPageTurns=0;window.__diaryPaperSounds=0;window.__diaryOriginalMediaPlay=HTMLMediaElement.prototype.play;HTMLMediaElement.prototype.play=function(){window.__diaryPaperSounds++;return Promise.resolve()};document.getElementById('paper').addEventListener('diarypageturn',()=>window.__diaryPageTurns++)");
     const longWriting = Array.from({ length: 12 }, (_, index) => `${index + 1}. Hoje encontrei tempo para respirar e observar os detalhes ao meu redor. Escrevo com calma sobre o que senti, os pequenos encontros e aquilo que quero guardar. Cada lembrança encontra seu espaço nesta página, sem pressa para terminar.`).join('\n\n');
     await fill('#journalText', longWriting);
-    const pagination = await poll(() => evaluate("(()=>{const label=document.getElementById('writingPageIndicator').textContent,match=label.match(/(\\d+)\\D+(\\d+)/);if(!match||Number(match[2])<2)return null;return {current:Number(match[1]),total:Number(match[2]),paperHeight:Math.round(document.getElementById('paper').getBoundingClientRect().height),turns:window.__diaryPageTurns,sounds:window.__diaryPaperSounds,animation:document.getElementById('pageTurnEffect').getAnimations().length,value:document.getElementById('journalText').value}})()"), 'paginação automática da escrita');
-    assert.equal(pagination.current, pagination.total, 'Ao chegar ao fim, a última página aparece sozinha');
+    const pagination = await poll(() => evaluate("(()=>{const indicator=document.getElementById('writingPageIndicator'),match=indicator.textContent.match(/(\\d+)\\D+(\\d+)/);if(!match||Number(indicator.dataset.sheetTotal)<2)return null;return {current:Number(match[1]),total:Number(match[2]),used:Number(indicator.dataset.usedPages),paperHeight:Math.round(document.getElementById('paper').getBoundingClientRect().height),turns:window.__diaryPageTurns,sounds:window.__diaryPaperSounds,animation:document.getElementById('pageTurnEffect').getAnimations().length,value:document.getElementById('journalText').value}})()"), 'paginação automática da escrita');
+    assert.equal(pagination.current, pagination.used, 'Ao chegar ao fim, a última folha escrita aparece sozinha');
+    assert.equal(pagination.total, 365, 'O diário mantém 365 páginas disponíveis');
     assert.equal(pagination.paperHeight, blankPaperHeight, 'O pergaminho não cresce com o texto');
     assert.equal(pagination.value, longWriting, 'A paginação mantém todo o texto no mesmo registro');
     assert.ok(pagination.turns >= 1, 'A troca automática dispara o efeito de virar a página');
@@ -288,7 +297,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     assert.ok(pagination.animation >= 1, 'A folha anima durante a troca automática');
     const soundsBeforeNavigation = pagination.sounds;
     await click('#previousWritingPage');
-    assert.match(await evaluate("document.getElementById('writingPageIndicator').textContent"), new RegExp(`Página ${pagination.total - 1} de ${pagination.total}`));
+    assert.match(await evaluate("document.getElementById('writingPageIndicator').textContent"), new RegExp(`Página ${pagination.current - 1} de 365`));
     assert.equal(await evaluate("document.getElementById('journalText').value"), longWriting, 'Voltar uma folha não altera a escrita');
     assert.ok(await evaluate("window.__diaryPaperSounds") > soundsBeforeNavigation, 'A navegação manual também tem som de papel');
     const quietPage = await evaluate("document.getElementById('writingPageIndicator').textContent.match(/\\d+/)[0]");
