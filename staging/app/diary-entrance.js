@@ -19,7 +19,7 @@
     stylesheet = document.createElement('link');
     stylesheet.id = 'diaryEntranceStyles';
     stylesheet.rel = 'stylesheet';
-    stylesheet.href = new URL('./diary-entrance.css?h=45ec2ddf9f', scriptUrl).href;
+    stylesheet.href = new URL('./diary-entrance.css?h=88d3b5e08f', scriptUrl).href;
     document.head.append(stylesheet);
   }
 
@@ -84,7 +84,7 @@
     if (!destination || navigating) return;
     departurePlayed = true;
     mount('departure', point); root.classList.add('diary-entrance-leaving');
-    departureTimer = setTimeout(navigate, 1250);
+    departureTimer = setTimeout(navigate, 2250);
   }
   function waitForStyles(point) {
     if (stylesheet.sheet) { depart(point); return; }
@@ -121,15 +121,15 @@
     if (wantsPassage || standalone) {
       root.classList.add('diary-entrance-pending');
       // This script runs in the head, so the old page cannot flash at arrival.
-      cleanupTimer = setTimeout(cleanup, 4000);
+      cleanupTimer = setTimeout(cleanup, 6000);
       document.addEventListener('DOMContentLoaded', () => {
         const scene = mount('arrival', null, standalone);
         if (standalone) scene.classList.add('diary-entrance--standalone');
         const reveal = () => requestAnimationFrame(() => requestAnimationFrame(() => {
           root.classList.add('diary-entrance-revealing');
-          clearTimeout(cleanupTimer); cleanupTimer = setTimeout(cleanup, 1250);
+          clearTimeout(cleanupTimer); cleanupTimer = setTimeout(cleanup, 2250);
         }));
-        if (standalone) departureTimer = setTimeout(reveal, 1250);
+        if (standalone) departureTimer = setTimeout(reveal, 2250);
         else reveal();
       }, { once: true });
     }

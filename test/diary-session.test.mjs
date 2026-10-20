@@ -297,7 +297,7 @@ test('production diary: portal entry carries the cinematic reveal through both r
     assert.equal(await evaluate("document.activeElement.classList.contains('diary-entrance__skip')"), true, 'Skip is immediately available from the keyboard');
     assert.equal(await evaluate("document.querySelector('.diary-entrance').getAttribute('aria-modal')"), 'true');
     const presentation = await evaluate("(()=>{const root=document.querySelector('.diary-entrance'),scene=root.querySelector('.diary-entrance__scene'),animation=scene.getAnimations().find(item=>item.animationName==='diary-entry-scene');return {particles:root.querySelectorAll('.diary-entrance__dust i').length,duration:animation?.effect.getTiming().duration,cover:!!root.querySelector('.diary-entrance__cover svg'),textured:getComputedStyle(root.querySelector('.diary-entrance__cover')).backgroundImage.startsWith('url(\"data:image/webp;base64,')}})()");
-    assert.deepEqual(presentation, { particles: 26, duration: 1250, cover: true, textured: true }, 'Every account and device receives the same presentation');
+    assert.deepEqual(presentation, { particles: 26, duration: 2250, cover: true, textured: true }, 'Every account and device receives the same presentation');
     if (process.env.DIARY_CAPTURE_PREVIEW === '1' && selector.includes('card')) {
       await evaluate("for(const animation of document.querySelector('.diary-entrance').getAnimations({subtree:true})){animation.pause();animation.currentTime=800}");
       const shot = await send('Page.captureScreenshot', { format: 'png' });
@@ -368,7 +368,7 @@ test('production diary: the destination recovers the complete passage when a col
     await poll(() => evaluate("!!document.querySelector('.diary-entrance--standalone')"), 'complete passage recovered at destination');
     assert.equal(await evaluate('document.referrer'), '', 'The passage works with the production no-referrer policy');
     const scene = await evaluate("(()=>{const root=document.querySelector('.diary-entrance'),animation=root.querySelector('.diary-entrance__scene').getAnimations().find(item=>item.animationName==='diary-entry-scene');return {particles:root.querySelectorAll('.diary-entrance__dust i').length,duration:animation?.effect.getTiming().duration,cover:!!root.querySelector('.diary-entrance__cover svg'),textured:getComputedStyle(root.querySelector('.diary-entrance__cover')).backgroundImage.startsWith('url(\"data:image/webp;base64,')}})()");
-    assert.deepEqual(scene, { particles: 26, duration: 1250, cover: true, textured: true });
+    assert.deepEqual(scene, { particles: 26, duration: 2250, cover: true, textured: true });
     await click('.diary-entrance__skip');
     assert.equal(await evaluate("!!document.querySelector('.diary-entrance') || document.documentElement.classList.contains('diary-entrance-pending')"), false);
     await poll(() => evaluate("!document.getElementById('journalText').disabled"), 'recovered diary usable');
