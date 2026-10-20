@@ -152,7 +152,7 @@ async function withBrowser(run) {
   const api = await fixture();
   const origin = `http://127.0.0.1:${api.server.address().port}`;
   const profile = await mkdtemp(join(tmpdir(), 'ep-diary-session-'));
-  const browser = spawn(chrome, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--remote-debugging-port=0', `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore', windowsHide: true });
+  const browser = spawn(chrome, ['--headless=new', '--mute-audio', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--remote-debugging-port=0', `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore', windowsHide: true });
   let cdp;
   try {
     const debugPort = await poll(async () => Number((await readFile(join(profile, 'DevToolsActivePort'), 'utf8')).split('\n')[0]), 'browser port');
@@ -420,6 +420,32 @@ test('production diary: new page turns the saved sheet with sound and retains bo
   const pausesAtRequest = await evaluate('window.__paperPauses');
   await poll(() => evaluate(`window.__paperPauses>${pausesAtRequest}`), 'late paper audio cancelled');
   await evaluate('window.__finishPaperLoading()');
+}));
+
+test('production diary: delete action stays inside the footer on both sides of a page turn', options, () => withBrowser(async ({ accounts, navigate, click, evaluate, send }) => {
+  const previousDate = new Date(new Date(`${today()}T12:00:00Z`).getTime() - 86400000).toISOString().slice(0, 10);
+  accounts.get('A').set('earlier', entry('earlier', '', { date: previousDate, createdAt: 1 }));
+  accounts.get('A').set('later', entry('later', '', { createdAt: 2, weather: 'clear' }));
+  // Wide books produce fractional column widths: the old flex layout wrapped
+  // the cloned button below the footer after its auto margin became pixels.
+  for (const width of [2880, 1440, 390]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 1100, deviceScaleFactor: 1, mobile: width < 700 });
+    await navigate(); await evaluate('document.fonts.ready'); await click('#bookCover');
+    for (const direction of ['backward', 'forward']) {
+      await click(direction === 'backward' ? '#previousWritingPage' : '#nextWritingPage');
+      await poll(() => evaluate("!!document.querySelector('#pageTurnEffect .page-turn-snapshot')"), `${direction} snapshot`);
+      await evaluate(`for(const animation of document.getElementById('pageTurnEffect').getAnimations()){animation.pause();animation.currentTime=${direction === 'backward' ? 1300 : 0}}`);
+      const controls = await evaluate("['#editorView','#pageTurnEffect .page-turn-snapshot','#pageTurnUnderlay .page-turn-snapshot'].filter(selector=>document.querySelector(selector)).map(selector=>{const root=document.querySelector(selector),button=root.querySelector('.paper-bottom .text-button'),footer=root.querySelector('.entry-footer').getBoundingClientRect(),row=root.querySelector('.paper-bottom').getBoundingClientRect(),box=button.getBoundingClientRect();return {selector,label:button.textContent,button:{left:box.left,right:box.right,top:box.top,bottom:box.bottom},footer:{left:footer.left,right:footer.right,top:footer.top,bottom:footer.bottom},row:{left:row.left,right:row.right,top:row.top,bottom:row.bottom}}})");
+      assert.equal(controls.length, direction === 'backward' ? 3 : 2);
+      for (const { selector, label, button, footer, row } of controls) {
+        const context = `${direction}, ${width}px, ${selector}`;
+        assert.equal(label, 'Excluir página');
+        assert.ok(button.top >= row.top - 1 && button.bottom <= row.bottom + 1, `${context}: delete action stays in its row`);
+        assert.ok(button.left >= footer.left && button.right <= footer.right + 1 && button.top >= footer.top && button.bottom <= footer.bottom + 1, `${context}: delete action stays inside the footer`);
+      }
+      await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), `${direction} page landed`);
+    }
+  }
 }));
 
 test('production diary: returning pages carry their own date and reveal it only when the turn completes', options, () => withBrowser(async ({ accounts, navigate, click, evaluate, send }) => {

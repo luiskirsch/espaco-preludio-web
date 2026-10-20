@@ -1272,8 +1272,10 @@
 .is-book-writing .save-strip .save-state[data-state=error] { color:#9b3224; }
 .is-book-writing .save-strip .save-state[data-state=error]:before { content:'!'; flex-basis:14px; width:14px; height:14px; }
 .is-book-writing .tag { padding:2px 6px; border:1px solid var(--footer-rule); background:var(--footer-hover); color:var(--footer-ink); font:500 max(12px,1.05cqw)/1.45 var(--sans); }
-.is-book-writing .paper-bottom { grid-column:1/-1; min-height:28px; margin:0; color:var(--footer-muted); font:500 max(12px,1.05cqw)/1.5 var(--sans); }
-.is-book-writing .paper-bottom .text-button { min-height:28px; padding:3px 0; color:var(--footer-action); font:500 max(12px,1.05cqw)/1.5 var(--sans); text-decoration:underline; text-decoration-color:var(--footer-rule); text-underline-offset:3px; }
+/* Colunas mantêm a ação na mesma linha também na cópia da virada: margens
+   automáticas de um flex viram pixels arredondados e podem causar uma quebra. */
+.is-book-writing .paper-bottom { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) auto; min-height:28px; margin:0; color:var(--footer-muted); font:500 max(12px,1.05cqw)/1.5 var(--sans); }
+.is-book-writing .paper-bottom .text-button { grid-column:2; justify-self:end; min-height:28px; margin-left:0; padding:3px 0; color:var(--footer-action); font:500 max(12px,1.05cqw)/1.5 var(--sans); text-decoration:underline; text-decoration-color:var(--footer-rule); text-underline-offset:3px; }
 .is-book-writing .entry-footer button:hover { color:var(--footer-action); text-decoration:underline; text-underline-offset:3px; }
 .is-book-writing .entry-footer .tags-button:hover { background:var(--footer-hover); text-decoration:none; }
 .is-book-writing .book-cover { display:flex; position:absolute; inset:-1.7% -1.8% -2.3% -2.6%; z-index:12; flex-direction:column; align-items:center; justify-content:center; gap:2cqw; padding-left:2.6cqw; border:0; border-radius:12px 15px 15px 12px; background-color:#5a3022; background-image:url('./assets/diary/leather-cover.png?h=abe68145ac'),radial-gradient(120% 90% at 38% 26%,#ffd7aa29,transparent 58%),linear-gradient(180deg,transparent 55%,#00000047); background-size:280px 280px,auto,auto; box-shadow:0 24px 52px #0009,inset 0 0 0 1px #0007,inset 2px 2px 4px #ffdcaa19; color:#e6c47e; transform-origin:left center; transform:rotateY(0); opacity:1; backface-visibility:hidden; transition:transform var(--book-close-duration) var(--book-close-easing),opacity .35s ease,visibility 0s; }
@@ -1333,6 +1335,8 @@
   .quick-feelings > div { flex-wrap:wrap; gap:5px 19px; }
   .quick-feelings button { padding:5px 1px; font-size:9px; letter-spacing:.12em; }
   .is-book-writing .entry-footer { margin-top:8px; gap:4px 8px; }
+  .is-book-writing .paper-bottom { grid-template-columns:minmax(0,1fr); }
+  .is-book-writing .paper-bottom .text-button { grid-column:1; }
   .is-book-writing .book-cover { gap:18px; padding-left:10px; }
   .book-cover > span { font-size:10px; }
   .book-cover > strong { max-width:82%; font-size:34px; white-space:normal; }

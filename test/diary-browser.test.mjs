@@ -82,7 +82,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
   const server = await startServer();
   const profile = await mkdtemp(join(tmpdir(), 'ep-diary-browser-'));
   const browser = spawn(chrome, [
-    '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
+    '--headless=new', '--mute-audio', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
     '--remote-debugging-port=0', `--user-data-dir=${profile}`, 'about:blank'
   ], { stdio: 'ignore', windowsHide: true });
   let cdp;
