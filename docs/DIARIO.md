@@ -141,6 +141,10 @@ navegador podem atrasar ou impedir o convite em segundo plano.
 
 ## Verificação
 
+O HTML dos dois portais já contém o estado visual de livro fechado e a
+folha de altura fixa. A primeira pintura não depende do módulo, da sessão
+ou da leitura dos registros para substituir o pergaminho antigo.
+
 `npm test`, `npm run i18n:audit` e `npm run check:mirrors` verificam o frontend.
 `test/diary-browser.test.mjs` exercita os fluxos e dimensões responsivas usando
 Chrome/Edge, com a prévia isolada. Para atualizar as capturas locais, execute

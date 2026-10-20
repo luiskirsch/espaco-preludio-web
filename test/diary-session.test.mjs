@@ -194,6 +194,29 @@ async function withBrowser(run) {
   }
 }
 
+test('production diary: the book is visible before scripts run in both portals and retains its initial geometry after loading', options, () => withBrowser(async ({ server, navigate, evaluate, send }) => {
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1100, deviceScaleFactor: 1, mobile: false });
+  await send('Emulation.setScriptExecutionDisabled', { value: true });
+  let initial;
+  for (const path of ['/aluno-diario.html', '/app/diario.html']) {
+    await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}${path}` });
+    await poll(() => evaluate(`location.pathname===${JSON.stringify(path)} && document.readyState==='complete' && !!document.getElementById('bookCover')`), 'static diary document');
+    initial = await evaluate("(()=>{const cover=document.getElementById('bookCover'),frame=document.getElementById('bookFrame'),box=frame.getBoundingClientRect();return {cover:getComputedStyle(cover).display,coverVisibility:getComputedStyle(cover).visibility,toolbar:getComputedStyle(document.getElementById('bookToolbar')).display,width:Math.round(box.width),height:Math.round(box.height),closed:!frame.classList.contains('is-cover-open'),disabled:document.getElementById('journalText').disabled}})()");
+    assert.equal(initial.cover, 'flex', `${path} shows the book cover without JavaScript`);
+    assert.equal(initial.coverVisibility, 'visible');
+    assert.equal(initial.toolbar, 'flex');
+    assert.equal(initial.closed, true);
+    assert.equal(initial.disabled, true);
+    assert.ok(initial.width > 500 && initial.height > 500, 'The fixed book layout is present on the first paint');
+  }
+  await send('Emulation.setScriptExecutionDisabled', { value: false });
+  await navigate();
+  const loaded = await evaluate("(()=>{const box=document.getElementById('bookFrame').getBoundingClientRect();return {width:Math.round(box.width),height:Math.round(box.height),cover:getComputedStyle(document.getElementById('bookCover')).display}})()");
+  assert.equal(loaded.cover, 'flex');
+  assert.equal(loaded.width, initial.width, 'Restoring the session does not replace the initial layout');
+  assert.equal(loaded.height, initial.height);
+}));
+
 test('production diary: account switch clears private UI before B loads and ignores late A responses', options, () => withBrowser(async ({ accounts, pages, cursors, hold, navigate, click, fill, evaluate, completed }) => {
   const a = 'ACCOUNT_A_PRIVATE_512';
   const lateA = 'ACCOUNT_A_LATE_PAGE_817';
