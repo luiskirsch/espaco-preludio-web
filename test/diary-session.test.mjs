@@ -224,6 +224,30 @@ test('production diary: the book is visible before scripts run in both portals a
   assert.equal(loaded.height, initial.height);
 }));
 
+test('production diary: the cover stays closed without interaction on first access, reload and after closing', { ...options, timeout: 45000 }, () => withBrowser(async ({ server, accounts, click, evaluate, send }) => {
+  accounts.get('A').set('closed-cover-page', entry('closed-cover-page', 'Uma lembrança guardada.'));
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+  const assertStillClosed = async label => {
+    // Wait beyond the former automatic opening, including after a fresh reload.
+    await evaluate('new Promise(resolve=>setTimeout(resolve,4500))');
+    assert.equal(await evaluate("document.getElementById('bookCover').getAttribute('aria-expanded')"), 'false', label);
+    assert.equal(await evaluate("document.getElementById('bookFrame').classList.contains('is-cover-open')"), false, label);
+    assert.equal(await evaluate("document.getElementById('closeDiaryButton').textContent"), 'Abrir diário');
+  };
+  for (const path of ['/app/diario.html', '/aluno-diario.html']) {
+    await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}${path}` });
+    await poll(() => evaluate("!!document.getElementById('journalText') && !document.getElementById('journalText').disabled"), 'first diary access');
+    await assertStillClosed(`${path}: the initial cover waits for interaction`);
+    await click('#bookCover');
+    assert.equal(await evaluate("document.getElementById('bookCover').getAttribute('aria-expanded')"), 'true');
+    await click('#closeDiaryButton');
+    await assertStillClosed(`${path}: a closed diary stays closed`);
+    await send('Page.reload', { ignoreCache: true });
+    await poll(() => evaluate("!!document.getElementById('journalText') && !document.getElementById('journalText').disabled"), 'reloaded diary');
+    await assertStillClosed(`${path}: reloading keeps the cover closed`);
+  }
+}));
+
 test('production diary: portal entry carries the cinematic reveal through both real entry points and restores the portal', { ...options, timeout: 60000 }, () => withBrowser(async ({ server, accounts, send, click, evaluate }) => {
   const origin = `http://127.0.0.1:${server.address().port}`;
   accounts.get('A').set('entry-page', entry('entry-page', 'Uma lembrança para guardar.'));

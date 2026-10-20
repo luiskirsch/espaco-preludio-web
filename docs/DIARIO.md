@@ -28,7 +28,8 @@ como o portal. “Editar nome” continua disponível; salvar sem alterar o nome
 automático não cria uma personalização. Limpar o título volta ao nome da conta.
 
 A experiência de escrita abre como um livro físico: a capa de couro pode ser
-aberta e fechada, o pergaminho mantém proporção fixa e a data, a fase lunar,
+aberta e fechada por interação da pessoa, sem abertura automática após entrar
+ou recarregar. O pergaminho mantém proporção fixa e a data, a fase lunar,
 as perguntas rotativas, o selo de página salva e os sentimentos rápidos ficam
 integrados à folha. A textura de couro veio do protótipo HTML fornecido para o
 projeto e foi incorporada como arquivo local em `app/assets/diary/`, sem

@@ -13,7 +13,7 @@ let dirty = false, editTick = 0, saveTimer, saving = null, toastTimer, dialogOri
 let dialogGeneration = 0, dialogSerial = 0, deletingId = null, conflict = false;
 let dictationEntryId = null, dictationGeneration = 0;
 let preset = 'rain';
-let promptIndex = 0, coverTimer = 0, coverMotionTimer = 0, bookOpened = false;
+let promptIndex = 0, coverMotionTimer = 0, bookOpened = false;
 let namingCover = false, writingAnchor = null;
 let coverTitle = '';
 let pageCreation = null;
@@ -160,7 +160,7 @@ function renderBookDate(entry, root = document) {
 function renderPrompt() { $('journalPrompt').textContent = JOURNAL_PROMPTS[promptIndex % JOURNAL_PROMPTS.length]; }
 function openBook() {
   if (namingCover) return;
-  clearTimeout(coverTimer); coverTimer = 0; clearTimeout(coverMotionTimer); coverMotionTimer = 0; bookOpened = true;
+  clearTimeout(coverMotionTimer); coverMotionTimer = 0; bookOpened = true;
   const frame = $('bookFrame');
   frame.classList.remove('is-cover-preparing', 'is-cover-closing');
   frame.classList.add('is-cover-open'); $('bookCover').setAttribute('aria-expanded', 'true');
@@ -168,7 +168,7 @@ function openBook() {
 }
 function closeBook() {
   pagedEditor.cancelTurn();
-  clearTimeout(coverTimer); coverTimer = 0; clearTimeout(coverMotionTimer); coverMotionTimer = 0; bookOpened = false;
+  clearTimeout(coverMotionTimer); coverMotionTimer = 0; bookOpened = false;
   text.blur(); setWritingFocus(false); if (dirty) flush();
   const frame = $('bookFrame');
   frame.classList.remove('is-cover-closing');
@@ -214,7 +214,7 @@ async function loadCoverTitle() {
 }
 function startCoverNaming() {
   if ($('bookFrame').classList.contains('is-cover-open')) { closeBook(); }
-  clearTimeout(coverTimer); coverTimer = 0; namingCover = true;
+  namingCover = true;
   const input = $('coverTitleInput');
   input.value = coverTitle || defaultCoverTitle();
   $('bookFrame').classList.add('is-naming'); $('coverTitle').hidden = true; input.hidden = false;
@@ -373,7 +373,6 @@ function showEditor(entry, { lastSheet = false, keepDate = false } = {}) {
   setStatus(current.version ? current.kind === 'capsule' ? 'Cápsula aberta · somente leitura' : 'Salvo automaticamente' : 'Seu espaço está pronto', current.version ? 'saved' : '');
   renderMeta(); requestAnimationFrame(() => { pagedEditor.reset(); if (lastSheet) pagedEditor.show(pagedEditor.total - 1); syncNewPageButton(); });
   if (bookOpened) $('bookFrame').classList.add('is-cover-open');
-  else if (!coverTimer) coverTimer = setTimeout(openBook, 4200);
 }
 async function navigateBookEntry(id, direction) {
   if (pageCreation || !assertReady()) return;
@@ -692,7 +691,7 @@ $('saveState').addEventListener('click', () => { if ($('saveState').dataset.stat
 $('saveState').addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); $('saveState').click(); } });
 document.querySelectorAll('a.back-link, a.diary-brand').forEach(link => link.addEventListener('click', async event => { if (!dirty) return; event.preventDefault(); if (await settle()) location.assign(link.href); }));
 window.addEventListener('beforeunload', event => { if (dirty || $('capsuleText')?.value.trim()) { event.preventDefault(); event.returnValue = ''; } });
-window.addEventListener('pagehide', () => { invitation.pause(); pagedEditor.cancelTurn(); clearTimeout(coverTimer); clearTimeout(coverMotionTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
+window.addEventListener('pagehide', () => { invitation.pause(); pagedEditor.cancelTurn(); clearTimeout(coverMotionTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
 window.addEventListener('online', () => { if (ready && dirty) flush(); });
 $('headerDate').dateTime = today(); $('headerDate').textContent = dateLabel(today(), { weekday: 'long' });
 renderBookDate(current); renderPrompt(); renderCoverTitle();
