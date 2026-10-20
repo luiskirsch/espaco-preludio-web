@@ -1,6 +1,6 @@
 import { createSoundscape, createDictation } from './diary-audio.js?h=fb22bb467e';
 import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, hasEntryContent, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=baf32a79b0';
-import { createPagedEditor } from './diary-pages.js?h=2fef6abb4c';
+import { createPagedEditor } from './diary-pages.js?h=2f3dc7fb7c';
 import { createIdleInvitation } from './diary-invitation.js?h=26ddf46ff3';
 
 const $ = id => document.getElementById(id);

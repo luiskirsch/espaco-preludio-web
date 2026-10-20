@@ -622,6 +622,56 @@ test('production diary: new page turns the saved sheet with sound and retains bo
   await evaluate('window.__finishPaperLoading()');
 }));
 
+test('production diary: turning sheets retain the resting paper colors in both themes and portals', { ...options, timeout: 60000 }, () => withBrowser(async ({ server, accounts, click, evaluate, send }) => {
+  accounts.get('A').set('color-next', entry('color-next', '', { createdAt: 2 }));
+  accounts.get('A').set('color-first', entry('color-first', '', { createdAt: 1 }));
+  const capturePaper = async (clip) => {
+    await evaluate("document.getElementById('paper').scrollIntoView({block:'center'});new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))");
+    clip ||= await evaluate("(()=>{const p=document.getElementById('paper');p.scrollIntoView({block:'center'});const b=p.getBoundingClientRect();return {x:Math.round(b.left+scrollX+b.width*.025),y:Math.round(b.top+scrollY+b.height*.43),width:Math.floor(b.width*.92),height:Math.floor(b.height*.1),scale:1}})()");
+    return { data: (await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false, clip })).data, clip };
+  };
+  const assertSamePaper = async (before, label) => {
+    const during = await capturePaper(before.clip);
+    assert.equal(await evaluate("document.getElementById('pageTurnEffect').childElementCount"), 1, `${label}: the comparison captures the sheet before it is removed`);
+    const difference = await evaluate(`(async()=>{
+      const pixels=async data=>{const image=await createImageBitmap(await (await fetch('data:image/png;base64,'+data)).blob());const canvas=new OffscreenCanvas(image.width,image.height),ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);return ctx.getImageData(0,0,canvas.width,canvas.height).data};
+      const [a,b]=await Promise.all([pixels(${JSON.stringify(before.data)}),pixels(${JSON.stringify(during.data)})]);
+      // Compositing the 3D leaf can round a few texture channels differently.
+      let changed=0,maximum=0;for(let i=0;i<a.length;i++){const delta=Math.abs(a[i]-b[i]);if(delta>3)changed++;maximum=Math.max(maximum,delta)}
+      return {sameSize:a.length===b.length,changed,maximum};
+    })()`);
+    assert.equal(difference.sameSize, true, label);
+    if (difference.changed) {
+      await writeFile(join(tmpdir(), 'ep-diary-color-before.png'), Buffer.from(before.data, 'base64'));
+      await writeFile(join(tmpdir(), 'ep-diary-color-during.png'), Buffer.from(during.data, 'base64'));
+      console.log(label, before.clip, await evaluate("['paper','pageTurnEffect','pageTurnUnderlay'].map(id=>{const el=document.getElementById(id),s=getComputedStyle(el),b=el.getBoundingClientRect();return {id,x:b.x,y:b.y,w:b.width,h:b.height,background:s.background,content:el.childElementCount,animation:s.animation,shadow:getComputedStyle(el,'::before').boxShadow}})"));
+    }
+    assert.equal(difference.changed, 0, `${label}: ${JSON.stringify(difference)}`);
+  };
+  const pauseTurn = async () => {
+    await poll(() => evaluate("document.getElementById('paper').classList.contains('is-turning-entry')"), 'color comparison turn');
+    await evaluate("for(const animation of document.getElementById('pageTurnEffect').getAnimations()){animation.pause();animation.currentTime=0}");
+  };
+  for (const [path, width] of [['/app/diario.html', 1440], ['/aluno-diario.html', 390]]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: width < 700 });
+    await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}${path}` });
+    await poll(() => evaluate(`location.pathname===${JSON.stringify(path)} && typeof window.__diaryAuth==='function' && !document.getElementById('journalText').disabled && !document.querySelector('.diary-entrance') && !document.documentElement.classList.contains('diary-entrance-pending')`), 'paper color fixture');
+    await click('#bookCover');
+    await evaluate("document.getElementById('bookCover').style.transition='none';document.fonts.ready");
+    for (const theme of ['day', 'night']) {
+      await evaluate(`document.documentElement.dataset.diaryTheme=${JSON.stringify(theme)}`);
+      const beforeBack = await capturePaper();
+      await click('#previousWritingPage'); await pauseTurn();
+      await assertSamePaper(beforeBack, `${path} ${theme}: the flat outgoing underlay`);
+      await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'back turn finished');
+      const beforeForward = await capturePaper();
+      await click('#nextWritingPage'); await pauseTurn();
+      await assertSamePaper(beforeForward, `${path} ${theme}: the moving outgoing sheet`);
+      await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'forward turn finished');
+    }
+  }
+}));
+
 test('production diary: delete action stays inside the footer on both sides of a page turn', options, () => withBrowser(async ({ accounts, navigate, click, evaluate, send }) => {
   const previousDate = new Date(new Date(`${today()}T12:00:00Z`).getTime() - 86400000).toISOString().slice(0, 10);
   accounts.get('A').set('earlier', entry('earlier', '', { date: previousDate, createdAt: 1 }));

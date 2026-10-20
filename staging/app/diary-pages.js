@@ -107,6 +107,9 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
     originals.forEach((original, index) => {
       const copy = copies[index], style = getComputedStyle(original);
       copy.style.cssText = Array.from(style, property => `${property}:${style.getPropertyValue(property)}`).join(';');
+      // Keep currentColor live for pseudo-elements such as the lighter writing
+      // invitation; freezing the resolved text fill makes it flash dark.
+      if (style.webkitTextFillColor === style.color) copy.style.webkitTextFillColor = 'currentColor';
       copy.style.animation = 'none'; copy.style.transition = 'none';
       if (original instanceof HTMLTextAreaElement) copy.value = original.value;
     });
