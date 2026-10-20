@@ -144,6 +144,10 @@ navegador podem atrasar ou impedir o convite em segundo plano.
 O HTML dos dois portais já contém o estado visual de livro fechado e a
 folha de altura fixa. A primeira pintura não depende do módulo, da sessão
 ou da leitura dos registros para substituir o pergaminho antigo.
+No desktop, o rodapé acompanha a coluna do livro, logo depois da legenda,
+independentemente da altura dos painéis. No celular, fica após os painéis.
+A legenda reserva espaço para a fita. Redimensionar o livro descarta a
+cópia de uma virada em andamento antes de recalcular as margens.
 
 `npm test`, `npm run i18n:audit` e `npm run check:mirrors` verificam o frontend.
 `test/diary-browser.test.mjs` exercita os fluxos e dimensões responsivas usando

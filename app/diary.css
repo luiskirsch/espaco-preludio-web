@@ -1071,20 +1071,21 @@
 .book-toolbar { display: none; }
 .book-frame { position: relative; min-width: 0; }
 .book-cover,.book-ribbon { display: none; }
+.diary-layout > .diary-footer { grid-column:1/-1; padding-top:0; }
 .is-book-writing { background: radial-gradient(ellipse 74% 60% at 50% 42%, #493127 0%, #2a1d18 58%, #160f0d 100%); }
 .is-book-writing .diary-shell { max-width: none; padding-inline: clamp(18px,3vw,44px); }
 .is-book-writing .diary-header { grid-template-columns:minmax(0,1fr) auto; max-width:1180px; margin:0 auto; gap:22px; padding:9px 0 12px; }
 .is-book-writing .diary-brand { display:none; }
 .is-book-writing .diary-tabs { max-width:850px; justify-self:center; width:100%; }
 .is-book-writing .diary-tabs button { padding-block:9px 13px; font-size:15px; }
-.is-book-writing .diary-layout { display:grid; grid-template-columns:clamp(190px,16vw,240px) minmax(0,1fr) clamp(220px,18vw,275px); max-width:1740px; margin:0 auto; gap:clamp(18px,1.7vw,30px); }
+.is-book-writing .diary-layout { display:grid; grid-template-columns:clamp(190px,16vw,240px) minmax(0,1fr) clamp(220px,18vw,275px); grid-template-rows:min-content 1fr; max-width:1740px; margin:0 auto; column-gap:clamp(18px,1.7vw,30px); row-gap:0; }
 .is-book-writing .journal-stage { grid-column:2; grid-row:1; width:100%; min-width:0; }
-.is-book-writing .diary-tools { grid-column:1; grid-row:1; display:flex; flex-direction:column; align-content:start; gap:14px; padding:60px 0 0; }
+.is-book-writing .diary-tools { grid-column:1; grid-row:1/span 2; display:flex; flex-direction:column; align-content:start; gap:14px; padding:60px 0 0; }
 .is-book-writing .diary-tools .rail-caption,.is-book-writing .diary-tools .tools-footnote { grid-column:auto; }
 .is-book-writing .diary-tools .tool-card--voice { grid-column:auto; }
-.is-book-writing .diary-panels { grid-column:3; grid-row:1; display:grid; grid-template-columns:minmax(0,1fr); align-content:start; gap:14px; padding:60px 0 0; }
-.is-book-writing .journal-caption { margin-top:24px; }
-.is-book-writing .diary-footer { padding-bottom:18px; }
+.is-book-writing .diary-panels { grid-column:3; grid-row:1/span 2; display:grid; grid-template-columns:minmax(0,1fr); align-content:start; gap:14px; padding:60px 0 0; }
+.is-book-writing .journal-caption { margin-top:0; padding-top:clamp(40px,3.2vw,64px); }
+.is-book-writing .diary-footer { grid-column:2; grid-row:2; align-self:start; padding:20px 0 18px; }
 .is-book-writing .journal-stage:before,.is-book-writing .journal-stage:after { display:none; }
 .is-book-writing .book-toolbar {
   width:100%;
@@ -1235,11 +1236,12 @@
   .is-book-writing .diary-header { grid-template-columns:1fr; }
   .is-book-writing .diary-tabs { max-width:none; }
   .is-book-writing .book-toolbar,.is-book-writing .book-frame { width:calc(100vw - 58px); min-width:0; }
-  .is-book-writing .diary-layout { grid-template-columns:1fr; }
+  .is-book-writing .diary-layout { grid-template-columns:1fr; grid-template-rows:none; row-gap:24px; }
   .is-book-writing .journal-stage,.is-book-writing .diary-tools,.is-book-writing .diary-panels { grid-column:1; }
   .is-book-writing .diary-tools { grid-row:2; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); padding-top:0; }
   .is-book-writing .diary-tools .rail-caption,.is-book-writing .diary-tools .tools-footnote,.is-book-writing .diary-tools .tool-card--voice { grid-column:1/-1; }
   .is-book-writing .diary-panels { grid-row:3; grid-template-columns:repeat(2,minmax(0,1fr)); padding-top:0; }
+  .is-book-writing .diary-footer { grid-column:1; grid-row:4; padding-top:0; }
 }
 @media(max-width:640px) {
   .is-book-writing .diary-shell { padding-inline:13px; }

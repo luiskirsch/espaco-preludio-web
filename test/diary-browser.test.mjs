@@ -145,7 +145,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
       assert.ok(typography.footer, 'Controles inferiores agrupados dentro do pergaminho');
       for (const control of typography.controls) {
         assert.ok(control.fontSize >= 11, `${control.selector}: fonte auxiliar de pelo menos 11px em ${width}px (${control.fontSize}px)`);
-        assert.ok(control.left >= typography.paper.left && control.right <= typography.paper.right, `${control.selector}: controle cabe no pergaminho em ${width}px`);
+        assert.ok(control.left >= typography.paper.left && control.right <= typography.paper.right, `${control.selector}: controle cabe no pergaminho em ${width}px ${JSON.stringify({ control, paper: typography.paper })}`);
         assert.ok(control.top >= typography.paper.top && control.bottom <= typography.paper.bottom, `${control.selector}: controle não é cortado pelo pergaminho em ${width}px`);
         if (['feelingButton', 'wordCount', 'saveState', 'entryExtra', 'deleteCurrent'].includes(control.selector)) {
           assert.ok(control.top >= typography.footer.top - 1 && control.bottom <= typography.footer.bottom + 1, `${control.selector}: cabe no grupo de controles em ${width}px`);
@@ -201,6 +201,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
       const tools = await evaluate("[...document.querySelectorAll('.tool-card,.tool-card__heading,.tool-card small,.voice-wave')].map(element=>({name:element.id||element.className,width:element.clientWidth,contentWidth:element.scrollWidth,height:element.clientHeight,contentHeight:element.scrollHeight}))");
       for (const tool of tools) { assert.ok(tool.contentWidth <= tool.width + 2, `${tool.name}: sem cortes laterais em ${width}px`); assert.ok(tool.contentHeight <= tool.height + 2, `${tool.name}: texto cabe no cartão em ${width}px`); }
       if (width === 1440 || width === 390) await capture(width === 1440 ? 'desktop.png' : 'mobile.png');
+      if (width === 1440) await capture('diary-footer-desktop.png', true);
       await openDialog('#tagsButton'); await checkLayout('marcadores', width); await closeDialog();
     }
     await viewport(1440);

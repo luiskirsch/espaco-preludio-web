@@ -6,6 +6,7 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
   let page = 0;
   let total = 1;
   let pageHeight = 1;
+  let layoutWidth = 0, layoutHeight = 0;
   let turnTimer = 0;
   let finishEntryTurn = null;
   let sound = null;
@@ -203,6 +204,11 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
 
   function layout({ reset = false, followCaret = false, animate = false, withSound = false } = {}) {
     const available = Math.max(1, viewport.clientHeight);
+    const width = viewport.clientWidth;
+    // A frozen turning sheet belongs to its original geometry. Release it
+    // before laying out a resized book so it cannot cover the new margins.
+    if (layoutWidth && (width !== layoutWidth || available !== layoutHeight)) cancelTurn();
+    layoutWidth = width; layoutHeight = available;
     textarea.style.height = `${available}px`;
     textarea.style.transform = '';
     const { lineHeight } = copyTypography();
