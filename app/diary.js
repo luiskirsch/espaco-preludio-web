@@ -696,6 +696,7 @@ renderBookDate(current); renderPrompt(); renderCoverTitle();
 document.querySelector('.fireflies').innerHTML = Array.from({ length: 38 }, (_, i) => `<i style="--x:${(i * 27.3 + 3) % 100}%;--y:${(i * 17.6 + 2) % 100}%;--s:${i % 4 === 0 ? 4 : 2}px;--o:${.3 + (i % 5) / 10};--t:${3 + i % 4}s;--d:-${i * .3}s"></i>`).join('');
 document.querySelector('.spectrum').innerHTML = Array.from({ length: 38 }, (_, i) => `<i style="--h:${15 + Math.abs(Math.sin(i * 1.8) * Math.cos(i * .42)) * 85}%;--hue:${15 + i * 7};--d:-${i * .13}s"></i>`).join('');
 document.fonts?.ready.then(() => requestAnimationFrame(resizeEditor));
+document.fonts?.addEventListener('loadingdone', () => requestAnimationFrame(() => { if (!$('editorView').hidden) resizeEditor(); }));
 let previousPaperWidth = 0;
 new ResizeObserver(records => {
   const width = records[0]?.contentRect.width;

@@ -80,6 +80,12 @@ escolhido manualmente. Coordenadas não são gravadas no diário. Clima,
 sentimentos, marcadores, aroma e estilo de escrita acionam salvamento imediato,
 mesmo antes de existir texto, e são restaurados ao recarregar a página.
 
+A caligrafia escolhida vale para o texto, o convite e a apresentação do dia
+guardado: Caveat para escrita à mão, Cormorant Garamond para clássica e
+Inter para simples. Cada família usa tamanho, entrelinha e posição da pauta
+compatíveis com suas métricas. A paginação é recalculada também quando uma
+fonte local termina de carregar. A escolha continua associada à página.
+
 Os insights representam os sentimentos escolhidos pelo titular, sem análise
 automática do texto ou avaliação clínica. Desabafos são descartados na própria
 interface, sem envio ou gravação. As ilustrações de pergaminho e parque foram

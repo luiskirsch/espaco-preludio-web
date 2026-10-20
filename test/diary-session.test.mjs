@@ -288,6 +288,44 @@ test('production diary: weather and every page personalization survive a reload 
   assert.match(await evaluate("document.querySelector('.entry-open h2').textContent"), /Chuva suave guardado neste dia/);
 }));
 
+test('production diary: handwriting choices style the writing, invitation and saved page', options, () => withBrowser(async ({ accounts, navigate, click, evaluate, send }) => {
+  const writing = 'Boa tarde.\nUma lembrança para guardar.';
+  accounts.get('A').set('font-page', entry('font-page', writing));
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1100, deviceScaleFactor: 1, mobile: false });
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+  await navigate(); await click('#bookCover');
+  for (const [id, family] of [['hand', 'Caveat'], ['classic', 'Cormorant Garamond'], ['simple', 'Inter']]) {
+    await click('#fontButton'); await click(`.font-choice[data-font="${id}"]`);
+    await poll(() => accounts.get('A').get('font-page').font === id, `${id} saved`);
+    await evaluate('document.fonts.ready');
+    const typography = await evaluate("(()=>{const text=document.getElementById('journalText'),style=getComputedStyle(text),hint=getComputedStyle(text,'::placeholder'),ctx=document.createElement('canvas').getContext('2d');ctx.font=style.font;const metrics=ctx.measureText('Agp'),line=parseFloat(style.lineHeight),baseline=(line-metrics.fontBoundingBoxAscent-metrics.fontBoundingBoxDescent)/2+metrics.fontBoundingBoxAscent;return {font:style.fontFamily,hint:hint.fontFamily,size:parseFloat(style.fontSize),hintSize:parseFloat(hint.fontSize),gap:line-1+parseFloat(style.backgroundPositionY)-baseline,value:text.value,typeset:getComputedStyle(document.getElementById('journalTypeset')).fontFamily}})()");
+    assert.ok(typography.font.includes(family), `${id} uses ${family}: ${typography.font}`);
+    assert.equal(typography.hint, typography.font, 'The invitation follows the selected family');
+    assert.equal(typography.hintSize, typography.size);
+    assert.ok(typography.gap >= -.5 && typography.gap <= 2.5, `${id} rests on the rule: ${typography.gap.toFixed(2)}px`);
+    assert.equal(typography.value, writing);
+    assert.ok(typography.typeset.includes(family), 'Guarding the day keeps the selected family');
+    if (process.env.DIARY_CAPTURE_PREVIEW === '1') {
+      const clip = await evaluate("(()=>{const box=document.getElementById('journalText').getBoundingClientRect();return {x:box.left+scrollX,y:box.top+scrollY,width:box.width,height:100,scale:2}})()");
+      for (const mode of ['writing', 'invitation']) {
+        if (mode === 'invitation') await evaluate("document.getElementById('journalText').value=''");
+        const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip });
+        await writeFile(join(root, `docs/diary-preview/font-${id}-${mode}.png`), Buffer.from(shot.data, 'base64'));
+      }
+      await evaluate(`document.getElementById('journalText').value=${JSON.stringify(writing)}`);
+    }
+    await navigate(); await click('#bookCover');
+    assert.ok((await evaluate("getComputedStyle(document.getElementById('journalText')).fontFamily")).includes(family), `${id} is restored after reloading`);
+    assert.equal(accounts.get('A').get('font-page').text, writing);
+  }
+  await click('#sealDayButton');
+  await poll(() => evaluate("!document.getElementById('journalTypeset').hidden"), 'day guarded');
+  assert.ok((await evaluate("getComputedStyle(document.querySelector('.drop-cap')).fontFamily")).includes('Inter'));
+  await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+  await click('#diaryThemeToggle');
+  assert.ok((await evaluate("getComputedStyle(document.getElementById('journalTypeset')).fontFamily")).includes('Inter'), 'Mobile and night mode retain the selected style');
+}));
+
 test('production diary: letters typed during PUTs survive autosave and a pending page switch', options, () => withBrowser(async ({ accounts, hold, navigate, click, fill, evaluate }) => {
   accounts.get('A').set('writing-page', entry('writing-page', 'Original writing'));
   await navigate();
