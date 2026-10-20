@@ -1186,8 +1186,24 @@
 .journal-prompt button { padding:0; background:none; color:#85502c; font:600 max(9.5px,.85cqw)/1 var(--sans); letter-spacing:.16em; text-transform:uppercase; }
 .journal-prompt button:hover { color:#5f2e13; }
 .is-book-writing .writing-pages { flex:1 1 auto; min-height:14cqw; max-height:26cqw; overflow:hidden; isolation:isolate; -webkit-mask-image:none; mask-image:none; }
-.is-book-writing .writing-pages .journal-text { font-family:'Cormorant Garamond',Georgia,serif; font-size:max(17px,1.95cqw); font-weight:500; line-height:max(28px,3.2cqw); color:#2e1c12; background-image:repeating-linear-gradient(180deg,transparent 0,transparent calc(max(28px,3.2cqw) - 1px),#8c5c342b calc(max(28px,3.2cqw) - 1px),#8c5c342b max(28px,3.2cqw)); background-position:0 calc(max(28px,3.2cqw) * -.16); background-attachment:local; }
-.is-book-writing .writing-pages .journal-text::placeholder { color:#a58a72; opacity:1; font-style:italic; }
+.is-book-writing .writing-pages .journal-text {
+  --writing-font-size:max(17px,1.95cqw);
+  --writing-line-height:max(28px,3.2cqw);
+  /* Metade de (ascendente − descendente) da Cormorant Garamond: leva a pauta
+     até a linha-base, em vez de deixá-la flutuando sob a escrita. */
+  --writing-rule-drop:.31;
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:var(--writing-font-size);
+  font-weight:500;
+  line-height:var(--writing-line-height);
+  color:#2e1c12;
+  background-image:repeating-linear-gradient(180deg,transparent 0,transparent calc(var(--writing-line-height) - 1px),#8c5c342b calc(var(--writing-line-height) - 1px),#8c5c342b var(--writing-line-height));
+  background-position:0 calc(2px - var(--writing-line-height) * .5 + var(--writing-font-size) * var(--writing-rule-drop));
+  background-attachment:local;
+}
+/* O convite herdava o corpo do pergaminho antigo (27px contra 17px da escrita)
+   e por isso nunca pousava na pauta. Ele cai onde a primeira palavra vai cair. */
+.is-book-writing .writing-pages .journal-text::placeholder { color:#a58a72; opacity:1; font-family:inherit; font-size:inherit; font-weight:inherit; font-style:italic; }
 .day-seal { position:relative; flex:0 0 auto; align-self:center; display:flex; flex-direction:column; align-items:center; justify-content:center; width:6.4cqw; height:6.4cqw; min-width:50px; min-height:50px; margin:.55cqw 0 .65cqw; border:1px dashed #965c32b3; border-radius:50%; background:#fcf4e6b3; color:#87451f; font:italic 500 max(10px,1.25cqw)/1.05 var(--serif); transition:transform .3s,filter .3s,background .3s; }
 .day-seal:hover { transform:scale(1.05); background:#fff6e8f2; }
 .day-seal strong { display:none; }
@@ -1230,7 +1246,7 @@
 .book-frame.is-collection .book-cover,.book-frame.is-collection .book-ribbon { display:none; }
 [data-diary-theme=night] .is-book-writing .entry-date em,[data-diary-theme=night] .is-book-writing .entry-date small,[data-diary-theme=night] .journal-prompt p,[data-diary-theme=night] .quick-feelings,[data-diary-theme=night] .quick-feelings button { color:#e4d6c1; }
 [data-diary-theme=night] .is-book-writing .journal-prompt button,[data-diary-theme=night] .is-book-writing .feeling-button { color:#e4bd87; }
-[data-diary-theme=night] .is-book-writing .writing-pages .journal-text { color:#eee2cc; caret-color:#e5c891; background-image:repeating-linear-gradient(180deg,transparent 0,transparent calc(max(28px,3.2cqw) - 1px),#c5a77e26 calc(max(28px,3.2cqw) - 1px),#c5a77e26 max(28px,3.2cqw)); }
+[data-diary-theme=night] .is-book-writing .writing-pages .journal-text { color:#eee2cc; caret-color:#e5c891; background-image:repeating-linear-gradient(180deg,transparent 0,transparent calc(var(--writing-line-height) - 1px),#c5a77e26 calc(var(--writing-line-height) - 1px),#c5a77e26 var(--writing-line-height)); }
 [data-diary-theme=night] .is-book-writing .writing-pages .journal-text::placeholder { color:#c4b9a6; }
 @media(max-width:1180px) {
   .is-book-writing .diary-header { grid-template-columns:1fr; }
@@ -1264,7 +1280,7 @@
   .journal-prompt p { flex:1; font-size:19px; }
   .journal-prompt button { margin-left:28px; font-size:9px; }
   .is-book-writing .writing-pages { min-height:215px; max-height:none; }
-  .is-book-writing .writing-pages .journal-text { font-size:20px; line-height:31px; background-image:repeating-linear-gradient(180deg,transparent 0,transparent 30px,#8c5c342b 30px,#8c5c342b 31px); }
+  .is-book-writing .writing-pages .journal-text { --writing-font-size:20px; --writing-line-height:31px; }
   .day-seal { width:54px; height:54px; margin:8px 0; font-size:11px; }
   .paper.is-day-sealed .day-seal strong { font-size:22px; }
   .quick-feelings { gap:7px; }

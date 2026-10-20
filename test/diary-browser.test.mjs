@@ -160,6 +160,18 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
       const screenshot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: fullPage, ...(dimensions ? { clip: { x: 0, y: 0, width: dimensions.width, height: dimensions.height, scale: 1 } } : {}) });
       await writeFile(join(root, 'docs/diary-preview', filename), Buffer.from(screenshot.data, 'base64'));
     };
+    // A escrita precisa repousar sobre a pauta, e o convite tem de cair onde
+    // a primeira palavra vai cair — senão as linhas pulam na primeira tecla.
+    const checkWritingLines = async (label, filename) => {
+      await evaluate("document.getElementById('journalText').blur()");
+      const rule = await evaluate("(()=>{const text=document.getElementById('journalText'),style=getComputedStyle(text),context=document.createElement('canvas').getContext('2d');context.font=style.font;const m=context.measureText('Agp'),line=parseFloat(style.lineHeight),baseline=(line-(m.fontBoundingBoxAscent+m.fontBoundingBoxDescent))/2+m.fontBoundingBoxAscent,rule=line-1+parseFloat(style.backgroundPositionY),hint=parseFloat(getComputedStyle(text,'::placeholder').fontSize);return {gap:rule-baseline,size:parseFloat(style.fontSize),hint,line}})()");
+      assert.equal(rule.hint, rule.size, `${label}: o convite usa a mesma letra da escrita`);
+      assert.ok(rule.gap >= -0.5 && rule.gap <= 2.5, `${label}: a escrita repousa sobre a pauta (folga de ${rule.gap.toFixed(2)}px em ${rule.line}px de entrelinha)`);
+      if (!capturePreview) return;
+      const clip = await evaluate("(()=>{const box=document.getElementById('journalText').getBoundingClientRect();return {x:box.left+scrollX,y:box.top+scrollY,width:box.width,height:Math.min(box.height,95),scale:2}})()");
+      const screenshot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip });
+      await writeFile(join(root, 'docs/diary-preview', filename), Buffer.from(screenshot.data, 'base64'));
+    };
     const checkLeaves = async () => {
       const decoration = await evaluate(`(()=>{const layer=document.querySelector('.diary-leaves'),text=document.getElementById('journalText'),box=text.getBoundingClientRect(),x=box.left+box.width/2,y=Math.min(box.bottom-1,box.top+20);return {exists:!!layer,editorHit:y>=0&&y<innerHeight?document.elementFromPoint(x,y)===text:null,writingMotion:['paper','editorView','journalText'].map(id=>({id,animations:document.getElementById(id).getAnimations().length,transform:getComputedStyle(document.getElementById(id)).transform}))}})()`);
       assert.equal(decoration.exists, false, 'Folhas permanecem na ilustração estática do pergaminho');
@@ -283,6 +295,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     for (const width of [1440, 768, 390, 320]) {
       await viewport(width); await checkLayout('página vazia', width); await checkPaperText(width);
       if (width === 1440 || width === 390) await capture(width === 1440 ? 'blank-desktop.png' : 'blank-mobile.png');
+      if (width === 1440 || width === 390) await checkWritingLines(`pauta em ${width}px`, width === 1440 ? 'writing-lines-desktop.png' : 'writing-lines-mobile.png');
     }
     const blankPaperHeight = await evaluate("Math.round(document.getElementById('paper').getBoundingClientRect().height)");
     await evaluate("window.__diaryPageTurns=0;window.__diaryPaperSounds=0;window.__diaryOriginalMediaPlay=HTMLMediaElement.prototype.play;HTMLMediaElement.prototype.play=function(){window.__diaryPaperSounds++;return Promise.resolve()};document.getElementById('paper').addEventListener('diarypageturn',()=>window.__diaryPageTurns++)");
