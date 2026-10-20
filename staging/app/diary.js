@@ -15,6 +15,7 @@ let dictationEntryId = null, dictationGeneration = 0;
 let preset = 'rain';
 let promptIndex = 0, coverTimer = 0, coverMotionTimer = 0, bookOpened = false;
 let namingCover = false, writingAnchor = null;
+let coverTitle = '';
 let pageCreation = null;
 const bookDrafts = new Map();
 const bookOrder = new Map();
@@ -183,20 +184,37 @@ function closeBook() {
   $('bookCover').setAttribute('aria-expanded', 'false');
   $('closeDiaryButton').textContent = 'Abrir diário';
 }
+// O nome da capa segue a conta, não o navegador. O cache local existe só
+// para a capa já nascer com o nome certo, antes de a resposta chegar.
 function coverTitleKey() { return `ep.diary.cover-title${account?.uid ? `.${account.uid}` : ''}`; }
-function storedCoverTitle() { try { return localStorage.getItem(coverTitleKey()) || ''; } catch { return ''; } }
+function cacheCoverTitle(value) {
+  try { if (value) localStorage.setItem(coverTitleKey(), value); else localStorage.removeItem(coverTitleKey()); }
+  catch { /* Sem cache a capa ainda chega pela conta. */ }
+}
 function renderCoverTitle() {
-  const chosen = storedCoverTitle(), title = $('coverTitle');
-  if (chosen) { title.removeAttribute('data-i18n'); title.textContent = chosen; }
+  const title = $('coverTitle');
+  if (coverTitle) { title.removeAttribute('data-i18n'); title.textContent = coverTitle; }
   else { title.dataset.i18n = COVER_TITLE_KEY; title.textContent = COVER_TITLE_DEFAULT; }
-  const length = Math.max(8, (chosen || COVER_TITLE_DEFAULT).length);
+  const length = Math.max(8, (coverTitle || COVER_TITLE_DEFAULT).length);
   $('bookCover').style.setProperty('--cover-title-size', `${Math.min(6.6, 58 / (length * 0.42)).toFixed(2)}cqw`);
+}
+function adoptCoverTitle(value) {
+  coverTitle = String(value || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+  if (coverTitle === COVER_TITLE_DEFAULT) coverTitle = '';
+  cacheCoverTitle(coverTitle); renderCoverTitle();
+}
+async function loadCoverTitle() {
+  const generation = bootGeneration;
+  try {
+    const data = await api(`${endpoint}/ajustes/capa`);
+    if (generation === bootGeneration) adoptCoverTitle(data.cover?.title);
+  } catch { /* A capa segue com o nome em cache até a próxima tentativa. */ }
 }
 function startCoverNaming() {
   if ($('bookFrame').classList.contains('is-cover-open')) { closeBook(); }
   clearTimeout(coverTimer); coverTimer = 0; namingCover = true;
   const input = $('coverTitleInput');
-  input.value = storedCoverTitle() || COVER_TITLE_DEFAULT;
+  input.value = coverTitle || COVER_TITLE_DEFAULT;
   $('bookFrame').classList.add('is-naming'); $('coverTitle').hidden = true; input.hidden = false;
   $('coverTitleButton').textContent = 'Salvar nome';
   input.focus(); input.select();
@@ -204,17 +222,24 @@ function startCoverNaming() {
 function finishCoverNaming({ save = true } = {}) {
   if (!namingCover) return;
   namingCover = false;
-  if (save) {
-    const chosen = $('coverTitleInput').value.trim().replace(/\s+/g, ' ').slice(0, 40);
-    try {
-      if (chosen && chosen !== COVER_TITLE_DEFAULT) localStorage.setItem(coverTitleKey(), chosen);
-      else localStorage.removeItem(coverTitleKey());
-    } catch { toast('Este navegador não permite guardar o nome da capa.'); }
-  }
+  const chosen = $('coverTitleInput').value;
   $('coverTitleInput').hidden = true; $('coverTitle').hidden = false;
   $('coverTitleButton').textContent = 'Editar nome';
   $('bookFrame').classList.remove('is-naming');
-  renderCoverTitle();
+  if (!save) { renderCoverTitle(); return; }
+  const previous = coverTitle;
+  adoptCoverTitle(chosen);
+  if (coverTitle === previous) return;
+  saveCoverTitle(coverTitle, previous);
+}
+async function saveCoverTitle(title, previous) {
+  const generation = bootGeneration;
+  try { await api(`${endpoint}/ajustes/capa`, { method: 'PUT', body: JSON.stringify({ title }) }); }
+  catch (error) {
+    if (generation !== bootGeneration) return;
+    adoptCoverTitle(previous);
+    toast(error.message === 'CAPA_INVALIDA' ? 'Escolha um nome de até 40 caracteres, em uma única linha.' : 'Não foi possível guardar o nome da capa. Tente novamente.');
+  }
 }
 function setWritingFocus(active) {
   if (active === document.body.classList.contains('is-writing-focus')) return;
@@ -699,7 +724,16 @@ async function loadDiary() {
   } catch (error) { if (generation !== bootGeneration) return; ready = false; text.disabled = true; setStatus('Diário indisponível · tentar novamente', 'error'); toast(errorText(error)); }
 }
 const demoEntries = new Map();
+let demoCoverTitle = '';
 async function demoApi(path, options = {}) {
+  if (path.endsWith('/ajustes/capa')) {
+    if (options.method === 'PUT') {
+      const title = String(JSON.parse(options.body).title || '').trim().replace(/\s+/g, ' ');
+      if (title.length > 40 || /[\u0000-\u001f\u007f]/.test(title)) throw new Error('CAPA_INVALIDA');
+      demoCoverTitle = title;
+    }
+    return { ok: true, cover: { title: demoCoverTitle } };
+  }
   if (options.method === 'PUT') {
     const item = JSON.parse(options.body); const previous = demoEntries.get(item.id);
     if ((previous?.version || 0) !== item.version) throw new Error('REGISTRO_ALTERADO');
@@ -713,7 +747,7 @@ async function demoApi(path, options = {}) {
 if (preview) {
   $('previewBanner').hidden = false;
   const example = { ...draft(), text: 'Hoje o dia teve um tom diferente… caminhei pelo parque e o vento parecia trazer memórias antigas…\nE de repente, uma sensação de nostalgia me abraçou, como se o próprio cenário estivesse contando uma história.\nSinto que o outono sempre traz essa vontade de olhar para dentro.', feelings: ['nostalgia', 'serenidade'], tags: ['parque', 'nostalgia', 'reflexão'], version: 1, createdAt: Date.now(), updatedAt: Date.now() };
-  demoEntries.set(example.id, example); loadDiary();
+  demoEntries.set(example.id, example); loadCoverTitle(); loadDiary();
 } else {
   try {
     const [{ onAuthStateChanged }, config] = await Promise.all([import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js'), import('../js/firebase-config.js?h=a1e6b0a1a1')]);
@@ -725,7 +759,9 @@ if (preview) {
         $('collectionView').innerHTML = ''; $('collectionView').hidden = true; $('editorView').hidden = false;
       }
       if (!user) { account = null; location.replace(student ? './aluno-login.html' : './login.html'); return; }
-      account = user; finishCoverNaming({ save: false }); renderCoverTitle(); loadDiary(); loadPortalAvatar(user);
+      account = user; finishCoverNaming({ save: false });
+      coverTitle = (() => { try { return localStorage.getItem(coverTitleKey()) || ''; } catch { return ''; } })();
+      renderCoverTitle(); loadCoverTitle(); loadDiary(); loadPortalAvatar(user);
     });
   } catch { setStatus('Não foi possível conectar · recarregue a página', 'error'); toast('Não foi possível abrir o diário. Verifique sua conexão e recarregue a página.'); }
 }

@@ -391,6 +391,14 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     await fill('#coverTitleInput', 'Meus dias de outono');
     await click('#coverTitleButton');
     assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), 'Meus dias de outono', 'A capa guarda o nome escolhido');
+    // A capa nao pode depender do armazenamento do navegador: ele e so cache.
+    // Que o nome siga a pessoa para outro aparelho e provado no servidor,
+    // em test/diary.test.js do osl-video-server.
+    await evaluate("(()=>{try{for(const k of Object.keys(localStorage))if(k.startsWith('ep.diary.cover-title'))localStorage.removeItem(k)}catch{}})()");
+    await click('#coverTitleButton');
+    assert.equal(await evaluate("document.getElementById('coverTitleInput').value"), 'Meus dias de outono', 'O nome guardado nao vem do cache local');
+    await click('#coverTitleButton');
+    assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), 'Meus dias de outono');
     assert.equal(await evaluate("document.getElementById('coverTitle').hasAttribute('data-i18n')"), false, 'O nome escolhido não é substituído pela tradução');
     assert.match(await evaluate("document.getElementById('bookCover').style.getPropertyValue('--cover-title-size')"), /cqw$/, 'O nome se ajusta ao tamanho da capa');
     assert.equal(await evaluate("document.getElementById('coverTitleButton').textContent"), 'Editar nome');
