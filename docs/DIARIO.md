@@ -16,6 +16,17 @@ As duas páginas usam `app/diary.js`, `diary-model.js`, `diary-audio.js`,
 identidade de portal e links de retorno ajustados. Os arquivos de implantação
 também são espelhados em `staging/`.
 
+A entrada pelos atalhos do portal usa `diary-entrance.js` e
+`diary-entrance.css`: uma passagem curta em luz âmbar, com revelação da capa no
+destino. A intenção fica apenas no `sessionStorage`, dura até 15 segundos e é
+consumida ao chegar; recarregar o diário não repete a animação. Links abertos em
+outra aba e a preferência por movimento reduzido mantêm a navegação direta.
+“Pular animação” antecipa a entrada. O retorno pelo histórico libera o portal.
+
+Sem um título personalizado, a capa usa o nome de exibição da conta, assim
+como o portal. “Editar nome” continua disponível; salvar sem alterar o nome
+automático não cria uma personalização. Limpar o título volta ao nome da conta.
+
 A experiência de escrita abre como um livro físico: a capa de couro pode ser
 aberta e fechada, o pergaminho mantém proporção fixa e a data, a fase lunar,
 as perguntas rotativas, o selo de página salva e os sentimentos rápidos ficam

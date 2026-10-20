@@ -1,6 +1,9 @@
 // Portal responsivo do colaborador: preserva a navegação móvel e cria uma
 // experiência institucional completa em telas maiores.
 (function enhanceCollaboratorPortal() {
+  const diaryEntrance = document.createElement('script');
+  diaryEntrance.src = new URL('./diary-entrance.js?h=aa880337b5', document.currentScript.src).href;
+  document.head.append(diaryEntrance);
   const currentFile = (location.pathname.split("/").pop() || "home.html").toLowerCase();
   const route = currentFile.replace(/\.html$/, "") || "home";
   document.body.classList.add("a-portal-authenticated", `a-route-${route}`);

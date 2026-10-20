@@ -1,0 +1,76 @@
+/* The portal fades into the same leather, amber light and quiet of the diary. */
+.diary-entrance {
+  --entry-gold:#e5c888;
+  position:fixed; inset:0; z-index:2147483647; isolation:isolate;
+  display:grid; place-items:center; overflow:hidden;
+  padding:24px; color:#f5e8d1; background:#191311;
+  font-family:Inter,Arial,sans-serif;
+  -webkit-tap-highlight-color:transparent;
+}
+.diary-entrance::before {
+  content:''; position:absolute; z-index:-2; inset:0;
+  background:radial-gradient(ellipse at 50% 42%,#8c593536,transparent 57%),linear-gradient(145deg,#10363840,transparent 45%,#6b38231f);
+}
+.diary-entrance::after {
+  content:''; position:absolute; z-index:-1; inset:0; pointer-events:none;
+  box-shadow:inset 0 0 18vmin 4vmin #050807a6;
+  background:linear-gradient(180deg,#080b0c55,transparent 25%,transparent 75%,#080b0c55);
+}
+.diary-entrance__halo { position:absolute; inset:5% 4%; pointer-events:none; background:radial-gradient(ellipse at 50% 39%,#edca7c20,transparent 53%); animation:diary-entry-light 2.5s ease-out both; }
+.diary-entrance__dust { position:absolute; inset:0; pointer-events:none; }
+.diary-entrance__dust i { position:absolute; left:var(--x); top:var(--y); width:var(--size); height:var(--size); border-radius:50%; background:#f8dea1; box-shadow:0 0 9px 2px #ebc58148; opacity:0; animation:diary-entry-dust 3.4s ease-in-out var(--delay) infinite; }
+.diary-entrance__scene { position:relative; width:min(100%,680px); display:flex; flex-direction:column; align-items:center; text-align:center; }
+.diary-entrance__book { position:relative; width:112px; height:142px; margin-bottom:32px; perspective:650px; transform:rotate(-6deg); }
+.diary-entrance__book::before { content:''; position:absolute; inset:5px -4px 3px 7px; border-radius:5px; background:repeating-linear-gradient(180deg,#d0ba95 0 1px,#f5dfb9 1px 3px); box-shadow:0 24px 45px #0009; }
+.diary-entrance__cover { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; border:1px solid #dfb87387; border-radius:5px 8px 8px 5px; background:#663e2b url('./assets/diary/leather-cover.png?h=abe68145ac') center/230px; color:var(--entry-gold); box-shadow:inset 4px 0 7px #2e120b80,inset 0 0 0 5px #41241a66,inset 0 0 0 6px #dbaf6652; transform-origin:left center; }
+.diary-entrance__cover svg { width:59px; height:59px; flex-shrink:0; stroke-linecap:round; stroke-linejoin:round; filter:drop-shadow(0 1px 1px #170a04); }
+.diary-entrance__cover span { font-size:12px; line-height:1; }
+.diary-entrance__eyebrow { margin:0 0 16px; color:#d6b67c; font-size:10px; font-weight:500; line-height:1.5; letter-spacing:.3em; text-transform:uppercase; }
+.diary-entrance #diaryEntranceTitle { margin:0; color:#f5e8d1; font-family:Georgia,serif; font-size:clamp(32px,4.5vw,62px); font-weight:400; line-height:1.06; letter-spacing:-.025em; text-wrap:balance; }
+.diary-entrance h1 span,.diary-entrance h1 strong { display:block; font-weight:400; }
+.diary-entrance h1 strong { color:#edce96; font-style:italic; }
+.diary-entrance__whisper { margin:23px 0 0; color:#d1beaa; font-family:Georgia,serif; font-size:clamp(18px,2vw,23px); font-style:italic; line-height:1.5; }
+.diary-entrance__line { width:100px; height:1px; margin-top:29px; background:linear-gradient(90deg,transparent,#d8b575,transparent); transform-origin:center; }
+.diary-entrance__skip { position:absolute; right:max(26px,env(safe-area-inset-right)); bottom:max(24px,env(safe-area-inset-bottom)); padding:12px 4px; border:0; border-bottom:1px solid #d6b67c55; border-radius:0; background:transparent; color:#cfbda6; font:500 12px/1.5 Inter,Arial,sans-serif; cursor:pointer; }
+.diary-entrance__skip:hover { color:#fff0ce; border-color:#e5c888; }
+.diary-entrance__skip:focus-visible { outline:2px solid #e5c888; outline-offset:5px; }
+.diary-entrance--departure { animation:diary-entry-iris .65s cubic-bezier(.22,.7,.18,1) both; }
+.diary-entrance--departure .diary-entrance__scene { animation:diary-entry-scene 1.25s cubic-bezier(.16,.7,.2,1) both; }
+.diary-entrance--departure .diary-entrance__cover { animation:diary-entry-book 1.25s cubic-bezier(.2,.65,.3,1) both; }
+.diary-entrance--departure .diary-entrance__line { animation:diary-entry-line 1.2s ease both; }
+html.diary-entrance-leaving { overflow:hidden; }
+html.diary-entrance-pending { background:#191311; }
+html.diary-entrance-pending body { background:#191311; }
+html.diary-entrance-pending:not(.diary-entrance-revealing) .diary-shell { opacity:0; }
+.diary-entrance--arrival { opacity:1; }
+html.diary-entrance-revealing .diary-entrance--arrival { animation:diary-entry-arrive 1.15s ease-in-out both; }
+html.diary-entrance-revealing .diary-entrance--arrival .diary-entrance__scene { animation:diary-entry-away .85s cubic-bezier(.4,0,.6,1) both; }
+html.diary-entrance-revealing .diary-shell { animation:diary-entry-world 1.15s cubic-bezier(.2,.65,.25,1) both; }
+@keyframes diary-entry-iris { from { clip-path:circle(0 at var(--entry-x,50%) var(--entry-y,50%)); } to { clip-path:circle(150vmax at var(--entry-x,50%) var(--entry-y,50%)); } }
+@keyframes diary-entry-scene { from { opacity:0; transform:translateY(25px) scale(.92); } 36% { opacity:1; } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes diary-entry-book { from { transform:rotateY(-35deg); filter:brightness(.6); } to { transform:rotateY(0); filter:brightness(1.15); } }
+@keyframes diary-entry-line { from { opacity:0; transform:scaleX(.1); } to { opacity:1; transform:scaleX(1); } }
+@keyframes diary-entry-light { from { opacity:.15; transform:scale(.8); } to { opacity:1; transform:scale(1.15); } }
+@keyframes diary-entry-dust { 0%,100% { opacity:0; transform:translate3d(0,18px,0); } 45% { opacity:.65; } 80% { opacity:.15; transform:translate3d(var(--drift),-30px,0); } }
+@keyframes diary-entry-arrive { 0%,18% { opacity:1; } to { opacity:0; visibility:hidden; } }
+@keyframes diary-entry-away { from { opacity:1; transform:scale(1); } to { opacity:0; transform:scale(1.08) translateY(-15px); } }
+@keyframes diary-entry-world { from { opacity:0; transform:translateY(14px) scale(.985); } 30% { opacity:.25; } to { opacity:1; transform:none; } }
+@media(max-width:600px) {
+  .diary-entrance { padding:24px 24px 70px; }
+  .diary-entrance__book { width:88px; height:113px; margin-bottom:28px; }
+  .diary-entrance__cover svg { width:46px; height:46px; }
+  .diary-entrance__eyebrow { font-size:9px; letter-spacing:.24em; }
+}
+@media(max-height:580px) {
+  .diary-entrance__book { width:67px; height:85px; margin-bottom:16px; }
+  .diary-entrance__cover svg { width:38px; height:38px; }
+  .diary-entrance__cover span { display:none; }
+  .diary-entrance__eyebrow { margin-bottom:10px; }
+  .diary-entrance #diaryEntranceTitle { font-size:32px; }
+  .diary-entrance__whisper { margin-top:12px; }
+  .diary-entrance__line { margin-top:16px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .diary-entrance { display:none; }
+  html.diary-entrance-pending .diary-shell { opacity:1!important; animation:none!important; transform:none!important; }
+}

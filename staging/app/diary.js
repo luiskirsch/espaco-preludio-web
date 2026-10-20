@@ -191,11 +191,13 @@ function cacheCoverTitle(value) {
   try { if (value) localStorage.setItem(coverTitleKey(), value); else localStorage.removeItem(coverTitleKey()); }
   catch { /* Sem cache a capa ainda chega pela conta. */ }
 }
+function defaultCoverTitle() { return String(account?.displayName || '').trim().replace(/\s+/g, ' ').slice(0, 40) || COVER_TITLE_DEFAULT; }
 function renderCoverTitle() {
   const title = $('coverTitle');
-  if (coverTitle) { title.removeAttribute('data-i18n'); title.textContent = coverTitle; }
+  const label = coverTitle || defaultCoverTitle();
+  if (label !== COVER_TITLE_DEFAULT) { title.removeAttribute('data-i18n'); title.textContent = label; }
   else { title.dataset.i18n = COVER_TITLE_KEY; title.textContent = COVER_TITLE_DEFAULT; }
-  const length = Math.max(8, (coverTitle || COVER_TITLE_DEFAULT).length);
+  const length = Math.max(8, label.length);
   $('bookCover').style.setProperty('--cover-title-size', `${Math.min(6.6, 58 / (length * 0.42)).toFixed(2)}cqw`);
 }
 function adoptCoverTitle(value) {
@@ -214,7 +216,7 @@ function startCoverNaming() {
   if ($('bookFrame').classList.contains('is-cover-open')) { closeBook(); }
   clearTimeout(coverTimer); coverTimer = 0; namingCover = true;
   const input = $('coverTitleInput');
-  input.value = coverTitle || COVER_TITLE_DEFAULT;
+  input.value = coverTitle || defaultCoverTitle();
   $('bookFrame').classList.add('is-naming'); $('coverTitle').hidden = true; input.hidden = false;
   $('coverTitleButton').textContent = 'Salvar nome';
   input.focus(); input.select();
@@ -228,6 +230,7 @@ function finishCoverNaming({ save = true } = {}) {
   $('bookFrame').classList.remove('is-naming');
   if (!save) { renderCoverTitle(); return; }
   const previous = coverTitle;
+  if (chosen.trim().replace(/\s+/g, ' ') === (coverTitle || defaultCoverTitle())) { renderCoverTitle(); return; }
   adoptCoverTitle(chosen);
   if (coverTitle === previous) return;
   saveCoverTitle(coverTitle, previous);
@@ -759,7 +762,7 @@ if (preview) {
         text.value = ''; text.disabled = true; entries = []; current = draft(); renderBookDate(current); renderMeta(); pagedEditor.reset();
         $('collectionView').innerHTML = ''; $('collectionView').hidden = true; $('editorView').hidden = false;
       }
-      if (!user) { account = null; location.replace(student ? './aluno-login.html' : './login.html'); return; }
+      if (!user) { account = null; coverTitle = ''; renderCoverTitle(); location.replace(student ? './aluno-login.html' : './login.html'); return; }
       account = user; finishCoverNaming({ save: false });
       coverTitle = (() => { try { return localStorage.getItem(coverTitleKey()) || ''; } catch { return ''; } })();
       renderCoverTitle(); loadCoverTitle(); loadDiary(); loadPortalAvatar(user);

@@ -30,6 +30,7 @@ async function fixture() {
   const pages = new Map();
   const cursors = new Map();
   const requests = [];
+  const covers = new Map();
   const holds = [];
   function hold(method, uid, match = () => true) {
     let release;
@@ -57,7 +58,10 @@ async function fixture() {
         const gate = holds.find(candidate => !candidate.request && candidate.method === record.method && candidate.uid === uid && candidate.match(record));
         if (gate) { gate.request = record; await gate.wait; }
         let payload;
-        if (request.method === 'GET') {
+        if (pathname.endsWith('/ajustes/capa')) {
+          if (request.method === 'PUT') covers.set(uid, body.title);
+          payload = { ok: true, cover: { title: covers.get(uid) || '' } };
+        } else if (request.method === 'GET') {
           const items = record.cursor ? pages.get(`${uid}:${record.cursor}`) || [] : [...store.values()];
           payload = { ok: true, items, nextCursor: record.cursor ? null : cursors.get(uid) || null };
         } else if (request.method === 'PUT') {
@@ -76,7 +80,7 @@ async function fixture() {
         return;
       }
       if (pathname === '/__diary-fixture/auth.js') {
-        response.writeHead(200, { 'content-type': mime['.js'] }).end('const user=uid=>({uid,displayName:uid,getIdToken:async()=>uid}); export function onAuthStateChanged(auth,callback){ window.__diaryAuth=uid=>callback(uid?user(uid):null); window.__diaryAuth("A"); return ()=>{}; }');
+        response.writeHead(200, { 'content-type': mime['.js'] }).end('const user=uid=>({uid,displayName:window.__diaryNames?.[uid]||uid,getIdToken:async()=>uid}); export function onAuthStateChanged(auth,callback){ window.__diaryAuth=uid=>callback(uid?user(uid):null); window.__diaryAuth("A"); return ()=>{}; }');
         return;
       }
       if (pathname === '/__diary-fixture/config.js') {
@@ -97,13 +101,16 @@ async function fixture() {
       }
       // Os modulepreload (scripts/perf/build.mjs) buscariam o Firebase real; o fixture não os usa.
       if (extname(file) === '.html') body = body.toString('utf8').replace(/[ \t]*<link rel="modulepreload"[^>]*>\r?\n?/g, '');
+      // Exercise the real entry links without loading production authentication.
+      if (pathname === '/app/home.html') body = body.toString('utf8').replace(/<script type="module">[\s\S]*?<\/script>/g, '').replace(/<script src="\.\/sw-register\.js[^"\s]*"[^>]*><\/script>/g, '');
+      if (pathname === '/aluno-painel.html' && url.searchParams.has('preview')) body = body.toString('utf8').replace(/^\s*import .+ from .+;\r?\n/gm, '');
       response.writeHead(200, { 'content-type': mime[extname(file)] || 'application/octet-stream', 'cache-control': 'no-store' }).end(body);
     } catch (error) {
       response.writeHead(404).end(String(error.message));
     }
   });
   await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
-  return { server, accounts, pages, cursors, requests, hold, releaseAll() { holds.forEach(gate => gate.release()); } };
+  return { server, accounts, pages, cursors, requests, covers, hold, releaseAll() { holds.forEach(gate => gate.release()); } };
 }
 
 async function connectCdp(url, origin) {
@@ -215,6 +222,92 @@ test('production diary: the book is visible before scripts run in both portals a
   assert.equal(loaded.cover, 'flex');
   assert.equal(loaded.width, initial.width, 'Restoring the session does not replace the initial layout');
   assert.equal(loaded.height, initial.height);
+}));
+
+test('production diary: portal entry carries the cinematic reveal through both real entry points and restores the portal', { ...options, timeout: 60000 }, () => withBrowser(async ({ server, accounts, send, click, evaluate }) => {
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  accounts.get('A').set('entry-page', entry('entry-page', 'Uma lembrança para guardar.'));
+  await send('Page.addScriptToEvaluateOnNewDocument', { source: "window.__diaryNames={A:'Luis Henrique'}" });
+  const sources = [
+    ['/app/home.html', '.home-diary-card', '/app/diario.html', 1440],
+    ['/app/home.html', '.a-nav__item[href="./diario.html"]', '/app/diario.html', 1440],
+    ['/aluno-painel.html?preview=1', '.home-diary-card', '/aluno-diario.html', 390],
+    ['/aluno-painel.html?preview=1', '.nav-button--diary', '/aluno-diario.html', 390],
+  ];
+  for (const [source, selector, target, width] of sources) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: width < 700 });
+    await send('Page.navigate', { url: origin + source });
+    await poll(() => evaluate(`!!document.querySelector(${JSON.stringify(selector)}) && document.documentElement.dataset.diaryEntranceBound==='true' && !!document.getElementById('diaryEntranceStyles')?.sheet`), 'real portal entry ready');
+    await evaluate(`document.querySelector(${JSON.stringify(selector)}).scrollIntoView({block:'center'})`);
+    await click(selector);
+    await poll(() => evaluate("!!document.querySelector('.diary-entrance--departure')"), 'departure visible');
+    assert.equal(await evaluate('location.pathname'), source.split('?')[0], 'The portal remains visible behind the beginning of the transition');
+    assert.equal(await evaluate("document.activeElement.classList.contains('diary-entrance__skip')"), true, 'Skip is immediately available from the keyboard');
+    assert.equal(await evaluate("document.querySelector('.diary-entrance').getAttribute('aria-modal')"), 'true');
+    if (process.env.DIARY_CAPTURE_PREVIEW === '1' && selector.includes('card')) {
+      await evaluate("for(const animation of document.querySelector('.diary-entrance').getAnimations({subtree:true})){animation.pause();animation.currentTime=800}");
+      const shot = await send('Page.captureScreenshot', { format: 'png' });
+      await writeFile(join(root, `docs/diary-preview/entrance-${width}-${selector.includes('card') ? 'card' : 'menu'}.png`), Buffer.from(shot.data, 'base64'));
+    }
+    await poll(() => evaluate(`location.pathname===${JSON.stringify(target)} && !!document.querySelector('.diary-entrance--arrival')`), 'arrival continues the passage');
+    assert.equal(await evaluate("sessionStorage.getItem('ep.diary.entrance')"), null, 'The arrival consumes its one-time intent');
+    await poll(() => evaluate("!document.querySelector('.diary-entrance') && !document.documentElement.classList.contains('diary-entrance-pending') && !document.getElementById('journalText').disabled"), 'diary revealed');
+    assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), 'Luis Henrique');
+    assert.equal(await evaluate("document.getElementById('bookCover').getAttribute('aria-expanded')"), 'false', 'The passage lands on the closed personal cover');
+    assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'), true);
+    const history = await send('Page.getNavigationHistory');
+    await send('Page.navigateToHistoryEntry', { entryId: history.entries[history.currentIndex - 1].id });
+    await poll(() => evaluate(`location.pathname===${JSON.stringify(source.split('?')[0])} && !!document.querySelector(${JSON.stringify(selector)}) && !document.querySelector('.diary-entrance') && !document.documentElement.classList.contains('diary-entrance-leaving')`), 'back restores portal');
+    assert.equal(await evaluate("[...document.body.children].some(element=>element.inert)"), false, 'Back never leaves the portal inert');
+  }
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+  await send('Page.navigate', { url: origin + '/app/home.html' });
+  await poll(() => evaluate("!!document.querySelector('.home-diary-card') && document.documentElement.dataset.diaryEntranceBound==='true'"), 'reduced-motion source');
+  await click('.home-diary-card');
+  await poll(() => evaluate("location.pathname==='/app/diario.html' && !!document.getElementById('bookCover')"), 'direct reduced-motion navigation');
+  assert.equal(await evaluate("!!document.querySelector('.diary-entrance') || document.documentElement.classList.contains('diary-entrance-pending')"), false);
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
+  await send('Page.navigate', { url: origin + '/app/home.html' });
+  await poll(() => evaluate("!!document.querySelector('.home-diary-card') && !!document.getElementById('diaryEntranceStyles')?.sheet"), 'keyboard entry ready');
+  const intercepted = await evaluate("(()=>{let intercepted;document.addEventListener('click',event=>{intercepted=event.defaultPrevented;event.preventDefault()},{once:true});document.querySelector('.home-diary-card').dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,ctrlKey:true,button:0}));return intercepted})()");
+  assert.equal(intercepted, false, 'Modified clicks retain the browser new-tab behavior');
+  await evaluate("document.querySelector('.home-diary-card').focus()");
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
+  await poll(() => evaluate("!!document.querySelector('.diary-entrance--departure')"), 'keyboard activates passage');
+  await click('.diary-entrance__skip');
+  await poll(() => evaluate("location.pathname==='/app/diario.html' && !!document.getElementById('journalText') && !document.getElementById('journalText').disabled"), 'skip enters the diary');
+  assert.equal(await evaluate("!!document.querySelector('.diary-entrance') || document.documentElement.classList.contains('diary-entrance-pending')"), false, 'Skip also skips the arrival animation');
+  await send('Page.reload', { ignoreCache: true });
+  await poll(() => evaluate("!!document.getElementById('journalText') && !document.getElementById('journalText').disabled"), 'reloaded diary ready');
+  assert.equal(await evaluate("!!document.querySelector('.diary-entrance') || document.documentElement.classList.contains('diary-entrance-pending')"), false, 'Reload never replays the passage');
+}));
+
+test('production diary: the cover starts with the account name and preserves an editable custom title across reloads and accounts', options, () => withBrowser(async ({ accounts, covers, requests, navigate, click, fill, evaluate, send }) => {
+  await send('Page.addScriptToEvaluateOnNewDocument', { source: "window.__diaryNames={A:'Luis Henrique',B:'Marina Oliveira'}" });
+  accounts.get('A').set('named-page', entry('named-page', 'Minha escrita.'));
+  accounts.get('B').set('other-page', entry('other-page', 'Outra escrita.'));
+  await navigate();
+  assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), 'Luis Henrique');
+  assert.equal(await evaluate("document.getElementById('coverTitle').hasAttribute('data-i18n')"), false);
+  await click('#coverTitleButton');
+  assert.equal(await evaluate("document.getElementById('coverTitleInput').value"), 'Luis Henrique');
+  await click('#coverTitleButton');
+  assert.equal(requests.some(record => record.method === 'PUT' && record.path.endsWith('/ajustes/capa')), false, 'Accepting the automatic name does not save a custom title');
+  await click('#coverTitleButton'); await fill('#coverTitleInput', 'Meus dias de outono'); await click('#coverTitleButton');
+  await poll(() => covers.get('A') === 'Meus dias de outono', 'custom cover saved to the account');
+  await navigate();
+  assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), 'Meus dias de outono');
+  await evaluate("window.__diaryAuth('B')");
+  await poll(() => evaluate("document.getElementById('coverTitle').textContent==='Marina Oliveira' && !document.getElementById('journalText').disabled"), 'second account name');
+  await evaluate("window.__diaryAuth('A')");
+  await poll(() => evaluate("document.getElementById('coverTitle').textContent==='Meus dias de outono' && !document.getElementById('journalText').disabled"), 'first account custom title');
+  await click('#coverTitleButton'); await fill('#coverTitleInput', ''); await click('#coverTitleButton');
+  await poll(() => covers.get('A') === '', 'clear custom cover');
+  assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), 'Luis Henrique');
+  await navigate();
+  assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), 'Luis Henrique');
+  assert.equal(await evaluate("document.getElementById('coverTitleButton').textContent"), 'Editar nome');
 }));
 
 test('production diary: account switch clears private UI before B loads and ignores late A responses', options, () => withBrowser(async ({ accounts, pages, cursors, hold, navigate, click, fill, evaluate, completed }) => {
