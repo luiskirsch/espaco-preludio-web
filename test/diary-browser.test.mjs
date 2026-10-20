@@ -170,11 +170,18 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     assert.equal(await evaluate("document.getElementById('portalBack').getAttribute('href')"), './home.html');
     await evaluate('Promise.race([document.fonts.ready,new Promise(resolve=>setTimeout(resolve,3000))])');
     assert.equal(await evaluate("document.getElementById('bookCover').getAttribute('aria-expanded')"), 'false', 'O diário começa com a capa fechada');
+    const coverLayout = await evaluate("(()=>{const cover=document.getElementById('bookCover').getBoundingClientRect(),rename=document.getElementById('coverTitleButton').getBoundingClientRect(),hint=document.querySelector('#bookCover small').getBoundingClientRect(),title=document.getElementById('coverTitle').getBoundingClientRect();return {cover:{left:cover.left,right:cover.right,top:cover.top,bottom:cover.bottom},rename:{left:rename.left,right:rename.right,top:rename.top,bottom:rename.bottom},hintCenter:hint.left+hint.width/2,titleCenter:title.left+title.width/2,visualCenter:cover.left+cover.width*.513,titleSize:parseFloat(getComputedStyle(document.getElementById('coverTitle')).fontSize)}})()");
+    assert.ok(coverLayout.rename.left > coverLayout.cover.left && coverLayout.rename.right < coverLayout.cover.right && coverLayout.rename.top > coverLayout.cover.top, 'Editar nome fica contido na moldura da capa');
+    assert.ok(Math.abs(coverLayout.hintCenter-coverLayout.visualCenter) < 8, 'A indicação para abrir fica centralizada');
+    assert.ok(Math.abs(coverLayout.titleCenter-coverLayout.visualCenter) < 8 && coverLayout.titleSize >= 34, 'O nome do diário fica central e legível');
     await capture('book-cover-desktop.png');
     await click('#bookCover');
     assert.equal(await evaluate("document.getElementById('bookFrame').classList.contains('is-cover-open')"), true, 'A capa abre o diário');
     await click('#closeDiaryButton');
     assert.equal(await evaluate("document.getElementById('bookFrame').classList.contains('is-cover-open')"), false, 'A ação de fechar devolve a capa');
+    await poll(() => evaluate("document.getElementById('bookFrame').classList.contains('is-cover-closing')"), 'início do fechamento físico da capa');
+    await evaluate('new Promise(resolve=>setTimeout(resolve,450))');
+    assert.ok(await evaluate("Number(getComputedStyle(document.getElementById('bookCover')).opacity)") > .98, 'A capa fecha opaca, sem se sobrepor como uma transparência ao papel');
     assert.equal(await evaluate("document.getElementById('closeDiaryButton').textContent"), 'Abrir diário');
     await click('#closeDiaryButton');
     assert.equal(await evaluate("document.getElementById('bookFrame').classList.contains('is-cover-open')"), true, 'A ação da barra também reabre o diário');
@@ -223,9 +230,14 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
       await capture(`premium-${section}-day.png`, true);
     }
     await tab('diary');
-    const composition = await evaluate("(()=>{const paper=document.getElementById('paper').getBoundingClientRect(),tools=document.querySelector('.diary-tools').getBoundingClientRect(),rail=document.querySelector('.diary-panels').getBoundingClientRect();return {paperBottom:paper.bottom,toolsTop:tools.top,railTop:rail.top}})()");
-    assert.ok(composition.toolsTop >= composition.paperBottom && composition.railTop >= composition.paperBottom, 'Recursos complementares começam abaixo do livro');
-    assert.ok(Math.abs(composition.toolsTop-composition.railTop) < 2, 'Ferramentas e painéis começam na mesma linha');
+    for (const width of [1440, 1920]) {
+      await viewport(width);
+      const composition = await evaluate("(()=>{const paper=document.getElementById('paper').getBoundingClientRect(),tools=document.querySelector('.diary-tools').getBoundingClientRect(),rail=document.querySelector('.diary-panels').getBoundingClientRect();return {paper:{left:paper.left,right:paper.right,top:paper.top,bottom:paper.bottom},tools:{left:tools.left,right:tools.right,top:tools.top,bottom:tools.bottom},rail:{left:rail.left,right:rail.right,top:rail.top,bottom:rail.bottom}}})()");
+      assert.ok(composition.tools.right < composition.paper.left, `Ferramentas permanecem à esquerda do livro em ${width}px`);
+      assert.ok(composition.rail.left > composition.paper.right, `Inspirações permanecem à direita do livro em ${width}px`);
+      assert.ok(composition.tools.top < composition.paper.bottom && composition.rail.top < composition.paper.bottom, `As duas laterais acompanham verticalmente o pergaminho em ${width}px`);
+    }
+    await viewport(1440);
     await capture('premium-diary-day.png', true);
     await evaluate('window.scrollTo(0,document.documentElement.scrollHeight)');
     await tab('timeline');
@@ -338,8 +350,9 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
 
     // A capa recebe o nome escolhido por quem escreve, e o relevo do couro existe.
     assert.equal(await evaluate("!!document.getElementById('diario-deboss') && !!document.getElementById('diario-deboss-sm')"), true, 'Os relevos da capa estão definidos');
-    assert.match(await evaluate("getComputedStyle(document.getElementById('coverTitle')).filter"), /diario-deboss/, 'O título da capa é gravado em relevo');
+    assert.match(await evaluate("getComputedStyle(document.getElementById('coverTitle')).filter"), /drop-shadow/, 'O nome da capa recebe contraste sobre o couro');
     await click('#closeDiaryButton');
+    await poll(() => evaluate("!document.getElementById('bookFrame').classList.contains('is-cover-closing') && !document.getElementById('bookFrame').classList.contains('is-cover-preparing')"), 'fim do fechamento antes de editar a capa');
     await click('#coverTitleButton');
     assert.equal(await evaluate("document.getElementById('coverTitleInput').hidden"), false, 'Editar nome abre o campo da capa');
     assert.equal(await evaluate("document.getElementById('coverTitleButton').textContent"), 'Salvar nome');

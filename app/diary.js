@@ -12,7 +12,7 @@ let dirty = false, editTick = 0, saveTimer, saving = null, toastTimer, dialogOri
 let dialogGeneration = 0, dialogSerial = 0, deletingId = null, conflict = false;
 let dictationEntryId = null, dictationGeneration = 0;
 let preset = 'rain';
-let promptIndex = 0, coverTimer = 0, bookOpened = false;
+let promptIndex = 0, coverTimer = 0, coverMotionTimer = 0, bookOpened = false;
 let namingCover = false, writingAnchor = null;
 const COVER_TITLE_DEFAULT = 'Uma página só sua';
 const COVER_TITLE_KEY = 'p-app-diario:uma_pagina_so_sua_0c698';
@@ -117,13 +117,27 @@ function renderBookDate(entry) {
 function renderPrompt() { $('journalPrompt').textContent = JOURNAL_PROMPTS[promptIndex % JOURNAL_PROMPTS.length]; }
 function openBook() {
   if (namingCover) return;
-  clearTimeout(coverTimer); coverTimer = 0; bookOpened = true;
-  $('bookFrame').classList.add('is-cover-open'); $('bookCover').setAttribute('aria-expanded', 'true');
+  clearTimeout(coverTimer); coverTimer = 0; clearTimeout(coverMotionTimer); coverMotionTimer = 0; bookOpened = true;
+  const frame = $('bookFrame');
+  frame.classList.remove('is-cover-preparing', 'is-cover-closing');
+  frame.classList.add('is-cover-open'); $('bookCover').setAttribute('aria-expanded', 'true');
   $('closeDiaryButton').textContent = 'Fechar diário';
 }
 function closeBook() {
-  clearTimeout(coverTimer); coverTimer = 0; bookOpened = false;
-  $('bookFrame').classList.remove('is-cover-open'); $('bookCover').setAttribute('aria-expanded', 'false');
+  clearTimeout(coverTimer); coverTimer = 0; clearTimeout(coverMotionTimer); coverMotionTimer = 0; bookOpened = false;
+  text.blur(); setWritingFocus(false); if (dirty) flush();
+  const frame = $('bookFrame');
+  frame.classList.remove('is-cover-closing');
+  frame.classList.add('is-cover-preparing');
+  frame.classList.remove('is-cover-open');
+  void frame.offsetWidth;
+  requestAnimationFrame(() => {
+    if (bookOpened) return;
+    frame.classList.remove('is-cover-preparing');
+    frame.classList.add('is-cover-closing');
+    coverMotionTimer = setTimeout(() => { frame.classList.remove('is-cover-closing'); coverMotionTimer = 0; }, 1350);
+  });
+  $('bookCover').setAttribute('aria-expanded', 'false');
   $('closeDiaryButton').textContent = 'Abrir diário';
 }
 function coverTitleKey() { return `ep.diary.cover-title${account?.uid ? `.${account.uid}` : ''}`; }
@@ -531,7 +545,7 @@ document.querySelectorAll('[data-go]').forEach(button => button.addEventListener
 document.querySelectorAll('[data-memory]').forEach(button => button.addEventListener('click', () => openMemory(button.dataset.memory)));
 $('newPageButton').addEventListener('click', () => newPage(current.kind === 'dream' ? 'dream' : 'diary'));
 $('bookCover').addEventListener('click', openBook);
-$('bookCover').addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openBook(); } });
+$('bookCover').addEventListener('keydown', event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openBook(); } });
 $('coverTitleButton').addEventListener('mousedown', event => event.preventDefault());
 $('coverTitleButton').addEventListener('click', event => { event.stopPropagation(); if (namingCover) finishCoverNaming(); else startCoverNaming(); });
 $('coverTitleInput').addEventListener('click', event => event.stopPropagation());
@@ -555,7 +569,7 @@ $('saveState').addEventListener('click', () => { if ($('saveState').dataset.stat
 $('saveState').addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); $('saveState').click(); } });
 document.querySelectorAll('a.back-link, a.diary-brand').forEach(link => link.addEventListener('click', async event => { if (!dirty) return; event.preventDefault(); if (await settle()) location.assign(link.href); }));
 window.addEventListener('beforeunload', event => { if (dirty || $('capsuleText')?.value.trim()) { event.preventDefault(); event.returnValue = ''; } });
-window.addEventListener('pagehide', () => { clearTimeout(coverTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
+window.addEventListener('pagehide', () => { clearTimeout(coverTimer); clearTimeout(coverMotionTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
 window.addEventListener('online', () => { if (ready && dirty) flush(); });
 $('headerDate').dateTime = today(); $('headerDate').textContent = dateLabel(today(), { weekday: 'long' });
 renderBookDate(current); renderPrompt(); renderCoverTitle();

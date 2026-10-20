@@ -25,6 +25,12 @@ dependência externa. Em telas estreitas, o livro e os painéis se reorganizam
 sem rolagem horizontal; a composição mantém os mesmos recursos nos portais do
 colaborador e do aluno.
 
+No desktop, ferramentas e inspirações acompanham o livro em duas laterais,
+deixando a página sempre no centro. A capa usa movimentos inversos para abrir e
+fechar: no fechamento ela é preparada fora do campo visual e volta opaca pela
+dobradiça, sem atravessar o pergaminho como uma camada transparente. O nome,
+a ação de edição e o convite para abrir permanecem dentro da moldura da capa.
+
 ## Registros e privacidade
 
 O backend correspondente está em `osl-video-server/routes/diary.js` e

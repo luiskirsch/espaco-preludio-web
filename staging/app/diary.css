@@ -1073,18 +1073,18 @@
 .is-book-writing .diary-brand { display:none; }
 .is-book-writing .diary-tabs { max-width:850px; justify-self:center; width:100%; }
 .is-book-writing .diary-tabs button { padding-block:9px 13px; font-size:15px; }
-.is-book-writing .diary-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); max-width:1280px; margin:0 auto; gap:34px 28px; }
-.is-book-writing .journal-stage { grid-column:1/-1; grid-row:1; width:100%; }
-.is-book-writing .diary-tools { grid-column:1; grid-row:2; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-content:start; gap:14px; padding:0; }
-.is-book-writing .diary-tools .rail-caption,.is-book-writing .diary-tools .tools-footnote { grid-column:1/-1; }
-.is-book-writing .diary-tools .tool-card--voice { grid-column:1/-1; }
-.is-book-writing .diary-panels { grid-column:2; grid-row:2; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-content:start; gap:14px; padding:0; }
+.is-book-writing .diary-layout { display:grid; grid-template-columns:clamp(190px,16vw,240px) minmax(0,1fr) clamp(220px,18vw,275px); max-width:1740px; margin:0 auto; gap:clamp(18px,1.7vw,30px); }
+.is-book-writing .journal-stage { grid-column:2; grid-row:1; width:100%; min-width:0; }
+.is-book-writing .diary-tools { grid-column:1; grid-row:1; display:flex; flex-direction:column; align-content:start; gap:14px; padding:60px 0 0; }
+.is-book-writing .diary-tools .rail-caption,.is-book-writing .diary-tools .tools-footnote { grid-column:auto; }
+.is-book-writing .diary-tools .tool-card--voice { grid-column:auto; }
+.is-book-writing .diary-panels { grid-column:3; grid-row:1; display:grid; grid-template-columns:minmax(0,1fr); align-content:start; gap:14px; padding:60px 0 0; }
 .is-book-writing .journal-caption { margin-top:24px; }
 .is-book-writing .diary-footer { padding-bottom:18px; }
 .is-book-writing .journal-stage:before,.is-book-writing .journal-stage:after { display:none; }
 .is-book-writing .book-toolbar {
-  width:min(1180px,calc((100svh - 175px) * 1.142),calc(100vw - 88px));
-  min-width:720px;
+  width:100%;
+  min-width:0;
   min-height:46px;
   margin:0 auto 14px;
   display:flex;
@@ -1104,8 +1104,8 @@
 .book-new:hover { border-color:#e2be8c9e; background:#e2be8c29; }
 .is-book-writing .book-frame {
   container-type:inline-size;
-  width:min(1180px,calc((100svh - 175px) * 1.142),calc(100vw - 88px));
-  min-width:720px;
+  width:100%;
+  min-width:0;
   aspect-ratio:1663/1457;
   margin:0 auto 3.6%;
   perspective:3200px;
@@ -1200,27 +1200,30 @@
 .is-book-writing .save-strip .save-state[data-state=saved]:before { content:''; background:#8f2a1f; border-color:#8f2a1f; }
 .is-book-writing .tag { padding:0; background:none; color:#87451f; font:italic 500 max(11px,1.1cqw)/1 var(--serif); }
 .is-book-writing .paper-bottom { grid-column:1/-1; min-height:16px; margin:0; color:#87664c; }
-.is-book-writing .book-cover { display:flex; position:absolute; inset:-1.7% -1.8% -2.3% -2.6%; z-index:12; flex-direction:column; align-items:center; justify-content:center; gap:2cqw; padding-left:2.6cqw; border:0; border-radius:12px 15px 15px 12px; background-color:#5a3022; background-image:url('./assets/diary/leather-cover.png?h=abe68145ac'),radial-gradient(120% 90% at 38% 26%,#ffd7aa29,transparent 58%),linear-gradient(180deg,transparent 55%,#00000047); background-size:280px 280px,auto,auto; box-shadow:0 24px 52px #0009,inset 0 0 0 1px #0007,inset 2px 2px 4px #ffdcaa19; color:#e6c47e; transform-origin:left center; transform:rotateY(0); opacity:1; backface-visibility:hidden; transition:transform 1.5s cubic-bezier(.6,.02,.28,1),opacity .5s ease 1s,visibility 0s; }
+.is-book-writing .book-cover { display:flex; position:absolute; inset:-1.7% -1.8% -2.3% -2.6%; z-index:12; flex-direction:column; align-items:center; justify-content:center; gap:2cqw; padding-left:2.6cqw; border:0; border-radius:12px 15px 15px 12px; background-color:#5a3022; background-image:url('./assets/diary/leather-cover.png?h=abe68145ac'),radial-gradient(120% 90% at 38% 26%,#ffd7aa29,transparent 58%),linear-gradient(180deg,transparent 55%,#00000047); background-size:280px 280px,auto,auto; box-shadow:0 24px 52px #0009,inset 0 0 0 1px #0007,inset 2px 2px 4px #ffdcaa19; color:#e6c47e; transform-origin:left center; transform:rotateY(0); opacity:1; backface-visibility:hidden; transition:transform 1.3s cubic-bezier(.45,0,.25,1),opacity .35s ease,visibility 0s; }
 .is-book-writing .book-cover:before { content:''; position:absolute; inset:5.4% 5.2% 5.4% 8%; border:1px solid #e4be76bf; box-shadow:inset 0 0 0 8px transparent,0 0 0 1px #5d301f; }
 .is-book-writing .book-cover:after { content:''; position:absolute; inset:1% 1% 1% 3.4%; border:1px dashed #deb8806b; border-radius:9px; }
-.book-cover > span { z-index:1; color:#e8c983; font:600 1.4cqw/1 var(--sans); letter-spacing:.42em; }
-.book-cover > strong { z-index:1; max-width:76%; color:#e6c47e; background-image:linear-gradient(100deg,#c9a058,#f5dc9a 24%,#d4aa60 44%,#fce9b4 62%,#c0944c 82%,#ebca84); background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent; font:italic 600 min(6.2cqw,68px)/1.1 var(--serif); text-shadow:0 2px 1px #3a160899; white-space:nowrap; }
+.book-cover > span { z-index:1; color:#f2d78f; font:600 1.4cqw/1 var(--sans); letter-spacing:.42em; text-shadow:0 1px 1px #2b0e06,0 0 12px #ffd78e2e; }
+.book-cover > strong { z-index:1; max-width:78%; color:#f4d78c; background:none; -webkit-text-fill-color:#f4d78c; font:italic 600 min(6.2cqw,68px)/1.1 var(--serif); text-align:center; text-wrap:balance; text-shadow:0 2px 1px #2a0b03,0 0 14px #f3c76e52; white-space:normal; }
 .book-cover > i { z-index:1; width:1.1cqw; height:1.1cqw; transform:rotate(45deg); background:linear-gradient(135deg,#f5dc9a,#c0944c); box-shadow:1px 1px 1px #351408; }
-.book-cover > small { position:absolute; z-index:1; bottom:7.5%; left:2.6cqw; right:0; color:#e6cfa8b8; font:italic 1.55cqw/1 var(--serif); }
+.book-cover > small { position:absolute; z-index:1; bottom:7.2%; left:2.6cqw; right:0; color:#f3dfbd; font:italic 500 max(14px,1.55cqw)/1 var(--serif); text-align:center; text-shadow:0 1px 2px #240b04; }
 .book-frame.is-cover-open .book-cover { visibility:hidden; pointer-events:none; transform:rotateY(-112deg); opacity:0; transition:transform 1.5s cubic-bezier(.6,.02,.28,1),opacity .5s ease 1s,visibility 0s 1.5s; }
+.book-frame.is-cover-preparing .book-cover { visibility:visible; pointer-events:none; transform:rotateY(-112deg); opacity:0; transition:none; }
+.book-frame.is-cover-closing .book-cover { visibility:visible; pointer-events:none; transform:rotateY(0); opacity:1; transition:transform 1.3s cubic-bezier(.45,0,.25,1),opacity .35s ease; }
 .book-frame.is-collection .book-cover,.book-frame.is-collection .book-ribbon { display:none; }
 [data-diary-theme=night] .is-book-writing .entry-date em,[data-diary-theme=night] .is-book-writing .entry-date small,[data-diary-theme=night] .journal-prompt p,[data-diary-theme=night] .quick-feelings,[data-diary-theme=night] .quick-feelings button { color:#e4d6c1; }
 [data-diary-theme=night] .is-book-writing .journal-prompt button,[data-diary-theme=night] .is-book-writing .feeling-button { color:#e4bd87; }
 [data-diary-theme=night] .is-book-writing .writing-pages .journal-text { color:#eee2cc; caret-color:#e5c891; background-image:repeating-linear-gradient(180deg,transparent 0,transparent calc(max(28px,3.2cqw) - 1px),#c5a77e26 calc(max(28px,3.2cqw) - 1px),#c5a77e26 max(28px,3.2cqw)); }
 [data-diary-theme=night] .is-book-writing .writing-pages .journal-text::placeholder { color:#c4b9a6; }
-@media(max-width:980px) {
+@media(max-width:1180px) {
   .is-book-writing .diary-header { grid-template-columns:1fr; }
   .is-book-writing .diary-tabs { max-width:none; }
   .is-book-writing .book-toolbar,.is-book-writing .book-frame { width:calc(100vw - 58px); min-width:0; }
   .is-book-writing .diary-layout { grid-template-columns:1fr; }
-  .is-book-writing .diary-tools,.is-book-writing .diary-panels { grid-column:1; }
-  .is-book-writing .diary-tools { grid-row:2; }
-  .is-book-writing .diary-panels { grid-row:3; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .is-book-writing .journal-stage,.is-book-writing .diary-tools,.is-book-writing .diary-panels { grid-column:1; }
+  .is-book-writing .diary-tools { grid-row:2; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); padding-top:0; }
+  .is-book-writing .diary-tools .rail-caption,.is-book-writing .diary-tools .tools-footnote,.is-book-writing .diary-tools .tool-card--voice { grid-column:1/-1; }
+  .is-book-writing .diary-panels { grid-row:3; grid-template-columns:repeat(2,minmax(0,1fr)); padding-top:0; }
 }
 @media(max-width:640px) {
   .is-book-writing .diary-shell { padding-inline:13px; }
@@ -1278,22 +1281,24 @@
 
 /* ── Acabamentos do protótipo "Meu diário" ───────────────────────────────── */
 
-/* Relevo gravado no couro: o título e os ornamentos afundam na capa. */
+/* Relevo no couro e brilho suficiente para o nome permanecer legível. */
 .is-book-writing .book-cover > span,
 .is-book-writing .book-cover > i,
 .is-book-writing .book-cover:before { filter:url(#diario-deboss-sm); }
-.is-book-writing .book-cover > strong { filter:url(#diario-deboss); }
+.is-book-writing .book-cover > strong { filter:drop-shadow(0 1px 1px #2a0b03a6) drop-shadow(0 0 10px #f6d88970); }
 
 /* A capa fechada se entreabre quando a pessoa chega perto. */
 .book-frame:not(.is-cover-open) .book-cover:hover,
 .book-frame:not(.is-cover-open) .book-cover:focus-visible { transform:rotateY(-6deg); transition:transform .6s cubic-bezier(.3,.7,.3,1); }
-.book-frame.is-naming .book-cover:hover { transform:rotateY(0); }
+.book-frame.is-naming .book-cover:hover,
+.book-frame.is-cover-preparing .book-cover:hover,
+.book-frame.is-cover-closing .book-cover:hover { transform:rotateY(0); }
 
 /* O nome da capa é escolhido por quem escreve. */
 .book-cover > strong { font-size:min(var(--cover-title-size,6.2cqw),68px); }
-.cover-rename { position:absolute; z-index:2; right:calc(6.4cqw - .22em); top:2.05cqw; padding:.5cqw 0 .5cqw 1cqw; border:0; background:none; color:#ecd4aab8; font:500 max(10px,.95cqw)/1 var(--sans); letter-spacing:.22em; text-transform:uppercase; transition:color .2s; }
-.cover-rename:hover,.cover-rename:focus-visible { color:#f6e6c8; }
-#coverTitleInput { z-index:1; width:62cqw; max-width:76%; padding:0 .5cqw; border:0; border-bottom:.12cqw dashed #dcb88080; background:none; color:#f1ddb0; font:italic 600 min(var(--cover-title-size,6.2cqw),68px)/1.1 var(--serif); text-align:center; outline:none; }
+.cover-rename { position:absolute; z-index:2; right:7%; top:6.8%; padding:max(8px,.65cqw) max(11px,1cqw); border:1px solid #e3c58f52; border-radius:999px; background:#2b100533; box-shadow:inset 0 1px #ffe7b81f; color:#f3ddb8; font:600 max(11px,.9cqw)/1 var(--sans); letter-spacing:.16em; text-transform:uppercase; text-shadow:0 1px 2px #210a03; transition:color .2s,border-color .2s,background .2s; }
+.cover-rename:hover,.cover-rename:focus-visible { color:#fff0d2; border-color:#f0d49a9c; background:#2b10055c; }
+#coverTitleInput { z-index:1; width:62cqw; max-width:76%; padding:0 .5cqw .18em; border:0; border-bottom:.12cqw dashed #edcf958f; background:#210b0324; border-radius:4px; color:#ffe8ac; font:italic 600 min(var(--cover-title-size,6.2cqw),68px)/1.1 var(--serif); text-align:center; text-shadow:0 1px 2px #210a03; outline:none; }
 
 /* Modo foco: ao escrever, o entorno recua e deixa a página sozinha. */
 .diary-tools,.diary-panels,.journal-caption,.portal-bar,.appearance-bar,.diary-header,.book-toolbar,.diary-footer { transition:opacity .8s ease; }
@@ -1319,7 +1324,7 @@
 @keyframes sealRipple { from { transform:scale(.85); opacity:.7; } to { transform:scale(2.1); opacity:0; } }
 
 @media(max-width:640px) {
-  .cover-rename { right:10px; top:9px; }
+  .cover-rename { right:18px; top:20px; padding:8px 10px; font-size:10px; }
   #coverTitleInput { width:82%; max-width:82%; font-size:34px; }
   .journal-typeset { font-size:20px; line-height:31px; }
   .journal-typeset .drop-cap { margin-top:2px; font-size:78px; line-height:56px; }
@@ -1327,6 +1332,7 @@
 @media(prefers-reduced-motion:reduce) {
   .book-frame:not(.is-cover-open) .book-cover:hover,
   .book-frame:not(.is-cover-open) .book-cover:focus-visible { transform:rotateY(0); }
+  .book-frame.is-cover-preparing .book-cover,.book-frame.is-cover-closing .book-cover { transition:none; }
   .paper.is-day-sealed .journal-typeset,.paper.is-day-sealed .day-seal.is-stamping:after { animation:none; }
   .diary-tools,.diary-panels,.journal-caption,.portal-bar,.appearance-bar,.diary-header,.book-toolbar,.diary-footer { transition:none; }
 }
