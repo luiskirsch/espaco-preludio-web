@@ -1275,3 +1275,58 @@
   .book-cover,.book-frame.is-cover-open .book-cover { transition:none!important; }
   .day-seal.is-stamping { animation:none; }
 }
+
+/* ── Acabamentos do protótipo "Meu diário" ───────────────────────────────── */
+
+/* Relevo gravado no couro: o título e os ornamentos afundam na capa. */
+.is-book-writing .book-cover > span,
+.is-book-writing .book-cover > i,
+.is-book-writing .book-cover:before { filter:url(#diario-deboss-sm); }
+.is-book-writing .book-cover > strong { filter:url(#diario-deboss); }
+
+/* A capa fechada se entreabre quando a pessoa chega perto. */
+.book-frame:not(.is-cover-open) .book-cover:hover,
+.book-frame:not(.is-cover-open) .book-cover:focus-visible { transform:rotateY(-6deg); transition:transform .6s cubic-bezier(.3,.7,.3,1); }
+.book-frame.is-naming .book-cover:hover { transform:rotateY(0); }
+
+/* O nome da capa é escolhido por quem escreve. */
+.book-cover > strong { font-size:min(var(--cover-title-size,6.2cqw),68px); }
+.cover-rename { position:absolute; z-index:2; right:calc(6.4cqw - .22em); top:2.05cqw; padding:.5cqw 0 .5cqw 1cqw; border:0; background:none; color:#ecd4aab8; font:500 max(10px,.95cqw)/1 var(--sans); letter-spacing:.22em; text-transform:uppercase; transition:color .2s; }
+.cover-rename:hover,.cover-rename:focus-visible { color:#f6e6c8; }
+#coverTitleInput { z-index:1; width:62cqw; max-width:76%; padding:0 .5cqw; border:0; border-bottom:.12cqw dashed #dcb88080; background:none; color:#f1ddb0; font:italic 600 min(var(--cover-title-size,6.2cqw),68px)/1.1 var(--serif); text-align:center; outline:none; }
+
+/* Modo foco: ao escrever, o entorno recua e deixa a página sozinha. */
+.diary-tools,.diary-panels,.journal-caption,.portal-bar,.appearance-bar,.diary-header,.book-toolbar,.diary-footer { transition:opacity .8s ease; }
+.is-writing-focus .diary-tools,.is-writing-focus .diary-panels,.is-writing-focus .journal-caption { opacity:.12; }
+.is-writing-focus .portal-bar,.is-writing-focus .appearance-bar,.is-writing-focus .diary-header { opacity:.45; }
+.is-writing-focus .book-toolbar,.is-writing-focus .diary-footer { opacity:.32; }
+
+/* Dia guardado: a escrita vira página impressa, com capitular. */
+.journal-typeset { position:absolute; inset:0; overflow-y:auto; scrollbar-width:none; color:#2e1c12; font:500 max(17px,1.95cqw)/max(28px,3.2cqw) 'Cormorant Garamond',Georgia,serif; text-align:justify; hyphens:auto; }
+.journal-typeset::-webkit-scrollbar { width:0; }
+.journal-typeset p { margin:0; }
+.journal-typeset p+p { text-indent:1.6em; }
+.journal-typeset .drop-cap { float:left; margin:calc(max(28px,3.2cqw) * .08) .12em 0 0; color:#8f4a22; font:600 calc(max(28px,3.2cqw) * 2.5)/calc(max(28px,3.2cqw) * 1.82) 'Cormorant Garamond',Georgia,serif; }
+.paper.is-day-sealed .journal-text { opacity:0; pointer-events:none; }
+.paper.is-day-sealed .journal-typeset { animation:typesetReveal 1s ease .35s both; }
+@keyframes typesetReveal { from { opacity:0; } to { opacity:1; } }
+[data-diary-theme=night] .journal-typeset { color:#eee2cc; }
+[data-diary-theme=night] .journal-typeset .drop-cap { color:#d9a05e; }
+
+/* A onda que se abre quando o carimbo encosta no papel. */
+.day-seal:after { content:''; position:absolute; inset:0; border-radius:50%; border:max(1.5px,.15cqw) solid #96281980; opacity:0; pointer-events:none; }
+.paper.is-day-sealed .day-seal.is-stamping:after { animation:sealRipple .9s cubic-bezier(.2,.7,.3,1) .3s both; }
+@keyframes sealRipple { from { transform:scale(.85); opacity:.7; } to { transform:scale(2.1); opacity:0; } }
+
+@media(max-width:640px) {
+  .cover-rename { right:10px; top:9px; }
+  #coverTitleInput { width:82%; max-width:82%; font-size:34px; }
+  .journal-typeset { font-size:20px; line-height:31px; }
+  .journal-typeset .drop-cap { margin-top:2px; font-size:78px; line-height:56px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .book-frame:not(.is-cover-open) .book-cover:hover,
+  .book-frame:not(.is-cover-open) .book-cover:focus-visible { transform:rotateY(0); }
+  .paper.is-day-sealed .journal-typeset,.paper.is-day-sealed .day-seal.is-stamping:after { animation:none; }
+  .diary-tools,.diary-panels,.journal-caption,.portal-bar,.appearance-bar,.diary-header,.book-toolbar,.diary-footer { transition:none; }
+}

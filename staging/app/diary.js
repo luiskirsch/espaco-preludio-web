@@ -1,5 +1,5 @@
 import { createSoundscape, createDictation } from './diary-audio.js?h=fb22bb467e';
-import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, hasEntryContent, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=15c6c8575e';
+import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, hasEntryContent, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=baf32a79b0';
 import { createPagedEditor } from './diary-pages.js?h=1a6450364c';
 
 const $ = id => document.getElementById(id);
@@ -12,7 +12,10 @@ let dirty = false, editTick = 0, saveTimer, saving = null, toastTimer, dialogOri
 let dialogGeneration = 0, dialogSerial = 0, deletingId = null, conflict = false;
 let dictationEntryId = null, dictationGeneration = 0;
 let preset = 'rain';
-let promptIndex = 0, coverTimer = 0, bookOpened = false, sealedEntryId = null;
+let promptIndex = 0, coverTimer = 0, bookOpened = false;
+let namingCover = false, writingAnchor = null;
+const COVER_TITLE_DEFAULT = 'Uma página só sua';
+const COVER_TITLE_KEY = 'p-app-diario:uma_pagina_so_sua_0c698';
 const JOURNAL_PROMPTS = [
   'O que você gostaria de guardar de hoje?',
   'Qual pequeno momento de hoje merece ser lembrado?',
@@ -113,6 +116,7 @@ function renderBookDate(entry) {
 }
 function renderPrompt() { $('journalPrompt').textContent = JOURNAL_PROMPTS[promptIndex % JOURNAL_PROMPTS.length]; }
 function openBook() {
+  if (namingCover) return;
   clearTimeout(coverTimer); coverTimer = 0; bookOpened = true;
   $('bookFrame').classList.add('is-cover-open'); $('bookCover').setAttribute('aria-expanded', 'true');
   $('closeDiaryButton').textContent = 'Fechar diário';
@@ -122,6 +126,57 @@ function closeBook() {
   $('bookFrame').classList.remove('is-cover-open'); $('bookCover').setAttribute('aria-expanded', 'false');
   $('closeDiaryButton').textContent = 'Abrir diário';
 }
+function coverTitleKey() { return `ep.diary.cover-title${account?.uid ? `.${account.uid}` : ''}`; }
+function storedCoverTitle() { try { return localStorage.getItem(coverTitleKey()) || ''; } catch { return ''; } }
+function renderCoverTitle() {
+  const chosen = storedCoverTitle(), title = $('coverTitle');
+  if (chosen) { title.removeAttribute('data-i18n'); title.textContent = chosen; }
+  else { title.dataset.i18n = COVER_TITLE_KEY; title.textContent = COVER_TITLE_DEFAULT; }
+  const length = Math.max(8, (chosen || COVER_TITLE_DEFAULT).length);
+  $('bookCover').style.setProperty('--cover-title-size', `${Math.min(6.6, 58 / (length * 0.42)).toFixed(2)}cqw`);
+}
+function startCoverNaming() {
+  if ($('bookFrame').classList.contains('is-cover-open')) { closeBook(); }
+  clearTimeout(coverTimer); coverTimer = 0; namingCover = true;
+  const input = $('coverTitleInput');
+  input.value = storedCoverTitle() || COVER_TITLE_DEFAULT;
+  $('bookFrame').classList.add('is-naming'); $('coverTitle').hidden = true; input.hidden = false;
+  $('coverTitleButton').textContent = 'Salvar nome';
+  input.focus(); input.select();
+}
+function finishCoverNaming({ save = true } = {}) {
+  if (!namingCover) return;
+  namingCover = false;
+  if (save) {
+    const chosen = $('coverTitleInput').value.trim().replace(/\s+/g, ' ').slice(0, 40);
+    try {
+      if (chosen && chosen !== COVER_TITLE_DEFAULT) localStorage.setItem(coverTitleKey(), chosen);
+      else localStorage.removeItem(coverTitleKey());
+    } catch { toast('Este navegador não permite guardar o nome da capa.'); }
+  }
+  $('coverTitleInput').hidden = true; $('coverTitle').hidden = false;
+  $('coverTitleButton').textContent = 'Editar nome';
+  $('bookFrame').classList.remove('is-naming');
+  renderCoverTitle();
+}
+function setWritingFocus(active) {
+  if (active === document.body.classList.contains('is-writing-focus')) return;
+  document.body.classList.toggle('is-writing-focus', active);
+  if (!active) writingAnchor = null;
+}
+function renderTypeset(sealed) {
+  const typeset = $('journalTypeset');
+  if (!sealed) {
+    typeset.hidden = true; typeset.replaceChildren();
+    text.removeAttribute('readonly'); text.removeAttribute('aria-hidden'); text.removeAttribute('tabindex');
+    return;
+  }
+  const paragraphs = String(current.text || '').trim().split(/\n+/).map(part => part.trim()).filter(Boolean);
+  const first = paragraphs[0] || '';
+  typeset.innerHTML = `<p><span class="drop-cap">${esc(first.charAt(0))}</span>${esc(first.slice(1))}</p>${paragraphs.slice(1).map(part => `<p>${esc(part)}</p>`).join('')}`;
+  typeset.hidden = false;
+  text.setAttribute('readonly', ''); text.setAttribute('aria-hidden', 'true'); text.setAttribute('tabindex', '-1');
+}
 function renderMeta() {
   $('wordCount').textContent = `${countWords(current.text)} ${countWords(current.text) === 1 ? 'palavra' : 'palavras'}`;
   $('entryTags').innerHTML = (current.tags || []).map(tag => `<span class="tag">#${esc(tag)}</span>`).join('');
@@ -129,10 +184,11 @@ function renderMeta() {
   const feelingSummary = (current.feelings || []).map(id => FEELINGS[id]?.label).filter(Boolean).join(', ');
   $('feelingButton').textContent = feelingSummary ? `${feelingSummary} · ${current.feelings.length}/3` : 'Outros sentimentos';
   document.querySelectorAll('[data-quick-feeling]').forEach(button => button.setAttribute('aria-pressed', String((current.feelings || []).includes(button.dataset.quickFeeling))));
-  const sealed = sealedEntryId === current.id && Boolean(current.version);
+  const sealed = Boolean(current.sealed);
   $('paper').classList.toggle('is-day-sealed', sealed);
   $('sealDayButton').setAttribute('aria-pressed', String(sealed));
   $('sealDayButton').setAttribute('aria-label', sealed ? 'Reabrir este dia para escrever' : 'Guardar este dia');
+  renderTypeset(sealed);
   const aromaLabel = current.aromaText || AROMAS[current.aroma]?.[0] || '';
   $('aromaLabel').textContent = current.aromaText ? `Memória de ${current.aromaText}` : current.aroma ? `Memória de ${aromaLabel.toLowerCase()}` : 'Um perfume para esta lembrança.';
   $('weatherLabel').textContent = current.weather ? `${WEATHER[current.weather]?.[0]} · guardado nesta página` : 'O clima de hoje na sua página.';
@@ -154,7 +210,7 @@ function renderInsights() {
 }
 function markDirty({ immediate = false } = {}) {
   if (!ready || current.locked || current.kind === 'capsule') return;
-  sealedEntryId = null; dirty = true; editTick++; renderMeta(); clearTimeout(saveTimer);
+  dirty = true; editTick++; renderMeta(); clearTimeout(saveTimer);
   if (!hasEntryContent(current) && !saving) { dirty = false; setStatus('Sua página espera por você'); return; }
   setStatus('Alterações pendentes…');
   saveTimer = setTimeout(() => flush(), immediate ? 0 : 950);
@@ -218,7 +274,6 @@ function showEditor(entry) {
   activateTab(current.kind === 'dream' ? 'dreams' : current.kind === 'capsule' ? 'capsules' : 'diary');
   renderBookDate(current);
   promptIndex = [...current.id].reduce((total, char) => total + char.charCodeAt(0), 0) % JOURNAL_PROMPTS.length; renderPrompt();
-  sealedEntryId = current.version ? current.id : null;
   $('entryKind').textContent = current.kind === 'dream' ? 'UM SONHO PARA GUARDAR' : current.kind === 'capsule' ? 'UMA CARTA DO SEU PASSADO' : 'UMA PÁGINA SÓ SUA';
   text.value = current.text; text.disabled = !ready || current.kind === 'capsule';
   $('newPageButton').textContent = current.kind === 'dream' ? '+ Novo sonho' : '+ Nova página';
@@ -454,20 +509,39 @@ function toggleQuickFeeling(event) {
 }
 async function toggleDaySeal() {
   if (!canEdit()) return;
-  if (sealedEntryId === current.id) { sealedEntryId = null; renderMeta(); text.focus(); return; }
-  if (!hasEntryContent(current)) { toast('Escreva uma lembrança antes de guardar este dia.'); text.focus(); return; }
+  if (current.sealed) { current.sealed = false; markDirty({ immediate: true }); text.focus(); return; }
+  if (!String(current.text || '').trim()) { toast('Escreva uma lembrança antes de guardar este dia.'); text.focus(); return; }
   if (!await flush()) return;
-  sealedEntryId = current.id; renderMeta();
+  setWritingFocus(false);
+  current.sealed = true; markDirty({ immediate: true });
   const seal = $('sealDayButton'); seal.classList.remove('is-stamping'); void seal.offsetWidth; seal.classList.add('is-stamping');
   setTimeout(() => seal.classList.remove('is-stamping'), 950);
   toast('Este dia foi guardado no seu diário.');
 }
-text.addEventListener('input', () => { current.text = text.value; markDirty(); resizeEditor({ followCaret: true, animate: true, withSound: true }); });
+text.addEventListener('input', () => { current.text = text.value; setWritingFocus(true); markDirty(); resizeEditor({ followCaret: true, animate: true, withSound: true }); });
+text.addEventListener('blur', () => setWritingFocus(false));
+document.addEventListener('pointermove', event => {
+  if (!document.body.classList.contains('is-writing-focus')) return;
+  const point = [event.clientX, event.clientY];
+  if (!writingAnchor) { writingAnchor = point; return; }
+  if (Math.abs(point[0] - writingAnchor[0]) + Math.abs(point[1] - writingAnchor[1]) > 14) setWritingFocus(false);
+}, { passive: true });
 document.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => switchTab(button.dataset.tab)));
 document.querySelectorAll('[data-go]').forEach(button => button.addEventListener('click', () => switchTab(button.dataset.go)));
 document.querySelectorAll('[data-memory]').forEach(button => button.addEventListener('click', () => openMemory(button.dataset.memory)));
 $('newPageButton').addEventListener('click', () => newPage(current.kind === 'dream' ? 'dream' : 'diary'));
-$('bookCover').addEventListener('click', openBook); $('closeDiaryButton').addEventListener('click', () => (bookOpened ? closeBook() : openBook()));
+$('bookCover').addEventListener('click', openBook);
+$('bookCover').addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openBook(); } });
+$('coverTitleButton').addEventListener('mousedown', event => event.preventDefault());
+$('coverTitleButton').addEventListener('click', event => { event.stopPropagation(); if (namingCover) finishCoverNaming(); else startCoverNaming(); });
+$('coverTitleInput').addEventListener('click', event => event.stopPropagation());
+$('coverTitleInput').addEventListener('blur', () => finishCoverNaming());
+$('coverTitleInput').addEventListener('keydown', event => {
+  event.stopPropagation();
+  if (event.key === 'Enter') { event.preventDefault(); finishCoverNaming(); }
+  else if (event.key === 'Escape') { event.preventDefault(); finishCoverNaming({ save: false }); }
+});
+$('closeDiaryButton').addEventListener('click', () => (bookOpened ? closeBook() : openBook()));
 $('nextPromptButton').addEventListener('click', () => { promptIndex = (promptIndex + 1) % JOURNAL_PROMPTS.length; renderPrompt(); });
 $('sealDayButton').addEventListener('click', toggleDaySeal);
 document.querySelectorAll('[data-quick-feeling]').forEach(button => button.addEventListener('click', toggleQuickFeeling));
@@ -484,7 +558,7 @@ window.addEventListener('beforeunload', event => { if (dirty || $('capsuleText')
 window.addEventListener('pagehide', () => { clearTimeout(coverTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
 window.addEventListener('online', () => { if (ready && dirty) flush(); });
 $('headerDate').dateTime = today(); $('headerDate').textContent = dateLabel(today(), { weekday: 'long' });
-renderBookDate(current); renderPrompt();
+renderBookDate(current); renderPrompt(); renderCoverTitle();
 document.querySelector('.fireflies').innerHTML = Array.from({ length: 38 }, (_, i) => `<i style="--x:${(i * 27.3 + 3) % 100}%;--y:${(i * 17.6 + 2) % 100}%;--s:${i % 4 === 0 ? 4 : 2}px;--o:${.3 + (i % 5) / 10};--t:${3 + i % 4}s;--d:-${i * .3}s"></i>`).join('');
 document.querySelector('.spectrum').innerHTML = Array.from({ length: 38 }, (_, i) => `<i style="--h:${15 + Math.abs(Math.sin(i * 1.8) * Math.cos(i * .42)) * 85}%;--hue:${15 + i * 7};--d:-${i * .13}s"></i>`).join('');
 document.fonts?.ready.then(() => requestAnimationFrame(resizeEditor));
@@ -525,11 +599,11 @@ if (preview) {
     onAuthStateChanged(config.auth, user => {
       if (!user || account && account.uid !== user.uid) {
         bootGeneration++; ready = false; dirty = false; conflict = false; saving = null; deletingId = null; clearTimeout(saveTimer); closeDialog(); dictation.stop(); soundscape.stop();
-        text.value = ''; text.disabled = true; entries = []; current = draft(); sealedEntryId = null; renderBookDate(current); renderMeta(); pagedEditor.reset();
+        text.value = ''; text.disabled = true; entries = []; current = draft(); renderBookDate(current); renderMeta(); pagedEditor.reset();
         $('collectionView').innerHTML = ''; $('collectionView').hidden = true; $('editorView').hidden = false;
       }
       if (!user) { account = null; location.replace(student ? './aluno-login.html' : './login.html'); return; }
-      account = user; loadDiary(); loadPortalAvatar(user);
+      account = user; finishCoverNaming({ save: false }); renderCoverTitle(); loadDiary(); loadPortalAvatar(user);
     });
   } catch { setStatus('Não foi possível conectar · recarregue a página', 'error'); toast('Não foi possível abrir o diário. Verifique sua conexão e recarregue a página.'); }
 }

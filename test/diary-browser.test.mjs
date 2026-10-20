@@ -313,6 +313,43 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     assert.equal(await evaluate("document.querySelector('[data-quick-feeling=cansaco]').getAttribute('aria-pressed')"), 'false', 'A seleção rápida também respeita o limite de três sentimentos');
     await evaluate("document.getElementById('diaryToast').hidden=true");
 
+    // Guardar o dia é um gesto explícito: a escrita vira página impressa e volta a abrir.
+    assert.equal(await evaluate("document.getElementById('journalTypeset').hidden"), true, 'Uma página salva não nasce selada');
+    await click('#sealDayButton'); await saved();
+    assert.equal(await evaluate("document.getElementById('paper').classList.contains('is-day-sealed')"), true, 'O dia guardado marca o papel');
+    assert.equal(await evaluate("document.getElementById('journalTypeset').hidden"), false, 'O dia guardado mostra a escrita composta');
+    assert.equal(await evaluate("document.querySelector('#journalTypeset .drop-cap')?.textContent.length"), 1, 'A página composta abre com capitular');
+    await poll(() => evaluate("getComputedStyle(document.getElementById('journalTypeset')).opacity==='1'"), 'a escrita composta se revelando');
+    assert.ok(await evaluate("document.getElementById('journalTypeset').getBoundingClientRect().height > 40"), 'A escrita composta ocupa a página');
+    await capture('sealed-day-desktop.png');
+    assert.equal(await evaluate("document.getElementById('journalText').hasAttribute('readonly')"), true, 'O dia guardado protege a escrita');
+    assert.equal(await evaluate("(()=>{const first=document.getElementById('journalText').value.trim().split(String.fromCharCode(10))[0].trim();return first.length>8 && document.getElementById('journalTypeset').textContent.includes(first)})()"), true, 'A composição preserva o texto salvo');
+    await click('#sealDayButton'); await saved();
+    assert.equal(await evaluate("document.getElementById('paper').classList.contains('is-day-sealed')"), false, 'A pessoa pode reabrir o dia');
+    assert.equal(await evaluate("document.getElementById('journalText').hasAttribute('readonly')"), false, 'Reabrir o dia devolve a escrita');
+    assert.equal(await evaluate("document.getElementById('diaryToast').hidden=true"), true);
+
+    // Modo foco: ao escrever, o entorno recua; mover o cursor devolve a página inteira.
+    await evaluate("document.getElementById('journalText').dispatchEvent(new Event('input',{bubbles:true}))");
+    assert.equal(await evaluate("document.body.classList.contains('is-writing-focus')"), true, 'Escrever recolhe o entorno');
+    await poll(() => evaluate("Number(getComputedStyle(document.querySelector('.diary-tools')).opacity) < 0.2"), 'as ferramentas recuando durante a escrita');
+    await evaluate("document.dispatchEvent(new PointerEvent('pointermove',{clientX:10,clientY:10}));document.dispatchEvent(new PointerEvent('pointermove',{clientX:400,clientY:400}))");
+    assert.equal(await evaluate("document.body.classList.contains('is-writing-focus')"), false, 'Mover o cursor devolve o entorno');
+
+    // A capa recebe o nome escolhido por quem escreve, e o relevo do couro existe.
+    assert.equal(await evaluate("!!document.getElementById('diario-deboss') && !!document.getElementById('diario-deboss-sm')"), true, 'Os relevos da capa estão definidos');
+    assert.match(await evaluate("getComputedStyle(document.getElementById('coverTitle')).filter"), /diario-deboss/, 'O título da capa é gravado em relevo');
+    await click('#closeDiaryButton');
+    await click('#coverTitleButton');
+    assert.equal(await evaluate("document.getElementById('coverTitleInput').hidden"), false, 'Editar nome abre o campo da capa');
+    assert.equal(await evaluate("document.getElementById('coverTitleButton').textContent"), 'Salvar nome');
+    await fill('#coverTitleInput', 'Meus dias de outono');
+    await click('#coverTitleButton');
+    assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), 'Meus dias de outono', 'A capa guarda o nome escolhido');
+    assert.equal(await evaluate("document.getElementById('coverTitle').hasAttribute('data-i18n')"), false, 'O nome escolhido não é substituído pela tradução');
+    assert.match(await evaluate("document.getElementById('bookCover').style.getPropertyValue('--cover-title-size')"), /cqw$/, 'O nome se ajusta ao tamanho da capa');
+    assert.equal(await evaluate("document.getElementById('coverTitleButton').textContent"), 'Editar nome');
+
     await tab('feelings');
     assert.equal(await evaluate("document.querySelector('.feelings-chart')!==null"), true, 'Insights mostra a distribuição dos sentimentos registrados');
     assert.equal(await evaluate("document.querySelectorAll('.feeling-stat-card').length"), 2, 'Insights apresenta os dois indicadores principais');

@@ -6,7 +6,7 @@
   <!-- ep:perf · gerado por scripts/perf/build.mjs, não editar à mão -->
   <link rel="modulepreload" href="../app/diary-audio.js?h=fb22bb467e">
   <link rel="modulepreload" href="../app/diary-rain.js?h=28fc06031d">
-  <link rel="modulepreload" href="../app/diary-model.js?h=15c6c8575e">
+  <link rel="modulepreload" href="../app/diary-model.js?h=baf32a79b0">
   <link rel="modulepreload" href="../app/diary-pages.js?h=1a6450364c">
   <!-- /ep:perf -->
   <meta name="robots" content="noindex,nofollow">
@@ -15,9 +15,9 @@
   <title data-i18n="p-diary:page_title">Diário dos Pensamentos Vividos · Espaço Prelúdio</title>
   <link rel="icon" href="/logo-144.png" type="image/png">
   <link rel="stylesheet" href="../fonts/caveat400-600_cormorantgaramond400-600_inter400-600.css?h=4f8befaaca">
-  <link rel="stylesheet" href="./diary.css?h=ea9b70b900">
+  <link rel="stylesheet" href="./diary.css?h=41ec3af5d5">
   <script src="/i18n/init.js?v=2-8" defer></script>
-  <script type="module" src="./diary.js?h=2ee59582bb"></script>
+  <script type="module" src="./diary.js?h=6c9ef44a9d"></script>
 </head>
 <body data-portal="collaborator">
   <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -32,6 +32,8 @@
     <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M6 2h12M6 22h12M7 2v4c0 3 3 4 5 6-2 2-5 3-5 6v4m10-20v4c0 3-3 4-5 6 2 2 5 3 5 6v4M8 18h8"/></symbol>
     <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2Z"/></symbol>
     <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M20 3C10 2 2 7 5 17c9 4 17-4 15-14ZM3 22 16 8m-8 9 1-7m3 3 6-1"/></symbol>
+    <filter id="diario-deboss" x="-10%" y="-20%" width="120%" height="140%" color-interpolation-filters="sRGB"><feOffset in="SourceAlpha" dy="2.4" result="o"/><feGaussianBlur in="o" stdDeviation="1.4" result="b"/><feComposite in="SourceAlpha" in2="b" operator="out" result="ie"/><feFlood flood-color="#1c0a04" flood-opacity="0.5"/><feComposite in2="ie" operator="in" result="is"/><feComposite in="is" in2="SourceGraphic" operator="atop" result="g"/><feOffset in="SourceAlpha" dy="1.6" result="o2"/><feComposite in="o2" in2="SourceAlpha" operator="out" result="r2"/><feFlood flood-color="#ffdcae" flood-opacity="0.45"/><feComposite in2="r2" operator="in" result="hl"/><feOffset in="SourceAlpha" dy="-1.6" result="o3"/><feGaussianBlur in="o3" stdDeviation="0.6" result="o3b"/><feComposite in="o3b" in2="SourceAlpha" operator="out" result="r3"/><feFlood flood-color="#000" flood-opacity="0.5"/><feComposite in2="r3" operator="in" result="dk"/><feMerge><feMergeNode in="dk"/><feMergeNode in="hl"/><feMergeNode in="g"/></feMerge></filter>
+    <filter id="diario-deboss-sm" x="-10%" y="-20%" width="120%" height="140%" color-interpolation-filters="sRGB"><feOffset in="SourceAlpha" dy="1" result="o"/><feGaussianBlur in="o" stdDeviation="0.5" result="b"/><feComposite in="SourceAlpha" in2="b" operator="out" result="ie"/><feFlood flood-color="#1c0a04" flood-opacity="0.45"/><feComposite in2="ie" operator="in" result="is"/><feComposite in="is" in2="SourceGraphic" operator="atop" result="g"/><feOffset in="SourceAlpha" dy="0.9" result="o2"/><feComposite in="o2" in2="SourceAlpha" operator="out" result="r2"/><feFlood flood-color="#ffdcae" flood-opacity="0.38"/><feComposite in2="r2" operator="in" result="hl"/><feOffset in="SourceAlpha" dy="-0.9" result="o3"/><feGaussianBlur in="o3" stdDeviation="0.6" result="o3b"/><feComposite in="o3b" in2="SourceAlpha" operator="out" result="r3"/><feFlood flood-color="#000" flood-opacity="0.45"/><feComposite in2="r3" operator="in" result="dk"/><feMerge><feMergeNode in="dk"/><feMergeNode in="hl"/><feMergeNode in="g"/></feMerge></filter>
   </defs></svg>
   <div class="fireflies" aria-hidden="true"></div>
   <div class="diary-shell">
@@ -83,6 +85,7 @@
               <div class="writing-pages" id="writingPages">
                 <textarea data-i18n-placeholder="p-diary:writing_placeholder" id="journalText" class="journal-text" maxlength="20000" spellcheck="true" disabled placeholder="Escreva no seu tempo."></textarea>
                 <div class="journal-measure" id="journalMeasure" aria-hidden="true"></div>
+                <div class="journal-typeset" id="journalTypeset" lang="pt-BR" hidden></div>
               </div>
               <button type="button" class="day-seal" id="sealDayButton" aria-label="Guardar este dia" aria-pressed="false" data-i18n-aria-label="p-app-diario:guardar_este_dia_91820"><span data-i18n="p-app-diario:guardar_3c67c">guardar</span><span data-i18n="p-app-diario:o_dia_2af1f">o dia</span><strong id="sealDayNumber"></strong></button>
               <div class="quick-feelings" aria-labelledby="quickFeelingsTitle">
@@ -103,9 +106,10 @@
             </div>
             <div class="paper-content collection-view" id="collectionView" hidden></div>
           </div>
-          <button type="button" class="book-cover" id="bookCover" aria-label="Abrir o diário" aria-expanded="false" data-i18n-aria-label="p-app-diario:abrir_o_diario_5c953">
-            <span data-i18n="p-app-diario:diario_mmxxvi_3e01a">DIÁRIO · MMXXVI</span><strong data-i18n="p-app-diario:uma_pagina_so_sua_0c698">Uma página só sua</strong><i aria-hidden="true"></i><small data-i18n="p-app-diario:toque_para_abrir_8f814">toque para abrir</small>
-          </button>
+          <div role="button" tabindex="0" class="book-cover" id="bookCover" aria-label="Abrir o diário" aria-expanded="false" data-i18n-aria-label="p-app-diario:abrir_o_diario_5c953">
+            <span data-i18n="p-app-diario:diario_mmxxvi_3e01a">DIÁRIO · MMXXVI</span><strong id="coverTitle" data-i18n="p-app-diario:uma_pagina_so_sua_0c698">Uma página só sua</strong><input id="coverTitleInput" type="text" maxlength="40" hidden aria-label="Nome da capa" data-i18n-aria-label="p-diary:cover_name"><i aria-hidden="true"></i><small data-i18n="p-app-diario:toque_para_abrir_8f814">toque para abrir</small>
+            <button type="button" class="cover-rename" id="coverTitleButton">Editar nome</button>
+          </div>
         </div>
         <p class="journal-caption" data-i18n-html="p-diary:journal_caption">Entre o que se sente e o que se escreve, um universo inteiro. <span>✦</span></p>
       </section>
