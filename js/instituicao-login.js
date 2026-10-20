@@ -8,7 +8,7 @@ import {
   signInWithEmailAndPassword,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=a1e6b0a1a1";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=69b74fc63a";
 import { requestPasswordReset, requestEmailVerification } from "./account-email.js?h=adc983ca80";
 
 const form = document.getElementById("institutionLoginForm");

@@ -4,7 +4,8 @@
 //     /staging/* → STAGING (Firebase sextolugar-staging + backend staging)
 //     resto      → PRODUCTION (Firebase osextolugar-game + backend production)
 //
-// (2) Perfil (paciente/aluno, instituição ou profissional) — por path:
+// (2) Perfil (colaborador, paciente/aluno, instituição ou profissional) — por path:
+//     /app/*                                → app isolado "collaborator"
 //     /paciente-*, /aluno-* ou /entrar.html → app isolado "patient"
 //     /instituicao-*                         → app isolado "institution"
 //     resto                                  → PROFISSIONAL (app "[DEFAULT]")
@@ -20,7 +21,7 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence }
   from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { isRtAuthContext, installClinicalFetch } from "./twofa-session.js?h=fbd5e4b98b";
+import { isRtAuthContext, isCollaboratorAuthContext, installClinicalFetch } from "./twofa-session.js?h=295a6b1bd5";
 
 // ─── Detecções ─────────────────────────────────────────────────────────
 const _path = typeof location !== "undefined" ? location.pathname : "";
@@ -31,6 +32,7 @@ const IS_PATIENT_PAGE =
   _path.endsWith("/entrar.html");
 const IS_INSTITUTION_PAGE = _path.includes("/instituicao-");
 const IS_RT_PAGE = isRtAuthContext(_path, typeof location !== "undefined" ? location.search : "");
+const IS_COLLABORATOR_PAGE = isCollaboratorAuthContext(_path, typeof location !== "undefined" ? location.search : "");
 
 // ─── Configs por ambiente ─────────────────────────────────────────────────
 const STAGING_FIREBASE = {
@@ -103,7 +105,13 @@ export const BACKEND_BASE_URL = _override || (IS_STAGING
   ? "https://api-staging.espacopreludio.com.br"
   : "https://api.espacopreludio.com.br");
 
-// ─── 2 apps Firebase (default + patient) ─────────────────────────────────
+// Chrome prepares portal pages invisibly. Restore authentication only when
+// that page is activated, so a speculative redirect cannot sign out the user.
+if (IS_COLLABORATOR_PAGE && typeof document !== "undefined" && document.prerendering) {
+  await new Promise(resolve => document.addEventListener("prerenderingchange", resolve, { once: true }));
+}
+
+// ─── Apps Firebase isolados por perfil ──────────────────────────────────
 // getApps() retorna lista de TODOS apps inicializados — preciso checar
 // pelo NOME especifico se ja existe, em vez de assumir [DEFAULT].
 function _ensureApp(name, config) {
@@ -121,14 +129,16 @@ const professionalApp = (() => {
 const patientApp = _ensureApp("patient", firebaseConfig);
 const institutionApp = _ensureApp("institution", firebaseConfig);
 const rtApp = _ensureApp("responsavel-tecnico", firebaseConfig);
+const collaboratorApp = _ensureApp("collaborator", firebaseConfig);
 
 // Export padrao: aponta pro app correto baseado no perfil da pagina.
 // Clinical data is fetched only through the authorized backend.
-export const AUTH_CONTEXT = IS_PATIENT_PAGE ? "patient"
+export const AUTH_CONTEXT = IS_COLLABORATOR_PAGE ? "collaborator"
+  : IS_PATIENT_PAGE ? "patient"
   : IS_INSTITUTION_PAGE ? "institution"
   : IS_RT_PAGE ? "rt"
   : "professional";
-export const app = { patient: patientApp, institution: institutionApp, rt: rtApp, professional: professionalApp }[AUTH_CONTEXT];
+export const app = { collaborator: collaboratorApp, patient: patientApp, institution: institutionApp, rt: rtApp, professional: professionalApp }[AUTH_CONTEXT];
 
 // Mesma persistência do getAuth(), sem o popupRedirectResolver: o site não usa
 // login por pop-up/redirecionamento, e o resolver padrão baixava o gapi e um
@@ -163,7 +173,7 @@ if (typeof window !== "undefined") {
 if (typeof console !== "undefined") {
   console.info(
     `[ep] ambiente: ${IS_STAGING ? "STAGING" : "PRODUCTION"} · ` +
-    `perfil: ${IS_PATIENT_PAGE ? "PACIENTE" : IS_INSTITUTION_PAGE ? "INSTITUICAO" : IS_RT_PAGE ? "RT" : "PROFISSIONAL"} · ` +
+    `perfil: ${IS_COLLABORATOR_PAGE ? "COLABORADOR" : IS_PATIENT_PAGE ? "PACIENTE" : IS_INSTITUTION_PAGE ? "INSTITUICAO" : IS_RT_PAGE ? "RT" : "PROFISSIONAL"} · ` +
     `backend: ${BACKEND_BASE_URL} · firebase: ${firebaseConfig.projectId}`
   );
 }

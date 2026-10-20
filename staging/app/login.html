@@ -12,9 +12,9 @@
   <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js">
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js">
-  <link rel="modulepreload" href="../js/mfa-flow.js?h=824d566594">
-  <link rel="modulepreload" href="../js/firebase-config.js?h=a1e6b0a1a1">
-  <link rel="modulepreload" href="../js/twofa-session.js?h=fbd5e4b98b">
+  <link rel="modulepreload" href="../js/mfa-flow.js?h=d60b79b944">
+  <link rel="modulepreload" href="../js/firebase-config.js?h=69b74fc63a">
+  <link rel="modulepreload" href="../js/twofa-session.js?h=295a6b1bd5">
   <link rel="modulepreload" href="../js/crypto.js?h=e302c46b08">
   <link rel="modulepreload" href="../js/patient-session.js?h=b2d1db5669">
   <!-- /ep:perf -->
@@ -209,6 +209,7 @@
         <a href="./recuperar.html" class="login-help" style="font-size:12px;margin-top:4px;display:inline-block;" data-i18n="p-app-login:esqueceu_a_senha_ba06a">Esqueceu a senha?</a>
       </div>
       <div id="erroEntrar" class="a-alert a-alert--err a-hide"></div>
+      <button type="button" id="resumeSessionButton" class="a-btn a-btn--ghost a-hide">Tentar continuar minha sessão</button>
       <button type="submit" class="a-btn a-btn--primary a-btn--block a-btn--lg a-mt-8" id="btnEntrar">Entrar</button>
     </form>
 
@@ -268,10 +269,10 @@
 </div>
 
 <script type="module">
-  import { ensureMfa } from "../js/mfa-flow.js?h=824d566594";
+  import { ensureMfa } from "../js/mfa-flow.js?h=d60b79b944";
   import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile, signOut }
     from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?h=a1e6b0a1a1";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?h=69b74fc63a";
   import { generateSalt, generateDEK, wrapDek, unwrapDek, dekToRecoveryPhrase } from "../js/crypto.js?h=e302c46b08";
   import { rememberPatientDek, rememberPatientUser } from "../js/patient-session.js?h=b2d1db5669";
 
@@ -292,12 +293,31 @@
   // Contas com 2FA (ex.: profissional usando o portal) confirmam o código
   // antes de entrar; colaborador sem 2FA passa direto. Durante o submit, o
   // próprio formulário conduz o fluxo — o listener não redireciona sozinho.
-  let signingIn = false;
+  let signingIn = false, resumingSession = false;
+  async function resumeSession(user) {
+    if (!user || signingIn || resumingSession || isReauth) return;
+    resumingSession = true;
+    const retry = document.getElementById("resumeSessionButton");
+    retry.disabled = true;
+    try {
+      await ensureMfa(user);
+      if (auth.currentUser?.uid === user.uid) window.location.href = redirectTo;
+    } catch (error) {
+      // A failed status request does not invalidate an existing Firebase login.
+      if (auth.currentUser?.uid !== user.uid) return;
+      const message = document.getElementById("erroEntrar");
+      message.textContent = error?.code === "MFA_CANCELLED"
+        ? "Conclua a verificação em duas etapas para continuar."
+        : "Não foi possível retomar sua sessão agora. Verifique sua conexão e tente continuar.";
+      message.classList.remove("a-hide");
+      retry.classList.remove("a-hide");
+    } finally { resumingSession = false; retry.disabled = false; }
+  }
+  document.getElementById("resumeSessionButton").addEventListener("click", () => resumeSession(auth.currentUser));
   onAuthStateChanged(auth, async u => {
     if (u && isReauth && u.email) document.getElementById("loginEmail").value = u.email;
     if (!u || isReauth || signingIn) return;
-    try { await ensureMfa(u); window.location.href = redirectTo; }
-    catch { await signOut(auth).catch(() => {}); }
+    await resumeSession(u);
   });
 
   async function registerAccount({ idToken, displayName, e2eeSalt, wrappedDEK, wrappedDEKIv }) {

@@ -3,7 +3,7 @@
 import {
   verifyPasswordResetCode, confirmPasswordReset, applyActionCode, checkActionCode, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=a1e6b0a1a1";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=69b74fc63a";
 import { parseActionParams, safeContinueUrl, actionErrorKey } from "./auth-action-core.js?h=628d155b56";
 import { requestPasswordReset } from "./account-email.js?h=adc983ca80";
 

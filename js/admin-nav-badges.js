@@ -14,7 +14,7 @@
 //   #navBadgeSemConselho   — admin-comprovantes-formacao.html
 // Cada um e <span class="ep-nav-badge ep-hide">. Hidden quando count=0.
 
-import { BACKEND_BASE_URL } from "./firebase-config.js?h=a1e6b0a1a1";
+import { BACKEND_BASE_URL } from "./firebase-config.js?h=69b74fc63a";
 
 const ENDPOINTS = [
   { url: "/therapy/admin/verificacoes?status=pending",                     badgeId: "navBadgeCrpCrm" },

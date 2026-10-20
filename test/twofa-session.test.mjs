@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createClinicalFetch, get2faSessionToken, verificationRedirect, isRtAuthContext, safeMfaReturn } from "../js/twofa-session.js";
+import { createClinicalFetch, get2faSessionToken, verificationRedirect, isRtAuthContext, isCollaboratorAuthContext, mfaNavigation, safeMfaReturn } from "../js/twofa-session.js";
 
 function fixture(response = Response.json({ ok: true })) {
   const calls = [], redirects = [];
@@ -71,6 +71,42 @@ test("ordinary auth errors and the verification page do not trigger a second-fac
   verify.location.pathname = "/staging/2fa-verify.html";
   await verify.fetch("https://api.example.invalid/therapy/2fa/verify");
   assert.equal(verify.redirects.length, 0);
+});
+
+test('collaborator authentication follows the portal through MFA without crossing into another account context', () => {
+  for (const path of ['/app/login.html', '/app/home.html', '/app/diario.html', '/staging/app/perfil.html', '/staging/app/']) {
+    assert.equal(isCollaboratorAuthContext(path), true, path);
+  }
+  const location = { pathname: '/staging/app/diario.html', search: '?page=4', hash: '#writing' };
+  const redirect = new URL(verificationRedirect(location), 'https://portal.example.invalid/staging/app/diario.html');
+  assert.equal(isCollaboratorAuthContext(redirect.pathname, redirect.search), true);
+  assert.deepEqual(mfaNavigation('collaborator', redirect.searchParams.get('redirect')), {
+    destination: './app/diario.html?page=4#writing', loginPage: './app/login.html?redirect=.%2Fdiario.html%3Fpage%3D4%23writing'
+  });
+  for (const target of ['https://evil.invalid/app/home.html', '//evil.invalid/app/home.html', './app/../painel.html', './painel.html', null]) {
+    assert.equal(isCollaboratorAuthContext('/2fa-verify.html', '?redirect=' + encodeURIComponent(target)), false);
+    assert.equal(mfaNavigation('collaborator', target).destination, './app/home.html');
+  }
+  for (const path of ['/login.html', '/painel.html', '/aluno-diario.html', '/paciente-painel.html', '/instituicao-painel.html', '/rt-painel.html']) {
+    assert.equal(isCollaboratorAuthContext(path), false, path);
+  }
+  assert.equal(isCollaboratorAuthContext('/2fa-verify.html', '?context=rt&redirect=./app/home.html'), false);
+  assert.deepEqual(mfaNavigation('rt', './rt-painel.html'), { destination: './rt-painel.html', loginPage: './rt-login.html' });
+});
+
+test('collaborator MFA proof is independent of professional proof and a challenge clears only its own session', async () => {
+  const f = fixture(Response.json({ error: 'TWOFA_REQUIRED' }, { status: 401 }));
+  f.location.pathname = '/app/diario.html'; f.location.search = ''; f.location.href = 'https://portal.example.invalid/app/diario.html';
+  f.entries.set('ep:twofa-session:collaborator', JSON.stringify({ token: 'collaborator-proof', savedAt: Date.now() }));
+  assert.equal(get2faSessionToken(f.storage, f.location), 'collaborator-proof');
+  assert.equal(get2faSessionToken(f.storage, { pathname: '/painel.html' }), 'opaque-second-factor');
+  await f.fetch('https://api.example.invalid/therapy/paciente/diario', { headers: { Authorization: 'Bearer collaborator-user' } });
+  assert.equal(f.calls[0].init.headers.get('X-Therapy-2FA'), 'collaborator-proof');
+  assert.equal(f.entries.has('ep:twofa-session:collaborator'), false);
+  assert.equal(f.entries.has('ep:twofa-session'), true);
+  const target = new URL(f.redirects[0], f.location.href);
+  assert.equal(isCollaboratorAuthContext(target.pathname, target.search), true);
+  assert.equal(get2faSessionToken(f.storage, f.location), '', 'A professional proof never substitutes the missing collaborator proof');
 });
 
 test("malformed, expired and future session entries are ignored", () => {

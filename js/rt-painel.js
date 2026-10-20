@@ -1,8 +1,8 @@
 import "./csp-actions.js?h=6c7094ea11";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=a1e6b0a1a1";
-import "./twofa-fetch.js?h=38cf68b49a";
-import { clear2faSession, isTwoFactorChallenge } from "./twofa-session.js?h=fbd5e4b98b";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=69b74fc63a";
+import "./twofa-fetch.js?h=820c8ff33b";
+import { clear2faSession, isTwoFactorChallenge } from "./twofa-session.js?h=295a6b1bd5";
 
 const state = {
   actor: null,

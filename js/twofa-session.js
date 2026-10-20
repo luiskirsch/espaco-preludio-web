@@ -1,23 +1,25 @@
 // Shared second-factor transport for clinical and technical portals.
 const KEY = "ep:twofa-session";
 const TTL = 2 * 60 * 60 * 1000;
+const sessionKey = location => isCollaboratorAuthContext(location?.pathname || '', location?.search || '') ? KEY + ':collaborator' : KEY;
 
-export function get2faSessionToken(storage) {
+export function get2faSessionToken(storage, location = globalThis.location) {
   try {
     storage ||= globalThis.sessionStorage;
-    const entry = JSON.parse(storage.getItem(KEY) || "null");
+    const key = sessionKey(location);
+    const entry = JSON.parse(storage.getItem(key) || "null");
     if (!entry || typeof entry.token !== "string" || !entry.token || !Number.isFinite(entry.savedAt)) return "";
     if (entry.savedAt > Date.now() || Date.now() - entry.savedAt >= TTL) {
-      storage.removeItem(KEY); return "";
+      storage.removeItem(key); return "";
     }
     return entry.token;
   } catch { return ""; }
 }
 export function save2faSession(token) {
-  try { sessionStorage.setItem(KEY, JSON.stringify({ token, savedAt: Date.now() })); } catch {}
+  try { sessionStorage.setItem(sessionKey(globalThis.location), JSON.stringify({ token, savedAt: Date.now() })); } catch {}
 }
-export function clear2faSession(storage) {
-  try { (storage || globalThis.sessionStorage).removeItem(KEY); } catch {}
+export function clear2faSession(storage, location = globalThis.location) {
+  try { (storage || globalThis.sessionStorage).removeItem(sessionKey(location)); } catch {}
 }
 export function hasValid2faSession() { return !!get2faSessionToken(); }
 export function isTwoFactorChallenge(error) {
@@ -29,6 +31,21 @@ export function isRtAuthContext(pathname, search = "") {
   const params = new URLSearchParams(search);
   // Also accept the narrow relative return path emitted by the previous release.
   return params.get("context") === "rt" || /^\.\/rt-(?:login|painel)\.html(?:[?#]|$)/.test(params.get("redirect") || "");
+}
+export function isCollaboratorAuthContext(pathname, search = "") {
+  if (/\/app(?:\/|$)/.test(pathname)) return true;
+  if (!pathname.endsWith('/2fa-verify.html') || isRtAuthContext(pathname, search)) return false;
+  const target = new URLSearchParams(search).get('redirect');
+  return typeof target === 'string' && target.startsWith('./app/') && safeMfaReturn(target, '') === target;
+}
+export function mfaNavigation(context, rawReturn) {
+  const collaborator = context === 'collaborator';
+  const fallback = collaborator ? './app/home.html' : context === 'rt' ? './rt-painel.html' : './painel.html';
+  let destination = safeMfaReturn(rawReturn, fallback);
+  if (collaborator && !destination.startsWith('./app/')) destination = fallback;
+  const loginPage = collaborator ? './app/login.html?redirect=' + encodeURIComponent(destination.replace('./app/', './'))
+    : context === 'rt' ? './rt-login.html' : './login.html';
+  return { destination, loginPage };
 }
 export function verificationRedirect(location) {
   // The verification page accepts ./relative paths; preserve the current page
@@ -58,13 +75,13 @@ export function createClinicalFetch({ fetch: nativeFetch, backend, location, sto
     }
     const requestHeaders = typeof Request !== "undefined" && input instanceof Request ? input.headers : undefined;
     const headers = new Headers(init.headers || requestHeaders);
-    const token = get2faSessionToken(storage);
+    const token = get2faSessionToken(storage, location);
     if (token && headers.has("Authorization") && !headers.has("X-Therapy-2FA")) headers.set("X-Therapy-2FA", token);
     const response = await nativeFetch(input, { ...init, headers, cache: "no-store", credentials: "omit" });
     if (response.status === 401 && !location.pathname.endsWith("/2fa-verify.html")) {
       const data = await response.clone().json().catch(() => ({}));
       if (isTwoFactorChallenge(data.error)) {
-        clear2faSession(storage);
+        clear2faSession(storage, location);
         if (!redirecting) { redirecting = true; location.replace(verificationRedirect(location)); }
       }
     }

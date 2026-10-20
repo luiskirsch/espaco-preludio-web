@@ -1,6 +1,6 @@
 // Botão de 2FA opcional (paciente, aluno). Fica oculto quando a conta não é
 // opt-in — profissional gerencia o 2FA obrigatório pelo perfil profissional.
-import { ensureMfa, mfaStatus } from "./mfa-flow.js?h=824d566594";
+import { ensureMfa, mfaStatus } from "./mfa-flow.js?h=d60b79b944";
 
 export function mountOptionalMfaButton(anchor, user, { className = "" } = {}) {
   const button = document.createElement("button");

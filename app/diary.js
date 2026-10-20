@@ -753,7 +753,7 @@ if (preview) {
   demoEntries.set(example.id, example); loadCoverTitle(); loadDiary();
 } else {
   try {
-    const [{ onAuthStateChanged }, config] = await Promise.all([import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js'), import('../js/firebase-config.js?h=a1e6b0a1a1')]);
+    const [{ onAuthStateChanged }, config] = await Promise.all([import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js'), import('../js/firebase-config.js?h=69b74fc63a')]);
     backend = config.BACKEND_BASE_URL;
     onAuthStateChanged(config.auth, user => {
       if (!user || account && account.uid !== user.uid) {

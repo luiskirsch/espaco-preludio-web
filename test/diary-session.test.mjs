@@ -895,14 +895,14 @@ test('production diary: a slow capsule response preserves a different modal open
   await poll(() => capsule.request, 'pending capsule save');
   // Opening another real application modal closes/clears the old form without
   // relying on test-only production hooks or the browser confirmation dialog.
-  await click('[data-memory="park"]');
-  await poll(() => evaluate("document.getElementById('diaryDialog').open && !!document.getElementById('memoryWrite')"), 'replacement memory modal');
+  await click('#soundButton');
+  await poll(() => evaluate("document.getElementById('diaryDialog').open && !!document.getElementById('stopSound')"), 'replacement soundtrack modal');
   const title = await evaluate("document.getElementById('dialogTitle').textContent");
   capsule.release();
   await poll(() => accounts.get('A').has(capsule.request.body.id), 'capsule persisted');
   await poll(() => evaluate("document.getElementById('diaryToast').textContent.includes('Sua cápsula está guardada')"), 'capsule response processed');
   assert.equal(await evaluate("document.getElementById('diaryDialog').open"), true);
   assert.equal(await evaluate("document.getElementById('dialogTitle').textContent"), title);
-  assert.equal(await evaluate("!!document.getElementById('memoryWrite')"), true, 'Late completion leaves the newer dialog intact');
+  assert.equal(await evaluate("!!document.getElementById('stopSound')"), true, 'Late completion leaves the newer dialog intact');
   assert.equal(await evaluate("document.getElementById('capsuleText')"), null, 'Sealed message is removed from the DOM');
 }));
