@@ -508,7 +508,8 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     await click('#releaseForm button[type="submit"]');
     assert.equal(await evaluate("document.getElementById('releaseText')"), null);
     assert.equal(await evaluate(`document.body.innerHTML.includes(${JSON.stringify(release)})`), false, 'Desabafo é removido do DOM ao virar constelação');
-    assert.equal(await evaluate("document.querySelectorAll('.constellation i').length>=20"), true);
+    assert.equal(await evaluate("!!document.querySelector('.release-ritual[open] .release-ritual__canvas')"), true, 'As próprias palavras se transformam em estrelas no céu');
+    await poll(() => evaluate("document.querySelector('.release-ritual')?.dataset.phase==='settled'"), 'palavras integradas ao universo', 10_000);
     await click('#releaseDone');
     await tab('diary'); await tab('timeline');
     assert.equal(await evaluate("document.querySelectorAll('.entry-card').length"), beforeRelease, 'Desabafo não cria uma memória');

@@ -2,6 +2,7 @@ import { createSoundscape, createDictation } from './diary-audio.js?h=fb22bb467e
 import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, hasEntryContent, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=baf32a79b0';
 import { createPagedEditor } from './diary-pages.js?h=2f3dc7fb7c';
 import { createIdleInvitation } from './diary-invitation.js?h=26ddf46ff3';
+import { startReleaseRitual } from './diary-release.js?h=7bd9ce17e2';
 
 const $ = id => document.getElementById(id);
 const student = document.body.dataset.portal === 'student';
@@ -17,6 +18,7 @@ let promptIndex = 0, coverMotionTimer = 0, bookOpened = false;
 let namingCover = false, writingAnchor = null;
 let coverTitle = '';
 let pageCreation = null;
+let releaseRitual = null;
 const bookDrafts = new Map();
 const bookOrder = new Map();
 let bookEntries = [];
@@ -55,7 +57,7 @@ let invitationEnabled = true;
 try { invitationEnabled = localStorage.getItem(invitationPreferenceKey) !== 'off'; } catch { /* Use the default in this tab. */ }
 const invitation = createIdleInvitation({ enabled: invitationEnabled, play: () => { if (ready && !pageCreation && !dictation.listening) pagedEditor.invite(); } });
 function syncInvitationAvailability() {
-  if (ready) invitation.resume();
+  if (ready && !document.querySelector('.release-ritual[open]')) invitation.resume();
   else invitation.pause();
 }
 function renderInvitationToggle() {
@@ -498,11 +500,12 @@ async function loadMore() {
   catch { if (generation !== bootGeneration) return; toast('Não foi possível carregar mais páginas. Tente novamente.'); if (button) { button.disabled = false; button.textContent = 'Carregar mais páginas'; } }
 }
 function openDialog(title, markup, cleanup = null) {
+  releaseRitual?.cancel(); releaseRitual = null;
   if (dialog.open) closeDialog();
   dialogOrigin = document.activeElement; dialogCleanup = cleanup; dialogGeneration = bootGeneration; dialogSerial++;
   $('dialogTitle').textContent = title; $('dialogBody').innerHTML = markup; document.documentElement.classList.add('diary-modal-open'); dialog.showModal();
 }
-function closeDialog() { dialogSerial++; dialogCleanup?.(); dialogCleanup = null; if (dialog.open) dialog.close(); document.documentElement.classList.remove('diary-modal-open'); dialog.classList.remove('diary-dialog--aroma'); $('dialogBody').replaceChildren(); $('dialogTitle').textContent = ''; dialogOrigin?.focus?.(); }
+function closeDialog() { dialogSerial++; dialogCleanup?.(); dialogCleanup = null; if (dialog.open) dialog.close(); document.documentElement.classList.remove('diary-modal-open'); dialog.classList.remove('diary-dialog--aroma', 'diary-dialog--release'); $('dialogBody').replaceChildren(); $('dialogTitle').textContent = ''; dialogOrigin?.focus?.(); }
 function requestCloseDialog() {
   if ($('capsuleText')?.value.trim() && !window.confirm('Descartar esta carta ainda não selada?')) return;
   closeDialog();
@@ -606,8 +609,36 @@ function openMemory(kind) {
   $('memoryWrite').addEventListener('click', async () => { closeDialog(); if (!assertReady() || !await settle()) return; if ($('editorView').hidden || current.kind === 'capsule') showEditor(draft()); const tag = kind === 'park' ? 'parque' : 'outono'; if (!current.tags.includes(tag) && current.tags.length < 6) { current.tags.push(tag); markDirty({ immediate: true }); } text.focus(); });
 }
 function openRelease() {
-  openDialog('Nem tudo precisa ficar guardado', '<form id="releaseForm"><p>Escreva o que pesa. Quando estiver pronto, deixe suas palavras encontrar outro lugar no céu.</p><label class="sr-only" for="releaseText">O que você gostaria de soltar?</label><textarea class="release-field" id="releaseText" maxlength="5000" placeholder="Hoje eu quero deixar ir…" required></textarea><p class="dialog-note">Estas palavras não são salvas nem enviadas.</p><div class="dialog-actions"><button class="gold-button" type="submit">✧ Deixar ir</button></div></form>');
-  $('releaseForm').addEventListener('submit', event => { event.preventDefault(); if (!$('releaseText').value.trim()) return; const stars = Math.min(75, Math.max(20, countWords($('releaseText').value))); $('releaseText').value = ''; $('dialogBody').innerHTML = `<div class="constellation">${Array.from({ length: stars }, (_, i) => `<i style="--x:${(i * 37.7) % 100}%;--y:${(i * 19.3) % 100}%;--d:${i * .025}s"></i>`).join('')}<span>Há espaço para respirar.</span></div><p>Suas palavras se desfizeram em estrelas. Fique aqui pelo tempo que precisar.</p><div class="dialog-actions"><button class="quiet-button" id="releaseDone">Voltar ao meu diário</button></div>`; $('releaseDone').addEventListener('click', closeDialog); });
+  const translate = (key, fallback) => window.EP_I18N?.t?.(`p-diary:${key}`, { defaultValue: fallback }) || fallback;
+  openDialog(translate('release_title', 'Nem tudo precisa ficar guardado'), `<form id="releaseForm"><p>${esc(translate('release_intro', 'Escreva o que pesa. Quando estiver pronto, deixe suas palavras encontrar outro lugar no céu.'))}</p><label class="sr-only" for="releaseText">${esc(translate('release_label', 'O que você gostaria de soltar?'))}</label><textarea class="release-field" id="releaseText" maxlength="5000" placeholder="${esc(translate('release_placeholder', 'Hoje eu quero deixar ir…'))}" required></textarea><p class="dialog-note">${esc(translate('release_privacy', 'Estas palavras não são salvas nem enviadas.'))}</p><div class="dialog-actions"><button class="gold-button" type="submit"><span aria-hidden="true">✧</span> ${esc(translate('release_submit', 'Deixar ir'))}</button></div></form>`);
+  dialog.classList.add('diary-dialog--release');
+  $('releaseForm').addEventListener('submit', event => {
+    event.preventDefault();
+    const source = $('releaseText');
+    if (!source?.value.trim() || releaseRitual) return;
+    invitation.pause();
+    const labels = {
+      close: translate('release_close', 'Voltar ao diário'),
+      title: translate('release_ritual_title', 'Há espaço para respirar.'),
+      description: translate('release_ritual_description', 'Suas palavras agora fazem parte do céu. Fique aqui pelo tempo que precisar.'),
+      return: translate('release_return', 'Voltar ao meu diário'),
+      skip: translate('release_skip', 'Pular animação'),
+      progress: translate('release_progress', 'Suas palavras estão se transformando em estrelas.'),
+    };
+    try {
+      releaseRitual = startReleaseRitual({
+        source,
+        labels,
+        onRelease: () => { $('releaseText').value = ''; closeDialog(); },
+        onReturn: () => { syncInvitationAvailability(); $('releaseButton').focus({ preventScroll: true }); },
+      });
+    } catch {
+      source.value = '';
+      releaseRitual?.cancel(); releaseRitual = null;
+      closeDialog(); syncInvitationAvailability();
+      toast(labels.title);
+    }
+  });
 }
 function tomorrow() { const value = new Date(`${today()}T12:00:00Z`); value.setUTCDate(value.getUTCDate() + 1); return value.toISOString().slice(0, 10); }
 function openCapsule() {
@@ -710,7 +741,7 @@ $('saveState').addEventListener('click', () => { if ($('saveState').dataset.stat
 $('saveState').addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); $('saveState').click(); } });
 document.querySelectorAll('a.back-link, a.diary-brand').forEach(link => link.addEventListener('click', async event => { if (!dirty) return; event.preventDefault(); if (await settle()) location.assign(link.href); }));
 window.addEventListener('beforeunload', event => { if (dirty || $('capsuleText')?.value.trim()) { event.preventDefault(); event.returnValue = ''; } });
-window.addEventListener('pagehide', () => { invitation.pause(); pagedEditor.cancelTurn(); clearTimeout(coverMotionTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
+window.addEventListener('pagehide', () => { releaseRitual?.cancel(); releaseRitual = null; invitation.pause(); pagedEditor.cancelTurn(); clearTimeout(coverMotionTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
 window.addEventListener('online', () => { if (ready && dirty) flush(); });
 $('headerDate').dateTime = today(); $('headerDate').textContent = dateLabel(today(), { weekday: 'long' });
 renderBookDate(current); renderPrompt(); renderCoverTitle();
@@ -789,7 +820,7 @@ if (preview) {
     backend = config.BACKEND_BASE_URL;
     onAuthStateChanged(config.auth, user => {
       if (!user || account && account.uid !== user.uid) {
-        bootGeneration++; invitation.pause(); bookDrafts.clear(); bookOrder.clear(); bookEntries = []; pagedEditor.clearBook(); pageCreation = null; $('newPageButton').disabled = false; ready = false; dirty = false; conflict = false; saving = null; deletingId = null; clearTimeout(saveTimer); closeDialog(); dictation.stop(); soundscape.stop();
+        bootGeneration++; releaseRitual?.cancel(); releaseRitual = null; invitation.pause(); bookDrafts.clear(); bookOrder.clear(); bookEntries = []; pagedEditor.clearBook(); pageCreation = null; $('newPageButton').disabled = false; ready = false; dirty = false; conflict = false; saving = null; deletingId = null; clearTimeout(saveTimer); closeDialog(); dictation.stop(); soundscape.stop();
         text.value = ''; text.disabled = true; entries = []; current = draft(); renderBookDate(current); renderMeta(); pagedEditor.reset();
         $('collectionView').innerHTML = ''; $('collectionView').hidden = true; $('editorView').hidden = false;
       }

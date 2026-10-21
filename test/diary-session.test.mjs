@@ -648,6 +648,31 @@ test('production diary: account switch clears private UI before B loads and igno
   assert.equal(await evaluate(`document.body.innerHTML.includes(${JSON.stringify(a)}) || document.body.innerHTML.includes(${JSON.stringify(lateA)})`), false, 'Neither old-account page is exposed after the late response');
 }));
 
+test('production diary: account switch cancels the release ritual and wipes its canvas before loading another account', options, () => withBrowser(async ({ accounts, hold, navigate, click, fill, evaluate, requests }) => {
+  accounts.get('B').set('b-after-release', entry('b-after-release', 'A página da outra conta.'));
+  await navigate();
+  await click('#releaseButton');
+  const secret = 'ACCOUNT_A_RELEASE_PRIVATE_80731';
+  await fill('#releaseText', secret);
+  await click('#releaseForm button[type="submit"]');
+  assert.equal(await evaluate("!!document.querySelector('.release-ritual[open]')"), true);
+  const nextLoad = hold('GET', 'B');
+  const cleared = await evaluate(`(() => {
+    const canvas = document.querySelector('.release-ritual__canvas');
+    window.__diaryAuth('B');
+    return {
+      ritual: !!document.querySelector('.release-ritual'),
+      releasing: document.body.classList.contains('is-releasing'),
+      pixels: canvas.width > 0 && canvas.height > 0 && canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data.some((value, i) => i % 4 === 3 && value > 0),
+      privateText: document.documentElement.outerHTML.includes(${JSON.stringify(secret)}),
+    };
+  })()`);
+  assert.deepEqual(cleared, { ritual: false, releasing: false, pixels: false, privateText: false }, 'The old account leaves no message, animation or bitmap during the next load');
+  assert.equal(JSON.stringify(requests).includes(secret), false, 'Released words are never sent to the production API');
+  await poll(() => nextLoad.request, 'next account loading'); nextLoad.release();
+  await poll(() => evaluate("document.getElementById('journalText').value==='A página da outra conta.'"), 'next account ready');
+}));
+
 test('production diary: weather and every page personalization survive a reload without text', options, () => withBrowser(async ({ accounts, navigate, click, fill, evaluate }) => {
   await navigate();
   assert.equal(await evaluate("document.getElementById('journalText').value"), '');
