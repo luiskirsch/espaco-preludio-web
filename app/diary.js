@@ -1,7 +1,7 @@
 import { createSoundscape, createDictation } from './diary-audio.js?h=fb22bb467e';
 import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, hasEntryContent, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=baf32a79b0';
-import { createPagedEditor } from './diary-pages.js?h=7eb571191a';
-import { createBookFoley, bookMotionTiming } from './diary-foley.js?h=43a0e7ef5a';
+import { createPagedEditor } from './diary-pages.js?h=5308d04d2c';
+import { createBookFoley, bookMotionTiming } from './diary-foley.js?h=3737733da5';
 import { createIdleInvitation } from './diary-invitation.js?h=26ddf46ff3';
 import { startReleaseRitual } from './diary-release.js?h=1cf48e0479';
 
@@ -39,6 +39,7 @@ const dialog = $('diaryDialog');
 const text = $('journalText');
 const bookFoley = createBookFoley({
   paperUrl: new URL('./assets/diary/page-turn.ogg', import.meta.url).href,
+  leatherUrl: new URL('./assets/diary/leather-cover-move.ogg', import.meta.url).href,
   impactUrl: new URL('./assets/diary/hardcover-close.ogg', import.meta.url).href,
   getVolume: () => Number($('volumeSlider').value) / 200,
 });

@@ -24,9 +24,13 @@ class FakeContext {
     const data = new Float32Array(length);
     return { duration: length / rate, getChannelData: () => data };
   }
-  async decodeAudioData() {
-    const buffer = this.createBuffer(1, 4800, this.sampleRate);
-    buffer.getChannelData(0).set(Array.from({ length: 4800 }, (_, i) => Math.sin(i * 2.3) * .2));
+  async decodeAudioData(bytes) {
+    const impact = new Uint8Array(bytes)[0] === 3;
+    const length = impact ? 1320 : 4800;
+    const buffer = this.createBuffer(1, length, this.sampleRate);
+    buffer.getChannelData(0).set(Array.from({ length }, (_, i) => impact
+      ? i < 256 ? 0 : Math.sin((i - 256) * .1) * Math.exp(-(i - 256) / 80)
+      : Math.sin(i * 2.3) * .2));
     return buffer;
   }
   createGain() { return { gain: { value: 0, setValueAtTime() {}, linearRampToValueAtTime() {}, cancelScheduledValues() {}, setTargetAtTime() {} }, connect() {}, disconnect() {} }; }
@@ -38,8 +42,8 @@ class FakeContext {
 
 function setup(options = {}) {
   globalThis.AudioContext = FakeContext;
-  globalThis.fetch = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) });
-  return createBookFoley({ paperUrl: '/paper.ogg', ...options });
+  globalThis.fetch = async url => ({ ok: true, arrayBuffer: async () => Uint8Array.of(url.includes('impact') ? 3 : url.includes('leather') ? 2 : 1).buffer });
+  return createBookFoley({ paperUrl: '/paper.ogg', leatherUrl: '/leather.ogg', impactUrl: '/impact.ogg', ...options });
 }
 const motion = (currentTime, duration = 1500) => ({ ready: Promise.resolve(), currentTime, playState: 'running', effect: { getComputedTiming: () => ({ duration }) } });
 
@@ -100,10 +104,10 @@ test('muting and unavailable audio never block the book', async () => {
 test('material textures remain finite, bounded and adapt to shorter motion', () => {
   const paper = Float32Array.from({ length: 4000 }, (_, i) => Math.sin(i * 1.7) * .3);
   for (const material of ['paper', 'leather']) for (const direction of ['forward', 'backward']) {
-    const samples = renderBookFoley({ sampleRate: 8000, duration: .32, material, direction, paper });
+    const samples = renderBookFoley({ sampleRate: 8000, duration: .32, material, direction, paper, leather: paper });
     assert.ok(samples.length >= 2560);
     assert.ok(samples.every(value => Number.isFinite(value) && Math.abs(value) <= .851));
-    assert.ok(samples.some(value => Math.abs(value) > .2), 'Both materials remain audible without clipping');
+    assert.ok(samples.some(value => Math.abs(value) > .1), 'Both materials remain audible without clipping');
   }
 });
 
@@ -115,4 +119,17 @@ test('the recorded hardcover contact lands at the end of the closing motion', ()
   let peakIndex = 0;
   for (let i = 1; i < data.length; i++) if (Math.abs(data[i]) > Math.abs(data[peakIndex])) peakIndex = i;
   assert.ok(Math.abs(peakIndex / sampleRate - duration) < .002, 'The recorded impact peak coincides with the cover reaching the book');
+});
+
+test('leather stays quiet and natural while the approved closing contact stays independent', () => {
+  const sampleRate = 8000, duration = 1.3;
+  const leather = Float32Array.from({ length: 12800 }, (_, i) => Math.sin(i * .7) * .2);
+  const impact = new Float32Array(1320);
+  impact[256] = 1; impact[300] = .6; impact[600] = .1;
+  const opening = renderBookFoley({ sampleRate, duration, material: 'leather', leather });
+  assert.ok(Math.max(...opening.map(Math.abs)) <= .221, 'The movement is quieter than the previous synthetic cover');
+  const closing = renderBookFoley({ sampleRate, duration, material: 'leather', direction: 'backward', leather, impact });
+  const contactOnly = renderBookFoley({ sampleRate, duration, material: 'leather', direction: 'backward', impact });
+  assert.ok(closing.slice(sampleRate * duration).every((value, index) => value === contactOnly[sampleRate * duration + index]), 'Changing the leather texture leaves the final contact and its decay intact');
+  assert.ok(renderBookFoley({ sampleRate, duration, material: 'leather' }).every(value => value === 0), 'An unavailable recording never falls back to the disliked synthesized creak');
 });

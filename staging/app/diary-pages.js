@@ -1,4 +1,4 @@
-import { bookMotionTiming } from './diary-foley.js?h=43a0e7ef5a';
+import { bookMotionTiming } from './diary-foley.js?h=3737733da5';
 
 export const DIARY_PAGE_COUNT = 365;
 

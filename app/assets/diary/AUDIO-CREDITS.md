@@ -36,8 +36,20 @@ by **Kenney Vleugels (Kenney.nl)**.
 - Changes: excerpt from 0.045s to 0.210s, mono, 50Hz high-pass, 6.5kHz
   low-pass, restrained gain, short boundary fades and Vorbis encoding.
 - Runtime places the recording's main contact transient at the end of the
-  actual closing transition. The leather friction and irregular spine creaks
-  during opening/closing are synthesized locally and follow the motion curve.
+  actual closing transition. Its level is independent of the movement texture.
+
+`leather-cover-move.ogg` derives from **Leather - Creak, soft** by **Vrymaa**,
+published on Freesound on 2024-05-05.
+
+- Source: https://freesound.org/people/Vrymaa/sounds/734598/
+- Public HQ preview: https://cdn.freesound.org/previews/734/734598_13973196-hq.mp3
+- License: CC0 1.0 Universal — https://creativecommons.org/publicdomain/zero/1.0/
+- Recorded material: soft movement of heavy leather garments, close-miked.
+- Changes: excerpt from 4.35s to 5.95s, mono, 120Hz high-pass, 3.8kHz
+  low-pass, short boundary fades and Vorbis encoding.
+- Runtime plays one quiet natural gesture at its original pitch. The volume
+  follows the cover's motion; no oscillators, looping or artificial creaks are
+  mixed into the leather. The closing board contact remains a separate layer.
 
 All material sounds use the diary's volume control. No third-party audio
 service is contacted during playback.

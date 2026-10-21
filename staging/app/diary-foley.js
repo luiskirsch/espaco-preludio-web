@@ -19,12 +19,11 @@ function progressAt(time, [x1, y1, x2, y2]) {
   return curve((low + high) / 2, y1, y2);
 }
 
-/** Dry, close-up foley. The paper retains the recorded fibers' original pitch;
- * leather combines low friction, irregular spine creaks and a damped board tap. */
-export function renderBookFoley({ sampleRate, duration, material, direction = 'forward', paper, impact, easing = EASINGS[direction] }) {
+/** Recorded material textures at their original pitch, shaped by the motion. */
+export function renderBookFoley({ sampleRate, duration, material, direction = 'forward', paper, leather, impact, easing = EASINGS[direction] }) {
   const closing = material === 'leather' && direction === 'backward';
   const samples = new Float32Array(Math.ceil(sampleRate * (duration + (closing ? .14 : .025))));
-  let seed = closing ? 7319 : material === 'leather' ? 1937 : 4117;
+  let seed = 4117;
   const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 2147483648 - 1; };
   if (material === 'paper' && paper?.length) {
     // Overlapping, windowed grains extend a short rustle without slowing its pitch.
@@ -43,49 +42,37 @@ export function renderBookFoley({ sampleRate, duration, material, direction = 'f
   let fastest = .001;
   for (let i = 0; i <= steps; i++) motion[i] = progressAt(i / steps, easing);
   for (let i = 1; i <= steps; i++) { velocity[i] = motion[i] - motion[i - 1]; fastest = Math.max(fastest, velocity[i]); }
-  let low = 0, deep = 0, phase = 0;
-  const contact = duration - .012;
-  let impactPeak = 0;
-  if (impact) for (let i = 1; i < impact.length; i++) if (Math.abs(impact[i]) > Math.abs(impact[impactPeak])) impactPeak = i;
-  const impactStart = duration - impactPeak / sampleRate;
+  // A single natural gesture, without looping or stretching the leather.
+  const leatherOffset = Math.max(0, Math.floor(((leather?.length || 0) - duration * sampleRate) / 2));
   for (let i = 0; i < samples.length; i++) {
     const time = i / sampleRate, index = Math.min(steps, Math.floor(time / duration * steps));
     const speed = Math.min(1, velocity[index] / fastest);
     const edge = Math.min(1, time / .025, Math.max(0, duration - time) / .055);
     const envelope = speed ** .65 * Math.max(0, edge);
     if (material === 'paper') samples[i] *= envelope;
-    else {
-      const noise = random();
-      low += (noise - low) * (1 - Math.exp(-2 * Math.PI * 780 / sampleRate));
-      deep += (low - deep) * (1 - Math.exp(-2 * Math.PI * 90 / sampleRate));
-      const movement = motion[index];
-      phase += 2 * Math.PI * (105 + 48 * Math.sin(movement * 9) + 9 * Math.sin(time * 41)) / sampleRate;
-      const grain = Math.sin(phase) + .31 * Math.sin(phase * 2.013) + .12 * Math.sin(phase * 3.04);
-      const creak = (.5 + .5 * Math.sin(movement * 37 + Math.sin(time * 57))) ** 5;
-      samples[i] = ((low - deep) * .52 + grain * creak * .035) * envelope;
-      if (closing && impact) {
-        const index = Math.round((time - impactStart) * sampleRate);
-        if (index >= 0 && index < impact.length) samples[i] += impact[index];
-      } else if (closing && time >= contact) {
-        const hit = time - contact;
-        // The short low-frequency body gives the padded board weight; the
-        // irregular broadband attack is the cover meeting the paper block.
-        samples[i] += .46 * Math.sin(2 * Math.PI * 92 * hit) * Math.exp(-hit / .019)
-          + .18 * Math.sin(2 * Math.PI * 173 * hit) * Math.exp(-hit / .008)
-          + (low * .4 + noise * .14) * Math.exp(-hit / .006);
-      }
-    }
+    else samples[i] = (leather?.[leatherOffset + i] || 0) * envelope;
   }
   let peak = .001;
   for (const value of samples) peak = Math.max(peak, Math.abs(value));
-  const level = material === 'paper' ? .68 : closing ? .85 : .48;
+  const level = material === 'paper' ? .68 : closing ? .12 : .22;
   for (let i = 0; i < samples.length; i++) samples[i] *= level / peak;
+  // Keep the approved board contact independent of the quieter movement.
+  if (closing && impact?.length) {
+    let peakIndex = 0;
+    for (let i = 1; i < impact.length; i++) if (Math.abs(impact[i]) > Math.abs(impact[peakIndex])) peakIndex = i;
+    const start = Math.round(duration * sampleRate) - peakIndex;
+    const gain = .85 / Math.max(.001, Math.abs(impact[peakIndex]));
+    for (let i = 0; i < impact.length; i++) {
+      const target = start + i;
+      if (target >= 0 && target < samples.length) samples[target] += impact[i] * gain;
+    }
+  }
   return samples;
 }
 
 /** One audio clock for paper and leather. Nothing plays before an action. */
-export function createBookFoley({ paperUrl, impactUrl, getVolume = () => .14 } = {}) {
-  let context, loading, loadingImpact, recordedPaper, recordedImpact, destroyed = false;
+export function createBookFoley({ paperUrl, leatherUrl, impactUrl, getVolume = () => .14 } = {}) {
+  let context, loading, loadingLeather, loadingImpact, recordedPaper, recordedLeather, recordedImpact, destroyed = false;
   const buffers = new Map(), requests = new Map(), active = new Map();
   const host = globalThis.document;
 
@@ -103,6 +90,10 @@ export function createBookFoley({ paperUrl, impactUrl, getVolume = () => .14 } =
       if (!loadingImpact && !recordedImpact && impactUrl) {
         loadingImpact = fetch(impactUrl).then(response => { if (!response.ok) throw new Error('CAPA_INDISPONIVEL'); return response.arrayBuffer(); })
           .then(bytes => context.decodeAudioData(bytes)).then(buffer => { recordedImpact = buffer.getChannelData(0); }).catch(() => { loadingImpact = null; });
+      }
+      if (!loadingLeather && !recordedLeather && leatherUrl) {
+        loadingLeather = fetch(leatherUrl).then(response => { if (!response.ok) throw new Error('COURO_INDISPONIVEL'); return response.arrayBuffer(); })
+          .then(bytes => context.decodeAudioData(bytes)).then(buffer => { recordedLeather = buffer.getChannelData(0); }).catch(() => { loadingLeather = null; });
       }
       return Promise.resolve(context.state === 'suspended' ? context.resume() : undefined).then(() => context.state === 'running').catch(() => false);
     } catch { return Promise.resolve(false); }
@@ -132,17 +123,19 @@ export function createBookFoley({ paperUrl, impactUrl, getVolume = () => .14 } =
     try {
       if (!await prepare()) return false;
       if (material === 'paper') await loading;
+      if (material === 'leather') await loadingLeather;
       if (material === 'leather' && direction === 'backward') await loadingImpact;
       if (animation) await animation.ready;
       if (destroyed || requests.get(material) !== request || (!invitation && host?.hidden)) return false;
       if (material === 'paper' && !recordedPaper) return false;
+      if (material === 'leather' && !recordedLeather && !(direction === 'backward' && recordedImpact)) return false;
       const measured = animation?.effect?.getComputedTiming().duration;
       if (typeof measured === 'number' && measured > 0) duration = measured;
       const seconds = duration / 1000;
-      const key = `${material}:${direction}:${duration}:${easing.join(',')}:${!!recordedImpact}`;
+      const key = `${material}:${direction}:${duration}:${easing.join(',')}:${!!recordedImpact}:${!!recordedLeather}`;
       let buffer = buffers.get(key);
       if (!buffer) {
-        const data = renderBookFoley({ sampleRate: context.sampleRate, duration: seconds, material, direction, paper: recordedPaper, impact: recordedImpact, easing });
+        const data = renderBookFoley({ sampleRate: context.sampleRate, duration: seconds, material, direction, paper: recordedPaper, leather: recordedLeather, impact: recordedImpact, easing });
         buffer = context.createBuffer(1, data.length, context.sampleRate);
         buffer.getChannelData(0).set(data);
         buffers.set(key, buffer);
