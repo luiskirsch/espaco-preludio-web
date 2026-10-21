@@ -225,6 +225,8 @@ test('production diary: the textured book is visible before scripts run in both 
     assert.equal(initial.toolbar, 'flex');
     assert.equal(initial.closed, true);
     assert.equal(initial.disabled, true);
+    assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), '', 'Static HTML never paints a generic cover title before the account is known');
+    assert.equal(await evaluate("document.getElementById('coverTitle').hasAttribute('data-i18n')"), false, 'Translation bootstrap cannot insert the generic title');
     assert.ok(initial.width > 500 && initial.height > 500, 'The fixed book layout is present on the first paint');
     const texture = await evaluate(`(async()=>{
       const cover=getComputedStyle(document.getElementById('bookCover')).backgroundImage;
@@ -612,6 +614,52 @@ test('production diary: the cover starts with the account name and preserves an 
   await navigate();
   assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), 'Luis Henrique');
   assert.equal(await evaluate("document.getElementById('coverTitleButton').textContent"), 'Editar nome');
+}));
+
+test('production diary: cover titles never flash a placeholder on reload with slow scripts or missing local settings', { ...options, timeout: 45000 }, () => withBrowser(async ({ server, accounts, covers, holdAsset, hold, send, evaluate }) => {
+  accounts.get('A').set('cover-entry', entry('cover-entry', 'Uma lembrança.'));
+  await send('Page.addScriptToEvaluateOnNewDocument', { source: `
+    window.__diaryNames={A:'Luis Henrique'};
+    window.__coverFrames=[];
+    const capture=()=>{
+      const title=document.getElementById('coverTitle'),value=title?.textContent.trim();
+      if(value && window.__coverFrames.at(-1)!==value)window.__coverFrames.push(value);
+      requestAnimationFrame(capture);
+    };
+    requestAnimationFrame(capture);
+  ` });
+  const ready = () => poll(() => evaluate("document.documentElement.dataset.diaryReady==='true' && !document.querySelector('.diary-entrance')"), 'personal cover ready');
+  for (const path of ['/app/diario.html', '/aluno-diario.html']) {
+    covers.set('A', 'Meu universo particular');
+    await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}${path}` });
+    await ready();
+    const module = holdAsset('/app/diary.js');
+    const cachedCover = hold('GET', 'A', record => record.path.endsWith('/ajustes/capa'));
+    await send('Page.reload', { ignoreCache: true });
+    await poll(() => module.request && evaluate("!!document.getElementById('coverTitle')"), 'static cover while the module is delayed');
+    assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), '', 'A slow script never exposes the old default phrase');
+    module.release();
+    await poll(() => cachedCover.request && evaluate("document.getElementById('coverTitle').textContent==='Meu universo particular'"), 'verified account restores its cached choice before the API response');
+    cachedCover.release(); await ready();
+    assert.deepEqual(await evaluate('window.__coverFrames'), ['Meu universo particular'], `${path}: cached reload only paints the chosen title`);
+
+    await evaluate("localStorage.removeItem('ep.diary.cover-title.A')");
+    const coldCover = hold('GET', 'A', record => record.path.endsWith('/ajustes/capa'));
+    await send('Page.reload', { ignoreCache: true });
+    await poll(() => coldCover.request, 'saved choice delayed without a local cache');
+    assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), '', 'The account name does not temporarily replace an unresolved custom title');
+    assert.equal(await evaluate("document.getElementById('coverTitle').getAttribute('aria-busy')"), 'true');
+    coldCover.release(); await ready();
+    await poll(() => evaluate('window.__coverFrames.length>0'), 'first personal title painted');
+    assert.deepEqual(await evaluate('window.__coverFrames'), ['Meu universo particular']);
+
+    covers.set('A', '');
+    await evaluate("localStorage.removeItem('ep.diary.cover-title.A')");
+    await send('Page.reload', { ignoreCache: true });
+    await ready();
+    await poll(() => evaluate('window.__coverFrames.length>0'), 'automatic account name painted');
+    assert.deepEqual(await evaluate('window.__coverFrames'), ['Luis Henrique'], 'Without a custom title, the first inscription is the account name');
+  }
 }));
 
 test('production diary: account switch clears private UI before B loads and ignores late A responses', options, () => withBrowser(async ({ accounts, pages, cursors, hold, navigate, click, fill, evaluate, completed }) => {

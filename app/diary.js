@@ -20,6 +20,7 @@ let preset = 'rain';
 let promptIndex = 0, coverMotionTimer = 0, bookOpened = false;
 let namingCover = false, writingAnchor = null;
 let coverTitle = '';
+let coverTitleReady = false;
 let pageCreation = null;
 let releaseRitual = null;
 const bookDrafts = new Map();
@@ -217,6 +218,12 @@ function cacheCoverTitle(value) {
 function defaultCoverTitle() { return String(account?.displayName || '').trim().replace(/\s+/g, ' ').slice(0, 40) || COVER_TITLE_DEFAULT; }
 function renderCoverTitle() {
   const title = $('coverTitle');
+  if (!coverTitleReady) {
+    title.removeAttribute('data-i18n'); title.textContent = '';
+    title.setAttribute('aria-busy', 'true');
+    return;
+  }
+  title.removeAttribute('aria-busy');
   const label = coverTitle || defaultCoverTitle();
   if (label !== COVER_TITLE_DEFAULT) { title.removeAttribute('data-i18n'); title.textContent = label; }
   else { title.dataset.i18n = COVER_TITLE_KEY; title.textContent = COVER_TITLE_DEFAULT; }
@@ -226,6 +233,7 @@ function renderCoverTitle() {
 function adoptCoverTitle(value) {
   coverTitle = String(value || '').trim().replace(/\s+/g, ' ').slice(0, 40);
   if (coverTitle === COVER_TITLE_DEFAULT) coverTitle = '';
+  coverTitleReady = true;
   cacheCoverTitle(coverTitle); renderCoverTitle();
 }
 async function loadCoverTitle() {
@@ -233,9 +241,12 @@ async function loadCoverTitle() {
   try {
     const data = await api(`${endpoint}/ajustes/capa`);
     if (generation === bootGeneration) adoptCoverTitle(data.cover?.title);
-  } catch { /* A capa segue com o nome em cache até a próxima tentativa. */ }
+  } catch {
+    if (generation === bootGeneration) { coverTitleReady = true; renderCoverTitle(); }
+  }
 }
 function startCoverNaming() {
+  if (!coverTitleReady) { toast('Aguarde enquanto o nome da sua capa é preparado.'); return; }
   if ($('bookFrame').classList.contains('is-cover-open')) { closeBook(); }
   namingCover = true;
   const input = $('coverTitleInput');
@@ -910,9 +921,11 @@ if (preview) {
         text.value = ''; text.disabled = true; entries = []; current = draft(); renderBookDate(current); renderMeta(); pagedEditor.reset();
         $('collectionView').innerHTML = ''; $('collectionView').hidden = true; $('editorView').hidden = false;
       }
+      coverTitleReady = false;
       if (!user) { account = null; coverTitle = ''; renderCoverTitle(); location.replace(student ? './aluno-login.html' : './login.html'); return; }
       account = user; finishCoverNaming({ save: false });
       coverTitle = (() => { try { return localStorage.getItem(coverTitleKey()) || ''; } catch { return ''; } })();
+      coverTitleReady = Boolean(coverTitle);
       renderCoverTitle(); prepareDiary(user);
     });
   } catch { setStatus('Não foi possível conectar · recarregue a página', 'error'); toast('Não foi possível abrir o diário. Verifique sua conexão e recarregue a página.'); }
