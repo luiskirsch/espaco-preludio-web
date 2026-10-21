@@ -85,9 +85,9 @@
     .staff-promises { display: flex; gap: 10px; flex-wrap: wrap; }
     .staff-promise { display: inline-flex; align-items: center; gap: 8px; padding: 9px 13px; border: 1px solid rgba(255,255,255,.24); border-radius: 999px; background: rgba(255,255,255,.085); color: rgba(255,255,255,.94); font-size: 12.5px; font-weight: 700; }
     .staff-promise::before { content: ""; width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--staff-gold); box-shadow: 0 0 0 3px rgba(224,173,79,.16); }
-    .staff-side { position: relative; isolation: isolate; min-width: 0; display: flex; align-items: center; justify-content: center; padding: clamp(24px, 4vw, 58px); background-color: var(--staff-paper); background-image: linear-gradient(rgba(44,102,112,.075) 1px, transparent 1px); background-size: 100% 32px; }
+    .staff-side { position: relative; isolation: isolate; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 24px clamp(24px, 4vw, 58px); background-color: var(--staff-paper); background-image: linear-gradient(rgba(44,102,112,.075) 1px, transparent 1px); background-size: 100% 32px; }
     .staff-side::before { content: ""; position: absolute; z-index: -1; top: 0; bottom: 0; left: 74px; width: 2px; background: rgba(214,122,98,.22); box-shadow: 7px 0 0 rgba(214,122,98,.07); }
-    .login-card { position: relative; min-width: 0; width: 100%; max-width: 530px; height: min(706px, calc(100dvh - 36px)); max-height: calc(100dvh - 36px); overflow: hidden; display: flex; flex-direction: column; padding: 28px 30px 22px; border: 1px solid rgba(18,58,69,.13); border-radius: 22px; background: rgba(255,251,241,.97); color: #1a2b2d; box-shadow: 0 30px 70px -38px rgba(18,58,69,.48), 0 8px 24px -18px rgba(18,58,69,.32); }
+    .login-card { position: relative; min-width: 0; width: 100%; max-width: 530px; height: min(706px, calc(100dvh - 48px)); max-height: calc(100dvh - 48px); overflow: hidden; display: flex; flex-direction: column; padding: 28px 30px 22px; border: 1px solid rgba(18,58,69,.13); border-radius: 22px; background: rgba(255,251,241,.97); color: #1a2b2d; box-shadow: 0 30px 70px -38px rgba(18,58,69,.48), 0 8px 24px -18px rgba(18,58,69,.32); }
     .login-card > * { flex-shrink: 0; }
     .login-card::before { content: ""; position: absolute; top: 14px; left: 50%; width: 62px; height: 6px; transform: translateX(-50%); border-top: 2px dotted rgba(18,58,69,.18); border-bottom: 2px dotted rgba(18,58,69,.18); }
     .login-card__identity { display: flex; align-items: center; gap: 11px; margin-bottom: 16px; }
@@ -134,6 +134,7 @@
     /* Reserve space for the session notice and both actions on shorter screens. */
     @media (max-height: 760px) {
       .staff-side { padding-block: 14px; }
+      .login-card { height: min(706px, calc(100dvh - 48px)); max-height: calc(100dvh - 48px); }
       .login-card { padding-top: 22px; padding-bottom: 18px; }
       .login-card__identity { margin-bottom: 12px; }
       .login-card__seal { width: 34px; height: 34px; flex-basis: 34px; }
@@ -155,8 +156,11 @@
       .login-card.is-registering #formCadastrar .a-btn--lg { height: 42px; }
       .login-card.is-registering .login-footer { padding-top: 7px; }
     }
+    @media (max-height: 700px) {
+      .login-card:has(#erroEntrar:not(.a-hide)) .login-card__identity { display: none; }
+    }
     @media (max-height: 640px) {
-      .login-card, .login-card.is-registering { padding: 18px 16px 12px; }
+      .login-card, .login-card.is-registering { height: calc(100dvh - 28px); max-height: calc(100dvh - 28px); padding: 18px 16px 12px; }
       .login-card .login-card__identity, .login-card .a-sub { display: none; }
       .login-card .a-h1 { font-size: 23px; margin-top: 4px; }
       .login-toggle { margin: 10px 0; }
@@ -269,7 +273,7 @@
         </div>
         <a href="./recuperar.html" class="login-help" style="font-size:12px;margin-top:4px;display:inline-block;" data-i18n="p-app-login:esqueceu_a_senha_ba06a">Esqueceu a senha?</a>
       </div>
-      <div id="erroEntrar" class="a-alert a-alert--err a-hide"></div>
+      <div id="erroEntrar" class="a-alert a-alert--err a-hide" role="status" aria-live="polite"></div>
       <button type="button" id="resumeSessionButton" class="a-btn a-btn--ghost a-hide" data-i18n="p-app-login:tentar_continuar_minha_sessao_2eca8">Tentar continuar minha sessão</button>
       <button type="submit" class="a-btn a-btn--primary a-btn--block a-btn--lg a-mt-8" id="btnEntrar">Entrar</button>
     </form>
@@ -355,23 +359,47 @@
   // antes de entrar; colaborador sem 2FA passa direto. Durante o submit, o
   // próprio formulário conduz o fluxo — o listener não redireciona sozinho.
   let signingIn = false, resumingSession = false;
+  function sessionFailure(error) {
+    const code = error?.code;
+    if (code === "MFA_CANCELLED") return { key: "session_mfa", text: "Conclua a verificação em duas etapas para continuar.", retry: true };
+    if (code === "auth/user-disabled" || error?.status === 403) return { key: "session_denied", text: "Não foi possível autorizar este acesso. Entre novamente ou procure o suporte.", retry: false };
+    if (error?.status === 401 || ["auth/user-token-expired", "auth/invalid-user-token", "auth/user-not-found"].includes(code)) {
+      return { key: "session_expired", text: "Sua sessão salva não é mais válida. Entre novamente com e-mail e senha.", retry: false };
+    }
+    if (error?.status === 429 || code === "auth/too-many-requests") return { key: "session_limited", text: "Muitas tentativas de acesso. Aguarde um pouco antes de tentar novamente.", retry: true };
+    if (error?.status >= 500) return { key: "session_unavailable", text: "O serviço de acesso está temporariamente indisponível. Tente continuar em instantes.", retry: true };
+    if (navigator.onLine === false) return { key: "session_offline", text: "Seu navegador está offline. Reconecte-se e tente continuar.", retry: true };
+    return { key: "session_unconfirmed", text: "Não foi possível confirmar sua sessão salva agora. Tente continuar ou entre novamente.", retry: true };
+  }
   async function resumeSession(user) {
     if (!user || signingIn || resumingSession || isReauth) return;
     resumingSession = true;
     const retry = document.getElementById("resumeSessionButton");
     retry.disabled = true;
+    const message = document.getElementById("erroEntrar");
+    message.classList.add("a-hide");
     try {
-      await ensureMfa(user);
+      try { await ensureMfa(user); }
+      catch (error) {
+        // Refresh a rejected credential once; never retry MFA or bypass its result.
+        if (error?.status !== 401 || error?.code !== "TOKEN_INVALIDO") throw error;
+        if (auth.currentUser?.uid !== user.uid) return;
+        await user.getIdToken(true);
+        if (auth.currentUser?.uid !== user.uid) return;
+        await ensureMfa(user);
+      }
       if (auth.currentUser?.uid === user.uid) window.location.href = redirectTo;
     } catch (error) {
       // A failed status request does not invalidate an existing Firebase login.
       if (auth.currentUser?.uid !== user.uid) return;
-      const message = document.getElementById("erroEntrar");
-      message.textContent = error?.code === "MFA_CANCELLED"
-        ? "Conclua a verificação em duas etapas para continuar."
-        : "Não foi possível retomar sua sessão agora. Verifique sua conexão e tente continuar.";
+      const failure = sessionFailure(error);
+      const key = "p-app-login:" + failure.key;
+      message.setAttribute("data-i18n", key);
+      message.textContent = window.EP_I18N?.t(key, { defaultValue: failure.text }) || failure.text;
       message.classList.remove("a-hide");
-      retry.classList.remove("a-hide");
+      retry.classList.toggle("a-hide", !failure.retry);
+      if (!failure.retry && user.email) document.getElementById("loginEmail").value = user.email;
+      console.warn("[portal] Falha ao retomar sessão", { code: error?.code || "UNKNOWN", status: error?.status || null });
     } finally { resumingSession = false; retry.disabled = false; }
   }
   document.getElementById("resumeSessionButton").addEventListener("click", () => resumeSession(auth.currentUser));
@@ -501,7 +529,9 @@
     e.preventDefault();
     const btn = document.getElementById("btnEntrar");
     const erro = document.getElementById("erroEntrar");
+    erro.removeAttribute("data-i18n");
     erro.classList.add("a-hide");
+    document.getElementById("resumeSessionButton").classList.add("a-hide");
     btn.disabled = true; btn.textContent = "Entrando…";
     const email = document.getElementById("loginEmail").value.trim();
     const senha = document.getElementById("loginSenha").value;

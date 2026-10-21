@@ -83,18 +83,27 @@ test('an invisible prerender cannot initialize portal authentication or run its 
 });
 
 const loginModule = readFileSync(new URL('../app/login.html', import.meta.url), 'utf8').match(/<script type="module">([\s\S]*?)<\/script>/)[1];
-const restoreNode = parse(loginModule, { ecmaVersion: 'latest', sourceType: 'module' }).body.find(node => node.type === 'FunctionDeclaration' && node.id.name === 'resumeSession');
-const restoreSource = loginModule.slice(restoreNode.start, restoreNode.end);
-function restoreFixture(verify) {
-  const user = { uid: 'existing-user' }, auth = { currentUser: user }, location = { href: '/app/login.html' };
+const restoreSource = parse(loginModule, { ecmaVersion: 'latest', sourceType: 'module' }).body
+  .filter(node => node.type === 'FunctionDeclaration' && ['sessionFailure', 'resumeSession'].includes(node.id.name))
+  .map(node => loginModule.slice(node.start, node.end)).join('\n');
+function restoreFixture(verify, { online = true, refresh = async () => 'fresh-token' } = {}) {
+  const refreshes = [], warnings = [];
+  const user = { uid: 'existing-user', email: 'user@example.test', async getIdToken(force) { refreshes.push(force); return refresh(); } };
+  const auth = { currentUser: user }, location = { href: '/app/login.html' };
   const elements = new Map();
   const document = { getElementById(id) {
-    if (!elements.has(id)) elements.set(id, { disabled: false, textContent: '', classList: { remove() {} } });
+    if (!elements.has(id)) {
+      const classes = new Set(['a-hide']);
+      elements.set(id, { disabled: false, textContent: '', attributes: {}, setAttribute(key, value) { this.attributes[key] = value; },
+        classList: { add: name => classes.add(name), remove: name => classes.delete(name), contains: name => classes.has(name),
+          toggle(name, force) { if (force) classes.add(name); else classes.delete(name); } } });
+    }
     return elements.get(id);
   } };
-  const scope = createContext({ auth, document, window: { location }, ensureMfa: verify, redirectTo: './home.html', signingIn: false, resumingSession: false, isReauth: false });
+  const scope = createContext({ auth, document, navigator: { onLine: online }, console: { warn: (...args) => warnings.push(args) },
+    window: { location }, ensureMfa: verify, redirectTo: './home.html', signingIn: false, resumingSession: false, isReauth: false });
   new Script(restoreSource + ';globalThis.restore=resumeSession;').runInContext(scope);
-  return { auth, user, location, elements, restore: scope.restore };
+  return { auth, user, location, elements, refreshes, warnings, restore: scope.restore };
 }
 test('temporary verification failures preserve the login and allow retry without entering the password again', async () => {
   let attempts = 0;
@@ -103,9 +112,63 @@ test('temporary verification failures preserve the login and allow retry without
   assert.equal(f.auth.currentUser, f.user);
   assert.equal(f.location.href, '/app/login.html');
   assert.ok(f.elements.get('erroEntrar').textContent);
+  assert.doesNotMatch(f.elements.get('erroEntrar').textContent, /conexão|internet|offline/i);
   assert.equal(f.elements.get('resumeSessionButton').disabled, false);
   await f.restore(f.user);
   assert.equal(attempts, 2); assert.equal(f.location.href, './home.html');
+});
+test('a rejected saved credential is refreshed once and must pass MFA before continuing', async () => {
+  let attempts = 0;
+  const f = restoreFixture(async () => { if (++attempts === 1) throw { code: 'TOKEN_INVALIDO', status: 401 }; });
+  await f.restore(f.user);
+  assert.deepEqual(f.refreshes, [true]);
+  assert.equal(attempts, 2);
+  assert.equal(f.location.href, './home.html');
+  assert.equal(f.warnings.length, 0);
+});
+test('a persistently rejected credential requests a new login instead of offering an endless session retry', async () => {
+  let attempts = 0;
+  const f = restoreFixture(async () => { attempts++; throw { code: 'TOKEN_INVALIDO', status: 401 }; });
+  await f.restore(f.user);
+  assert.deepEqual(f.refreshes, [true]);
+  assert.equal(attempts, 2);
+  assert.equal(f.elements.get('erroEntrar').attributes['data-i18n'], 'p-app-login:session_expired');
+  assert.equal(f.elements.get('resumeSessionButton').classList.contains('a-hide'), true);
+  assert.equal(f.elements.get('loginEmail').value, f.user.email);
+  assert.equal(f.location.href, '/app/login.html');
+  assert.equal(f.auth.currentUser, f.user);
+  assert.deepEqual(JSON.parse(JSON.stringify(f.warnings[0][1])), { code: 'TOKEN_INVALIDO', status: 401 });
+});
+for (const [name, error, online, key, retry] of [
+  ['offline browser', new TypeError('Failed to fetch'), false, 'session_offline', true],
+  ['unreachable service while online', new TypeError('Failed to fetch'), true, 'session_unconfirmed', true],
+  ['unavailable server', { status: 503 }, true, 'session_unavailable', true],
+  ['confirmed server error even if connectivity changed', { status: 503 }, false, 'session_unavailable', true],
+  ['request limit', { status: 429 }, true, 'session_limited', true],
+  ['cancelled MFA', { code: 'MFA_CANCELLED' }, true, 'session_mfa', true],
+  ['expired Firebase session', { code: 'auth/user-token-expired' }, true, 'session_expired', false],
+  ['disabled user', { code: 'auth/user-disabled' }, true, 'session_denied', false],
+  ['access denied', { status: 403 }, true, 'session_denied', false]
+]) {
+  test(`saved session reports ${name} without guessing that the internet is down`, async () => {
+    const f = restoreFixture(async () => { throw error; }, { online });
+    await f.restore(f.user);
+    assert.equal(f.elements.get('erroEntrar').attributes['data-i18n'], 'p-app-login:' + key);
+    assert.equal(f.elements.get('resumeSessionButton').classList.contains('a-hide'), !retry);
+    assert.equal(f.refreshes.length, 0);
+    assert.equal(f.location.href, '/app/login.html');
+  });
+}
+test('an account change during credential refresh cannot verify or redirect the previous user', async () => {
+  let finish, attempts = 0;
+  const f = restoreFixture(async () => { attempts++; throw { code: 'TOKEN_INVALIDO', status: 401 }; }, {
+    refresh: () => new Promise(resolve => { finish = resolve; })
+  });
+  const pending = f.restore(f.user);
+  await new Promise(resolve => setImmediate(resolve));
+  f.auth.currentUser = { uid: 'another-user' }; finish('fresh-token'); await pending;
+  assert.equal(attempts, 1);
+  assert.equal(f.location.href, '/app/login.html');
 });
 test('a restored session never skips MFA or redirects a different account after an asynchronous verification', async () => {
   let finish;
