@@ -481,6 +481,64 @@ test('production diary: the destination recovers the complete passage when a col
   assert.equal(await evaluate("document.getElementById('bookCover').getAttribute('aria-expanded')"), 'false');
 }));
 
+test('production diary: all collections retain the book background, geometry and readable controls in both portals and themes', { ...options, timeout: 90000 }, () => withBrowser(async ({ server, accounts, send, click, fill, evaluate }) => {
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  accounts.get('A').set('collection-memory', entry('collection-memory', 'Uma lembrança para reencontrar.', { feelings: ['alegria', 'serenidade'], tags: ['parque'] }));
+  accounts.get('A').set('collection-dream', entry('collection-dream', 'Um sonho entre estrelas.', { kind: 'dream' }));
+  accounts.get('A').set('collection-capsule', entry('collection-capsule', '', { kind: 'capsule', locked: true, unlockDate: '2099-10-20' }));
+  const composition = `(()=>{
+    const bounds=node=>{const box=node.getBoundingClientRect();return {x:box.x,y:box.y,width:box.width}};
+    const paper=document.getElementById('paper'),style=getComputedStyle(paper);
+    return {background:getComputedStyle(document.body).backgroundImage,attachment:getComputedStyle(document.body).backgroundAttachment,paper:style.backgroundImage,paperColor:style.backgroundColor,header:bounds(document.querySelector('.diary-header')),frame:bounds(document.getElementById('bookFrame')),tools:bounds(document.querySelector('.diary-tools')),panels:bounds(document.querySelector('.diary-panels'))};
+  })()`;
+  for (const path of ['/app/diario.html', '/aluno-diario.html']) {
+    await send('Page.navigate', { url: origin + path });
+    await poll(() => evaluate(`location.pathname===${JSON.stringify(path)} && document.documentElement.dataset.diaryReady==='true' && !document.querySelector('.diary-entrance')`), 'real collection account ready');
+    for (const theme of ['day', 'night']) {
+      if (await evaluate('document.documentElement.dataset.diaryTheme') !== theme) await click('#diaryThemeToggle');
+      for (const width of [1440, 1024, 768, 390, 320]) {
+        await send('Emulation.setDeviceMetricsOverride', { width, height: 1100, deviceScaleFactor: 1, mobile: width < 700 });
+        await click('[data-tab="diary"]');
+        await poll(() => evaluate("!document.getElementById('editorView').hidden"), 'writing composition');
+        await evaluate('document.fonts.ready');
+        const baseline = await evaluate(composition);
+        for (const name of ['timeline', 'dreams', 'feelings', 'capsules']) {
+          await click(`[data-tab="${name}"]`);
+          await poll(() => evaluate(`!document.getElementById('collectionView').hidden && document.getElementById('collectionView').dataset.collection===${JSON.stringify(name)}`), 'collection visible');
+          const actual = await evaluate(composition);
+          assert.equal(actual.background, baseline.background, `${path} ${theme} ${name} ${width}: the room background never changes`);
+          assert.ok(actual.attachment.split(',').every(value => value.trim() === 'fixed'), 'Every layer of the room lighting stays anchored while longer collections scroll');
+          assert.equal(actual.paper, baseline.paper, 'The collection retains the exact writing paper artwork');
+          assert.equal(actual.paperColor, baseline.paperColor);
+          for (const part of ['header', 'frame', 'tools', 'panels']) for (const metric of ['x', 'width']) {
+            assert.ok(Math.abs(actual[part][metric] - baseline[part][metric]) < 1, `${name} ${width}: ${part} ${metric} remains in place`);
+          }
+          assert.ok(Math.abs(actual.frame.y - baseline.frame.y) < 1, 'The collection does not jump up or down when replacing the book toolbar');
+          const reading = await evaluate("(()=>{const view=document.getElementById('collectionView'),paper=document.getElementById('paper').getBoundingClientRect(),last=view.getBoundingClientRect();return {overflow:document.documentElement.scrollWidth>innerWidth,title:parseFloat(getComputedStyle(view.querySelector('h1')).fontSize),intro:parseFloat(getComputedStyle(view.querySelector('.collection-intro')).fontSize),clipped:last.bottom>paper.bottom+1,cards:[...view.querySelectorAll('.entry-card,.collection-heading,.collection-toolbar,.feelings-view')].filter(node=>node.scrollWidth>node.clientWidth+2).map(node=>node.className)}})()");
+          assert.equal(reading.overflow, false); assert.equal(reading.clipped, false); assert.deepEqual(reading.cards, []);
+          assert.ok(reading.title >= 32 && reading.intro >= 15, 'Titles and supporting text retain a readable size');
+          if (process.env.DIARY_COLLECTION_REVIEW === '1' && path.startsWith('/app/') && [1440, 390].includes(width)) {
+            await poll(() => evaluate("getComputedStyle(document.getElementById('collectionView')).opacity==='1'"), 'collection dissolve settled');
+            const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+            await writeFile(join(tmpdir(), `ep-collection-${theme}-${name}-${width}.png`), Buffer.from(shot.data, 'base64'));
+          }
+        }
+      }
+    }
+    await click('[data-tab="timeline"]'); await fill('#memorySearch', 'Nada corresponde a esta busca');
+    await poll(() => evaluate("!!document.querySelector('[data-clear-search]')"), 'useful empty search');
+    await click('[data-clear-search]');
+    assert.equal(await evaluate("document.getElementById('memorySearch').value"), '');
+    await click('#collectionBack');
+    await poll(() => evaluate("!document.getElementById('editorView').hidden"), 'return from collection');
+    assert.equal(await evaluate("document.getElementById('bookCover').getAttribute('aria-expanded')"), 'false');
+    await click('[data-tab="timeline"]'); await click('[data-open="collection-memory"]');
+    await poll(() => evaluate("!document.getElementById('editorView').hidden"), 'selected memory');
+    assert.equal(await evaluate("document.getElementById('bookCover').getAttribute('aria-expanded')"), 'true', 'Opening a memory from a closed diary reveals the selected page immediately');
+    assert.equal(await evaluate("document.getElementById('journalText').value"), 'Uma lembrança para reencontrar.');
+  }
+}));
+
 test('production diary: the cover starts with the account name and preserves an editable custom title across reloads and accounts', options, () => withBrowser(async ({ accounts, covers, requests, navigate, click, fill, evaluate, send }) => {
   await send('Page.addScriptToEvaluateOnNewDocument', { source: "window.__diaryNames={A:'Luis Henrique',B:'Marina Oliveira'}" });
   accounts.get('A').set('named-page', entry('named-page', 'Minha escrita.'));
