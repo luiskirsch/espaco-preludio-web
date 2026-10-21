@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="../fonts/caveat400-600_cormorantgaramond400-600_inter400-600.css?h=4f8befaaca">
   <link rel="stylesheet" href="./diary.css?h=7e680c36e2">
   <link rel="stylesheet" href="./diary-collections.css?h=6d9b6f9a03">
+  <link rel="stylesheet" href="./diary-engraving.css?h=d7ccd6e864">
   <script src="/i18n/init.js?v=2-8" defer></script>
   <script type="module" src="./diary.js?h=bc337a3552"></script>
 </head>
@@ -38,6 +39,64 @@
     <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M20 3C10 2 2 7 5 17c9 4 17-4 15-14ZM3 22 16 8m-8 9 1-7m3 3 6-1"/></symbol>
     <filter id="diario-deboss" x="-10%" y="-20%" width="120%" height="140%" color-interpolation-filters="sRGB"><feOffset in="SourceAlpha" dy="2.4" result="o"/><feGaussianBlur in="o" stdDeviation="1.4" result="b"/><feComposite in="SourceAlpha" in2="b" operator="out" result="ie"/><feFlood flood-color="#1c0a04" flood-opacity="0.5"/><feComposite in2="ie" operator="in" result="is"/><feComposite in="is" in2="SourceGraphic" operator="atop" result="g"/><feOffset in="SourceAlpha" dy="1.6" result="o2"/><feComposite in="o2" in2="SourceAlpha" operator="out" result="r2"/><feFlood flood-color="#ffdcae" flood-opacity="0.45"/><feComposite in2="r2" operator="in" result="hl"/><feOffset in="SourceAlpha" dy="-1.6" result="o3"/><feGaussianBlur in="o3" stdDeviation="0.6" result="o3b"/><feComposite in="o3b" in2="SourceAlpha" operator="out" result="r3"/><feFlood flood-color="#000" flood-opacity="0.5"/><feComposite in2="r3" operator="in" result="dk"/><feMerge><feMergeNode in="dk"/><feMergeNode in="hl"/><feMergeNode in="g"/></feMerge></filter>
     <filter id="diario-deboss-sm" x="-10%" y="-20%" width="120%" height="140%" color-interpolation-filters="sRGB"><feOffset in="SourceAlpha" dy="1" result="o"/><feGaussianBlur in="o" stdDeviation="0.5" result="b"/><feComposite in="SourceAlpha" in2="b" operator="out" result="ie"/><feFlood flood-color="#1c0a04" flood-opacity="0.45"/><feComposite in2="ie" operator="in" result="is"/><feComposite in="is" in2="SourceGraphic" operator="atop" result="g"/><feOffset in="SourceAlpha" dy="0.9" result="o2"/><feComposite in="o2" in2="SourceAlpha" operator="out" result="r2"/><feFlood flood-color="#ffdcae" flood-opacity="0.38"/><feComposite in2="r2" operator="in" result="hl"/><feOffset in="SourceAlpha" dy="-0.9" result="o3"/><feGaussianBlur in="o3" stdDeviation="0.6" result="o3b"/><feComposite in="o3b" in2="SourceAlpha" operator="out" result="r3"/><feFlood flood-color="#000" flood-opacity="0.45"/><feComposite in2="r3" operator="in" result="dk"/><feMerge><feMergeNode in="dk"/><feMergeNode in="hl"/><feMergeNode in="g"/></feMerge></filter>
+    <filter id="diario-intaglio" x="-8%" y="-25%" width="116%" height="150%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.7" result="softShape"/>
+      <feComponentTransfer in="softShape" result="cavity"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+      <feDiffuseLighting in="cavity" surfaceScale="3.6" diffuseConstant="1.15" lighting-color="#fff3db" result="wallLight"><feDistantLight azimuth="225" elevation="52"/></feDiffuseLighting>
+      <feComposite in="wallLight" in2="SourceAlpha" operator="in" result="cutLight"/>
+      <feBlend in="SourceGraphic" in2="cutLight" mode="multiply" result="foil"/>
+      <feOffset in="SourceAlpha" dx="0.7" dy="1.7" result="shadowOffset"/>
+      <feGaussianBlur in="shadowOffset" stdDeviation="0.45" result="shadowSoft"/>
+      <feComposite in="SourceAlpha" in2="shadowSoft" operator="out" result="innerShadowMask"/>
+      <feFlood flood-color="#210b04" flood-opacity="0.86" result="shadowInk"/>
+      <feComposite in="shadowInk" in2="innerShadowMask" operator="in" result="innerShadow"/>
+      <feComposite in="innerShadow" in2="foil" operator="atop" result="pressedFoil"/>
+      <feOffset in="SourceAlpha" dx="-0.35" dy="-0.85" result="lipOffset"/>
+      <feComposite in="SourceAlpha" in2="lipOffset" operator="out" result="lipMask"/>
+      <feFlood flood-color="#ffe8b5" flood-opacity="0.58" result="lipGold"/>
+      <feComposite in="lipGold" in2="lipMask" operator="in" result="innerLip"/>
+      <feComposite in="innerLip" in2="pressedFoil" operator="atop" result="engravedFace"/>
+      <feMorphology in="SourceAlpha" operator="dilate" radius="0.55" result="cutEdge"/>
+      <feComposite in="cutEdge" in2="SourceAlpha" operator="out" result="cutMask"/>
+      <feFlood flood-color="#240c04" flood-opacity="0.7"/>
+      <feComposite in2="cutMask" operator="in" result="contact"/>
+      <feMerge><feMergeNode in="contact"/><feMergeNode in="engravedFace"/></feMerge>
+    </filter>
+    <filter id="diario-intaglio-fine" x="-8%" y="-20%" width="116%" height="140%" color-interpolation-filters="sRGB">
+      <feOffset in="SourceAlpha" dx="0.35" dy="0.7" result="offset"/>
+      <feComposite in="SourceAlpha" in2="offset" operator="out" result="shadowMask"/>
+      <feFlood flood-color="#200b04" flood-opacity="0.8"/>
+      <feComposite in2="shadowMask" operator="in" result="shadow"/>
+      <feComposite in="shadow" in2="SourceGraphic" operator="atop" result="face"/>
+      <feOffset in="SourceAlpha" dx="0.3" dy="0.65" result="lowerEdge"/>
+      <feComposite in="lowerEdge" in2="SourceAlpha" operator="out" result="lightMask"/>
+      <feFlood flood-color="#efd2a0" flood-opacity="0.58"/>
+      <feComposite in2="lightMask" operator="in" result="light"/>
+      <feMerge><feMergeNode in="light"/><feMergeNode in="face"/></feMerge>
+    </filter>
+    <filter id="diario-intaglio-mobile" x="-8%" y="-25%" width="116%" height="150%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.45" result="softShape"/>
+      <feComponentTransfer in="softShape" result="cavity"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+      <feDiffuseLighting in="cavity" surfaceScale="2.2" diffuseConstant="1.15" lighting-color="#fff3db" result="wallLight"><feDistantLight azimuth="225" elevation="52"/></feDiffuseLighting>
+      <feComposite in="wallLight" in2="SourceAlpha" operator="in" result="cutLight"/>
+      <feBlend in="SourceGraphic" in2="cutLight" mode="multiply" result="foil"/>
+      <feOffset in="SourceAlpha" dx="0.7" dy="1.1" result="shadowOffset"/>
+      <feGaussianBlur in="shadowOffset" stdDeviation="0.45" result="shadowSoft"/>
+      <feComposite in="SourceAlpha" in2="shadowSoft" operator="out" result="innerShadowMask"/>
+      <feFlood flood-color="#210b04" flood-opacity="0.86" result="shadowInk"/>
+      <feComposite in="shadowInk" in2="innerShadowMask" operator="in" result="innerShadow"/>
+      <feComposite in="innerShadow" in2="foil" operator="atop" result="pressedFoil"/>
+      <feOffset in="SourceAlpha" dx="-0.35" dy="-0.85" result="lipOffset"/>
+      <feComposite in="SourceAlpha" in2="lipOffset" operator="out" result="lipMask"/>
+      <feFlood flood-color="#ffe8b5" flood-opacity="0.58" result="lipGold"/>
+      <feComposite in="lipGold" in2="lipMask" operator="in" result="innerLip"/>
+      <feComposite in="innerLip" in2="pressedFoil" operator="atop" result="engravedFace"/>
+      <feMorphology in="SourceAlpha" operator="dilate" radius="0.35" result="cutEdge"/>
+      <feComposite in="cutEdge" in2="SourceAlpha" operator="out" result="cutMask"/>
+      <feFlood flood-color="#240c04" flood-opacity="0.7"/>
+      <feComposite in2="cutMask" operator="in" result="contact"/>
+      <feMerge><feMergeNode in="contact"/><feMergeNode in="engravedFace"/></feMerge>
+    </filter>
   </defs></svg>
   <div class="fireflies" aria-hidden="true"></div>
   <div class="diary-shell">

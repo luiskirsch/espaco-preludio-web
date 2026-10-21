@@ -382,7 +382,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
 
     // A capa recebe o nome escolhido por quem escreve, e o relevo do couro existe.
     assert.equal(await evaluate("!!document.getElementById('diario-deboss') && !!document.getElementById('diario-deboss-sm')"), true, 'Os relevos da capa estão definidos');
-    assert.match(await evaluate("getComputedStyle(document.getElementById('coverTitle')).filter"), /drop-shadow/, 'O nome da capa recebe contraste sobre o couro');
+    assert.match(await evaluate("getComputedStyle(document.getElementById('coverTitle')).filter"), /diario-intaglio/, 'O nome da capa recebe contraste sobre o couro');
     await click('#closeDiaryButton');
     await poll(() => evaluate("!document.getElementById('bookFrame').classList.contains('is-cover-closing') && !document.getElementById('bookFrame').classList.contains('is-cover-preparing')"), 'fim do fechamento antes de editar a capa');
     await click('#coverTitleButton');

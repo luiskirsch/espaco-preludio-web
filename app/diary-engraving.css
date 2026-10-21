@@ -1,0 +1,40 @@
+/* Foil pressed into leather: the cavity owns the shadow, not a floating label. */
+.is-book-writing .book-cover > strong {
+  color:#d3b77e;
+  -webkit-text-fill-color:#d3b77e;
+  text-shadow:none;
+  filter:url(#diario-intaglio);
+}
+@supports ((background-clip:text) or (-webkit-background-clip:text)) {
+  .is-book-writing .book-cover > strong {
+    background-image:var(--diary-leather-texture),linear-gradient(168deg,#b99559 0%,#e2cb98 27%,#c2a16b 46%,#e3c995 68%,#b69257 100%);
+    background-size:280px 280px,100% 100%;
+    background-position:center;
+    background-blend-mode:soft-light;
+    background-clip:text;
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+}
+.is-book-writing .book-cover > span {
+  color:#d4b77f;
+  text-shadow:none;
+  filter:url(#diario-intaglio-fine);
+}
+.is-book-writing .book-cover > i {
+  background:linear-gradient(145deg,#a97f43,#d5b77f 52%,#ae874b);
+  box-shadow:none;
+  filter:url(#diario-intaglio-fine);
+}
+.is-book-writing .book-cover:before {
+  border-color:#c4a16b;
+  box-shadow:inset 0 1px 1px #210b0480,0 1px 0 #efd2a066;
+}
+@media(max-width:640px) {
+  .is-book-writing .book-cover > strong {
+    font-size:clamp(22px,var(--cover-title-size,6.6cqw),34px);
+    line-height:1.3;
+    text-wrap:balance;
+    filter:url(#diario-intaglio-mobile);
+  }
+}
