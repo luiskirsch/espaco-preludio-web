@@ -15,7 +15,7 @@
   <meta name="theme-color" content="#2b2225">
   <link id="diaryEntranceStyles" rel="stylesheet" href="./app/diary-entrance.css?h=d2aabe62d0">
   <script src="./app/diary-entrance.js?h=da1a0042f7"></script>
-  <script src="./app/diary-theme.js?h=650d248338"></script>
+  <script src="./app/diary-theme.js?h=7fc7c2c3a6"></script>
   <title data-i18n="p-diary:page_title">Diário dos Pensamentos Vividos · Espaço Prelúdio</title>
   <link rel="icon" href="/logo-144.png" type="image/png">
   <link rel="stylesheet" href="./fonts/caveat400-600_cormorantgaramond400-600_inter400-600.css?h=4f8befaaca">
@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="./app/diary-release.css?h=39734e5e27">
   <link rel="stylesheet" href="./app/diary-collections.css?h=11cb376fca">
   <link rel="stylesheet" href="./app/diary-engraving.css?h=d7ccd6e864">
+  <link rel="stylesheet" href="./app/diary-header.css?h=fb3c08436d">
   <script src="/i18n/init.js?v=2-8" defer></script>
   <script type="module" src="./app/diary.js?h=036dcde9d8"></script>
 </head>
@@ -102,19 +103,20 @@
   </defs></svg>
   <div class="fireflies" aria-hidden="true"></div>
   <div class="diary-shell">
-    <div class="portal-bar"><a class="back-link" id="portalBack" href="./aluno-painel.html" data-i18n-html="p-diary:back_to_portal"><svg><use href="#i-arrow"/></svg> Voltar ao portal</a><span data-i18n-html="p-diary:portal_motto">ESPAÇO PRELÚDIO <i>✦</i> UM TEMPO PARA VOCÊ</span><span class="private-badge" data-i18n-html="p-diary:personal_diary"><svg><use href="#i-lock"/></svg> Seu diário pessoal</span></div>
-    <div class="appearance-bar"><button type="button" class="theme-toggle" id="diaryThemeToggle" aria-pressed="false"><span data-theme-icon aria-hidden="true">☾</span><span data-theme-label data-i18n="p-aluno-diario:modo_noturno_53b62">Modo noturno</span></button></div>
+    <div class="portal-bar"><a class="back-link" id="portalBack" href="./aluno-painel.html" data-i18n-html="p-diary:back_to_portal"><svg><use href="#i-arrow"/></svg> Voltar ao portal</a><span class="portal-motto" data-i18n-html="p-diary:portal_motto">ESPAÇO PRELÚDIO <i>✦</i> UM TEMPO PARA VOCÊ</span><div class="portal-controls"><span class="private-badge" data-i18n-html="p-diary:personal_diary"><svg><use href="#i-lock"/></svg> Seu diário pessoal</span><button type="button" class="theme-toggle" id="diaryThemeToggle" aria-pressed="false"><span data-theme-icon aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.2 14.4A8.6 8.6 0 0 1 9.6 3.8a8.6 8.6 0 1 0 10.6 10.6Z"/></svg></span><span data-theme-label data-i18n="p-aluno-diario:modo_noturno_53b62">Modo noturno</span></button><span class="avatar" id="avatar" role="img" aria-label="Foto de perfil" data-i18n-aria-label="p-aluno-diario:foto_de_perfil_4eb8e">✦</span></div></div>
     <div id="previewBanner" class="preview-banner" hidden data-i18n="p-diary:demo_notice">Prévia de demonstração · os registros não são enviados</div>
     <header class="diary-header">
-      <a href="./aluno-diario.html" class="diary-brand" aria-label="Diário dos Pensamentos Vividos, início" data-i18n-aria-label="p-diary:brand_home"><svg><use href="#i-book"/></svg><span data-i18n-html="p-diary:brand_name">Diário dos<br><strong>Pensamentos Vividos</strong></span></a>
+      <div class="diary-masthead">
+        <a href="./aluno-diario.html" class="diary-brand" aria-label="Diário dos Pensamentos Vividos, início" data-i18n-aria-label="p-diary:brand_home"><svg><use href="#i-book"/></svg><span data-i18n-html="p-diary:brand_name">Diário dos<br><strong>Pensamentos Vividos</strong></span></a>
+        <div class="diary-date"><span data-i18n="p-diary:header_today">Hoje</span><time id="headerDate"></time></div>
+      </div>
       <nav class="diary-tabs" aria-label="Ambientes do diário" data-i18n-aria-label="p-diary:diary_sections">
-        <button class="is-active" data-tab="diary" aria-current="page" data-i18n="p-diary:tab_diary">Meu Diário</button>
-        <button data-tab="timeline" data-i18n-html="p-diary:tab_timeline">Linha do Tempo<br>de Memórias</button>
-        <button data-tab="dreams" data-i18n-html="p-diary:tab_dreams">Mundo dos<br>Sonhos</button>
-        <button data-tab="feelings" data-i18n-html="p-diary:tab_feelings">Análise de<br>Sentimentos</button>
-        <button data-tab="capsules" data-i18n-html="p-diary:tab_capsules">Cápsula do<br>Tempo</button>
+        <button type="button" class="is-active" aria-current="page" data-tab="diary" aria-label="Meu Diário" data-i18n-aria-label="p-diary:tab_diary"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 6c-3-2-6-2-9-1v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1Zm0 0v14"/></svg><span data-i18n="p-diary:nav_diary">Diário</span></button>
+        <button type="button" data-tab="timeline" aria-label="Linha do Tempo de Memórias" data-i18n-aria-label="p-diary:nav_memories_label"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/></svg><span data-i18n="p-diary:nav_memories">Memórias</span></button>
+        <button type="button" data-tab="dreams" aria-label="Mundo dos Sonhos" data-i18n-aria-label="p-diary:nav_dreams_label"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.2 14.4A8.6 8.6 0 0 1 9.6 3.8a8.6 8.6 0 1 0 10.6 10.6Z"/><path d="M17.5 3v4m-2-2h4"/></svg><span data-i18n="p-diary:nav_dreams">Sonhos</span></button>
+        <button type="button" data-tab="feelings" aria-label="Análise de Sentimentos" data-i18n-aria-label="p-diary:nav_feelings_label"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 20-8-8a5 5 0 0 1 7-7l1 1 1-1a5 5 0 0 1 7 7Z"/></svg><span class="diary-tab-label" data-i18n="p-diary:nav_feelings">Sentimentos</span><span class="diary-tab-label--compact" data-i18n="p-diary:nav_feelings_compact">Análise</span></button>
+        <button type="button" data-tab="capsules" aria-label="Cápsula do Tempo" data-i18n-aria-label="p-diary:nav_capsules_label"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg><span data-i18n="p-diary:nav_capsules">Cápsulas</span></button>
       </nav>
-      <div class="diary-identity"><span class="avatar" id="avatar" role="img" aria-label="Foto de perfil" data-i18n-aria-label="p-aluno-diario:foto_de_perfil_4eb8e">✦</span><time id="headerDate"></time></div>
     </header>
     <main class="diary-layout">
       <aside class="diary-tools" aria-label="Ferramentas do diário" id="diaryTools" data-i18n-aria-label="p-diary:diary_tools">

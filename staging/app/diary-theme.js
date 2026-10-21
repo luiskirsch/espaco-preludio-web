@@ -8,8 +8,8 @@
     if (button) {
       button.setAttribute('aria-pressed', String(night));
       button.querySelector('[data-theme-label]').textContent = 'Modo noturno';
-      button.querySelector('[data-theme-icon]').textContent = '☾';
       button.title = night ? 'Desativar modo noturno' : 'Ativar modo noturno';
+      button.setAttribute('aria-label', button.title);
     }
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', night ? '#191a21' : '#2b2225');
   }

@@ -187,6 +187,30 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     await poll(() => evaluate("!document.getElementById('journalText')?.disabled && document.getElementById('journalText').value.length>0 && !document.querySelector('.diary-entrance') && !document.documentElement.classList.contains('diary-entrance-pending')"), 'prévia real pronta');
     assert.equal(await evaluate("document.getElementById('previewBanner').hidden"), false);
     assert.equal(await evaluate("document.getElementById('portalBack').getAttribute('href')"), './home.html');
+    for (const width of [320, 390, 768, 1024, 1440, 1920]) {
+      await viewport(width);
+      const header = await evaluate(`(() => {
+        const box = node => { const r=node.getBoundingClientRect();return {left:r.left,right:r.right,width:r.width}; };
+        return {
+          back:box(document.getElementById('portalBack')),
+          controls:box(document.querySelector('.portal-controls')),
+          tabs:[...document.querySelectorAll('.diary-tabs button')].map(node=>({ ...box(node),scroll:node.scrollWidth,client:node.clientWidth,label:node.getAttribute('aria-label'),icon:!!node.querySelector('svg')})),
+          current:document.querySelectorAll('.diary-tabs [aria-current="page"]').length,
+          brand:getComputedStyle(document.querySelector('.diary-brand')).display,
+          themeIcon:!!document.querySelector('#diaryThemeToggle svg'),
+        };
+      })()`);
+      assert.equal(header.tabs.length,5,'Todos os ambientes permanecem disponíveis');
+      assert.equal(header.current,1,'A navegação indica um único ambiente ativo');
+      assert.notEqual(header.brand,'none','O cabeçalho identifica o diário');
+      assert.equal(header.themeIcon,true,'O controle de aparência preserva seu ícone vetorial');
+      assert.ok(header.back.right<=header.controls.left+1,`Os controles gerais não se sobrepõem em ${width}px`);
+      for(const item of header.tabs) {
+        assert.ok(item.left>=0 && item.right<=width && item.width>0 && item.scroll<=item.client+1,`Ambiente visível e sem corte em ${width}px: ${JSON.stringify(item)}`);
+        assert.ok(item.label && item.icon,'Cada ambiente possui nome acessível e ícone');
+      }
+    }
+    await viewport(1440);
     await evaluate('Promise.race([document.fonts.ready,new Promise(resolve=>setTimeout(resolve,3000))])');
     assert.equal(await evaluate("document.getElementById('bookCover').getAttribute('aria-expanded')"), 'false', 'O diário começa com a capa fechada');
     const coverLayout = await evaluate("(()=>{const cover=document.getElementById('bookCover').getBoundingClientRect(),rename=document.getElementById('coverTitleButton').getBoundingClientRect(),hint=document.querySelector('#bookCover small').getBoundingClientRect(),title=document.getElementById('coverTitle').getBoundingClientRect();return {cover:{left:cover.left,right:cover.right,top:cover.top,bottom:cover.bottom},rename:{left:rename.left,right:rename.right,top:rename.top,bottom:rename.bottom},hintCenter:hint.left+hint.width/2,titleCenter:title.left+title.width/2,visualCenter:cover.left+cover.width*.513,titleSize:parseFloat(getComputedStyle(document.getElementById('coverTitle')).fontSize)}})()");
