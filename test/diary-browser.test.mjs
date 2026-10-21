@@ -202,6 +202,26 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     await poll(() => evaluate("!document.getElementById('journalText')?.disabled && document.getElementById('journalText').value.length>0 && !document.querySelector('.diary-entrance') && !document.documentElement.classList.contains('diary-entrance-pending')"), 'prévia real pronta');
     assert.equal(await evaluate("document.getElementById('previewBanner').hidden"), false);
     assert.equal(await evaluate("document.getElementById('portalBack').getAttribute('href')"), './home.html');
+    await poll(() => evaluate('!!window.EP_I18N'), 'traduções do diário');
+    for (const locale of ['pt-BR', 'en-US', 'es-ES']) {
+      await evaluate(`window.EP_I18N.change(${JSON.stringify(locale)})`);
+      const phrases = await evaluate(`(() => {
+        const lang = ${JSON.stringify(locale)}, i18n = window.i18next;
+        const caption = i18n.getResource(lang, 'p-diary', 'journal_caption');
+        const footer = i18n.getResource(lang, 'p-diary', 'footer');
+        i18n.addResourceBundle(lang, 'p-diary', {journal_caption:caption+' <span>✦</span>',footer:'<span>✧</span> '+footer+' <span>✧</span>'}, true, true);
+        window.EP_I18N.apply();
+        const result = [...document.querySelectorAll('.journal-caption,.diary-footer')].map((el, index) => ({text:el.innerText.trim(),expected:index?footer:caption,decorations:[...el.querySelectorAll('span')].map(span=>getComputedStyle(span).display)}));
+        i18n.addResourceBundle(lang, 'p-diary', {journal_caption:caption,footer}, true, true);
+        window.EP_I18N.apply();
+        return result;
+      })()`);
+      for (const phrase of phrases) {
+        assert.equal(phrase.text, phrase.expected, `${locale}: a tradução antiga não mostra HTML nem estrelas`);
+        assert.ok(phrase.decorations.every(display => display === 'none'), 'Enfeites de traduções em cache permanecem ocultos');
+      }
+    }
+    await evaluate("window.EP_I18N.change('pt-BR')");
     for (const width of [320, 390, 768, 1024, 1440, 1920]) {
       await viewport(width);
       const header = await evaluate(`(() => {
