@@ -1,6 +1,9 @@
 /* The four collections live inside the same book as the writing pages. */
 body.is-book-writing { background-attachment:fixed; }
 .is-book-writing .book-frame.is-collection { height:auto; aspect-ratio:auto; min-height:0; }
+/* Binding depth follows the book width, not the length of the collection. */
+.is-book-writing .book-frame.is-collection:before { inset:-1.5cqw -1.8% -2cqw -2.6%; }
+.is-book-writing .book-frame.is-collection:after { inset:-.9cqw -.9% -1.3cqw -1.75%; }
 .is-book-writing .book-frame.is-collection .paper.paper--writing {
   height:auto; min-height:clamp(640px,62vw,850px); contain:none;
 }

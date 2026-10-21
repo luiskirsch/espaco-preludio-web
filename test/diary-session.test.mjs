@@ -539,6 +539,35 @@ test('production diary: all collections retain the book background, geometry and
   }
 }));
 
+test('production diary: a long timeline never paints its leather binding over the return link', { ...options, timeout: 45000 }, () => withBrowser(async ({ server, accounts, send, click, evaluate }) => {
+  for (let index = 0; index < 36; index++) accounts.get('A').set(`long-timeline-${index}`, entry(`long-timeline-${index}`, `Uma lembrança guardada na página ${index + 1}.`));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  for (const path of ['/app/diario.html', '/aluno-diario.html']) {
+    await send('Page.navigate', { url: origin + path });
+    await poll(() => evaluate("document.documentElement.dataset.diaryReady==='true' && !document.querySelector('.diary-entrance')"), 'long diary ready');
+    for (const width of [1440, 390]) {
+      await send('Emulation.setDeviceMetricsOverride', { width, height: 1100, deviceScaleFactor: 1, mobile: width < 700 });
+      await click('[data-tab="timeline"]');
+      await poll(() => evaluate("!document.getElementById('collectionView').hidden && document.querySelectorAll('.entry-card').length===36"), 'all timeline records visible');
+      await evaluate('window.scrollTo(0,0);new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+      const link = await evaluate(`(()=>{
+        const frame=document.getElementById('bookFrame'),box=frame.getBoundingClientRect();
+        const button=document.getElementById('collectionBack'),label=button.querySelector('span').getBoundingClientRect();
+        const bindingTop=box.top+parseFloat(getComputedStyle(frame,'::before').top);
+        const stitchingTop=box.top+parseFloat(getComputedStyle(frame,'::after').top);
+        const hit=document.elementFromPoint(label.x+label.width/2,label.y+label.height/2);
+        return {height:box.height,bottom:label.bottom,bindingTop,stitchingTop,clickable:hit===button||button.contains(hit)};
+      })()`);
+      assert.ok(link.height > 4000, 'Exercises a genuinely tall collection, not the empty or short case');
+      assert.ok(link.bindingTop > link.bottom + 4, `${path} ${width}: leather stays below the complete return label`);
+      assert.ok(link.stitchingTop > link.bottom + 4, 'Stitching cannot cross the label either');
+      assert.equal(link.clickable, true, 'The visible return text also receives pointer input');
+      await click('#collectionBack');
+      await poll(() => evaluate("!document.getElementById('editorView').hidden"), 'return from long timeline');
+    }
+  }
+}));
+
 test('production diary: the cover starts with the account name and preserves an editable custom title across reloads and accounts', options, () => withBrowser(async ({ accounts, covers, requests, navigate, click, fill, evaluate, send }) => {
   await send('Page.addScriptToEvaluateOnNewDocument', { source: "window.__diaryNames={A:'Luis Henrique',B:'Marina Oliveira'}" });
   accounts.get('A').set('named-page', entry('named-page', 'Minha escrita.'));
