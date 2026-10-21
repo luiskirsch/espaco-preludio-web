@@ -662,6 +662,44 @@ test('production diary: cover titles never flash a placeholder on reload with sl
   }
 }));
 
+test('production diary: resolved account names and custom titles render before a slow settings request on reload', { ...options, timeout: 45000 }, () => withBrowser(async ({ server, accounts, covers, hold, send, evaluate }) => {
+  accounts.get('A').set('fast-cover-entry', entry('fast-cover-entry', 'Meu dia.'));
+  await send('Page.addScriptToEvaluateOnNewDocument', { source: "window.__diaryNames={A:'Luis Henrique',B:'Marina Oliveira'}" });
+  for (const path of ['/app/diario.html', '/aluno-diario.html']) {
+    covers.set('A', '');
+    await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}${path}` });
+    await poll(() => evaluate(`location.pathname===${JSON.stringify(path)} && document.documentElement.dataset.diaryReady==='true' && document.getElementById('coverTitle').textContent==='Luis Henrique' && !document.querySelector('.diary-entrance')`), 'account name learned once');
+    assert.equal(await evaluate("localStorage.getItem('ep.diary.cover-title.A.resolved')"), 'name', 'The automatic name is remembered without becoming a custom title');
+    const settings = hold('GET', 'A', record => record.path.endsWith('/ajustes/capa'));
+    await send('Page.reload', { ignoreCache: true });
+    await poll(() => settings.request && evaluate("document.getElementById('coverTitle').textContent==='Luis Henrique'"), 'account name rendered before settings arrive');
+    assert.equal(await evaluate("document.getElementById('coverTitle').hasAttribute('aria-busy')"), false);
+    assert.notEqual(await evaluate('document.documentElement.dataset.diaryReady'), 'true', 'The name does not wait for the settings request');
+    await new Promise(resolveWait => setTimeout(resolveWait, 2000));
+    assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), 'Luis Henrique', 'The correct name remains visible throughout a two-second response delay');
+    settings.release();
+    await poll(() => evaluate("document.documentElement.dataset.diaryReady==='true'"), 'settings revalidated in the background');
+
+    covers.set('A', 'Meus dias de outono');
+    await send('Page.reload', { ignoreCache: true });
+    await poll(() => evaluate("document.getElementById('coverTitle').textContent==='Meus dias de outono' && document.documentElement.dataset.diaryReady==='true'"), 'updated choice received');
+    const custom = hold('GET', 'A', record => record.path.endsWith('/ajustes/capa'));
+    await send('Page.reload', { ignoreCache: true });
+    await poll(() => custom.request && evaluate("document.getElementById('coverTitle').textContent==='Meus dias de outono'"), 'custom title also rendered before settings arrive');
+    assert.equal(await evaluate("localStorage.getItem('ep.diary.cover-title.A.resolved')"), 'custom');
+    custom.release();
+    await poll(() => evaluate("document.documentElement.dataset.diaryReady==='true'"), 'custom choice revalidated');
+
+    await evaluate("localStorage.removeItem('ep.diary.cover-title.B');localStorage.removeItem('ep.diary.cover-title.B.resolved')");
+    const other = hold('GET', 'B', record => record.path.endsWith('/ajustes/capa'));
+    await evaluate("window.__diaryAuth('B')");
+    await poll(() => other.request, 'uncached second account settings');
+    assert.equal(await evaluate("document.getElementById('coverTitle').textContent"), '', 'The fast cache never exposes the previous account name');
+    other.release();
+    await poll(() => evaluate("document.getElementById('coverTitle').textContent==='Marina Oliveira'"), 'second account name resolved independently');
+  }
+}));
+
 test('production diary: account switch clears private UI before B loads and ignores late A responses', options, () => withBrowser(async ({ accounts, pages, cursors, hold, navigate, click, fill, evaluate, completed }) => {
   const a = 'ACCOUNT_A_PRIVATE_512';
   const lateA = 'ACCOUNT_A_LATE_PAGE_817';

@@ -212,8 +212,22 @@ function closeBook() {
 // para a capa já nascer com o nome certo, antes de a resposta chegar.
 function coverTitleKey() { return `ep.diary.cover-title${account?.uid ? `.${account.uid}` : ''}`; }
 function cacheCoverTitle(value) {
-  try { if (value) localStorage.setItem(coverTitleKey(), value); else localStorage.removeItem(coverTitleKey()); }
+  if (!account?.uid) return;
+  try {
+    const key = coverTitleKey();
+    if (value) localStorage.setItem(key, value); else localStorage.removeItem(key);
+    // An empty title is a resolved choice too: the cover uses the account name.
+    localStorage.setItem(`${key}.resolved`, value ? 'custom' : 'name');
+  }
   catch { /* Sem cache a capa ainda chega pela conta. */ }
+}
+function restoreCoverTitle() {
+  try {
+    const key = coverTitleKey();
+    coverTitle = localStorage.getItem(key) || '';
+    coverTitleReady = Boolean(coverTitle) || localStorage.getItem(`${key}.resolved`) === 'name';
+  } catch { coverTitle = ''; coverTitleReady = false; }
+  renderCoverTitle();
 }
 function defaultCoverTitle() { return String(account?.displayName || '').trim().replace(/\s+/g, ' ').slice(0, 40) || COVER_TITLE_DEFAULT; }
 function renderCoverTitle() {
@@ -924,9 +938,7 @@ if (preview) {
       coverTitleReady = false;
       if (!user) { account = null; coverTitle = ''; renderCoverTitle(); location.replace(student ? './aluno-login.html' : './login.html'); return; }
       account = user; finishCoverNaming({ save: false });
-      coverTitle = (() => { try { return localStorage.getItem(coverTitleKey()) || ''; } catch { return ''; } })();
-      coverTitleReady = Boolean(coverTitle);
-      renderCoverTitle(); prepareDiary(user);
+      restoreCoverTitle(); prepareDiary(user);
     });
   } catch { setStatus('Não foi possível conectar · recarregue a página', 'error'); toast('Não foi possível abrir o diário. Verifique sua conexão e recarregue a página.'); }
 }
