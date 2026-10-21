@@ -1,5 +1,20 @@
 /* The four collections live inside the same book as the writing pages. */
 body.is-book-writing { background-attachment:fixed; }
+/* Dreams, feelings and capsules grow with their content, like before. */
+.is-book-writing .book-frame.is-collection:not(.is-collection-scroll) { height:auto; aspect-ratio:auto; min-height:0; }
+.is-book-writing .book-frame.is-collection:not(.is-collection-scroll) .paper.paper--writing {
+  height:auto; min-height:clamp(640px,62vw,850px); contain:none;
+}
+/* The timeline alone can grow very long, so it keeps the book's own height and scrolls internally. */
+.is-book-writing .book-frame.is-collection-scroll .collection-view {
+  height:100%; min-height:0; overflow-y:auto; overflow-x:hidden;
+  overscroll-behavior-y:contain; scrollbar-gutter:stable;
+  scrollbar-width:thin; scrollbar-color:var(--collection-accent) var(--collection-soft);
+}
+.is-book-writing .book-frame.is-collection-scroll .collection-view > * { flex-shrink:0; }
+.is-book-writing .book-frame.is-collection-scroll .collection-view::-webkit-scrollbar { width:8px; }
+.is-book-writing .book-frame.is-collection-scroll .collection-view::-webkit-scrollbar-track { background:var(--collection-soft); border-radius:8px; }
+.is-book-writing .book-frame.is-collection-scroll .collection-view::-webkit-scrollbar-thumb { background:var(--collection-accent); border:2px solid transparent; background-clip:padding-box; border-radius:8px; }
 /* Binding depth follows the book width, not the length of the collection. */
 .is-book-writing .book-frame.is-collection:before { inset:-1.5cqw -1.8% -2cqw -2.6%; }
 .is-book-writing .book-frame.is-collection:after { inset:-.9cqw -.9% -1.3cqw -1.75%; }
@@ -19,17 +34,10 @@ body.is-book-writing { background-attachment:fixed; }
   --collection-accent:#80542e; --collection-rule:#99714640;
   --collection-card:#fff8ecf5; --collection-soft:#af85401a; --collection-wash:#fff3d587;
   --collection-button:#7c512e; --collection-button-ink:#fff5e1;
-  height:100%; min-height:0; overflow-y:auto; overflow-x:hidden;
-  overscroll-behavior-y:contain; scrollbar-gutter:stable;
-  scrollbar-width:thin; scrollbar-color:var(--collection-accent) var(--collection-soft);
-  padding:clamp(32px,5.2cqw,60px) clamp(24px,7cqw,72px) clamp(36px,5.5cqw,66px);
+  min-height:0; padding:clamp(32px,5.2cqw,60px) clamp(24px,7cqw,72px) clamp(36px,5.5cqw,66px);
   color:var(--collection-ink); animation:collection-arrive .3s ease both;
   background:linear-gradient(90deg,transparent,var(--collection-wash) 12%,var(--collection-wash) 88%,transparent);
 }
-.collection-view > * { flex-shrink:0; }
-.collection-view::-webkit-scrollbar { width:8px; }
-.collection-view::-webkit-scrollbar-track { background:var(--collection-soft); border-radius:8px; }
-.collection-view::-webkit-scrollbar-thumb { background:var(--collection-accent); border:2px solid transparent; background-clip:padding-box; border-radius:8px; }
 .collection-view .collection-heading { display:grid; grid-template-columns:52px minmax(0,1fr); gap:18px; align-items:start; }
 .collection-view .collection-emblem {
   display:grid; place-items:center; width:52px; height:52px; margin-top:3px;

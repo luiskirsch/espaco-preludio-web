@@ -429,6 +429,8 @@ async function switchTab(name) {
   }
   setWritingFocus(false);
   activateTab(name); $('editorView').hidden = true; $('collectionView').hidden = false; $('bookFrame').classList.add('is-collection');
+  $('collectionView').dataset.collection = name;
+  $('bookFrame').classList.toggle('is-collection-scroll', name === 'timeline');
   $('bookToolbar').hidden = true; $('collectionNavigation').hidden = false;
   $('collectionContext').textContent = { timeline: 'Memórias', dreams: 'Sonhos', feelings: 'Sentimentos', capsules: 'Cápsula do Tempo' }[name];
   renderCollection(name);
