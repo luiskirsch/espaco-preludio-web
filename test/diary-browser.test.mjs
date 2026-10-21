@@ -94,7 +94,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     const { send, evaluate } = cdp;
     const click = async selector => {
       assert.equal(await evaluate(`!!document.querySelector(${JSON.stringify(selector)})`), true, `Controle existe: ${selector}`);
-      if (['#newPageButton', '#previousWritingPage', '#nextWritingPage'].includes(selector)) {
+      if (['#bookCover', '#closeDiaryButton', '#newPageButton', '#previousWritingPage', '#nextWritingPage'].includes(selector)) {
         if (await evaluate(`document.querySelector(${JSON.stringify(selector)}).disabled`)) return;
         const point = await evaluate(`(()=>{const node=document.querySelector(${JSON.stringify(selector)});node.scrollIntoView({block:'center'});const box=node.getBoundingClientRect();return {x:box.left+box.width/2,y:box.top+box.height/2}})()`);
         await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...point, button: 'left', clickCount: 1 });
@@ -189,6 +189,13 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
         stop() { this.onend?.(); }
         abort() { this.onend?.(); }
       };
+      window.__diaryBookSounds = [];
+      const startBuffer = AudioBufferSourceNode.prototype.start;
+      AudioBufferSourceNode.prototype.start = function(when, offset, ...args) {
+        const motion = [...document.getElementById('pageTurnEffect').getAnimations(), ...document.getElementById('bookCover').getAnimations()].find(animation => ['pageLeafOpen', 'pageLeafClose'].includes(animation.animationName) || animation.transitionProperty === 'transform');
+        window.__diaryBookSounds.push({ offset, when, time:this.context.currentTime, latency:(this.context.baseLatency||0)+(this.context.outputLatency||0), bufferDuration:this.buffer.duration, motionDuration:motion?.effect.getComputedTiming().duration, motionTime:motion?.currentTime, name:motion?.animationName||motion?.transitionProperty });
+        return startBuffer.call(this, when, offset, ...args);
+      };
     ` });
     await viewport(1440);
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/app/diario.html?preview=1` });
@@ -241,11 +248,19 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     assert.ok(Math.abs(coverLayout.hintCenter-coverLayout.visualCenter) < 8, 'A indicação para abrir fica centralizada');
     assert.ok(Math.abs(coverLayout.titleCenter-coverLayout.visualCenter) < 8 && coverLayout.titleSize >= 34, 'O nome do diário fica central e legível');
     await capture('book-cover-desktop.png');
+    const openingSoundCount = await evaluate('window.__diaryBookSounds.length');
     await click('#bookCover');
     assert.equal(await evaluate("document.getElementById('bookFrame').classList.contains('is-cover-open')"), true, 'A capa abre o diário');
+    const coverOpeningSound = await poll(() => evaluate(`window.__diaryBookSounds.length>${openingSoundCount}&&window.__diaryBookSounds.at(-1)`), 'som de couro abrindo');
+    assert.equal(coverOpeningSound.name, 'transform', 'O couro acompanha a transição da capa');
+    assert.ok(Math.abs(coverOpeningSound.bufferDuration-coverOpeningSound.motionDuration/1000-.025)<.002, 'O som de couro usa a duração real da abertura');
     await click('#closeDiaryButton');
     assert.equal(await evaluate("document.getElementById('bookFrame').classList.contains('is-cover-open')"), false, 'A ação de fechar devolve a capa');
     await checkClosedPageTools();
+    const coverClosingSound = await poll(() => evaluate(`window.__diaryBookSounds.length>${openingSoundCount+1}&&window.__diaryBookSounds.at(-1)`), 'som da capa dura fechando');
+    assert.equal(coverClosingSound.name, 'transform');
+    assert.ok(Math.abs(coverClosingSound.bufferDuration-coverClosingSound.motionDuration/1000-.14)<.002, 'A batida da capa tem cauda curta após o contato');
+    assert.ok(Math.abs(coverClosingSound.offset-coverClosingSound.motionTime/1000-coverClosingSound.latency-.005)<.035, 'O som considera o ponto da animação e a latência do dispositivo');
     await poll(() => evaluate("document.getElementById('bookFrame').classList.contains('is-cover-closing')"), 'início do fechamento físico da capa');
     await evaluate('new Promise(resolve=>setTimeout(resolve,450))');
     assert.ok(await evaluate("Number(getComputedStyle(document.getElementById('bookCover')).opacity)") > .98, 'A capa fecha opaca, sem se sobrepor como uma transparência ao papel');
@@ -355,21 +370,29 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
       if (width === 1440 || width === 390) await checkWritingLines(`pauta em ${width}px`, width === 1440 ? 'writing-lines-desktop.png' : 'writing-lines-mobile.png');
     }
     const blankPaperHeight = await evaluate("Math.round(document.getElementById('paper').getBoundingClientRect().height)");
-    await evaluate("window.__diaryPageTurns=0;window.__diaryPaperSounds=0;window.__diaryOriginalMediaPlay=HTMLMediaElement.prototype.play;HTMLMediaElement.prototype.play=function(){window.__diaryPaperSounds++;return Promise.resolve()};document.getElementById('paper').addEventListener('diarypageturn',()=>window.__diaryPageTurns++)");
+    await evaluate("window.__diaryPageTurns=0;window.__diaryPaperSounds=0;window.__diaryOriginalBufferStart=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(...args){window.__diaryPaperSounds++;return window.__diaryOriginalBufferStart.apply(this,args)};document.getElementById('paper').addEventListener('diarypageturn',()=>window.__diaryPageTurns++)");
     const longWriting = Array.from({ length: 12 }, (_, index) => `${index + 1}. Hoje encontrei tempo para respirar e observar os detalhes ao meu redor. Escrevo com calma sobre o que senti, os pequenos encontros e aquilo que quero guardar. Cada lembrança encontra seu espaço nesta página, sem pressa para terminar.`).join('\n\n');
     await fill('#journalText', longWriting);
-    const pagination = await poll(() => evaluate("(()=>{const indicator=document.getElementById('writingPageIndicator'),match=indicator.textContent.match(/(\\d+)\\D+(\\d+)/);if(!match||Number(indicator.dataset.sheetTotal)<2)return null;return {current:Number(match[1]),total:Number(match[2]),used:Number(indicator.dataset.usedPages),paperHeight:Math.round(document.getElementById('paper').getBoundingClientRect().height),turns:window.__diaryPageTurns,sounds:window.__diaryPaperSounds,animation:document.getElementById('pageTurnEffect').getAnimations().length,value:document.getElementById('journalText').value}})()"), 'paginação automática da escrita');
+    const pagination = await poll(() => evaluate("(()=>{const indicator=document.getElementById('writingPageIndicator'),match=indicator.textContent.match(/(\\d+)\\D+(\\d+)/);if(!match||Number(indicator.dataset.sheetTotal)<2||!window.__diaryPaperSounds)return null;return {current:Number(match[1]),total:Number(match[2]),used:Number(indicator.dataset.usedPages),paperHeight:Math.round(document.getElementById('paper').getBoundingClientRect().height),turns:window.__diaryPageTurns,sounds:window.__diaryPaperSounds,animation:document.getElementById('pageTurnEffect').getAnimations().length,value:document.getElementById('journalText').value}})()"), 'paginação automática da escrita');
     assert.equal(pagination.current, pagination.used, 'Ao chegar ao fim, a última folha escrita aparece sozinha');
     assert.equal(pagination.total, 365, 'O diário mantém 365 páginas disponíveis');
     assert.equal(pagination.paperHeight, blankPaperHeight, 'O pergaminho não cresce com o texto');
     assert.equal(pagination.value, longWriting, 'A paginação mantém todo o texto no mesmo registro');
     assert.ok(pagination.turns >= 1, 'A troca automática dispara o efeito de virar a página');
     assert.ok(pagination.sounds >= 1, 'A troca automática toca a gravação de papel');
+    const paperSound = await evaluate('window.__diaryBookSounds.at(-1)');
+    assert.equal(paperSound.name, 'pageLeafOpen', 'O áudio começa com a animação real da folha');
+    assert.ok(Math.abs(paperSound.bufferDuration-paperSound.motionDuration/1000-.025)<.002, 'O som do papel cobre toda a duração da virada');
+    assert.ok(Math.abs(paperSound.offset-paperSound.motionTime/1000-paperSound.latency-.005)<.035, 'O som do papel está no ponto certo da animação, com compensação de latência');
     assert.ok(pagination.animation >= 1, 'A folha anima durante a troca automática');
     const soundsBeforeNavigation = pagination.sounds;
     await click('#previousWritingPage');
     assert.match(await evaluate("document.getElementById('writingPageIndicator').textContent"), new RegExp(`Página ${pagination.current - 1} de 365`));
     assert.equal(await evaluate("document.getElementById('journalText').value"), longWriting, 'Voltar uma folha não altera a escrita');
+    await poll(() => evaluate(`window.__diaryPaperSounds>${soundsBeforeNavigation}`), 'som da navegação manual');
+    const backwardSound = await evaluate('window.__diaryBookSounds.at(-1)');
+    assert.equal(backwardSound.name, 'pageLeafClose', 'A volta da folha tem som sincronizado com o movimento inverso');
+    assert.ok(Math.abs(backwardSound.bufferDuration-backwardSound.motionDuration/1000-.025)<.002);
     assert.ok(await evaluate("window.__diaryPaperSounds") > soundsBeforeNavigation, 'A navegação manual também tem som de papel');
     const quietPage = await evaluate("document.getElementById('writingPageIndicator').textContent.match(/\\d+/)[0]");
     const soundsAfterNavigation = await evaluate('window.__diaryPaperSounds');
@@ -379,7 +402,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     assert.equal(await evaluate("document.getElementById('writingPageIndicator').textContent.match(/\\d+/)[0]"), quietPage, 'Uma tecla modificadora não muda a folha que está sendo lida');
     await capture('writing-page-turn-mobile.png');
     await click('#nextWritingPage');
-    await evaluate("HTMLMediaElement.prototype.play=window.__diaryOriginalMediaPlay;delete window.__diaryOriginalMediaPlay");
+    await evaluate("AudioBufferSourceNode.prototype.start=window.__diaryOriginalBufferStart;delete window.__diaryOriginalBufferStart");
     await saved();
     for (const width of [320, 390, 768, 1440]) {
       await viewport(width); await checkLayout('texto longo', width); await checkPaperText(width);

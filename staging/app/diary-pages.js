@@ -1,28 +1,31 @@
+import { bookMotionTiming } from './diary-foley.js?h=43a0e7ef5a';
+
 export const DIARY_PAGE_COUNT = 365;
 
 /** Fixed-height, continuous diary pagination with an optional paper sound. */
-export function createPagedEditor({ textarea, viewport, measure, paper, indicator, previous, next, soundUrl, getVolume = () => 0.14, getBook = () => null, onEntryNavigate = () => {}, onEmptyPage = () => {} } = {}) {
+export function createPagedEditor({ textarea, viewport, measure, paper, indicator, previous, next, foley, getBook = () => null, onEntryNavigate = () => {}, onEmptyPage = () => {} } = {}) {
   if (!textarea || !viewport || !measure || !paper || !indicator || !previous || !next) throw new Error('PAGINACAO_INDISPONIVEL');
   let page = 0;
   let total = 1;
   let pageHeight = 1;
   let layoutWidth = 0, layoutHeight = 0;
   let turnTimer = 0;
+  let motionSerial = 0;
   let finishEntryTurn = null;
-  let sound = null;
-  let soundRequest = 0, soundStartTimer = 0;
   let invitationPlaying = false;
   const effect = document.getElementById('pageTurnEffect');
   const underlay = document.getElementById('pageTurnUnderlay');
   const sheetCounts = new Map();
-  const turnDuration = direction => direction === 'backward' ? 1300 : 1500;
+  const turnDuration = direction => bookMotionTiming(paper, direction).duration;
   let lastInteraction = -Infinity;
   const noteInteraction = event => {
     if (event.isTrusted && event.target.closest?.('#journalText,#newPageButton,#previousWritingPage,#nextWritingPage')) lastInteraction = performance.now();
   };
 
   function cancelTurn() {
+    motionSerial++;
     clearTimeout(turnTimer);
+    stopPaper();
     paper.classList.remove('is-turning-forward', 'is-turning-backward', 'is-turning-entry');
     effect?.classList.remove('is-turning-forward', 'is-turning-backward', 'is-turning-entry');
     effect?.replaceChildren();
@@ -31,6 +34,14 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
     const finish = finishEntryTurn;
     finishEntryTurn = null;
     finish?.(false);
+  }
+
+  function finishWithMotion(direction, finish) {
+    const serial = motionSerial;
+    const animation = effect?.getAnimations().find(item => item.animationName === (direction === 'backward' ? 'pageLeafClose' : 'pageLeafOpen'));
+    if (!animation) { turnTimer = setTimeout(finish, turnDuration(direction)); return; }
+    void animation.finished.then(() => { if (motionSerial === serial) finish(); })
+      .catch(() => { if (motionSerial === serial) cancelTurn(); });
   }
 
   function bookPosition() {
@@ -77,26 +88,12 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
   }
 
   function playPaper(direction, { invitation = false } = {}) {
-    if ((!invitation && (document.hidden || !document.hasFocus() || performance.now() - lastInteraction > 1200)) || !soundUrl || typeof Audio !== 'function') return;
-    const volume = Math.max(0, Math.min(1, Number(getVolume()) || 0));
-    if (!volume) return;
-    try {
-      stopPaper();
-      sound ||= new Audio(soundUrl);
-      invitationPlaying = invitation;
-      sound.preload = 'none';
-      sound.loop = false;
-      sound.volume = invitation ? Math.min(.1, volume * .6) : volume;
-      sound.playbackRate = direction === 'backward' ? 0.92 : 1;
-      sound.currentTime = 0;
-      const request = soundRequest;
-      soundStartTimer = setTimeout(() => { if (request === soundRequest) stopPaper(); }, 500);
-      void sound.play().then(() => {
-        if (request !== soundRequest) return;
-        clearTimeout(soundStartTimer);
-        if (document.hidden && !invitation) stopPaper();
-      }).catch(() => { if (request === soundRequest) clearTimeout(soundStartTimer); });
-    } catch { /* A virada visual continua quando o navegador bloqueia áudio. */ }
+    if (!invitation && (document.hidden || !document.hasFocus() || performance.now() - lastInteraction > 1200)) return;
+    invitationPlaying = invitation;
+    const animation = invitation ? null : effect?.getAnimations().find(item => item.animationName === (direction === 'backward' ? 'pageLeafClose' : 'pageLeafOpen'));
+    const timing = bookMotionTiming(paper, direction);
+    if (invitation || matchMedia('(prefers-reduced-motion: reduce)').matches) timing.duration = 580;
+    void foley?.play('paper', { ...timing, direction, animation, invitation });
   }
 
   function snapshotPage(source, prepare) {
@@ -141,12 +138,12 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
 
   function animateTurn(direction, withSound, outgoing) {
     cancelTurn();
-    if (withSound) playPaper(direction);
     const book = bookPosition();
     paper.dispatchEvent(new CustomEvent('diarypageturn', { detail: { direction, page: book.offset + page + 1, total: DIARY_PAGE_COUNT } }));
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { if (withSound) playPaper(direction); return; }
     mountTurn(direction, outgoing, paper.querySelector('#editorView'));
-    turnTimer = setTimeout(cancelTurn, turnDuration(direction));
+    if (withSound) playPaper(direction);
+    finishWithMotion(direction, cancelTurn);
   }
 
   function turnEntry(update, source, { direction = 'forward', lastSheet = false, prepareSnapshot } = {}) {
@@ -156,20 +153,20 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
     update();
     layout({ reset: true });
     if (lastSheet) show(total - 1);
-    playPaper(direction);
     const book = bookPosition();
     paper.dispatchEvent(new CustomEvent('diarypageturn', { detail: { direction, entry: true, page: book.offset + page + 1, total: DIARY_PAGE_COUNT } }));
-    if (!effect || reduced) return Promise.resolve(true);
+    if (!effect || reduced) { playPaper(direction); return Promise.resolve(true); }
     mountTurn(direction, outgoing, source, prepareSnapshot);
     paper.classList.add('is-turning-entry');
     effect.classList.add('is-turning-entry');
+    playPaper(direction);
     return new Promise(resolve => {
       finishEntryTurn = resolve;
-      turnTimer = setTimeout(() => {
+      finishWithMotion(direction, () => {
         finishEntryTurn = null;
         cancelTurn();
         resolve(true);
-      }, turnDuration(direction));
+      });
     });
   }
 
@@ -248,8 +245,7 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
     layout({ followCaret: true });
   };
   function stopPaper() {
-    soundRequest++; clearTimeout(soundStartTimer);
-    try { sound?.pause(); } catch { /* Best effort. */ }
+    foley?.stop('paper');
   }
   const leavePage = () => { lastInteraction = -Infinity; if (!invitationPlaying) stopPaper(); };
   const visibilityChanged = () => { if (document.hidden) leavePage(); };
@@ -300,7 +296,6 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
       window.removeEventListener('pagehide', stopPaper);
       paper.classList.remove('is-turning-forward', 'is-turning-backward');
       stopPaper();
-      sound = null;
     },
     get page() { return page; },
     get total() { return total; },
