@@ -573,7 +573,13 @@ dialog.addEventListener('submit', event => { if (dialogGeneration !== bootGenera
 $('closeDialog').addEventListener('click', requestCloseDialog);
 dialog.addEventListener('cancel', event => { event.preventDefault(); requestCloseDialog(); });
 dialog.addEventListener('click', event => { if (event.target === dialog) { const r = dialog.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) requestCloseDialog(); } });
-function canEdit() { if (!assertReady()) return false; if ($('editorView').hidden) { toast('Abra uma página para personalizar sua escrita.'); return false; } if (current.kind === 'capsule') { toast('Esta carta já foi selada. Comece uma nova página.'); return false; } return true; }
+function canEdit({ requireOpen = false } = {}) {
+  if (!assertReady()) return false;
+  if (requireOpen && !bookOpened) { toast('Abra o diário primeiro para usar este recurso.'); return false; }
+  if ($('editorView').hidden) { toast('Abra uma página para personalizar sua escrita.'); return false; }
+  if (current.kind === 'capsule') { toast('Esta carta já foi selada. Comece uma nova página.'); return false; }
+  return true;
+}
 function openFeelings() {
   if (!canEdit()) return;
   const selected = new Set(current.feelings || []);
@@ -610,7 +616,7 @@ function openTags() {
   $('tagsForm').addEventListener('submit', event => { event.preventDefault(); const tags = [...new Set($('tagsInput').value.split(',').map(tag => tag.trim().replace(/^#/, '')).filter(Boolean))]; if (tags.length > 6 || tags.some(tag => tag.length > 30)) { toast('Use até seis marcadores de até 30 caracteres.'); return; } current.tags = tags; markDirty({ immediate: true }); closeDialog(); });
 }
 async function captureWeather() {
-  if (!canEdit()) return;
+  if (!canEdit({ requireOpen: true })) return;
   const generation = bootGeneration, entryId = current.id, weatherDialogSerial = dialogSerial;
   const button = $('weatherButton'); button.disabled = true; $('weatherLabel').textContent = 'Olhando pela janela do tempo…';
   try {
@@ -657,7 +663,7 @@ const dictation = createDictation({ onText(transcript) {
   if ($('voiceToggle')) $('voiceToggle').textContent = listening ? 'Pausar microfone' : 'Começar a falar';
 }, onError(message) { toast(message); if ($('voiceStatusText')) $('voiceStatusText').textContent = message; } });
 function openVoice() {
-  if (!canEdit()) return;
+  if (!canEdit({ requireOpen: true })) return;
   if (!dictation.supported) { openDialog('Sua voz também tem lugar aqui', '<p>O ditado não está disponível neste navegador. Você pode usar o microfone do teclado do seu celular ou abrir este diário no Google Chrome.</p><p class="dialog-note">Sua escrita continua disponível normalmente.</p>'); return; }
   openDialog('Deixe sua voz virar palavras', '<p>Fale com calma. Suas palavras serão acrescentadas à página aberta.</p><div class="voice-status" id="voiceStatus"><svg><use href="#i-mic"/></svg><span id="voiceStatusText">Quando quiser, é só começar.</span></div><p class="dialog-note">O navegador pode enviar áudio ao serviço de reconhecimento de voz. O diário salva a transcrição, sem guardar o áudio.</p><div class="dialog-actions"><button class="gold-button" id="voiceToggle">Começar a falar</button></div>', () => dictation.stop());
   $('voiceToggle').addEventListener('click', () => { if (dictation.listening) dictation.stop(); else { dictationEntryId = current.id; dictationGeneration = bootGeneration; dictation.start(); } });

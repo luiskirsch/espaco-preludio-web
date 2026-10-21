@@ -182,6 +182,14 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
       }
     };
     if (capturePreview) await mkdir(join(root, 'docs/diary-preview'), { recursive: true });
+    await send('Page.addScriptToEvaluateOnNewDocument', { source: `
+      window.__diarySpeechStarts = 0;
+      window.SpeechRecognition = class {
+        start() { window.__diarySpeechStarts++; this.onstart?.(); }
+        stop() { this.onend?.(); }
+        abort() { this.onend?.(); }
+      };
+    ` });
     await viewport(1440);
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/app/diario.html?preview=1` });
     await poll(() => evaluate("!document.getElementById('journalText')?.disabled && document.getElementById('journalText').value.length>0 && !document.querySelector('.diary-entrance') && !document.documentElement.classList.contains('diary-entrance-pending')"), 'prévia real pronta');
@@ -213,6 +221,21 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     await viewport(1440);
     await evaluate('Promise.race([document.fonts.ready,new Promise(resolve=>setTimeout(resolve,3000))])');
     assert.equal(await evaluate("document.getElementById('bookCover').getAttribute('aria-expanded')"), 'false', 'O diário começa com a capa fechada');
+    const checkClosedPageTools = async () => {
+      const before = await evaluate("({text:document.getElementById('journalText').value,weather:document.getElementById('weatherLabel').textContent,saves:document.getElementById('saveState').dataset.state,starts:window.__diarySpeechStarts})");
+      for (const selector of ['#voiceButton', '#weatherButton']) {
+        await evaluate("document.getElementById('diaryToast').hidden=true");
+        await click(selector);
+        assert.equal(await evaluate("document.getElementById('diaryToast').hidden"), false, `${selector}: avisa quando o diário está fechado`);
+        assert.match(await evaluate("document.getElementById('diaryToast').textContent"), /Abra o diário primeiro/);
+        assert.equal(await evaluate("document.getElementById('diaryDialog').open"), false, `${selector}: não abre um recurso com a capa fechada`);
+        assert.equal(await evaluate("document.getElementById('bookCover').getAttribute('aria-expanded')"), 'false', 'O aviso permite que a pessoa decida abrir o diário');
+        assert.equal(await evaluate("document.getElementById('voiceButton').classList.contains('is-listening')"), false, 'O microfone não começa a ouvir');
+        assert.deepEqual(await evaluate("({text:document.getElementById('journalText').value,weather:document.getElementById('weatherLabel').textContent,saves:document.getElementById('saveState').dataset.state,starts:window.__diarySpeechStarts})"), before, 'Os cliques não alteram a página, o clima nem iniciam gravação');
+      }
+      await evaluate("document.getElementById('diaryToast').hidden=true");
+    };
+    await checkClosedPageTools();
     const coverLayout = await evaluate("(()=>{const cover=document.getElementById('bookCover').getBoundingClientRect(),rename=document.getElementById('coverTitleButton').getBoundingClientRect(),hint=document.querySelector('#bookCover small').getBoundingClientRect(),title=document.getElementById('coverTitle').getBoundingClientRect();return {cover:{left:cover.left,right:cover.right,top:cover.top,bottom:cover.bottom},rename:{left:rename.left,right:rename.right,top:rename.top,bottom:rename.bottom},hintCenter:hint.left+hint.width/2,titleCenter:title.left+title.width/2,visualCenter:cover.left+cover.width*.513,titleSize:parseFloat(getComputedStyle(document.getElementById('coverTitle')).fontSize)}})()");
     assert.ok(coverLayout.rename.left > coverLayout.cover.left && coverLayout.rename.right < coverLayout.cover.right && coverLayout.rename.top > coverLayout.cover.top, 'Editar nome fica contido na moldura da capa');
     assert.ok(Math.abs(coverLayout.hintCenter-coverLayout.visualCenter) < 8, 'A indicação para abrir fica centralizada');
@@ -222,12 +245,22 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     assert.equal(await evaluate("document.getElementById('bookFrame').classList.contains('is-cover-open')"), true, 'A capa abre o diário');
     await click('#closeDiaryButton');
     assert.equal(await evaluate("document.getElementById('bookFrame').classList.contains('is-cover-open')"), false, 'A ação de fechar devolve a capa');
+    await checkClosedPageTools();
     await poll(() => evaluate("document.getElementById('bookFrame').classList.contains('is-cover-closing')"), 'início do fechamento físico da capa');
     await evaluate('new Promise(resolve=>setTimeout(resolve,450))');
     assert.ok(await evaluate("Number(getComputedStyle(document.getElementById('bookCover')).opacity)") > .98, 'A capa fecha opaca, sem se sobrepor como uma transparência ao papel');
     assert.equal(await evaluate("document.getElementById('closeDiaryButton').textContent"), 'Abrir diário');
     await click('#closeDiaryButton');
     assert.equal(await evaluate("document.getElementById('bookFrame').classList.contains('is-cover-open')"), true, 'A ação da barra também reabre o diário');
+    await openDialog('#voiceButton');
+    await click('#voiceToggle');
+    assert.equal(await evaluate('window.__diarySpeechStarts'), 1, 'Abrir o diário permite iniciar o microfone');
+    assert.equal(await evaluate("document.getElementById('voiceButton').classList.contains('is-listening')"), true);
+    await closeDialog();
+    assert.equal(await evaluate("document.getElementById('voiceButton').classList.contains('is-listening')"), false, 'Fechar o modal encerra o microfone');
+    await openDialog('#weatherButton');
+    assert.equal(await evaluate("!!document.querySelector('[data-weather]')"), true, 'Abrir o diário permite escolher o clima');
+    await closeDialog();
     await checkLeaves();
     await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
     assert.equal(await evaluate("!document.querySelector('.diary-leaves') && document.getElementById('paper').getAnimations().length===0"), true, 'Folhas e pergaminho continuam estáticos com movimento reduzido');
