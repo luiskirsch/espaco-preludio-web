@@ -539,7 +539,7 @@ test('production diary: all collections retain the book background, geometry and
   }
 }));
 
-test('production diary: a long timeline never paints its leather binding over the return link', { ...options, timeout: 45000 }, () => withBrowser(async ({ server, accounts, send, click, evaluate }) => {
+test('production diary: a long timeline stays within the book height and scrolls internally without covering the return link', { ...options, timeout: 45000 }, () => withBrowser(async ({ server, accounts, send, click, evaluate }) => {
   for (let index = 0; index < 36; index++) accounts.get('A').set(`long-timeline-${index}`, entry(`long-timeline-${index}`, `Uma lembrança guardada na página ${index + 1}.`));
   const origin = `http://127.0.0.1:${server.address().port}`;
   for (const path of ['/app/diario.html', '/aluno-diario.html']) {
@@ -547,21 +547,40 @@ test('production diary: a long timeline never paints its leather binding over th
     await poll(() => evaluate("document.documentElement.dataset.diaryReady==='true' && !document.querySelector('.diary-entrance')"), 'long diary ready');
     for (const width of [1440, 390]) {
       await send('Emulation.setDeviceMetricsOverride', { width, height: 1100, deviceScaleFactor: 1, mobile: width < 700 });
+      const shortTab = await evaluate(`(()=>{
+        const frame=document.getElementById('bookFrame');
+        return frame.getBoundingClientRect().height;
+      })()`);
       await click('[data-tab="timeline"]');
       await poll(() => evaluate("!document.getElementById('collectionView').hidden && document.querySelectorAll('.entry-card').length===36"), 'all timeline records visible');
       await evaluate('window.scrollTo(0,0);new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
-      const link = await evaluate(`(()=>{
+      const before = await evaluate(`(()=>{
         const frame=document.getElementById('bookFrame'),box=frame.getBoundingClientRect();
+        const view=document.getElementById('collectionView');
         const button=document.getElementById('collectionBack'),label=button.querySelector('span').getBoundingClientRect();
         const bindingTop=box.top+parseFloat(getComputedStyle(frame,'::before').top);
         const stitchingTop=box.top+parseFloat(getComputedStyle(frame,'::after').top);
         const hit=document.elementFromPoint(label.x+label.width/2,label.y+label.height/2);
-        return {height:box.height,bottom:label.bottom,bindingTop,stitchingTop,clickable:hit===button||button.contains(hit)};
+        return {height:box.height,scrollHeight:view.scrollHeight,clientHeight:view.clientHeight,scrollTop:view.scrollTop,bottom:label.bottom,bindingTop,stitchingTop,clickable:hit===button||button.contains(hit)};
       })()`);
-      assert.ok(link.height > 4000, 'Exercises a genuinely tall collection, not the empty or short case');
-      assert.ok(link.bindingTop > link.bottom + 4, `${path} ${width}: leather stays below the complete return label`);
-      assert.ok(link.stitchingTop > link.bottom + 4, 'Stitching cannot cross the label either');
-      assert.equal(link.clickable, true, 'The visible return text also receives pointer input');
+      assert.ok(before.scrollHeight > before.clientHeight + 200, 'A 36-entry timeline exercises genuine internal scrolling, not the empty or short case');
+      assert.ok(Math.abs(before.height - shortTab) < 4, `${path} ${width}: a long timeline keeps the same book height as a short one instead of growing the frame`);
+      assert.equal(before.scrollTop, 0, 'Opening a collection starts scrolled to the top');
+      assert.ok(before.bindingTop > before.bottom + 4, `${path} ${width}: leather stays below the complete return label`);
+      assert.ok(before.stitchingTop > before.bottom + 4, 'Stitching cannot cross the label either');
+      assert.equal(before.clickable, true, 'The visible return text also receives pointer input');
+      const after = await evaluate(`(()=>{
+        const view=document.getElementById('collectionView');
+        view.scrollTop=view.scrollHeight;
+        const frame=document.getElementById('bookFrame'),box=frame.getBoundingClientRect();
+        const button=document.getElementById('collectionBack'),label=button.querySelector('span').getBoundingClientRect();
+        const bindingTop=box.top+parseFloat(getComputedStyle(frame,'::before').top);
+        const hit=document.elementFromPoint(label.x+label.width/2,label.y+label.height/2);
+        return {scrollTop:view.scrollTop,bottom:label.bottom,bindingTop,clickable:hit===button||button.contains(hit)};
+      })()`);
+      assert.ok(after.scrollTop > 0, 'The timeline actually scrolled down inside the frame');
+      assert.ok(after.bindingTop > after.bottom + 4, `${path} ${width}: leather still stays below the return label after scrolling to the bottom`);
+      assert.equal(after.clickable, true, 'The return button stays clickable after scrolling the collection');
       await click('#collectionBack');
       await poll(() => evaluate("!document.getElementById('editorView').hidden"), 'return from long timeline');
     }

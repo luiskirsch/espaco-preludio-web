@@ -432,6 +432,7 @@ async function switchTab(name) {
   $('bookToolbar').hidden = true; $('collectionNavigation').hidden = false;
   $('collectionContext').textContent = { timeline: 'Memórias', dreams: 'Sonhos', feelings: 'Sentimentos', capsules: 'Cápsula do Tempo' }[name];
   renderCollection(name);
+  $('collectionView').scrollTop = 0;
   revealPage($('collectionView').querySelector('h1'));
 }
 function emptyState(icon, title, description, action = '') { return `<div class="empty-state"><span class="empty-state__emblem" aria-hidden="true"><svg><use href="#i-${icon}"/></svg></span><strong>${title}</strong><p>${description}</p>${action}</div>`; }
