@@ -2,7 +2,7 @@ import { createSoundscape, createDictation } from './diary-audio.js?h=fb22bb467e
 import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, hasEntryContent, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=baf32a79b0';
 import { createPagedEditor } from './diary-pages.js?h=2f3dc7fb7c';
 import { createIdleInvitation } from './diary-invitation.js?h=26ddf46ff3';
-import { startReleaseRitual } from './diary-release.js?h=7bd9ce17e2';
+import { startReleaseRitual } from './diary-release.js?h=1cf48e0479';
 
 const $ = id => document.getElementById(id);
 const student = document.body.dataset.portal === 'student';
@@ -610,7 +610,7 @@ function openMemory(kind) {
 }
 function openRelease() {
   const translate = (key, fallback) => window.EP_I18N?.t?.(`p-diary:${key}`, { defaultValue: fallback }) || fallback;
-  openDialog(translate('release_title', 'Nem tudo precisa ficar guardado'), `<form id="releaseForm"><p>${esc(translate('release_intro', 'Escreva o que pesa. Quando estiver pronto, deixe suas palavras encontrar outro lugar no céu.'))}</p><label class="sr-only" for="releaseText">${esc(translate('release_label', 'O que você gostaria de soltar?'))}</label><textarea class="release-field" id="releaseText" maxlength="5000" placeholder="${esc(translate('release_placeholder', 'Hoje eu quero deixar ir…'))}" required></textarea><p class="dialog-note">${esc(translate('release_privacy', 'Estas palavras não são salvas nem enviadas.'))}</p><div class="dialog-actions"><button class="gold-button" type="submit"><span aria-hidden="true">✧</span> ${esc(translate('release_submit', 'Deixar ir'))}</button></div></form>`);
+  openDialog(translate('release_title', 'Nem tudo precisa ficar guardado'), `<form id="releaseForm"><p>${esc(translate('release_intro', 'Escreva o que pesa. Quando estiver pronto, deixe suas palavras encontrar outro lugar no céu.'))}</p><label class="sr-only" for="releaseText">${esc(translate('release_label', 'O que você gostaria de soltar?'))}</label><textarea class="release-field" id="releaseText" maxlength="5000" placeholder="${esc(translate('release_placeholder', 'Hoje eu quero deixar ir…'))}" required></textarea><p class="dialog-note">${esc(translate('release_privacy', 'Estas palavras não são salvas nem enviadas.'))}</p><div class="dialog-actions"><button class="gold-button" type="submit"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m10 2 2.1 5.9L18 10l-5.9 2.1L10 18l-2.1-5.9L2 10l5.9-2.1Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg> ${esc(translate('release_submit', 'Deixar ir'))}</button></div></form>`);
   dialog.classList.add('diary-dialog--release');
   $('releaseForm').addEventListener('submit', event => {
     event.preventDefault();
