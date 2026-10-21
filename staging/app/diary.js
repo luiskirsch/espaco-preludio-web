@@ -500,11 +500,13 @@ async function loadMore() {
   try { const data = await api(`${endpoint}?cursor=${encodeURIComponent(nextCursor)}`); data.items.forEach(upsert); nextCursor = data.nextCursor; renderCollection(tab); }
   catch { if (generation !== bootGeneration) return; toast('Não foi possível carregar mais páginas. Tente novamente.'); if (button) { button.disabled = false; button.textContent = 'Carregar mais páginas'; } }
 }
-function openDialog(title, markup, cleanup = null) {
+function openDialog(title, markup, cleanup = null, { keepScrollbar = false } = {}) {
   releaseRitual?.cancel(); releaseRitual = null;
   if (dialog.open) closeDialog();
   dialogOrigin = document.activeElement; dialogCleanup = cleanup; dialogGeneration = bootGeneration; dialogSerial++;
-  $('dialogTitle').textContent = title; $('dialogBody').innerHTML = markup; document.documentElement.classList.add('diary-modal-open'); dialog.showModal();
+  $('dialogTitle').textContent = title; $('dialogBody').innerHTML = markup;
+  if (!keepScrollbar) document.documentElement.classList.add('diary-modal-open');
+  dialog.showModal();
 }
 function closeDialog() {
   clearTimeout(dialogCloseTimer); dialogCloseTimer = 0;
@@ -515,7 +517,7 @@ function closeDialog() {
   dialog.classList.remove('diary-dialog--aroma', 'diary-dialog--release', 'is-closing');
   for (const property of ['--release-close-opacity', '--release-close-transform', '--release-close-backdrop']) dialog.style.removeProperty(property);
   $('dialogBody').replaceChildren(); $('dialogTitle').textContent = '';
-  dialogOrigin?.focus?.();
+  dialogOrigin?.focus?.({ preventScroll: true });
 }
 function requestCloseDialog() {
   if (dialogCloseTimer) return;
@@ -632,7 +634,7 @@ function openMemory(kind) {
 }
 function openRelease() {
   const translate = (key, fallback) => window.EP_I18N?.t?.(`p-diary:${key}`, { defaultValue: fallback }) || fallback;
-  openDialog(translate('release_title', 'Nem tudo precisa ficar guardado'), `<form id="releaseForm"><p>${esc(translate('release_intro', 'Escreva o que pesa. Quando estiver pronto, deixe suas palavras encontrarem um lugar no céu.'))}</p><label class="sr-only" for="releaseText">${esc(translate('release_label', 'O que você gostaria de soltar?'))}</label><textarea class="release-field" id="releaseText" maxlength="5000" placeholder="${esc(translate('release_placeholder', 'Hoje eu quero deixar ir…'))}" required></textarea><p class="dialog-note">${esc(translate('release_privacy', 'Essas palavras ficam para o universo.'))}</p><div class="dialog-actions"><button class="gold-button" type="submit"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m10 2 2.1 5.9L18 10l-5.9 2.1L10 18l-2.1-5.9L2 10l5.9-2.1Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg> ${esc(translate('release_submit', 'Deixar ir'))}</button></div></form>`);
+  openDialog(translate('release_title', 'Nem tudo precisa ficar guardado'), `<form id="releaseForm"><p>${esc(translate('release_intro', 'Escreva o que pesa. Quando estiver pronto, deixe suas palavras encontrarem um lugar no céu.'))}</p><label class="sr-only" for="releaseText">${esc(translate('release_label', 'O que você gostaria de soltar?'))}</label><textarea class="release-field" id="releaseText" maxlength="5000" placeholder="${esc(translate('release_placeholder', 'Hoje eu quero deixar ir…'))}" required></textarea><p class="dialog-note">${esc(translate('release_privacy', 'Essas palavras ficam para o universo.'))}</p><div class="dialog-actions"><button class="gold-button" type="submit"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m10 2 2.1 5.9L18 10l-5.9 2.1L10 18l-2.1-5.9L2 10l5.9-2.1Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg> ${esc(translate('release_submit', 'Deixar ir'))}</button></div></form>`, null, { keepScrollbar: true });
   dialog.classList.add('diary-dialog--release');
   $('releaseForm').addEventListener('submit', event => {
     event.preventDefault();

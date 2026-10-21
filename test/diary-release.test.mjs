@@ -160,6 +160,30 @@ test('deixar ir: palavras privadas viram estrelas, com retorno acessível e sem 
     await poll(() => evaluate("!document.getElementById('collectionView').hidden && !!document.querySelector('.entry-card')"), 'memórias iniciais');
     const entryCount = await evaluate("document.querySelectorAll('.entry-card').length");
 
+    await t.test('abrir e fechar o card preserva a barra, a largura e a posição do fundo', async () => {
+      await viewport(1280,720,true);
+      await evaluate("document.getElementById('releaseButton').focus({preventScroll:true});window.scrollTo(0,60)");
+      const measure = () => evaluate(`(() => {
+        const root=document.documentElement,box=document.getElementById('paper').getBoundingClientRect();
+        return {scrollY,viewportWidth:root.clientWidth,left:box.left,top:box.top,width:box.width};
+      })()`);
+      assert.equal(await evaluate('document.documentElement.scrollHeight>innerHeight'),true,'O cenário possui rolagem vertical real');
+      const before=await measure();
+      await click('#releaseButton');
+      assert.deepEqual(await measure(),before,'O fundo não desloca nem muda de largura ao abrir');
+      const scrollbar=await evaluate(`(() => {
+        const root=document.documentElement;
+        return {overflow:getComputedStyle(root).overflowY,width:getComputedStyle(root).scrollbarWidth,display:getComputedStyle(root,'::-webkit-scrollbar').display};
+      })()`);
+      assert.notEqual(scrollbar.overflow,'hidden');
+      assert.notEqual(scrollbar.width,'none');
+      assert.notEqual(scrollbar.display,'none','A barra do fundo continua visível');
+      await click('#closeDialog');
+      assert.deepEqual(await measure(),before,'Fechar e restaurar o foco também preserva o enquadramento');
+      await evaluate('window.scrollTo(0,0)');
+      await viewport(1440,1000);
+    });
+
     await t.test('o card abre e fecha suavemente, sem saltar ao interromper a abertura', async () => {
       await evaluate("document.getElementById('releaseButton').focus()");
       await click('#releaseButton');
