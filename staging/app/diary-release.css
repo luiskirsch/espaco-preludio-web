@@ -17,6 +17,20 @@ html:has(body.is-releasing) { scrollbar-gutter: auto; }
   isolation: isolate;
 }
 .diary-dialog--release::backdrop { background: #100c16a6; backdrop-filter: blur(8px); }
+.diary-dialog--release[open] { animation: releaseCardEnter 380ms cubic-bezier(.16, 1, .3, 1) both; }
+.diary-dialog--release[open]::backdrop { animation: releaseBackdropEnter 380ms ease-out both; }
+.diary-dialog--release[open].is-closing { animation: releaseCardExit 240ms cubic-bezier(.4, 0, 1, 1) both; pointer-events: none; }
+.diary-dialog--release[open].is-closing::backdrop { animation: releaseBackdropExit 240ms ease-in both; }
+@keyframes releaseCardEnter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes releaseCardExit {
+  from { opacity: var(--release-close-opacity, 1); transform: var(--release-close-transform, translateY(0)); }
+  to { opacity: 0; transform: translateY(8px); }
+}
+@keyframes releaseBackdropEnter { from { opacity: 0; } to { opacity: 1; } }
+@keyframes releaseBackdropExit { from { opacity: var(--release-close-backdrop, 1); } to { opacity: 0; } }
 .diary-dialog--release::before {
   content: "";
   position: absolute;
@@ -253,6 +267,7 @@ dialog.release-ritual:not([open]) { display: none; }
   .release-ritual__return { min-height: 42px; margin-top: 19px; padding-block: 9px; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .diary-dialog--release[open], .diary-dialog--release[open]::backdrop { animation: none; }
   .diary-shell, .fireflies, .is-releasing .diary-shell, .is-releasing .fireflies { transition: none; }
   .release-ritual__veil { opacity: 1; animation: none; }
   .release-ritual__arrival, .release-ritual[data-phase="settled"] .release-ritual__arrival { transform: translate(-50%, -50%); transition: opacity .5s ease; }

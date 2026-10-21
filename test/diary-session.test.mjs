@@ -631,6 +631,8 @@ test('production diary: account switch clears private UI before B loads and igno
   await poll(() => lateGet.request, 'pending A pagination');
   await click('#releaseButton');
   await fill('#releaseText', 'ACCOUNT_A_PRIVATE_MODAL_222');
+  await click('#closeDialog');
+  assert.equal(await evaluate("document.getElementById('diaryDialog').classList.contains('is-closing')"), true, 'Account switching also interrupts an animated dismissal');
   const bLoad = hold('GET', 'B');
   const cleared = await evaluate("(()=>{window.__diaryAuth('B');return {text:document.getElementById('journalText').value,disabled:document.getElementById('journalText').disabled,dialog:document.getElementById('diaryDialog').open,modal:document.getElementById('dialogBody').textContent,collection:document.getElementById('collectionView').innerHTML,tags:document.getElementById('entryTags').textContent}})()");
   assert.deepEqual(cleared, { text: '', disabled: true, dialog: false, modal: '', collection: '', tags: '' }, 'Private UI is cleared synchronously, before the new-account GET can finish');

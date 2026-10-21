@@ -12,6 +12,7 @@ const endpoint = '/therapy/paciente/diario';
 let account, backend = '', ready = false, entries = [], nextCursor = null, current = draft(), tab = 'diary';
 let dirty = false, editTick = 0, saveTimer, saving = null, toastTimer, dialogOrigin, dialogCleanup = null, bootGeneration = 0;
 let dialogGeneration = 0, dialogSerial = 0, deletingId = null, conflict = false;
+let dialogCloseTimer = 0;
 let dictationEntryId = null, dictationGeneration = 0;
 let preset = 'rain';
 let promptIndex = 0, coverMotionTimer = 0, bookOpened = false;
@@ -505,9 +506,30 @@ function openDialog(title, markup, cleanup = null) {
   dialogOrigin = document.activeElement; dialogCleanup = cleanup; dialogGeneration = bootGeneration; dialogSerial++;
   $('dialogTitle').textContent = title; $('dialogBody').innerHTML = markup; document.documentElement.classList.add('diary-modal-open'); dialog.showModal();
 }
-function closeDialog() { dialogSerial++; dialogCleanup?.(); dialogCleanup = null; if (dialog.open) dialog.close(); document.documentElement.classList.remove('diary-modal-open'); dialog.classList.remove('diary-dialog--aroma', 'diary-dialog--release'); $('dialogBody').replaceChildren(); $('dialogTitle').textContent = ''; dialogOrigin?.focus?.(); }
+function closeDialog() {
+  clearTimeout(dialogCloseTimer); dialogCloseTimer = 0;
+  dialogSerial++; dialogCleanup?.(); dialogCleanup = null;
+  if (dialog.open) dialog.close();
+  dialog.inert = false;
+  document.documentElement.classList.remove('diary-modal-open');
+  dialog.classList.remove('diary-dialog--aroma', 'diary-dialog--release', 'is-closing');
+  for (const property of ['--release-close-opacity', '--release-close-transform', '--release-close-backdrop']) dialog.style.removeProperty(property);
+  $('dialogBody').replaceChildren(); $('dialogTitle').textContent = '';
+  dialogOrigin?.focus?.();
+}
 function requestCloseDialog() {
+  if (dialogCloseTimer) return;
   if ($('capsuleText')?.value.trim() && !window.confirm('Descartar esta carta ainda não selada?')) return;
+  if (dialog.open && dialog.classList.contains('diary-dialog--release') && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const style = getComputedStyle(dialog);
+    dialog.style.setProperty('--release-close-opacity', style.opacity);
+    dialog.style.setProperty('--release-close-transform', style.transform);
+    dialog.style.setProperty('--release-close-backdrop', getComputedStyle(dialog, '::backdrop').opacity);
+    dialog.classList.add('is-closing');
+    dialog.inert = true;
+    dialogCloseTimer = setTimeout(closeDialog, 240);
+    return;
+  }
   closeDialog();
 }
 dialog.addEventListener('click', event => { if (dialogGeneration !== bootGeneration) { event.preventDefault(); event.stopImmediatePropagation(); closeDialog(); } }, true);
@@ -615,7 +637,12 @@ function openRelease() {
   $('releaseForm').addEventListener('submit', event => {
     event.preventDefault();
     const source = $('releaseText');
-    if (!source?.value.trim() || releaseRitual) return;
+    if (!source?.value.trim() || releaseRitual || dialogCloseTimer) return;
+    // The star passage captures the settled writing position, even if the
+    // person submits during the card's entrance.
+    for (const animation of dialog.getAnimations()) {
+      if (animation.animationName === 'releaseCardEnter') animation.finish();
+    }
     invitation.pause();
     const labels = {
       close: translate('release_close', 'Voltar ao diário'),
@@ -741,7 +768,7 @@ $('saveState').addEventListener('click', () => { if ($('saveState').dataset.stat
 $('saveState').addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); $('saveState').click(); } });
 document.querySelectorAll('a.back-link, a.diary-brand').forEach(link => link.addEventListener('click', async event => { if (!dirty) return; event.preventDefault(); if (await settle()) location.assign(link.href); }));
 window.addEventListener('beforeunload', event => { if (dirty || $('capsuleText')?.value.trim()) { event.preventDefault(); event.returnValue = ''; } });
-window.addEventListener('pagehide', () => { releaseRitual?.cancel(); releaseRitual = null; invitation.pause(); pagedEditor.cancelTurn(); clearTimeout(coverMotionTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
+window.addEventListener('pagehide', () => { if (dialogCloseTimer) closeDialog(); releaseRitual?.cancel(); releaseRitual = null; invitation.pause(); pagedEditor.cancelTurn(); clearTimeout(coverMotionTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
 window.addEventListener('online', () => { if (ready && dirty) flush(); });
 $('headerDate').dateTime = today(); $('headerDate').textContent = dateLabel(today(), { weekday: 'long' });
 renderBookDate(current); renderPrompt(); renderCoverTitle();

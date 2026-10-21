@@ -160,6 +160,40 @@ test('deixar ir: palavras privadas viram estrelas, com retorno acessível e sem 
     await poll(() => evaluate("!document.getElementById('collectionView').hidden && !!document.querySelector('.entry-card')"), 'memórias iniciais');
     const entryCount = await evaluate("document.querySelectorAll('.entry-card').length");
 
+    await t.test('o card abre e fecha suavemente, sem saltar ao interromper a abertura', async () => {
+      await evaluate("document.getElementById('releaseButton').focus()");
+      await click('#releaseButton');
+      const opening = await evaluate(`(() => {
+        const dialog=document.getElementById('diaryDialog');
+        const animation=dialog.getAnimations().find(item=>item.animationName==='releaseCardEnter');
+        animation.pause(); animation.currentTime=35;
+        const before=Number(getComputedStyle(dialog).opacity);
+        document.getElementById('closeDialog').click();
+        return {before,after:Number(getComputedStyle(dialog).opacity),open:dialog.open,inert:dialog.inert};
+      })()`);
+      assert.ok(opening.before>0 && opening.before<1, 'A abertura possui estados visuais intermediários');
+      assert.ok(Math.abs(opening.after-opening.before)<.03, 'Fechar durante a entrada continua da opacidade atual');
+      assert.equal(opening.open,true,'O card permanece visível durante a saída');
+      assert.equal(opening.inert,true,'A saída bloqueia novos envios');
+      await poll(()=>evaluate("!document.getElementById('diaryDialog').open"),'saída concluída',2000);
+      assert.equal(await evaluate("document.activeElement?.id"),'releaseButton');
+      assert.equal(await evaluate("document.getElementById('dialogBody').childElementCount"),0);
+
+      await click('#releaseButton'); await click('#closeDialog');
+      await click('#releaseButton');
+      await wait(420);
+      assert.equal(await evaluate("document.getElementById('diaryDialog').open"),true,'Um fechamento anterior não encerra o card reaberto');
+      await click('#closeDialog');
+      await poll(()=>evaluate("!document.getElementById('diaryDialog').open"),'fechamento após reabrir',2000);
+
+      await viewport(1440,1000,true);
+      await click('#releaseButton');
+      assert.equal(await evaluate("document.getElementById('diaryDialog').getAnimations().length"),0,'Movimento reduzido dispensa a animação do card');
+      await click('#closeDialog');
+      assert.equal(await evaluate("document.getElementById('diaryDialog').open"),false,'Movimento reduzido também fecha sem espera');
+      await viewport(1440,1000);
+    });
+
     await t.test('o ritual anima de verdade e não guarda nem transmite as palavras', async () => {
       const marker = 'RELEASE_PRIVATE_863742';
       const message = `${marker}: Hoje deixo ir o peso de tentar controlar tudo.\n${'Que estas palavras encontrem seu lugar no céu. ✨ '.repeat(18)}`;
