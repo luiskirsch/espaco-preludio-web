@@ -13,6 +13,7 @@ let account, backend = '', ready = false, entries = [], nextCursor = null, curre
 let dirty = false, editTick = 0, saveTimer, saving = null, toastTimer, dialogOrigin, dialogCleanup = null, bootGeneration = 0;
 let dialogGeneration = 0, dialogSerial = 0, deletingId = null, conflict = false;
 let dialogCloseTimer = 0;
+let backdropScroll = null;
 let dictationEntryId = null, dictationGeneration = 0;
 let preset = 'rain';
 let promptIndex = 0, coverMotionTimer = 0, bookOpened = false;
@@ -500,18 +501,51 @@ async function loadMore() {
   try { const data = await api(`${endpoint}?cursor=${encodeURIComponent(nextCursor)}`); data.items.forEach(upsert); nextCursor = data.nextCursor; renderCollection(tab); }
   catch { if (generation !== bootGeneration) return; toast('Não foi possível carregar mais páginas. Tente novamente.'); if (button) { button.disabled = false; button.textContent = 'Carregar mais páginas'; } }
 }
+// A viewport scrollbar is painted above the page's backdrop filter. Move the
+// same scrollable scene beneath the modal while keeping its original geometry.
+function mountBackdropScroll() {
+  const root = document.documentElement, shell = document.querySelector('.diary-shell');
+  const x = window.scrollX, y = window.scrollY, height = root.scrollHeight;
+  const ruler = document.createElement('div');
+  ruler.style.cssText = 'position:fixed;width:100vw;visibility:hidden;pointer-events:none';
+  document.body.append(ruler);
+  const viewportUnit = ruler.getBoundingClientRect().width / 100;
+  ruler.remove();
+  const surface = document.createElement('div');
+  surface.className = 'diary-backdrop-scroll';
+  root.style.setProperty('--diary-background-height', `${height}px`);
+  root.style.setProperty('--diary-viewport-unit', `${viewportUnit}px`);
+  shell.before(surface); surface.append(shell);
+  root.classList.add('diary-backdrop-scroll-open');
+  surface.scrollTop = y; surface.scrollLeft = x;
+  const resize = () => root.style.setProperty('--diary-viewport-unit', `${surface.clientWidth / 100}px`);
+  window.addEventListener('resize', resize);
+  backdropScroll = { surface, shell, x, y, resize };
+}
+function restoreBackdropScroll() {
+  if (!backdropScroll) return;
+  const { surface, shell, x, y, resize } = backdropScroll;
+  backdropScroll = null;
+  window.removeEventListener('resize', resize);
+  surface.replaceWith(shell);
+  document.documentElement.classList.remove('diary-backdrop-scroll-open');
+  for (const property of ['--diary-background-height', '--diary-viewport-unit']) document.documentElement.style.removeProperty(property);
+  window.scrollTo(x, y);
+}
 function openDialog(title, markup, cleanup = null, { keepScrollbar = false } = {}) {
   releaseRitual?.cancel(); releaseRitual = null;
   if (dialog.open) closeDialog();
   dialogOrigin = document.activeElement; dialogCleanup = cleanup; dialogGeneration = bootGeneration; dialogSerial++;
   $('dialogTitle').textContent = title; $('dialogBody').innerHTML = markup;
-  if (!keepScrollbar) document.documentElement.classList.add('diary-modal-open');
+  if (keepScrollbar) mountBackdropScroll();
+  else document.documentElement.classList.add('diary-modal-open');
   dialog.showModal();
 }
 function closeDialog() {
   clearTimeout(dialogCloseTimer); dialogCloseTimer = 0;
   dialogSerial++; dialogCleanup?.(); dialogCleanup = null;
   if (dialog.open) dialog.close();
+  restoreBackdropScroll();
   dialog.inert = false;
   document.documentElement.classList.remove('diary-modal-open');
   dialog.classList.remove('diary-dialog--aroma', 'diary-dialog--release', 'is-closing');
@@ -770,7 +804,7 @@ $('saveState').addEventListener('click', () => { if ($('saveState').dataset.stat
 $('saveState').addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); $('saveState').click(); } });
 document.querySelectorAll('a.back-link, a.diary-brand').forEach(link => link.addEventListener('click', async event => { if (!dirty) return; event.preventDefault(); if (await settle()) location.assign(link.href); }));
 window.addEventListener('beforeunload', event => { if (dirty || $('capsuleText')?.value.trim()) { event.preventDefault(); event.returnValue = ''; } });
-window.addEventListener('pagehide', () => { if (dialogCloseTimer) closeDialog(); releaseRitual?.cancel(); releaseRitual = null; invitation.pause(); pagedEditor.cancelTurn(); clearTimeout(coverMotionTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
+window.addEventListener('pagehide', () => { if (dialogCloseTimer || backdropScroll) closeDialog(); releaseRitual?.cancel(); releaseRitual = null; invitation.pause(); pagedEditor.cancelTurn(); clearTimeout(coverMotionTimer); soundscape.stop(); dictation.stop(); dictationEntryId = null; });
 window.addEventListener('online', () => { if (ready && dirty) flush(); });
 $('headerDate').dateTime = today(); $('headerDate').textContent = dateLabel(today(), { weekday: 'long' });
 renderBookDate(current); renderPrompt(); renderCoverTitle();

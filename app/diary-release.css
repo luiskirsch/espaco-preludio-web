@@ -4,6 +4,10 @@ body.is-releasing { overflow: hidden; overscroll-behavior: none; }
 html:has(body.is-releasing) { scrollbar-gutter: auto; }
 .diary-shell { transition: opacity .9s ease; }
 .fireflies { transition: opacity 1.8s ease; }
+html.diary-backdrop-scroll-open { overflow: hidden; scrollbar-gutter: auto; }
+.diary-backdrop-scroll-open body { min-height: var(--diary-background-height); }
+.diary-backdrop-scroll { position: fixed; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.diary-backdrop-scroll-open .fireflies { right: auto; width: calc(100 * var(--diary-viewport-unit)); }
 .diary-dialog .dialog-close { display: grid; place-items: center; padding: 0; line-height: 0; }
 .diary-dialog .dialog-close svg { display: block; width: 16px; height: 16px; margin: 0; flex: none; }
 .diary-dialog--release {
