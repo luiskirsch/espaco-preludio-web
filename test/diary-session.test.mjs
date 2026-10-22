@@ -764,6 +764,8 @@ test('production diary: account switch cancels the release ritual and wipes its 
 test('production diary: weather and every page personalization survive a reload without text', options, () => withBrowser(async ({ accounts, navigate, click, fill, evaluate }) => {
   await navigate();
   assert.equal(await evaluate("document.getElementById('journalText').value"), '');
+  // Weather is only offered once the cover is open.
+  await click('#bookCover');
   await click('#weatherButton');
   await poll(() => evaluate("document.getElementById('weatherLabel').textContent.includes('Chuva suave')"), 'captured weather');
   await click('#feelingButton');
@@ -871,8 +873,12 @@ test('production diary: new page turns the saved sheet with sound and retains bo
   const original = 'Uma lembrança que precisa continuar guardada.';
   accounts.get('A').set('original-page', entry('original-page', original));
   await navigate();
+  // Recordings play through Web Audio; each start is attributed to the motion it accompanies.
+  await evaluate("window.__bookSounds=[];const start=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(...args){window.__bookSounds.push(document.getElementById('pageTurnEffect').getAnimations().some(item=>['pageLeafOpen','pageLeafClose'].includes(item.animationName))?'paper':'other');return start.apply(this,args)}");
   await click('#bookCover');
-  await evaluate("window.__newEntryTurns=0;window.__newEntrySounds=0;HTMLMediaElement.prototype.play=function(){window.__newEntrySounds++;return Promise.resolve()};document.getElementById('paper').addEventListener('diarypageturn',event=>{if(event.detail.entry)window.__newEntryTurns++})");
+  // A late cover recording would otherwise be counted during the page turn.
+  await poll(() => evaluate("document.getElementById('bookCover').getAnimations().length===0"), 'cover opened');
+  await evaluate("window.__newEntryTurns=0;document.getElementById('paper').addEventListener('diarypageturn',event=>{if(event.detail.entry)window.__newEntryTurns++})");
   await click('#newPageButton');
   await poll(() => evaluate("document.getElementById('paper').classList.contains('is-turning-entry')"), 'new-entry page turn');
   assert.equal(await evaluate("document.querySelector('#pageTurnEffect textarea').value"), original, 'The outgoing sheet still shows the saved writing during the turn');
@@ -891,8 +897,11 @@ test('production diary: new page turns the saved sheet with sound and retains bo
   assert.equal(await evaluate("document.getElementById('newPageButton').disabled"), true, 'Repeated clicks cannot create overlapping page changes');
   await click('#newPageButton');
   assert.equal(await evaluate('window.__newEntryTurns'), 1);
-  assert.equal(await evaluate('window.__newEntrySounds'), 1, 'New page plays the paper recording once');
+  await poll(() => evaluate("window.__bookSounds.includes('paper')"), 'paper recording');
+  // The page lands when its animation finishes, so the leaf paused for inspection resumes.
+  await evaluate("for(const animation of document.getElementById('pageTurnEffect').getAnimations())animation.play()");
   await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'completed page turn');
+  assert.equal(await evaluate("window.__bookSounds.filter(kind=>kind==='paper').length"), 1, 'New page plays the paper recording once');
   assert.equal(await evaluate("document.getElementById('pageTurnEffect').childElementCount"), 0, 'The outgoing snapshot is released after the animation');
   const next = 'Uma nova história em outra página.';
   await fill('#journalText', next);
@@ -924,12 +933,13 @@ test('production diary: new page turns the saved sheet with sound and retains bo
   await poll(() => evaluate(`window.__newEntryTurns===${turnsBefore + 1}`), 'new page with reduced motion');
   assert.equal(await evaluate("document.getElementById('pageTurnEffect').getAnimations().length"), 0, 'Reduced motion skips the page animation');
   assert.equal(await evaluate("document.getElementById('pageTurnEffect').childElementCount"), 0);
-  await evaluate("window.__paperPauses=0;HTMLMediaElement.prototype.pause=function(){window.__paperPauses++};HTMLMediaElement.prototype.play=function(){return new Promise(resolve=>{window.__finishPaperLoading=resolve})}");
+  // Late decoding is covered by the foley unit tests; without motion the page still sounds exactly once.
+  await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'reduced-motion page ready');
+  const soundsBefore = await evaluate('window.__bookSounds.length');
   await click('#newPageButton');
-  await poll(() => evaluate('typeof window.__finishPaperLoading === "function"'), 'pending paper audio download');
-  const pausesAtRequest = await evaluate('window.__paperPauses');
-  await poll(() => evaluate(`window.__paperPauses>${pausesAtRequest}`), 'late paper audio cancelled');
-  await evaluate('window.__finishPaperLoading()');
+  await poll(() => evaluate(`window.__bookSounds.length>${soundsBefore}`), 'reduced-motion paper recording');
+  await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'reduced-motion page landed');
+  assert.equal(await evaluate('window.__bookSounds.length'), soundsBefore + 1, 'Reduced motion plays the paper recording once');
 }));
 
 test('production diary: turning sheets retain the resting paper colors in both themes and portals', { ...options, timeout: 60000 }, () => withBrowser(async ({ server, accounts, click, evaluate, send }) => {
@@ -962,6 +972,8 @@ test('production diary: turning sheets retain the resting paper colors in both t
     await poll(() => evaluate("document.getElementById('paper').classList.contains('is-turning-entry')"), 'color comparison turn');
     await evaluate("for(const animation of document.getElementById('pageTurnEffect').getAnimations()){animation.pause();animation.currentTime=0}");
   };
+  // A turn lands when its animation finishes, so the inspected leaf resumes before waiting.
+  const resumeTurn = () => evaluate("for(const animation of document.getElementById('pageTurnEffect').getAnimations())animation.play()");
   for (const [path, width] of [['/app/diario.html', 1440], ['/aluno-diario.html', 390]]) {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: width < 700 });
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}${path}` });
@@ -973,10 +985,12 @@ test('production diary: turning sheets retain the resting paper colors in both t
       const beforeBack = await capturePaper();
       await click('#previousWritingPage'); await pauseTurn();
       await assertSamePaper(beforeBack, `${path} ${theme}: the flat outgoing underlay`);
+      await resumeTurn();
       await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'back turn finished');
       const beforeForward = await capturePaper();
       await click('#nextWritingPage'); await pauseTurn();
       await assertSamePaper(beforeForward, `${path} ${theme}: the moving outgoing sheet`);
+      await resumeTurn();
       await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'forward turn finished');
     }
   }
@@ -1003,6 +1017,7 @@ test('production diary: delete action stays inside the footer on both sides of a
         assert.ok(button.top >= row.top - 1 && button.bottom <= row.bottom + 1, `${context}: delete action stays in its row`);
         assert.ok(button.left >= footer.left && button.right <= footer.right + 1 && button.top >= footer.top && button.bottom <= footer.bottom + 1, `${context}: delete action stays inside the footer`);
       }
+      await evaluate("for(const animation of document.getElementById('pageTurnEffect').getAnimations())animation.play()");
       await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), `${direction} page landed`);
     }
   }
@@ -1032,6 +1047,7 @@ test('production diary: returning pages carry their own date and reveal it only 
   const closing = await evaluate("(()=>{const effect=document.getElementById('pageTurnEffect'),animation=effect.getAnimations().find(item=>item.animationName==='pageLeafClose'),frame=getComputedStyle(effect.parentElement),style=document.createElement('div').style;style.transitionTimingFunction=frame.getPropertyValue('--book-close-easing');return {duration:animation.effect.getTiming().duration,easing:animation.effect.getKeyframes()[0].easing,coverDuration:parseFloat(frame.getPropertyValue('--book-close-duration')),coverEasing:style.transitionTimingFunction}})()");
   assert.equal(closing.duration, closing.coverDuration);
   assert.equal(closing.easing.replaceAll(' ', ''), closing.coverEasing.replaceAll(' ', ''));
+  await evaluate("for(const animation of document.getElementById('pageTurnEffect').getAnimations())animation.play()");
   await poll(() => evaluate("!document.getElementById('newPageButton').disabled"), 'returning page landed');
   assert.equal(await evaluate("document.getElementById('entryDay').textContent"), previousDay);
   assert.equal(await evaluate("document.getElementById('pageTurnUnderlay').childElementCount"), 0);
@@ -1124,22 +1140,30 @@ test('production diary: invitation waits for its idle timer, works in the backgr
     };
     window.clearTimeout = id => { if (id < 0) invitations.delete(id); else cancel(id); };
     window.__fireDiaryInvitations = () => { for (const [id, callback] of [...invitations]) { invitations.delete(id); callback(); } };
+    // The invitation sounds through Web Audio: record each start with the level its gain ramps to.
     window.__invitationPlays = [];
-    HTMLMediaElement.prototype.play = function() { window.__invitationPlays.push({src:this.src,volume:this.volume}); return Promise.resolve(); };
+    let level = 0;
+    const ramp = AudioParam.prototype.linearRampToValueAtTime, start = AudioBufferSourceNode.prototype.start;
+    AudioParam.prototype.linearRampToValueAtTime = function(value, ...args) { level = value; return ramp.call(this, value, ...args); };
+    AudioBufferSourceNode.prototype.start = function(...args) { window.__invitationPlays.push({volume:level}); return start.apply(this, args); };
   ` });
   accounts.get('A').set('first-page', entry('first-page', 'Minha escrita permanece aqui.'));
   await navigate();
   assert.equal(await evaluate("document.getElementById('diaryInvitationToggle').getAttribute('aria-pressed')"), 'true');
   assert.equal(await evaluate('window.__invitationPlays.length'), 0, 'Opening the diary does not call immediately');
+  // Browsers release audio after a gesture, as when the person used the diary before it went quiet.
+  const quietSpot = await evaluate("(()=>{const box=document.querySelector('.diary-date').getBoundingClientRect();return {x:box.left+box.width/2,y:box.top+box.height/2}})()");
+  await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...quietSpot, button: 'left', clickCount: 1 });
+  await send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...quietSpot, button: 'left', clickCount: 1 });
   await evaluate('window.__fireDiaryInvitations()');
-  assert.equal(await evaluate('window.__invitationPlays.length'), 1, 'A full idle interval can call while the diary remains open');
+  await poll(() => evaluate('window.__invitationPlays.length===1'), 'A full idle interval can call while the diary remains open');
   await evaluate("Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));window.__fireDiaryInvitations()");
-  assert.equal(await evaluate('window.__invitationPlays.length'), 2);
+  await poll(() => evaluate('window.__invitationPlays.length===2'), 'invitation while the tab is hidden');
   assert.ok(await evaluate('window.__invitationPlays[0].volume') <= .1, 'The call is softer than a normal page turn');
   assert.equal(await evaluate("document.getElementById('journalText').value"), 'Minha escrita permanece aqui.');
   assert.equal(await evaluate("document.getElementById('pageTurnEffect').getAnimations().length"), 0, 'The invitation does not turn a page');
   await evaluate('window.__fireDiaryInvitations()');
-  assert.equal(await evaluate('window.__invitationPlays.length'), 3, 'A later full interval can call again');
+  await poll(() => evaluate('window.__invitationPlays.length===3'), 'A later full interval can call again');
   await evaluate("Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'))");
   assert.equal(await evaluate('window.__invitationPlays.length'), 3, 'Returning to the diary starts a fresh interval without calling immediately');
   await evaluate("window.dispatchEvent(new Event('pagehide'));window.__fireDiaryInvitations()");

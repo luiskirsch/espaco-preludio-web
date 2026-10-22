@@ -26,8 +26,10 @@
 .diary-masthead { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 18px; }
 .is-book-writing .diary-brand { display: inline-flex; flex-direction: row; align-items: center; gap: 13px; flex: 0 1 auto; text-align: left; letter-spacing: 0; }
 .is-book-writing .diary-brand > svg { width: 46px; height: 46px; padding: 9px; border: 1px solid #c8a87540; border-radius: 14px; background: #c8a87509; color: #d9bb80; fill: #d9bb800d; stroke-width: 1.5; filter: none; box-shadow: inset 0 1px #f8e6bc08; }
-.is-book-writing .diary-brand > span { color: #c0a98b; font: 400 17px/1.15 var(--serif); }
-.is-book-writing .diary-brand strong { display: block; color: #f3e3c8; font: 500 26px/1.12 var(--serif); letter-spacing: -.015em; }
+/* Whole-pixel line boxes keep the book on a whole pixel; a fractional offset made the page-turn layer
+   rasterize 1px away from the resting paper. */
+.is-book-writing .diary-brand > span { color: #c0a98b; font: 400 17px/20px var(--serif); }
+.is-book-writing .diary-brand strong { display: block; color: #f3e3c8; font: 500 26px/29px var(--serif); letter-spacing: -.015em; }
 .diary-date { min-width: 0; text-align: right; }
 .diary-date > span { display: block; margin-bottom: 6px; color: #b89e78; font: 500 10px/1.2 var(--sans); letter-spacing: .18em; text-transform: uppercase; }
 .diary-date time { display: block; color: #d3bea0; font: 400 13px/1.5 var(--sans); }
@@ -41,6 +43,8 @@
 .is-book-writing .diary-tabs button:focus-visible { outline: 2px solid #dfc18b; outline-offset: 2px; }
 .diary-tab-label--compact { display: none; }
 .is-book-writing .book-toolbar { min-height: 48px; margin-bottom: 14px; gap: 14px; flex-wrap: wrap; }
+/* Collections replace the toolbar in the same slot; equal heights keep the book from jumping. */
+.is-book-writing .collection-navigation { min-height: 48px; margin-bottom: 14px; }
 .is-book-writing .page-navigation { display: inline-flex; width: auto; min-height: 42px; padding: 3px; gap: 0; border: 1px solid #c8a87535; border-radius: 13px; background: #d8b77f05; }
 .is-book-writing .page-navigation button { display: grid; place-items: center; width: 34px; height: 34px; margin: 0; padding: 0; border: 0; border-radius: 9px; background: transparent; }
 .is-book-writing .page-navigation button svg { width: 15px; height: 15px; stroke-width: 1.6; }
@@ -84,6 +88,7 @@
   .is-book-writing .diary-tabs { width: 100%; gap: 3px; padding: 4px; border-radius: 14px; }
   .is-book-writing .diary-tabs button { padding-inline: 2px; gap: 6px; font-size: 11px; }
   .is-book-writing .book-toolbar { width: 100%; min-height: 98px; margin-bottom: 14px; gap: 11px; }
+  .is-book-writing .collection-navigation { min-height: 98px; margin-bottom: 14px; }
   .is-book-writing .book-actions { order: 1; width: 100%; justify-content: space-between; }
   .is-book-writing .page-navigation { order: 2; width: max-content; margin-inline: auto; justify-content: center; }
 }
