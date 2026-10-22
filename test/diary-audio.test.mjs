@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { createDictation, createSoundscape as createRuntimeSoundscape } from '../app/diary-audio.js';
 
 function createSoundscape(options = {}) {
-  return createRuntimeSoundscape({ rainLoader: async context => context.createBuffer(2, context.sampleRate * 3, context.sampleRate), ...options });
+  const recording = async context => context.createBuffer(2, context.sampleRate * 3, context.sampleRate);
+  return createRuntimeSoundscape({ rainLoader: recording, forestLoader: recording, pianoLoader: recording, ...options });
 }
 
 const originalGlobals = new Map(['AudioContext', 'webkitAudioContext', 'SpeechRecognition', 'webkitSpeechRecognition'].map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
@@ -93,13 +94,18 @@ test('soundscapes stay idle until explicitly played; switching and destruction r
   assert.deepEqual(rain.nodes[0].gain.events.at(-1), ['target', 0, 0, 0.035]);
   await new Promise(resolve => setTimeout(resolve, 200));
   assert.equal(rain.closed, true);
-  assert.equal(forest.nodes.find(node => node.kind === 'filter').type, 'lowpass');
-  assert.ok(forest.nodes.filter(node => node.kind === 'oscillator').length >= 3);
+  const forestSource = forest.nodes.find(node => node.kind === 'buffer');
+  assert.equal(forestSource.buffer.numberOfChannels, 2);
+  assert.equal(forestSource.loop, true);
+  assert.equal(forest.nodes.some(node => node.kind === 'oscillator'), false, 'No synthetic birds or random notes');
   await audio.play('piano');
   const piano = FakeAudioContext.instances.at(-1);
   await new Promise(resolve => setTimeout(resolve, 200));
   assert.equal(forest.closed, true);
-  assert.equal(piano.nodes.some(node => node.kind === 'buffer'), false);
+  const pianoSource = piano.nodes.find(node => node.kind === 'buffer');
+  assert.equal(pianoSource.buffer.numberOfChannels, 2);
+  assert.equal(pianoSource.loop, true);
+  assert.equal(piano.nodes.some(node => node.kind === 'oscillator'), false, 'Piano plays the complete composition');
   await audio.setVolume(2);
   assert.equal(piano.nodes[0].gain.value, 1);
   await audio.destroy();
@@ -170,6 +176,43 @@ test('stopping during a rain download cancels it and ignores its late result', a
   assert.equal(context.closed, true);
   assert.equal(context.nodes.some(node => node.kind === 'buffer' || node.kind === 'oscillator'), false);
 });
+
+for (const preset of ['forest', 'piano']) {
+  test(`${preset} releases a failed download and allows a fresh play`, async () => {
+    globalThis.AudioContext = FakeAudioContext;
+    let attempts = 0;
+    const audio = createSoundscape({ [`${preset}Loader`]: async context => {
+      if (++attempts === 1) throw new Error('Recording unavailable');
+      return context.createBuffer(2, 2000, 8000);
+    } });
+    await assert.rejects(audio.play(preset), /Não foi possível iniciar/);
+    const failed = FakeAudioContext.instances.at(-1);
+    assert.equal(failed.closed, true);
+    assert.equal(failed.nodes.some(node => node.kind === 'buffer' || node.kind === 'oscillator'), false);
+    assert.equal(await audio.play(preset), true);
+    await audio.destroy();
+  });
+
+  test(`switching away from a loading ${preset} cannot restart it later`, async () => {
+    globalThis.AudioContext = FakeAudioContext;
+    let finishDownload, downloadSignal;
+    const audio = createSoundscape({ [`${preset}Loader`]: (context, signal) => {
+      downloadSignal = signal;
+      return new Promise(resolve => { finishDownload = () => resolve(context.createBuffer(2, 2000, 8000)); });
+    } });
+    const pending = audio.play(preset);
+    for (let i = 0; !finishDownload && i < 5; i++) await Promise.resolve();
+    const abandoned = FakeAudioContext.instances.at(-1);
+    assert.equal(await audio.play('rain'), true);
+    assert.equal(downloadSignal.aborted, true);
+    finishDownload();
+    assert.equal(await pending, false);
+    assert.equal(abandoned.closed, true);
+    assert.equal(abandoned.nodes.some(node => node.kind === 'buffer' || node.kind === 'oscillator'), false);
+    assert.equal(audio.playing, true, 'The new selection keeps playing');
+    await audio.destroy();
+  });
+}
 
 test('unsupported speech recognition reports a useful message without throwing', () => {
   delete globalThis.SpeechRecognition;

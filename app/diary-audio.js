@@ -1,10 +1,11 @@
 /** Browser-only diary helpers. Nothing starts at module load. */
 import { loadCabinRain } from './diary-rain.js?h=28fc06031d';
+import { loadForest, loadPiano } from './diary-tracks.js?h=d78cee2e97';
 
 const SOUNDSCAPES = {
   rain: { notes: [261.63, 329.63, 392, 523.25, 440, 392, 329.63, 293.66], interval: 2600, decay: 5.8, level: .038 },
-  forest: { notes: [196, 246.94, 293.66, 392, 493.88], interval: 3400, decay: 6, level: 0.075 },
-  piano: { notes: [261.63, 329.63, 392, 523.25, 440, 392, 329.63, 293.66], interval: 1100, decay: 4, level: 0.15 },
+  forest: {},
+  piano: {},
 };
 
 function notify(callback, value) {
@@ -16,8 +17,8 @@ function disconnect(node) {
   try { node.disconnect(); } catch { /* Already disconnected. */ }
 }
 
-/** Recorded rain and a gentle piano. Nothing loads or plays before a click. */
-export function createSoundscape({ onState, rainLoader = loadCabinRain } = {}) {
+/** Nothing loads or plays before a click. Every preset shares the same playback lifecycle. */
+export function createSoundscape({ onState, rainLoader = loadCabinRain, forestLoader = loadForest, pianoLoader = loadPiano } = {}) {
   let session = null;
   let generation = 0;
   let volume = 0.35;
@@ -35,21 +36,14 @@ export function createSoundscape({ onState, rainLoader = loadCabinRain } = {}) {
     return node;
   }
 
-  function tone(current, frequency, start, duration, level, bird = false) {
+  function tone(current, frequency, start, duration, level) {
     if (!current.alive) return;
     const oscillator = track(current, current.context.createOscillator(), true);
     const envelope = track(current, current.context.createGain());
-    if (bird) {
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(frequency, start);
-      oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.38, start + duration * 0.35);
-      oscillator.frequency.exponentialRampToValueAtTime(frequency * 0.88, start + duration);
-    } else {
-      oscillator.setPeriodicWave(current.pianoWave);
-      oscillator.frequency.setValueAtTime(frequency, start);
-    }
+    oscillator.setPeriodicWave(current.pianoWave);
+    oscillator.frequency.setValueAtTime(frequency, start);
     envelope.gain.setValueAtTime(0, start);
-    envelope.gain.linearRampToValueAtTime(level, start + (bird ? 0.035 : 0.012));
+    envelope.gain.linearRampToValueAtTime(level, start + 0.012);
     envelope.gain.exponentialRampToValueAtTime(0.0001, start + duration);
     oscillator.connect(envelope);
     envelope.connect(current.master);
@@ -65,43 +59,19 @@ export function createSoundscape({ onState, rainLoader = loadCabinRain } = {}) {
   }
 
   async function addAtmosphere(current, selectedPreset) {
-    if (selectedPreset === 'piano') return;
     const context = current.context;
-    if (selectedPreset === 'rain') {
-      const buffer = await rainLoader(context, current.loading.signal);
-      if (!current.alive) return;
-      const rain = track(current, context.createBufferSource(), true);
-      rain.buffer = buffer;
-      rain.loop = true;
-      rain.connect(current.master);
-      rain.start();
-      return;
-    }
-    const buffer = context.createBuffer(1, context.sampleRate * 3, context.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < data.length; i += 1) data[i] = Math.random() * 2 - 1;
-    // Blend the tail into the beginning to soften the repeating noise boundary.
-    const blend = Math.min(1024, Math.floor(data.length / 8));
-    for (let i = 0; i < blend; i += 1) {
-      const amount = i / blend;
-      data[data.length - blend + i] = data[data.length - blend + i] * (1 - amount) + data[i] * amount;
-    }
-    const noise = track(current, context.createBufferSource(), true);
-    const filter = track(current, context.createBiquadFilter());
-    const level = track(current, context.createGain());
-    noise.buffer = buffer;
-    noise.loop = true;
-    filter.type = 'lowpass';
-    filter.frequency.value = 480;
-    filter.Q.value = 0.5;
-    level.gain.value = 0.065;
-    noise.connect(filter);
-    filter.connect(level);
-    level.connect(current.master);
-    noise.start();
+    const loader = { rain: rainLoader, forest: forestLoader, piano: pianoLoader }[selectedPreset];
+    const buffer = await loader(context, current.loading.signal);
+    if (!current.alive) return;
+    const recording = track(current, context.createBufferSource(), true);
+    recording.buffer = buffer;
+    recording.loop = true;
+    recording.connect(current.master);
+    recording.start();
   }
 
   function schedule(current, selectedPreset) {
+    if (selectedPreset !== 'rain') return;
     const config = SOUNDSCAPES[selectedPreset];
     let step = 0;
     const tick = () => {
@@ -112,18 +82,10 @@ export function createSoundscape({ onState, rainLoader = loadCabinRain } = {}) {
       }
       try {
         const time = current.context.currentTime + 0.025;
-        const index = selectedPreset === 'forest' ? Math.floor(Math.random() * config.notes.length) : step % config.notes.length;
+        const index = step % config.notes.length;
         tone(current, config.notes[index], time, config.decay, config.level);
-        if (selectedPreset === 'piano' && step % 4 === 0) {
-          tone(current, config.notes[0] / 2, time, 5.2, 0.105);
-        }
-        if (selectedPreset === 'rain' && step % 4 === 0) {
+        if (step % 4 === 0) {
           tone(current, config.notes[0] / 2, time, 6, .022);
-        }
-        if (selectedPreset === 'forest' && step % 2 === 0) {
-          const frequency = 1500 + Math.random() * 650;
-          tone(current, frequency, time + 0.6, 0.28, 0.035, true);
-          tone(current, frequency * 1.12, time + 1.02, 0.2, 0.025, true);
         }
         step += 1;
         current.timer = setTimeout(tick, config.interval);
@@ -192,10 +154,12 @@ export function createSoundscape({ onState, rainLoader = loadCabinRain } = {}) {
       compressor.release.value = 0.25;
       current.master.connect(compressor);
       compressor.connect(context.destination);
-      current.pianoWave = context.createPeriodicWave(
-        new Float32Array([0, 0, 0, 0, 0]),
-        new Float32Array([0, 1, 0.38, 0.14, 0.06]),
-      );
+      if (selectedPreset === 'rain') {
+        current.pianoWave = context.createPeriodicWave(
+          new Float32Array([0, 0, 0, 0, 0]),
+          new Float32Array([0, 1, 0.38, 0.14, 0.06]),
+        );
+      }
       await context.resume();
       if (destroyed || ticket !== generation || session !== current) {
         await release(current);

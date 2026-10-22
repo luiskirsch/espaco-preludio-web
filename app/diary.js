@@ -1,4 +1,4 @@
-import { createSoundscape, createDictation } from './diary-audio.js?h=fb22bb467e';
+import { createSoundscape, createDictation } from './diary-audio.js?h=fbf09f4afa';
 import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, hasEntryContent, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=baf32a79b0';
 import { createPagedEditor } from './diary-pages.js?h=5308d04d2c';
 import { createBookFoley, bookMotionTiming } from './diary-foley.js?h=3737733da5';

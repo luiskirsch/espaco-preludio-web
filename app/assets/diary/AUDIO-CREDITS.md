@@ -13,6 +13,40 @@ a field recording by **Ylmir**, published on OpenGameArt on 2016-03-28.
 No artificial noise is added to the rain. The bundled recording is served
 from the portal's own origin; playback does not contact OpenGameArt.
 
+# Um passeio pela floresta
+
+`forest-recorded-v1.mp3` derives from **Birds In Spring (Scotland)** by
+**BurghRecords**, published on Freesound on 2019-03-18.
+
+- Source: https://freesound.org/people/BurghRecords/sounds/463903/
+- Public HQ preview: https://cdn.freesound.org/previews/463/463903_7241289-hq.mp3
+- License: CC0 1.0 Universal — https://creativecommons.org/publicdomain/zero/1.0/
+- Recorded material: stereo spring birdsong near a river in Scotland.
+- Changes: 90-second excerpt starting at 12s, 90Hz high-pass, 9kHz low-pass,
+  constant gain of +10.5dB, MP3 at 160 kbps / 44.1 kHz stereo.
+- Runtime joins the boundaries with a 2.5-second equal-power crossfade.
+  There are no synthesized birds, notes or generated noise in this preset.
+
+# Piano para desacelerar
+
+`piano-unwind-v1.mp3` derives from **Mystical Piano** by **Indieteur**,
+published on OpenGameArt on 2019-01-02.
+
+- Source: https://opengameart.org/content/mystical-piano
+- Original MP3: https://opengameart.org/sites/default/files/Mystical%20Piano.mp3
+- License: CC0 1.0 Universal — https://creativecommons.org/publicdomain/zero/1.0/
+- Changes: cut at 1:35 following the composer's loop instructions, 35Hz
+  high-pass, 10kHz low-pass, constant gain of +3.8dB, MP3 at 160 kbps /
+  44.1 kHz stereo. Original musical timing and dynamics are preserved.
+- Runtime smooths the join with a 40ms equal-power crossfade. No additional
+  synthesized melody or random notes are mixed into this preset.
+
+Both tracks load only after a playback request, from the portal's own
+origin. Playback does not contact Freesound or OpenGameArt. Compressed
+recordings are cached for subsequent plays; decoded buffers are released
+when playback stops. The diary volume control and gentle start/stop fades
+apply to both tracks.
+
 # Virada de página
 
 `page-turn.ogg` is **FlippingPages.ogg**, a paper page-turn recording by **yd**,

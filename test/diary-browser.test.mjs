@@ -634,6 +634,7 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
       const result = await send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(selector)}).click()`, userGesture: true, returnByValue: true });
       if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
     };
+    assert.equal(await evaluate("performance.getEntriesByType('resource').some(entry=>/forest-recorded|piano-unwind/.test(entry.name))"), false, 'As novas trilhas ficam sem download até a seleção');
     await audioClick('#playButton');
     await poll(() => evaluate("document.body.classList.contains('is-playing') && document.getElementById('playerDescription').textContent.includes('Chuva na cabana & piano')"), 'chuva gravada e piano no Web Audio');
     assert.equal(await evaluate("performance.getEntriesByType('resource').some(entry=>entry.name.includes('cabin-rain-recorded-v1.mp3'))"), true, 'Reprodução usa o arquivo de chuva gravada');
@@ -641,8 +642,14 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     await audioClick('#playButton');
     await poll(() => evaluate("document.getElementById('playButton').getAttribute('aria-pressed')==='false'"), 'pausa da chuva');
     await openDialog('#soundButton');
+    await audioClick('[data-preset="forest"]');
+    await poll(() => evaluate("document.body.classList.contains('is-playing') && document.getElementById('playerDescription').textContent.includes('Um passeio pela floresta')"), 'floresta gravada no Web Audio');
+    assert.equal(await evaluate("performance.getEntriesByType('resource').some(entry=>entry.name.includes('forest-recorded-v1.mp3'))"), true);
+    assert.equal(await evaluate("performance.getEntriesByType('resource').some(entry=>entry.name.includes('piano-unwind-v1.mp3'))"), false, 'Selecionar a floresta não baixa o piano');
+    await openDialog('#soundButton');
     await audioClick('[data-preset="piano"]');
     await poll(() => evaluate("document.body.classList.contains('is-playing') && document.getElementById('playerDescription').textContent.includes('Piano para desacelerar')"), 'piano separado da chuva');
+    assert.equal(await evaluate("performance.getEntriesByType('resource').some(entry=>entry.name.includes('piano-unwind-v1.mp3'))"), true);
     await audioClick('#playButton');
 
     await click('#diaryThemeToggle');
