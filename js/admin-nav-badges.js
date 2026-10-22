@@ -1,81 +1,39 @@
-// Espaço Prelúdio — badges de contagem nos 4 menus admin.
-// Bate em paralelo nos 4 endpoints de listagem (status=pending) e injeta
-// numero ao lado de cada link. Polling a cada 60s pra refrescar enquanto
-// admin tem a aba aberta — feedback ao vivo de fila crescendo sem reload.
-//
-// Por que aqui (frontend, paralelo) e nao um endpoint backend agregador:
-// evita criar nova rota + redeploy. Os 4 endpoints ja existem, latencia
-// somada com Promise.all e ~ max(t1..t4), barato.
-//
-// IDs esperados no DOM (criados nos HTMLs admin):
-//   #navBadgeCrpCrm        — admin-verificacoes.html
-//   #navBadgeEstudante     — admin-comprovantes.html
-//   #navBadgeRecemFormado  — admin-comprovantes-recem-formado.html
-//   #navBadgeSemConselho   — admin-comprovantes-formacao.html
-// Cada um e <span class="ep-nav-badge ep-hide">. Hidden quando count=0.
-
-import { BACKEND_BASE_URL } from "./firebase-config.js?h=69b74fc63a";
-
-const ENDPOINTS = [
-  { url: "/therapy/admin/verificacoes?status=pending",                     badgeId: "navBadgeCrpCrm" },
-  { url: "/therapy/admin/comprovantes-estudante?status=pending-review",    badgeId: "navBadgeEstudante" },
-  { url: "/therapy/admin/comprovantes-recem-formado?status=pending-review", badgeId: "navBadgeRecemFormado" },
-  { url: "/therapy/admin/comprovantes-formacao?status=pending-review",      badgeId: "navBadgeSemConselho" },
-  { url: "/therapy/admin/empresa-pendentes?status=pending-review",          badgeId: "navBadgeEmpresa" }
-];
-
-async function fetchCount(url, idToken) {
-  try {
-    const res = await fetch(BACKEND_BASE_URL + url, {
-      headers: { Authorization: `Bearer ${idToken}` }
-    });
-    if (!res.ok) return { error: true, status: res.status };
-    const data = await res.json().catch(() => ({}));
-    if (!data.ok) return { error: true };
-    return { count: Array.isArray(data.items) ? data.items.length : 0 };
-  } catch {
-    return { error: true };
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=69b74fc63a";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+const badges = { crpCrm:"CrpCrm", estudante:"Estudante", recemFormado:"RecemFormado", semConselho:"SemConselho", leadsEstudante:"LeadsEstudante", empresa:"Empresa", empresas:"Empresas", denuncias:"Denuncias", colaboradores:"Colaboradores", repasses:"Repasses", reembolsos:"Repasses", nr1:"Nr1", estudantes:"Estudantes", apoio:"Apoio" };
+let timer, running = null, epoch = 0;
+function render(counts) {
+  const grouped = {};
+  for (const [key,suffix] of Object.entries(badges)) {
+    const value = counts[key], entry = grouped[suffix] ||= { count:0, error:false };
+    if (!value || value.error) entry.error = true; else entry.count += Number(value.count) || 0;
+  }
+  for (const [suffix,value] of Object.entries(grouped)) for (const el of document.querySelectorAll(`#navBadge${suffix}, #badge${suffix}`)) {
+    el.textContent = value.error ? "!" : value.count > 99 ? "99+" : String(value.count);
+    el.classList.toggle("ep-hide", !value.error && value.count === 0); el.classList.toggle("is-error", value.error);
+    el.setAttribute("aria-label", value.error ? "Falha ao verificar pendências" : `${value.count} pendências`);
+    el.title = value.error ? "Não foi possível verificar. Tente atualizar." : `${value.count} itens aguardando atenção`;
+    el.dataset.noI18n = "";
   }
 }
-
-function applyBadge(badgeId, result) {
-  const el = document.getElementById(badgeId);
-  if (!el) return;
-  el.classList.remove("is-error");
-  el.removeAttribute("title");
-  if (result?.error) {
-    // Estado de erro visivel: "?" com title explicativo. Antes badges sumiam
-    // silenciosos em 401/network failure (token expirado), dando falsa
-    // impressao de "fila zerada".
-    el.textContent = "?";
-    el.classList.add("is-error");
-    el.classList.remove("ep-hide");
-    el.setAttribute("title", `Erro ao carregar contagem${result.status ? " (HTTP " + result.status + ")" : ""}. Atualize a pagina.`);
-    return;
-  }
-  const count = Number(result?.count) || 0;
-  if (count <= 0) {
-    el.classList.add("ep-hide");
-    return;
-  }
-  el.textContent = count > 99 ? "99+" : String(count);
-  el.classList.remove("ep-hide");
-}
-
 export async function refreshNavBadges(idToken) {
-  if (!idToken) return;
-  await Promise.all(ENDPOINTS.map(async (ep) => {
-    const result = await fetchCount(ep.url, idToken);
-    applyBadge(ep.badgeId, result);
-  }));
+  if (!idToken) return; if (running) return running;
+  const current = epoch;
+  running = (async () => {
+    try {
+      const response = await fetch(`${BACKEND_BASE_URL}/therapy/admin/notifications/counts`, {cache:"no-store", headers:{Authorization:`Bearer ${idToken}`}});
+      if (!response.ok) throw new Error("unavailable"); const data = await response.json();
+      if (!data.ok) throw new Error("unavailable"); if (current === epoch) render(data.counts || {});
+    } catch { if (current === epoch) render({}); }
+  })().finally(() => { running = null; }); return running;
 }
-
-// Inicia polling. Retorna handle de intervalo pra caller poder parar se quiser.
-export function startNavBadgePolling(getIdToken, intervalMs = 60_000) {
-  const tick = async () => {
-    const token = typeof getIdToken === "function" ? await getIdToken() : getIdToken;
-    if (token) refreshNavBadges(token);
-  };
-  tick();
-  return setInterval(tick, intervalMs);
+export function startNavBadgePolling(getIdToken, intervalMs = 30000) {
+  if (timer) return timer;
+  const tick = async () => { if (document.hidden) return; try { const token = await getIdToken(); if(token) await refreshNavBadges(token); } catch { render({}); } };
+  tick(); timer = setInterval(tick, intervalMs); window.addEventListener("focus", tick);
+  document.addEventListener("visibilitychange", tick); window.addEventListener("ep:admin-updated", tick); return timer;
 }
+onAuthStateChanged(auth, user => {
+  epoch++; if (!user) { render(Object.fromEntries(Object.keys(badges).map(key=>[key,{count:0}]))); return; }
+  startNavBadgePolling(() => auth.currentUser?.getIdToken()); user.getIdToken().then(refreshNavBadges).catch(()=>{});
+});

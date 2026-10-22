@@ -109,6 +109,8 @@ function renderList() {
   for (const item of filtered) {
     const row = node("button", "", "ap-request"); row.type = "button"; row.setAttribute("aria-pressed", String(item.id === selected?.id));
     const meta = node("div", "", "ap-request-meta"); meta.append(badge(item.status), node("span", date(item.createdAt, false)));
+    if (admin) row.append(personal("p", item.companyName || companies.find(c => c.id === item.companyId)?.name || item.companyId, "ap-company-name"));
+    if (item.needsAttention) meta.append(node("span", "Aguardando resposta", "ap-attention"));
     row.append(meta, node("strong", requestTitle(item)), personal("p", item.employeeName || "Colaborador", "ap-muted"));
     if (isOverdue(item)) row.append(node("p", `Prazo ultrapassado · ${date(item.dueAt)}`, "ap-overdue"));
     else if (item.ownerName) { const owner = node("p", "Com ", "ap-muted"); owner.append(personal("span", item.ownerName)); row.append(owner); }
@@ -118,7 +120,6 @@ function renderList() {
   $("moreRequests").hidden = !nextCursor;
 }
 async function loadRequests(more = false) {
-  if (admin && !companyId) { requests = []; renderList(); return; }
   const epoch = ++loadEpoch;
   $("refreshRequests").disabled = true; $("moreRequests").disabled = true;
   $("requests").setAttribute("aria-busy", "true");
@@ -126,6 +127,14 @@ async function loadRequests(more = false) {
   try {
     const data = await api(`/requests${query({ cursor: more ? nextCursor : "" })}`);
     if (epoch !== loadEpoch) return;
+    if (admin && data.queue) {
+      let overview = $("queueOverview");
+      if (!overview) { overview = node("div", "", "ap-queue-overview"); overview.id = "queueOverview"; overview.setAttribute("role", "status"); $("companyPicker").after(overview); }
+      overview.replaceChildren();
+      for (const [key,label] of [["attention","Aguardando resposta"],["overdue","Prazos vencidos"],["companies","Empresas com pendências"],["total","Pedidos no histórico"]]) {
+        const card = node("div"); card.append(node("strong",String(data.queue[key] || 0)),node("span",label)); overview.append(card);
+      }
+    }
     const allowed = (data.items || []).filter(item => item.recipient === (admin ? "care" : "company"));
     requests = more ? [...new Map([...requests, ...allowed].map(item => [item.id, item])).values()] : allowed;
     nextCursor = data.nextCursor || null; renderList();
@@ -150,6 +159,7 @@ function renderDetail(draft = "") {
   const header = node("div", "", "ap-row"); header.append(badge(item.status), node("span", `Recebido em ${date(item.createdAt)}`, "ap-muted"));
   const title = node("h2", requestTitle(item), "ap-detail-title"); title.id = "detailTitle"; title.tabIndex = -1;
   container.append(header, title, personal("p", [item.employeeName || "Colaborador", item.employeeEmail].filter(Boolean).join(" · "), "ap-detail-person"));
+  if (admin) container.append(personal("p", item.companyName || requests.find(r=>r.id===item.id)?.companyName || companies.find(c=>c.id===item.companyId)?.name || item.companyId, "ap-company-name"));
   container.append(personal("p", item.text, "ap-request-text"));
   if (item.need) { const need = node("div", "", "ap-need"); need.append(node("strong", "O que a pessoa precisa"), personal("p", item.need, "ap-request-text")); container.append(need); }
   if (item.feedback) {
@@ -208,7 +218,7 @@ async function mutateRequest(form, suffix, method, payload, success) {
   try {
     const data = await api(`/requests/${encodeURIComponent(id)}${suffix}`, { method, body: JSON.stringify({ ...payload, version }) });
     if (selected?.id === id) { if (data.item) selected = data.item; else selected = (await api(`/requests/${encodeURIComponent(id)}`)).item; renderDetail(suffix ? "" : draft); }
-    await loadRequests(); say(success);
+    await loadRequests(); window.dispatchEvent(new Event("ep:admin-updated")); say(success);
   } catch (error) {
     if (error.status === 409 && selected?.id === id) { await selectRequest(id); renderDetail(draft); }
     say(error.status === 409 ? "Este pedido recebeu uma atualização. Os dados atuais foram carregados; revise antes de salvar novamente. Sua mensagem foi preservada." : errorText(error), true);
@@ -265,6 +275,7 @@ function activateTab(id) {
   for (const tab of document.querySelectorAll("[data-panel]")) { const selectedTab = tab.dataset.panel === id; tab.setAttribute("aria-selected", String(selectedTab)); tab.tabIndex = selectedTab ? 0 : -1; $("panel-" + tab.dataset.panel).hidden = !selectedTab; }
   if (id === "impact") loadSummary();
   if (id === "actions") loadActions().catch(error => say(errorText(error), true));
+  if (id === "settings" && admin && !companyId) say("Selecione uma empresa no filtro para configurar seus serviços. Os pedidos de todas as empresas continuam disponíveis na caixa de cuidado.");
 }
 for (const tab of document.querySelectorAll("[data-panel]")) {
   tab.tabIndex = tab.getAttribute("aria-selected") === "true" ? 0 : -1;
@@ -316,7 +327,7 @@ async function loadCompanies(more = false) {
     const incoming = data.companies || data.items || [];
     companies = more ? [...new Map([...companies, ...incoming].map(c => [c.id, c])).values()] : incoming;
     companyCursor = data.nextCursor || null;
-    $("companySelect").replaceChildren(new Option("Selecione uma empresa", ""));
+    $("companySelect").replaceChildren(new Option("Todas as empresas", ""));
     for (const company of companies) $("companySelect").add(new Option(company.name || company.id, company.id));
     $("companySelect").value = companyId; $("moreCompanies").hidden = !companyCursor;
   } finally { $("moreCompanies").disabled = false; }
@@ -325,7 +336,8 @@ async function changeCompany() {
   companyId = $("companySelect").value; selected = null; requests = []; nextCursor = null; loadEpoch++; selectionEpoch++;
   $("detail").replaceChildren(empty("Selecione um pedido.", "A conversa e os próximos passos aparecerão aqui."));
   $("configFields").disabled = true; say(); renderList();
-  if (companyId) { await loadConfig(); await loadRequests(); }
+  if (companyId) await loadConfig();
+  await loadRequests();
 }
 $("companySelect").addEventListener("change", () => changeCompany().catch(error => say(errorText(error), true)));
 $("moreCompanies").addEventListener("click", () => loadCompanies(true).catch(error => say(errorText(error), true)));
@@ -336,7 +348,7 @@ async function bootAdmin() {
     $("accessPanel").hidden = true; $("workspace").hidden = false;
     const target = new URLSearchParams(location.search).get("empresa");
     if (target && companies.some(c => c.id === target)) { $("companySelect").value = target; await changeCompany(); }
-    else { renderList(); say("Selecione uma empresa para acolher os pedidos e configurar os serviços."); }
+    else { await loadRequests(); }
   } catch (error) { showAccess(error); } finally { booting = false; }
 }
 $("adminLoginForm").addEventListener("submit", async event => {
@@ -351,3 +363,6 @@ $("signOutAdmin").addEventListener("click", () => signOut(auth).catch(error => {
 if (admin) onAuthStateChanged(auth, user => user ? bootAdmin() : showAccess());
 else if (!sessionStorage.getItem("ep:empresa:token")) location.replace("./empresa-login.html");
 else { $("workspace").hidden = false; loadConfig().catch(error => say(errorText(error), true)); loadRequests(); }
+
+// Refresh the queue without replacing an open conversation or its draft.
+setInterval(() => { if (!document.hidden && !mutating && (!admin || (auth.currentUser && !$("workspace").hidden))) loadRequests(); }, 30000);

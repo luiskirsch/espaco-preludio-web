@@ -4,6 +4,7 @@
  * Inclua este script no início do <body> de cada página admin.
  */
 (function () {
+  const badgeModuleUrl = new URL("./admin-nav-badges.js?h=7b869ab807", document.currentScript.src).href;
   // ─── CSS ────────────────────────────────────────────────────────────────
   const style = document.createElement("style");
   style.textContent = `
@@ -132,6 +133,7 @@
       .ep-asb__brand { padding: 14px 8px; justify-content: center; }
       .ep-asb__link { padding: 10px; justify-content: center; }
       .ep-asb__link::before { display: none; }
+      .ep-asb__link .ep-asb__badge { position:absolute; top:3px; right:2px; min-width:14px; height:14px; font-size:9px; padding:0 3px; }
       .ep-asb__foot { padding: 10px 6px; }
       .ep-asb__email { display: none; }
       #epAdminLogoutBtn { padding: 8px; justify-content: center; }
@@ -171,7 +173,7 @@
     { section: "Profissionais" },
     { href: "admin-profissionais.html", label: "Profissionais",  icon: "users"     },
     { href: "admin-pacientes.html",   label: "Pacientes",        icon: "user"      },
-    { href: "admin-denuncias.html",   label: "Denúncias",        icon: "flag"      },
+    { href: "admin-denuncias.html",   label: "Denúncias",        icon: "flag"      , badgeId: "navBadgeDenuncias" },
 
     { section: "Revisões" },
     { href: "admin-verificacoes.html",          label: "CRP/CRM",       icon: "shield",    badgeId: "navBadgeCrpCrm"       },
@@ -181,19 +183,19 @@
     { href: "admin-leads-estudante.html",        label: "Leads Estudante", icon: "star",    badgeId: "navBadgeLeadsEstudante"},
 
     { section: "B2B / Empresas" },
-    { href: "admin-empresas.html",      label: "Empresas",       icon: "building"   },
-    { href: "admin-nr1.html",           label: "NR-1 / Riscos",  icon: "file"       },
-    { href: "admin-apoio.html",         label: "Central de apoio", icon: "heart"    },
-    { href: "admin-colaboradores.html", label: "Colaboradores",  icon: "briefcase"  },
+    { href: "admin-empresas.html",      label: "Empresas",       icon: "building"   , badgeId: "navBadgeEmpresas" },
+    { href: "admin-nr1.html",           label: "NR-1 / Riscos",  icon: "file"       , badgeId: "navBadgeNr1" },
+    { href: "admin-apoio.html",         label: "Central de apoio", icon: "heart"    , badgeId: "navBadgeApoio" },
+    { href: "admin-colaboradores.html", label: "Colaboradores",  icon: "briefcase"  , badgeId: "navBadgeColaboradores" },
     { href: "admin-empresa.html",       label: "Aprovações",     icon: "check",     badgeId: "navBadgeEmpresa" },
 
     { section: "Municipal" },
     { href: "admin-programa-publico.html", label: "Programa Público", icon: "building" },
-    { href: "admin-estudantes.html",    label: "Estudantes",     icon: "grad"       },
+    { href: "admin-estudantes.html",    label: "Estudantes",     icon: "grad"       , badgeId: "navBadgeEstudantes" },
 
     { section: "Financeiro" },
     { href: "admin-propostas.html",     label: "Propostas",      icon: "calc"       },
-    { href: "admin-repasses.html",      label: "Repasses PIX",   icon: "pix"        },
+    { href: "admin-repasses.html",      label: "Repasses PIX",   icon: "pix"        , badgeId: "navBadgeRepasses" },
   ];
 
   // ─── Active detection ───────────────────────────────────────────────────
@@ -271,6 +273,7 @@
     const sidebar = buildSidebar();
     document.body.appendChild(sidebar);
     document.body.classList.add("ep-admin-has-sidebar");
+    const badgeScript = document.createElement("script"); badgeScript.type = "module"; badgeScript.nonce = document.querySelector("script[nonce]")?.nonce || ""; badgeScript.src = badgeModuleUrl; document.head.append(badgeScript);
 
     // Cápsula flutuante de Sair — canto inferior direito
     const sairFloat = document.createElement("button");

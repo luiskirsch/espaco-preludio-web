@@ -196,7 +196,7 @@
     }
     .ap-event {
       display: grid;
-      grid-template-columns: 60px 1fr;
+      grid-template-columns: 88px minmax(0, 1fr);
       gap: 12px;
       padding: 8px 16px;
       border-bottom: 1px solid var(--ep-line);
@@ -408,7 +408,7 @@
 <script type="module" src="./js/csp-actions.js?h=6c7094ea11"></script>
 </head>
 <body>
-<script src="./js/admin-sidebar.js?h=5f12610c31"></script>
+<script src="./js/admin-sidebar.js?h=09ac33560c"></script>
 
 <div class="ep-shell">
   <header class="ep-topbar">
@@ -1333,7 +1333,7 @@
     }
     list.innerHTML = eventos.map(e => `
       <div class="ap-event">
-        <div class="ap-event__time">${fmtTime(e.at)}</div>
+        <div class="ap-event__time">${e.at ? new Date(e.at).toLocaleDateString(currentLocale(), { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" }) : "—"}<br>${e.at ? new Date(e.at).toLocaleTimeString(currentLocale(), { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", second: "2-digit" }) : ""}</div>
         <div>
           <div class="ap-event__type">${escapeHtml(eventLabel(e.type))}</div>
           ${e.therapistUid ? `<div class="ap-event__detail">uid: ${escapeHtml(String(e.therapistUid).substring(0,12))}…</div>` : ""}

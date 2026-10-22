@@ -73,7 +73,7 @@ test('admin verifica acesso e MFA antes de abrir caixa de cuidado e habilitar se
     if (headers.authorization !== 'Bearer admin@example.test') return { status: 403, body: { error: 'NAO_AUTORIZADO' } };
     if (url.pathname.endsWith('/companies')) return { companies: [{ id: 'company-one', name: 'Empresa Exemplo', config }] };
     if (url.pathname.endsWith('/companies/company-one/config')) { config = { ...config, ...body }; return { config }; }
-    if (url.pathname.endsWith('/requests')) { assert.equal(url.searchParams.get('companyId'), 'company-one'); return { items: [item] }; }
+    if (url.pathname.endsWith('/requests')) { assert.ok([null, 'company-one'].includes(url.searchParams.get('companyId'))); return { items: [{...item, companyName:'Empresa Exemplo', needsAttention:true}] }; }
     if (url.pathname.endsWith('/requests/req-one')) return { item };
     throw new Error('Unexpected route');
   } });
@@ -84,6 +84,9 @@ test('admin verifica acesso e MFA antes de abrir caixa de cuidado e habilitar se
   assert.equal(await ev('document.querySelector("#workspace").hidden'), true);
   await ev(`(() => { const f=document.querySelector('#adminLoginForm'); f.elements.email.value='admin@example.test'; f.elements.password.value='password'; f.requestSubmit(); })()`);
   await poll(() => ev('!document.querySelector("#workspace").hidden'), 'admin workspace');
+  await poll(() => ev('document.querySelectorAll(".ap-request").length === 1'), 'inbox opens across all companies');
+  assert.equal(await ev('document.querySelector("#companySelect").value'), '');
+  assert.equal(await ev('document.querySelector("#requests").textContent.includes("Empresa Exemplo")'), true);
   assert.ok(await ev('window.__mfa') >= 2);
   await ev('document.querySelector("#companySelect").value="company-one"; document.querySelector("#companySelect").dispatchEvent(new Event("change"))');
   await poll(() => ev('document.querySelectorAll(".ap-request").length === 1'), 'care inbox');
