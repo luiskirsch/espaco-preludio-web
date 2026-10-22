@@ -134,7 +134,9 @@ async function load() {
     const firstAvailable = context.companies.find(hasRoute);
     if (firstAvailable) $('requestCompany').value = firstAvailable.id;
     renderCategories();
-    notice(available ? '' : 'O atendimento pela Central de apoio ainda não está habilitado para sua organização. Seus pedidos anteriores continuam disponíveis abaixo.');
+    notice(available ? '' : context.companies.length
+      ? 'O atendimento pela Central de apoio ainda não está habilitado para sua organização. Seus pedidos anteriores continuam disponíveis abaixo.'
+      : 'Sua conta não está vinculada a uma organização com a Central de apoio. Se você trabalha em uma empresa parceira, peça ao RH para confirmar seu cadastro com este e-mail.');
     const results = await Promise.allSettled([loadRequests(), loadActions()]);
     if (results[0].status === 'rejected') { $('requestsList').innerHTML = '<p class="sp-muted">Não foi possível consultar seus pedidos. Use Atualizar para tentar novamente.</p>'; notice(friendlyError(results[0].reason), true); }
   } catch (error) { notice(friendlyError(error), true); $('retryLoad').hidden = false; }
