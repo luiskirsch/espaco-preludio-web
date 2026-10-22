@@ -29,31 +29,29 @@ from the portal's own origin; playback does not contact OpenGameArt.
 
 # Piano para desacelerar
 
-`piano-unwind-v3.mp3` is an original sparse arrangement created for the
-Espaço Prelúdio diary, using the softest dynamic layer of **Upright Piano**
-from **VSCO 2 Community Edition**. The piano was sampled by **Simon Dalzell /
-Ivy Audio** and distributed by **Sam Gossner / Versilian Studios**.
+`piano-unwind-v4.mp3` is **Gymnopédie No. 1** by **Erik Satie**, performed
+by pianist **Robin Alciatore**, courtesy of **Musopen**. This is a complete
+piano performance with its original phrasing, touch and musical development.
 
-- Library: https://versilian-studios.com/vsco-community/
-- Sample source, pinned revision: https://github.com/sgossner/VSCO-2-CE/tree/440300901dfe9275fd84e0b7763af1f8443ae62e/Keys/Upright%20Piano
-- Sample license: CC0 1.0 Universal — https://github.com/sgossner/VSCO-2-CE/blob/440300901dfe9275fd84e0b7763af1f8443ae62e/LICENSE
-- Samples: `Player_dyn1_rr1_010.wav` through `_024.wav`, even indexes only.
-  Sample key mapping follows the library's `MappingChart.txt`.
-- Arrangement: 120 seconds, 48 BPM, 56 softly played notes, open voicings
-  and long spaces. Each phrase varies its note order and spacing; the second
-  half introduces related voicings instead of repeating the first half.
-  No percussion, rhythmic backing or additional instruments.
-- Processing: slight touch/timing variations, gentle pedal releases, quiet
-  room reflections and diffuse reverb, 45Hz high-pass, 4.2kHz low-pass,
-  restrained treble and constant gain. MP3 at 128 kbps / 44.1 kHz stereo.
-- Reproducible score and renderer: `scripts/audio/render-writing-piano.py`
-  (Python with NumPy and FFmpeg). Source samples stay in the build cache;
-  playback downloads only the finished MP3. No oscillators generate notes.
-- Decays wrap across the musical cycle; runtime smooths the final boundary
-  with a 40ms crossfade. The previous `Mystical Piano` track is no longer used.
+- Recording and rights statement: https://commons.wikimedia.org/wiki/File:Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg
+- Original Ogg: https://upload.wikimedia.org/wikipedia/commons/9/90/Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg
+- Original SHA-1: `96b2343c81047abd9723488d8540b5a2af688233`.
+- Recording rights: released into the public domain worldwide by Robin
+  Alciatore. The composition is also in the public domain. Musopen and the
+  performer are credited here and in the bundled MP3 metadata.
+- Changes: remove 1.9 seconds of the silent lead-in, gentle 40Hz high-pass
+  and 8kHz low-pass, short entrance fade and a fade over the final decay.
+  No notes are edited, reordered, generated or time-stretched; no additional
+  instruments, synthesized notes or reverb are mixed into the performance.
+- Duration: approximately 3 minutes. MP3 at 128 kbps / 44.1 kHz stereo.
+- Reproducible preparation: `scripts/audio/render-writing-piano.py`
+  (Python standard library and FFmpeg). The renderer verifies the original
+  recording against its published checksum before encoding.
+- Runtime smooths the final boundary with a 40ms crossfade. Previous
+  generated piano arrangements are no longer used.
 
 Both tracks load only after a playback request, from the portal's own
-origin. Playback does not contact Freesound or OpenGameArt. Compressed
+origin. Playback does not contact any third-party audio service. Compressed
 recordings are cached for subsequent plays; decoded buffers are released
 when playback stops. The diary volume control and gentle start/stop fades
 apply to both tracks.

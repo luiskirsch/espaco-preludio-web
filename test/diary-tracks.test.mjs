@@ -35,9 +35,9 @@ test('both loop lengths preserve stereo, original samples and a continuous bound
   }
 });
 
-for (const [name, loader, file] of [
-  ['forest', loadForest, 'forest-recorded-v1.mp3'],
-  ['piano', loadPiano, 'piano-unwind-v3.mp3'],
+for (const [name, loader, file, size] of [
+  ['forest', loadForest, 'forest-recorded-v1.mp3', [1_500_000, 2_000_000]],
+  ['piano', loadPiano, 'piano-unwind-v4.mp3', [2_500_000, 3_200_000]],
 ]) {
   test(`${name} downloads only on request, retries failures and caches only successful decodes`, async t => {
     const { context } = fixture();
@@ -67,11 +67,11 @@ for (const [name, loader, file] of [
 
   test(`${name} ships a complete locally hosted MP3 and its license credits`, () => {
     const bytes = readFileSync(new URL(`../app/assets/diary/${file}`, import.meta.url));
-    assert.ok(bytes.length > 1_500_000 && bytes.length < 2_000_000);
+    assert.ok(bytes.length > size[0] && bytes.length < size[1]);
     assert.equal(bytes.subarray(0, 3).toString(), 'ID3');
     const credits = readFileSync(new URL('../app/assets/diary/AUDIO-CREDITS.md', import.meta.url), 'utf8');
     assert.ok(credits.includes(file));
-    assert.match(credits, name === 'forest' ? /BurghRecords/ : /Simon Dalzell/);
-    assert.match(credits, /CC0 1\.0 Universal/);
+    assert.match(credits, name === 'forest' ? /BurghRecords/ : /Robin Alciatore/);
+    assert.match(credits, name === 'forest' ? /CC0 1\.0 Universal/ : /public domain worldwide/);
   });
 }
