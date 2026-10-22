@@ -37,7 +37,7 @@ test('both loop lengths preserve stereo, original samples and a continuous bound
 
 for (const [name, loader, file] of [
   ['forest', loadForest, 'forest-recorded-v1.mp3'],
-  ['piano', loadPiano, 'piano-unwind-v1.mp3'],
+  ['piano', loadPiano, 'piano-unwind-v2.mp3'],
 ]) {
   test(`${name} downloads only on request, retries failures and caches only successful decodes`, async t => {
     const { context } = fixture();
@@ -71,7 +71,7 @@ for (const [name, loader, file] of [
     assert.equal(bytes.subarray(0, 3).toString(), 'ID3');
     const credits = readFileSync(new URL('../app/assets/diary/AUDIO-CREDITS.md', import.meta.url), 'utf8');
     assert.ok(credits.includes(file));
-    assert.match(credits, name === 'forest' ? /BurghRecords/ : /Indieteur/);
+    assert.match(credits, name === 'forest' ? /BurghRecords/ : /Simon Dalzell/);
     assert.match(credits, /CC0 1\.0 Universal/);
   });
 }

@@ -29,17 +29,26 @@ from the portal's own origin; playback does not contact OpenGameArt.
 
 # Piano para desacelerar
 
-`piano-unwind-v1.mp3` derives from **Mystical Piano** by **Indieteur**,
-published on OpenGameArt on 2019-01-02.
+`piano-unwind-v2.mp3` is an original sparse arrangement created for the
+Espaço Prelúdio diary, using the softest dynamic layer of **Upright Piano**
+from **VSCO 2 Community Edition**. The piano was sampled by **Simon Dalzell /
+Ivy Audio** and distributed by **Sam Gossner / Versilian Studios**.
 
-- Source: https://opengameart.org/content/mystical-piano
-- Original MP3: https://opengameart.org/sites/default/files/Mystical%20Piano.mp3
-- License: CC0 1.0 Universal — https://creativecommons.org/publicdomain/zero/1.0/
-- Changes: cut at 1:35 following the composer's loop instructions, 35Hz
-  high-pass, 10kHz low-pass, constant gain of +3.8dB, MP3 at 160 kbps /
-  44.1 kHz stereo. Original musical timing and dynamics are preserved.
-- Runtime smooths the join with a 40ms equal-power crossfade. No additional
-  synthesized melody or random notes are mixed into this preset.
+- Library: https://versilian-studios.com/vsco-community/
+- Sample source, pinned revision: https://github.com/sgossner/VSCO-2-CE/tree/440300901dfe9275fd84e0b7763af1f8443ae62e/Keys/Upright%20Piano
+- Sample license: CC0 1.0 Universal — https://github.com/sgossner/VSCO-2-CE/blob/440300901dfe9275fd84e0b7763af1f8443ae62e/LICENSE
+- Samples: `Player_dyn1_rr1_010.wav` through `_024.wav`, even indexes only.
+  Sample key mapping follows the library's `MappingChart.txt`.
+- Arrangement: 120 seconds, 48 BPM, 56 softly played notes, open voicings
+  and long spaces. No percussion, rhythmic backing or additional instruments.
+- Processing: slight touch/timing variations, gentle pedal releases, quiet
+  room reflections and diffuse reverb, 45Hz high-pass, 4.2kHz low-pass,
+  restrained treble and constant gain. MP3 at 128 kbps / 44.1 kHz stereo.
+- Reproducible score and renderer: `scripts/audio/render-writing-piano.py`
+  (Python with NumPy and FFmpeg). Source samples stay in the build cache;
+  playback downloads only the finished MP3. No oscillators generate notes.
+- Decays wrap across the musical cycle; runtime smooths the final boundary
+  with a 40ms crossfade. The previous `Mystical Piano` track is no longer used.
 
 Both tracks load only after a playback request, from the portal's own
 origin. Playback does not contact Freesound or OpenGameArt. Compressed
