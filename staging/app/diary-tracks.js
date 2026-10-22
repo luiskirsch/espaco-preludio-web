@@ -1,7 +1,7 @@
 /** Licensed stereo recordings, downloaded only after the listener presses play. */
 const tracks = {
   forest: { url: new URL('./assets/diary/forest-recorded-v1.mp3', import.meta.url), overlap: 2.5 },
-  piano: { url: new URL('./assets/diary/piano-unwind-v2.mp3', import.meta.url), overlap: .04 },
+  piano: { url: new URL('./assets/diary/piano-unwind-v3.mp3', import.meta.url), overlap: .04 },
 };
 const recordings = new Map();
 

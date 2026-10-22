@@ -29,7 +29,7 @@ from the portal's own origin; playback does not contact OpenGameArt.
 
 # Piano para desacelerar
 
-`piano-unwind-v2.mp3` is an original sparse arrangement created for the
+`piano-unwind-v3.mp3` is an original sparse arrangement created for the
 Espaço Prelúdio diary, using the softest dynamic layer of **Upright Piano**
 from **VSCO 2 Community Edition**. The piano was sampled by **Simon Dalzell /
 Ivy Audio** and distributed by **Sam Gossner / Versilian Studios**.
@@ -40,7 +40,9 @@ Ivy Audio** and distributed by **Sam Gossner / Versilian Studios**.
 - Samples: `Player_dyn1_rr1_010.wav` through `_024.wav`, even indexes only.
   Sample key mapping follows the library's `MappingChart.txt`.
 - Arrangement: 120 seconds, 48 BPM, 56 softly played notes, open voicings
-  and long spaces. No percussion, rhythmic backing or additional instruments.
+  and long spaces. Each phrase varies its note order and spacing; the second
+  half introduces related voicings instead of repeating the first half.
+  No percussion, rhythmic backing or additional instruments.
 - Processing: slight touch/timing variations, gentle pedal releases, quiet
   room reflections and diffuse reverb, 45Hz high-pass, 4.2kHz low-pass,
   restrained treble and constant gain. MP3 at 128 kbps / 44.1 kHz stereo.

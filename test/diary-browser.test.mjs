@@ -645,11 +645,11 @@ test('diário real: autosave, memórias, sonhos, cápsulas, desabafos e telas re
     await audioClick('[data-preset="forest"]');
     await poll(() => evaluate("document.body.classList.contains('is-playing') && document.getElementById('playerDescription').textContent.includes('Um passeio pela floresta')"), 'floresta gravada no Web Audio');
     assert.equal(await evaluate("performance.getEntriesByType('resource').some(entry=>entry.name.includes('forest-recorded-v1.mp3'))"), true);
-    assert.equal(await evaluate("performance.getEntriesByType('resource').some(entry=>entry.name.includes('piano-unwind-v2.mp3'))"), false, 'Selecionar a floresta não baixa o piano');
+    assert.equal(await evaluate("performance.getEntriesByType('resource').some(entry=>entry.name.includes('piano-unwind-v3.mp3'))"), false, 'Selecionar a floresta não baixa o piano');
     await openDialog('#soundButton');
     await audioClick('[data-preset="piano"]');
     await poll(() => evaluate("document.body.classList.contains('is-playing') && document.getElementById('playerDescription').textContent.includes('Piano para desacelerar')"), 'piano separado da chuva');
-    assert.equal(await evaluate("performance.getEntriesByType('resource').some(entry=>entry.name.includes('piano-unwind-v2.mp3'))"), true);
+    assert.equal(await evaluate("performance.getEntriesByType('resource').some(entry=>entry.name.includes('piano-unwind-v3.mp3'))"), true);
     await audioClick('#playButton');
 
     await click('#diaryThemeToggle');

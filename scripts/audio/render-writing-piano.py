@@ -21,7 +21,7 @@ COMMIT = '440300901dfe9275fd84e0b7763af1f8443ae62e'
 BASE = f'https://raw.githubusercontent.com/sgossner/VSCO-2-CE/{COMMIT}/Keys/Upright%20Piano/'
 RATE = 44100
 SECONDS = 120
-OUTPUT = ROOT / 'app/assets/diary/piano-unwind-v2.mp3'
+OUTPUT = ROOT / 'app/assets/diary/piano-unwind-v3.mp3'
 
 # Quietest sampled dynamic, nearby original keys; no oscillator-generated piano.
 SAMPLE_INDEXES = [10, 12, 14, 16, 18, 20, 22, 24]
@@ -70,26 +70,31 @@ def main():
         indices = (start + np.arange(count)) % length
         mix[indices] += voice * level
 
-    # Two slow passes: open voicings, shared tones and no dramatic cadence.
-    # Fmaj9, Cadd9/E, Dm7, Bbmaj9, Fmaj9/A, Csus2/G; 48 BPM, two bars each.
-    voicings = [
-        (41, 57, 60, 67), (52, 55, 62, 64), (50, 57, 60, 65),
-        (46, 57, 62, 65), (45, 55, 60, 64), (43, 55, 60, 62),
+    # Related open voicings at 48 BPM, two bars per phrase. The second half
+    # changes inversions and shared tones instead of repeating the first pass.
+    # Each phrase has its own spacing and order, without adding busier notes.
+    phrases = [
+        # Voicing (bass, inner, middle, upper), onsets, voice order, touch.
+        ((41, 57, 60, 67), (.13, 2.55, 5.09, 7.61), (1, 3, 2, 3), 1.00),
+        ((52, 55, 62, 64), (.18, 3.05, 5.67, 8.02), (2, 3, 1, 2), .94),
+        ((50, 57, 60, 65), (.13, 2.75, 6.25), (1, 2, 3), .97),
+        ((46, 57, 62, 65), (.21, 3.32, 5.91, 8.25), (1, 3, 2, 1), .92),
+        ((45, 55, 60, 64), (.12, 2.43, 5.48, 7.94), (2, 1, 3, 2), .96),
+        ((43, 55, 60, 62), (.17, 3.36, 6.67), (1, 2, 3), .90),
+        ((41, 57, 60, 64), (.14, 2.88, 5.46, 8.16), (1, 2, 3, 2), .97),
+        ((52, 57, 60, 67), (.22, 3.20, 5.82, 8.40), (2, 3, 1, 3), .92),
+        ((50, 53, 60, 64), (.16, 2.33, 6.31), (1, 3, 2), .95),
+        ((46, 53, 60, 62), (.12, 3.57, 6.27, 8.71), (2, 1, 3, 2), .93),
+        ((45, 57, 60, 65), (.18, 2.79, 5.16, 7.76), (1, 2, 3, 1), .94),
+        ((43, 55, 62, 64), (.14, 3.12, 6.63), (2, 3, 1), .90),
     ]
     score = []
-    for cell in range(12):
-        bass, lower, middle, upper = voicings[cell % 6]
+    for cell, (voicing, onsets, voices, touch) in enumerate(phrases):
         start = cell * 10 + .35
-        touch = [1, .94, .97, .92, .96, .90][cell % 6]
-        events = [
-            (bass, start, .17, 6.2),
-            (lower, start + .13, .16, 5.3),
-            (upper, start + 2.57 + (.025 if cell % 2 else -.02), .12, 5.8),
-            (middle, start + 5.09, .15, 5.6),
-        ]
-        # Some phrases end in quiet space; the second pass gently changes touch.
-        if cell not in (2, 5, 8, 11):
-            events.append((upper if cell < 6 else lower, start + 7.61, .085, 5.1))
+        events = [(voicing[0], start, .17, 6.2)]
+        for position, (offset, voice) in enumerate(zip(onsets, voices, strict=True)):
+            level = .085 if position == 3 else {1: .16, 2: .15, 3: .12}[voice]
+            events.append((voicing[voice], start + offset, level, 5.8 if voice == 3 else 5.3))
         for midi, onset, level, hold in events:
             note(midi, onset, level * touch, hold)
             score.append({'midi': midi, 'onset': round(onset, 3), 'level': round(level * touch, 4)})

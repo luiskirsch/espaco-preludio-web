@@ -1,6 +1,6 @@
 /** Browser-only diary helpers. Nothing starts at module load. */
 import { loadCabinRain } from './diary-rain.js?h=28fc06031d';
-import { loadForest, loadPiano } from './diary-tracks.js?h=98c26c48b3';
+import { loadForest, loadPiano } from './diary-tracks.js?h=15ae23e42d';
 
 const SOUNDSCAPES = {
   rain: { notes: [261.63, 329.63, 392, 523.25, 440, 392, 329.63, 293.66], interval: 2600, decay: 5.8, level: .038 },

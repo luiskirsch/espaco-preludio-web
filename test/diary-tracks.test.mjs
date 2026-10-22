@@ -37,7 +37,7 @@ test('both loop lengths preserve stereo, original samples and a continuous bound
 
 for (const [name, loader, file] of [
   ['forest', loadForest, 'forest-recorded-v1.mp3'],
-  ['piano', loadPiano, 'piano-unwind-v2.mp3'],
+  ['piano', loadPiano, 'piano-unwind-v3.mp3'],
 ]) {
   test(`${name} downloads only on request, retries failures and caches only successful decodes`, async t => {
     const { context } = fixture();
