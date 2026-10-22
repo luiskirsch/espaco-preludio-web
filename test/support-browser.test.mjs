@@ -58,6 +58,9 @@ test('apoio: consentimento, tentativa idempotente, acompanhamento e telas respon
   await set('#requestNeed', 'Gostaria de conversar para organizar o próximo passo.');
   await click('#nextStep');
   await poll(() => evaluate("!document.getElementById('wizardStep2').hidden"), 'escolha de destinatário');
+  assert.equal(await evaluate("document.querySelectorAll('input[name=\"recipient\"]:checked').length"), 0, 'com dois caminhos, nenhum vem marcado');
+  await click('#nextStep');
+  assert.equal(await evaluate("!document.getElementById('wizardError').hidden && !document.getElementById('wizardStep2').hidden"), true, 'não avança sem escolher o caminho');
   await click('input[name="recipient"][value="care"]');
   await click('#nextStep');
   await poll(() => evaluate("!document.getElementById('wizardStep3').hidden"), 'revisão de envio');

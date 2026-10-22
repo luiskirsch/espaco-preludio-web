@@ -29,7 +29,7 @@ function selectedCompany() { return companyById($('requestCompany').value); }
 function selectedRecipient() { return $('requestForm').querySelector('input[name="recipient"]:checked')?.value; }
 function routeName(recipient) { return recipient === 'company' ? 'Equipe da organização' : 'Equipe de cuidado'; }
 function routeOwner(company, recipient) { return company?.config?.[recipient === 'company' ? 'companyOwnerName' : 'careOwnerName'] || routeName(recipient); }
-function enabled(company, recipient) { return company?.config?.enabled === true && company.config[recipient === 'company' ? 'companyEnabled' : 'careEnabled'] === true; }
+function enabled(company, recipient) { const flag = { care: 'careEnabled', company: 'companyEnabled' }[recipient]; return Boolean(flag) && company?.config?.enabled === true && company.config[flag] === true; }
 function hasRoute(company) { return enabled(company, 'care') || enabled(company, 'company'); }
 function closed(item) { return ['closed', 'cancelled'].includes(item.status); }
 function overdue(item) { return !closed(item) && !['resolved', 'waiting_employee'].includes(item.status) && item.dueAt && new Date(item.dueAt).getTime() < Date.now(); }
@@ -168,7 +168,8 @@ function showStep(next) {
   $('discardDraft').hidden = !!pendingPayload;
   if (step === 2) renderRecipients();
   if (step === 3) renderReview();
-  $('wizardTitle').focus();
+  $('requestForm').scrollTop = 0;
+  $('wizardTitle').focus({ preventScroll: true });
 }
 function openWizard(category) {
   dialogOpener = document.activeElement;
