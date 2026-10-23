@@ -1443,3 +1443,69 @@
 .bookmark-highlight { color:inherit; background:#dab25166; border-radius:2px; }
 @media(max-width:640px) { .book-actions { gap:4px; } .book-actions .book-close,.book-actions .book-new,#bookmarkButton { padding-inline:8px; letter-spacing:0; } }
 @media(prefers-reduced-motion:reduce) { .is-book-writing .book-ribbons .book-ribbon { transition:none; } }
+
+/* Um pequeno arquivo de lembranças, com a mesma matéria do diário. */
+.diary-dialog--bookmarks {
+  width:min(600px,calc(100% - 32px));
+  max-height:calc(100svh - 32px);
+  padding:28px 30px 24px;
+  border:1px solid #bfa17366;
+  border-radius:22px;
+  background:radial-gradient(ellipse at 16% 0,#ad80501c,transparent 58%),linear-gradient(145deg,#3d3031,#292429);
+  box-shadow:0 28px 90px #100b0e80,inset 0 1px #fff3d80c;
+  scrollbar-width:thin;
+  scrollbar-color:#b49a7566 transparent;
+}
+.diary-dialog--bookmarks .dialog-top { align-items:center; }
+.diary-dialog--bookmarks .dialog-kicker { font-size:10px; letter-spacing:.22em; color:#cfb58b; }
+.diary-dialog--bookmarks .dialog-close { width:36px; height:36px; color:#dbc6aa; border-color:#bfa17338; background:#ffffff03; }
+.diary-dialog--bookmarks h2 { margin:16px 0 8px; max-width:440px; color:#f3e6d2; font:500 clamp(29px,4vw,36px)/1.12 var(--serif); letter-spacing:-.02em; text-wrap:balance; }
+.diary-dialog--bookmarks .bookmark-intro { margin:0; color:#c9b9a7; font:400 13px/1.6 var(--sans); }
+.bookmark-section-label { color:#ccb084; font:600 9px/1.5 var(--sans); letter-spacing:.18em; }
+.bookmark-empty { display:flex; flex-direction:column; align-items:center; margin-top:24px; padding:22px 22px 26px; border:1px solid #c2a16b2e; border-radius:14px; background:radial-gradient(ellipse at 50% 14%,#c9a36b12,transparent 70%),#1d171a22; text-align:center; }
+.bookmark-keepsake { position:relative; width:156px; height:96px; margin:0 0 12px; }
+.bookmark-keepsake:before { content:''; position:absolute; inset:17px 17px 11px; border:1px solid #cfb38355; border-radius:6px 9px 9px 6px; background:repeating-linear-gradient(0deg,transparent 0 11px,#cfb3830c 11px 12px),linear-gradient(110deg,#9b785016,#e8c8900a); box-shadow:3px 3px 0 #c7a57414,6px 6px 0 #c7a5740a; transform:rotate(-5deg); }
+.bookmark-keepsake:after { content:''; position:absolute; left:29px; top:14px; width:1px; height:66px; background:#cfb38340; transform:rotate(-5deg); }
+.bookmark-keepsake span { position:absolute; z-index:1; top:12px; left:52px; width:18px; height:64px; background:linear-gradient(90deg,#0003,transparent 46%,#0004),#a64f42; clip-path:polygon(0 0,100% 0,100% 100%,50% 84%,0 100%); transform:rotate(-5deg); }
+.bookmark-keepsake span:nth-child(2) { left:78px; top:10px; height:74px; background-color:#66889e; }
+.bookmark-keepsake span:nth-child(3) { left:104px; top:8px; height:58px; background-color:#bba16b; }
+.diary-dialog--bookmarks .bookmark-empty h3 { margin:10px 0 8px; color:#f2e3cc; font:500 29px/1.15 var(--serif); text-wrap:balance; }
+.diary-dialog--bookmarks .bookmark-empty p { max-width:350px; margin:0; color:#c9b9a7; font:400 13px/1.7 var(--sans); }
+.diary-dialog--bookmarks .gold-button { display:inline-flex; align-items:center; justify-content:center; gap:20px; min-height:44px; padding:12px 20px; border:1px solid #e6c79166; border-radius:8px; background:linear-gradient(135deg,#e4c58e,#cfa96f); color:#30251d; font:600 12px/1.4 var(--sans); box-shadow:0 4px 14px #160d0c26,inset 0 1px #fff5dc55; }
+.diary-dialog--bookmarks .gold-button:hover { background:linear-gradient(135deg,#efd6a7,#ddba83); }
+.bookmark-empty .gold-button { margin-top:22px; }
+.bookmark-how { display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; margin-top:20px; color:#bca991; font:400 10px/1.5 var(--sans); }
+.bookmark-how span { display:flex; align-items:center; gap:7px; }
+.bookmark-how b { color:#cbb083; font:500 10px/1.5 var(--serif); }
+.bookmark-compose { margin-top:22px; padding-top:20px; border-top:1px solid #c2a16b2e; }
+.diary-dialog--bookmarks .dialog-note { margin:7px 0 18px; color:#c9b9a7; font-size:12px; line-height:1.65; }
+.bookmark-selection { margin:0 0 18px; padding:10px 14px; border-left:2px solid #bb9e6b88; border-radius:0 6px 6px 0; color:#e2cfb4; background:#d6b27d08; font:italic 18px/1.4 var(--serif); overflow-wrap:anywhere; }
+.diary-dialog--bookmarks .dialog-field { gap:7px; font:500 12px/1.6 var(--sans); color:#e4d4bd; }
+.diary-dialog--bookmarks #bookmarkLabel { min-height:44px; border-color:#b99c704d; background:#17151c52; color:#f4e6d4; }
+.diary-dialog--bookmarks #bookmarkLabel::placeholder { color:#b6a28d; opacity:1; }
+.diary-dialog--bookmarks .bookmark-colors { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:18px 0 20px; }
+.diary-dialog--bookmarks .bookmark-colors legend { color:#e4d4bd; font-size:12px; }
+.diary-dialog--bookmarks .bookmark-color { gap:8px; padding:9px 10px; border:1px solid #b99c7026; border-radius:7px; color:#d6c5af; font-size:11px; }
+.diary-dialog--bookmarks .bookmark-color span { width:12px; height:22px; flex-shrink:0; }
+.diary-dialog--bookmarks .bookmark-color:has(input:checked) { border-color:#d5b57b99; background:#cbaa7014; color:#f6e4c5; text-decoration:none; }
+.diary-dialog--bookmarks .dialog-actions { margin-top:0; }
+.diary-dialog--bookmarks #bookmarkError:empty { display:none; }
+.bookmark-saved-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:26px; padding-top:20px; border-top:1px solid #c2a16b2e; }
+.bookmark-saved-heading > span:last-child { color:#bca991; font:400 10px/1.5 var(--sans); }
+.diary-dialog--bookmarks .bookmark-list { margin-top:12px; gap:10px; max-height:none; overflow:visible; }
+.diary-dialog--bookmarks .bookmark-item { padding:15px 16px 10px; border-color:#b99c702d; border-left:3px solid var(--ribbon-color); border-radius:0 10px 10px 0; background:#17151c30; }
+.diary-dialog--bookmarks .bookmark-open strong { display:flex; justify-content:space-between; gap:14px; color:#f0dfc6; font-size:23px; }
+.diary-dialog--bookmarks .bookmark-open strong > span { color:#cbb083; font-size:16px; }
+.diary-dialog--bookmarks .bookmark-open small { color:#cbb083; font-size:10px; }
+.diary-dialog--bookmarks .bookmark-open > span { color:#c9b9a7; font-size:12px; line-height:1.65; }
+.diary-dialog--bookmarks .bookmark-item .text-button { color:#cebda8; font-size:11px; }
+@media(max-width:480px) {
+  .diary-dialog--bookmarks { width:calc(100% - 24px); max-height:calc(100svh - 24px); padding:20px; border-radius:18px; }
+  .diary-dialog--bookmarks h2 { margin-top:14px; font-size:31px; }
+  .diary-dialog--bookmarks .dialog-kicker { font-size:9px; letter-spacing:.15em; }
+  .bookmark-empty { margin-top:20px; padding:18px 14px 22px; }
+  .diary-dialog--bookmarks .bookmark-empty h3 { font-size:27px; }
+  .bookmark-how { flex-direction:column; align-items:center; gap:6px; margin-top:16px; }
+  .diary-dialog--bookmarks .bookmark-colors { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .diary-dialog--bookmarks .gold-button { width:100%; gap:12px; }
+}

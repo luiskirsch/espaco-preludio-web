@@ -1248,7 +1248,10 @@ test('production diary: colored ribbons persist, return to exact passages and fo
   await click('[data-ribbon-color="blue"]');
   assert.ok(await evaluate("document.getElementById('dialogBody').textContent.includes('Uma conversa <especial>')"), 'title is restored as text');
   await click('[data-bookmark-visit]');
-  await poll(() => evaluate(`document.getElementById('journalText').selectionStart===${start} && Number(document.getElementById('writingPageIndicator').dataset.sheetPage)>1`), 'exact passage revealed');
+  await poll(() => evaluate(`document.getElementById('journalText').selectionStart===${start} && Number(document.getElementById('writingPageIndicator').dataset.sheetPage)>1`), 'exact passage revealed').catch(async error => {
+    error.message += ' ' + JSON.stringify(await evaluate("(()=>{const text=document.getElementById('journalText');return {start:text.selectionStart,end:text.selectionEnd,length:text.value.length,page:document.getElementById('writingPageIndicator').dataset.sheetPage,transform:text.style.transform,focus:document.activeElement.id,dialog:document.getElementById('diaryDialog').open}})()"));
+    throw error;
+  });
   const prefix = 'Um novo começo.\n';
   await fill('#journalText', prefix + original);
   await poll(() => accounts.get('A').get('marked-page')?.bookmarks?.[0]?.start === start + prefix.length, 'bookmark follows insertion');
@@ -1299,4 +1302,28 @@ test('production diary: colored ribbons persist, return to exact passages and fo
   await poll(() => accounts.get('A').get('marked-page')?.bookmarks?.length === 1, 'removal persisted');
   await evaluate('window.__diaryAuth("B")');
   await poll(() => evaluate("!document.getElementById('diaryDialog').open && !document.querySelector('[data-ribbon-color]')"), 'switching accounts wipes private bookmarks');
+}));
+
+test('production diary: empty bookmark card leads back to writing and fits narrow screens', { ...options, timeout: 45000 }, () => withBrowser(async ({ navigate, click, fill, evaluate, send }) => {
+  await navigate();
+  await click('#bookmarkButton');
+  assert.equal(await evaluate("!!document.getElementById('bookmarkStartWriting')"), true, 'empty state offers a way to start');
+  for (const width of [1280, 390, 320]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 700 });
+    await evaluate('document.fonts.ready');
+    const layout = await evaluate("(()=>{const dialog=document.getElementById('diaryDialog'),box=dialog.getBoundingClientRect();return {content:dialog.scrollWidth,width:dialog.clientWidth,left:box.left,right:box.right,viewport:innerWidth}})()");
+    assert.ok(layout.content <= layout.width && layout.left >= 0 && layout.right <= layout.viewport, `bookmark card fits ${width}px: ${JSON.stringify(layout)}`);
+    if (process.env.DIARY_BOOKMARK_CARD_PREVIEW) {
+      const shot = await send('Page.captureScreenshot', { format: 'png' });
+      await writeFile(join(tmpdir(), `ep-bookmark-card-${width}.png`), Buffer.from(shot.data, 'base64'));
+    }
+  }
+  await click('#bookmarkStartWriting');
+  await poll(() => evaluate("!document.getElementById('diaryDialog').open && document.activeElement.id==='journalText'"), 'empty card returns to writing');
+  assert.equal(await evaluate("document.getElementById('bookFrame').classList.contains('is-cover-open')"), true);
+  assert.equal(await evaluate("document.getElementById('diaryDialog').classList.contains('diary-dialog--bookmarks')"), false, 'card appearance resets on close');
+  await fill('#journalText', 'Um dia que merece uma fita.');
+  await click('#bookmarkButton');
+  assert.equal(await evaluate("!!document.getElementById('bookmarkForm')"), true, 'writing can now receive a marker');
+  assert.equal(await evaluate("document.getElementById('bookmarkStartWriting')"), null, 'empty prompt gives way to the form');
 }));
