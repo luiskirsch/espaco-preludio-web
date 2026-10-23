@@ -12,7 +12,7 @@ async function mount(b){
  await b.evaluate(`(async()=>{const {mountDailyMood}=await import('/app/daily-mood.js');window.mountMood=mountDailyMood;window.owner={uid:'synthetic-owner',getIdToken:async()=> 'synthetic-token'};window.current=true;window.daily=mountDailyMood({user:window.owner,backendUrl:location.origin,isCurrent:()=>window.current});await window.daily.ready;})()`);
 }
 
-test('home daily check-in requires descriptive answers, saves atomically, retries without losing responses and supports editing',{timeout:40000,skip:!chrome},async t=>{
+test('home daily check-in requires descriptive answers, saves atomically, retries without losing responses and only reviews saved records',{timeout:40000,skip:!chrome},async t=>{
  const writes=[];let fail=true;
  const b=await browserFixture(t,options(async(method,url,body)=>{
   if(method==='GET')return {ok:true,items:[]};
@@ -55,12 +55,17 @@ test('home daily check-in requires descriptive answers, saves atomically, retrie
  assert.deepEqual(writes[1],{method:'POST',path:'/therapy/paciente/humor',body:{mood:4,wellbeing:{anxiety:0,energy:8,sleep:10},note:'synthetic private note'}});
  assert.equal(await ev('document.querySelector("[data-mood=\\"4\\"]").disabled'),true);
  assert.equal(await ev('document.querySelectorAll(".wbe-dialog input:checked").length'),0,'sensitive modal answers clear after closing');
- await click('#moodWellbeing');assert.equal(await ev('document.querySelector(".wbe-note").hidden'),true);
- assert.equal(await ev('document.querySelector("input[name=sleep]:checked").value'),'10');
- await click('input[name="sleep"][value="8"]');await click('.wbe-submit');
- await poll(()=>ev('!document.querySelector(".wbe-dialog").open'),'edited daily well-being');
- assert.deepEqual(writes.at(-1),{method:'PATCH',path:'/therapy/paciente/humor/bem-estar',body:{anxiety:0,energy:8,sleep:8}});
- await click('#moodWellbeing');await click('.wbe-close');await poll(()=>ev('!document.querySelector(".wbe-dialog").open'),'close without saving');assert.equal(writes.length,3);
+ await click('#moodWellbeing');
+ assert.ok(await ev('document.getElementById("moodWellbeing").textContent.includes("Ver registro")'));
+ assert.equal(await ev('document.querySelectorAll(".wbe-record article").length'),3);
+ assert.ok(await ev('document.querySelector(".wbe-record").textContent.includes("Restaurador")'));
+ assert.equal(await ev('document.querySelectorAll(".wbe-dialog input:not(:disabled)").length'),0);
+ assert.equal(await ev('document.querySelector(".wbe-submit").hidden'),true);
+ await click('input[name="sleep"][value="8"]');await ev('document.querySelector(".wbe-form").requestSubmit()');assert.equal(writes.length,2);
+ await click('.wbe-add-note');assert.equal(await ev('document.getElementById("wbeNote").readOnly'),true);
+ assert.equal(await ev('document.getElementById("wbeNote").value'),'synthetic private note');
+ await click('.wbe-done');await poll(()=>ev('!document.querySelector(".wbe-dialog").open'),'closed saved record');
+ await click('#moodWellbeing');await click('.wbe-close');assert.equal(writes.length,2);
  await ev('window.daily.destroy()');assert.equal(await ev('!!document.querySelector(".wbe-dialog")'),false);
  assert.deepEqual(b.errors,[]);
 });
@@ -97,18 +102,42 @@ test('check-in fits without modal scrolling and small screens require each answe
  assert.deepEqual(b.errors,[]);
 });
 
-test('existing mood can complete wellbeing from home without another mood submission; leaving an unfinished modal saves nothing',{timeout:20000,skip:!chrome},async t=>{
+test('legacy saved mood is view-only and missing metrics stay unrecorded',{timeout:20000,skip:!chrome},async t=>{
  const writes=[];
  const date=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
- const b=await browserFixture(t,options(async(method,url,body)=>{if(method==='GET')return {ok:true,items:[{date,mood:4}]};writes.push({method,body});return {ok:true,date,metrics:body};}));
+ const b=await browserFixture(t,options(async(method,url,body)=>{if(method==='GET')return {ok:true,items:[{date,mood:4,note:'original note'}]};writes.push({method,body});return {ok:true,date,metrics:body};}));
  await mount(b);const ev=b.evaluate,click=s=>ev(`document.querySelector(${JSON.stringify(s)}).click()`);
  assert.equal(await ev('document.querySelector(".wbe-dialog").open'),false);
- assert.ok(await ev('document.getElementById("moodWellbeing").textContent.includes("Completar")'));
- await click('#moodWellbeing');await click('input[name="energy"][value="8"]');await click('.wbe-close');
- await poll(()=>ev('!document.querySelector(".wbe-dialog").open'),'cancelled incomplete form');assert.equal(writes.length,0);
- await click('#moodWellbeing');assert.equal(await ev('document.querySelectorAll(".wbe-dialog input:checked").length'),0);
- for(const id of ['anxiety','energy','sleep'])await click(`input[name="${id}"][value="5"]`);
- await click('.wbe-submit');await poll(()=>ev('!document.querySelector(".wbe-dialog").open'),'completed legacy day');
- assert.deepEqual(writes,[{method:'PATCH',body:{anxiety:5,energy:5,sleep:5}}]);
+ await click('#moodWellbeing');assert.equal(await ev('document.querySelectorAll(".wbe-record article").length'),3);
+ assert.equal(await ev('[...document.querySelectorAll(".wbe-record strong")].filter(e=>e.textContent==="Não registrado").length'),3);
+ await ev('document.querySelector(".wbe-form").requestSubmit()');assert.equal(writes.length,0);
+ await click('.wbe-add-note');assert.equal(await ev('document.getElementById("wbeNote").value'),'original note');
+ assert.equal(await ev('document.getElementById("wbeNote").readOnly'),true);
+ for(const [width,height] of [[1440,768],[390,844],[320,568]]){
+  await b.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<700});
+  await click('.wbe-back');
+  assert.equal(await ev('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>{const d=document.querySelector(".wbe-dialog");r(d.scrollHeight<=d.clientHeight+1);})))'),true);
+  await click('.wbe-add-note');
+ }
+ await click('.wbe-done');assert.equal(writes.length,0);
+ assert.deepEqual(b.errors,[]);
+});
+
+test('a day already saved in another tab is loaded for viewing instead of overwritten',{timeout:20000,skip:!chrome},async t=>{
+ let reads=0,writes=0;
+ const date=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const original={date,mood:3,wellbeing:{anxiety:2,energy:2,sleep:5},note:'saved in another tab'};
+ const b=await browserFixture(t,options(async method=>{
+  if(method==='GET')return {ok:true,items:++reads===1?[]:[original]};
+  writes++;return {status:409,body:{ok:false,error:'REGISTRO_JA_SALVO'}};
+ }));
+ await mount(b);const ev=b.evaluate,click=s=>ev(`document.querySelector(${JSON.stringify(s)}).click()`);
+ await click('[data-mood="4"]');
+ for(const id of ['anxiety','energy','sleep'])await click(`input[name="${id}"][value="8"]`);
+ await click('.wbe-submit');await poll(()=>ev('!document.querySelector(".wbe-dialog").open'),'existing record loaded');
+ assert.equal(writes,1);await click('#moodWellbeing');
+ assert.ok(await ev('document.querySelector(".wbe-record").textContent.includes("Pouca energia")'));
+ assert.equal(await ev('document.querySelector(".wbe-submit").hidden'),true);
+ assert.equal(await ev('document.querySelector("[data-mood=\\"3\\"]").classList.contains("is-selected")'),true);
  assert.deepEqual(b.errors,[]);
 });

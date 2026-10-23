@@ -1,4 +1,4 @@
-import {createWellbeingDialog} from './wellbeing-entry.js?h=926be1a2b1';
+import {createWellbeingDialog} from './wellbeing-entry.js?h=2ad04c8200';
 
 export function todayInSaoPaulo(){
   const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
@@ -19,7 +19,7 @@ export function mountDailyMood({user,backendUrl,isCurrent=()=>true}){
     for(const button of buttons){button.classList.toggle('is-selected',saved&&Number(button.dataset.mood)===Number(record.mood));button.disabled=loading||saved;button.style.opacity=saved&&!button.classList.contains('is-selected')?'.55':'';button.style.cursor=saved?'default':'';}
     footer.classList.toggle('is-visible',saved);
     edit.hidden=!saved||loading;
-    edit.textContent=complete(record?.wellbeing)?'Editar bem-estar':'Completar bem-estar';
+    edit.textContent='Ver registro';
     message.textContent=saved?(complete(record.wellbeing)?'✓ Dia registrado':'✓ Humor registrado'):'';
   }
   async function request(path,options={}){
@@ -27,18 +27,23 @@ export function mountDailyMood({user,backendUrl,isCurrent=()=>true}){
     const token=await user.getIdToken();if(!current())throw Error('SESSION_CHANGED');
     const response=await fetch(backendUrl+path,{...options,signal:controller.signal,cache:'no-store',headers:{Authorization:`Bearer ${token}`,...(options.body?{'Content-Type':'application/json'}:{})}});
     const data=await response.json().catch(()=>({}));
-    if(!current()||!response.ok||!data.ok)throw Error('SAVE_FAILED');
+    if(!current()||!response.ok||!data.ok)throw Object.assign(Error('SAVE_FAILED'),{status:response.status,code:data.error});
     return data;
   }
   const entry=createWellbeingDialog({
     save:async({metrics,note})=>{
-      const creating=!!pending,mood=creating?Number(pending.dataset.mood):record?.mood;
-      if(!creating&&record?.date!==todayInSaoPaulo())throw Error('DAY_CHANGED');
-      const data=await request(creating?'/therapy/paciente/humor':'/therapy/paciente/humor/bem-estar',{
-        method:creating?'POST':'PATCH',body:JSON.stringify(creating?{mood,wellbeing:metrics,...(note?{note}:{})}:metrics)
-      });
+      if(!pending)throw Error('READ_ONLY');
+      const mood=Number(pending.dataset.mood);
+      let data;
+      try{data=await request('/therapy/paciente/humor',{method:'POST',body:JSON.stringify({mood,wellbeing:metrics,...(note?{note}:{})})});}
+      catch(error){
+        if(error.status!==409||error.code!=='REGISTRO_JA_SALVO')throw error;
+        const saved=await request('/therapy/paciente/humor?days=1');
+        record=saved.items?.find(item=>item.date===todayInSaoPaulo());
+        if(!record)throw error;pending=null;paint();return;
+      }
       if(data.date!==todayInSaoPaulo())throw Error('DAY_CHANGED');
-      record={date:data.date,mood,wellbeing:data.wellbeing||data.metrics||metrics};pending=null;
+      record={date:data.date,mood,wellbeing:data.wellbeing||metrics,note:note||null};pending=null;
       try{sessionStorage.setItem(key,JSON.stringify({date:record.date,mood:String(mood)}));localStorage.setItem('ep:dirtyAt',String(Date.now()));}catch{}
       paint();
     },
@@ -52,8 +57,8 @@ export function mountDailyMood({user,backendUrl,isCurrent=()=>true}){
     buttons.forEach(button=>button.classList.toggle('is-selected',button===pending));
     entry.open({moodLabel:pending.querySelector('.a-mood__name')?.textContent||pending.title,withNote:true});
   }
-  function openEdit(){if(current()&&record?.date===todayInSaoPaulo()){pending=null;entry.open({metrics:record.wellbeing});}}
-  buttons.forEach(button=>button.addEventListener('click',openMood));edit.addEventListener('click',openEdit);
+  function openView(){if(current()&&record?.date===todayInSaoPaulo()){pending=null;entry.open({readOnly:true,metrics:record.wellbeing,note:record.note,date:record.date,moodLabel:buttons.find(button=>Number(button.dataset.mood)===Number(record.mood))?.querySelector('.a-mood__name')?.textContent||''});}}
+  buttons.forEach(button=>button.addEventListener('click',openMood));edit.addEventListener('click',openView);
   try{const cached=JSON.parse(sessionStorage.getItem(key)||'null');if(cached?.date===todayInSaoPaulo())record=cached;}catch{}
   paint();
   const ready=(async()=>{
@@ -63,5 +68,5 @@ export function mountDailyMood({user,backendUrl,isCurrent=()=>true}){
     }catch{if(current()&&!record){message.textContent='Não foi possível consultar o registro de hoje.';}}
     finally{if(current()){loading=false;paint();}}
   })();
-  return {ready,destroy(){disposed=true;controller.abort();entry.destroy();buttons.forEach(button=>button.removeEventListener('click',openMood));edit.removeEventListener('click',openEdit);}};
+  return {ready,destroy(){disposed=true;controller.abort();entry.destroy();buttons.forEach(button=>button.removeEventListener('click',openMood));edit.removeEventListener('click',openView);}};
 }

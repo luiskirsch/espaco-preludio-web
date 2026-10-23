@@ -27,12 +27,13 @@ test('well-being: real records, missing values, chart toggles, periods, saving a
  await click('[data-metric="anxiety"]');await click('[data-chart="area"]');await click('[data-days="7"]');
  assert.equal(await ev('document.querySelector("[data-days=\\"7\\"]").getAttribute("aria-pressed")'),'true');
  await b.send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
- await click('#wbEdit');
+ await click('#wbView');
  assert.equal(await ev('document.querySelector(".wbe-dialog").open'),true);
- for(const [id,n] of [['anxiety',0],['energy',8],['sleep',8]])await click(`input[name="${id}"][value="${n}"]`);
- await click('.wbe-submit');
- await poll(()=>ev('document.getElementById("wbStatus").textContent.includes("salvo")'),'saved metrics');
- assert.deepEqual(await ev('window.saved'),{anxiety:0,energy:8,sleep:8});
+ assert.equal(await ev('document.querySelector(".wbe-submit").hidden'),true);
+ assert.equal(await ev('document.querySelectorAll(".wbe-record article").length'),3);
+ assert.equal(await ev('document.querySelectorAll(".wbe-dialog input:not(:disabled)").length'),0);
+ await ev('document.querySelector(".wbe-form").requestSubmit()');assert.equal(await ev('window.saved===undefined'),true);
+ await click('.wbe-done');
  for(const width of [1440,768,390,320]){
   await b.send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:width<700});
   await ev('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
