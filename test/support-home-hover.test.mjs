@@ -13,4 +13,9 @@ test('support action matches the journey and survey links under mouse hover', {t
     styles.push(await b.evaluate(`(()=>{const e=document.querySelector(${JSON.stringify(selector)}),s=getComputedStyle(e),a=getComputedStyle(e.querySelector('b'));return {tag:e.tagName,color:s.color,transform:s.transform,filter:s.filter,background:s.backgroundColor,shadow:s.boxShadow,gap:s.gap,arrowBackground:a.backgroundColor,arrowRadius:a.borderRadius};})()`));
   }
   assert.deepEqual(styles[0],styles[1]);assert.deepEqual(styles[0],styles[2]);
+  const diary=await b.send('DOM.querySelector',{nodeId:root.nodeId,selector:'.home-diary-card'});
+  await b.send('CSS.forcePseudoState',{nodeId:diary.nodeId,forcedPseudoClasses:['hover']});
+  const diaryStyle=await b.evaluate('(()=>{const s=getComputedStyle(document.querySelector(".home-diary-card__cta"));return {background:s.backgroundColor,transform:s.transform};})()');
+  assert.equal(diaryStyle.background,'rgb(237, 196, 100)');
+  assert.equal(diaryStyle.transform,'matrix(1, 0, 0, 1, 0, -2)');
 });

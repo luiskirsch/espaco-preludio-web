@@ -1155,7 +1155,10 @@ body.a-route-home .home-hero::before, body.a-route-home .home-hero::after { z-in
   .a-btn--primary:not(:disabled):hover { background: #303432; box-shadow: 0 10px 24px rgba(0,0,0,.24); }
   .a-btn--accent:not(:disabled):hover { background: #245d37; box-shadow: 0 10px 24px rgba(45,106,62,.3); }
   .a-btn--ghost:not(:disabled):hover { border-color: rgba(45,106,62,.32); background: #fbfdfb; color: var(--a-accent); }
-  .home-hero__btn:hover { background: #edc464; box-shadow: 0 15px 32px rgba(0,0,0,.22); }
+  .home-hero__btn:hover,
+  .home-diary-card:hover .home-diary-card__cta { background: #edc464; box-shadow: 0 15px 32px rgba(0,0,0,.22); }
+  .home-diary-card__cta { transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease; }
+  .home-diary-card:hover .home-diary-card__cta { transform: translateY(-2px); }
 
   /* Chips, horários, dias e abas vivem em faixas com rolagem: deslocamento e
      sombra são cortados pela borda do container. Hover só em cor/borda. */
@@ -1218,6 +1221,7 @@ body.a-route-home .home-hero::before, body.a-route-home .home-hero::after { z-in
 
 @media (prefers-reduced-motion: reduce) {
   .home-hero__sky *, .home-hero__sky *::before, .home-hero__sky *::after { animation: none !important; }
+  .home-diary-card__cta { transition: none !important; transform: none !important; }
   .home-hero[data-weather="storm"] .sky-flash { opacity: 0; }
   .sky-drops i { top: auto; bottom: calc(var(--y, 50) * 1%); }
 }
