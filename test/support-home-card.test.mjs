@@ -22,7 +22,7 @@ test('home support card prioritizes tracking an existing request even when the c
   for(const enabled of [true,false]){
     const {card,label}=await cardState({enabled,requests:[{id:'request-one',status:'open'}]});
     assert.equal(card.hidden,false);assert.match(label.innerHTML,/Acompanhar pedido/);
-    assert.equal(card.href,'./apoio.html#requestsTitle');assert.equal(label['data-i18n-html'],'p-app-home:acompanhar_pedido');
+    assert.equal(label.href,'./apoio.html#requestsTitle');assert.equal(label['data-i18n-html'],'p-app-home:acompanhar_pedido');
   }
 });
 test('home support card offers a new request only with a configured route and no previous requests',async()=>{

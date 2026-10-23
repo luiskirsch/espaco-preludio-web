@@ -23,7 +23,7 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="/logo-144.png">
   <link rel="stylesheet" href="../fonts/fraunces500-600_inter400-700_jetbrainsmono500-600.css?h=2a7bf0e67f">
-  <link rel="stylesheet" href="./app.css?h=5ed7e20d66">
+  <link rel="stylesheet" href="./app.css?h=c769be97e7">
   <link rel="stylesheet" href="./session-card.css?h=571fa2671c">
   <link rel="stylesheet" href="./weather-hero.css?h=92c4e7cb78">
   <style>
@@ -90,11 +90,9 @@
     .home-support-card__copy small { color: #a07924; font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
     .home-support-card h2 { margin: 5px 0 4px; color: var(--a-ink); font: 600 19px/1.2 var(--ff-serif,serif); }
     .home-support-card p { margin: 0; color: var(--a-ink2); font-size: 12px; line-height: 1.55; }
-    .home-support-card__cta { flex-shrink: 0; display: inline-flex; align-items: center; gap: 10px; color: #145b59; font-size: 12px; font-weight: 800; }
-    .home-support-card__cta b { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 50%; background: #145b59; color: #fff; }
+    .home-support-card__cta { flex-shrink: 0; margin-top: 0; }
     .home-support-card[hidden] { display: none; }
-    .home-support-card:hover { border-color: rgba(200,150,58,.46); box-shadow: 0 14px 30px rgba(19,55,52,.1); }
-    .home-support-card:focus-visible { outline: 3px solid #d6a944; outline-offset: 4px; }
+    .home-support-card__cta:focus-visible { outline: 3px solid #d6a944; outline-offset: 4px; }
     @media(max-width:700px) { .home-support-card { display: grid; grid-template-columns: 40px minmax(0,1fr); gap: 12px; padding: 18px; border-radius: 20px; }.home-support-card__icon { width: 40px; height: 40px; border-radius: 12px; }.home-support-card__cta { grid-column: 2; } }
     @media(max-width:700px) { .home-diary-card { display: grid; grid-template-columns: 46px minmax(0,1fr); gap: 14px; padding: 22px 19px; border-radius: 20px; }.home-diary-card__icon { width: 46px; height: 57px; border-radius: 12px; }.home-diary-card__icon svg { width: 30px; height: 30px; }.home-diary-card__cta { grid-column: 2; justify-self: start; padding: 11px 15px; }.home-diary-card h2 { font-size: 22px; }.home-diary-card__copy small { font-size: 9px; } }
   </style>
@@ -219,11 +217,11 @@ body.mood-note-open{overflow:hidden}
         <div class="home-diary-card__copy"><small data-i18n="p-app-home:diary_eyebrow">Seu espaço de memórias</small><h2 data-i18n="p-app-home:diary_title">Diário dos Pensamentos Vividos</h2><p data-i18n="p-app-home:diary_description">Um lugar para suas memórias, sonhos e sentimentos.</p></div>
         <span class="home-diary-card__cta"><span data-i18n="p-app-home:diary_cta">Abrir meu diário</span><span aria-hidden="true">↗</span></span>
       </a>
-      <a class="home-support-card" id="homeSupport" href="./apoio.html" hidden>
+      <div class="home-support-card" id="homeSupport" hidden>
         <span class="home-support-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M5.6 5.6l3.6 3.6M14.8 14.8l3.6 3.6M18.4 5.6l-3.6 3.6M9.2 14.8l-3.6 3.6"/></svg></span>
         <div class="home-support-card__copy"><small data-i18n="p-app-home:central_de_apoio_2e13d">Central de apoio</small><h2 data-i18n="p-app-home:algo_dificil_de_resolver_sozinho_0ff17">Algo difícil de resolver sozinho?</h2><p data-i18n="p-app-home:peca_ajuda_escolha_quem_recebe_d9c58">Peça ajuda, escolha quem recebe seu pedido e acompanhe cada próximo passo.</p></div>
-        <span class="home-support-card__cta" data-i18n-html="p-app-home:pedir_apoio_2f1bc">Pedir apoio <b aria-hidden="true">→</b></span>
-      </a>
+        <a href="./apoio.html" class="home-support-card__cta" data-i18n-html="p-app-home:pedir_apoio_2f1bc">Pedir apoio <b aria-hidden="true">→</b></a>
+      </div>
       <div class="home-section-head"><div><span data-i18n="p-app-home:desenvolvimento_continuo_8d046">Desenvolvimento contínuo</span><h2 id="journeyTitle" data-i18n="p-app-home:sua_jornada_profissional_18457">Sua jornada profissional</h2></div><a href="./jornada.html" data-i18n="p-app-home:ver_trilhas_6866f">Ver trilhas</a></div>
       <div id="homeJourney" class="home-feature-loading" data-i18n="p-app-home:carregando_seu_proximo_passo_17a4f">Carregando seu próximo passo…</div>
     </section>
@@ -609,7 +607,7 @@ body.mood-note-open{overflow:hidden}
     const key = hasRequests ? "acompanhar_pedido" : history.status === "rejected" ? "abrir_central" : "pedir_apoio_2f1bc";
     label.setAttribute("data-i18n-html", `p-app-home:${key}`);
     label.innerHTML = `${hasRequests ? "Acompanhar pedido" : history.status === "rejected" ? "Abrir central" : "Pedir apoio"} <b aria-hidden="true">→</b>`;
-    card.href = hasRequests ? "./apoio.html#requestsTitle" : "./apoio.html";
+    label.href = hasRequests ? "./apoio.html#requestsTitle" : "./apoio.html";
     card.hidden = false;
   }
 
