@@ -15,6 +15,8 @@
   <link rel="modulepreload" href="../js/firebase-config.js?h=69b74fc63a">
   <link rel="modulepreload" href="../js/twofa-session.js?h=295a6b1bd5">
   <link rel="modulepreload" href="../app/mood-face.js?h=254c2bc271">
+  <link rel="modulepreload" href="../app/wellbeing.js?h=5e9cfd685c">
+  <link rel="modulepreload" href="../app/wellbeing-model.js?h=c004476f4f">
   <!-- /ep:perf -->
   <meta name="robots" content="noindex, nofollow">
   <meta name="mobile-web-app-capable" content="yes">
@@ -24,6 +26,7 @@
   <link rel="icon" type="image/png" href="/logo-144.png">
   <link rel="stylesheet" href="../fonts/fraunces500-600_inter400-700_jetbrainsmono500-600.css?h=2a7bf0e67f">
   <link rel="stylesheet" href="./app.css?h=510132451b">
+  <link rel="stylesheet" href="./wellbeing.css?h=8bb3501622">
   <link rel="stylesheet" href="./mood-face.css?h=6debd550f4">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
   <style>
@@ -186,16 +189,7 @@
       </div>
     </div>
 
-    <!-- Histórico -->
-    <div class="a-section" style="padding-top:0;">
-      <div style="font-size:15px;font-weight:700;margin-bottom:12px;" data-i18n="p-app-humor:historico_bea29">Histórico</div>
-      <div class="a-card a-card--pad" id="historyList">
-        <div class="a-empty" style="padding:24px 0;">
-          <div class="a-empty__icon" style="font-size:32px;">📝</div>
-          <div class="a-empty__sub" data-i18n="p-app-humor:seus_registros_de_humor_aparecerao_1e555">Seus registros de humor aparecerão aqui.</div>
-        </div>
-      </div>
-    </div>
+    <section id="wellbeingSection" class="a-section" aria-label="Evolução do bem-estar"></section>
 
   </div>
 </div>
@@ -204,6 +198,7 @@
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?h=69b74fc63a";
   import { mountMoodFace } from "./mood-face.js?h=254c2bc271";
+  import { createWellbeing } from "./wellbeing.js?h=5e9cfd685c";
   let heroFace = null, heroFaceMood = null;
   function setHeroFace(mood) {
     if (heroFaceMood === mood) return;
@@ -227,6 +222,15 @@
   let humorData    = {};
   let humorNotes   = {};
   let chartInstance = null;
+
+  const wellbeingView = createWellbeing(document.getElementById("wellbeingSection"), { save: async metrics => {
+    const owner = currentUser;
+    if (!owner) throw new Error("Sessao encerrada");
+    const token = await owner.getIdToken();
+    const response = await fetch(BACKEND_BASE_URL + "/therapy/paciente/humor/bem-estar", {method:"PATCH",cache:"no-store",headers:{Authorization:"Bearer " + token,"Content-Type":"application/json"},body:JSON.stringify(metrics)});
+    if (!response.ok || currentUser !== owner) throw new Error("Nao foi possivel salvar");
+    await loadFromBackend(true);
+  }});
 
   // Data em horário de São Paulo, não UTC — toISOString() usaria UTC e, entre
   // 21h e 23h59 em SP (UTC-3), o UTC já teria virado o dia seguinte, fazendo
@@ -270,7 +274,8 @@
   }
 
   onAuthStateChanged(auth, async user => {
-    if (!user) { window.location.href = "./login.html"; return; }
+    if (!user) { wellbeingView.reset(); currentUser = null; window.location.href = "./login.html"; return; }
+    wellbeingView.reset();
     currentUser = user;
     try { sessionStorage.setItem("ep:lastUid", user.uid); } catch {}
     if (lastUid && lastUid !== user.uid) { humorData = {}; humorNotes = {}; }
@@ -293,7 +298,8 @@
     await loadFromBackend();
   });
 
-  async function loadFromBackend() {
+  async function loadFromBackend(rethrow = false) {
+    const owner = currentUser;
     try {
       for (let i = localStorage.length - 1; i >= 0; i--) {
         const key = localStorage.key(i);
@@ -302,18 +308,23 @@
     } catch {}
 
     try {
-      const token = await currentUser.getIdToken();
+      const token = await owner.getIdToken();
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor?all=1`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const d = await r.json().catch(() => ({}));
-      if (!d.ok) throw new Error(d.error || "api");
+      if (!r.ok || !d.ok) throw new Error(d.error || "api");
+      if (currentUser !== owner) return;
+      wellbeingView.update(d.items || [], todayStr());
       humorData = {};
       humorNotes = {};
       d.items.forEach(item => { humorData[item.date] = item.mood; if (item.note) humorNotes[item.date] = item.note; });
       writeSessionCache(humorData);
       renderAll();
     } catch {
+      if (currentUser !== owner) return;
+      wellbeingView.error("Não foi possível carregar a evolução. Atualize a página para tentar novamente.");
+      if (rethrow) throw new Error("Falha ao atualizar registro");
       if (!Object.keys(humorData).length) {
         document.getElementById("heroLabel").textContent = "Não foi possível carregar o histórico.";
       }
@@ -333,11 +344,10 @@
       setHeroFace(3);
       document.getElementById("heroLabel").innerHTML = 'Ainda sem registro hoje · <a href="./home.html" style="color:inherit;text-decoration:underline">registrar no início</a>';
     }
-    buildChart();
+    if (typeof Chart === "function") buildChart();
     buildMonth();
     buildStreak();
     buildCalendar();
-    loadHistory();
   }
 
   // Calendário mensal: navega do primeiro mês com registro até o atual;
@@ -501,35 +511,6 @@
   function escapeNote(t) {
     return String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
-  function loadHistory() {
-    const sorted = Object.entries(humorData).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 30);
-    const list = document.getElementById("historyList");
-    if (!sorted.length) {
-      list.innerHTML = `<div class="a-empty" style="padding:24px 0;"><div class="a-empty__icon" style="font-size:32px;">📝</div><div class="a-empty__sub">Seus registros de humor aparecerão aqui.</div></div>`;
-      return;
-    }
-    list.innerHTML = `<div class="history-scroll">${sorted.map(([dateStr, val]) => {
-      const d = dateFromKey(dateStr);
-      const m = MOODS[val] || MOODS[3];
-      return `<div class="history-item">
-        <div class="history-emoji">${m.emoji}</div>
-        <div class="history-info">
-          <div class="history-label">${DAYS_FULL[d.getUTCDay()]}</div>
-          <div class="history-day">${m.label}</div>
-          ${humorNotes[dateStr] ? `<p class="history-note">${escapeNote(humorNotes[dateStr])}</p>` : ""}
-        </div>
-        <div class="history-date">${d.getUTCDate()} de ${MONTHS[d.getUTCMonth()]}</div>
-      </div>`;
-    }).join("")}</div>`;
-    // Até 7 registros visíveis; o restante rola dentro do card.
-    const box = list.querySelector(".history-scroll");
-    const items = box.querySelectorAll(".history-item");
-    if (items.length > 7) {
-      box.style.maxHeight = items[7].offsetTop + "px";
-      box.classList.add("is-scrollable");
-    }
-  }
-
   // Desenha o último estado desta aba antes de o login confirmar (sem piscar).
   {
     const t0 = dateFromKey(todayStr());
