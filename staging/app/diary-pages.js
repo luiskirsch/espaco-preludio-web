@@ -191,8 +191,7 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
     return { style, lineHeight: parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.5 };
   }
 
-  function pageAtCaret() {
-    const caret = textarea.selectionStart ?? textarea.value.length;
+  function pageAtCaret(caret = textarea.selectionStart ?? textarea.value.length) {
     const { lineHeight } = copyTypography();
     measure.replaceChildren(document.createTextNode(textarea.value.slice(0, caret) || '\u200b'));
     const marker = document.createElement('span');
@@ -274,6 +273,15 @@ export function createPagedEditor({ textarea, viewport, measure, paper, indicato
     reset() { return layout({ reset: true }); },
     follow({ animate = false, withSound = false } = {}) { return layout({ followCaret: true, animate, withSound }); },
     show,
+    selectionForPage() {
+      if (pageAtCaret() === page) return { start: textarea.selectionStart, end: textarea.selectionEnd };
+      let low = 0, high = textarea.value.length;
+      while (low < high) {
+        const middle = Math.floor((low + high) / 2);
+        if (pageAtCaret(middle) < page) low = middle + 1; else high = middle;
+      }
+      return { start: low, end: low };
+    },
     fits(value) {
       if (pageHeight <= 1) return true;
       copyTypography();

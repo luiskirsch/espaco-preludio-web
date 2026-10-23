@@ -1,9 +1,10 @@
 import { createSoundscape, createDictation } from './diary-audio.js?h=b9ea31d7d2';
-import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, hasEntryContent, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=baf32a79b0';
-import { createPagedEditor } from './diary-pages.js?h=5308d04d2c';
+import { FEELINGS, AROMAS, WEATHER, today, dateLabel, draft, hasEntryContent, countWords, feelingStats, searchEntries, escapeHtml as esc } from './diary-model.js?h=3149bf964e';
+import { createPagedEditor } from './diary-pages.js?h=5955d1a718';
 import { createBookFoley, bookMotionTiming } from './diary-foley.js?h=3737733da5';
 import { createIdleInvitation } from './diary-invitation.js?h=26ddf46ff3';
 import { startReleaseRitual } from './diary-release.js?h=1cf48e0479';
+import { BOOKMARK_COLORS, moveBookmarks } from './diary-bookmarks.js?h=5d11f2d552';
 
 const $ = id => document.getElementById(id);
 const student = document.body.dataset.portal === 'student';
@@ -297,16 +298,22 @@ function setWritingFocus(active) {
   document.body.classList.toggle('is-writing-focus', active);
   if (!active) writingAnchor = null;
 }
-function renderTypeset(sealed) {
+function renderTypeset(sealed, bookmark = null) {
   const typeset = $('journalTypeset');
   if (!sealed) {
     typeset.hidden = true; typeset.replaceChildren();
     text.removeAttribute('readonly'); text.removeAttribute('aria-hidden'); text.removeAttribute('tabindex');
     return;
   }
-  const paragraphs = String(current.text || '').trim().split(/\n+/).map(part => part.trim()).filter(Boolean);
-  const first = paragraphs[0] || '';
-  typeset.innerHTML = `<p><span class="drop-cap">${esc(first.charAt(0))}</span>${esc(first.slice(1))}</p>${paragraphs.slice(1).map(part => `<p>${esc(part)}</p>`).join('')}`;
+  const paragraphs = [...String(current.text || '').matchAll(/[^\n]+/g)].map(part => ({
+    value: part[0].trim(), offset: part.index + part[0].length - part[0].trimStart().length,
+  })).filter(part => part.value);
+  const passage = (value, offset) => {
+    if (!bookmark || offset + value.length <= bookmark.start || offset >= Math.max(bookmark.end, bookmark.start + 1)) return esc(value);
+    const start = Math.max(0, bookmark.start - offset), end = Math.min(value.length, Math.max(bookmark.end, bookmark.start + 1) - offset);
+    return `${esc(value.slice(0, start))}<mark class="bookmark-highlight">${esc(value.slice(start, end))}</mark>${esc(value.slice(end))}`;
+  };
+  typeset.innerHTML = paragraphs.map((part, index) => `<p data-text-start="${part.offset}">${index === 0 ? `<span class="drop-cap">${passage(part.value.charAt(0), part.offset)}</span>${passage(part.value.slice(1), part.offset + 1)}` : passage(part.value, part.offset)}</p>`).join('');
   typeset.hidden = false;
   text.setAttribute('readonly', ''); text.setAttribute('aria-hidden', 'true'); text.setAttribute('tabindex', '-1');
 }
@@ -330,7 +337,73 @@ function renderMeta() {
   $('deleteCurrent').hidden = !current.version;
   $('entryExtra').parentElement.hidden = $('entryExtra').hidden && !current.version;
   renderInsights();
+  renderRibbons();
   requestAnimationFrame(resizeEditor);
+}
+function bookmarkedEntries() {
+  return [...new Map([...bookEntries, ...entries, current].filter(entry => !entry.locked && entry.kind !== 'capsule').map(entry => [entry.id, entry])).values()];
+}
+function renderRibbons() {
+  const marks = bookmarkedEntries().flatMap(entry => entry.bookmarks || []);
+  $('ribbonButton').setAttribute('aria-label', `Abrir marcadores do diário · ${marks.length} momentos marcados`);
+  const colors = Object.entries(BOOKMARK_COLORS).filter(([color]) => color !== 'red' && marks.some(mark => mark.color === color));
+  $('extraRibbons').innerHTML = colors.map(([color, info]) => `<button type="button" class="book-ribbon book-ribbon--saved" data-ribbon-color="${color}" style="--ribbon-color:${info.hex}" title="${info.label} · ${marks.filter(mark => mark.color === color).length} momentos" aria-label="Ver momentos com marcador ${info.label.toLowerCase()}"></button>`).join('');
+}
+async function visitBookmark(entryId, bookmarkId, edit = false) {
+  const generation = bootGeneration;
+  dictation.stop(); dictationEntryId = null;
+  if (pageCreation || !assertReady() || !await settle() || generation !== bootGeneration) return;
+  const entry = bookmarkedEntries().find(item => item.id === entryId);
+  const bookmark = entry?.bookmarks?.find(mark => mark.id === bookmarkId);
+  if (!bookmark) return;
+  closeDialog(); openBook(); showEditor(entry);
+  requestAnimationFrame(() => {
+    if (generation !== bootGeneration || current.id !== entryId) return;
+    if (edit) { openBookmarks(bookmark); return; }
+    if (current.sealed) {
+      renderTypeset(true, bookmark);
+      const typeset = $('journalTypeset'), paragraphs = [...typeset.querySelectorAll('p')];
+      const target = typeset.querySelector('mark') || paragraphs.find(part => Number(part.dataset.textStart) >= bookmark.start) || paragraphs.at(-1);
+      if (target) typeset.scrollTop = target.offsetTop - typeset.clientHeight / 3;
+      typeset.setAttribute('tabindex', '0'); typeset.focus({ preventScroll: true });
+    } else {
+      text.focus({ preventScroll: true }); text.setSelectionRange(bookmark.start, bookmark.end); pagedEditor.follow();
+    }
+    $('bookFrame').scrollIntoView({ block: 'nearest', behavior: 'instant' });
+    toast(`Você voltou a “${bookmark.label}”.`);
+  });
+}
+function openBookmarks(editing = null, filter = '') {
+  if (!assertReady()) return;
+  dictation.stop(); dictationEntryId = null;
+  const entryId = current.id, generation = bootGeneration;
+  const range = editing || (current.sealed ? { start: 0, end: 0 } : pagedEditor.selectionForPage());
+  const snippet = current.text.slice(range.start, range.end || range.start).trim();
+  const rows = bookmarkedEntries().flatMap(entry => (entry.bookmarks || []).filter(mark => !filter || mark.color === filter).map(mark => ({ entry, mark })));
+  const canAdd = !$('editorView').hidden && current.kind !== 'capsule' && Boolean(current.text.trim()) && (editing || (current.bookmarks || []).length < 32);
+  const initialColor = editing?.color || Object.keys(BOOKMARK_COLORS).find(color => !(current.bookmarks || []).some(mark => mark.color === color)) || 'red';
+  const colorOptions = Object.entries(BOOKMARK_COLORS).map(([color, info]) => `<label class="bookmark-color" style="--ribbon-color:${info.hex}"><input type="radio" name="bookmarkColor" value="${color}" ${color === initialColor ? 'checked' : ''} required><span aria-hidden="true"></span>${info.label}</label>`).join('');
+  openDialog(editing ? 'Editar marcador' : 'Seus momentos marcados', `<p>Uma fita para reencontrar as palavras que você quer guardar por perto.</p>${canAdd ? `<form id="bookmarkForm"><p class="dialog-note">${editing ? 'Escolha um novo nome ou uma nova cor.' : snippet ? 'O trecho selecionado será marcado.' : current.sealed ? 'Este marcador guarda o começo deste dia. Para marcar um trecho, reabra o dia e selecione as palavras.' : 'Este marcador guarda a posição na página. Você também pode selecionar um trecho antes de abrir os marcadores.'}</p><label class="dialog-field">Nome do momento<input id="bookmarkLabel" maxlength="80" required value="${esc(editing?.label || snippet.replace(/\s+/g, ' ').slice(0, 80))}" placeholder="Uma conversa que quero lembrar"></label><fieldset class="bookmark-colors"><legend>Cor da fita</legend>${colorOptions}</fieldset><div class="dialog-actions"><button type="submit" class="gold-button" id="saveBookmark">${editing ? 'Salvar marcador' : '+ Marcar este momento'}</button></div><p id="bookmarkError" role="alert"></p></form>` : `<p class="dialog-note">${(current.bookmarks || []).length >= 32 ? 'Esta página já tem 32 marcadores. Você pode editar ou remover uma fita.' : 'Abra uma página com escrita para marcar um novo momento.'}</p>`}${filter ? '<button type="button" class="quiet-button" id="allBookmarks">Ver todas as cores</button>' : ''}<div class="bookmark-list">${rows.length ? rows.map(({ entry, mark }) => `<article class="bookmark-item" style="--ribbon-color:${BOOKMARK_COLORS[mark.color]?.hex || '#a5322b'}"><button type="button" class="bookmark-open" data-bookmark-visit="${esc(mark.id)}" data-bookmark-entry="${esc(entry.id)}"><strong>${esc(mark.label)}</strong><small>${esc(dateLabel(entry.date))} · ${esc(BOOKMARK_COLORS[mark.color]?.label || '')}${entry.kind === 'dream' ? ' · Sonho' : ''}</small><span>${esc(entry.text.slice(mark.start, Math.max(mark.end, mark.start + 100)).slice(0, 140))}</span></button><button type="button" class="text-button" data-bookmark-edit="${esc(mark.id)}" data-bookmark-entry="${esc(entry.id)}" aria-label="Editar marcador ${esc(mark.label)}">Editar</button>${entry.id === current.id ? `<button type="button" class="text-button" data-bookmark-remove="${esc(mark.id)}" aria-label="Remover marcador ${esc(mark.label)}">Remover</button>` : ''}</article>`).join('') : '<p class="dialog-note">Suas fitas aparecerão aqui. Escolha um momento para começar.</p>'}</div>`);
+  $('allBookmarks')?.addEventListener('click', () => openBookmarks());
+  $('bookmarkForm')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (generation !== bootGeneration || entryId !== current.id) return;
+    const label = $('bookmarkLabel').value.trim();
+    if (!label) { $('bookmarkLabel').focus(); return; }
+    const button = $('saveBookmark'), errorBox = $('bookmarkError'), serial = dialogSerial;
+    const mark = { id: editing?.id || `mark-${crypto.randomUUID()}`, label, color: dialog.querySelector('[name="bookmarkColor"]:checked').value, start: range.start, end: range.end };
+    current.bookmarks = [...(current.bookmarks || []).filter(item => item.id !== mark.id), mark];
+    markDirty(); button.disabled = true;
+    if (await flush()) { if (serial === dialogSerial) { closeDialog(); toast('Marcador salvo. Sua fita espera por você aqui.'); } }
+    else if (serial === dialogSerial) { errorBox.textContent = 'O marcador continua aqui. Tente salvar novamente.'; button.disabled = false; editing = mark; }
+  });
+  dialog.querySelectorAll('[data-bookmark-visit]').forEach(button => button.addEventListener('click', () => visitBookmark(button.dataset.bookmarkEntry, button.dataset.bookmarkVisit)));
+  dialog.querySelectorAll('[data-bookmark-edit]').forEach(button => button.addEventListener('click', () => visitBookmark(button.dataset.bookmarkEntry, button.dataset.bookmarkEdit, true)));
+  dialog.querySelectorAll('[data-bookmark-remove]').forEach(button => button.addEventListener('click', () => {
+    if (generation !== bootGeneration || entryId !== current.id) return;
+    current.bookmarks = (current.bookmarks || []).filter(mark => mark.id !== button.dataset.bookmarkRemove);
+    markDirty({ immediate: true }); openBookmarks();
+  }));
 }
 function renderInsights() {
   const list = entries.filter(entry => entry.date === today() && entry.id !== current.id);
@@ -696,6 +769,7 @@ const dictation = createDictation({ onText(transcript) {
   const spacer = text.value && !/\s$/.test(text.value) ? ' ' : '';
   const value = (text.value + spacer + transcript).slice(0, 20000);
   if (!pagedEditor.fits(value)) { toast('Você chegou à última das 365 páginas. Suas lembranças continuam guardadas.'); return; }
+  current.bookmarks = moveBookmarks(current.bookmarks, current.text, value);
   text.value = value; text.setSelectionRange(text.value.length, text.value.length); current.text = text.value; markDirty(); resizeEditor({ followCaret: true, animate: true, withSound: true });
 }, onState(listening) {
   $('voiceButton').classList.toggle('is-listening', listening);
@@ -813,6 +887,7 @@ text.addEventListener('input', () => {
     toast('Você chegou à última das 365 páginas. Revise uma lembrança para abrir espaço.');
     resizeEditor({ followCaret: true }); return;
   }
+  current.bookmarks = moveBookmarks(current.bookmarks, current.text, text.value);
   current.text = text.value; setWritingFocus(true); markDirty(); resizeEditor({ followCaret: true, animate: true, withSound: true });
 });
 text.addEventListener('blur', () => setWritingFocus(false));
@@ -826,6 +901,12 @@ document.querySelectorAll('[data-tab]').forEach(button => button.addEventListene
 document.querySelectorAll('[data-go]').forEach(button => button.addEventListener('click', () => switchTab(button.dataset.go)));
 document.querySelectorAll('[data-memory]').forEach(button => button.addEventListener('click', () => openMemory(button.dataset.memory)));
 $('newPageButton').addEventListener('click', () => newPage(current.kind === 'dream' ? 'dream' : 'diary'));
+$('bookmarkButton').addEventListener('click', () => openBookmarks());
+$('ribbonButton').addEventListener('click', () => openBookmarks());
+$('extraRibbons').addEventListener('click', event => {
+  const ribbon = event.target.closest('[data-ribbon-color]');
+  if (ribbon) openBookmarks(null, ribbon.dataset.ribbonColor);
+});
 $('bookCover').addEventListener('click', openBook);
 $('bookCover').addEventListener('keydown', event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openBook(); } });
 $('coverTitleButton').addEventListener('mousedown', event => event.preventDefault());
@@ -915,7 +996,7 @@ async function demoApi(path, options = {}) {
     const item = JSON.parse(options.body); const previous = demoEntries.get(item.id);
     if ((previous?.version || 0) !== item.version) throw new Error('REGISTRO_ALTERADO');
     const saved = { ...item, version: item.version + 1, createdAt: previous?.createdAt || Date.now(), updatedAt: Date.now(), locked: item.kind === 'capsule' && item.unlockDate > today() };
-    if (saved.locked) { delete saved.text; delete saved.tags; delete saved.feelings; delete saved.aroma; delete saved.aromaText; delete saved.font; delete saved.weather; }
+    if (saved.locked) { delete saved.text; delete saved.tags; delete saved.feelings; delete saved.aroma; delete saved.aromaText; delete saved.font; delete saved.weather; delete saved.bookmarks; }
     demoEntries.set(item.id, saved); return { ok: true, item: saved };
   }
   if (options.method === 'DELETE') { demoEntries.delete(path.split('/').pop().split('?')[0]); return { ok: true }; }

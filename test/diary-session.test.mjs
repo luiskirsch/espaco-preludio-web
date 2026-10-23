@@ -82,7 +82,7 @@ async function fixture() {
           const item = { ...body, version: body.version + 1, createdAt: previous?.createdAt || Date.now(), updatedAt: Date.now(), locked: body.kind === 'capsule' && body.unlockDate > today() };
           store.set(item.id, structuredClone(item));
           const visible = structuredClone(item);
-          if (visible.locked) for (const key of ['text', 'tags', 'feelings', 'aroma', 'aromaText', 'font', 'weather']) delete visible[key];
+          if (visible.locked) for (const key of ['text', 'tags', 'feelings', 'aroma', 'aromaText', 'font', 'weather', 'bookmarks']) delete visible[key];
           payload = { ok: true, item: visible };
         } else throw new Error(`Unexpected method ${request.method}`);
         response.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' }).end(JSON.stringify(payload));
@@ -515,7 +515,7 @@ test('production diary: all collections retain the book background, geometry and
           for (const part of ['header', 'frame', 'tools', 'panels']) for (const metric of ['x', 'width']) {
             assert.ok(Math.abs(actual[part][metric] - baseline[part][metric]) < 1, `${name} ${width}: ${part} ${metric} remains in place`);
           }
-          assert.ok(Math.abs(actual.frame.y - baseline.frame.y) < 1, 'The collection does not jump up or down when replacing the book toolbar');
+          assert.ok(Math.abs(actual.frame.y - baseline.frame.y) < 1, `${path} ${theme} ${name} ${width}: the collection does not jump when replacing the book toolbar (${baseline.frame.y} → ${actual.frame.y})`);
           const reading = await evaluate("(()=>{const view=document.getElementById('collectionView'),paper=document.getElementById('paper').getBoundingClientRect(),last=view.getBoundingClientRect();return {overflow:document.documentElement.scrollWidth>innerWidth,title:parseFloat(getComputedStyle(view.querySelector('h1')).fontSize),intro:parseFloat(getComputedStyle(view.querySelector('.collection-intro')).fontSize),clipped:last.bottom>paper.bottom+1,cards:[...view.querySelectorAll('.entry-card,.collection-heading,.collection-toolbar,.feelings-view')].filter(node=>node.scrollWidth>node.clientWidth+2).map(node=>node.className)}})()");
           assert.equal(reading.overflow, false); assert.equal(reading.clipped, false); assert.deepEqual(reading.cards, []);
           assert.ok(reading.title >= 32 && reading.intro >= 15, 'Titles and supporting text retain a readable size');
@@ -1219,4 +1219,84 @@ test('production diary: a slow capsule response preserves a different modal open
   assert.equal(await evaluate("document.getElementById('dialogTitle').textContent"), title);
   assert.equal(await evaluate("!!document.getElementById('stopSound')"), true, 'Late completion leaves the newer dialog intact');
   assert.equal(await evaluate("document.getElementById('capsuleText')"), null, 'Sealed message is removed from the DOM');
+}));
+
+test('production diary: colored ribbons persist, return to exact passages and follow edits in both portals', { ...options, timeout: 60000 }, () => withBrowser(async ({ server, accounts, navigate, click, fill, evaluate, send }) => {
+  const original = Array.from({ length: 70 }, (_, i) => `Linha ${i}: uma lembrança para guardar com carinho.`).join('\n');
+  const start = original.indexOf('Linha 50:'), end = start + 38;
+  accounts.get('A').set('marked-page', entry('marked-page', original));
+  await navigate();
+  await click('#bookCover');
+  await evaluate(`(()=>{const text=document.getElementById('journalText');text.focus();text.setSelectionRange(${start},${end});text.dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowDown',bubbles:true}));})()`);
+  assert.ok(await evaluate("Number(document.getElementById('writingPageIndicator').dataset.sheetPage)>1"), 'passage lies on a later physical sheet');
+  await click('#bookmarkButton');
+  await fill('#bookmarkLabel', 'Uma conversa <especial>');
+  await click('[name="bookmarkColor"][value="blue"]');
+  const dialogLayout = await evaluate("(()=>{const dialog=document.getElementById('diaryDialog'),right=dialog.getBoundingClientRect().right;return {width:dialog.clientWidth,content:dialog.scrollWidth,overflow:[...dialog.querySelectorAll('*')].filter(node=>node.getBoundingClientRect().right>right).map(node=>({tag:node.tagName,class:node.className,width:node.getBoundingClientRect().width}))}})()");
+  assert.ok(dialogLayout.content <= dialogLayout.width, `bookmark dialog has no horizontal overflow: ${JSON.stringify(dialogLayout)}`);
+  if (process.env.DIARY_BOOKMARK_PREVIEW) {
+    const screenshot = await send('Page.captureScreenshot', { format: 'png' });
+    await writeFile(join(tmpdir(), 'ep-diary-bookmarks-dialog.png'), Buffer.from(screenshot.data, 'base64'));
+  }
+  await click('#saveBookmark');
+  await poll(() => accounts.get('A').get('marked-page')?.bookmarks?.length === 1, 'bookmark saved');
+  const saved = structuredClone(accounts.get('A').get('marked-page').bookmarks[0]);
+  assert.deepEqual({ start: saved.start, end: saved.end, color: saved.color }, { start, end, color: 'blue' });
+  await poll(() => evaluate("!document.getElementById('diaryDialog').open"), 'bookmark dialog closed');
+  await click('#newPageButton');
+  await poll(() => evaluate("!document.getElementById('journalText').value"), 'new blank page');
+  await click('[data-ribbon-color="blue"]');
+  assert.ok(await evaluate("document.getElementById('dialogBody').textContent.includes('Uma conversa <especial>')"), 'title is restored as text');
+  await click('[data-bookmark-visit]');
+  await poll(() => evaluate(`document.getElementById('journalText').selectionStart===${start} && Number(document.getElementById('writingPageIndicator').dataset.sheetPage)>1`), 'exact passage revealed');
+  const prefix = 'Um novo começo.\n';
+  await fill('#journalText', prefix + original);
+  await poll(() => accounts.get('A').get('marked-page')?.bookmarks?.[0]?.start === start + prefix.length, 'bookmark follows insertion');
+  await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/aluno-diario.html` });
+  await poll(() => evaluate("document.body.dataset.portal==='student' && !document.getElementById('journalText').disabled && !document.querySelector('.diary-entrance')"), 'student portal loaded');
+  // Exercise a real pointer click on the ribbon, including with the cover closed.
+  const point = await evaluate("(()=>{const node=document.querySelector('[data-ribbon-color=blue]');node.scrollIntoView({block:'center'});const b=node.getBoundingClientRect();return {x:b.left+b.width/2,y:b.top+b.height/2}})()");
+  await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...point, button: 'left', clickCount: 1 });
+  await send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...point, button: 'left', clickCount: 1 });
+  await poll(() => evaluate("document.getElementById('diaryDialog').open"), 'ribbon clickable below the cover');
+  await click('[data-bookmark-visit]');
+  await poll(() => evaluate(`document.getElementById('journalText').selectionStart===${start + prefix.length}`), 'restored passage in student diary');
+  await click('#bookmarkButton');
+  await fill('#bookmarkLabel', 'Outra fita');
+  await click('[name="bookmarkColor"][value="green"]');
+  await click('#saveBookmark');
+  await poll(() => accounts.get('A').get('marked-page')?.bookmarks?.length === 2, 'second color saved');
+  await poll(() => evaluate("!document.getElementById('diaryDialog').open"), 'second bookmark closed');
+  assert.equal(await evaluate("document.querySelectorAll('[data-ribbon-color]').length"), 2);
+  if (process.env.DIARY_BOOKMARK_PREVIEW) {
+    await evaluate("document.getElementById('bookFrame').scrollIntoView({block:'center'})");
+    const screenshot = await send('Page.captureScreenshot', { format: 'png' });
+    await writeFile(join(tmpdir(), 'ep-diary-bookmarks-ribbons.png'), Buffer.from(screenshot.data, 'base64'));
+  }
+  await click('#sealDayButton');
+  await poll(() => accounts.get('A').get('marked-page')?.sealed, 'day sealed');
+  await click('[data-ribbon-color="blue"]');
+  await click('[data-bookmark-visit]');
+  await poll(() => evaluate("!!document.querySelector('#journalTypeset mark') && document.getElementById('journalTypeset').scrollTop>0"), 'sealed passage highlighted and scrolled');
+  assert.equal(await evaluate("document.getElementById('journalTypeset').querySelector('mark').textContent"), original.slice(start, end));
+  await click('#bookmarkButton');
+  await click('[data-bookmark-edit]');
+  await poll(() => evaluate("document.getElementById('dialogTitle').textContent==='Editar marcador'"), 'edit bookmark');
+  await fill('#bookmarkLabel', 'Conversa renomeada');
+  await click('[name="bookmarkColor"][value="purple"]');
+  await click('#saveBookmark');
+  await poll(() => accounts.get('A').get('marked-page')?.bookmarks?.some(mark => mark.label === 'Conversa renomeada' && mark.color === 'purple'), 'rename and recolor persisted');
+  await poll(() => evaluate("!document.getElementById('diaryDialog').open"), 'edit saved');
+  await send('Emulation.setDeviceMetricsOverride', { width: 320, height: 900, deviceScaleFactor: 1, mobile: true });
+  await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+  assert.ok(await evaluate('document.documentElement.scrollWidth<=innerWidth'), 'toolbar and ribbons fit 320px');
+  await click('#bookmarkButton');
+  await click('[data-bookmark-remove]');
+  if (process.env.DIARY_BOOKMARK_PREVIEW) {
+    const screenshot = await send('Page.captureScreenshot', { format: 'png' });
+    await writeFile(join(tmpdir(), 'ep-diary-bookmarks-mobile.png'), Buffer.from(screenshot.data, 'base64'));
+  }
+  await poll(() => accounts.get('A').get('marked-page')?.bookmarks?.length === 1, 'removal persisted');
+  await evaluate('window.__diaryAuth("B")');
+  await poll(() => evaluate("!document.getElementById('diaryDialog').open && !document.querySelector('[data-ribbon-color]')"), 'switching accounts wipes private bookmarks');
 }));

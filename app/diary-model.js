@@ -14,7 +14,7 @@ export function dateLabel(date, options = {}) {
   return new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long', year: 'numeric', ...options }).format(new Date(`${date}T12:00:00Z`));
 }
 export function draft(kind = 'diary') {
-  return { id: `page-${crypto.randomUUID()}`, kind, date: today(), text: '', version: 0, unlockDate: null, feelings: [], tags: [], aroma: '', aromaText: '', font: 'hand', weather: '', sealed: false };
+  return { id: `page-${crypto.randomUUID()}`, kind, date: today(), text: '', version: 0, unlockDate: null, feelings: [], tags: [], aroma: '', aromaText: '', font: 'hand', weather: '', sealed: false, bookmarks: [] };
 }
 export function hasEntryContent(entry) {
   return Boolean(entry?.version || String(entry?.text || '').trim() || entry?.feelings?.length || entry?.tags?.length || entry?.aroma || String(entry?.aromaText || '').trim() || entry?.weather || entry?.font && entry.font !== 'hand');
