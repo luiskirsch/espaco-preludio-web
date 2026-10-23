@@ -180,15 +180,15 @@
       </div>
     </div>
 
-    <!-- Segurança: verificação em duas etapas opcional -->
-    <div class="menu-section a-mt-16 a-hide" id="mfaSection">
+    <!-- Segurança -->
+    <div class="menu-section a-mt-16" id="mfaSection">
       <div class="menu-section__title" data-i18n="p-app-perfil:seguranca_27a02">Segurança</div>
       <div class="menu-card">
-        <button type="button" class="menu-item" id="mfaItem">
+        <button type="button" class="menu-item" id="mfaItem" disabled aria-busy="true">
           <div class="menu-item__icon" style="background:rgba(45,106,62,.1);">🔐</div>
           <div class="menu-item__text">
             <div class="menu-item__label" data-i18n="p-app-perfil:verificacao_em_duas_etapas_e9246">Verificação em duas etapas</div>
-            <div class="menu-item__sub" id="mfaSub">—</div>
+            <div class="menu-item__sub" id="mfaSub">Verificando segurança da conta…</div>
           </div>
           <div class="menu-item__arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
         </button>
@@ -199,7 +199,21 @@
     <div class="menu-section a-mt-16">
       <div class="menu-section__title" data-i18n="p-app-perfil:notificacoes_e9c96">Notificações</div>
       <div class="menu-card" id="notifCard">
-        <!-- Preenchido pelo JS baseado no suporte do dispositivo -->
+        <div class="menu-item">
+          <div class="menu-item__icon" style="background:rgba(45,106,62,.1);">🔔</div>
+          <div class="menu-item__text">
+            <div class="menu-item__label">Notificações push</div>
+            <div class="menu-item__sub" id="notifSub">Verificando neste dispositivo…</div>
+          </div>
+          <button type="button" class="toggle-switch" id="notifToggle" aria-label="Notificações push" disabled></button>
+        </div>
+        <div class="menu-item">
+          <div class="menu-item__icon" style="background:rgba(40,140,180,.1);">📧</div>
+          <div class="menu-item__text">
+            <div class="menu-item__label">E-mail</div>
+            <div class="menu-item__sub" id="menuEmail">Carregando conta…</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -297,17 +311,21 @@
   import { clearPatientDek } from "../js/patient-session.js?h=b2d1db5669";
   import { ensureMfa, mfaStatus } from "../js/mfa-flow.js?h=d60b79b944";
 
-  // 2FA opcional (paciente, colaborador, aluno). Contas em que é obrigatório
-  // (profissional) gerenciam pelo perfil profissional — aqui fica oculto.
+  // A estrutura aparece junto do perfil. O servidor confirma o estado antes
+  // de liberar ações; contas profissionais mantêm a verificação obrigatória.
   let mfaEnabled = false;
   async function renderMfa(user) {
+    const item = document.getElementById("mfaItem");
+    item.disabled = true;
+    item.setAttribute("aria-busy", "true");
+    document.getElementById("mfaSub").textContent = "Verificando segurança da conta…";
     try {
       const state = await mfaStatus(user);
-      const item = document.getElementById("mfaItem");
+      if (currentUser !== user) return;
+      item.querySelector(".menu-item__arrow").hidden = state.required !== false;
       if (state.required !== false) {
         // Conta profissional: obrigatória, gerenciada no perfil profissional.
         item.disabled = true;
-        item.querySelector(".menu-item__arrow").remove();
         document.getElementById("mfaSub").textContent = "Ativada · sua conta também é profissional, então é obrigatória e protege todo o acesso";
         document.getElementById("mfaSection").classList.remove("a-hide");
         return;
@@ -316,15 +334,20 @@
       document.getElementById("mfaSub").textContent = mfaEnabled
         ? "Ativada · toque para desativar"
         : "Desativada · toque para ativar (recomendado)";
+      item.disabled = false;
       document.getElementById("mfaSection").classList.remove("a-hide");
-    } catch { /* indisponível — a seção permanece oculta */ }
+    } catch {
+      if (currentUser === user) document.getElementById("mfaSub").textContent = "Não foi possível consultar a segurança. Atualize a página para tentar novamente.";
+    } finally {
+      if (currentUser === user) item.setAttribute("aria-busy", "false");
+    }
   }
   document.getElementById("mfaItem").addEventListener("click", async () => {
     const item = document.getElementById("mfaItem");
     item.disabled = true;
     try { await ensureMfa(auth.currentUser, mfaEnabled ? { disable: true } : { enroll: true }); }
     catch { /* o próprio modal explica erros; cancelar não muda nada */ }
-    finally { item.disabled = false; await renderMfa(auth.currentUser); }
+    finally { await renderMfa(auth.currentUser); }
   });
 
   let currentUser = null;
@@ -354,7 +377,7 @@
   }
 
   onAuthStateChanged(auth, async user => {
-    if (!user) { window.location.href = "./login.html"; return; }
+    if (!user) { currentUser = null; window.location.href = "./login.html"; return; }
     currentUser = user;
     renderMfa(user);
     const name = user.displayName || user.email.split("@")[0];
@@ -363,34 +386,8 @@
     document.getElementById("profileEmail").textContent = user.email;
     document.getElementById("menuNome").textContent  = name;
     document.getElementById("newName").value = name;
-    // #menuEmail não existe ainda aqui — buildNotifCard() é quem o cria via
-    // innerHTML mais abaixo. Setar antes disso lançava TypeError e abortava
-    // o resto do callback (inclusive a lógica do avatar logo a seguir),
-    // deixando o "?" estático travado mesmo quando o usuário tinha nome mas
-    // não tinha foto. Preenchido dentro de buildNotifCard() agora.
-
-    // A foto NÃO vem de user.photoURL (Firebase Auth): esse campo é global à
-    // conta e pode ter sido definido por outro produto da mesma conta. A foto
-    // fica em therapy_patient_accounts (base64), isolada no Espaço Prelúdio.
-    let photoUrl = null;
-    try {
-      const idToken = await user.getIdToken();
-      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/me`, {
-        headers: { Authorization: `Bearer ${idToken}` }
-      });
-      if (r.ok) {
-        const a = (await r.json()).account || {};
-        if (a.photoBase64 && /^image\/(png|jpeg|webp)$/.test(a.photoMime || "")) {
-          photoUrl = `data:${a.photoMime};base64,${a.photoBase64}`;
-        }
-      }
-    } catch { /* sem conta/rede — cai pras iniciais, não é bloqueante */ }
-
-    if (photoUrl) {
-      setAvatar(photoUrl);
-    } else {
-      document.getElementById("profileAvatar").textContent = initials;
-    }
+    document.getElementById("menuEmail").textContent = user.email;
+    document.getElementById("profileAvatar").textContent = initials;
 
     // Notificações push — renderiza baseado no suporte do dispositivo
     (function buildNotifCard() {
@@ -447,11 +444,32 @@
             <div class="menu-item__label">Notificações push</div>
             <div class="menu-item__sub" id="notifSub">${isOn ? "✓ Ativas neste dispositivo" : "Toque para ativar"}</div>
           </div>
-          <button class="toggle-switch ${isOn ? "is-on" : ""}" id="notifToggle" data-csp-action="toggle-notifications"></button>
+          <button type="button" class="toggle-switch ${isOn ? "is-on" : ""}" id="notifToggle" aria-label="Notificações push" data-csp-action="toggle-notifications"></button>
         </div>
         ${emailRow}`;
       document.getElementById("menuEmail").textContent = user.email;
     })();
+
+    // A foto NÃO vem de user.photoURL (Firebase Auth): esse campo é global à
+    // conta e pode ter sido definido por outro produto da mesma conta. A foto
+    // fica em therapy_patient_accounts (base64), isolada no Espaço Prelúdio.
+    let photoUrl = null;
+    try {
+      const idToken = await user.getIdToken();
+      const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/me`, {
+        headers: { Authorization: `Bearer ${idToken}` }
+      });
+      if (r.ok) {
+        const a = (await r.json()).account || {};
+        if (a.photoBase64 && /^image\/(png|jpeg|webp)$/.test(a.photoMime || "")) {
+          photoUrl = `data:${a.photoMime};base64,${a.photoBase64}`;
+        }
+      }
+    } catch { /* sem conta/rede — cai pras iniciais, não é bloqueante */ }
+
+    if (currentUser !== user) return;
+    if (photoUrl) setAvatar(photoUrl);
+
   });
 
   // Upload de foto
