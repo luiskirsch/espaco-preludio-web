@@ -26,7 +26,7 @@ test('well-being: real records, missing values, chart toggles, periods, saving a
  await click('[data-metric="anxiety"]');assert.ok(await ev('document.getElementById("wbChart").textContent.includes("pelo menos três")'));
  await click('[data-metric="anxiety"]');await click('[data-chart="area"]');await click('[data-days="7"]');
  assert.equal(await ev('document.querySelector("[data-days=\\"7\\"]").getAttribute("aria-pressed")'),'true');
- await ev(`(()=>{document.querySelector('.wb-form-wrap').open=true;const f=document.getElementById('wbForm');f.elements.anxiety.value='0';f.elements.energy.value='7';f.elements.sleep.value='8';f.requestSubmit();})()`);
+ await ev(`(()=>{const f=document.getElementById('wbForm');f.elements.anxiety.value='0';f.elements.energy.value='7';f.elements.sleep.value='8';f.requestSubmit();})()`);
  await poll(()=>ev('document.getElementById("wbStatus").textContent.includes("salvo")'),'saved metrics');
  assert.deepEqual(await ev('window.saved'),{anxiety:0,energy:7,sleep:8});
  for(const width of [1440,768,390,320]){
