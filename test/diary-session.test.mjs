@@ -1009,7 +1009,7 @@ test('production diary: delete action stays inside the footer on both sides of a
       await click(direction === 'backward' ? '#previousWritingPage' : '#nextWritingPage');
       await poll(() => evaluate("!!document.querySelector('#pageTurnEffect .page-turn-snapshot')"), `${direction} snapshot`);
       await evaluate(`for(const animation of document.getElementById('pageTurnEffect').getAnimations()){animation.pause();animation.currentTime=${direction === 'backward' ? 1300 : 0}}`);
-      const controls = await evaluate("['#editorView','#pageTurnEffect .page-turn-snapshot','#pageTurnUnderlay .page-turn-snapshot'].filter(selector=>document.querySelector(selector)).map(selector=>{const root=document.querySelector(selector),button=root.querySelector('.paper-bottom .text-button'),footer=root.querySelector('.entry-footer').getBoundingClientRect(),row=root.querySelector('.paper-bottom').getBoundingClientRect(),box=button.getBoundingClientRect();return {selector,label:button.textContent,button:{left:box.left,right:box.right,top:box.top,bottom:box.bottom},footer:{left:footer.left,right:footer.right,top:footer.top,bottom:footer.bottom},row:{left:row.left,right:row.right,top:row.top,bottom:row.bottom}}})");
+      const controls = await evaluate("['#editorView','#pageTurnEffect .page-turn-snapshot','#pageTurnUnderlay .page-turn-snapshot'].filter(selector=>document.querySelector(selector)).map(selector=>{const root=document.querySelector(selector),button=root.querySelector('.paper-bottom .text-button:not(.page-bookmark-button)'),footer=root.querySelector('.entry-footer').getBoundingClientRect(),row=root.querySelector('.paper-bottom').getBoundingClientRect(),box=button.getBoundingClientRect();return {selector,label:button.textContent,button:{left:box.left,right:box.right,top:box.top,bottom:box.bottom},footer:{left:footer.left,right:footer.right,top:footer.top,bottom:footer.bottom},row:{left:row.left,right:row.right,top:row.top,bottom:row.bottom}}})");
       assert.equal(controls.length, direction === 'backward' ? 3 : 2);
       for (const { selector, label, button, footer, row } of controls) {
         const context = `${direction}, ${width}px, ${selector}`;
@@ -1229,8 +1229,7 @@ test('production diary: colored ribbons persist, return to exact passages and fo
   await click('#bookCover');
   await evaluate(`(()=>{const text=document.getElementById('journalText');text.focus();text.setSelectionRange(${start},${end});text.dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowDown',bubbles:true}));})()`);
   assert.ok(await evaluate("Number(document.getElementById('writingPageIndicator').dataset.sheetPage)>1"), 'passage lies on a later physical sheet');
-  await click('#bookmarkButton');
-  await click('#addBookmark');
+  await click('#markMomentButton');
   await fill('#bookmarkLabel', 'Uma conversa <especial>');
   await click('[name="bookmarkColor"][value="blue"]');
   const dialogLayout = await evaluate("(()=>{const dialog=document.getElementById('diaryDialog'),right=dialog.getBoundingClientRect().right;return {width:dialog.clientWidth,content:dialog.scrollWidth,overflow:[...dialog.querySelectorAll('*')].filter(node=>node.getBoundingClientRect().right>right).map(node=>({tag:node.tagName,class:node.className,width:node.getBoundingClientRect().width}))}})()");
@@ -1247,8 +1246,7 @@ test('production diary: colored ribbons persist, return to exact passages and fo
   await click('#newPageButton');
   await poll(() => evaluate("!document.getElementById('journalText').value"), 'new blank page');
   await click('[data-ribbon-color="blue"]');
-  assert.ok(await evaluate("document.getElementById('dialogBody').textContent.includes('Uma conversa <especial>')"), 'title is restored as text');
-  await click('[data-bookmark-visit]');
+  assert.equal(await evaluate("document.getElementById('diaryDialog').open"), false, 'colored ribbon skips the manager');
   await poll(() => evaluate(`document.getElementById('journalText').selectionStart===${start} && Number(document.getElementById('writingPageIndicator').dataset.sheetPage)>1`), 'exact passage revealed').catch(async error => {
     error.message += ' ' + JSON.stringify(await evaluate("(()=>{const text=document.getElementById('journalText');return {start:text.selectionStart,end:text.selectionEnd,length:text.value.length,page:document.getElementById('writingPageIndicator').dataset.sheetPage,transform:text.style.transform,focus:document.activeElement.id,dialog:document.getElementById('diaryDialog').open}})()"));
     throw error;
@@ -1260,13 +1258,14 @@ test('production diary: colored ribbons persist, return to exact passages and fo
   await poll(() => evaluate("document.body.dataset.portal==='student' && !document.getElementById('journalText').disabled && !document.querySelector('.diary-entrance')"), 'student portal loaded');
   // Exercise a real pointer click on the ribbon, including with the cover closed.
   const point = await evaluate("(()=>{const node=document.querySelector('[data-ribbon-color=blue]');node.scrollIntoView({block:'center'});const b=node.getBoundingClientRect();return {x:b.left+b.width/2,y:b.top+b.height/2}})()");
+  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...point });
+  await poll(() => evaluate("!document.getElementById('ribbonPreview').hidden"), 'hover shows the reference');
+  assert.equal(await evaluate("document.querySelector('#ribbonPreview p').textContent"), original.slice(start, end));
   await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...point, button: 'left', clickCount: 1 });
   await send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...point, button: 'left', clickCount: 1 });
-  await poll(() => evaluate("document.getElementById('diaryDialog').open"), 'ribbon clickable below the cover');
-  await click('[data-bookmark-visit]');
   await poll(() => evaluate(`document.getElementById('journalText').selectionStart===${start + prefix.length}`), 'restored passage in student diary');
-  await click('#bookmarkButton');
-  await click('#addBookmark');
+  assert.equal(await evaluate("document.getElementById('diaryDialog').open"), false);
+  await click('#markMomentButton');
   await fill('#bookmarkLabel', 'Outra fita');
   await click('[name="bookmarkColor"][value="green"]');
   await click('#saveBookmark');
@@ -1281,7 +1280,6 @@ test('production diary: colored ribbons persist, return to exact passages and fo
   await click('#sealDayButton');
   await poll(() => accounts.get('A').get('marked-page')?.sealed, 'day sealed');
   await click('[data-ribbon-color="blue"]');
-  await click('[data-bookmark-visit]');
   await poll(() => evaluate("!!document.querySelector('#journalTypeset mark') && document.getElementById('journalTypeset').scrollTop>0"), 'sealed passage highlighted and scrolled');
   assert.equal(await evaluate("document.getElementById('journalTypeset').querySelector('mark').textContent"), original.slice(start, end));
   await click('#bookmarkButton');
@@ -1326,7 +1324,9 @@ test('production diary: empty bookmark card leads back to writing and fits narro
   assert.equal(await evaluate("document.getElementById('diaryDialog').classList.contains('diary-dialog--bookmarks')"), false, 'card appearance resets on close');
   await fill('#journalText', 'Um dia que merece uma fita.');
   await click('#bookmarkButton');
-  await click('#addBookmark');
+  assert.equal(await evaluate("document.getElementById('addBookmark')"), null, 'manager has no creation action');
+  await click('#closeDialog');
+  await click('#markMomentButton');
   assert.equal(await evaluate("!!document.getElementById('bookmarkForm')"), true, 'writing can now receive a marker');
   assert.equal(await evaluate("document.getElementById('bookmarkStartWriting')"), null, 'empty prompt gives way to the form');
 }));
@@ -1349,7 +1349,10 @@ test('production diary: saved bookmarks appear first and creation stays in its o
       await writeFile(join(tmpdir(), `ep-bookmark-overview-${width}.png`), Buffer.from(shot.data, 'base64'));
     }
   }
-  await click('#addBookmark');
+  assert.equal(await evaluate("document.getElementById('addBookmark')"), null, 'creation belongs to the writing page');
+  await click('#closeDialog');
+  await click('#bookCover');
+  await click('#markMomentButton');
   assert.equal(await evaluate("!!document.getElementById('bookmarkForm') && !document.querySelector('[data-bookmark-visit]')"), true, 'creating a marker has no competing list');
   const formFits = await evaluate("(()=>{const d=document.getElementById('diaryDialog');return d.scrollWidth<=d.clientWidth && d.scrollHeight<=d.clientHeight+1})()");
   assert.equal(formFits, true, 'sealed-day form fits a small phone');
@@ -1359,4 +1362,54 @@ test('production diary: saved bookmarks appear first and creation stays in its o
   }
   await click('#cancelBookmark');
   assert.equal(await evaluate("!!document.querySelector('[data-bookmark-visit]') && !document.getElementById('bookmarkForm')"), true, 'back returns to the saved list');
+}));
+
+test('production diary: every ribbon opens its own page and previews its reference, including repeated colors', { ...options, timeout: 45000 }, () => withBrowser(async ({ accounts, navigate, click, fill, evaluate, send }) => {
+  const firstText = 'A conversa no parque ficou comigo.', secondText = 'Sonhei com uma casa azul.';
+  accounts.get('A').set('first-ribbon', entry('first-ribbon', firstText, { bookmarks: [{ id: 'mark-first', label: 'No parque', color: 'red', start: 0, end: firstText.length }] }));
+  accounts.get('A').set('second-ribbon', entry('second-ribbon', secondText, { kind: 'dream', sealed: true, bookmarks: [{ id: 'mark-second', label: 'A casa azul', color: 'red', start: 0, end: secondText.length }] }));
+  await navigate();
+  assert.equal(await evaluate("document.querySelectorAll('[data-ribbon-color=red]').length"), 2, 'each moment has its own ribbon');
+  const point = await evaluate("(()=>{const node=document.querySelector('[data-ribbon-bookmark=mark-first]');node.scrollIntoView({block:'center'});const b=node.getBoundingClientRect();return {x:b.left+b.width/2,y:b.top+b.height/2}})()");
+  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...point });
+  await evaluate('new Promise(resolve=>setTimeout(resolve,180))');
+  await poll(() => evaluate("!document.getElementById('ribbonPreview').hidden"), 'reference shown on hover');
+  assert.equal(await evaluate("document.querySelector('#ribbonPreview p').textContent"), firstText);
+  const previewBounds = await evaluate("(()=>{const b=document.getElementById('ribbonPreview').getBoundingClientRect();return {left:b.left,right:b.right,top:b.top,bottom:b.bottom,boxWidth:b.width,width:innerWidth,height:innerHeight}})()");
+  assert.ok(previewBounds.boxWidth > 0 && previewBounds.left >= 0 && previewBounds.right <= previewBounds.width && previewBounds.top >= 0 && previewBounds.bottom <= previewBounds.height, JSON.stringify(previewBounds));
+  if (process.env.DIARY_RIBBON_PREVIEW) {
+    const shot = await send('Page.captureScreenshot', { format: 'png' });
+    await writeFile(join(tmpdir(), 'ep-diary-ribbon-reference.png'), Buffer.from(shot.data, 'base64'));
+  }
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape' });
+  await poll(() => evaluate("document.getElementById('ribbonPreview').hidden"), 'Escape dismisses the preview');
+  await click('[data-ribbon-bookmark="mark-first"]');
+  await poll(() => evaluate(`document.getElementById('journalText').value===${JSON.stringify(firstText)} && !document.getElementById('diaryDialog').open`), 'first red ribbon opens its own page');
+  await click('#newPageButton');
+  await fill('#journalText', 'Escrita ainda não salva.');
+  await click('[data-ribbon-bookmark="mark-second"]');
+  await poll(() => evaluate(`document.getElementById('journalText').value===${JSON.stringify(secondText)} && !!document.querySelector('#journalTypeset mark')`), 'second red ribbon opens its own dream');
+  assert.ok([...accounts.get('A').values()].some(item => item.text === 'Escrita ainda não salva.'), 'jump saves pending writing');
+  await evaluate("document.querySelector('[data-ribbon-bookmark=mark-first]').focus()");
+  await poll(() => evaluate("!document.getElementById('ribbonPreview').hidden"), 'keyboard focus also shows the reference').catch(async error => {
+    error.message += ' ' + JSON.stringify(await evaluate("({focus:document.activeElement.outerHTML,preview:document.getElementById('ribbonPreview').outerHTML,dialog:document.getElementById('diaryDialog').open})"));
+    throw error;
+  });
+  assert.equal(await evaluate("document.querySelector('#ribbonPreview p').textContent"), firstText);
+  await click('#bookmarkButton');
+  assert.equal(await evaluate("document.getElementById('addBookmark')"), null);
+  assert.equal(await evaluate("document.getElementById('ribbonPreview').hidden"), true, 'manager hides the floating reference');
+  await click('#closeDialog');
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
+  await evaluate('window.scrollTo(0,0)');
+  await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+  for (const id of ['bookmarkButton', 'closeDiaryButton']) {
+    await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 1, y: 1 });
+    await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+    const normal = await evaluate(`getComputedStyle(document.getElementById('${id}')).backgroundColor`);
+    const buttonPoint = await evaluate(`(()=>{const b=document.getElementById('${id}').getBoundingClientRect();return {x:b.left+b.width/2,y:b.top+b.height/2}})()`);
+    await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...buttonPoint });
+    await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+    assert.notEqual(await evaluate(`getComputedStyle(document.getElementById('${id}')).backgroundColor`), normal, `${id} has a visible hover`);
+  }
 }));

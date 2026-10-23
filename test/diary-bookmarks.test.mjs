@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { moveBookmarks } from '../app/diary-bookmarks.js';
+import { moveBookmarks, bookmarkExcerpt } from '../app/diary-bookmarks.js';
 
 test('bookmarks follow insertions and deletions before a selected passage', () => {
   const text = 'Hoje fui ao parque e sorri.';
@@ -19,4 +19,13 @@ test('bookmark boundaries keep inserted text outside the passage and track edits
   assert.deepEqual(moveBookmarks([mark], 'Meu parque lindo', 'Meu parque florido lindo'), [mark]);
   assert.deepEqual(moveBookmarks([mark], 'Meu parque lindo', 'Meu jardim lindo'), [mark]);
   assert.deepEqual(moveBookmarks([mark], 'Meu parque lindo', 'Meu par lindo'), [{ ...mark, end: 7 }]);
+});
+
+test('ribbon references show the selected words or nearby writing for a cursor marker', () => {
+  const text = 'Hoje fomos ao parque.\nVoltamos felizes.';
+  assert.equal(bookmarkExcerpt(text, { start: 14, end: 20 }), 'parque');
+  assert.equal(bookmarkExcerpt(text, { start: 22, end: 22 }), 'Voltamos felizes.');
+  assert.equal(bookmarkExcerpt(text, { start: text.length, end: text.length }), 'Hoje fomos ao parque. Voltamos felizes.');
+  assert.equal(bookmarkExcerpt('', { start: 0, end: 0 }), '');
+  assert.equal(bookmarkExcerpt('a'.repeat(200), { start: 0, end: 200 }).length, 181);
 });

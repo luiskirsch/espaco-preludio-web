@@ -7,6 +7,13 @@ export const BOOKMARK_COLORS = {
   rose: { label: 'Rosa', hex: '#c47491' },
 };
 
+export function bookmarkExcerpt(text, mark, limit = 180) {
+  const selected = text.slice(mark.start, mark.end).trim();
+  const source = selected || text.slice(mark.start, mark.start + limit + 1).trim() || text.slice(Math.max(0, mark.start - limit), mark.start).trim();
+  const excerpt = source.replace(/\s+/g, ' ');
+  return excerpt.length > limit ? `${excerpt.slice(0, limit).trimEnd()}…` : excerpt;
+}
+
 // Offsets belong to the writing, so inserting or removing earlier words moves
 // the ribbons along with their passage. A removed passage rests at the cut.
 export function moveBookmarks(bookmarks = [], before, after) {

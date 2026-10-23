@@ -4,7 +4,7 @@ import { createPagedEditor } from './diary-pages.js?h=5955d1a718';
 import { createBookFoley, bookMotionTiming } from './diary-foley.js?h=3737733da5';
 import { createIdleInvitation } from './diary-invitation.js?h=26ddf46ff3';
 import { startReleaseRitual } from './diary-release.js?h=1cf48e0479';
-import { BOOKMARK_COLORS, moveBookmarks } from './diary-bookmarks.js?h=5d11f2d552';
+import { BOOKMARK_COLORS, moveBookmarks, bookmarkExcerpt } from './diary-bookmarks.js?h=dba0895924';
 
 const $ = id => document.getElementById(id);
 const student = document.body.dataset.portal === 'student';
@@ -39,6 +39,11 @@ const JOURNAL_PROMPTS = [
 ];
 const dialog = $('diaryDialog');
 const text = $('journalText');
+const ribbonPreview = document.createElement('div');
+ribbonPreview.id = 'ribbonPreview'; ribbonPreview.className = 'ribbon-preview';
+ribbonPreview.setAttribute('role', 'tooltip'); ribbonPreview.hidden = true;
+document.body.append(ribbonPreview);
+let ribbonPreviewTarget = null, ribbonPreviewTimer = 0;
 const bookFoley = createBookFoley({
   paperUrl: new URL('./assets/diary/page-turn.ogg', import.meta.url).href,
   leatherUrl: new URL('./assets/diary/leather-cover-move.ogg', import.meta.url).href,
@@ -335,7 +340,9 @@ function renderMeta() {
   $('entryExtra').textContent = [current.weather ? WEATHER[current.weather]?.[0] : '', current.aroma || current.aromaText ? aromaLabel : ''].filter(Boolean).join(' · ');
   $('entryExtra').hidden = !$('entryExtra').textContent;
   $('deleteCurrent').hidden = !current.version;
-  $('entryExtra').parentElement.hidden = $('entryExtra').hidden && !current.version;
+  $('markMomentButton').hidden = !ready || current.kind === 'capsule' || !current.text.trim();
+  $('markMomentButton').disabled = (current.bookmarks || []).length >= 32;
+  $('entryExtra').parentElement.hidden = $('entryExtra').hidden && !current.version && $('markMomentButton').hidden;
   renderInsights();
   renderRibbons();
   requestAnimationFrame(resizeEditor);
@@ -344,13 +351,47 @@ function bookmarkedEntries() {
   return [...new Map([...bookEntries, ...entries, current].filter(entry => !entry.locked && entry.kind !== 'capsule').map(entry => [entry.id, entry])).values()];
 }
 function renderRibbons() {
-  const marks = bookmarkedEntries().flatMap(entry => entry.bookmarks || []);
-  $('ribbonButton').setAttribute('aria-label', `Abrir marcadores do diário · ${marks.length} momentos marcados`);
-  const colors = Object.entries(BOOKMARK_COLORS).filter(([color]) => color !== 'red' && marks.some(mark => mark.color === color));
-  $('extraRibbons').innerHTML = colors.map(([color, info]) => `<button type="button" class="book-ribbon book-ribbon--saved" data-ribbon-color="${color}" style="--ribbon-color:${info.hex}" title="${info.label} · ${marks.filter(mark => mark.color === color).length} momentos" aria-label="Ver momentos com marcador ${info.label.toLowerCase()}"></button>`).join('');
+  hideRibbonPreview();
+  const marks = bookmarkedEntries().flatMap(entry => (entry.bookmarks || []).map(mark => ({ entry, mark })))
+    .sort((a, b) => (a.entry.createdAt || 0) - (b.entry.createdAt || 0) || a.entry.id.localeCompare(b.entry.id) || a.mark.start - b.mark.start);
+  const ribbons = $('bookRibbons');
+  ribbons.hidden = !marks.length;
+  // Each ribbon has its own destination, even when two moments share a color.
+  ribbons.innerHTML = marks.map(({ entry, mark }) => {
+    const color = BOOKMARK_COLORS[mark.color] || BOOKMARK_COLORS.red;
+    const label = `${mark.label} · ${dateLabel(entry.date)} · ${color.label}`;
+    return `<button type="button" class="book-ribbon book-ribbon--saved" data-ribbon-color="${esc(mark.color)}" data-ribbon-entry="${esc(entry.id)}" data-ribbon-bookmark="${esc(mark.id)}" style="--ribbon-color:${color.hex}" aria-label="Ir para ${esc(label)}"></button>`;
+  }).join('');
+}
+function hideRibbonPreview() {
+  clearTimeout(ribbonPreviewTimer);
+  ribbonPreviewTarget?.removeAttribute('aria-describedby'); ribbonPreviewTarget = null;
+  ribbonPreview.hidden = true; ribbonPreview.replaceChildren();
+}
+function showRibbonPreview(ribbon) {
+  const entry = bookmarkedEntries().find(item => item.id === ribbon.dataset.ribbonEntry);
+  const mark = entry?.bookmarks?.find(item => item.id === ribbon.dataset.ribbonBookmark);
+  if (!mark || dialog.open) return;
+  hideRibbonPreview(); ribbonPreviewTarget = ribbon;
+  ribbonPreview.style.setProperty('--ribbon-color', BOOKMARK_COLORS[mark.color]?.hex || BOOKMARK_COLORS.red.hex);
+  const heading = document.createElement('strong'), date = document.createElement('small'), quote = document.createElement('p');
+  heading.textContent = mark.label; date.textContent = dateLabel(entry.date);
+  quote.textContent = bookmarkExcerpt(entry.text, mark) || 'Este trecho foi removido da página.';
+  ribbonPreview.replaceChildren(heading, date, quote);
+  ribbonPreview.style.left = '0px'; ribbonPreview.style.top = '0px'; ribbonPreview.hidden = false;
+  const anchor = ribbon.getBoundingClientRect(), box = ribbonPreview.getBoundingClientRect();
+  const left = Math.max(8, Math.min(innerWidth - box.width - 8, anchor.left + anchor.width / 2 - box.width / 2));
+  let top = anchor.top - box.height - 10;
+  if (top < 8) top = Math.max(8, Math.min(innerHeight - box.height - 8, anchor.bottom + 10));
+  top = Math.max(8, Math.min(innerHeight - box.height - 8, top));
+  ribbonPreview.style.left = `${left}px`; ribbonPreview.style.top = `${top}px`;
+  ribbon.setAttribute('aria-describedby', ribbonPreview.id);
 }
 async function visitBookmark(entryId, bookmarkId, edit = false) {
   const generation = bootGeneration;
+  pagedEditor.cancelTurn();
+  // A cancelled sheet turn releases the pending page navigation first.
+  await Promise.resolve();
   dictation.stop(); dictationEntryId = null;
   if (pageCreation || !assertReady() || !await settle() || generation !== bootGeneration) return;
   const entry = bookmarkedEntries().find(item => item.id === entryId);
@@ -400,16 +441,15 @@ function openBookmarks(editing = null, filter = '', creating = false) {
     <span class="bookmark-section-label">${filter ? 'ESTA COR AINDA ESPERA' : 'SUA PRIMEIRA FITA'}</span>
     <h3 id="bookmarkEmptyTitle">${filter ? 'Uma cor, novas lembranças.' : 'Guarde um ponto de volta.'}</h3>
     <p>${filter ? 'Nenhum momento foi marcado com esta cor. Suas outras fitas continuam guardadas.' : 'Uma frase, uma descoberta, um dia especial. Marque o que você quer reencontrar, no seu tempo.'}</p>
-    ${filter ? '' : canAdd ? '<button type="button" class="gold-button" id="addBookmark">+ Novo marcador</button>' : '<button type="button" class="gold-button" id="bookmarkStartWriting">Ir para minha escrita <span aria-hidden="true">↗</span></button>'}
+    ${filter ? '' : '<button type="button" class="gold-button" id="bookmarkStartWriting">Ir para minha escrita <span aria-hidden="true">↗</span></button>'}
   </section>` : '';
   const limit = !composing && !canAdd && (current.bookmarks || []).length >= 32 ? '<p class="dialog-note">Esta página tem 32 marcadores. Edite ou remova uma fita para guardar outro momento.</p>' : '';
-  const toolbar = !composing && rows.length ? `<div class="bookmark-saved-heading"><span>${rows.length} ${rows.length === 1 ? 'momento guardado' : 'momentos guardados'}</span>${canAdd ? '<button type="button" class="bookmark-add" id="addBookmark">+ Novo marcador</button>' : ''}</div>` : '';
+  const toolbar = !composing && rows.length ? `<div class="bookmark-saved-heading"><span>${rows.length} ${rows.length === 1 ? 'momento guardado' : 'momentos guardados'}</span></div>` : '';
   const title = editing ? 'Editar marcador' : composing ? 'Novo marcador' : 'Seus marcadores';
   const intro = composing ? 'Um nome e uma cor para lembrar deste momento.' : 'Volte aos momentos que você escolheu guardar.';
   openDialog(title, `<p class="bookmark-intro">${intro}</p>${toolbar}${form}${empty}${limit}${!composing && filter ? '<button type="button" class="quiet-button" id="allBookmarks">Ver todas as cores</button>' : ''}${list}`);
   dialog.classList.add('diary-dialog--bookmarks');
   dialog.classList.toggle('diary-dialog--bookmark-compose', Boolean(composing));
-  $('addBookmark')?.addEventListener('click', () => openBookmarks(null, filter, true));
   $('cancelBookmark')?.addEventListener('click', () => openBookmarks(null, filter));
   $('bookmarkStartWriting')?.addEventListener('click', async () => {
     if (generation !== bootGeneration || !await settle() || generation !== bootGeneration) return;
@@ -684,6 +724,7 @@ function restoreBackdropScroll() {
   window.scrollTo(x, y);
 }
 function openDialog(title, markup, cleanup = null, { keepScrollbar = false } = {}) {
+  hideRibbonPreview();
   releaseRitual?.cancel(); releaseRitual = null;
   if (dialog.open) closeDialog();
   dialogOrigin = document.activeElement; dialogCleanup = cleanup; dialogGeneration = bootGeneration; dialogSerial++;
@@ -938,11 +979,36 @@ document.querySelectorAll('[data-go]').forEach(button => button.addEventListener
 document.querySelectorAll('[data-memory]').forEach(button => button.addEventListener('click', () => openMemory(button.dataset.memory)));
 $('newPageButton').addEventListener('click', () => newPage(current.kind === 'dream' ? 'dream' : 'diary'));
 $('bookmarkButton').addEventListener('click', () => openBookmarks());
-$('ribbonButton').addEventListener('click', () => openBookmarks());
-$('extraRibbons').addEventListener('click', event => {
-  const ribbon = event.target.closest('[data-ribbon-color]');
-  if (ribbon) openBookmarks(null, ribbon.dataset.ribbonColor);
+$('markMomentButton').addEventListener('click', () => {
+  if (!canEdit({ requireOpen: true }) || !current.text.trim()) return;
+  openBookmarks(null, '', true);
 });
+$('bookRibbons').addEventListener('click', event => {
+  const ribbon = event.target.closest('[data-ribbon-bookmark]');
+  if (ribbon) { hideRibbonPreview(); void visitBookmark(ribbon.dataset.ribbonEntry, ribbon.dataset.ribbonBookmark); }
+});
+for (const type of ['pointerover', 'focusin']) $('bookRibbons').addEventListener(type, event => {
+  const ribbon = event.target.closest('[data-ribbon-bookmark]');
+  if (!ribbon) return;
+  if (type === 'focusin') requestAnimationFrame(() => { if (document.activeElement === ribbon) showRibbonPreview(ribbon); });
+  else showRibbonPreview(ribbon);
+});
+for (const type of ['pointerout', 'focusout']) $('bookRibbons').addEventListener(type, () => {
+  clearTimeout(ribbonPreviewTimer); ribbonPreviewTimer = setTimeout(hideRibbonPreview, 120);
+});
+ribbonPreview.addEventListener('pointerenter', () => clearTimeout(ribbonPreviewTimer));
+ribbonPreview.addEventListener('pointerleave', hideRibbonPreview);
+document.addEventListener('keydown', event => { if (event.key === 'Escape') hideRibbonPreview(); });
+document.addEventListener('scroll', () => {
+  const ribbon = document.activeElement?.closest('[data-ribbon-bookmark]') || ribbonPreviewTarget;
+  const keepVisible = ribbon && (document.activeElement === ribbon || ribbon.matches(':hover'));
+  hideRibbonPreview();
+  if (keepVisible) requestAnimationFrame(() => {
+    if (ribbon.isConnected && (document.activeElement === ribbon || ribbon.matches(':hover'))) showRibbonPreview(ribbon);
+  });
+}, { capture: true, passive: true });
+window.addEventListener('resize', hideRibbonPreview);
+window.addEventListener('blur', hideRibbonPreview);
 $('bookCover').addEventListener('click', openBook);
 $('bookCover').addEventListener('keydown', event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openBook(); } });
 $('coverTitleButton').addEventListener('mousedown', event => event.preventDefault());
