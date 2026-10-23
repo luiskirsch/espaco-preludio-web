@@ -596,12 +596,21 @@ body.mood-note-open{overflow:hidden}
   // convidar alguém a pedir ajuda num canal desligado seria pior que não mostrar.
   async function loadSupport(user) {
     const card = document.getElementById("homeSupport");
-    try {
-      const data = await portalApi(user, "/therapy/paciente/apoio/context");
-      let visible = (data.companies || []).some(c => c.config?.enabled === true && (c.config.careEnabled === true || c.config.companyEnabled === true));
-      if (!visible) visible = ((await portalApi(user, "/therapy/paciente/apoio/requests?limit=1")).items || []).length > 0;
-      card.hidden = !visible;
-    } catch { card.hidden = true; }
+    card.hidden = true;
+    const [context, history] = await Promise.allSettled([
+      portalApi(user, "/therapy/paciente/apoio/context"),
+      portalApi(user, "/therapy/paciente/apoio/requests?limit=1")
+    ]);
+    if (activeSkyUser !== user) return;
+    const hasRequests = history.status === "fulfilled" && (history.value.items || []).length > 0;
+    const enabled = context.status === "fulfilled" && (context.value.companies || []).some(c => c.config?.enabled === true && (c.config.careEnabled === true || c.config.companyEnabled === true));
+    if (!hasRequests && !enabled) return;
+    const label = card.querySelector(".home-support-card__cta");
+    const key = hasRequests ? "acompanhar_pedido" : history.status === "rejected" ? "abrir_central" : "pedir_apoio_2f1bc";
+    label.setAttribute("data-i18n-html", `p-app-home:${key}`);
+    label.innerHTML = `${hasRequests ? "Acompanhar pedido" : history.status === "rejected" ? "Abrir central" : "Pedir apoio"} <b aria-hidden="true">→</b>`;
+    card.href = hasRequests ? "./apoio.html#requestsTitle" : "./apoio.html";
+    card.hidden = false;
   }
 
   onAuthStateChanged(auth, async user => {
