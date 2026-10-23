@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js">
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js">
-  <link rel="modulepreload" href="../app/daily-mood.js?h=95033cf043">
+  <link rel="modulepreload" href="../app/daily-mood.js?h=ab623bf7ed">
   <link rel="modulepreload" href="../app/wellbeing-entry.js?h=2ad04c8200">
   <link rel="modulepreload" href="../app/session-card.js?h=99e4806343">
   <link rel="modulepreload" href="../js/firebase-config.js?h=69b74fc63a">
@@ -232,7 +232,7 @@
 </div>
 
 <script type="module">
-  import {mountDailyMood} from "./daily-mood.js?h=95033cf043";
+  import {mountDailyMood} from "./daily-mood.js?h=ab623bf7ed";
   import { renderCard, isActive, joinSession } from "./session-card.js?h=99e4806343";
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?h=69b74fc63a";
@@ -592,12 +592,12 @@
     document.querySelector(".home-hero__greeting").textContent = greeting;
     document.getElementById("heroNome").textContent = (user.displayName || user.email.split("@")[0]).split(" ")[0];
     activeSkyUser = user;
+    dailyMood = mountDailyMood({user, backendUrl: BACKEND_BASE_URL, isCurrent: () => activeSkyUser === user});
     loadSky(user);
     loadJourney(user);
     loadSurveys(user);
     loadSupport(user);
 
-    dailyMood = mountDailyMood({user, backendUrl: BACKEND_BASE_URL, isCurrent: () => activeSkyUser === user});
     const sessionsRequest = user.getIdToken().then(token => fetch(BACKEND_BASE_URL + "/therapy/paciente/sessoes", {
       headers: { Authorization: "Bearer " + token }
     }));

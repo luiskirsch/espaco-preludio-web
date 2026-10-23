@@ -10,7 +10,7 @@ export function mountDailyMood({user,backendUrl,isCurrent=()=>true}){
   const controller=new AbortController(),buttons=[...document.querySelectorAll('#moodPicker [data-mood]')];
   const footer=document.getElementById('moodFooter'),message=document.getElementById('moodSaved'),edit=document.getElementById('moodWellbeing');
   const key=`ep:humor:today:${user.uid}`;
-  let record=null,pending=null,loading=true,disposed=false;
+  let record=null,pending=null,loading=true,disposed=false,confirmed=false,loadFailed=false,viewPending=false;
   const current=()=>!disposed&&isCurrent();
   const complete=metrics=>['anxiety','energy','sleep'].every(id=>Number.isInteger(metrics?.[id])&&metrics[id]>=0&&metrics[id]<=10);
   try{localStorage.removeItem(`ep:humor:cache:${user.uid}`);}catch{}
@@ -18,9 +18,10 @@ export function mountDailyMood({user,backendUrl,isCurrent=()=>true}){
     const saved=record?.date===todayInSaoPaulo();
     for(const button of buttons){button.classList.toggle('is-selected',saved&&Number(button.dataset.mood)===Number(record.mood));button.disabled=loading||saved;button.style.opacity=saved&&!button.classList.contains('is-selected')?'.55':'';button.style.cursor=saved?'default':'';}
     footer.classList.toggle('is-visible',saved);
-    edit.hidden=!saved||loading;
+    edit.hidden=!saved;
+    edit.setAttribute('aria-busy',String(loading));
     edit.textContent='Ver registro';
-    message.textContent=saved?(complete(record.wellbeing)?'✓ Dia registrado':'✓ Humor registrado'):'';
+    message.textContent=loadFailed?'Não foi possível carregar o registro. Toque em “Ver registro” para tentar novamente.':saved?(complete(record.wellbeing)?'✓ Dia registrado':'✓ Humor registrado'):'';
   }
   async function request(path,options={}){
     if(!current())throw Error('SESSION_CHANGED');
@@ -40,10 +41,10 @@ export function mountDailyMood({user,backendUrl,isCurrent=()=>true}){
         if(error.status!==409||error.code!=='REGISTRO_JA_SALVO')throw error;
         const saved=await request('/therapy/paciente/humor?days=1');
         record=saved.items?.find(item=>item.date===todayInSaoPaulo());
-        if(!record)throw error;pending=null;paint();return;
+        if(!record)throw error;confirmed=true;loadFailed=false;pending=null;paint();return;
       }
       if(data.date!==todayInSaoPaulo())throw Error('DAY_CHANGED');
-      record={date:data.date,mood,wellbeing:data.wellbeing||metrics,note:note||null};pending=null;
+      record={date:data.date,mood,wellbeing:data.wellbeing||metrics,note:note||null};confirmed=true;loadFailed=false;pending=null;
       try{sessionStorage.setItem(key,JSON.stringify({date:record.date,mood:String(mood)}));localStorage.setItem('ep:dirtyAt',String(Date.now()));}catch{}
       paint();
     },
@@ -57,16 +58,28 @@ export function mountDailyMood({user,backendUrl,isCurrent=()=>true}){
     buttons.forEach(button=>button.classList.toggle('is-selected',button===pending));
     entry.open({moodLabel:pending.querySelector('.a-mood__name')?.textContent||pending.title,withNote:true});
   }
-  function openView(){if(current()&&record?.date===todayInSaoPaulo()){pending=null;entry.open({readOnly:true,metrics:record.wellbeing,note:record.note,date:record.date,moodLabel:buttons.find(button=>Number(button.dataset.mood)===Number(record.mood))?.querySelector('.a-mood__name')?.textContent||''});}}
+  async function openView(){
+    if(!current()||viewPending)return;
+    viewPending=true;
+    try{
+      if(loading)await ready;
+      else if(!confirmed)await loadToday();
+      if(current()&&confirmed&&record?.date===todayInSaoPaulo()){pending=null;entry.open({readOnly:true,metrics:record.wellbeing,note:record.note,date:record.date,moodLabel:buttons.find(button=>Number(button.dataset.mood)===Number(record.mood))?.querySelector('.a-mood__name')?.textContent||''});}
+    }finally{viewPending=false;}
+  }
   buttons.forEach(button=>button.addEventListener('click',openMood));edit.addEventListener('click',openView);
   try{const cached=JSON.parse(sessionStorage.getItem(key)||'null');if(cached?.date===todayInSaoPaulo())record=cached;}catch{}
   paint();
-  const ready=(async()=>{
+  async function loadToday(){
+    loading=true;loadFailed=false;paint();
     try{
       const data=await request('/therapy/paciente/humor?days=1');
       record=data.items?.find(item=>item.date===todayInSaoPaulo())||null;
-    }catch{if(current()&&!record){message.textContent='Não foi possível consultar o registro de hoje.';}}
+      confirmed=true;
+      try{if(record)sessionStorage.setItem(key,JSON.stringify({date:record.date,mood:String(record.mood)}));else sessionStorage.removeItem(key);}catch{}
+    }catch{if(current()){confirmed=false;loadFailed=true;}}
     finally{if(current()){loading=false;paint();}}
-  })();
+  }
+  const ready=loadToday();
   return {ready,destroy(){disposed=true;controller.abort();entry.destroy();buttons.forEach(button=>button.removeEventListener('click',openMood));edit.removeEventListener('click',openView);}};
 }

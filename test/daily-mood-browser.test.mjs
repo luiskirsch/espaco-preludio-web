@@ -12,6 +12,25 @@ async function mount(b){
  await b.evaluate(`(async()=>{const {mountDailyMood}=await import('/app/daily-mood.js');window.mountMood=mountDailyMood;window.owner={uid:'synthetic-owner',getIdToken:async()=> 'synthetic-token'};window.current=true;window.daily=mountDailyMood({user:window.owner,backendUrl:location.origin,isCurrent:()=>window.current});await window.daily.ready;})()`);
 }
 
+test('cached daily mood renders the view action before the API responds and opens only confirmed answers',{timeout:20000,skip:!chrome},async t=>{
+ let release,reads=0;
+ const gate=new Promise(resolve=>{release=resolve;});
+ const date=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const b=await browserFixture(t,options(async()=>{reads++;await gate;return {ok:true,items:[{date,mood:4,wellbeing:{anxiety:0,energy:8,sleep:10}}]};}));
+ await poll(()=>b.evaluate('!!document.getElementById("moodPicker")'),'daily mood');
+ await b.evaluate(`(async()=>{sessionStorage.setItem('ep:humor:today:synthetic-owner',JSON.stringify({date:${JSON.stringify(date)},mood:'4'}));const {mountDailyMood}=await import('/app/daily-mood.js');window.daily=mountDailyMood({user:{uid:'synthetic-owner',getIdToken:async()=> 'synthetic-token'},backendUrl:location.origin});})()`);
+ assert.equal(await b.evaluate('document.getElementById("moodWellbeing").hidden'),false);
+ assert.equal(await b.evaluate('document.getElementById("moodWellbeing").disabled'),false);
+ assert.equal(await b.evaluate('document.getElementById("moodFooter").classList.contains("is-visible")'),true);
+ assert.equal(await b.evaluate('document.getElementById("moodWellbeing").getAttribute("aria-busy")'),'true');
+ await b.evaluate('document.getElementById("moodWellbeing").click()');
+ assert.equal(await b.evaluate('document.querySelector(".wbe-dialog").open'),false,'cached mood alone never renders incomplete answers');
+ release();await poll(()=>b.evaluate('document.querySelector(".wbe-dialog").open'),'confirmed saved record');
+ assert.ok(await b.evaluate('document.querySelector(".wbe-record").textContent.includes("Restaurador")'));
+ assert.equal(reads,1);assert.equal(await b.evaluate('document.getElementById("moodWellbeing").getAttribute("aria-busy")'),'false');
+ assert.deepEqual(b.errors,[]);
+});
+
 test('home daily check-in requires descriptive answers, saves atomically, retries without losing responses and only reviews saved records',{timeout:40000,skip:!chrome},async t=>{
  const writes=[];let fail=true;
  const b=await browserFixture(t,options(async(method,url,body)=>{
