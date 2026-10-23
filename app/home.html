@@ -11,6 +11,8 @@
   <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js">
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js">
+  <link rel="modulepreload" href="../app/daily-mood.js?h=0a20e525db">
+  <link rel="modulepreload" href="../app/wellbeing-entry.js?h=cc4cd3d67e">
   <link rel="modulepreload" href="../app/session-card.js?h=99e4806343">
   <link rel="modulepreload" href="../js/firebase-config.js?h=69b74fc63a">
   <link rel="modulepreload" href="../js/twofa-session.js?h=295a6b1bd5">
@@ -23,6 +25,7 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="/logo-144.png">
   <link rel="stylesheet" href="../fonts/fraunces500-600_inter400-700_jetbrainsmono500-600.css?h=2a7bf0e67f">
+  <link rel="stylesheet" href="./wellbeing-entry.css?h=e225f4f6ac">
   <link rel="stylesheet" href="./app.css?h=510132451b">
   <link rel="stylesheet" href="./session-card.css?h=571fa2671c">
   <link rel="stylesheet" href="./weather-hero.css?h=92c4e7cb78">
@@ -53,6 +56,10 @@
     .mood-card__history { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: #175f59; text-decoration: none; transition: gap .2s; }
     .mood-card__history:hover { gap: 8px; }
     .mood-card__history svg { flex-shrink: 0; }
+    .mood-card__footer.is-visible { flex-wrap: wrap; gap: 10px; max-height: 130px; }
+    .mood-card__edit { border: 1px solid #d7e2d4; border-radius: 10px; padding: 8px 12px; background: #f1f5eb; color: #285b48; font: 600 12px Inter,system-ui; cursor: pointer; min-height: 40px; }
+    .mood-card__edit:hover { background: #dfebd9; border-color: #9cb69a; }
+    .mood-card__edit:focus-visible { outline: 3px solid #ba963c; outline-offset: 3px; }
     .section-title { font-size: 17px; font-weight: 700; color: var(--a-ink); margin-bottom: 12px; }
     .next-session-empty { display: flex; flex-direction: column; padding: 20px; background: var(--a-surface); border-radius: var(--a-radius); box-shadow: var(--a-shadow); }
     .next-session-empty__body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
@@ -100,32 +107,7 @@
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <style>html.ep-i18n-pending body{visibility:hidden}</style>
   <script src="/i18n/init.js?v=2-8" defer></script>
-<style>
-.mood-note{position:fixed;inset:0;z-index:1000;display:grid;grid-template-columns:minmax(0,1fr);place-items:center;padding:16px}
-.mood-note__panel,.mood-note textarea{min-width:0;max-width:100%}
-.mood-note[hidden]{display:none}
-.mood-note__backdrop{position:absolute;inset:0;background:rgba(8,30,32,.45);backdrop-filter:blur(3px);animation:mnFade .2s ease}
-.mood-note__panel{position:relative;box-sizing:border-box;width:min(420px,100%);padding:22px 20px 18px;border-radius:20px;background:#fffdf8;box-shadow:0 24px 60px rgba(0,0,0,.25);animation:mnUp .24s cubic-bezier(.2,.8,.2,1)}
-.mood-note__x{position:absolute;top:10px;right:12px;width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:#6b7a78;font-size:24px;line-height:1;cursor:pointer}
-.mood-note__x:hover{background:#f1ece2}
-.mood-note__head{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-right:28px}
-.mood-note__emoji{font-size:34px;line-height:1;display:grid;place-items:center;width:44px;height:44px}
-.mood-note__emoji img{width:40px;height:40px}
-.mood-note__head strong{display:block;font-family:var(--ff-serif,serif);font-size:19px;color:#123c40}
-.mood-note__head small{display:block;margin-top:2px;font-size:12.5px;color:#6b7a78}
-.mood-note textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:104px;padding:12px 14px;border:1.5px solid #dbe3df;border-radius:14px;font:inherit;font-size:15px;line-height:1.5;color:#1d2b2a;background:#fff;outline:none}
-.mood-note textarea:focus{border-color:#1d6b67;box-shadow:0 0 0 3px rgba(29,107,103,.12)}
-.mood-note__count{margin-top:4px;text-align:right;font-size:11.5px;color:#93a09e}
-.mood-note__actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
-.mood-note__actions button{min-height:44px;padding:0 18px;border-radius:12px;font:inherit;font-size:14.5px;font-weight:700;cursor:pointer}
-.mood-note__skip{border:1px solid #dbe3df;background:#fff;color:#3d5856}
-.mood-note__save{border:0;background:#123c40;color:#fff}
-.mood-note__save:hover{background:#1d5458}
-body.mood-note-open{overflow:hidden}
-@keyframes mnFade{from{opacity:0}}
-@keyframes mnUp{from{opacity:0;transform:translateY(14px) scale(.98)}}
-@media (max-width:520px){.mood-note{align-items:end;padding:0}.mood-note__panel{width:100%;border-radius:20px 20px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom))}.mood-note__actions button{flex:1}}
-</style>
+
   <link rel="stylesheet" href="../css/responsive.css?h=4e30c94957">
 </head>
 <body class="a-portal-authenticated">
@@ -172,22 +154,9 @@ body.mood-note-open{overflow:hidden}
           <button class="a-mood__btn" data-mood="2" title="Cansado" data-i18n-html="p-app-home:cansado_bb0f7" data-i18n-title="p-app-home:cansado_80251"><span class="a-mood__emoji">😔</span><span class="a-mood__name">Cansado</span></button>
           <button class="a-mood__btn" data-mood="1" title="Mal" data-i18n-html="p-app-home:mal_c645e" data-i18n-title="p-app-home:mal_33b24"><span class="a-mood__emoji">😞</span><span class="a-mood__name">Mal</span></button>
         </div>
-        <div class="mood-note" id="moodNote" hidden role="dialog" aria-modal="true" aria-labelledby="moodNoteTitle">
-          <div class="mood-note__backdrop" data-close></div>
-          <form class="mood-note__panel" id="moodNoteForm">
-            <button type="button" class="mood-note__x" data-close aria-label="Fechar" data-i18n-aria-label="p-app-home:fechar_7b200">×</button>
-            <div class="mood-note__head"><span class="mood-note__emoji" id="moodNoteEmoji"></span>
-              <div><strong id="moodNoteTitle" data-i18n="p-app-home:quer_contar_algo_sobre_hoje_b702e">Quer contar algo sobre hoje?</strong><small data-i18n="p-app-home:opcional_so_voce_ve_esta_9fb3d">Opcional · só você vê esta anotação</small></div></div>
-            <textarea id="moodNoteText" maxlength="600" rows="4" placeholder="Algo que chateou, alegrou, preocupou… escreva do seu jeito."></textarea>
-            <div class="mood-note__count"><span id="moodNoteCount">0</span>/600</div>
-            <div class="mood-note__actions">
-              <button type="button" class="mood-note__skip" id="moodNoteSkip" data-i18n="p-app-home:pular_6ec31">Pular</button>
-              <button type="submit" class="mood-note__save" data-i18n="p-app-home:salvar_registro_069d2">Salvar registro</button>
-            </div>
-          </form>
-        </div>
         <div class="mood-card__footer" id="moodFooter">
-          <span class="mood-card__saved" id="moodSaved">✓ Registrado</span>
+          <span class="mood-card__saved" id="moodSaved" role="status">✓ Registrado</span>
+          <button type="button" class="mood-card__edit" id="moodWellbeing" hidden>Completar bem-estar</button>
           <a href="./humor.html" class="mood-card__history"><span data-i18n="p-app-home:ver_historico_07a6c">Ver histórico</span> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></a>
         </div>
       </div>
@@ -263,6 +232,7 @@ body.mood-note-open{overflow:hidden}
 </div>
 
 <script type="module">
+  import {mountDailyMood} from "./daily-mood.js?h=0a20e525db";
   import { renderCard, isActive, joinSession } from "./session-card.js?h=99e4806343";
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?h=69b74fc63a";
@@ -289,6 +259,7 @@ body.mood-note-open{overflow:hidden}
   const SKY_TTL_MS = 30 * 60 * 1000;
   const SKY_REFRESH_MS = 10 * 60 * 1000;
   let activeSkyUser = null;
+  let dailyMood = null;
   let skyRequestInFlight = false;
   let lastSkyCheck = 0;
   // Coordenadas do aparelho (fallback: São Paulo) para nascer/pôr do sol reais.
@@ -611,6 +582,8 @@ body.mood-note-open{overflow:hidden}
   }
 
   onAuthStateChanged(auth, async user => {
+    dailyMood?.destroy();
+    dailyMood = null;
     if (!user) { activeSkyUser = null; window.location.href = "./login.html"; return; }
 
     // Saudação
@@ -624,137 +597,11 @@ body.mood-note-open{overflow:hidden}
     loadSurveys(user);
     loadSupport(user);
 
-    // Humor de hoje — o backend é a única fonte persistente. Dados de saúde
-    // não ficam em localStorage em dispositivos compartilhados.
-    function todayInSaoPaulo() {
-      const parts = new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit"
-      }).formatToParts(new Date()).reduce((acc, part) => {
-        acc[part.type] = part.value;
-        return acc;
-      }, {});
-      return `${parts.year}-${parts.month}-${parts.day}`;
-    }
-    const HUMOR_CACHE = `ep:humor:cache:${user.uid}`;
-    try { localStorage.removeItem(HUMOR_CACHE); } catch {}
-
-    async function loadTodayMood() {
-      // Tenta backend
-      try {
-        const tok = await user.getIdToken();
-        const r = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor?days=1`, {
-          headers: { Authorization: `Bearer ${tok}` }
-        });
-        const d = await r.json().catch(() => ({}));
-        const latest = d.items?.[0];
-        if (d.ok && latest?.date === todayInSaoPaulo() && latest.mood) return String(latest.mood);
-      } catch {}
-      return null;
-    }
-
-    let moodLocked = false;
-    function lockMoodPicker() {
-      moodLocked = true;
-      document.querySelectorAll(".a-mood__btn").forEach(b => {
-        b.disabled = true;
-        b.style.opacity = b.classList.contains("is-selected") ? "1" : ".55";
-        b.style.cursor = "default";
-      });
-    }
-
-    // Último estado conhecido na sessão: aparece na hora, sem piscar "não marcado".
-    const TODAY_KEY = `ep:humor:today:${user.uid}`;
-    const applyMood = (mood) => {
-      document.querySelectorAll(".a-mood__btn").forEach(b => b.classList.toggle("is-selected", b.dataset.mood === mood));
-      document.getElementById("moodFooter").classList.add("is-visible");
-      lockMoodPicker();
-    };
-    try {
-      const c = JSON.parse(sessionStorage.getItem(TODAY_KEY) || "null");
-      if (c?.date === todayInSaoPaulo() && c.mood) applyMood(String(c.mood));
-    } catch {}
-    // A próxima consulta não depende do humor: as duas buscas saem juntas.
-    const sessionsRequest = user.getIdToken().then(token => fetch(`${BACKEND_BASE_URL}/therapy/paciente/sessoes`, {
-      headers: { Authorization: `Bearer ${token}` }
+    dailyMood = mountDailyMood({user, backendUrl: BACKEND_BASE_URL, isCurrent: () => activeSkyUser === user});
+    const sessionsRequest = user.getIdToken().then(token => fetch(BACKEND_BASE_URL + "/therapy/paciente/sessoes", {
+      headers: { Authorization: "Bearer " + token }
     }));
     sessionsRequest.catch(() => {});
-    const savedMood = await loadTodayMood();
-    if (savedMood) { try { sessionStorage.setItem(TODAY_KEY, JSON.stringify({ date: todayInSaoPaulo(), mood: savedMood })); } catch {} }
-    if (savedMood && !moodLocked) {
-      document.querySelectorAll(".a-mood__btn").forEach(b => { if (b.dataset.mood === savedMood) b.classList.add("is-selected"); });
-      document.getElementById("moodFooter").classList.add("is-visible");
-      lockMoodPicker();
-    }
-
-    // Ao tocar num humor, abre um modal curto para uma observação opcional.
-    const noteBox = document.getElementById("moodNote");
-    document.body.appendChild(noteBox);
-    const noteText = document.getElementById("moodNoteText");
-    let pendingBtn = null;
-    function openNote(btn) {
-      pendingBtn = btn;
-      document.querySelectorAll(".a-mood__btn").forEach(b => b.classList.toggle("is-selected", b === btn));
-      document.getElementById("moodNoteEmoji").innerHTML = btn.querySelector(".a-mood__emoji").innerHTML;
-      noteText.value = "";
-      document.getElementById("moodNoteCount").textContent = "0";
-      noteBox.hidden = false;
-      document.body.classList.add("mood-note-open");
-      setTimeout(() => noteText.focus(), 60);
-    }
-    function closeNote(cancel) {
-      noteBox.hidden = true;
-      document.body.classList.remove("mood-note-open");
-      if (cancel && pendingBtn) pendingBtn.classList.remove("is-selected");
-      pendingBtn = null;
-    }
-    noteText.addEventListener("input", () => { document.getElementById("moodNoteCount").textContent = noteText.value.length; });
-    noteBox.querySelectorAll("[data-close]").forEach(el => el.addEventListener("click", () => closeNote(true)));
-    document.addEventListener("keydown", e => { if (e.key === "Escape" && !noteBox.hidden) closeNote(true); });
-    document.getElementById("moodNoteSkip").addEventListener("click", () => { const b = pendingBtn; closeNote(false); saveMood(b, ""); });
-    document.getElementById("moodNoteForm").addEventListener("submit", e => {
-      e.preventDefault();
-      const b = pendingBtn, note = noteText.value.trim();
-      closeNote(false);
-      saveMood(b, note);
-    });
-
-    document.querySelectorAll(".a-mood__btn").forEach(btn => {
-      btn.addEventListener("click", () => { if (!moodLocked) openNote(btn); });
-    });
-    async function saveMood(btn, note) {
-      {
-        if (moodLocked || !btn) return;
-        btn.classList.add("is-selected");
-        const mood = btn.dataset.mood;
-        const moodFooter = document.getElementById("moodFooter");
-        const moodSaved = document.getElementById("moodSaved");
-        moodSaved.textContent = "Salvando…";
-        moodFooter.classList.add("is-visible");
-        lockMoodPicker();
-        try {
-          const tok = await user.getIdToken();
-          const response = await fetch(`${BACKEND_BASE_URL}/therapy/paciente/humor`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" },
-            body: JSON.stringify(note ? { mood: Number(mood), note } : { mood: Number(mood) })
-          });
-          const data = await response.json().catch(() => ({}));
-          if (!response.ok || !data.ok || data.date !== todayInSaoPaulo()) {
-            throw new Error(data.error || "Não foi possível confirmar o registro.");
-          }
-          moodSaved.textContent = "✓ Registrado";
-          try { sessionStorage.setItem(TODAY_KEY, JSON.stringify({ date: data.date, mood: String(mood) })); } catch {}
-          // Páginas do menu já pré-renderizadas (ex.: Meu humor) recarregam ao abrir.
-          try { localStorage.setItem("ep:dirtyAt", String(Date.now())); } catch {}
-        } catch {
-          moodLocked = false;
-          moodSaved.textContent = "Não foi possível salvar. Toque novamente para tentar.";
-          document.querySelectorAll(".a-mood__btn").forEach(b => {
-            b.disabled = false; b.style.opacity = ""; b.style.cursor = "";
-          });
-        }
-      }
-    }
 
     // Próxima consulta
     try {
