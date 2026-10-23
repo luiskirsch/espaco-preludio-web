@@ -24,24 +24,29 @@ export function createWellbeingDialog({save,onCancel=()=>{}}={}) {
   const form=dialog.querySelector('form'),status=dialog.querySelector('.wbe-status'),submit=dialog.querySelector('.wbe-submit'),close=dialog.querySelector('.wbe-close'),note=dialog.querySelector('textarea');
   const smallScreen=matchMedia('(max-width:640px), (max-height:680px)'),back=dialog.querySelector('.wbe-back'),next=dialog.querySelector('.wbe-next'),addNote=dialog.querySelector('.wbe-add-note');
   const done=dialog.querySelector('.wbe-done');
-  let saving=false,epoch=0,trigger=null,includeNote=false,step=0,noteMode=false,viewOnly=false,hasSavedNote=false;
+  let saving=false,epoch=0,trigger=null,includeNote=false,step=0,noteMode=false,viewOnly=false,hasSavedNote=false,noteIntro=false,chosenMood='';
   function selected(){return Object.fromEntries(QUESTIONS.map(q=>[q.id,form.querySelector(`input[name="${q.id}"]:checked`)?.value]).map(([id,v])=>[id,v===undefined?null:Number(v)]));}
-  function progress(){const count=Object.values(selected()).filter(v=>v!==null).length;dialog.querySelector('.wbe-progress').textContent=viewOnly?'Registro salvo · somente leitura':noteMode?'Anotação pessoal · opcional':smallScreen.matches?`Pergunta ${step+1} de 3 · ${count} respondidas`:`${count} de 3 respostas`;}
+  function progress(){const count=Object.values(selected()).filter(v=>v!==null).length;dialog.querySelector('.wbe-progress').textContent=viewOnly?'Registro salvo · somente leitura':noteIntro?'A seguir: 3 perguntas de bem-estar':noteMode?'Anotação pessoal · opcional':smallScreen.matches?`Pergunta ${step+1} de 3 · ${count} respondidas`:`${count} de 3 respostas`;}
   function layout(focus=false){
     const stepped=smallScreen.matches;
     dialog.classList.toggle('is-stepped',stepped&&!viewOnly);dialog.classList.toggle('is-note',noteMode);
     dialog.classList.toggle('is-readonly',viewOnly);dialog.querySelector('.wbe-record').hidden=!viewOnly||noteMode;
     QUESTIONS.forEach((q,index)=>{dialog.querySelector(`[data-question="${q.id}"]`).hidden=viewOnly||noteMode||(stepped&&index!==step);});
     dialog.querySelector('.wbe-note').hidden=!noteMode;
-    back.hidden=!noteMode&&(viewOnly||!stepped||step===0);back.textContent=noteMode?(viewOnly?'Voltar ao registro':'Voltar às respostas'):'Voltar';
-    next.hidden=viewOnly||noteMode||!stepped||step===QUESTIONS.length-1;submit.hidden=viewOnly||!next.hidden;done.hidden=!viewOnly;
+    back.hidden=noteIntro||(!noteMode&&(viewOnly||(!includeNote&&(!stepped||step===0))));back.textContent=noteMode?(viewOnly?'Voltar ao registro':'Voltar às respostas'):includeNote&&(!stepped||step===0)?'Voltar à anotação':'Voltar';
+    next.hidden=!noteIntro&&(viewOnly||noteMode||!stepped||step===QUESTIONS.length-1);submit.hidden=viewOnly||!next.hidden;done.hidden=!viewOnly;
     addNote.textContent=viewOnly?'Ver anotação':'Acrescentar anotação';
     addNote.hidden=viewOnly?(!hasSavedNote||noteMode):!includeNote||noteMode||(stepped&&step<QUESTIONS.length-1);
+    if(!viewOnly){
+      dialog.querySelector('#wbeTitle').textContent=noteIntro?'Seu registro de hoje':'Seu dia, além do humor';
+      dialog.querySelector('#wbeIntro').textContent=noteIntro?`${chosenMood?'Você escolheu “'+chosenMood+'”. ':''}Se quiser, conte um pouco sobre hoje antes de continuar.`:chosenMood?`Você escolheu “${chosenMood}”. Complete as três perguntas para registrar seu dia.`:'Escolha uma resposta para cada pergunta para concluir seu registro.';
+      dialog.querySelector('#wbeNoteTitle').textContent=noteIntro?'Quer contar algo sobre hoje?':'Sua anotação sobre hoje';
+    }
     progress();
     if(focus){const target=noteMode?note:viewOnly?done:form.querySelector(`input[name="${QUESTIONS[step].id}"]:checked`)||form.querySelector(`input[name="${QUESTIONS[step].id}"]`);target?.focus({preventScroll:true});}
   }
   function setBusy(busy){saving=busy;form.querySelectorAll('button,input,textarea').forEach(input=>input.disabled=busy||(viewOnly&&input.type==='radio'));note.readOnly=viewOnly;submit.textContent=busy?'Salvando…':includeNote?'Salvar meu dia':'Salvar bem-estar';}
-  function clear(){epoch++;saving=false;step=0;noteMode=false;note.value='';dialog.querySelector('.wbe-record').replaceChildren();dialog.querySelector('.wbe-note-count').textContent='0/600';form.querySelectorAll('input').forEach(input=>input.checked=false);status.textContent='';}
+  function clear(){epoch++;saving=false;step=0;noteMode=false;noteIntro=false;chosenMood='';note.value='';dialog.querySelector('.wbe-record').replaceChildren();dialog.querySelector('.wbe-note-count').textContent='0/600';form.querySelectorAll('input').forEach(input=>input.checked=false);status.textContent='';}
   function dismiss(cancel=true,restoreFocus=true){
     if(dialog.open)dialog.close();document.body.classList.remove('wbe-open');clear();
     if(cancel)onCancel();
@@ -52,12 +57,13 @@ export function createWellbeingDialog({save,onCancel=()=>{}}={}) {
   close.addEventListener('click',()=>{if(!saving)dismiss();});
   done.addEventListener('click',()=>dismiss(false));
   function advance(){
+    if(noteIntro){noteIntro=false;noteMode=false;status.textContent='';layout(true);return;}
     const question=QUESTIONS[step];
     if(selected()[question.id]===null){dialog.querySelector(`[data-question="${question.id}"] .wbe-field-error`).hidden=false;status.textContent='Escolha uma resposta para continuar.';form.querySelector(`input[name="${question.id}"]`).focus({preventScroll:true});return;}
     step=Math.min(QUESTIONS.length-1,step+1);status.textContent='';layout(true);
   }
   next.addEventListener('click',advance);
-  back.addEventListener('click',()=>{if(noteMode)noteMode=false;else step=Math.max(0,step-1);status.textContent='';layout(true);});
+  back.addEventListener('click',()=>{if(noteMode)noteMode=false;else if(includeNote&&(!smallScreen.matches||step===0)){noteIntro=true;noteMode=true;}else step=Math.max(0,step-1);status.textContent='';layout(true);});
   addNote.addEventListener('click',()=>{noteMode=true;status.textContent='';layout(true);});
   const screenChanged=()=>{if(dialog.open)layout();};
   smallScreen.addEventListener('change',screenChanged);
@@ -65,6 +71,7 @@ export function createWellbeingDialog({save,onCancel=()=>{}}={}) {
   note.addEventListener('input',()=>{dialog.querySelector('.wbe-note-count').textContent=`${note.value.length}/600`;});
   form.addEventListener('submit',async event=>{
     event.preventDefault();if(saving||viewOnly)return;
+    if(noteIntro){advance();return;}
     if(smallScreen.matches&&!noteMode&&step<QUESTIONS.length-1){advance();return;}
     const metrics=selected(),missing=QUESTIONS.filter(q=>metrics[q.id]===null);
     for(const q of QUESTIONS)dialog.querySelector(`[data-question="${q.id}"] .wbe-field-error`).hidden=metrics[q.id]!==null;
@@ -76,7 +83,7 @@ export function createWellbeingDialog({save,onCancel=()=>{}}={}) {
   });
   return {
     open({metrics={},moodLabel='',withNote=false,readOnly=false,note:savedNote='',date=''}={}){
-      if(dialog.open)return;clear();trigger=document.activeElement;viewOnly=readOnly;includeNote=withNote;hasSavedNote=typeof savedNote==='string'&&savedNote.length>0;
+      if(dialog.open)return;clear();trigger=document.activeElement;viewOnly=readOnly;includeNote=withNote;chosenMood=moodLabel;noteIntro=!readOnly&&withNote;noteMode=noteIntro;hasSavedNote=typeof savedNote==='string'&&savedNote.length>0;
       dialog.querySelector('#wbeTitle').textContent=viewOnly?'Seu registro salvo':'Seu dia, além do humor';
       close.setAttribute('aria-label',viewOnly?'Fechar registro':'Fechar sem concluir o registro');
       dialog.querySelector('#wbeIntro').textContent=viewOnly?`${moodLabel?'Humor: '+moodLabel+'. ':''}${/^\d{4}-\d{2}-\d{2}$/.test(date)?'Dia '+date.slice(8,10)+'/'+date.slice(5,7)+'/'+date.slice(0,4)+'. ':''}Após salvar, as respostas não podem ser alteradas.`:moodLabel?`Você escolheu “${moodLabel}”. Complete as três perguntas para registrar seu dia.`:'Escolha uma resposta para cada pergunta para concluir seu registro.';

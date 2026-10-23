@@ -1,4 +1,4 @@
-import {createWellbeingDialog} from './wellbeing-entry.js?h=2ad04c8200';
+import {createWellbeingDialog} from './wellbeing-entry.js?h=ad059692a3';
 import {METRICS,windowRecords,summary,value,normalized} from './wellbeing-model.js?h=c004476f4f';
 const number=n=>new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}).format(n);
 const short=date=>`${date.slice(8,10)}/${date.slice(5,7)}`;

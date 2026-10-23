@@ -44,6 +44,11 @@ test('home daily check-in requires descriptive answers, saves atomically, retrie
  const ev=b.evaluate,click=selector=>ev(`document.querySelector(${JSON.stringify(selector)}).click()`);
  await click('[data-mood="4"]');
  assert.equal(await ev('document.querySelector(".wbe-dialog").open'),true);
+ assert.equal(await ev('document.querySelector(".wbe-note").hidden'),false);
+ assert.equal(await ev('document.querySelectorAll(".wbe-question:not([hidden])").length'),0);
+ await ev(`document.getElementById('wbeNote').value='synthetic private note';document.getElementById('wbeNote').dispatchEvent(new Event('input'));`);
+ assert.equal(await ev('document.querySelector(".wbe-note-count").textContent'),'22/600');
+ await click('.wbe-next');
  assert.equal(writes.length,0,'choosing mood does not commit an incomplete day');
  assert.equal(await ev('document.querySelectorAll(".wbe-dialog input:checked").length'),0);
  assert.equal(await ev('document.querySelectorAll(".wbe-dialog input[type=radio]").length'),15);
@@ -54,7 +59,7 @@ test('home daily check-in requires descriptive answers, saves atomically, retrie
  await click('input[name="energy"][value="8"]');
  await click('input[name="sleep"][value="10"]');
  await click('.wbe-add-note');
- await ev(`document.getElementById('wbeNote').value='synthetic private note';`);
+ assert.equal(await ev('document.getElementById("wbeNote").value'),'synthetic private note');
  for(const width of [1440,768,390,320]){
   await b.send('Emulation.setDeviceMetricsOverride',{width,height:850,deviceScaleFactor:1,mobile:width<700});
   const size=await ev('new Promise(r=>requestAnimationFrame(()=>{const d=document.querySelector(".wbe-dialog"),b=d.getBoundingClientRect();r({overflow:d.scrollWidth>d.clientWidth,left:b.left,right:b.right,height:b.height,viewport:innerWidth});}))');
@@ -100,6 +105,8 @@ test('check-in fits without modal scrolling and small screens require each answe
  }
  await b.send('Emulation.setDeviceMetricsOverride',{width:320,height:568,deviceScaleFactor:1,mobile:true});
  await click('[data-mood="4"]');await fits('initial small screen');
+ assert.equal(await ev('document.querySelector(".wbe-note").hidden'),false);
+ await click('.wbe-next');await fits('first required question');
  assert.equal(await ev('document.querySelectorAll(".wbe-question:not([hidden])").length'),1);
  await click('.wbe-next');assert.equal(writes.length,0);await fits('required answer feedback');
  assert.equal(await ev('document.querySelector(".wbe-question:not([hidden])").dataset.question'),'anxiety');
@@ -152,6 +159,7 @@ test('a day already saved in another tab is loaded for viewing instead of overwr
  }));
  await mount(b);const ev=b.evaluate,click=s=>ev(`document.querySelector(${JSON.stringify(s)}).click()`);
  await click('[data-mood="4"]');
+ await click('.wbe-next');
  for(const id of ['anxiety','energy','sleep'])await click(`input[name="${id}"][value="8"]`);
  await click('.wbe-submit');await poll(()=>ev('!document.querySelector(".wbe-dialog").open'),'existing record loaded');
  assert.equal(writes,1);await click('#moodWellbeing');

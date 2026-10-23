@@ -1,4 +1,4 @@
-import {createWellbeingDialog} from './wellbeing-entry.js?h=2ad04c8200';
+import {createWellbeingDialog} from './wellbeing-entry.js?h=ad059692a3';
 
 export function todayInSaoPaulo(){
   const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
