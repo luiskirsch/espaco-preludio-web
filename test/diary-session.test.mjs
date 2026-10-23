@@ -292,11 +292,11 @@ test('production diary: portal entry carries the cinematic reveal through both r
     }
   });entranceObserver.observe(document,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});` });
   const sources = [
-    ['/app/home.html', '.home-diary-card', '/app/diario.html', 1440],
+    ['/app/home.html', ':is(.home-diary-card[href],.home-diary-card__cta[href])', '/app/diario.html', 1440],
     ['/app/home.html', '.a-nav__item[href="./diario.html"]', '/app/diario.html', 1440],
-    ['/aluno-painel.html?preview=1', '.home-diary-card', '/aluno-diario.html', 390],
+    ['/aluno-painel.html?preview=1', ':is(.home-diary-card[href],.home-diary-card__cta[href])', '/aluno-diario.html', 390],
     ['/aluno-painel.html?preview=1', '.nav-button--diary', '/aluno-diario.html', 390],
-    ['/aluno-painel.html?preview=1', '.home-diary-card', '/aluno-diario.html', 390, true],
+    ['/aluno-painel.html?preview=1', ':is(.home-diary-card[href],.home-diary-card__cta[href])', '/aluno-diario.html', 390, true],
   ];
   for (const [source, selector, target, width, reduced] of sources) {
     await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: reduced ? 'reduce' : 'no-preference' }] });
@@ -342,10 +342,10 @@ test('production diary: portal entry carries the cinematic reveal through both r
   }
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
   await send('Page.navigate', { url: origin + '/app/home.html' });
-  await poll(() => evaluate("!!document.querySelector('.home-diary-card') && !!document.getElementById('diaryEntranceStyles')?.sheet"), 'keyboard entry ready');
-  const intercepted = await evaluate("(()=>{let intercepted;document.addEventListener('click',event=>{intercepted=event.defaultPrevented;event.preventDefault()},{once:true});document.querySelector('.home-diary-card').dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,ctrlKey:true,button:0}));return intercepted})()");
+  await poll(() => evaluate("!!document.querySelector(':is(.home-diary-card[href],.home-diary-card__cta[href])') && !!document.getElementById('diaryEntranceStyles')?.sheet"), 'keyboard entry ready');
+  const intercepted = await evaluate("(()=>{let intercepted;document.addEventListener('click',event=>{intercepted=event.defaultPrevented;event.preventDefault()},{once:true});document.querySelector(':is(.home-diary-card[href],.home-diary-card__cta[href])').dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,ctrlKey:true,button:0}));return intercepted})()");
   assert.equal(intercepted, false, 'Modified clicks retain the browser new-tab behavior');
-  await evaluate("document.querySelector('.home-diary-card').focus()");
+  await evaluate("document.querySelector(':is(.home-diary-card[href],.home-diary-card__cta[href])').focus()");
   await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
   await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
   await poll(() => evaluate("!!document.querySelector('.diary-entrance--departure')"), 'keyboard activates passage');
@@ -364,7 +364,7 @@ test('production diary: a slow document, saved cover and fonts never expose an u
   await send('Network.setCacheDisabled', { cacheDisabled: true });
   await send('Page.addScriptToEvaluateOnNewDocument', { source: "document.addEventListener('DOMContentLoaded',()=>{window.__diaryDcl=true},{once:true})" });
   for (const [source, selector, target, width] of [
-    ['/app/home.html', '.home-diary-card', '/app/diario.html', 1440],
+    ['/app/home.html', ':is(.home-diary-card[href],.home-diary-card__cta[href])', '/app/diario.html', 1440],
     ['/aluno-painel.html?preview=1', '.nav-button--diary', '/aluno-diario.html', 390],
   ]) {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: width < 700 });
@@ -411,11 +411,11 @@ test('production diary: the very first arrival frame retains the selected langua
   });languageObserver.observe(document,{childList:true,subtree:true});` });
   for (const [locale, copy] of [['en-US', 'Diary of|Lived Thoughts'], ['es-ES', 'Diario de|Pensamientos Vividos']]) {
     await send('Page.navigate', { url: origin + '/app/home.html' });
-    await poll(() => evaluate("!!document.querySelector('.home-diary-card')"), 'language setup');
+    await poll(() => evaluate("!!document.querySelector(':is(.home-diary-card[href],.home-diary-card__cta[href])')"), 'language setup');
     await evaluate(`localStorage.setItem('ep_lang',${JSON.stringify(locale)})`);
     await send('Page.navigate', { url: origin + '/app/home.html' });
     await poll(() => evaluate(`window.EP_I18N?.locale?.()===${JSON.stringify(locale)} && !!document.getElementById('diaryEntranceStyles')?.sheet`), 'translated portal ready');
-    await click('.home-diary-card');
+    await click(':is(.home-diary-card[href],.home-diary-card__cta[href])');
     assert.equal(await evaluate("[...document.querySelector('.diary-entrance h1').children].map(node=>node.textContent).join('|')"), copy);
     await poll(() => evaluate("location.pathname==='/app/diario.html' && !!window.__firstEntranceCopy"), 'first destination frame');
     assert.equal(await evaluate('window.__firstEntranceCopy'), copy, 'Navigation never briefly switches the cinematic title back to Portuguese');
@@ -430,7 +430,7 @@ test('production diary: an early portal click waits for cold entrance styles in 
   await send('Network.setCacheDisabled', { cacheDisabled: true });
   for (const [source, selector, target] of [
     ['/app/home.html', '.a-nav__item[href="./diario.html"]', '/app/diario.html'],
-    ['/aluno-painel.html?preview=1', '.home-diary-card', '/aluno-diario.html'],
+    ['/aluno-painel.html?preview=1', ':is(.home-diary-card[href],.home-diary-card__cta[href])', '/aluno-diario.html'],
   ]) {
     const styles = holdAsset('/app/diary-entrance.css');
     await send('Page.navigate', { url: origin + source });
@@ -453,9 +453,9 @@ test('production diary: the destination recovers the complete passage when a col
   for (const asset of ['/app/diary-entrance.js', '/app/diary-entrance.css']) {
     const delayed = holdAsset(asset);
     await send('Page.navigate', { url: origin + '/app/home.html' });
-    await poll(() => evaluate("!!document.querySelector('.home-diary-card')"), 'portal card available');
+    await poll(() => evaluate("!!document.querySelector(':is(.home-diary-card[href],.home-diary-card__cta[href])')"), 'portal card available');
     await poll(() => delayed.request, 'cold asset delayed');
-    await click('.home-diary-card');
+    await click(':is(.home-diary-card[href],.home-diary-card__cta[href])');
     await poll(() => evaluate("location.pathname==='/app/diario.html'"), 'destination reached despite cold assets');
     delayed.release();
     await poll(() => evaluate("!!document.querySelector('.diary-entrance--standalone')"), 'complete passage recovered at destination');
@@ -472,8 +472,8 @@ test('production diary: the destination recovers the complete passage when a col
   }
   await send('Page.addScriptToEvaluateOnNewDocument', { source: "for(const method of ['getItem','setItem']){const original=Storage.prototype[method];Storage.prototype[method]=function(key,...args){if(key==='ep.diary.entrance')throw new DOMException('Storage blocked','SecurityError');return original.call(this,key,...args)}}" });
   await send('Page.navigate', { url: origin + '/app/home.html' });
-  await poll(() => evaluate("!!document.querySelector('.home-diary-card') && !!document.getElementById('diaryEntranceStyles')?.sheet"), 'storage-restricted portal ready');
-  await click('.home-diary-card');
+  await poll(() => evaluate("!!document.querySelector(':is(.home-diary-card[href],.home-diary-card__cta[href])') && !!document.getElementById('diaryEntranceStyles')?.sheet"), 'storage-restricted portal ready');
+  await click(':is(.home-diary-card[href],.home-diary-card__cta[href])');
   await poll(() => evaluate("location.pathname==='/app/diario.html' && !!document.querySelector('.diary-entrance--standalone')"), 'full arrival without storage or referrer');
   await click('.diary-entrance__skip');
   await send('Page.navigate', { url: origin + '/aluno-diario.html' });

@@ -15,6 +15,13 @@ test('support action matches the journey and survey links under mouse hover', {t
   assert.deepEqual(styles[0],styles[1]);assert.deepEqual(styles[0],styles[2]);
   const diary=await b.send('DOM.querySelector',{nodeId:root.nodeId,selector:'.home-diary-card'});
   await b.send('CSS.forcePseudoState',{nodeId:diary.nodeId,forcedPseudoClasses:['hover']});
+  assert.equal(await b.evaluate('document.querySelector(".home-diary-card").tagName'),'DIV');
+  assert.equal(await b.evaluate('document.querySelector(".home-diary-card__cta").getAttribute("href")'),'./diario.html');
+  assert.equal(await b.evaluate('getComputedStyle(document.querySelector(".home-diary-card__cta")).backgroundColor'),'rgb(224, 182, 87)');
+  await b.evaluate('document.querySelector(".home-diary-card h2").click()');
+  assert.equal(await b.evaluate('location.pathname'),'/app/home.html');
+  const diaryButton=await b.send('DOM.querySelector',{nodeId:root.nodeId,selector:'.home-diary-card__cta'});
+  await b.send('CSS.forcePseudoState',{nodeId:diaryButton.nodeId,forcedPseudoClasses:['hover']});
   const diaryStyle=await b.evaluate('(()=>{const s=getComputedStyle(document.querySelector(".home-diary-card__cta"));return {background:s.backgroundColor,transform:s.transform};})()');
   assert.equal(diaryStyle.background,'rgb(237, 196, 100)');
   assert.equal(diaryStyle.transform,'matrix(1, 0, 0, 1, 0, -2)');
