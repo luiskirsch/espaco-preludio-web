@@ -1230,6 +1230,7 @@ test('production diary: colored ribbons persist, return to exact passages and fo
   await evaluate(`(()=>{const text=document.getElementById('journalText');text.focus();text.setSelectionRange(${start},${end});text.dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowDown',bubbles:true}));})()`);
   assert.ok(await evaluate("Number(document.getElementById('writingPageIndicator').dataset.sheetPage)>1"), 'passage lies on a later physical sheet');
   await click('#bookmarkButton');
+  await click('#addBookmark');
   await fill('#bookmarkLabel', 'Uma conversa <especial>');
   await click('[name="bookmarkColor"][value="blue"]');
   const dialogLayout = await evaluate("(()=>{const dialog=document.getElementById('diaryDialog'),right=dialog.getBoundingClientRect().right;return {width:dialog.clientWidth,content:dialog.scrollWidth,overflow:[...dialog.querySelectorAll('*')].filter(node=>node.getBoundingClientRect().right>right).map(node=>({tag:node.tagName,class:node.className,width:node.getBoundingClientRect().width}))}})()");
@@ -1265,6 +1266,7 @@ test('production diary: colored ribbons persist, return to exact passages and fo
   await click('[data-bookmark-visit]');
   await poll(() => evaluate(`document.getElementById('journalText').selectionStart===${start + prefix.length}`), 'restored passage in student diary');
   await click('#bookmarkButton');
+  await click('#addBookmark');
   await fill('#bookmarkLabel', 'Outra fita');
   await click('[name="bookmarkColor"][value="green"]');
   await click('#saveBookmark');
@@ -1324,6 +1326,37 @@ test('production diary: empty bookmark card leads back to writing and fits narro
   assert.equal(await evaluate("document.getElementById('diaryDialog').classList.contains('diary-dialog--bookmarks')"), false, 'card appearance resets on close');
   await fill('#journalText', 'Um dia que merece uma fita.');
   await click('#bookmarkButton');
+  await click('#addBookmark');
   assert.equal(await evaluate("!!document.getElementById('bookmarkForm')"), true, 'writing can now receive a marker');
   assert.equal(await evaluate("document.getElementById('bookmarkStartWriting')"), null, 'empty prompt gives way to the form');
+}));
+
+test('production diary: saved bookmarks appear first and creation stays in its own compact view', { ...options, timeout: 45000 }, () => withBrowser(async ({ accounts, navigate, click, evaluate, send }) => {
+  accounts.get('A').set('saved-day', entry('saved-day', 'Aquela conversa me fez olhar o dia de outro jeito.', {
+    sealed: true, bookmarks: [{ id: 'mark-conversa', label: 'Uma conversa importante', color: 'red', start: 0, end: 16 }],
+  }));
+  await navigate();
+  await click('#bookmarkButton');
+  assert.equal(await evaluate("document.getElementById('bookmarkForm')"), null, 'opening ribbons prioritizes returning to saved moments');
+  assert.equal(await evaluate("!!document.querySelector('[data-bookmark-visit]')"), true);
+  for (const [width, height] of [[1280, 900], [390, 844], [320, 568]]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 700 });
+    await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+    const fits = await evaluate("(()=>{const d=document.getElementById('diaryDialog'),box=d.getBoundingClientRect(),item=d.querySelector('.bookmark-item').getBoundingClientRect();return d.scrollWidth<=d.clientWidth && d.scrollHeight<=d.clientHeight+1 && box.left>=0 && box.right<=innerWidth && item.bottom<=box.bottom})()");
+    assert.equal(fits, true, `saved moment and its actions are visible without scrolling at ${width}px`);
+    if (process.env.DIARY_BOOKMARK_OVERVIEW_PREVIEW) {
+      const shot = await send('Page.captureScreenshot', { format: 'png' });
+      await writeFile(join(tmpdir(), `ep-bookmark-overview-${width}.png`), Buffer.from(shot.data, 'base64'));
+    }
+  }
+  await click('#addBookmark');
+  assert.equal(await evaluate("!!document.getElementById('bookmarkForm') && !document.querySelector('[data-bookmark-visit]')"), true, 'creating a marker has no competing list');
+  const formFits = await evaluate("(()=>{const d=document.getElementById('diaryDialog');return d.scrollWidth<=d.clientWidth && d.scrollHeight<=d.clientHeight+1})()");
+  assert.equal(formFits, true, 'sealed-day form fits a small phone');
+  if (process.env.DIARY_BOOKMARK_OVERVIEW_PREVIEW) {
+    const shot = await send('Page.captureScreenshot', { format: 'png' });
+    await writeFile(join(tmpdir(), 'ep-bookmark-compose-320.png'), Buffer.from(shot.data, 'base64'));
+  }
+  await click('#cancelBookmark');
+  assert.equal(await evaluate("!!document.querySelector('[data-bookmark-visit]') && !document.getElementById('bookmarkForm')"), true, 'back returns to the saved list');
 }));

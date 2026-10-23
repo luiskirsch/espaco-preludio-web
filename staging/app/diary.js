@@ -373,7 +373,7 @@ async function visitBookmark(entryId, bookmarkId, edit = false) {
     toast(`Você voltou a “${bookmark.label}”.`);
   });
 }
-function openBookmarks(editing = null, filter = '') {
+function openBookmarks(editing = null, filter = '', creating = false) {
   if (!assertReady()) return;
   // Finish the visible page transition before offering a return to another page.
   pagedEditor.cancelTurn();
@@ -383,29 +383,34 @@ function openBookmarks(editing = null, filter = '') {
   const snippet = current.text.slice(range.start, range.end || range.start).trim();
   const rows = bookmarkedEntries().flatMap(entry => (entry.bookmarks || []).filter(mark => !filter || mark.color === filter).map(mark => ({ entry, mark })));
   const canAdd = !$('editorView').hidden && current.kind !== 'capsule' && Boolean(current.text.trim()) && (editing || (current.bookmarks || []).length < 32);
+  const composing = Boolean((editing || creating) && canAdd);
   const initialColor = editing?.color || Object.keys(BOOKMARK_COLORS).find(color => !(current.bookmarks || []).some(mark => mark.color === color)) || 'red';
   const colorOptions = Object.entries(BOOKMARK_COLORS).map(([color, info]) => `<label class="bookmark-color" style="--ribbon-color:${info.hex}"><input type="radio" name="bookmarkColor" value="${color}" ${color === initialColor ? 'checked' : ''} required><span aria-hidden="true"></span>${info.label}</label>`).join('');
-  const form = canAdd ? `<form id="bookmarkForm" class="bookmark-compose">
-    <div class="bookmark-section-label">${editing ? 'SUA FITA' : 'MARCAR UM MOMENTO'}</div>
-    <p class="dialog-note">${editing ? 'Dê outro nome ou uma nova cor a este momento.' : snippet ? 'Uma fita para as palavras que você selecionou.' : current.sealed ? 'A fita ficará no começo deste dia. Para marcar um trecho, reabra o dia e selecione as palavras.' : 'A fita ficará na posição atual da escrita. Para guardar um trecho, selecione as palavras antes de marcar.'}</p>
-    ${snippet ? `<blockquote class="bookmark-selection">${esc(snippet.slice(0, 180))}${snippet.length > 180 ? '…' : ''}</blockquote>` : ''}
-    <label class="dialog-field">Nome do momento<input id="bookmarkLabel" maxlength="80" required value="${esc(editing?.label || snippet.replace(/\s+/g, ' ').slice(0, 80))}" placeholder="Uma conversa que quero lembrar"></label>
-    <fieldset class="bookmark-colors"><legend>Escolha a cor da fita</legend>${colorOptions}</fieldset>
-    <div class="dialog-actions"><button type="submit" class="gold-button" id="saveBookmark">${editing ? 'Salvar marcador' : 'Guardar este momento'}<span aria-hidden="true">↗</span></button></div>
+  const form = composing ? `<form id="bookmarkForm" class="bookmark-compose">
+    <div class="bookmark-target"><span aria-hidden="true"></span><div><small>${snippet ? 'TRECHO SELECIONADO' : current.sealed ? 'INÍCIO DO DIA' : 'POSIÇÃO NA ESCRITA'}</small><p>${esc(dateLabel(current.date))}</p></div></div>
+    ${snippet ? `<blockquote class="bookmark-selection">${esc(snippet.slice(0, 110))}${snippet.length > 110 ? '…' : ''}</blockquote>` : ''}
+    <label class="dialog-field">Nome do marcador<input id="bookmarkLabel" maxlength="80" required value="${esc(editing?.label || snippet.replace(/\s+/g, ' ').slice(0, 80))}" placeholder="Ex.: uma conversa importante"></label>
+    <fieldset class="bookmark-colors"><legend>Cor da fita</legend>${colorOptions}</fieldset>
+    <div class="bookmark-form-actions"><button type="button" class="quiet-button" id="cancelBookmark">Voltar</button><button type="submit" class="gold-button" id="saveBookmark">${editing ? 'Salvar alterações' : 'Guardar marcador'}</button></div>
     <p id="bookmarkError" role="alert"></p>
   </form>` : '';
-  const list = rows.length ? `<div class="bookmark-saved-heading"><span class="bookmark-section-label">PARA REENCONTRAR</span><span>${rows.length} ${rows.length === 1 ? 'momento' : 'momentos'}</span></div><div class="bookmark-list">${rows.map(({ entry, mark }) => `<article class="bookmark-item" style="--ribbon-color:${BOOKMARK_COLORS[mark.color]?.hex || '#a5322b'}"><button type="button" class="bookmark-open" data-bookmark-visit="${esc(mark.id)}" data-bookmark-entry="${esc(entry.id)}"><strong>${esc(mark.label)}<span aria-hidden="true">↗</span></strong><small>${esc(dateLabel(entry.date))} · ${esc(BOOKMARK_COLORS[mark.color]?.label || '')}${entry.kind === 'dream' ? ' · Sonho' : ''}</small><span>${esc(entry.text.slice(mark.start, Math.max(mark.end, mark.start + 100)).slice(0, 140))}</span></button><button type="button" class="text-button" data-bookmark-edit="${esc(mark.id)}" data-bookmark-entry="${esc(entry.id)}" aria-label="Editar marcador ${esc(mark.label)}">Editar</button>${entry.id === current.id ? `<button type="button" class="text-button" data-bookmark-remove="${esc(mark.id)}" aria-label="Remover marcador ${esc(mark.label)}">Remover</button>` : ''}</article>`).join('')}</div>` : '';
-  const empty = !rows.length && !canAdd ? `<section class="bookmark-empty" aria-labelledby="bookmarkEmptyTitle">
+  const list = rows.length && !composing ? `<div class="bookmark-list">${rows.map(({ entry, mark }) => `<article class="bookmark-item" style="--ribbon-color:${BOOKMARK_COLORS[mark.color]?.hex || '#a5322b'}"><button type="button" class="bookmark-open" data-bookmark-visit="${esc(mark.id)}" data-bookmark-entry="${esc(entry.id)}"><strong>${esc(mark.label)}<span aria-hidden="true">↗</span></strong><small>${esc(dateLabel(entry.date, { month: 'short' }))}${entry.kind === 'dream' ? ' · Sonho' : ''}</small><span>${esc(entry.text.slice(mark.start, Math.max(mark.end, mark.start + 100)).slice(0, 100))}</span></button><div class="bookmark-item-actions"><button type="button" class="text-button" data-bookmark-edit="${esc(mark.id)}" data-bookmark-entry="${esc(entry.id)}" aria-label="Editar marcador ${esc(mark.label)}">Editar</button>${entry.id === current.id ? `<button type="button" class="text-button" data-bookmark-remove="${esc(mark.id)}" aria-label="Remover marcador ${esc(mark.label)}">Remover</button>` : ''}</div></article>`).join('')}</div>` : '';
+  const empty = !rows.length && !composing ? `<section class="bookmark-empty" aria-labelledby="bookmarkEmptyTitle">
     <div class="bookmark-keepsake" aria-hidden="true"><span></span><span></span><span></span></div>
     <span class="bookmark-section-label">${filter ? 'ESTA COR AINDA ESPERA' : 'SUA PRIMEIRA FITA'}</span>
     <h3 id="bookmarkEmptyTitle">${filter ? 'Uma cor, novas lembranças.' : 'Guarde um ponto de volta.'}</h3>
     <p>${filter ? 'Nenhum momento foi marcado com esta cor. Suas outras fitas continuam guardadas.' : 'Uma frase, uma descoberta, um dia especial. Marque o que você quer reencontrar, no seu tempo.'}</p>
-    ${filter ? '' : '<button type="button" class="gold-button" id="bookmarkStartWriting">Ir para minha escrita <span aria-hidden="true">↗</span></button>'}
+    ${filter ? '' : canAdd ? '<button type="button" class="gold-button" id="addBookmark">+ Novo marcador</button>' : '<button type="button" class="gold-button" id="bookmarkStartWriting">Ir para minha escrita <span aria-hidden="true">↗</span></button>'}
   </section>` : '';
-  const limit = !canAdd && (current.bookmarks || []).length >= 32 ? '<p class="dialog-note">Esta página tem 32 marcadores. Edite ou remova uma fita para guardar outro momento.</p>' : '';
-  const footer = !rows.length && !filter ? `<div class="bookmark-how"><span><b>01</b> Escolha um trecho</span><span><b>02</b> Dê uma cor</span><span><b>03</b> Volte quando quiser</span></div>` : '';
-  openDialog(editing ? 'Editar marcador' : 'Seus momentos marcados', `<p class="bookmark-intro">Pequenos caminhos de volta ao que importa.</p>${form}${empty}${limit}${filter ? '<button type="button" class="quiet-button" id="allBookmarks">Ver todas as cores</button>' : ''}${list}${footer}`);
+  const limit = !composing && !canAdd && (current.bookmarks || []).length >= 32 ? '<p class="dialog-note">Esta página tem 32 marcadores. Edite ou remova uma fita para guardar outro momento.</p>' : '';
+  const toolbar = !composing && rows.length ? `<div class="bookmark-saved-heading"><span>${rows.length} ${rows.length === 1 ? 'momento guardado' : 'momentos guardados'}</span>${canAdd ? '<button type="button" class="bookmark-add" id="addBookmark">+ Novo marcador</button>' : ''}</div>` : '';
+  const title = editing ? 'Editar marcador' : composing ? 'Novo marcador' : 'Seus marcadores';
+  const intro = composing ? 'Um nome e uma cor para lembrar deste momento.' : 'Volte aos momentos que você escolheu guardar.';
+  openDialog(title, `<p class="bookmark-intro">${intro}</p>${toolbar}${form}${empty}${limit}${!composing && filter ? '<button type="button" class="quiet-button" id="allBookmarks">Ver todas as cores</button>' : ''}${list}`);
   dialog.classList.add('diary-dialog--bookmarks');
+  dialog.classList.toggle('diary-dialog--bookmark-compose', Boolean(composing));
+  $('addBookmark')?.addEventListener('click', () => openBookmarks(null, filter, true));
+  $('cancelBookmark')?.addEventListener('click', () => openBookmarks(null, filter));
   $('bookmarkStartWriting')?.addEventListener('click', async () => {
     if (generation !== bootGeneration || !await settle() || generation !== bootGeneration) return;
     const page = !$('editorView').hidden && current.kind !== 'capsule' ? current : bookmarkedEntries().find(item => item.kind === 'diary') || draft();
@@ -694,7 +699,7 @@ function closeDialog() {
   restoreBackdropScroll();
   dialog.inert = false;
   document.documentElement.classList.remove('diary-modal-open');
-  dialog.classList.remove('diary-dialog--aroma', 'diary-dialog--release', 'diary-dialog--bookmarks', 'is-closing');
+  dialog.classList.remove('diary-dialog--aroma', 'diary-dialog--release', 'diary-dialog--bookmarks', 'diary-dialog--bookmark-compose', 'is-closing');
   for (const property of ['--release-close-opacity', '--release-close-transform', '--release-close-backdrop']) dialog.style.removeProperty(property);
   $('dialogBody').replaceChildren(); $('dialogTitle').textContent = '';
   dialogOrigin?.focus?.({ preventScroll: true });
