@@ -340,7 +340,7 @@ function renderMeta() {
   $('entryExtra').textContent = [current.weather ? WEATHER[current.weather]?.[0] : '', current.aroma || current.aromaText ? aromaLabel : ''].filter(Boolean).join(' · ');
   $('entryExtra').hidden = !$('entryExtra').textContent;
   $('deleteCurrent').hidden = !current.version;
-  $('markMomentButton').hidden = !ready || current.kind === 'capsule' || !current.text.trim();
+  $('markMomentButton').hidden = !ready || current.kind === 'capsule';
   $('markMomentButton').disabled = (current.bookmarks || []).length >= 32;
   $('entryExtra').parentElement.hidden = $('entryExtra').hidden && !current.version && $('markMomentButton').hidden;
   renderInsights();
@@ -980,7 +980,12 @@ document.querySelectorAll('[data-memory]').forEach(button => button.addEventList
 $('newPageButton').addEventListener('click', () => newPage(current.kind === 'dream' ? 'dream' : 'diary'));
 $('bookmarkButton').addEventListener('click', () => openBookmarks());
 $('markMomentButton').addEventListener('click', () => {
-  if (!canEdit({ requireOpen: true }) || !current.text.trim()) return;
+  if (!canEdit({ requireOpen: true })) return;
+  if (!current.text.trim()) {
+    toast('Escreva nesta página e depois clique em “Marcar momento” para escolher sua fita.');
+    text.focus({ preventScroll: true }); text.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+    return;
+  }
   openBookmarks(null, '', true);
 });
 $('bookRibbons').addEventListener('click', event => {

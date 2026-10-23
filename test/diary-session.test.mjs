@@ -1322,6 +1322,10 @@ test('production diary: empty bookmark card leads back to writing and fits narro
   await poll(() => evaluate("!document.getElementById('diaryDialog').open && document.activeElement.id==='journalText'"), 'empty card returns to writing');
   assert.equal(await evaluate("document.getElementById('bookFrame').classList.contains('is-cover-open')"), true);
   assert.equal(await evaluate("document.getElementById('diaryDialog').classList.contains('diary-dialog--bookmarks')"), false, 'card appearance resets on close');
+  const markerVisible = await evaluate("(()=>{const button=document.getElementById('markMomentButton'),box=button.getBoundingClientRect(),footer=document.querySelector('.entry-footer').getBoundingClientRect();return !button.hidden && !button.disabled && box.width>0 && box.top>=footer.top && box.bottom<=footer.bottom+1})()");
+  assert.equal(markerVisible, true, 'blank pages already show the marker action inside the footer');
+  await click('#markMomentButton');
+  assert.equal(await evaluate("!document.getElementById('diaryDialog').open && document.activeElement.id==='journalText' && document.getElementById('diaryToast').textContent.includes('Escreva nesta página')"), true, 'the empty-page action guides writing instead of silently doing nothing');
   await fill('#journalText', 'Um dia que merece uma fita.');
   await click('#bookmarkButton');
   assert.equal(await evaluate("document.getElementById('addBookmark')"), null, 'manager has no creation action');
