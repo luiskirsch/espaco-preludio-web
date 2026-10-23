@@ -17,16 +17,28 @@ export function createWellbeingDialog({save,onCancel=()=>{}}) {
       <h2 id="wbeTitle">Seu dia, além do humor</h2><p id="wbeIntro"></p>
       <p class="wbe-progress" role="status">0 de 3 respostas</p></header>
     <div class="wbe-body">${QUESTIONS.map(q=>`<fieldset class="wbe-question" data-question="${q.id}"><legend><span aria-hidden="true">${q.icon}</span> ${q.title}</legend><p class="wbe-hint">${q.hint}</p><div class="wbe-options" data-options="${q.id}"></div><p class="wbe-field-error" hidden>Escolha a opção que mais se aproxima do seu dia.</p></fieldset>`).join('')}
-      <details class="wbe-note"><summary>Quer acrescentar uma anotação? <span>Opcional</span></summary><label for="wbeNote">O que marcou seu dia?</label><textarea id="wbeNote" maxlength="600" rows="3" placeholder="Escreva do seu jeito. Esta anotação é pessoal."></textarea><span class="wbe-note-count">0/600</span></details>
-    </div><footer class="wbe-footer"><p class="wbe-status" role="status" aria-live="polite" tabindex="-1"></p><button type="submit" class="wbe-submit">Salvar meu dia</button></footer>
+      <section class="wbe-note" hidden aria-labelledby="wbeNoteTitle"><h3 id="wbeNoteTitle">Uma anotação sobre seu dia</h3><p class="wbe-hint">Opcional · escreva do seu jeito. Esta anotação é pessoal.</p><label for="wbeNote">O que marcou seu dia?</label><textarea id="wbeNote" maxlength="600" rows="3" placeholder="Algo que alegrou, preocupou ou chamou sua atenção…"></textarea><span class="wbe-note-count">0/600</span></section>
+    </div><footer class="wbe-footer"><p class="wbe-status" role="status" aria-live="polite" tabindex="-1"></p><button type="button" class="wbe-add-note">Acrescentar anotação</button><button type="button" class="wbe-back" hidden>Voltar</button><button type="button" class="wbe-next" hidden>Continuar</button><button type="submit" class="wbe-submit">Salvar meu dia</button></footer>
   </form>`;
   document.body.append(dialog);
   const form=dialog.querySelector('form'),status=dialog.querySelector('.wbe-status'),submit=dialog.querySelector('.wbe-submit'),close=dialog.querySelector('.wbe-close'),note=dialog.querySelector('textarea');
-  let saving=false,epoch=0,trigger=null,includeNote=false;
+  const smallScreen=matchMedia('(max-width:640px), (max-height:680px)'),back=dialog.querySelector('.wbe-back'),next=dialog.querySelector('.wbe-next'),addNote=dialog.querySelector('.wbe-add-note');
+  let saving=false,epoch=0,trigger=null,includeNote=false,step=0,noteMode=false;
   function selected(){return Object.fromEntries(QUESTIONS.map(q=>[q.id,form.querySelector(`input[name="${q.id}"]:checked`)?.value]).map(([id,v])=>[id,v===undefined?null:Number(v)]));}
-  function progress(){const count=Object.values(selected()).filter(v=>v!==null).length;dialog.querySelector('.wbe-progress').textContent=`${count} de 3 respostas`;}
-  function setBusy(busy){saving=busy;close.disabled=busy;submit.disabled=busy;form.querySelectorAll('input,textarea').forEach(input=>input.disabled=busy);submit.textContent=busy?'Salvando seu registro…':includeNote?'Salvar meu dia':'Salvar bem-estar';}
-  function clear(){epoch++;saving=false;note.value='';dialog.querySelector('.wbe-note-count').textContent='0/600';dialog.querySelector('.wbe-note').open=false;form.querySelectorAll('input').forEach(input=>input.checked=false);status.textContent='';}
+  function progress(){const count=Object.values(selected()).filter(v=>v!==null).length;dialog.querySelector('.wbe-progress').textContent=noteMode?'Anotação pessoal · opcional':smallScreen.matches?`Pergunta ${step+1} de 3 · ${count} respondidas`:`${count} de 3 respostas`;}
+  function layout(focus=false){
+    const stepped=smallScreen.matches;
+    dialog.classList.toggle('is-stepped',stepped);dialog.classList.toggle('is-note',noteMode);
+    QUESTIONS.forEach((q,index)=>{dialog.querySelector(`[data-question="${q.id}"]`).hidden=noteMode||(stepped&&index!==step);});
+    dialog.querySelector('.wbe-note').hidden=!noteMode;
+    back.hidden=!noteMode&&(!stepped||step===0);back.textContent=noteMode?'Voltar às respostas':'Voltar';
+    next.hidden=noteMode||!stepped||step===QUESTIONS.length-1;submit.hidden=!next.hidden;
+    addNote.hidden=!includeNote||noteMode||(stepped&&step<QUESTIONS.length-1);
+    progress();
+    if(focus){const target=noteMode?note:form.querySelector(`input[name="${QUESTIONS[step].id}"]:checked`)||form.querySelector(`input[name="${QUESTIONS[step].id}"]`);target?.focus({preventScroll:true});}
+  }
+  function setBusy(busy){saving=busy;form.querySelectorAll('button,input,textarea').forEach(input=>input.disabled=busy);submit.textContent=busy?'Salvando…':includeNote?'Salvar meu dia':'Salvar bem-estar';}
+  function clear(){epoch++;saving=false;step=0;noteMode=false;note.value='';dialog.querySelector('.wbe-note-count').textContent='0/600';form.querySelectorAll('input').forEach(input=>input.checked=false);status.textContent='';}
   function dismiss(cancel=true,restoreFocus=true){
     if(dialog.open)dialog.close();document.body.classList.remove('wbe-open');clear();
     if(cancel)onCancel();
@@ -35,13 +47,24 @@ export function createWellbeingDialog({save,onCancel=()=>{}}) {
   }
   dialog.addEventListener('cancel',event=>{event.preventDefault();if(!saving)dismiss();});
   close.addEventListener('click',()=>{if(!saving)dismiss();});
+  function advance(){
+    const question=QUESTIONS[step];
+    if(selected()[question.id]===null){dialog.querySelector(`[data-question="${question.id}"] .wbe-field-error`).hidden=false;status.textContent='Escolha uma resposta para continuar.';form.querySelector(`input[name="${question.id}"]`).focus({preventScroll:true});return;}
+    step=Math.min(QUESTIONS.length-1,step+1);status.textContent='';layout(true);
+  }
+  next.addEventListener('click',advance);
+  back.addEventListener('click',()=>{if(noteMode)noteMode=false;else step=Math.max(0,step-1);status.textContent='';layout(true);});
+  addNote.addEventListener('click',()=>{noteMode=true;status.textContent='';layout(true);});
+  const screenChanged=()=>{if(dialog.open)layout();};
+  smallScreen.addEventListener('change',screenChanged);
   form.addEventListener('change',event=>{if(event.target.type==='radio'){event.target.closest('fieldset').querySelector('.wbe-field-error').hidden=true;progress();status.textContent='';}});
   note.addEventListener('input',()=>{dialog.querySelector('.wbe-note-count').textContent=`${note.value.length}/600`;});
   form.addEventListener('submit',async event=>{
     event.preventDefault();if(saving)return;
+    if(smallScreen.matches&&!noteMode&&step<QUESTIONS.length-1){advance();return;}
     const metrics=selected(),missing=QUESTIONS.filter(q=>metrics[q.id]===null);
     for(const q of QUESTIONS)dialog.querySelector(`[data-question="${q.id}"] .wbe-field-error`).hidden=metrics[q.id]!==null;
-    if(missing.length){status.textContent='Responda às três perguntas para concluir seu registro.';form.querySelector(`input[name="${missing[0].id}"]`).focus();return;}
+    if(missing.length){step=QUESTIONS.findIndex(q=>q.id===missing[0].id);noteMode=false;layout();status.textContent='Responda às três perguntas para concluir seu registro.';form.querySelector(`input[name="${missing[0].id}"]`).focus({preventScroll:true});return;}
     const ticket=epoch;setBusy(true);status.textContent='Salvando seu registro…';
     try{await save({metrics,note:includeNote?note.value.trim():undefined});if(ticket!==epoch)return;dismiss(false);}
     catch{if(ticket===epoch){status.textContent='Não foi possível salvar. Suas respostas continuam aqui; tente novamente.';status.focus();}}
@@ -51,7 +74,6 @@ export function createWellbeingDialog({save,onCancel=()=>{}}) {
     open({metrics={},moodLabel='',withNote=false}={}){
       if(dialog.open)return;clear();trigger=document.activeElement;includeNote=withNote;
       dialog.querySelector('#wbeIntro').textContent=moodLabel?`Você escolheu “${moodLabel}”. Complete as três perguntas para registrar seu dia.`:'Escolha uma resposta para cada pergunta. Você pode atualizar o registro de hoje.';
-      dialog.querySelector('.wbe-note').hidden=!withNote;
       for(const q of QUESTIONS){
         const previous=metrics?.[q.id],options=[...q.options];
         if(Number.isInteger(previous)&&previous>=0&&previous<=10&&!options.some(o=>o[0]===previous))options.push([previous,'Manter registro anterior',`${previous}/10, informado anteriormente`]);
@@ -65,9 +87,9 @@ export function createWellbeingDialog({save,onCancel=()=>{}}) {
         }
         dialog.querySelector(`[data-question="${q.id}"] .wbe-field-error`).hidden=true;
       }
-      setBusy(false);progress();document.body.classList.add('wbe-open');dialog.showModal();
+      setBusy(false);layout();document.body.classList.add('wbe-open');dialog.showModal();
     },
     reset(){dismiss(false,false);},
-    destroy(){dismiss(false,false);dialog.remove();}
+    destroy(){smallScreen.removeEventListener('change',screenChanged);dismiss(false,false);dialog.remove();}
   };
 }

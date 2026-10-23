@@ -26,6 +26,7 @@ test('well-being: real records, missing values, chart toggles, periods, saving a
  await click('[data-metric="anxiety"]');assert.ok(await ev('document.getElementById("wbChart").textContent.includes("pelo menos três")'));
  await click('[data-metric="anxiety"]');await click('[data-chart="area"]');await click('[data-days="7"]');
  assert.equal(await ev('document.querySelector("[data-days=\\"7\\"]").getAttribute("aria-pressed")'),'true');
+ await b.send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
  await click('#wbEdit');
  assert.equal(await ev('document.querySelector(".wbe-dialog").open'),true);
  for(const [id,n] of [['anxiety',0],['energy',8],['sleep',8]])await click(`input[name="${id}"][value="${n}"]`);

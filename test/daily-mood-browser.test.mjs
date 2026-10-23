@@ -8,6 +8,7 @@ import {join} from 'node:path';
 const options=api=>({route:'/app/home.html',script:'/app/daily-mood.js',mockAuth:"import {createWellbeingDialog} from './wellbeing-entry.js';",api});
 async function mount(b){
  await poll(()=>b.evaluate('!!document.getElementById("moodPicker")'),'daily mood');
+ await b.send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
  await b.evaluate(`(async()=>{const {mountDailyMood}=await import('/app/daily-mood.js');window.mountMood=mountDailyMood;window.owner={uid:'synthetic-owner',getIdToken:async()=> 'synthetic-token'};window.current=true;window.daily=mountDailyMood({user:window.owner,backendUrl:location.origin,isCurrent:()=>window.current});await window.daily.ready;})()`);
 }
 
@@ -33,12 +34,14 @@ test('home daily check-in requires descriptive answers, saves atomically, retrie
  await click('input[name="anxiety"][value="0"]');
  await click('input[name="energy"][value="8"]');
  await click('input[name="sleep"][value="10"]');
- await ev(`document.querySelector('.wbe-note').open=true;document.getElementById('wbeNote').value='synthetic private note';`);
+ await click('.wbe-add-note');
+ await ev(`document.getElementById('wbeNote').value='synthetic private note';`);
  for(const width of [1440,768,390,320]){
   await b.send('Emulation.setDeviceMetricsOverride',{width,height:850,deviceScaleFactor:1,mobile:width<700});
   const size=await ev('new Promise(r=>requestAnimationFrame(()=>{const d=document.querySelector(".wbe-dialog"),b=d.getBoundingClientRect();r({overflow:d.scrollWidth>d.clientWidth,left:b.left,right:b.right,height:b.height,viewport:innerWidth});}))');
   assert.equal(size.overflow,false,`modal content fits at ${width}`);assert.ok(size.left>=0&&size.right<=size.viewport);assert.ok(size.height<=850);
  }
+ await b.send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
  if(process.env.WELLBEING_PREVIEW==='1'){
   await b.send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
   await ev('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
@@ -59,6 +62,38 @@ test('home daily check-in requires descriptive answers, saves atomically, retrie
  assert.deepEqual(writes.at(-1),{method:'PATCH',path:'/therapy/paciente/humor/bem-estar',body:{anxiety:0,energy:8,sleep:8}});
  await click('#moodWellbeing');await click('.wbe-close');await poll(()=>ev('!document.querySelector(".wbe-dialog").open'),'close without saving');assert.equal(writes.length,3);
  await ev('window.daily.destroy()');assert.equal(await ev('!!document.querySelector(".wbe-dialog")'),false);
+ assert.deepEqual(b.errors,[]);
+});
+
+test('check-in fits without modal scrolling and small screens require each answer before advancing',{timeout:30000,skip:!chrome},async t=>{
+ const writes=[];
+ const date=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const b=await browserFixture(t,options(async(method,url,body)=>{if(method==='GET')return {ok:true,items:[]};writes.push(body);return {ok:true,date,mood:body.mood,wellbeing:body.wellbeing};}));
+ await mount(b);const ev=b.evaluate,click=s=>ev(`document.querySelector(${JSON.stringify(s)}).click()`);
+ async function fits(label){
+  const layout=await ev('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>{const d=document.querySelector(".wbe-dialog"),box=d.getBoundingClientRect();r({scroll:d.scrollHeight>d.clientHeight+1,horizontal:d.scrollWidth>d.clientWidth+1,inside:box.top>=0&&box.bottom<=innerHeight,controls:[...d.querySelectorAll(".wbe-footer button:not([hidden])")].every(b=>{const r=b.getBoundingClientRect();return r.top>=box.top&&r.bottom<=box.bottom;})});})))');
+  assert.deepEqual(layout,{scroll:false,horizontal:false,inside:true,controls:true},label);
+ }
+ await b.send('Emulation.setDeviceMetricsOverride',{width:320,height:568,deviceScaleFactor:1,mobile:true});
+ await click('[data-mood="4"]');await fits('initial small screen');
+ assert.equal(await ev('document.querySelectorAll(".wbe-question:not([hidden])").length'),1);
+ await click('.wbe-next');assert.equal(writes.length,0);await fits('required answer feedback');
+ assert.equal(await ev('document.querySelector(".wbe-question:not([hidden])").dataset.question'),'anxiety');
+ await click('input[name="anxiety"][value="0"]');await click('.wbe-next');
+ assert.equal(await ev('document.querySelector(".wbe-question:not([hidden])").dataset.question'),'energy');
+ await click('.wbe-back');assert.equal(await ev('document.querySelector("input[name=anxiety]:checked").value'),'0');
+ await click('.wbe-next');await click('input[name="energy"][value="5"]');await click('.wbe-next');
+ await click('input[name="sleep"][value="8"]');await fits('last question');
+ await click('.wbe-add-note');await fits('optional note');
+ await ev('document.getElementById("wbeNote").value="synthetic note"');
+ await click('.wbe-back');assert.equal(await ev('document.querySelectorAll(".wbe-dialog input:checked").length'),3);
+ for(const [width,height] of [[1440,900],[1440,768],[1366,700],[1280,600],[768,1024],[390,844],[320,568],[844,390]]){
+  await b.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<700});
+  await fits(`${width}x${height}`);
+  if(process.env.WELLBEING_PREVIEW==='1'&&width===1440&&height===768){const shot=await b.send('Page.captureScreenshot',{format:'png'});await writeFile(join(tmpdir(),'ep-daily-check-in-compact.png'),Buffer.from(shot.data,'base64'));}
+ }
+ await click('.wbe-submit');await poll(()=>ev('!document.querySelector(".wbe-dialog").open'),'complete check-in without scrolling');
+ assert.deepEqual(writes,[{mood:4,wellbeing:{anxiety:0,energy:5,sleep:8},note:'synthetic note'}]);
  assert.deepEqual(b.errors,[]);
 });
 
