@@ -47,7 +47,10 @@ export async function browserFixture(t, { route, script, mockAuth, api }) {
   });
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   const profile = await mkdtemp(join(tmpdir(), 'ep-support-browser-'));
-  const browser = spawn(chrome, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--remote-debugging-port=0', `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore', windowsHide: true });
+  // Desktop com mouse em qualquer máquina: o runner Linux do CI não tem mouse e
+  // deixava falsas as regras em @media (hover: hover) and (pointer: fine).
+  const desktopPointer = '--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4';
+  const browser = spawn(chrome, ['--headless=new', '--disable-gpu', desktopPointer, '--no-first-run', '--no-default-browser-check', '--remote-debugging-port=0', `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore', windowsHide: true });
   let socket;
   t.after(async () => {
     socket?.close();
@@ -56,7 +59,7 @@ export async function browserFixture(t, { route, script, mockAuth, api }) {
     if (resolve(profile).startsWith(resolve(tmpdir()) + sep) && basename(profile).startsWith('ep-support-browser-'))
       await rm(profile, { recursive: true, force: true, maxRetries: 8, retryDelay: 200 });
   });
-  const port = await poll(async () => Number((await readFile(join(profile, 'DevToolsActivePort'), 'utf8')).split('\n')[0]), 'porta do Chrome');
+  const port = await poll(async () => Number((await readFile(join(profile, 'DevToolsActivePort'), 'utf8')).split('\n')[0]), 'porta do Chrome', 20000);
   const page = await poll(async () => (await fetch(`http://127.0.0.1:${port}/json/list`).then(r => r.json())).find(p => p.type === 'page'), 'aba');
   socket = new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((r, reject) => { socket.onopen = r; socket.onerror = reject; });

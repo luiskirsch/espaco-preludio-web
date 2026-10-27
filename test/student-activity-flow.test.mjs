@@ -19,14 +19,39 @@ const chromePath = [
 ].find(candidate => candidate && existsSync(candidate));
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml' };
 
+// A prévia não autentica, mas o módulo da página importa o SDK do Firebase do
+// gstatic; no CI a rede às vezes atrasava esse import e a prévia não renderizava
+// a tempo. O teste serve stubs locais e não depende da internet.
+const firebaseCdn = /https:\/\/www\.gstatic\.com\/firebasejs\/[\d.]+\//g;
+const firebaseStubs = {
+  'firebase-app.js': `const apps = [];
+export const getApps = () => apps;
+export const getApp = (name = '[DEFAULT]') => apps.find(app => app.name === name);
+export const initializeApp = (options, name = '[DEFAULT]') => { const app = { name, options }; apps.push(app); return app; };`,
+  'firebase-auth.js': `const auth = { currentUser: null };
+export const indexedDBLocalPersistence = {}, browserLocalPersistence = {}, browserSessionPersistence = {};
+export const initializeAuth = () => auth;
+export const getAuth = () => auth;
+export const onAuthStateChanged = () => () => {};
+export const signOut = async () => {};`
+};
+
 function startServer() {
   const server = createServer(async (request, response) => {
     try {
       const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
+      if (pathname.startsWith('/__firebase/')) {
+        const stub = firebaseStubs[pathname.slice('/__firebase/'.length)];
+        if (!stub) throw new Error('unknown firebase module');
+        response.writeHead(200, { 'content-type': mime['.js'] });
+        response.end(stub);
+        return;
+      }
       const relative = pathname === '/' ? 'aluno-painel.html' : pathname.replace(/^\/+/, '');
       const file = resolve(root, relative);
       if (!file.startsWith(root)) throw new Error('invalid path');
-      const body = await readFile(file);
+      let body = await readFile(file);
+      if (['.html', '.js'].includes(extname(file))) body = body.toString().replace(firebaseCdn, '/__firebase/');
       response.writeHead(200, { 'content-type': mime[extname(file)] || 'application/octet-stream' });
       response.end(body);
     } catch {

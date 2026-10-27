@@ -18,5 +18,9 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
+      # A primeira abertura do Chrome no runner monta caches de fontes e perfil
+      # e passava dos 12 s, derrubando o primeiro teste de navegador da suíte.
+      - name: Aquecer o Chrome
+        run: google-chrome --headless=new --disable-gpu --no-first-run --dump-dom about:blank > /dev/null
       - run: npm run check
       - run: npm audit --audit-level=high
