@@ -1517,9 +1517,12 @@
   .diary-dialog--bookmarks .bookmark-form-actions .gold-button { width:auto; padding-inline:15px; }
 }
 
-.page-footer-actions { grid-column:1/-1; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 16px; }
-.page-footer-actions #deleteCurrent { margin-left:auto; }
-.is-book-writing .paper-bottom .page-bookmark-button { display:inline-flex; align-items:center; gap:6px; justify-self:start; margin:0; }
+/* Grid pelo mesmo motivo do .paper-bottom: no flex com quebra, a margem
+   automática do "Excluir" virava pixels na cópia da virada e o botão caía
+   para baixo do rodapé (no Windows, a 2880px). */
+.page-footer-actions { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:6px 16px; }
+.page-footer-actions #deleteCurrent { grid-column:2; }
+.is-book-writing .paper-bottom .page-bookmark-button { display:inline-flex; align-items:center; gap:6px; grid-column:1; justify-self:start; margin:0; }
 .page-bookmark-button svg { width:13px; height:16px; flex-shrink:0; }
 .ribbon-preview { position:fixed; z-index:100; display:grid; gap:5px; width:max-content; max-width:min(310px,calc(100vw - 24px)); padding:14px 16px; border:1px solid #b99c7066; border-left:3px solid var(--ribbon-color,#a5322b); border-radius:10px; color:#f3e4cc; background:linear-gradient(145deg,#403330,#262126); box-shadow:0 8px 30px #0e0a0c66; overflow-wrap:anywhere; }
 .ribbon-preview strong { font:600 21px/1.2 var(--serif); }
