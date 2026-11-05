@@ -5,6 +5,9 @@ const HOSTS = new Set(["espacopreludio.com.br", "www.espacopreludio.com.br"]);
 
 export function portalPolicy(pathname, { nonce } = {}) {
   const staging = pathname.startsWith("/staging/");
+  // O selo externo pertence apenas à página inicial pública, nunca aos portais.
+  const reputationSeal = /^\/(?:staging\/)?(?:index\.html)?$/.test(pathname);
+  const reputationAssets = reputationSeal ? " https://s3.amazonaws.com/raichu-beta/ra-verified/" : "";
   // Domínio próprio da API + o endereço antigo do Railway (ainda usado pelo
   // app instalado até a próxima versão).
   const backends = staging
@@ -16,6 +19,7 @@ export function portalPolicy(pathname, { nonce } = {}) {
     "https://www.gstatic.com", "https://cdn.jsdelivr.net", "https://esm.sh",
     "https://cdn.socket.io", "https://browser.sentry-cdn.com"];
   if (nonce) scripts.unshift(`'nonce-${nonce}'`);
+  if (reputationSeal) scripts.push("https://s3.amazonaws.com/raichu-beta/ra-verified/bundle.js");
   return [
     "default-src 'none'",
     "base-uri 'self'",
@@ -24,17 +28,19 @@ export function portalPolicy(pathname, { nonce } = {}) {
     "form-action 'self' https://www.mercadopago.com.br https://www.asaas.com",
     "script-src " + scripts.join(" "),
     "script-src-attr 'none'",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net" + reputationAssets,
     "font-src 'self' https://fonts.gstatic.com data:",
-    "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://storage.googleapis.com https://lh3.googleusercontent.com https://api.qrserver.com",
+    "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://storage.googleapis.com https://lh3.googleusercontent.com https://api.qrserver.com" + reputationAssets,
     "media-src 'self' blob: https://firebasestorage.googleapis.com https://storage.googleapis.com",
     "connect-src 'self' " + backend +
       " https://identitytoolkit.googleapis.com https://securetoken.googleapis.com" +
       " https://firestore.googleapis.com https://firebaseinstallations.googleapis.com" +
       " https://firebasestorage.googleapis.com https://storage.googleapis.com" +
       " https://www.gstatic.com https://cdn.jsdelivr.net https://esm.sh" +
-      " https://*.livekit.cloud wss://*.livekit.cloud https://*.ingest.sentry.io",
-    `frame-src 'self' blob: https://${firebase}.firebaseapp.com https://${firebase}.web.app`,
+      " https://*.livekit.cloud wss://*.livekit.cloud https://*.ingest.sentry.io" +
+      (reputationSeal ? " https://api.reclameaqui.com.br/embed-raverified/hash/" : ""),
+    `frame-src 'self' blob: https://${firebase}.firebaseapp.com https://${firebase}.web.app` +
+      (reputationSeal ? " https://verificada.reclameaqui.com.br/embed/static" : ""),
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "upgrade-insecure-requests"

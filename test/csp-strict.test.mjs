@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { freshNonce, handleRequest, applyPortalHeaders } from "../security/edge/worker.mjs";
+import { freshNonce, handleRequest, applyPortalHeaders, portalPolicy } from "../security/edge/worker.mjs";
 import { runCspAction } from "../js/csp-actions.js";
 
 test("HTML receives a fresh nonce in its CSP and trusted scripts, without reusable validators", async () => {
@@ -43,6 +43,20 @@ test("UI actions do not interpret injected code or arbitrary global names", () =
   assert.equal(elements.get("cancelModal").style.display, "none");
   assert.deepEqual(calls, ["prox"]);
   for (const injected of ["alert(1)", "location='https://evil.invalid'", "constructor", "__proto__"]) assert.equal(runCspAction(injected, context), false);
+});
+
+test("Reclame AQUI resources are permitted only on the public homepage and its staging mirror", () => {
+  for (const path of ["/", "/index.html", "/staging/", "/staging/index.html"]) {
+    const policy = portalPolicy(path, { nonce: "fixture-reputation-nonce-123456" });
+    assert.match(policy, /connect-src[^;]*https:\/\/api\.reclameaqui\.com\.br\/embed-raverified\/hash\//, path);
+    assert.match(policy, /style-src[^;]*https:\/\/s3\.amazonaws\.com\/raichu-beta\/ra-verified\//, path);
+    assert.match(policy, /img-src[^;]*https:\/\/s3\.amazonaws\.com\/raichu-beta\/ra-verified\//, path);
+    assert.match(policy, /frame-src[^;]*https:\/\/verificada\.reclameaqui\.com\.br\/embed\/static/, path);
+    assert.doesNotMatch(policy, /script-src[^;]*'unsafe-inline'/, path);
+  }
+  for (const path of ["/paciente-painel.html", "/prontuario.html", "/app/home.html", "/staging/app/home.html", "/profissionais.html"]) {
+    assert.doesNotMatch(portalPolicy(path), /reclameaqui|raichu-beta/, path);
+  }
 });
 
 test("static pages and runtime templates contain no executable HTML event attributes", () => {
