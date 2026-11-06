@@ -36,9 +36,10 @@ test('scripts de cadastro, agendamento e administração têm sintaxe válida', 
   const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
   for (const name of ['colaborador-cadastro.html', 'agendar.html', 'admin-empresas.html', 'admin-colaboradores.html', 'admin-repasses.html', 'empresa-painel.html']) {
     const page = readFileSync(resolve(root, name), 'utf8');
-    const scripts = [...page.matchAll(/<script\s+type="module">([\s\S]*?)<\/script>/g)];
+    const scripts = [...page.matchAll(/<script\s+type="module"(?:\s+src="([^"]+)")?>([\s\S]*?)<\/script>/g)];
     assert.ok(scripts.length > 0, `${name}: script ausente`);
-    for (const [, source] of scripts) {
+    for (const [, src, inline] of scripts) {
+      const source = src ? readFileSync(resolve(root, src.split('?')[0]), 'utf8') : inline;
       const withoutImports = source.replace(/^\s*import\s+[\s\S]*?\s+from\s+["'][^"']+["'];\s*$/gm, '');
       assert.doesNotMatch(withoutImports, /^\s*import\s/m, `${name}: import não removido`);
       assert.doesNotThrow(() => new AsyncFunction(withoutImports), `${name}: erro de sintaxe`);
