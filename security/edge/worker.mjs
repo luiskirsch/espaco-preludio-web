@@ -1,6 +1,7 @@
 // Cloudflare Route Worker: fetch(request) goes to the existing zone origin.
 // Never use a workers.dev URL as a replacement for the website origin.
 import legacyWaf from "./legacy-waf.mjs";
+import { empresaOrigin } from "./empresa-assets.mjs";
 const HOSTS = new Set(["espacopreludio.com.br", "www.espacopreludio.com.br"]);
 
 export function portalPolicy(pathname, { nonce } = {}) {
@@ -120,5 +121,5 @@ export async function handleRequest(request, fetchOrigin = fetch, { HtmlRewriter
 
 export default {
   fetch: (request, env, ctx) => handleRequest(request,
-    original => legacyWaf.fetch(original, env, ctx))
+    original => legacyWaf.fetch(original, env, ctx, assetRequest => empresaOrigin(assetRequest, env)))
 };

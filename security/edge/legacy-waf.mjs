@@ -17,7 +17,7 @@ var NOINDEX_JOGO = /* @__PURE__ */ new Set([
   "/encontro-marcado.html"
 ]);
 var waf_worker_default = {
-  async fetch(request) {
+  async fetch(request, env, ctx, fetchOrigin = fetch) {
     const ua = request.headers.get("User-Agent") || "";
     if (CLONER_UA.test(ua)) {
       return new Response("Acesso negado.", {
@@ -27,7 +27,7 @@ var waf_worker_default = {
     }
     let response;
     try {
-      response = await fetch(request);
+      response = await fetchOrigin(request);
     } catch (_) {
       return new Response("Bad Gateway", { status: 502 });
     }
