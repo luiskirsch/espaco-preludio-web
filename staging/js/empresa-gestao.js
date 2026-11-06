@@ -19,6 +19,7 @@ const errors = { EMAIL_JA_CADASTRADO:'Este e-mail já está cadastrado. Localize
   DESLIGAMENTO_ANTERIOR_ADMISSAO:'O desligamento não pode ser anterior à admissão.',
   EMAIL_REPETIDO_PLANILHA:'E-mail repetido na planilha.', NOME_OBRIGATORIO:'Informe o nome completo.', EMAIL_INVALIDO:'Confira o e-mail informado.',
   TIPO_VINCULO_INVALIDO:'Tipo de vínculo inválido. Use clt, pj, estagiario, aprendiz, estatutario ou outro.',
+  TIPO_VINCULO_OBRIGATORIO:'Mantenha um tipo de vínculo válido para o benefício aprovado.',
   CAMPO_INVALIDO:'Confira o tamanho e o conteúdo dos campos. Não use quebras de linha nos dados.',
   IMPORTACAO_LIMITE_100:'Importe de 1 a 100 colaboradores por arquivo.', MUITAS_SOLICITACOES:'Muitas solicitações. Aguarde alguns minutos.',
   COLABORADOR_JA_ATIVO:'Este colaborador já está aprovado.', COLABORADOR_JA_INATIVO:'Este vínculo já foi encerrado.',
@@ -97,7 +98,7 @@ function openMember(item=null) {
   $('memberTitle').textContent=item?'Editar colaborador':'Adicionar colaborador';$('memberEmail').readOnly=!!item;
   $('emailHint').textContent=item?'O e-mail identifica a conta do colaborador e é preservado neste cadastro.':'Use o e-mail que a pessoa utilizará para acessar sua conta.';
   $('createStatusLabel').hidden=!!item;$('createConfirmLabel').hidden=true;$('createConfirm').required=false;
-  $('memberEmployment').required=false;$('memberAdmission').max=today();$('memberFacts').hidden=!item;
+  $('memberEmployment').required=!!item?.benefitEligible;$('memberAdmission').max=today();$('memberFacts').hidden=!item;
   if(item)$('memberFacts').textContent=item.status==='inativo'?`Vínculo encerrado em ${dateLabel(item.departureDate)}. Motivo: ${reasons[item.departureReason]||'Não informado'}. Use Reativar na lista para uma readmissão.`:`Situação: ${statuses[item.status]}. ${item.benefitEligible?'Benefício liberado.':'Aprovação do benefício pendente.'}`;
   $('memberDialog').showModal();
 }
