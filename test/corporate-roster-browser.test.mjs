@@ -44,7 +44,10 @@ test('HR browser supports admission, approval, offboarding, readmission, import,
       const items=records.filter(r=>(status==='all'||r.status===status)&&(!q||r.nome.toLowerCase().includes(q))&&(!department||r.departamento===department));
       return response({items,total:items.length,page:1,summary:{total:records.length,ativo:records.filter(r=>r.status==='ativo').length,pendente:records.filter(r=>r.status==='pendente').length,inativo:records.filter(r=>r.status==='inativo').length,elegiveis:records.filter(r=>r.benefitEligible).length,ocupadas:records.filter(r=>r.status!=='inativo').length,limite:30,disponiveis:30-records.filter(r=>r.status!=='inativo').length},departments:['Operações','Pessoas','Tecnologia'],company:{nome:'Prelúdio Software Systems LTDA',benefitActive:true},registrationPath:'/colaborador-cadastro.html?empresa=preludio'});
     }});
-  const click=selector=>ev(`document.querySelector(${JSON.stringify(selector)}).click()`);
+  const click=async selector=>{
+    await poll(()=>ev(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});return !!el&&!el.disabled&&!document.getElementById('tableBody').hasAttribute('aria-busy');})()`),`controle pronto: ${selector}`,16000);
+    return ev(`document.querySelector(${JSON.stringify(selector)}).click()`);
+  };
   const fill=(selector,value)=>ev(`document.querySelector(${JSON.stringify(selector)}).value=${JSON.stringify(value)}`);
   const wait=expression=>poll(()=>ev(expression),expression,16000);
   await wait('document.getElementById("countTotal").textContent==="3"');
