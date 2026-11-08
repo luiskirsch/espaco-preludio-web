@@ -70,14 +70,20 @@ export function createClinicalFetch({ fetch: nativeFetch, backend, location, sto
       const raw = typeof input === "string" || input instanceof URL ? input : input?.url;
       url = new URL(raw, location.href);
     } catch { return nativeFetch(input, init); }
-    if (url.origin !== new URL(backend).origin || !/^\/(?:therapy|rt)\//i.test(url.pathname)) {
+    const backendUrl = new URL(backend);
+    const prefix = backendUrl.pathname.replace(/\/$/, "");
+    if (url.origin !== backendUrl.origin || !url.pathname.startsWith(prefix + "/")) {
       return nativeFetch(input, init);
+    }
+    const sameOrigin = url.origin === new URL(location.href).origin;
+    if (!/^\/(?:therapy|rt)\//i.test(url.pathname.slice(prefix.length))) {
+      return nativeFetch(input, { ...init, ...(sameOrigin ? { credentials: "same-origin" } : {}) });
     }
     const requestHeaders = typeof Request !== "undefined" && input instanceof Request ? input.headers : undefined;
     const headers = new Headers(init.headers || requestHeaders);
     const token = get2faSessionToken(storage, location);
     if (token && headers.has("Authorization") && !headers.has("X-Therapy-2FA")) headers.set("X-Therapy-2FA", token);
-    const response = await nativeFetch(input, { ...init, headers, cache: "no-store", credentials: "omit" });
+    const response = await nativeFetch(input, { ...init, headers, cache: "no-store", credentials: sameOrigin ? "same-origin" : "omit" });
     if (response.status === 401 && !location.pathname.endsWith("/2fa-verify.html")) {
       const data = await response.clone().json().catch(() => ({}));
       if (isTwoFactorChallenge(data.error)) {

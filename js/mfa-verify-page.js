@@ -1,7 +1,7 @@
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, AUTH_CONTEXT } from "./firebase-config.js?h=69b74fc63a";
-import { ensureMfa } from "./mfa-flow.js?h=d60b79b944";
-import { clear2faSession, mfaNavigation } from "./twofa-session.js?h=295a6b1bd5";
+import { auth, AUTH_CONTEXT } from "./firebase-config.js?h=524e7ae9db";
+import { ensureMfa } from "./mfa-flow.js?h=4f6c9e2432";
+import { clear2faSession, mfaNavigation } from "./twofa-session.js?h=cd0e678dbd";
 import { clearDek } from "./crypto.js?h=e302c46b08";
 import { clearPatientDek } from "./patient-session.js?h=b2d1db5669";
 

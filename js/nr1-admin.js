@@ -1,6 +1,6 @@
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=69b74fc63a";
-import { ensureMfa } from "./mfa-flow.js?h=d60b79b944";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=524e7ae9db";
+import { ensureMfa } from "./mfa-flow.js?h=4f6c9e2432";
 
 const $ = id => document.getElementById(id);
 let campaigns = [];

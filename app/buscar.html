@@ -11,8 +11,9 @@
   <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js">
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js">
-  <link rel="modulepreload" href="../js/firebase-config.js?h=69b74fc63a">
-  <link rel="modulepreload" href="../js/twofa-session.js?h=295a6b1bd5">
+  <link rel="modulepreload" href="../js/public-profile.js?h=fb4abd3360">
+  <link rel="modulepreload" href="../js/firebase-config.js?h=524e7ae9db">
+  <link rel="modulepreload" href="../js/twofa-session.js?h=cd0e678dbd">
   <!-- /ep:perf -->
   <meta name="robots" content="noindex, nofollow">
   <meta name="mobile-web-app-capable" content="yes">
@@ -104,8 +105,9 @@
 </div>
 
 <script type="module">
+  import { publicPhotoUrl } from "../js/public-profile.js?h=fb4abd3360";
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?h=69b74fc63a";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?h=524e7ae9db";
   // Diretório depende do público (colaborador/aluno vê a rede dos programas;
   // paciente particular vê só pagantes): envia o login quando houver.
   async function directoryHeaders() {
@@ -167,12 +169,8 @@
     resultsList.innerHTML = items.map((p, index) => {
       const espLabel = ESP_LABELS[p.especialidade] || p.especialidade || "Profissional de saúde";
       const loc = [p.cidade, p.uf].filter(Boolean).join("/");
-      const photoMime = /^(image\/(?:jpeg|png|webp|gif))$/i.test(String(p.photoMime || "")) ? p.photoMime : "image/jpeg";
-      const photoBase64 = String(p.photoBase64 || "");
-      const safePhoto = photoBase64.length <= 1_500_000 && /^[A-Za-z0-9+/]+={0,2}$/.test(photoBase64);
-      const avatar = safePhoto
-        ? `<img src="data:${photoMime};base64,${photoBase64}" alt="">`
-        : initials(p.displayName);
+      const photo = publicPhotoUrl(p, BACKEND_BASE_URL);
+      const avatar = photo ? `<img src="${esc(photo)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : initials(p.displayName);
       const verified = p.isVerified ? `<span class="a-verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></span>` : "";
       return `
         <button type="button" class="a-prof-card" data-result-index="${index}">
@@ -190,7 +188,7 @@
     resultsList.querySelectorAll("[data-result-index]").forEach(btn => {
       btn.addEventListener("click", () => {
         const professional = items[Number(btn.dataset.resultIndex)];
-        if (professional?.uid) location.assign(`./agendar.html?uid=${encodeURIComponent(professional.uid)}`);
+        if (professional?.slug) location.assign(`./agendar.html?p=${encodeURIComponent(professional.slug)}`);
       });
     });
     resultsList.classList.remove("a-hide");

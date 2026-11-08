@@ -1,5 +1,5 @@
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
-import { auth, BACKEND_BASE_URL } from '../js/firebase-config.js?h=69b74fc63a';
+import { auth, BACKEND_BASE_URL } from '../js/firebase-config.js?h=524e7ae9db';
 
 // Sensitive drafts and request data exist only in this page's memory.
 const $ = id => document.getElementById(id);

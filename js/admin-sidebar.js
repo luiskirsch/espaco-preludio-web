@@ -4,7 +4,7 @@
  * Inclua este script no início do <body> de cada página admin.
  */
 (function () {
-  const badgeModuleUrl = new URL("./admin-nav-badges.js?h=7b869ab807", document.currentScript.src).href;
+  const badgeModuleUrl = new URL("./admin-nav-badges.js?h=c17f48a7cb", document.currentScript.src).href;
   // ─── CSS ────────────────────────────────────────────────────────────────
   const style = document.createElement("style");
   style.textContent = `

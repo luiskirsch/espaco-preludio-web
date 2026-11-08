@@ -1,4 +1,4 @@
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=69b74fc63a";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=524e7ae9db";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 const badges = { crpCrm:"CrpCrm", estudante:"Estudante", recemFormado:"RecemFormado", semConselho:"SemConselho", leadsEstudante:"LeadsEstudante", empresa:"Empresa", empresas:"Empresas", denuncias:"Denuncias", colaboradores:"Colaboradores", repasses:"Repasses", reembolsos:"Repasses", nr1:"Nr1", estudantes:"Estudantes", apoio:"Apoio" };
 let timer, running = null, epoch = 0;

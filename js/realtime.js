@@ -3,7 +3,7 @@
 // Chamado por auth-guard.js?v=20261018-tools1 após requireTherapist() → singleton, seguro chamar N vezes.
 
 import { invalidatePrefix } from "./api-cache.js?h=38870d9805";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=69b74fc63a";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=524e7ae9db";
 
 let _socket = null;
 let _uid    = null;
@@ -20,7 +20,9 @@ export async function connectRealtime(uid, initialToken) {
   try {
     const io = await loadIo();
 
-    _socket = io(BACKEND_BASE_URL, {
+    const socketBase = new URL(BACKEND_BASE_URL);
+    _socket = io(socketBase.origin, {
+      path: socketBase.pathname.replace(/\/$/, "") + "/socket.io",
       // auth como função: garante token fresco em cada (re)conexão (Firebase TTL 1h).
       auth: async (cb) => {
         try {

@@ -11,8 +11,9 @@
   <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js">
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js">
-  <link rel="modulepreload" href="../js/firebase-config.js?h=69b74fc63a">
-  <link rel="modulepreload" href="../js/twofa-session.js?h=295a6b1bd5">
+  <link rel="modulepreload" href="../js/public-profile.js?h=fb4abd3360">
+  <link rel="modulepreload" href="../js/firebase-config.js?h=524e7ae9db">
+  <link rel="modulepreload" href="../js/twofa-session.js?h=cd0e678dbd">
   <!-- /ep:perf -->
   <meta name="robots" content="noindex, nofollow">
   <meta name="mobile-web-app-capable" content="yes">
@@ -254,8 +255,9 @@
 </div>
 
 <script type="module">
+  import { publicPhotoUrl } from "../js/public-profile.js?h=fb4abd3360";
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?h=69b74fc63a";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?h=524e7ae9db";
   // Diretório depende do público (colaborador/aluno vê a rede dos programas;
   // paciente particular vê só pagantes): envia o login quando houver.
   async function directoryHeaders() {
@@ -267,9 +269,9 @@
   }
 
   const query = new URLSearchParams(location.search);
-  const professionalUid = query.get("uid") || "";
+  const professionalSlug = query.get("p") || "";
   const legacySlug = query.get("p") || "";
-  if (!professionalUid && !legacySlug) window.location.href = "./buscar.html";
+  if (!professionalSlug) window.location.href = "./buscar.html";
 
   let therapist    = null;
   let bookingSlug  = legacySlug;
@@ -295,9 +297,7 @@
   // Carrega dados do profissional
   async function loadProf() {
     try {
-      const endpoint = professionalUid
-        ? `${BACKEND_BASE_URL}/public/profissionais/${encodeURIComponent(professionalUid)}`
-        : `${BACKEND_BASE_URL}/public/agendar/${encodeURIComponent(legacySlug)}`;
+      const endpoint = `${BACKEND_BASE_URL}/public/profissionais/${encodeURIComponent(professionalSlug)}`;
       const r = await fetch(endpoint, { headers: await directoryHeaders() });
       const d = await r.json().catch(() => ({}));
       if (!r.ok || !d.ok || !d.profissional) throw new Error(d.error || "PROFISSIONAL_NAO_ENCONTRADO");
@@ -316,23 +316,19 @@
       const bioEl = document.getElementById("profBio");
       bioEl.textContent = String(prof.bio || "").trim();
       bioEl.classList.toggle("a-hide", !bioEl.textContent);
-      const profPhotoMime = /^image\/(?:jpeg|png|webp|gif)$/i.test(String(prof.photoMime || "")) ? prof.photoMime : "image/jpeg";
-      const profPhotoBase64 = String(prof.photoBase64 || "");
-      const profSafePhoto = profPhotoBase64.length <= 1_500_000 && /^[A-Za-z0-9+/]+={0,2}$/.test(profPhotoBase64);
-      if (profSafePhoto) {
-        document.getElementById("profAvatar").innerHTML = `<img src="data:${profPhotoMime};base64,${profPhotoBase64}" alt="">`;
-      } else {
-        document.getElementById("profAvatar").textContent = (prof.displayName||"?").match(/\b\p{L}/gu)?.slice(0,2).join("").toUpperCase()||"?";
-      }
+      const photo = publicPhotoUrl(prof, BACKEND_BASE_URL);
+      const avatar = document.getElementById("profAvatar");
+      if (photo) { const image = document.createElement("img"); image.src=photo; image.alt=""; image.referrerPolicy="no-referrer"; avatar.replaceChildren(image); }
+      else avatar.textContent=(prof.displayName||"?").match(/\b\p{L}/gu)?.slice(0,2).join("").toUpperCase()||"?";
       document.getElementById("confProf").textContent = prof.displayName;
 
-      if (prof.pixConfigured && prof.valorConsulta) {
+      if (prof.paymentFlow === "platform_pix" && prof.valorConsulta) {
         const valorFmt = (prof.valorConsulta / 100).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
         document.getElementById("confValorRow").style.display = "";
         document.getElementById("confValor").textContent = valorFmt;
       }
 
-      const schedulingEnabled = professionalUid ? d.publicSchedulingEnabled === true : true;
+      const schedulingEnabled = d.publicSchedulingEnabled === true;
       if (!schedulingEnabled || !bookingSlug) {
         showProfileNotice("Agenda online indisponível", "Este profissional faz parte da Rede de Psicologia, mas não está aceitando agendamentos online no momento.");
         return;
@@ -468,7 +464,7 @@
   }
 
   function totalSteps() {
-    return therapist?.pixConfigured ? TOTAL_STEPS_PIX : TOTAL_STEPS_LEGACY;
+    return therapist?.paymentFlow === "platform_pix" ? TOTAL_STEPS_PIX : TOTAL_STEPS_LEGACY;
   }
 
   function goStep(n) {
@@ -542,7 +538,7 @@
       const d = await r.json().catch(() => ({}));
       if (!d.ok) throw new Error(d.error || "Erro");
 
-      if (therapist?.pixConfigured) {
+      if (therapist?.paymentFlow === "platform_pix") {
         // Tem PIX configurado — avança para step de pagamento
         await iniciarPagamentoPix(d.requestId);
       } else {

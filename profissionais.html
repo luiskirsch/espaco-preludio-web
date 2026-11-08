@@ -10,8 +10,9 @@
   <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js">
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js">
-  <link rel="modulepreload" href="./js/firebase-config.js?h=69b74fc63a">
-  <link rel="modulepreload" href="./js/twofa-session.js?h=295a6b1bd5">
+  <link rel="modulepreload" href="./js/public-profile.js?h=fb4abd3360">
+  <link rel="modulepreload" href="./js/firebase-config.js?h=524e7ae9db">
+  <link rel="modulepreload" href="./js/twofa-session.js?h=cd0e678dbd">
   <!-- /ep:perf -->
   <script>(function(){try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <script type="speculationrules">{"prerender":[{"where":{"selector_matches":"a[href$='.html']:not([href^='http'])"},"eagerness":"moderate"}]}</script>
@@ -218,7 +219,8 @@
 </div>
 
 <script type="module">
-  import { BACKEND_BASE_URL } from "./js/firebase-config.js?h=69b74fc63a";
+  import { publicPhotoUrl } from "./js/public-profile.js?h=fb4abd3360";
+  import { BACKEND_BASE_URL } from "./js/firebase-config.js?h=524e7ae9db";
 
   const $ = id => document.getElementById(id);
   function escapeHtml(s) {
@@ -269,15 +271,10 @@
 
   function renderItem(item) {
     const initials = (item.displayName.match(/\b\p{L}/gu) || []).slice(0, 2).join("").toUpperCase() || "·";
-    // photoBase64/photoMime vêm de outro usuário (perfil do profissional) e
-    // caem direto num atributo style via innerHTML — sem validar o charset
-    // aqui, um valor malicioso quebra o atributo e injeta HTML arbitrário.
-    const photoMime = /^image\/(?:jpeg|png|webp|gif)$/i.test(String(item.photoMime || "")) ? item.photoMime : "image/jpeg";
-    const photoBase64 = String(item.photoBase64 || "");
-    const safePhoto = photoBase64.length <= 1_500_000 && /^[A-Za-z0-9+/]+={0,2}$/.test(photoBase64);
-    const avatar = safePhoto
-      ? `<div style="width: 64px; height: 64px; border-radius: 50%; background-image: url(data:${photoMime};base64,${photoBase64}); background-size: cover; background-position: center; flex-shrink: 0;"></div>`
-      : `<div class="ep-nav-avatar" style="width: 64px; height: 64px; font-size: 22px; flex-shrink: 0;">${initials}</div>`;
+    const photo = publicPhotoUrl(item, BACKEND_BASE_URL);
+    const avatar = photo
+      ? `<img src="${escapeHtml(photo)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" style="width:64px;height:64px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+      : `<div class="ep-nav-avatar" style="width:64px;height:64px;font-size:22px;flex-shrink:0">${initials}</div>`;
     // Badge verificado vai INLINE ao lado do nome (padrão Instagram), não
     // mais sobreposto no avatar. Decisão visual exclusiva da página pública
     // /profissionais.html — dentro da plataforma o badge continua no avatar.

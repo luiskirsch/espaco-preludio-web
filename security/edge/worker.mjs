@@ -2,6 +2,7 @@
 // Never use a workers.dev URL as a replacement for the website origin.
 import legacyWaf from "./legacy-waf.mjs";
 import { empresaOrigin } from "./empresa-assets.mjs";
+import { stagingGate, stagingProxy } from "./staging-gateway.mjs";
 const HOSTS = new Set(["espacopreludio.com.br", "www.espacopreludio.com.br"]);
 
 export function portalPolicy(pathname, { nonce } = {}) {
@@ -15,7 +16,6 @@ export function portalPolicy(pathname, { nonce } = {}) {
     ? ["https://api-staging.espacopreludio.com.br", "https://osl-video-server-staging.up.railway.app"]
     : ["https://api.espacopreludio.com.br", "https://osl-video-server-production.up.railway.app"];
   const backend = backends.flatMap(url => [url, url.replace("https:", "wss:")]).join(" ");
-  const firebase = staging ? "sextolugar-staging" : "osextolugar-game";
   const scripts = ["'strict-dynamic'", "'self'", "'wasm-unsafe-eval'",
     "https://www.gstatic.com", "https://cdn.jsdelivr.net", "https://esm.sh",
     "https://cdn.socket.io", "https://browser.sentry-cdn.com"];
@@ -31,7 +31,7 @@ export function portalPolicy(pathname, { nonce } = {}) {
     "script-src-attr 'none'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net" + reputationAssets,
     "font-src 'self' https://fonts.gstatic.com data:",
-    "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://storage.googleapis.com https://lh3.googleusercontent.com https://api.qrserver.com" + reputationAssets,
+    "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://storage.googleapis.com https://lh3.googleusercontent.com https://api.qrserver.com " + backends.map(url => url + '/public/profissionais/').join(' ') + reputationAssets,
     "media-src 'self' blob: https://firebasestorage.googleapis.com https://storage.googleapis.com",
     "connect-src 'self' " + backend +
       " https://identitytoolkit.googleapis.com https://securetoken.googleapis.com" +
@@ -40,7 +40,7 @@ export function portalPolicy(pathname, { nonce } = {}) {
       " https://www.gstatic.com https://cdn.jsdelivr.net https://esm.sh" +
       " https://*.livekit.cloud wss://*.livekit.cloud https://*.ingest.sentry.io" +
       (reputationSeal ? " https://api.reclameaqui.com.br/embed-raverified/hash/" : ""),
-    `frame-src 'self' blob: https://${firebase}.firebaseapp.com https://${firebase}.web.app` +
+    "frame-src 'self' blob:" +
       (reputationSeal ? " https://verificada.reclameaqui.com.br/embed/static" : ""),
     "worker-src 'self' blob:",
     "manifest-src 'self'",
@@ -71,6 +71,10 @@ export function applyPortalHeaders(response, request, { nonce } = {}) {
   headers.set("Referrer-Policy", "no-referrer");
   headers.set("Permissions-Policy", "camera=(self), microphone=(self), fullscreen=(self), autoplay=(self), geolocation=(), payment=(), usb=(), browsing-topics=()");
   headers.delete("X-Powered-By");
+  headers.delete("Access-Control-Allow-Origin");
+  headers.delete("Access-Control-Allow-Credentials");
+  headers.delete("Access-Control-Allow-Headers");
+  headers.delete("Access-Control-Allow-Methods");
   if ((headers.get("Content-Type") || "").toLowerCase().includes("text/html")) {
     if (!nonce || !/^[A-Za-z0-9+/_-]{22,}={0,2}$/.test(nonce)) throw new Error("HTML_REQUIRES_FRESH_CSP_NONCE");
     headers.set("Content-Security-Policy", portalPolicy(url.pathname, { nonce }));
@@ -94,6 +98,11 @@ export function freshNonce() {
 export async function handleRequest(request, fetchOrigin = fetch, { HtmlRewriter = globalThis.HTMLRewriter, nonceFactory = freshNonce } = {}) {
   const url = new URL(request.url);
   if (!HOSTS.has(url.hostname)) return new Response("Unknown host", { status: 421 });
+  let resourcePath;
+  try { resourcePath = decodeURIComponent(url.pathname).replace(/\\/g,'/'); } catch { return new Response('Not found',{status:404}); }
+  if (/(?:^|\/)(?:package(?:-lock)?\.json|AGENTS\.md|README\.md|\.git|\.env[^/]*|\.github|scripts|test|security|docs|node_modules)(?:\/|$)/i.test(resourcePath)) {
+    return new Response('Not found',{status:404,headers:{'Cache-Control':'no-store'}});
+  }
   if (url.protocol !== "https:") {
     url.protocol = "https:";
     return new Response(null, { status: 308, headers: { Location: url.href, "Cache-Control": "no-store" } });
@@ -120,6 +129,17 @@ export async function handleRequest(request, fetchOrigin = fetch, { HtmlRewriter
 }
 
 export default {
-  fetch: (request, env, ctx) => handleRequest(request,
-    original => legacyWaf.fetch(original, env, ctx, assetRequest => empresaOrigin(assetRequest, env)))
+  fetch: async (request, env, ctx) => {
+    const url=new URL(request.url);
+    if(!HOSTS.has(url.hostname))return new Response('Unknown host',{status:421});
+    if(url.protocol!=='https:'){url.protocol='https:';return Response.redirect(url.href,308);}
+    const gate=await stagingGate(request,env);
+    if(!gate.allowed)return gate.response;
+    const proxy=await stagingProxy(request,env);
+    const response=proxy||await handleRequest(request,
+      original=>legacyWaf.fetch(original,env,ctx,assetRequest=>empresaOrigin(assetRequest,env)));
+    if(!gate.cookie)return response;
+    const headers=new Headers(response.headers);headers.append('Set-Cookie',gate.cookie);
+    return new Response(response.body,{status:response.status,statusText:response.statusText,headers,...(response.webSocket?{webSocket:response.webSocket}:{})});
+  }
 };

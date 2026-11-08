@@ -1,4 +1,4 @@
-import { BACKEND_BASE_URL } from './firebase-config.js?h=69b74fc63a';
+import { BACKEND_BASE_URL } from './firebase-config.js?h=524e7ae9db';
 import { parseRosterCsv, rosterCsv } from './corporate-csv.js?h=428a058f07';
 
 const $ = id => document.getElementById(id);

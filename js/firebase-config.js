@@ -21,7 +21,7 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence }
   from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { isRtAuthContext, isCollaboratorAuthContext, installClinicalFetch } from "./twofa-session.js?h=295a6b1bd5";
+import { isRtAuthContext, isCollaboratorAuthContext, installClinicalFetch } from "./twofa-session.js?h=cd0e678dbd";
 
 // ─── Detecções ─────────────────────────────────────────────────────────
 const _path = typeof location !== "undefined" ? location.pathname : "";
@@ -74,7 +74,7 @@ function _detectBackendOverride() {
       const officialStaging = ["https://api-staging.espacopreludio.com.br", "https://osl-video-server-staging.up.railway.app"].includes(url.origin);
       if (url.username || url.password || (url.protocol !== "https:" && !(localHost && url.protocol === "http:"))) return null;
       if (!localHost && !officialStaging) return null;
-      return url.origin;
+      return officialStaging ? location.origin + "/staging/api" : url.origin;
     } catch {
       return null;
     }
@@ -102,7 +102,7 @@ function _detectBackendOverride() {
 }
 const _override = _detectBackendOverride();
 export const BACKEND_BASE_URL = _override || (IS_STAGING
-  ? "https://api-staging.espacopreludio.com.br"
+  ? location.origin + "/staging/api"
   : "https://api.espacopreludio.com.br");
 
 // Chrome prepares portal pages invisibly. Restore authentication only when

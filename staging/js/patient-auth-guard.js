@@ -3,7 +3,7 @@
 // usa coleção `therapy_patient_accounts` e sessionStorage namespaced.
 
 import { onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=69b74fc63a";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=524e7ae9db";
 import { requestEmailVerification } from "./account-email.js?h=adc983ca80";
 import { recallPatientDek } from "./patient-session.js?h=b2d1db5669";
 
