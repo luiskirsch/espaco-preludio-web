@@ -635,6 +635,11 @@
                 <input id="tissConvNumContratado" class="ep-input" type="text" maxlength="40" placeholder="Sua matrícula no convênio" data-i18n-placeholder="perfil:tiss.numContratadoPlaceholder">
               </div>
             </div>
+            <div class="ep-grid-2">
+              <div class="ep-field"><label class="ep-label" for="tissConvCnes" data-i18n="p-perfil:cnes_do_prestador_7_d_6775c">CNES do prestador (7 dígitos)</label><input id="tissConvCnes" class="ep-input" inputmode="numeric" maxlength="7"></div>
+              <div class="ep-field"><label class="ep-label" for="tissConvUf" data-i18n="p-perfil:uf_de_inscri_o_no_f8123">UF de inscrição no conselho</label><input id="tissConvUf" class="ep-input" maxlength="2" placeholder="MG" data-i18n-placeholder="p-perfil:mg_bd62b"></div>
+              <div class="ep-field"><label class="ep-label" for="tissConvCbo" data-i18n="p-perfil:cbo_do_profissional_6_d_00945">CBO do profissional (6 dígitos)</label><input id="tissConvCbo" class="ep-input" inputmode="numeric" maxlength="6"></div>
+            </div>
             <div class="ep-field">
               <label class="ep-label" for="tissConvPlano" data-i18n="perfil:tiss.plano">Plano específico (opcional)</label>
               <input id="tissConvPlano" class="ep-input" type="text" maxlength="80" placeholder="ex: Empresarial Master" data-i18n-placeholder="perfil:tiss.planoPlaceholder">
@@ -647,11 +652,7 @@
           </div>
         </details>
 
-        <p class="ep-text-xs ep-text-muted ep-mt-16" data-i18n-html="perfil:tiss.phaseNoteHtml">
-          <strong>Fase 1 (atual):</strong> cadastro de convênios + carteirinhas + marcação de sessão "via convênio" + status (paga/glosada).
-          <br><strong>Fase 2:</strong> geração de XML TISS 4.01.00 pra exportar e submeter manualmente no portal do convênio.
-          <br><strong>Fase 3+:</strong> auto-submit via API por convênio.
-        </p>
+        <p class="ep-text-xs ep-text-muted ep-mt-16" data-i18n-html="perfil:tiss.phaseNoteHtml">Cadastre seus convênios e prepare guias de consulta ou SP/SADT. Exporte XML TISS 4.03.00 validado pelo schema da ANS para envio no portal da operadora. A aceitação depende do credenciamento e das regras do convênio. Envio automático ainda não está disponível.</p>
       </section>
 
       <!-- Privacidade & LGPD -->
@@ -2448,9 +2449,9 @@ Direito de portabilidade — LGPD Art. 18, V.
       try {
         await tissApi("/therapy/profissional/tiss/convenios", {
           method: "POST",
-          body: JSON.stringify({ code, nome, registroAns, numeroContratado, plano })
+          body: JSON.stringify({ code, nome, registroAns, numeroContratado, plano, cnes: $("tissConvCnes").value.trim(), ufConselho: $("tissConvUf").value.trim().toUpperCase(), cbos: $("tissConvCbo").value.trim() })
         });
-        ["tissConvCode","tissConvNome","tissConvAns","tissConvNumContratado","tissConvPlano"].forEach(id => $(id).value = "");
+        ["tissConvCode","tissConvNome","tissConvAns","tissConvNumContratado","tissConvPlano","tissConvCnes","tissConvUf","tissConvCbo"].forEach(id => $(id).value = "");
         $("tissAddDetails").open = false;
         statusEl.textContent = "Convênio salvo.";
         statusEl.classList.add("is-ok");
@@ -2466,7 +2467,7 @@ Direito de portabilidade — LGPD Art. 18, V.
 
   if ($("tissCancelBtn")) {
     $("tissCancelBtn").addEventListener("click", () => {
-      ["tissConvCode","tissConvNome","tissConvAns","tissConvNumContratado","tissConvPlano"].forEach(id => $(id).value = "");
+      ["tissConvCode","tissConvNome","tissConvAns","tissConvNumContratado","tissConvPlano","tissConvCnes","tissConvUf","tissConvCbo"].forEach(id => $(id).value = "");
       $("tissStatus").textContent = "";
     });
   }

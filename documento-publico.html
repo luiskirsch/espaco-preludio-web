@@ -62,11 +62,9 @@
           <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
         </div>
         <div class="ep-verify-hero__body">
-          <div class="ep-eyebrow ep-text-success" data-i18n="documento-publico:hero.eyebrow">Documento autenticado</div>
+          <div class="ep-eyebrow ep-text-success" data-i18n="documento-publico:hero.eyebrow">Dados da emissão</div>
           <h1 class="ep-h1 ep-mt-12" id="docTitle">—</h1>
-          <p class="ep-text-muted ep-mt-0" data-i18n="documento-publico:hero.sub">
-            Este documento foi emitido e assinado digitalmente. Os dados abaixo conferem com o registro no Espaço Prelúdio.
-          </p>
+          <p class="ep-text-muted ep-mt-0" data-i18n="documento-publico:hero.sub">Consulte os dados da emissão e a situação da conferência da assinatura abaixo. Para conferir o arquivo, baixe o PDF e utilize o VALIDAR do ITI.</p>
         </div>
       </div>
 
@@ -92,7 +90,7 @@
 
       <div class="ep-alert ep-alert--info ep-mt-16" data-i18n-html="documento-publico:info">
         <strong>Para o destinatário:</strong> abra o PDF abaixo e valide a assinatura digital no
-        <a href="https://verificador.iti.gov.br/" target="_blank" rel="noopener">Verificador ITI gov.br</a>
+        <a href="https://validar.iti.gov.br/" target="_blank" rel="noopener">Verificador ITI gov.br</a>
         ou Adobe Reader (cadeia ICP-Brasil). Os dados desta página devem coincidir com os do PDF.
       </div>
 
@@ -240,7 +238,9 @@
       document.getElementById("therapistAddrLbl").textContent = addrParts.join(" / ");
       document.getElementById("therapistPhoneLbl").textContent = c.telefone ? "Tel.: " + c.telefone : "";
 
-      document.getElementById("signMethodLbl").textContent = methodLabel(d.signatureMethod);
+      document.getElementById("signMethodLbl").textContent = d.signatureVerification?.valid
+        ? "ICP-Brasil — conferida na emissão"
+        : "Assinatura sem conferência automática; valide o PDF no ITI";
       document.getElementById("signedAtLbl").textContent = tr("documento-publico:signedAt", "Assinado em ") + fmtDateLong(d.signedAt);
       if (d.deliveryTokenExp) {
         document.getElementById("validUntilLbl").textContent = tr("documento-publico:validUntil", "Link válido até ") + fmtDate(d.deliveryTokenExp);

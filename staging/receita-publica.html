@@ -63,12 +63,9 @@
           <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
         </div>
         <div class="ep-verify-hero__body">
-          <div class="ep-eyebrow" style="color: #1f6b3e;" data-i18n="receita-publica:hero.eyebrow">Documento autenticado</div>
-          <h1 class="ep-h1 ep-mt-12" data-i18n="receita-publica:hero.title">Receita digital autêntica</h1>
-          <p class="ep-text-muted ep-mt-0" data-i18n="receita-publica:hero.sub">
-            Esta receita foi emitida e assinada digitalmente. Os dados abaixo
-            conferem com o registro no Espaço Prelúdio.
-          </p>
+          <div class="ep-eyebrow" style="color: #1f6b3e;" data-i18n="receita-publica:hero.eyebrow">Dados da emissão</div>
+          <h1 class="ep-h1 ep-mt-12" data-i18n="receita-publica:hero.title">Receita digital</h1>
+          <p class="ep-text-muted ep-mt-0" data-i18n="receita-publica:hero.sub">Consulte os dados da emissão e a situação da conferência da assinatura abaixo. Para conferir o arquivo, baixe o PDF e utilize o VALIDAR do ITI.</p>
         </div>
       </div>
 
@@ -114,7 +111,7 @@
         <strong>Para a farmácia:</strong> antes de aviar, registre a dispensação acima.
         O sistema controla o saldo restante entre todas as farmácias que aviarem esta receita.
         Valide também a assinatura digital do PDF no
-        <a href="https://verificador.iti.gov.br/" target="_blank" rel="noopener">Verificador ITI gov.br</a>
+        <a href="https://validar.iti.gov.br/" target="_blank" rel="noopener">Verificador ITI gov.br</a>
         ou Adobe Reader (cadeia ICP-Brasil).
         <br><a href="./como-dispensar.html" target="_blank" rel="noopener">Guia rápido para farmacêuticos →</a>
       </div>
@@ -314,7 +311,9 @@
       document.getElementById("therapistPhoneLbl").textContent = c.telefone ? "Tel.: " + c.telefone : "";
 
       // Assinatura
-      document.getElementById("signMethodLbl").textContent = methodLabel(r.signatureMethod);
+      document.getElementById("signMethodLbl").textContent = r.signatureVerification?.valid
+        ? "ICP-Brasil — conferida na emissão"
+        : "Assinatura sem conferência automática; valide o PDF no ITI";
       document.getElementById("signedAtLbl").textContent = tr("receita-publica:signedAt", "Assinada em ") + fmtDateLong(r.signedAt);
       if (r.deliveryTokenExp) {
         document.getElementById("validUntilLbl").textContent = tr("receita-publica:validUntil", "Link válido até ") + fmtDate(r.deliveryTokenExp);

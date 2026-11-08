@@ -4,7 +4,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
 
 const ROOT = resolve(import.meta.dirname, "..");
-const IGNORED_DIRS = new Set([".git", "node_modules"]);
+const IGNORED_DIRS = new Set([".git", "node_modules", ".empresa-edge-assets", ".wrangler"]);
 
 function filesUnder(directory, extension, output = []) {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {

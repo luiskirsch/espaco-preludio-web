@@ -23,6 +23,7 @@
   <link rel="modulepreload" href="./js/realtime.js?h=2375eabd16">
   <link rel="modulepreload" href="./js/api-cache.js?h=38870d9805">
   <link rel="modulepreload" href="./js/twofa-fetch.js?h=820c8ff33b">
+  <link rel="modulepreload" href="./js/tiss-guide-editor.js?h=eb3ad4e299">
   <!-- /ep:perf -->
   <script>(function(){try{if(localStorage.getItem("ep:theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}try{var l=null;try{l=new URLSearchParams(location.search).get("lang");}catch(_){}if(!l)l=localStorage.getItem("ep_lang");if(l==="en-US"||l==="es-ES")document.documentElement.classList.add("ep-i18n-pending");}catch(e){}})();</script>
   <title data-i18n="tiss:title">TISS · Espaço Prelúdio</title>
@@ -85,10 +86,11 @@
         <h1 class="ep-h1 ep-mt-12 ep-page-title" data-i18n="tiss:header.title">Guias TISS</h1>
         <p class="ep-text-muted ep-mt-8" data-i18n="tiss:header.sub">
           Sessões marcadas como "via convênio". Status: rascunho → enviada → paga/glosada.
-          XML 4.01.00 + PDF disponíveis pra submissão manual nos portais dos convênios.
+          XML 4.03.00 + PDF disponíveis pra submissão manual nos portais dos convênios.
         </p>
       </div>
       <div class="ep-flex ep-flex--wrap ep-gap-8">
+        <button type="button" class="ep-btn ep-btn--primary" id="btnPrepararGuia" data-i18n="p-tiss:preparar_guia_b048a">Preparar guia</button>
         <button type="button" class="ep-btn ep-btn--ghost" id="btnGerarLote" data-i18n="tiss:actions.gerarLote">📦 Gerar lote mensal</button>
         <button type="button" class="ep-btn ep-btn--primary ep-hide" id="btnEnviarConvenio" data-i18n="tiss:actions.enviarConvenio">🚀 Enviar pro convênio</button>
         <button type="button" class="ep-btn ep-btn--ghost" id="btnImportarDp" data-i18n="tiss:actions.importarDp">📄 Importar demonstrativo</button>
@@ -100,9 +102,7 @@
     <div class="ep-modal" id="loteModal" role="dialog" aria-modal="true">
       <div class="ep-modal__panel" style="max-width: 480px;">
         <h3 class="ep-modal__title" data-i18n="tiss:lote.title">Gerar lote mensal TISS</h3>
-        <p class="ep-modal__sub ep-text-sm" data-i18n-html="tiss:lote.subHtml">
-          Empacota todas as guias <strong>rascunho</strong> do convênio escolhido no mês selecionado num XML único pronto pra submissão. TISS exige um lote por convênio.
-        </p>
+        <p class="ep-modal__sub ep-text-sm" data-i18n-html="tiss:lote.subHtml">Gera um XML com até 100 guias em rascunho do mesmo tipo, convênio e mês. O arquivo passa pela validação do schema da ANS antes de ser disponibilizado.</p>
         <div class="ep-stack ep-mt-12" style="gap: 10px;">
           <div class="ep-grid-2col">
             <div class="ep-field">
@@ -122,6 +122,10 @@
           <div class="ep-field">
             <label class="ep-label" for="loteConvenio" data-i18n="tiss:lote.convenio">Convênio</label>
             <select id="loteConvenio" class="ep-select"></select>
+          </div>
+          <div class="ep-field">
+            <label class="ep-label" for="loteTipoGuia" data-i18n="tiss:lote.tipoGuia">Tipo de guia</label>
+            <select id="loteTipoGuia" class="ep-select"><option value="sadt" data-i18n="tiss:lote.sadt">SP/SADT — terapia</option><option value="consulta" data-i18n="tiss:lote.consulta">Consulta</option></select>
           </div>
         </div>
         <div class="ep-modal__actions">
@@ -218,6 +222,7 @@
   import { auth, BACKEND_BASE_URL } from "./js/firebase-config.js?h=69b74fc63a";
   import { requireTherapist } from "./js/auth-guard.js?h=e99410928b";
   import { cachedGet, invalidatePrefix } from "./js/api-cache.js?h=38870d9805";
+  import { mountTissGuideEditor } from "./js/tiss-guide-editor.js?h=eb3ad4e299";
 
   // tr(): tenta EP_I18N.t(key); fallback PT se i18n nao carregou.
   function tr(key, fallback, opts) {
@@ -322,7 +327,7 @@
       const numOpLbl  = tr("tiss:list.numOperadora", "Nº operadora:");
       const glosaPre  = tr("tiss:list.glosaPrefix", "Glosa");
       const dash      = tr("tiss:list.dash", "—");
-      const xmlTtl    = tr("tiss:list.btnXmlTitle", "Baixar XML 4.01.00");
+      const xmlTtl    = tr("tiss:list.btnXmlTitle", "Baixar XML 4.03.00");
       const pdfTtl    = tr("tiss:list.btnPdfTitle", "Abrir guia em formato imprimível");
       const xmlLbl    = tr("tiss:list.btnXml", "XML");
       const pdfLbl    = tr("tiss:list.btnPdf", "PDF");
@@ -478,7 +483,7 @@
       const r = await fetch(`${BACKEND_BASE_URL}/therapy/tiss/lote`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
-        body: JSON.stringify({ ano, mes, convenioCode, status: "rascunho" })
+        body: JSON.stringify({ ano, mes, convenioCode, tipoGuia: document.getElementById("loteTipoGuia").value, status: "rascunho" })
       });
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
@@ -609,6 +614,11 @@
       goBtn.disabled = false;
     }
   });
+
+  mountTissGuideEditor({ api, onSaved: async () => {
+    invalidatePrefix("tiss:guias", uid);
+    await loadGuias();
+  } });
 
   (async () => {
     try {
