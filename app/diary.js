@@ -5,6 +5,7 @@ import { createBookFoley, bookMotionTiming } from './diary-foley.js?h=3737733da5
 import { createIdleInvitation } from './diary-invitation.js?h=26ddf46ff3';
 import { startReleaseRitual } from './diary-release.js?h=1cf48e0479';
 import { BOOKMARK_COLORS, moveBookmarks, bookmarkExcerpt } from './diary-bookmarks.js?h=dba0895924';
+import { nativeAccount } from '../js/native-bridge.js?h=ac8e82ce30';
 
 const $ = id => document.getElementById(id);
 const student = document.body.dataset.portal === 'student';
@@ -1115,8 +1116,15 @@ if (preview) {
   demoEntries.set(example.id, example); prepareDiary();
 } else {
   try {
-    const [{ onAuthStateChanged }, config] = await Promise.all([import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js'), import('../js/firebase-config.js?h=524e7ae9db')]);
+    // No app, a sessão é do app nativo: a página só pede tokens a ele.
+    const appAccount = nativeAccount();
+    const [{ onAuthStateChanged }, config] = await Promise.all([appAccount ? {} : import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js'), import('../js/firebase-config.js?h=524e7ae9db')]);
     backend = config.BACKEND_BASE_URL;
+    if (appAccount) {
+      document.documentElement.classList.add('is-native-app');
+      account = appAccount; finishCoverNaming({ save: false });
+      restoreCoverTitle(); prepareDiary(appAccount);
+    } else {
     onAuthStateChanged(config.auth, user => {
       if (!user || account && account.uid !== user.uid) {
         bootGeneration++; releaseRitual?.cancel(); releaseRitual = null; invitation.pause(); bookDrafts.clear(); bookOrder.clear(); bookEntries = []; pagedEditor.clearBook(); pageCreation = null; $('newPageButton').disabled = false; ready = false; dirty = false; conflict = false; saving = null; deletingId = null; clearTimeout(saveTimer); closeDialog(); dictation.stop(); bookFoley.stop(); soundscape.stop();
@@ -1128,5 +1136,6 @@ if (preview) {
       account = user; finishCoverNaming({ save: false });
       restoreCoverTitle(); prepareDiary(user);
     });
+    }
   } catch { setStatus('Não foi possível conectar · recarregue a página', 'error'); toast('Não foi possível abrir o diário. Verifique sua conexão e recarregue a página.'); }
 }
