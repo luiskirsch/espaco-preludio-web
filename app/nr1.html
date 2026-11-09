@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js">
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js">
-  <link rel="modulepreload" href="../js/firebase-config.js?h=524e7ae9db">
+  <link rel="modulepreload" href="../js/firebase-config.js?h=6cc9dd88df">
   <link rel="modulepreload" href="../js/twofa-session.js?h=cd0e678dbd">
   <!-- /ep:perf -->
   <meta name="robots" content="noindex,nofollow">
@@ -52,7 +52,7 @@
 </div>
 <script type="module">
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?h=524e7ae9db";
+  import { auth, BACKEND_BASE_URL } from "../js/firebase-config.js?h=6cc9dd88df";
   const $ = id => document.getElementById(id);
   let user = null, campaigns = [], questions = [];
   async function api(path, options = {}) { const token = await user.getIdToken(); const response = await fetch(`${BACKEND_BASE_URL}${path}`, { ...options, headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(options.headers || {}) } }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || `Erro HTTP ${response.status}`); return data; }

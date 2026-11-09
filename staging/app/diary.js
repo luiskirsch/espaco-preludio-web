@@ -1118,7 +1118,7 @@ if (preview) {
   try {
     // No app, a sessão é do app nativo: a página só pede tokens a ele.
     const appAccount = nativeAccount();
-    const [{ onAuthStateChanged }, config] = await Promise.all([appAccount ? {} : import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js'), import('../js/firebase-config.js?h=524e7ae9db')]);
+    const [{ onAuthStateChanged }, config] = await Promise.all([appAccount ? {} : import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js'), import('../js/firebase-config.js?h=6cc9dd88df')]);
     backend = config.BACKEND_BASE_URL;
     if (appAccount) {
       document.documentElement.classList.add('is-native-app');

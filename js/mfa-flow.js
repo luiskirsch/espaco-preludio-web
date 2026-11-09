@@ -1,4 +1,4 @@
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=524e7ae9db";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=6cc9dd88df";
 import { get2faSessionToken, save2faSession, clear2faSession } from "./twofa-session.js?h=cd0e678dbd";
 
 const messages = {

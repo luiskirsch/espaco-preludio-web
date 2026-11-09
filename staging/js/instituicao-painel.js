@@ -4,7 +4,7 @@ import {
   setPersistence,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=524e7ae9db";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=6cc9dd88df";
 
 const loading = document.getElementById("dashboardLoading");
 const app = document.getElementById("dashboardApp");

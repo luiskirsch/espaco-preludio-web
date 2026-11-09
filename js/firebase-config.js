@@ -2,7 +2,7 @@
 //
 // (1) Ambiente (staging vs production) — por path:
 //     /staging/* → STAGING (Firebase sextolugar-staging + backend staging)
-//     resto      → PRODUCTION (Firebase osextolugar-game + backend production)
+//     resto      → PRODUCTION (Firebase espaco-preludio-clinico + backend production)
 //
 // (2) Perfil (colaborador, paciente/aluno, instituição ou profissional) — por path:
 //     /app/*                                → app isolado "collaborator"
@@ -46,12 +46,12 @@ const STAGING_FIREBASE = {
 };
 
 const PRODUCTION_FIREBASE = {
-  apiKey: "AIzaSyC8sSvA7_1HPYRFGFgdgzstkP_yQHadY-c",
-  authDomain: "osextolugar-game.firebaseapp.com",
-  projectId: "osextolugar-game",
-  storageBucket: "osextolugar-game.firebasestorage.app",
-  messagingSenderId: "947922328721",
-  appId: "1:947922328721:web:989522c99e16ab449f3330"
+  apiKey: "AIzaSyCIVc3x17whefmYdrxUxgZzQgXvOiCCvNg",
+  authDomain: "espaco-preludio-clinico.firebaseapp.com",
+  projectId: "espaco-preludio-clinico",
+  storageBucket: "espaco-preludio-clinico.firebasestorage.app",
+  messagingSenderId: "974482166096",
+  appId: "1:974482166096:web:5ae1bc8e38893c09579c55"
 };
 
 export const firebaseConfig = IS_STAGING ? STAGING_FIREBASE : PRODUCTION_FIREBASE;

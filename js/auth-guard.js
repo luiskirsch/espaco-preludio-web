@@ -4,15 +4,15 @@
 //   const { user, idToken, therapist } = await requireTherapist();
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=524e7ae9db";
+import { auth, BACKEND_BASE_URL } from "./firebase-config.js?h=6cc9dd88df";
 import { recallDek } from "./crypto.js?h=e302c46b08";
 import { matchPatients, loadBookingDirectory, createSessionFromProposal, regeneratePatientLink, sanitizeProposal, proposalTimestamp, isValidEmail } from "./aurora-booking.js?h=78573dbb79";
 import { mountThemeToggle } from "./theme-toggle.js?h=e78b1bb8ef";
 import "./cmdk.js?h=16f6e12be2";
 import db from "./db.js?h=8b3a551836";
-import { connectRealtime } from "./realtime.js?h=58d7cdc001";
+import { connectRealtime } from "./realtime.js?h=69e72854f5";
 
-import "./twofa-fetch.js?h=7c3400b1fa";
+import "./twofa-fetch.js?h=3b29568ec3";
 import { get2faSessionToken, clear2faSession, hasValid2faSession, verificationRedirect } from "./twofa-session.js?h=cd0e678dbd";
 export { get2faSessionToken, save2faSession, clear2faSession, hasValid2faSession } from "./twofa-session.js?h=cd0e678dbd";
 
